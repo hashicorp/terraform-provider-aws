@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -6,44 +6,42 @@ package rds_test
 import (
 	"context"
 	"fmt"
-	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestParameterGroupModifyChunk(t *testing.T) {
+func TestParameterChunksForModify(t *testing.T) {
 	t.Parallel()
 
-	cases := []struct {
-		Name              string
-		ChunkSize         int
-		Parameters        []types.Parameter
-		ExpectedModify    []types.Parameter
-		ExpectedRemainder []types.Parameter
+	testCases := []struct {
+		Name      string
+		ChunkSize int
+		Input     []types.Parameter
+		Expected  [][]types.Parameter
 	}{
 		{
-			Name:              "Empty",
-			ChunkSize:         20,
-			Parameters:        nil,
-			ExpectedModify:    nil,
-			ExpectedRemainder: nil,
+			Name:      "Empty",
+			ChunkSize: 20,
+			Input:     nil,
+			Expected:  nil,
 		},
 		{
 			Name:      "A couple",
 			ChunkSize: 20,
-			Parameters: []types.Parameter{
+			Input: []types.Parameter{
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("tx_isolation"),
@@ -55,24 +53,25 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 					ParameterValue: aws.String("131072"),
 				},
 			},
-			ExpectedModify: []types.Parameter{
+			Expected: [][]types.Parameter{
 				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("tx_isolation"),
+						ParameterValue: aws.String("repeatable-read"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("binlog_cache_size"),
+						ParameterValue: aws.String("131072"),
+					},
 				},
 			},
-			ExpectedRemainder: nil,
 		},
 		{
 			Name:      "Over 3 max, 6 in",
 			ChunkSize: 3,
-			Parameters: []types.Parameter{
+			Input: []types.Parameter{
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("tx_isolation"),
@@ -100,49 +99,53 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				},
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_filesystem"),
-					ParameterValue: aws.String("utf8"),
+					ParameterName:  aws.String("collation_server"),
+					ParameterValue: aws.String("utf8_unicode_ci"),
 				},
 			},
-			ExpectedModify: []types.Parameter{
+			Expected: [][]types.Parameter{
 				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_server"),
-					ParameterValue: aws.String("utf8"),
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("character_set_server"),
+						ParameterValue: aws.String("utf8"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("collation_server"),
+						ParameterValue: aws.String("utf8_unicode_ci"),
+					},
 				},
 				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_filesystem"),
-					ParameterValue: aws.String("utf8"),
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("tx_isolation"),
+						ParameterValue: aws.String("repeatable-read"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("binlog_cache_size"),
+						ParameterValue: aws.String("131072"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+						ParameterValue: aws.String("0"),
+					},
 				},
 				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-			},
-			ExpectedRemainder: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_read_io_threads"),
-					ParameterValue: aws.String("64"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String("0"),
+					{
+						ApplyMethod:    types.ApplyMethodPendingReboot,
+						ParameterName:  aws.String("innodb_read_io_threads"),
+						ParameterValue: aws.String("64"),
+					},
 				},
 			},
 		},
 		{
 			Name:      "Over 3 max, 9 in",
 			ChunkSize: 3,
-			Parameters: []types.Parameter{
+			Input: []types.Parameter{
 				{
 					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("tx_isolation"),
@@ -160,8 +163,8 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				},
 				{
 					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("character_set_server"),
-					ParameterValue: aws.String("utf8"),
+					ParameterName:  aws.String("ssl_max_protocol_version"),
+					ParameterValue: aws.String("3"),
 				},
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
@@ -185,69 +188,95 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				},
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("key_buffer_size"),
-					ParameterValue: aws.String("67108864"),
-				},
-			},
-			ExpectedModify: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_filesystem"),
-					ParameterValue: aws.String("utf8"),
+					ParameterName:  aws.String("ssl_min_protocol_version"),
+					ParameterValue: aws.String("2"),
 				},
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_connection"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String("0"),
-				},
-			},
-			ExpectedRemainder: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_read_io_threads"),
-					ParameterValue: aws.String("64"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("character_set_server"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
-					ParameterValue: aws.String("90"),
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("collation_server"),
+					ParameterValue: aws.String("utf8_unicode_ci"),
+				},
+			},
+			Expected: [][]types.Parameter{
+				{
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("character_set_server"),
+						ParameterValue: aws.String("utf8"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("collation_server"),
+						ParameterValue: aws.String("utf8_unicode_ci"),
+					},
 				},
 				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("key_buffer_size"),
-					ParameterValue: aws.String("67108864"),
+					{
+						ApplyMethod:    types.ApplyMethodPendingReboot,
+						ParameterName:  aws.String("ssl_max_protocol_version"),
+						ParameterValue: aws.String("3"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("ssl_min_protocol_version"),
+						ParameterValue: aws.String("2"),
+					},
+				},
+				{
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+						ParameterValue: aws.String("0"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("character_set_filesystem"),
+						ParameterValue: aws.String("utf8"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodImmediate,
+						ParameterName:  aws.String("character_set_connection"),
+						ParameterValue: aws.String("utf8"),
+					},
+				},
+				{
+					{
+						ApplyMethod:    types.ApplyMethodPendingReboot,
+						ParameterName:  aws.String("tx_isolation"),
+						ParameterValue: aws.String("repeatable-read"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodPendingReboot,
+						ParameterName:  aws.String("binlog_cache_size"),
+						ParameterValue: aws.String("131072"),
+					},
+					{
+						ApplyMethod:    types.ApplyMethodPendingReboot,
+						ParameterName:  aws.String("innodb_read_io_threads"),
+						ParameterValue: aws.String("64"),
+					},
+				},
+				{
+					{
+						ApplyMethod:    types.ApplyMethodPendingReboot,
+						ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
+						ParameterValue: aws.String("90"),
+					},
 				},
 			},
 		},
 	}
 
-	for _, tc := range cases {
-		mod, rem := tfrds.ParameterGroupModifyChunk(tc.Parameters, tc.ChunkSize)
-		if !reflect.DeepEqual(mod, tc.ExpectedModify) {
-			t.Errorf("Case %q: Modify did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedModify, mod)
-		}
-		if !reflect.DeepEqual(rem, tc.ExpectedRemainder) {
-			t.Errorf("Case %q: Remainder did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedRemainder, rem)
+	for _, tc := range testCases {
+		output := tfrds.ParameterChunksForModify(tc.Input, tc.ChunkSize)
+		got, want := slices.Collect(output), tc.Expected
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(types.Parameter{})); diff != "" {
+			t.Fatalf("%s unexpected diff (+wanted, -got): %s", tc.Name, diff)
 		}
 	}
 }
@@ -256,18 +285,18 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -294,7 +323,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_addParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -324,10 +353,10 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
-					testAccCheckParameterNotUserDefined(ctx, resourceName, "collation_connection"),
-					testAccCheckParameterNotUserDefined(ctx, resourceName, "collation_server"),
+					testAccCheckParameterNotUserDefined(ctx, t, resourceName, "collation_connection"),
+					testAccCheckParameterNotUserDefined(ctx, t, resourceName, "collation_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_results",
@@ -351,19 +380,19 @@ func TestAccRDSParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceParameterGroup(), resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -375,18 +404,18 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -399,7 +428,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -408,7 +437,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -419,13 +448,13 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 
 func TestAccRDSParameterGroup_caseWithMixedParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_caseWithMixedParameters(rName),
@@ -439,18 +468,18 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_exceedDefaultLimit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -629,7 +658,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_updateExceedDefaultLimit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -809,16 +838,16 @@ func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBParameterGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
@@ -836,16 +865,16 @@ func TestAccRDSParameterGroup_generatedName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBParameterGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, "aws_db_parameter_group.test", &v),
+					testAccCheckParameterGroupExists(ctx, t, "aws_db_parameter_group.test", &v),
 				),
 			},
 		},
@@ -856,18 +885,18 @@ func TestAccRDSParameterGroup_withApplyMethod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_applyMethod(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -897,18 +926,18 @@ func TestAccRDSParameterGroup_only(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_only(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -927,18 +956,18 @@ func TestAccRDSParameterGroup_matchDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_includeDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "postgres9.4"),
 				),
@@ -957,18 +986,18 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_updateParametersInitial(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -994,7 +1023,7 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_updateParametersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_results",
@@ -1018,19 +1047,19 @@ func TestAccRDSParameterGroup_updateParameters2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	fam := "mysql5.7"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_updateParameters(rName, fam, "pending-reboot", "default_password_lifetime", "0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, fam),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, fam),
@@ -1044,7 +1073,7 @@ func TestAccRDSParameterGroup_updateParameters2(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_updateParameters(rName, fam, "immediate", "default_password_lifetime", "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, fam),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, fam),
@@ -1063,18 +1092,18 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_upperCase(rName, "Max_connections"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -1101,18 +1130,18 @@ func TestAccRDSParameterGroup_skipDestroy(t *testing.T) {
 	var v types.DBParameterGroup
 	ctx := acctest.Context(t)
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupNoDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupNoDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
@@ -1120,9 +1149,9 @@ func TestAccRDSParameterGroup_skipDestroy(t *testing.T) {
 	})
 }
 
-func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckParameterGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_parameter_group" {
@@ -1131,7 +1160,7 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfrds.FindDBParameterGroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1146,9 +1175,9 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckParameterGroupNoDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckParameterGroupNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_parameter_group" {
@@ -1178,14 +1207,14 @@ func testAccCheckParameterGroupAttributes(v *types.DBParameterGroup, name, fam s
 	}
 }
 
-func testAccCheckParameterGroupExists(ctx context.Context, n string, v *types.DBParameterGroup) resource.TestCheckFunc {
+func testAccCheckParameterGroupExists(ctx context.Context, t *testing.T, n string, v *types.DBParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDBParameterGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -1199,14 +1228,14 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *types.DB
 	}
 }
 
-func testAccCheckParameterNotUserDefined(ctx context.Context, rName, paramName string) resource.TestCheckFunc {
+func testAccCheckParameterNotUserDefined(ctx context.Context, t *testing.T, rName, paramName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", rName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		input := &rds.DescribeDBParametersInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),

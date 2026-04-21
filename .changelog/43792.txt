@@ -1,0 +1,15 @@
+```release-note:new-data-source
+aws_odb_db_server
+```
+
+```release-note:new-data-source
+aws_odb_db_servers
+```
+
+```release-note:new-data-source
+aws_odb_db_node
+```
+
+```release-note:new-data-source
+aws_odb_db_nodes
+```

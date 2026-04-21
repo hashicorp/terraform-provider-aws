@@ -1,10 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verify
 
 import (
-	"regexp"
 	"strings"
 	"testing"
 
@@ -93,59 +92,6 @@ func TestValid4ByteASNString(t *testing.T) {
 	}
 }
 
-func TestValidTypeStringNullableFloat(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		val         any
-		expectedErr *regexp.Regexp
-	}{
-		{
-			val: "",
-		},
-		{
-			val: "0",
-		},
-		{
-			val: "1",
-		},
-		{
-			val: "42.0",
-		},
-		{
-			val:         "threeve",
-			expectedErr: regexache.MustCompile(`cannot parse`),
-		},
-	}
-
-	matchErr := func(errs []error, r *regexp.Regexp) bool {
-		// err must match one provided
-		for _, err := range errs {
-			if r.MatchString(err.Error()) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	for i, tc := range testCases {
-		_, errs := ValidTypeStringNullableFloat(tc.val, "test_property")
-
-		if len(errs) == 0 && tc.expectedErr == nil {
-			continue
-		}
-
-		if len(errs) != 0 && tc.expectedErr == nil {
-			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
-		}
-
-		if !matchErr(errs, tc.expectedErr) {
-			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
-		}
-	}
-}
-
 func TestValidAccountID(t *testing.T) {
 	t.Parallel()
 
@@ -170,6 +116,33 @@ func TestValidAccountID(t *testing.T) {
 		_, errors := ValidAccountID(v, "account_id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid AWS Account ID", v)
+		}
+	}
+}
+
+func TestValidRegionName(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"mx-central-1",
+		"us-isof-south-1",
+	}
+	for _, v := range validNames {
+		_, errors := ValidRegionName(v, "region")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid AWS Region: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"invalid",
+		"k@rea-central-1",
+		"ca-west-123",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidRegionName(v, "region")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid AWS Region", v)
 		}
 	}
 }
@@ -203,6 +176,8 @@ func TestValidARN(t *testing.T) {
 		"arn:aws-us-gov:s3:::bucket/object",                                                                                       // lintignore:AWSAT005          // GovCloud S3 ARN
 		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                                                         // lintignore:AWSAT005          // CloudWatch Alarm
 		"arn:aws:imagebuilder:eu-central-1:aws-marketplace:component/crowdstrike-falcon-install-linux-prod-nhzsem4gwwfja/1.2.2/1", // lintignore:AWSAT003,AWSAT005 // EC2 image builder marketplace subscription ARN
+		"arn:aws-eusc:acm-pca:eusc-de-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012",             // lintignore:AWSAT003,AWSAT005 // ESC ACMPCA ARN
+		"arn:aws:network-firewall:us-east-1:partner-managed:stateful-rulegroup/Trend-MalwareBlockStrictOrder",                     // lintignore:AWSAT003,AWSAT005 // Network Firewall partner-managed rule group
 	}
 	for _, v := range validNames {
 		_, errors := ValidARN(v, "arn")
@@ -256,57 +231,6 @@ func TestValidCIDRNetworkAddress(t *testing.T) {
 				t.Fatalf("%d/%d: Expected err: %q, to include %q",
 					i+1, len(cases), errs[0], tc.ExpectedErrSubstr)
 			}
-		}
-	}
-}
-
-func TestValidIPv4CIDRBlock(t *testing.T) {
-	t.Parallel()
-
-	for _, ts := range []struct {
-		cidr  string
-		valid bool
-	}{
-		{"10.2.2.0/24", true},
-		{"10.2.2.0/1234", false},
-		{"10/24", false},
-		{"10.2.2.2/24", false},
-		{"::/0", false},
-		{"2000::/15", false},
-		{"", false},
-	} {
-		err := ValidateIPv4CIDRBlock(ts.cidr)
-		if !ts.valid && err == nil {
-			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
-		}
-		if ts.valid && err != nil {
-			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
-		}
-	}
-}
-
-func TestValidIPv6CIDRBlock(t *testing.T) {
-	t.Parallel()
-
-	for _, ts := range []struct {
-		cidr  string
-		valid bool
-	}{
-		{"10.2.2.0/24", false},
-		{"10.2.2.0/1234", false},
-		{"::/0", true},
-		{"::0/0", true},
-		{"2000::/15", true},
-		{"2001::/15", false},
-		{"2001:db8::/122", true},
-		{"", false},
-	} {
-		err := ValidateIPv6CIDRBlock(ts.cidr)
-		if !ts.valid && err == nil {
-			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
-		}
-		if ts.valid && err != nil {
-			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
 		}
 	}
 }
@@ -935,6 +859,70 @@ func TestMapKeysAre(t *testing.T) {
 
 			diags := f(testCase.value, cty.Path{})
 			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestCaseInsensitiveMatchDeprecation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		value    any
+		wantDiag bool
+	}{
+		{
+			name:  "exact match",
+			value: "foo",
+		},
+		{
+			name:  "no match",
+			value: "baz",
+		},
+		{
+			name:     "case insensitive match",
+			value:    "FOO",
+			wantDiag: true,
+		},
+	}
+
+	f := CaseInsensitiveMatchDeprecation([]string{"foo", "bar"})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(tt.value, cty.Path{})
+			if got, want := len(diags) > 0, tt.wantDiag; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestWarnStringIsNotEmpty(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		value    any
+		wantDiag bool
+	}{
+		"empty string": {
+			value:    "",
+			wantDiag: true,
+		},
+		"non-empty string": {
+			value: "value",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := WarnStringIsNotEmpty(tt.value, cty.Path{})
+			if got, want := len(diags) > 0, tt.wantDiag; got != want {
 				t.Errorf("got = %v, want = %v", got, want)
 			}
 		})

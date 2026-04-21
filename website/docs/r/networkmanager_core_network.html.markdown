@@ -3,12 +3,14 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_core_network"
 description: |-
-  Provides a core network resource.
+  Manages a Network Manager Core Network.
 ---
 
 # Resource: aws_networkmanager_core_network
 
-Provides a core network resource.
+Manages a Network Manager Core Network.
+
+Use this resource to create and manage a core network within a global network.
 
 ## Example Usage
 
@@ -342,13 +344,15 @@ resource "aws_networkmanager_vpc_attachment" "example_us_east_1" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `description` - (Optional) Description of the Core Network.
-* `base_policy_document` - (Optional, conflicts with `base_policy_region`, `base_policy_regions`) Sets the base policy document for the core network. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
-* `base_policy_region` - (Optional, **Deprecated** use the `base_policy_regions` or `base_policy_document` argument instead) The base policy created by setting the `create_base_policy` argument to `true` requires a region to be set in the `edge-locations`, `location` key. If `base_policy_region` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
-* `base_policy_regions` - (Optional, conflicts with `base_policy_region`, `base_policy_document`) A list of regions to add to the base policy. The base policy created by setting the `create_base_policy` argument to `true` requires one or more regions to be set in the `edge-locations`, `location` key. If `base_policy_regions` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
-* `create_base_policy` - (Optional) Specifies whether to create a base policy when a core network is created or updated. A base policy is created and set to `LIVE` to allow attachments to the core network (e.g. VPC Attachments) before applying a policy document provided using the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html). This base policy is needed if your core network does not have any `LIVE` policies and your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Valid values are `true` or `false`. An example of this Terraform snippet can be found above [for VPC Attachment in a single region](#with-vpc-attachment-single-region) and [for VPC Attachment multi-region](#with-vpc-attachment-multi-region). An example base policy is shown below. This base policy is overridden with the policy that you specify in the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html).
+* `global_network_id` - (Required) ID of the global network that a core network will be a part of.
+
+The following arguments are optional:
+
+* `base_policy_document` - (Optional, conflicts with `base_policy_regions`) Sets the base policy document for the core network. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
+* `base_policy_regions` - (Optional, conflicts with `base_policy_document`) List of regions to add to the base policy. The base policy created by setting the `create_base_policy` argument to `true` requires one or more regions to be set in the `edge-locations`, `location` key. If `base_policy_regions` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
+* `create_base_policy` - (Optional) Whether to create a base policy when a core network is created or updated. A base policy is created and set to `LIVE` to allow attachments to the core network (e.g. VPC Attachments) before applying a policy document provided using the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html). This base policy is needed if your core network does not have any `LIVE` policies and your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Valid values are `true` or `false`. An example of this Terraform snippet can be found above [for VPC Attachment in a single region](#with-vpc-attachment-single-region) and [for VPC Attachment multi-region](#with-vpc-attachment-multi-region). An example base policy is shown below. This base policy is overridden with the policy that you specify in the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html).
 
 ```json
 {
@@ -375,28 +379,20 @@ This resource supports the following arguments:
 }
 ```
 
-* `global_network_id` - (Required) The ID of the global network that a core network will be a part of.
+* `description` - (Optional) Description of the Core Network.
 * `tags` - (Optional) Key-value tags for the Core Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `delete` - (Default `30m`)
-* `update` - (Default `30m`)
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Core Network Amazon Resource Name (ARN).
+* `arn` - Core Network ARN.
 * `created_at` - Timestamp when a core network was created.
 * `edges` - One or more blocks detailing the edges within a core network. [Detailed below](#edges).
 * `id` - Core Network ID.
 * `segments` - One or more blocks detailing the segments within a core network. [Detailed below](#segments).
 * `state` - Current state of a core network.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `edges`
 
@@ -413,6 +409,14 @@ The `segments` configuration block supports the following arguments:
 * `edge_locations` - Regions where the edges are located.
 * `name` - Name of a core network segment.
 * `shared_segments` - Shared segments of a core network.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

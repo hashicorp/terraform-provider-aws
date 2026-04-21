@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccEventsBusDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudwatch_event_bus.test"
 	resourceName := "aws_cloudwatch_event_bus.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -37,11 +36,11 @@ func TestAccEventsBusDataSource_basic(t *testing.T) {
 
 func TestAccEventsBusDataSource_kmsKeyIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudwatch_event_bus.test"
 	resourceName := "aws_cloudwatch_event_bus.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -51,6 +50,52 @@ func TestAccEventsBusDataSource_kmsKeyIdentifier(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_identifier", resourceName, "kms_key_identifier"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEventsBusDataSource_deadLetterConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cloudwatch_event_bus.test"
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusDataSourceConfig_deadLetterConfig(busName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "dead_letter_config.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dead_letter_config.0.arn", resourceName, "dead_letter_config.0.arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEventsBusDataSource_logConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cloudwatch_event_bus.test"
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusDataSourceConfig_logConfig(busName, "FULL", "TRACE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "log_config.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "log_config.0.include_detail", resourceName, "log_config.0.include_detail"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "log_config.0.level", resourceName, "log_config.0.level"),
 				),
 			},
 		},
@@ -77,6 +122,7 @@ data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_iam_policy_document" "key_policy" {
@@ -133,4 +179,39 @@ data "aws_cloudwatch_event_bus" "test" {
   name = aws_cloudwatch_event_bus.test.name
 }
 `, busName)
+}
+
+func testAccBusDataSourceConfig_deadLetterConfig(busName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  dead_letter_config {
+    arn = aws_sqs_queue.test.arn
+  }
+}
+
+data "aws_cloudwatch_event_bus" "test" {
+  name = aws_cloudwatch_event_bus.test.name
+}
+`, busName)
+}
+
+func testAccBusDataSourceConfig_logConfig(name, includeDetail, level string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  log_config {
+    include_detail = %[2]q
+    level          = %[3]q
+  }
+}
+
+data "aws_cloudwatch_event_bus" "test" {
+  name = aws_cloudwatch_event_bus.test.name
+}
+`, name, includeDetail, level)
 }

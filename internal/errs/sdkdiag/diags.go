@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkdiag
@@ -72,17 +72,15 @@ func pathString(path cty.Path) string {
 			}
 			buf.WriteString(x.Name)
 		case cty.IndexStep:
-			val := x.Key
-			typ := val.Type()
 			var s string
-			switch {
-			case typ == cty.String:
+			switch val := x.Key; val.Type() {
+			case cty.String:
 				s = val.AsString()
-			case typ == cty.Number:
+			case cty.Number:
 				num := val.AsBigFloat()
 				s = num.String()
 			default:
-				s = fmt.Sprintf("<unexpected index: %s>", typ.FriendlyName())
+				s = fmt.Sprintf("<unexpected index: %s>", val.Type().FriendlyName())
 			}
 			fmt.Fprintf(&buf, "[%s]", s)
 		default:
@@ -104,4 +102,12 @@ func DiagnosticsString(diags diag.Diagnostics) string {
 	}
 
 	return buf.String()
+}
+
+func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
+	return diag.Diagnostic{
+		Severity: diag.Warning,
+		Summary:  "AWS resource not found during refresh",
+		Detail:   "Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: " + err.Error(),
+	}
 }

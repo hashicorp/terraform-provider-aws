@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_lakeformation_identity_center_configuration
+```
+
+```release-note:bug
+resource/aws_lakeformation_permissions: Allows IAM Identity Center Groups as `principal`.
+```
+
+```release-note:bug
+data-source/aws_lakeformation_permissions: Allows IAM Identity Center Groups as `principal`.
+```
+
+```release-note:enhancement
+resource/aws_identitystore_group: Adds `arn` attribute.
+```

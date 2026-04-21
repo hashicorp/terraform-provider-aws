@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_wafv2_web_acl_rule_group_association
+```

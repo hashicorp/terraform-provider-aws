@@ -20,14 +20,16 @@ data "aws_imagebuilder_image_recipe" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the image recipe.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `ami_tags` - Tags that are applied to the AMI that Image Builder creates during the Build phase prior to image distribution.
 * `block_device_mapping` - Set of objects with block device mappings for the image recipe.
     * `device_name` - Name of the device. For example, `/dev/sda` or `/dev/xvdb`.
     * `ebs` - Single list of object with Elastic Block Storage (EBS) block device mapping settings.

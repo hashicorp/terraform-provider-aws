@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -9,47 +9,50 @@ var (
 	ResourceCluster                      = resourceCluster
 	ResourceClusterIAMRoles              = resourceClusterIAMRoles
 	ResourceClusterSnapshot              = resourceClusterSnapshot
-	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
-	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
+	ResourceDataShareAuthorization       = newDataShareAuthorizationResource
+	ResourceDataShareConsumerAssociation = newDataShareConsumerAssociationResource
 	ResourceEndpointAccess               = resourceEndpointAccess
 	ResourceEndpointAuthorization        = resourceEndpointAuthorization
 	ResourceEventSubscription            = resourceEventSubscription
 	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceHSMConfiguration             = resourceHSMConfiguration
+	ResourceIdcApplication               = newIDCApplicationResource
 	ResourceIntegration                  = newIntegrationResource
-	ResourceLogging                      = newResourceLogging
+	ResourceLogging                      = newLoggingResource
 	ResourceParameterGroup               = resourceParameterGroup
 	ResourcePartner                      = resourcePartner
 	ResourceResourcePolicy               = resourceResourcePolicy
 	ResourceScheduledAction              = resourceScheduledAction
-	ResourceSnapshotCopy                 = newResourceSnapshotCopy
+	ResourceSnapshotCopy                 = newSnapshotCopyResource
 	ResourceSnapshotCopyGrant            = resourceSnapshotCopyGrant
 	ResourceSnapshotSchedule             = resourceSnapshotSchedule
 	ResourceSnapshotScheduleAssociation  = resourceSnapshotScheduleAssociation
 	ResourceSubnetGroup                  = resourceSubnetGroup
 	ResourceUsageLimit                   = resourceUsageLimit
 
-	FindAuthenticationProfileByID               = findAuthenticationProfileByID
-	FindClusterByID                             = findClusterByID
-	FindClusterSnapshotByID                     = findClusterSnapshotByID
-	FindDataShareAuthorizationByID              = findDataShareAuthorizationByID
-	FindDataShareConsumerAssociationByID        = findDataShareConsumerAssociationByID
-	FindEndpointAccessByName                    = findEndpointAccessByName
-	FindEndpointAuthorizationByID               = findEndpointAuthorizationByID
-	FindEventSubscriptionByName                 = findEventSubscriptionByName
-	FindHSMClientCertificateByID                = findHSMClientCertificateByID
-	FindHSMConfigurationByID                    = findHSMConfigurationByID
-	FindIntegrationByARN                        = findIntegrationByARN
-	FindLoggingByID                             = findLoggingByID
-	FindParameterGroupByName                    = findParameterGroupByName
-	FindPartnerByID                             = findPartnerByID
-	FindResourcePolicyByARN                     = findResourcePolicyByARN
-	FindScheduledActionByName                   = findScheduledActionByName
-	FindSnapshotCopyByID                        = findSnapshotCopyByID
-	FindSnapshotCopyGrantByName                 = findSnapshotCopyGrantByName
-	FindSnapshotScheduleAssociationByTwoPartKey = findSnapshotScheduleAssociationByTwoPartKey
-	FindSnapshotScheduleByID                    = findSnapshotScheduleByID
-	FindSubnetGroupByName                       = findSubnetGroupByName
-	FindUsageLimitByID                          = findUsageLimitByID
-	WaitSnapshotScheduleAssociationCreated      = waitSnapshotScheduleAssociationCreated
+	FindAuthenticationProfileByID                 = findAuthenticationProfileByID
+	FindClusterByID                               = findClusterByID
+	FindClusterSnapshotByID                       = findClusterSnapshotByID
+	FindDataShareAuthorizationByTwoPartKey        = findDataShareAuthorizationByTwoPartKey
+	FindDataShareConsumerAssociationByFourPartKey = findDataShareConsumerAssociationByFourPartKey
+	FindEndpointAccessByName                      = findEndpointAccessByName
+	FindEndpointAuthorizationByTwoPartKey         = findEndpointAuthorizationByTwoPartKey
+	FindEventSubscriptionByName                   = findEventSubscriptionByName
+	FindHSMClientCertificateByID                  = findHSMClientCertificateByID
+	FindHSMConfigurationByID                      = findHSMConfigurationByID
+	FindIntegrationByARN                          = findIntegrationByARN
+	FindLoggingStatusByID                         = findLoggingStatusByID
+	FindParameterGroupByName                      = findParameterGroupByName
+	FindPartnerByFourPartKey                      = findPartnerByFourPartKey
+	FindRedshiftIDCApplicationByARN               = findRedshiftIDCApplicationByARN // nosemgrep:ci.redshift-in-var-name
+	FindResourcePolicyByARN                       = findResourcePolicyByARN
+	FindScheduledActionByName                     = findScheduledActionByName
+	FindSnapshotCopyByID                          = findSnapshotCopyByID
+	FindSnapshotCopyGrantByName                   = findSnapshotCopyGrantByName
+	FindSnapshotScheduleAssociationByTwoPartKey   = findSnapshotScheduleAssociationByTwoPartKey
+	FindSnapshotScheduleByID                      = findSnapshotScheduleByID
+	FindSubnetGroupByName                         = findSubnetGroupByName
+	FindUsageLimitByID                            = findUsageLimitByID
+
+	WaitSnapshotScheduleAssociationCreated = waitSnapshotScheduleAssociationCreated
 )

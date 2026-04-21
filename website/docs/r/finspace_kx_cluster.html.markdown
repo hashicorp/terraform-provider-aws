@@ -78,11 +78,12 @@ The following arguments are required:
     * RDB - Realtime Database. This type of database captures all the data from a ticker plant and stores it in memory until the end of day, after which it writes all of its data to a disk and reloads the HDB. This cluster type requires local storage for temporary storage of data during the savedown process. If you specify this field in your request, you must provide the `savedownStorageConfiguration` parameter.
     * GATEWAY - A gateway cluster allows you to access data across processes in kdb systems. It allows you to create your own routing logic using the initialization scripts and custom code. This type of cluster does not require a  writable local storage.
     * GP - A general purpose cluster allows you to quickly iterate on code during development by granting greater access to system commands and enabling a fast reload of custom code. This cluster type can optionally mount databases including cache and savedown storage. For this cluster type, the node count is fixed at 1. It does not support autoscaling and supports only `SINGLE` AZ mode.
-    * Tickerplant – A tickerplant cluster allows you to subscribe to feed handlers based on IAM permissions. It can publish to RDBs, other Tickerplants, and real-time subscribers (RTS). Tickerplants can persist messages to log, which is readable by any RDB environment. It supports only single-node that is only one kdb process.
+    * Tickerplant - A tickerplant cluster allows you to subscribe to feed handlers based on IAM permissions. It can publish to RDBs, other Tickerplants, and real-time subscribers (RTS). Tickerplants can persist messages to log, which is readable by any RDB environment. It supports only single-node that is only one kdb process.
 * `vpc_configuration` - (Required) Configuration details about the network where the Privatelink endpoint of the cluster resides. See [vpc_configuration](#vpc_configuration).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_scaling_configuration` - (Optional) Configuration based on which FinSpace will scale in or scale out nodes in your cluster. See [auto_scaling_configuration](#auto_scaling_configuration).
 * `availability_zone_id` - (Optional) The availability zone identifiers for the requested regions. Required when `az_mode` is set to SINGLE.
 * `cache_storage_configurations` - (Optional) Configurations for a read only cache storage associated with a cluster. This cache will be stored as an FSx Lustre that reads from the S3 store. See [cache_storage_configuration](#cache_storage_configuration).
@@ -115,13 +116,13 @@ The capacity_configuration block supports the following arguments:
 * `node_type` - (Required) Determines the hardware of the host computer used for your cluster instance. Each node type offers different memory and storage capabilities. Choose a node type based on the requirements of the application or software that you plan to run on your instance.
   
   You can only specify one of the following values:
-    * kx.s.large – The node type with a configuration of 12 GiB memory and 2 vCPUs.
-    * kx.s.xlarge – The node type with a configuration of 27 GiB memory and 4 vCPUs.
-    * kx.s.2xlarge – The node type with a configuration of 54 GiB memory and 8 vCPUs.
-    * kx.s.4xlarge – The node type with a configuration of 108 GiB memory and 16 vCPUs.
-    * kx.s.8xlarge – The node type with a configuration of 216 GiB memory and 32 vCPUs.
-    * kx.s.16xlarge – The node type with a configuration of 432 GiB memory and 64 vCPUs.
-    * kx.s.32xlarge – The node type with a configuration of 864 GiB memory and 128 vCPUs.
+    * kx.s.large - The node type with a configuration of 12 GiB memory and 2 vCPUs.
+    * kx.s.xlarge - The node type with a configuration of 27 GiB memory and 4 vCPUs.
+    * kx.s.2xlarge - The node type with a configuration of 54 GiB memory and 8 vCPUs.
+    * kx.s.4xlarge - The node type with a configuration of 108 GiB memory and 16 vCPUs.
+    * kx.s.8xlarge - The node type with a configuration of 216 GiB memory and 32 vCPUs.
+    * kx.s.16xlarge - The node type with a configuration of 432 GiB memory and 64 vCPUs.
+    * kx.s.32xlarge - The node type with a configuration of 864 GiB memory and 128 vCPUs.
 * `node_count` - (Required) Number of instances running in a cluster. Must be at least 1 and at most 5.
 
 ### cache_storage_configuration

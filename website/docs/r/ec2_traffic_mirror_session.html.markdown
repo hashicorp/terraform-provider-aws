@@ -38,6 +38,7 @@ resource "aws_ec2_traffic_mirror_session" "session" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description of the traffic mirror session.
 * `network_interface_id` - (Required, Forces new) ID of the source network interface. Not all network interfaces are eligible as mirror sources. On EC2 instances only nitro based instances support mirroring.
 * `traffic_mirror_filter_id`  - (Required) ID of the traffic mirror filter to be used

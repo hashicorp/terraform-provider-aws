@@ -14,7 +14,7 @@ Get information on an EC2 Client VPN endpoint.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_client_vpn_endpoint" "example" {
   filter {
     name   = "tag:Name"
@@ -25,7 +25,7 @@ data "aws_ec2_client_vpn_endpoint" "example" {
 
 ### By Identifier
 
-```hcl
+```terraform
 data "aws_ec2_client_vpn_endpoint" "example" {
   client_vpn_endpoint_id = "cvpn-endpoint-083cf50d6eb314f21"
 }
@@ -35,6 +35,7 @@ data "aws_ec2_client_vpn_endpoint" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_vpn_endpoint_id` - (Optional) ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired endpoint.
@@ -57,16 +58,19 @@ This data source exports the following attributes in addition to the arguments a
 * `client_cidr_block` - IPv4 address range, in CIDR notation, from which client IP addresses are assigned.
 * `client_connect_options` - The options for managing connection authorization for new client connections.
 * `client_login_banner_options` - Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
+* `client_route_enforcement_options` - Options for enforce administrator defined routes on devices connected through the VPN.
 * `connection_log_options` - Information about the client connection logging options for the Client VPN endpoint.
 * `description` - Brief description of the endpoint.
 * `dns_name` - DNS name to be used by clients when connecting to the Client VPN endpoint.
 * `dns_servers` - Information about the DNS servers to be used for DNS resolution.
+* `endpoint_ip_address_type` - IP address type for the Client VPN endpoint.
 * `security_group_ids` - IDs of the security groups for the target network associated with the Client VPN endpoint.
 * `self_service_portal` - Whether the self-service portal for the Client VPN endpoint is enabled.
 * `self_service_portal_url` - The URL of the self-service portal.
 * `server_certificate_arn` - The ARN of the server certificate.
 * `session_timeout_hours` - The maximum VPN session duration time in hours.
 * `split_tunnel` - Whether split-tunnel is enabled in the AWS Client VPN endpoint.
+* `traffic_ip_address_type` - IP address type for traffic within the Client VPN tunnel.
 * `transport_protocol` - Transport protocol used by the Client VPN endpoint.
 * `vpc_id` - ID of the VPC associated with the Client VPN endpoint.
 * `vpn_port` - Port number for the Client VPN endpoint.

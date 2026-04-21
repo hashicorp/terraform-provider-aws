@@ -53,6 +53,7 @@ resource "aws_cloudformation_stack" "network" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Stack name.
 * `template_body` - (Optional) Structure containing the template body (max size: 51,200 bytes).
 * `template_url` - (Optional) Location of a file containing the template body (max size: 460,800 bytes).

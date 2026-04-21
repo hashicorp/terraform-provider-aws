@@ -32,12 +32,14 @@ data "aws_vpc_ipam_pools" "test" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-IPAM Pools in the current region.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Required) Custom filter block as described below.
 
-### filter
+The arguments of this data source act as filters for querying the available IPAM Pools in the current region.
+
+### `filter`
 
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
@@ -13,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -63,7 +65,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancers(ctx, input)
 			},
 			// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
@@ -80,7 +82,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancerTargetGroups(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -91,7 +93,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
+	d.SetId(sdkid.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
 
 	return append(diags, resourceAttachmentRead(ctx, d, meta)...)
 }
@@ -109,7 +111,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta an
 		err = findAttachmentByTargetGroupARN(ctx, conn, asgName, d.Get("lb_target_group_arn").(string))
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Group Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -135,7 +137,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.DetachLoadBalancers(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -155,7 +157,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.DetachLoadBalancerTargetGroups(ctx, input)
 			},
 			errCodeValidationError, "update too many")

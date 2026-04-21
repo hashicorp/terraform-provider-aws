@@ -29,10 +29,9 @@ data "aws_fsx_openzfs_snapshot" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `most_recent` - (Optional) If more than one result is returned, use the most recent snapshot.
-
 * `snapshot_ids` - (Optional) Returns information on a specific snapshot_id.
-
 * `filter` - (Optional) One or more name/value pairs to filter off of. The
 supported names are file-system-id or volume-id.
 

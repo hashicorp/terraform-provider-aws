@@ -24,6 +24,7 @@ resource "aws_s3outposts_endpoint" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `outpost_id` - (Required) Identifier of the Outpost to contain this endpoint.
 * `security_group_id` - (Required) Identifier of the EC2 Security Group.
 * `subnet_id` - (Required) Identifier of the EC2 Subnet.

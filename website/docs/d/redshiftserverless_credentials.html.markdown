@@ -22,6 +22,7 @@ data "aws_redshiftserverless_credentials" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workgroup_name` - (Required) The name of the workgroup associated with the database.
 * `db_name` - (Optional) The name of the database to get temporary authorization to log on to.
 * `duration_seconds` - (Optional) The number of seconds until the returned temporary password expires. The minimum is 900 seconds, and the maximum is 3600 seconds.

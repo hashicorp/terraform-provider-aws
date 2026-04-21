@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package meta_test
@@ -18,7 +18,7 @@ func TestAccMetaServicePrincipalDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service_principal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -40,7 +40,7 @@ func TestAccMetaServicePrincipalDataSource_basic(t *testing.T) {
 func TestAccMetaServicePrincipalDataSource_MissingService(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,17 +62,17 @@ func TestAccMetaServicePrincipalDataSource_ByRegion(t *testing.T) {
 	for _, region := range regions {
 		t.Run(region, func(t *testing.T) {
 			t.Parallel()
-			resource.Test(t, resource.TestCase{
+			acctest.Test(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
 					{
-						Config: testAccServicePrincipalDataSourceConfig_withRegion("s3", region),
+						Config: testAccServicePrincipalDataSourceConfig_withRegion("autoscaling", region),
 						Check: resource.ComposeTestCheckFunc(
 							//lintignore:AWSR001
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("s3.%s.amazonaws.com", region)),
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3.amazonaws.com"),
+							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("autoscaling.%s.amazonaws.com", region)),
+							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "autoscaling.amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, "suffix", "amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, region),
 						),
@@ -115,7 +115,7 @@ func TestAccMetaServicePrincipalDataSource_UniqueForServiceInRegion(t *testing.T
 		{
 			Region:   "cn-north-1", //lintignore:AWSAT003
 			Suffix:   "amazonaws.com.cn",
-			Services: []string{"codedeploy", "elasticmapreduce", "logs"},
+			Services: []string{"codedeploy", "elasticmapreduce", "logs", "ec2", "s3"},
 		},
 	}
 
@@ -134,7 +134,7 @@ func TestAccMetaServicePrincipalDataSource_UniqueForServiceInRegion(t *testing.T
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("%s/%s", testCase.Region, testCase.Service), func(t *testing.T) {
 			t.Parallel()
-			resource.Test(t, resource.TestCase{
+			acctest.Test(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

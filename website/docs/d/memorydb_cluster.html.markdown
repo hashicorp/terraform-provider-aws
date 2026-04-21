@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB Cluster.
 ---
 
-# Resource: aws_memorydb_cluster
+# Data Source: aws_memorydb_cluster
 
 Provides information about a MemoryDB Cluster.
 
@@ -20,8 +20,9 @@ data "aws_memorydb_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -41,8 +42,10 @@ This data source exports the following attributes in addition to the arguments a
 * `engine` - Engine that will run on cluster nodes.
 * `engine_version` - Version number of the engine used by the cluster.
 * `final_snapshot_name` - Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
+* `ip_discovery` - Mechanism that the cluster uses to discover IP addresses.
 * `kms_key_arn` - ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenance_window` - Weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). Example: `sun:23:00-mon:01:30`.
+* `network_type` - IP address type for the cluster.
 * `node_type` - Compute and memory capacity of the nodes in the cluster.
 * `num_replicas_per_shard` - The number of replicas to apply to each shard.
 * `num_shards` - Number of shards in the cluster.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -18,11 +17,11 @@ import (
 
 func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
+	rName := acctest.RandomWithPrefix(t, "tf_acc_test_")
 	resourceName := "aws_batch_compute_environment.test"
 	dataSourceName := "data.aws_batch_compute_environment.by_name"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -31,7 +30,7 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 				Config: testAccComputeEnvironmentDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "compute_environment_name", resourceName, "compute_environment_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ecs_cluster_arn", resourceName, "ecs_cluster_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrServiceRole, resourceName, names.AttrServiceRole),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
@@ -48,11 +47,11 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 
 func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
+	rName := acctest.RandomWithPrefix(t, "tf_acc_test_")
 	resourceName := "aws_batch_compute_environment.test"
 	dataSourceName := "data.aws_batch_compute_environment.by_name"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -75,6 +74,10 @@ func testAccComputeEnvironmentDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecs_%[1]s"
 
@@ -86,7 +89,7 @@ resource "aws_iam_role" "ecs_instance_role" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       }
     }
   ]
@@ -118,7 +121,7 @@ resource "aws_subnet" "sample" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = "%[1]s"
+  name = "%[1]s"
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance_role.arn
@@ -145,7 +148,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 data "aws_batch_compute_environment" "by_name" {
-  compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
+  name = aws_batch_compute_environment.test.name
 }
 `, rName)
 }
@@ -153,7 +156,7 @@ data "aws_batch_compute_environment" "by_name" {
 func testAccComputeEnvironmentDataSourceConfig_updatePolicy(rName string, timeout int, terminate bool) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     allocation_strategy = "BEST_FIT_PROGRESSIVE"
@@ -178,7 +181,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 data "aws_batch_compute_environment" "by_name" {
-  compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
+  name = aws_batch_compute_environment.test.name
 }
 `, rName, timeout, terminate))
 }

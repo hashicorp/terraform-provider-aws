@@ -3,13 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_transit_gateway_connect_peer_association"
 description: |-
-  Associates a transit gateway Connect peer with a device, and optionally, with a link.
+  Manages a Network Manager transit gateway Connect peer association.
 ---
 
 # Resource: aws_networkmanager_transit_gateway_connect_peer_association
 
-Associates a transit gateway Connect peer with a device, and optionally, with a link.
-If you specify a link, it must be associated with the specified device.
+Manages a Network Manager transit gateway Connect peer association. Associates a transit gateway Connect peer with a device, and optionally, with a link. If you specify a link, it must be associated with the specified device.
 
 ## Example Usage
 
@@ -23,20 +22,30 @@ resource "aws_networkmanager_transit_gateway_connect_peer_association" "example"
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `device_id` - (Required) The ID of the device.
-* `global_network_id` - (Required) The ID of the global network.
-* `link_id` - (Optional) The ID of the link.
-* `transit_gateway_connect_peer_arn` - (Required) The Amazon Resource Name (ARN) of the Connect peer.
+* `device_id` - (Required) ID of the device.
+* `global_network_id` - (Required) ID of the global network.
+* `transit_gateway_connect_peer_arn` - (Required) ARN of the Connect peer.
+
+The following arguments are optional:
+
+* `link_id` - (Optional) ID of the link.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_transit_gateway_connect_peer_association` using the global network ID and customer gateway ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_transit_gateway_connect_peer_association` using the global network ID and Connect peer ARN. For example:
 
 ```terraform
 import {
@@ -45,7 +54,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_networkmanager_transit_gateway_connect_peer_association` using the global network ID and customer gateway ARN. For example:
+Using `terraform import`, import `aws_networkmanager_transit_gateway_connect_peer_association` using the global network ID and Connect peer ARN. For example:
 
 ```console
 % terraform import aws_networkmanager_transit_gateway_connect_peer_association.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway-connect-peer/tgw-connect-peer-12345678

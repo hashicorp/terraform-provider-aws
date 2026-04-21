@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -9,31 +9,29 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_vpc_link.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName),
+					testAccCheckVPCLinkExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -48,7 +46,7 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 			{
 				Config: testAccVPCLinkConfig_basic(rName, "test update"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName),
+					testAccCheckVPCLinkExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test update"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -61,20 +59,20 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 
 func TestAccAPIGatewayVPCLink_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_vpc_link.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceVPCLink(), resourceName),
+					testAccCheckVPCLinkExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceVPCLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,9 +80,9 @@ func TestAccAPIGatewayVPCLink_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCLinkDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_vpc_link" {
@@ -93,7 +91,7 @@ func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigateway.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -108,14 +106,14 @@ func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVPCLinkExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVPCLinkExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		_, err := tfapigateway.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
 

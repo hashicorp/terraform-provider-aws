@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -24,6 +24,10 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			"subnetIDs":          testAccVerifiedAccessEndpoint_subnetIDs,
 			"cidr":               testAccVerifiedAccessEndpoint_cidr,
 			"rds":                testAccVerifiedAccessEndpoint_rds,
+			"portRangeTCP":       testAccVerifiedAccessEndpoint_portRangeTCP,
+			"portTCP":            testAccVerifiedAccessEndpoint_portTCP,
+			"portHTTP":           testAccVerifiedAccessEndpoint_portHTTP,
+			"portHTTPS":          testAccVerifiedAccessEndpoint_portHTTPS,
 		},
 		"Group": {
 			acctest.CtBasic:      testAccVerifiedAccessGroup_basic,

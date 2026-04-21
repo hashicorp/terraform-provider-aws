@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -14,13 +14,12 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -193,20 +192,20 @@ func TestTargetParseImportID(t *testing.T) {
 func TestAccEventsTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
@@ -228,6 +227,11 @@ func TestAccEventsTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -244,8 +248,15 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config:   testAccTargetConfig_defaultBusName(rName),
-				PlanOnly: true,
+				Config: testAccTargetConfig_defaultBusName(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -254,20 +265,20 @@ func TestAccEventsTarget_basic(t *testing.T) {
 func TestAccEventsTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceTarget(), resourceName),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -278,19 +289,19 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 func TestAccEventsTarget_eventBusName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_busName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
@@ -310,22 +321,22 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 func TestAccEventsTarget_eventBusARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	ruleName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
-	targetID := sdkacctest.RandomWithPrefix("tf-acc-test-target")
-	originEventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	destinationEventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ruleName := acctest.RandomWithPrefix(t, "tf-acc-test-rule")
+	targetID := acctest.RandomWithPrefix(t, "tf-acc-test-target")
+	originEventBusName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	destinationEventBusName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig_busARN(ruleName, originEventBusName, targetID, destinationEventBusName, sdkacctest.RandomWithPrefix("tf-acc-test-target"), sdkacctest.RandomWithPrefix("tf-acc-test-target")),
+				Config: testAccTargetConfig_busARN(ruleName, originEventBusName, targetID, destinationEventBusName, acctest.RandomWithPrefix(t, "tf-acc-test-target"), acctest.RandomWithPrefix(t, "tf-acc-test-target")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "event_bus_name", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
@@ -346,21 +357,21 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	ruleName := sdkacctest.RandomWithPrefix("tf-acc-cw-event-rule-missing-target-id")
-	snsTopicName := sdkacctest.RandomWithPrefix("tf-acc")
+	ruleName := acctest.RandomWithPrefix(t, "tf-acc-cw-event-rule-missing-target-id")
+	snsTopicName := acctest.RandomWithPrefix(t, "tf-acc")
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_missingID(ruleName, snsTopicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "target_id"),
@@ -380,21 +391,21 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	kinesisStreamResourceName := "aws_kinesis_stream.test"
 	queueResourceName := "aws_sqs_queue.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_retryPolicyDlc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, kinesisStreamResourceName, names.AttrARN),
@@ -419,22 +430,22 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 func TestAccEventsTarget_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	ruleName := sdkacctest.RandomWithPrefix("tf-acc-cw-event-rule-full")
-	ssmDocumentName := sdkacctest.RandomWithPrefix("tf_ssm_Document")
-	targetID := sdkacctest.RandomWithPrefix("tf-acc-cw-target-full")
+	ruleName := acctest.RandomWithPrefix(t, "tf-acc-cw-event-rule-full")
+	ssmDocumentName := acctest.RandomWithPrefix(t, "tf_ssm_Document")
+	targetID := acctest.RandomWithPrefix(t, "tf-acc-cw-target-full")
 	resourceName := "aws_cloudwatch_event_target.test"
 	kinesisStreamResourceName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_full(ruleName, targetID, ssmDocumentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, kinesisStreamResourceName, names.AttrARN),
@@ -456,19 +467,19 @@ func TestAccEventsTarget_full(t *testing.T) {
 func TestAccEventsTarget_ssmDocument(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix("tf_ssm_Document")
+	rName := acctest.RandomWithPrefix(t, "tf_ssm_Document")
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ssmDocument(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.0.values.#", "1"),
@@ -489,19 +500,19 @@ func TestAccEventsTarget_ssmDocument(t *testing.T) {
 func TestAccEventsTarget_http(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix("tf_http_target")
+	rName := acctest.RandomWithPrefix(t, "tf_http_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", "1"),
@@ -526,19 +537,19 @@ func TestAccEventsTarget_http(t *testing.T) {
 func TestAccEventsTarget_http_params(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix("tf_http_target")
+	rName := acctest.RandomWithPrefix(t, "tf_http_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_httpParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.0", "test"),
@@ -559,7 +570,7 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 			{
 				Config: testAccTargetConfig_httpParameterUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.0", "test"),
@@ -578,21 +589,21 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 func TestAccEventsTarget_ecs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ecs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
@@ -617,19 +628,19 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 func TestAccEventsTarget_redshift(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_redshift(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.database", "redshiftdb"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.sql", "SELECT * FROM table"),
@@ -653,21 +664,21 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ecsNoLaunchType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
@@ -687,7 +698,7 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 			{
 				Config: testAccTargetConfig_ecs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
 				),
 			},
@@ -701,7 +712,7 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 			{
 				Config: testAccTargetConfig_ecsNoLaunchType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
 				),
 			},
@@ -716,21 +727,21 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 	}
 
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ecsBlankLaunchType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
@@ -750,7 +761,7 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 			{
 				Config: testAccTargetConfig_ecs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
 				),
 			},
@@ -764,7 +775,7 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 			{
 				Config: testAccTargetConfig_ecsBlankLaunchType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
 				),
 			},
@@ -775,19 +786,19 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ecsBlankTaskCount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 				),
@@ -806,19 +817,19 @@ func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 func TestAccEventsTarget_ecsFull(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ecsBlankTaskCountFull(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
@@ -845,19 +856,19 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ecsCapacityProvider(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.#", "1"),
@@ -880,19 +891,19 @@ func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ecsPlacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.#", "2"),
@@ -916,20 +927,20 @@ func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
 func TestAccEventsTarget_batch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix("tf_batch_target")
+	rName := acctest.RandomWithPrefix(t, "tf_batch_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 	batchJobDefinitionResourceName := "aws_batch_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_batch(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "batch_target.0.job_definition", batchJobDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.0.job_name", rName),
@@ -949,19 +960,19 @@ func TestAccEventsTarget_batch(t *testing.T) {
 func TestAccEventsTarget_kinesis(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix("tf_kinesis_target")
+	rName := acctest.RandomWithPrefix(t, "tf_kinesis_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_kinesis(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_target.0.partition_key_path", "$.detail"),
 				),
@@ -980,19 +991,19 @@ func TestAccEventsTarget_kinesis(t *testing.T) {
 func TestAccEventsTarget_sqs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_sqs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_target.0.message_group_id", "event_group"),
 				),
@@ -1011,19 +1022,19 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_sageMakerPipeline(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_sagemaker_pipeline.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.#", "1"),
@@ -1048,7 +1059,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_target.test"
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix("tf_input_transformer")
+	rName := acctest.RandomWithPrefix(t, "tf_input_transformer")
 
 	tooManyInputPaths := make([]string, 101)
 	for i := range tooManyInputPaths {
@@ -1072,11 +1083,11 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 }
 `)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetConfig_inputTransformer(rName, tooManyInputPaths),
@@ -1085,7 +1096,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 			{
 				Config: testAccTargetConfig_inputTransformer(rName, validInputPaths),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", strconv.Itoa(len(validInputPaths))),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.ValidField_99", "$.ValidField_99"),
@@ -1106,19 +1117,19 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 func TestAccEventsTarget_inputTransformerJSONString(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_inputTransformerJSONString(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.instance", "$.detail.instance"),
@@ -1138,20 +1149,20 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 	}
 
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_partnerBus(rName, busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
@@ -1172,19 +1183,19 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_ecsNoPropagateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
@@ -1205,21 +1216,21 @@ func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 func TestAccEventsTarget_appsync(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
-	rName := sdkacctest.RandomWithPrefix("tf_appsync_target")
+	rName := acctest.RandomWithPrefix(t, "tf_appsync_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_appsync(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "appsync_target.0.graphql_operation", "mutation TestMutation($input:MutationInput!){testMutation(input: $input) {test}}"),
 				),
@@ -1235,14 +1246,14 @@ func TestAccEventsTarget_appsync(t *testing.T) {
 	})
 }
 
-func testAccCheckTargetExists(ctx context.Context, n string, v *types.Target) resource.TestCheckFunc {
+func testAccCheckTargetExists(ctx context.Context, t *testing.T, n string, v *types.Target) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		output, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrRule], rs.Primary.Attributes["target_id"])
 
@@ -1256,9 +1267,9 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *types.Target) re
 	}
 }
 
-func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_target" {
@@ -1267,7 +1278,7 @@ func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrRule], rs.Primary.Attributes["target_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1951,15 +1962,14 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  cluster_subnet_group_name           = aws_redshift_subnet_group.test.name
-  database_name                       = "test"
-  master_username                     = "tfacctest"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier        = %[1]q
+  cluster_subnet_group_name = aws_redshift_subnet_group.test.name
+  database_name             = "test"
+  master_username           = "tfacctest"
+  master_password           = "Mustbe8characters"
+  node_type                 = "ra3.large"
+  allow_version_upgrade     = false
+  skip_final_snapshot       = true
 
   depends_on = [aws_internet_gateway.test]
 }
@@ -2306,7 +2316,7 @@ resource "aws_subnet" "subnet" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = "%[1]s"
+  name = "%[1]s"
 
   compute_resources {
     instance_role = aws_iam_instance_profile.iam_instance_profile.arn
@@ -2335,10 +2345,14 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 resource "aws_batch_job_queue" "test" {
-  name                 = "%[1]s"
-  state                = "ENABLED"
-  priority             = 1
-  compute_environments = [aws_batch_compute_environment.test.arn]
+  name     = "%[1]s"
+  state    = "ENABLED"
+  priority = 1
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
 }
 
 resource "aws_batch_job_definition" "test" {

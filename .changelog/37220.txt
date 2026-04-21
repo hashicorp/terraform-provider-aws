@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.mongo_db_atlas_configuration` argument
+```

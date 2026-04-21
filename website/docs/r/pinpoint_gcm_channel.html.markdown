@@ -37,6 +37,7 @@ resource "aws_pinpoint_app" "app" {}
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) The application ID.
 * `api_key` - (Required) Platform credential API key from Google.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.

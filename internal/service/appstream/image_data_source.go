@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appstream
 
@@ -17,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,7 +35,7 @@ func newImageDataSource(context.Context) (datasource.DataSourceWithConfigure, er
 }
 
 type imageDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[imageDataSourceModel]
 }
 
 func (d *imageDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -148,7 +150,7 @@ func (d *imageDataSource) Read(ctx context.Context, request datasource.ReadReque
 
 	switch l := len(images); l {
 	case 0:
-		err = tfresource.NewEmptyResultError(input)
+		err = tfresource.NewEmptyResultError()
 	case 1:
 		// OK
 	default:
@@ -191,8 +193,7 @@ func findImages(ctx context.Context, conn *appstream.Client, input *appstream.De
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -207,6 +208,7 @@ func findImages(ctx context.Context, conn *appstream.Client, input *appstream.De
 }
 
 type imageDataSourceModel struct {
+	framework.WithRegionModel
 	Applications                fwtypes.ListNestedObjectValueOf[applicationModel]            `tfsdk:"applications"`
 	AppStreamAgentVersion       types.String                                                 `tfsdk:"appstream_agent_version"`
 	ARN                         fwtypes.ARN                                                  `tfsdk:"arn"`

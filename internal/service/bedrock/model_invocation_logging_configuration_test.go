@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -8,43 +8,42 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, "null", "null", "null", "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.video_data_delivery_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.s3_config.key_prefix", "bedrock"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.embedding_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.image_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.text_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.video_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.cloudwatch_config.0.log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.cloudwatch_config.0.role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.s3_config.0.bucket_name", s3BucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.s3_config.0.key_prefix", "bedrock"),
 				),
 			},
 			{
@@ -55,16 +54,16 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.video_data_delivery_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.s3_config.key_prefix", "bedrock"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.embedding_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.image_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.text_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.video_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.cloudwatch_config.0.log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.cloudwatch_config.0.role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.s3_config.0.bucket_name", s3BucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.s3_config.0.key_prefix", "bedrock"),
 				),
 			},
 			{
@@ -78,35 +77,99 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 
 func testAccModelInvocationLoggingConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckModelInvocationLoggingConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccModelInvocationLoggingConfiguration_upgrade_V6_0_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
+	logGroupResourceName := "aws_cloudwatch_log_group.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
+		CheckDestroy: testAccCheckModelInvocationLoggingConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.95.0",
+					},
+				},
+				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.video_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.s3_config.key_prefix", "bedrock"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.embedding_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.image_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.text_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.video_data_delivery_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.cloudwatch_config.0.log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.cloudwatch_config.0.role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.s3_config.0.bucket_name", s3BucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.s3_config.0.key_prefix", "bedrock"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckModelInvocationLoggingConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		_, err := tfbedrock.FindModelInvocationLoggingConfiguration(ctx, conn)
 
@@ -114,9 +177,9 @@ func testAccCheckModelInvocationLoggingConfigurationExists(ctx context.Context, 
 	}
 }
 
-func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrock_model_invocation_logging_configuration" {
 				continue
@@ -124,7 +187,7 @@ func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context)
 
 			_, err := tfbedrock.FindModelInvocationLoggingConfiguration(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -153,6 +216,9 @@ resource "aws_s3_bucket" "test" {
     ignore_changes = ["tags", "tags_all"]
   }
 }
+
+# Use "data.aws_region.current.name" instead of "data.aws_region.current.region" as this configguration
+# is used in a v6.0.0 upgrade test and must work in pre-v6.0.0 scenarios.
 
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.bucket

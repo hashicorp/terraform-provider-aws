@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ComputedOnlyFromSchema is a recursive function that converts an
@@ -68,14 +69,45 @@ func ComputedOnlyFromResourceSchema(rs map[string]*schema.Schema) map[string]*sc
 	return cs
 }
 
+// IAMPolicyDocumentSchemaRequired returns the standard schema for an optional IAM policy JSON document.
+var IAMPolicyDocumentSchemaOptional = sync.OnceValue(jsonDocumentSchemaOptionalFunc(SuppressEquivalentIAMPolicyDocuments))
+
 // IAMPolicyDocumentSchemaOptionalComputed returns the standard schema for an optional, computed IAM policy JSON document.
 var IAMPolicyDocumentSchemaOptionalComputed = sync.OnceValue(jsonDocumentSchemaOptionalComputedFunc(SuppressEquivalentIAMPolicyDocuments))
+
+// IAMPolicyDocumentSchemaRequired returns the standard schema for a required IAM policy JSON document.
+var IAMPolicyDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredFunc(SuppressEquivalentIAMPolicyDocuments))
+
+// IAMPolicyDocumentSchemaRequiredForceNew returns the standard schema for a required, force-new IAM policy JSON document.
+var IAMPolicyDocumentSchemaRequiredForceNew = sync.OnceValue(jsonDocumentSchemaRequiredForceNewFunc(SuppressEquivalentIAMPolicyDocuments))
+
+// JSONDocumentSchemaOptional returns the standard schema for an optional JSON document.
+var JSONDocumentSchemaOptional = sync.OnceValue(jsonDocumentSchemaOptionalFunc(SuppressEquivalentJSONDocuments))
+
+// JSONDocumentSchemaOptionalComputed returns the standard schema for an optional, computed JSON document.
+var JSONDocumentSchemaOptionalComputed = sync.OnceValue(jsonDocumentSchemaOptionalComputedFunc(SuppressEquivalentJSONDocuments))
+
+// JSONDocumentWithEmptySchemaOptional returns the standard schema for an optional JSON document with empty string handling.
+var JSONDocumentWithEmptySchemaOptional = sync.OnceValue(jsonDocumentSchemaOptionalFunc(SuppressEquivalentJSONDocumentsWithEmpty))
+
+// JSONDocumentSchemaOptionalForceNew returns the standard schema for an optional, force-new JSON document.
+var JSONDocumentSchemaOptionalForceNew = sync.OnceValue(jsonDocumentSchemaOptionalForceNewFunc(SuppressEquivalentJSONDocuments))
 
 // JSONDocumentSchemaRequired returns the standard schema for a required JSON document.
 var JSONDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredFunc(SuppressEquivalentJSONDocuments))
 
-// IAMPolicyDocumentSchemaRequired returns the standard schema for a required IAM policy JSON document.
-var IAMPolicyDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredFunc(SuppressEquivalentIAMPolicyDocuments))
+func jsonDocumentSchemaOptionalFunc(diffSuppressFunc schema.SchemaDiffSuppressFunc) func() *schema.Schema {
+	return func() *schema.Schema {
+		return &schema.Schema{
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      diffSuppressFunc,
+			DiffSuppressOnRefresh: true,
+			StateFunc:             NormalizeJsonStringSchemaStateFunc,
+		}
+	}
+}
 
 func jsonDocumentSchemaOptionalComputedFunc(diffSuppressFunc schema.SchemaDiffSuppressFunc) func() *schema.Schema {
 	return func() *schema.Schema {
@@ -83,6 +115,20 @@ func jsonDocumentSchemaOptionalComputedFunc(diffSuppressFunc schema.SchemaDiffSu
 			Type:                  schema.TypeString,
 			Optional:              true,
 			Computed:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      diffSuppressFunc,
+			DiffSuppressOnRefresh: true,
+			StateFunc:             NormalizeJsonStringSchemaStateFunc,
+		}
+	}
+}
+
+func jsonDocumentSchemaOptionalForceNewFunc(diffSuppressFunc schema.SchemaDiffSuppressFunc) func() *schema.Schema {
+	return func() *schema.Schema {
+		return &schema.Schema{
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ForceNew:              true,
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      diffSuppressFunc,
 			DiffSuppressOnRefresh: true,
@@ -103,3 +149,27 @@ func jsonDocumentSchemaRequiredFunc(diffSuppressFunc schema.SchemaDiffSuppressFu
 		}
 	}
 }
+
+func jsonDocumentSchemaRequiredForceNewFunc(diffSuppressFunc schema.SchemaDiffSuppressFunc) func() *schema.Schema {
+	return func() *schema.Schema {
+		return &schema.Schema{
+			Type:                  schema.TypeString,
+			Required:              true,
+			ForceNew:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      diffSuppressFunc,
+			DiffSuppressOnRefresh: true,
+			StateFunc:             NormalizeJsonStringSchemaStateFunc,
+		}
+	}
+}
+
+// RegionOptionalComputed returns the standard schema for an optional, computed AWS Region.
+var RegionOptionalComputed = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: names.ResourceTopLevelRegionAttributeDescription,
+	}
+})

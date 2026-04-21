@@ -23,7 +23,7 @@ resource "aws_ssoadmin_application" "example" {
 }
 
 resource "aws_ssoadmin_application_access_scope" "example" {
-  application_arn    = aws_ssoadmin_application.example.application_arn
+  application_arn    = aws_ssoadmin_application.example.arn
   authorized_targets = ["arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012"]
   scope              = "sso:account:access"
 }
@@ -38,6 +38,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorized_targets` - (Optional) Specifies an array list of ARNs that represent the authorized targets for this access scope.
 
 ## Attribute Reference

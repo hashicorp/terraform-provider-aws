@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_opensearch_package: Add `engine_version` argument
+```
+
+```release-note:enhancement
+resource/aws_opensearch_package: Add waiter to ensure package validation completes
+```

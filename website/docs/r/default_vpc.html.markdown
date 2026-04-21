@@ -34,6 +34,8 @@ resource "aws_default_vpc" "default" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 The arguments of an `aws_default_vpc` differ slightly from those of [`aws_vpc`](vpc.html):
 
 * The `cidr_block` and `instance_tenancy` arguments become computed attributes

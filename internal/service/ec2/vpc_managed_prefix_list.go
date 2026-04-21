@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -14,13 +16,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -106,7 +108,7 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 	name := d.Get(names.AttrName).(string)
 	input := &ec2.CreateManagedPrefixListInput{
 		AddressFamily:     aws.String(d.Get("address_family").(string)),
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		MaxEntries:        aws.Int32(int32(d.Get("max_entries").(int))),
 		PrefixListName:    aws.String(name),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePrefixList),
@@ -138,7 +140,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 
 	pl, err := findManagedPrefixListByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Managed Prefix List %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -248,12 +250,12 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if len(descriptionOnlyRemovals) > 0 {
-				input := ec2.ModifyManagedPrefixListInput{
+				removeInput := ec2.ModifyManagedPrefixListInput{
 					CurrentVersion: input.CurrentVersion,
 					PrefixListId:   aws.String(d.Id()),
 					RemoveEntries:  descriptionOnlyRemovals,
 				}
-				_, err := conn.ModifyManagedPrefixList(ctx, &input)
+				_, err := conn.ModifyManagedPrefixList(ctx, &removeInput)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
@@ -335,13 +337,13 @@ func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries
 	_, err := conn.ModifyManagedPrefixList(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
+		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %w", id, err)
 	}
 
 	_, err = waitManagedPrefixListModified(ctx, conn, id)
 
 	if err != nil {
-		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %s", id, err)
+		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %w", id, err)
 	}
 
 	return nil

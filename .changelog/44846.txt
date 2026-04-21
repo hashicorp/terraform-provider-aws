@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_sqs_queue: Remove `account_id` and `region` from Resource Identity schema
+```
+
+```release-note:enhancement
+resource/aws_sqs_queue_policy: Remove `account_id` and `region` from Resource Identity schema
+```
+
+```release-note:enhancement
+resource/aws_sqs_queue_redrive_allow_policy: Remove `account_id` and `region` from Resource Identity schema
+```
+
+```release-note:enhancement
+resource/aws_sqs_queue_redrive_policy: Remove `account_id` and `region` from Resource Identity schema
+```

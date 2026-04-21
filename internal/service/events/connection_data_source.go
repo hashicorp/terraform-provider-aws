@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package events
 
@@ -24,6 +26,10 @@ func dataSourceConnection() *schema.Resource {
 				Computed: true,
 			},
 			"authorization_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,6 +60,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(name)
 	d.Set(names.AttrARN, output.ConnectionArn)
 	d.Set("authorization_type", output.AuthorizationType)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 	d.Set("secret_arn", output.SecretArn)
 
