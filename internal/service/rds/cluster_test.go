@@ -7082,14 +7082,14 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_autoMinorVersionUpgrade_disabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-	cluster_identifier       = %[1]q
-	database_name            = "test"
-	engine									 = "aurora-mysql"
-	engine_version            = "8.0.mysql_aurora.3.04.0"
-	auto_minor_version_upgrade = false
-	master_username          = "tfacctest"
-	master_password          = "avoid-plaintext-passwords"
-	skip_final_snapshot      = true
+  cluster_identifier         = %[1]q
+  database_name              = "test"
+  engine                     = "aurora-mysql"
+  engine_version             = "8.0.mysql_aurora.3.04.0"
+  auto_minor_version_upgrade = false
+  master_username            = "tfacctest"
+  master_password            = "avoid-plaintext-passwords"
+  skip_final_snapshot        = true
 }
 `, rName)
 }
