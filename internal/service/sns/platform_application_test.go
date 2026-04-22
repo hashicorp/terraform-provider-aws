@@ -624,7 +624,7 @@ resource "aws_sns_platform_application" "test" {
 `, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
 }
 
-func testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name string, platform *TestAccPlatformApplication_gcmBasiPlatform, applePlatformTeamId string, applePlatformBundleId string) string {
+func testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name string, platform *testAccPlatformApplicationPlatform, applePlatformTeamId string, applePlatformBundleId string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
   name                     = %[1]q

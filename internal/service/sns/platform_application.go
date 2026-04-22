@@ -73,9 +73,10 @@ var (
 			ForceNew: true,
 		},
 		"platform_credential": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Sensitive:    true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
+			// ExactlyOneOf is used here because a credential is required by the AWS API.
 			ExactlyOneOf: []string{"platform_credential", "platform_credential_wo"},
 		},
 		"platform_credential_wo": {
@@ -85,9 +86,10 @@ var (
 			ExactlyOneOf: []string{"platform_credential", "platform_credential_wo"},
 		},
 		"platform_principal": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			Sensitive:     true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
+			// ConflictsWith is used here (instead of ExactlyOneOf) because the principal attribute is optional in the AWS API.
 			ConflictsWith: []string{"platform_principal_wo"},
 		},
 		"platform_principal_wo": {
@@ -241,6 +243,10 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		} else if v, ok := d.GetOk("platform_principal_wo"); ok {
 			attributes[platformApplicationAttributeNamePlatformPrincipal] = v.(string)
 		}
+	}
+
+	if len(attributes) == 0 {
+		return append(diags, resourcePlatformApplicationRead(ctx, d, meta)...)
 	}
 
 	input := &sns.SetPlatformApplicationAttributesInput{
