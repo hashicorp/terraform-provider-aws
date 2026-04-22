@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fms
 
@@ -13,12 +15,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -66,7 +68,7 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := findAdminAccount(ctx, conn)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading FMS Admin Account (%s): %s", accountID, err)
 	default:
@@ -88,7 +90,7 @@ func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findAdminAccount(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FMS Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,8 +133,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -141,23 +142,20 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.RoleStatus; status == awstypes.AccountRoleStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) retry.StateRefreshFunc {
-	// This is all wrapped in a StateRefreshFunc since AssociateAdminAccount returns
-	// success even though it failed if called too quickly after creating an Organization.
-	return func() (any, string, error) {
+func statusAssociateAdminAccount(conn *fms.Client, accountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &fms.AssociateAdminAccountInput{
 			AdminAccount: aws.String(accountID),
 		}
@@ -192,11 +190,11 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 	}
 }
 
-func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAdminAccount(conn *fms.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -215,7 +213,7 @@ func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID st
 			awstypes.AccountRoleStatusCreating,
 		),
 		Target:  enum.Slice(awstypes.AccountRoleStatusReady),
-		Refresh: statusAssociateAdminAccount(ctx, conn, accountID),
+		Refresh: statusAssociateAdminAccount(conn, accountID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -237,7 +235,7 @@ func waitAdminAccountDeleted(ctx context.Context, conn *fms.Client, timeout time
 			awstypes.AccountRoleStatusReady,
 		),
 		Target:  []string{},
-		Refresh: statusAdminAccount(ctx, conn),
+		Refresh: statusAdminAccount(conn),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}

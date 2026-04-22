@@ -1,0 +1,258 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
+  },
+  {
+    "@level": "trace",
+    "@message": "Direct XML wrapper struct conversion",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "FunctionAssociations",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
+  },
+  {
+    "@level": "trace",
+    "@message": "Processing direct XML wrapper",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "FunctionAssociations",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
+  },
+  {
+    "@level": "trace",
+    "@message": "Checking target field",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "FunctionAssociations",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found matching xmlwrapper field",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "FunctionAssociations",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
+  },
+  {
+    "@level": "trace",
+    "@message": "Calling xmlWrapperFlatten",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "FunctionAssociations",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
+  },
+  {
+    "@level": "trace",
+    "@message": "Starting XML wrapper flatten",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Target is NestedObjectCollectionType - checking for Rule 2",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Rule 2 detection result",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "field_count": 2,
+    "is_rule2": false
+  },
+  {
+    "@level": "trace",
+    "@message": "NOT Rule 2 - continuing with Rule 1",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Using target element type",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "element_type": "ObjectTypeOf[flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Converting items to set elements",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "items_count": 2,
+    "valid_count": 2
+  },
+  {
+    "@level": "trace",
+    "@message": "Processing item",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "EventType",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.fieldname": "EventType",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "EventType",
+    "autoflex.source.type": "string",
+    "autoflex.target.path": "EventType",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "FunctionARN",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.fieldname": "FunctionARN",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionARN",
+    "autoflex.source.type": "*string",
+    "autoflex.target.path": "FunctionARN",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Processing item",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items[1]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "EventType",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.fieldname": "EventType",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "EventType",
+    "autoflex.source.type": "string",
+    "autoflex.target.path": "EventType",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "FunctionARN",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.fieldname": "FunctionARN",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionARN",
+    "autoflex.source.type": "*string",
+    "autoflex.target.path": "FunctionARN",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Creating set value",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "element_count": 2
+  }
+]

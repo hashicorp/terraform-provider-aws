@@ -108,7 +108,7 @@ The following arguments are required:
 
 * `agent_id` - (Required) ID if the agent to associate the collaborator.
 * `collaboration_instruction` - (Required) Instruction to give the collaborator.
-* `collbaorator_name` - (Required) Name of this collaborator.
+* `collaborator_name` - (Required) Name of this collaborator.
 
 The following arguments are optional:
 

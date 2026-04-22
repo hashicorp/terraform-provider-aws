@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions_test
@@ -14,10 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,7 +29,7 @@ func TestAccVerifiedPermissionsPolicyStore_basic(t *testing.T) {
 	var policystore verifiedpermissions.GetPolicyStoreOutput
 	resourceName := "aws_verifiedpermissions_policy_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -38,13 +37,14 @@ func TestAccVerifiedPermissionsPolicyStore_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyStoreConfig_basic("OFF"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					testAccCheckPolicyStoreExists(ctx, t, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Terraform acceptance test"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
@@ -69,7 +69,7 @@ func TestAccVerifiedPermissionsPolicyStore_update(t *testing.T) {
 	var policystore verifiedpermissions.GetPolicyStoreOutput
 	resourceName := "aws_verifiedpermissions_policy_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -77,12 +77,12 @@ func TestAccVerifiedPermissionsPolicyStore_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyStoreConfig_basic("OFF"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					testAccCheckPolicyStoreExists(ctx, t, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "OFF"),
 				),
 			},
@@ -90,6 +90,47 @@ func TestAccVerifiedPermissionsPolicyStore_update(t *testing.T) {
 				Config: testAccPolicyStoreConfig_basic("STRICT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "STRICT"),
+				),
+			},
+		},
+	})
+}
+func TestAccVerifiedPermissionsPolicyStore_deletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policystore verifiedpermissions.GetPolicyStoreOutput
+	resourceName := "aws_verifiedpermissions_policy_store.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+			testAccPolicyStoresPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyStoreConfig_deletion_protection("DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyStoreExists(ctx, t, resourceName, &policystore),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "DISABLED"),
+				),
+			},
+			{
+				Config: testAccPolicyStoreConfig_deletion_protection("ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "ENABLED"),
+				),
+			},
+			{
+				Config: testAccPolicyStoreConfig_deletion_protection("DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "DISABLED"),
 				),
 			},
 		},
@@ -105,7 +146,7 @@ func TestAccVerifiedPermissionsPolicyStore_disappears(t *testing.T) {
 	var policystore verifiedpermissions.GetPolicyStoreOutput
 	resourceName := "aws_verifiedpermissions_policy_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -113,13 +154,13 @@ func TestAccVerifiedPermissionsPolicyStore_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyStoreConfig_basic("OFF"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicyStore, resourceName),
+					testAccCheckPolicyStoreExists(ctx, t, resourceName, &policystore),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourcePolicyStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,7 +177,7 @@ func TestAccVerifiedPermissionsPolicyStore_tags(t *testing.T) {
 	var policystore verifiedpermissions.GetPolicyStoreOutput
 	resourceName := "aws_verifiedpermissions_policy_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -144,12 +185,12 @@ func TestAccVerifiedPermissionsPolicyStore_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyStoreConfig_tags1("OFF", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					testAccCheckPolicyStoreExists(ctx, t, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -162,7 +203,7 @@ func TestAccVerifiedPermissionsPolicyStore_tags(t *testing.T) {
 			{
 				Config: testAccPolicyStoreConfig_tags2("OFF", acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					testAccCheckPolicyStoreExists(ctx, t, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -171,7 +212,7 @@ func TestAccVerifiedPermissionsPolicyStore_tags(t *testing.T) {
 			{
 				Config: testAccPolicyStoreConfig_tags1("OFF", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					testAccCheckPolicyStoreExists(ctx, t, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -180,9 +221,9 @@ func TestAccVerifiedPermissionsPolicyStore_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyStoreDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPolicyStoreDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedpermissions_policy_store" {
@@ -191,7 +232,7 @@ func testAccCheckPolicyStoreDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfverifiedpermissions.FindPolicyStoreByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -206,7 +247,7 @@ func testAccCheckPolicyStoreDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckPolicyStoreExists(ctx context.Context, name string, policystore *verifiedpermissions.GetPolicyStoreOutput) resource.TestCheckFunc {
+func testAccCheckPolicyStoreExists(ctx context.Context, t *testing.T, name string, policystore *verifiedpermissions.GetPolicyStoreOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -217,7 +258,7 @@ func testAccCheckPolicyStoreExists(ctx context.Context, name string, policystore
 			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingExistence, tfverifiedpermissions.ResNamePolicyStore, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 		resp, err := tfverifiedpermissions.FindPolicyStoreByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -231,7 +272,7 @@ func testAccCheckPolicyStoreExists(ctx context.Context, name string, policystore
 }
 
 func testAccPolicyStoresPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 
 	input := &verifiedpermissions.ListPolicyStoresInput{}
 	_, err := conn.ListPolicyStores(ctx, input)
@@ -252,6 +293,17 @@ resource "aws_verifiedpermissions_policy_store" "test" {
     mode = %[1]q
   }
 }`, mode)
+}
+
+func testAccPolicyStoreConfig_deletion_protection(deletionProtection string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedpermissions_policy_store" "test" {
+  description         = "Terraform acceptance test"
+  deletion_protection = %[1]q
+  validation_settings {
+    mode = "OFF"
+  }
+}`, deletionProtection)
 }
 
 func testAccPolicyStoreConfig_tags1(mode, tagKey1, tagValue1 string) string {

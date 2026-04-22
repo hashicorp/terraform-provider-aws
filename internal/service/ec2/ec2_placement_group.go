@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -9,7 +11,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -19,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,7 +55,7 @@ func resourcePlacementGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#placement-groups-limitations-partition.
-				ValidateFunc: validation.IntBetween(0, 7),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"placement_group_id": {
 				Type:     schema.TypeString,
@@ -119,11 +120,12 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	pg, err := findPlacementGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Placement Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -133,14 +135,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Placement Group (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, placementGroupARN(ctx, c, d.Id()))
 	d.Set(names.AttrName, pg.GroupName)
 	d.Set("partition_count", pg.PartitionCount)
 	d.Set("placement_group_id", pg.GroupId)
@@ -201,4 +196,7 @@ func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.Resourc
 	}
 
 	return nil
+}
+func placementGroupARN(ctx context.Context, c *conns.AWSClient, groupName string) string {
+	return c.RegionalARN(ctx, names.EC2, "placement-group/"+groupName)
 }

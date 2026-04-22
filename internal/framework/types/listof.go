@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -25,16 +27,19 @@ var (
 )
 
 var (
-	// ListOfStringType is a custom type used for defining a List of strings.
-	ListOfStringType = listTypeOf[basetypes.StringValue]{basetypes.ListType{ElemType: basetypes.StringType{}}, nil}
-
 	// ListOfARNType is a custom type used for defining a List of ARNs.
 	ListOfARNType = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}, nil}
+
+	// ListOfInt64Type is a custom type used for defining a List of int64s.
+	ListOfInt64Type = listTypeOf[basetypes.Int64Value]{basetypes.ListType{ElemType: basetypes.Int64Type{}}, nil}
+
+	// ListOfStringType is a custom type used for defining a List of strings.
+	ListOfStringType = listTypeOf[basetypes.StringValue]{basetypes.ListType{ElemType: basetypes.StringType{}}, nil}
 )
 
 type validateAttributeFunc[T attr.Value] func(context.Context, path.Path, []attr.Value) diag.Diagnostics
 
-// TODO Replace with Go 1.24 generic type alias when available.
+// ListOfStringEnumType is a custom type used for defining a List of string enums.
 func ListOfStringEnumType[T enum.Valueser[T]]() listTypeOf[StringEnum[T]] {
 	return listTypeOf[StringEnum[T]]{basetypes.ListType{ElemType: StringEnumType[T]()}, validateStringEnumSlice[T]}
 }
@@ -59,8 +64,7 @@ func (t listTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t listTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("ListTypeOf[%T]", zero)
+	return fmt.Sprintf("ListTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t listTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
@@ -115,8 +119,9 @@ type ListValueOf[T attr.Value] struct {
 }
 
 type (
-	ListOfString                         = ListValueOf[basetypes.StringValue]
 	ListOfARN                            = ListValueOf[ARN]
+	ListOfInt64                          = ListValueOf[basetypes.Int64Value]
+	ListOfString                         = ListValueOf[basetypes.StringValue]
 	ListOfStringEnum[T enum.Valueser[T]] = ListValueOf[StringEnum[T]]
 )
 
@@ -140,6 +145,20 @@ func (v ListValueOf[T]) ValidateAttribute(ctx context.Context, req xattr.Validat
 	}
 
 	resp.Diagnostics.Append(v.validateAttributeFunc(ctx, req.Path, v.Elements())...)
+}
+
+// IsFullyKnown returns true if `v` all its elements are known.
+func (v ListValueOf[T]) IsFullyKnown() bool {
+	switch {
+	case v.IsUnknown():
+		return false
+	case v.IsNull():
+		return true
+	default:
+		return tfslices.All(v.Elements(), func(v attr.Value) bool {
+			return !v.IsUnknown()
+		})
+	}
 }
 
 func NewListValueOfNull[T attr.Value](ctx context.Context) ListValueOf[T] {

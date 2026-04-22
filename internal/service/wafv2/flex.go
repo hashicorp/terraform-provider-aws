@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1078,6 +1078,41 @@ func expandWebACLRulesJSON(rawRules string) ([]awstypes.Rule, error) {
 	return rules, nil
 }
 
+func expandRuleGroupRulesJSON(rawRules string) ([]awstypes.Rule, error) {
+	// Backwards compatibility.
+	if rawRules == "" {
+		return nil, errors.New("decoding JSON: unexpected end of JSON input")
+	}
+
+	var temp []any
+	err := tfjson.DecodeFromBytes([]byte(rawRules), &temp)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %w", err)
+	}
+
+	for _, v := range temp {
+		walkRulesGroupJSON(reflect.ValueOf(v))
+	}
+
+	out, err := tfjson.EncodeToBytes(temp)
+	if err != nil {
+		return nil, err
+	}
+
+	var rules []awstypes.Rule
+	err = tfjson.DecodeFromBytes(out, &rules)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, r := range rules {
+		if reflect.ValueOf(r).IsZero() {
+			return nil, fmt.Errorf("invalid Rule Group Rule supplied at index (%d)", i)
+		}
+	}
+	return rules, nil
+}
+
 func walkWebACLJSON(v reflect.Value) {
 	m := map[string][]struct {
 		key        string
@@ -1106,7 +1141,7 @@ func walkWebACLJSON(v reflect.Value) {
 					case reflect.Slice, reflect.Array:
 						switch reflect.ValueOf(va.outputType).Type().Elem().Kind() {
 						case reflect.Uint8:
-							base64String := itypes.Base64Encode([]byte(str.(string)))
+							base64String := inttypes.Base64Encode([]byte(str.(string)))
 							st[va.key] = base64String
 						default:
 						}
@@ -1120,6 +1155,53 @@ func walkWebACLJSON(v reflect.Value) {
 	case reflect.Array, reflect.Slice:
 		for i := range v.Len() {
 			walkWebACLJSON(v.Index(i))
+		}
+	default:
+	}
+}
+
+func walkRulesGroupJSON(v reflect.Value) {
+	m := map[string][]struct {
+		key        string
+		outputType any
+	}{
+		"ByteMatchStatement": {
+			{key: "SearchString", outputType: []byte{}},
+		},
+	}
+
+	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.Map:
+		for _, k := range v.MapKeys() {
+			if val, ok := m[k.String()]; ok {
+				st := v.MapIndex(k).Interface().(map[string]any)
+				for _, va := range val {
+					if st[va.key] == nil {
+						continue
+					}
+					str := st[va.key]
+					switch reflect.ValueOf(va.outputType).Kind() {
+					case reflect.Slice, reflect.Array:
+						switch reflect.ValueOf(va.outputType).Type().Elem().Kind() {
+						case reflect.Uint8:
+							base64String := inttypes.Base64Encode([]byte(str.(string)))
+							st[va.key] = base64String
+						default:
+						}
+					default:
+					}
+				}
+			} else {
+				walkRulesGroupJSON(v.MapIndex(k))
+			}
+		}
+	case reflect.Array, reflect.Slice:
+		for i := range v.Len() {
+			walkRulesGroupJSON(v.Index(i))
 		}
 	default:
 	}
@@ -1774,6 +1856,9 @@ func expandRateBasedStatementCustomKeys(l []any) []awstypes.RateBasedStatementCu
 	for _, ck := range l {
 		r := awstypes.RateBasedStatementCustomKey{}
 		m := ck.(map[string]any)
+		if v, ok := m["asn"]; ok && len(v.([]any)) > 0 {
+			r.ASN = &awstypes.RateLimitAsn{}
+		}
 		if v, ok := m["cookie"]; ok {
 			r.Cookie = expandRateLimitCookie(v.([]any))
 		}
@@ -2454,8 +2539,8 @@ func flattenCookiesMatchPattern(c *awstypes.CookieMatchPattern) any {
 	}
 
 	m := map[string]any{
-		"included_cookies": aws.StringSlice(c.IncludedCookies),
-		"excluded_cookies": aws.StringSlice(c.ExcludedCookies),
+		"included_cookies": c.IncludedCookies,
+		"excluded_cookies": c.ExcludedCookies,
 	}
 
 	if c.All != nil {
@@ -3246,6 +3331,7 @@ func flattenHeader(apiObject *awstypes.ResponseInspectionHeader) []any {
 
 	m := map[string]any{
 		"failure_values": apiObject.FailureValues,
+		names.AttrName:   apiObject.Name,
 		"success_values": apiObject.SuccessValues,
 	}
 
@@ -3379,6 +3465,11 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 	for i, o := range apiObject {
 		tfMap := map[string]any{}
 
+		if o.ASN != nil {
+			tfMap["asn"] = []any{
+				map[string]any{},
+			}
+		}
 		if o.Cookie != nil {
 			tfMap["cookie"] = flattenRateLimitCookie(o.Cookie)
 		}

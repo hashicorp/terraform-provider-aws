@@ -47,7 +47,6 @@ resource "aws_transcribe_vocabulary" "example" {
 The following arguments are required:
 
 * `language_code` - (Required) The language code you selected for your vocabulary.
-* `vocabulary_file_uri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom vocabulary.
 * `vocabulary_name` - (Required) The name of the Vocabulary.
 
 The following arguments are optional:

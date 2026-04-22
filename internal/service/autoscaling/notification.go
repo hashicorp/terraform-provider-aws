@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
@@ -17,8 +19,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,9 +46,10 @@ func resourceNotification() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTopicARN: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
@@ -73,10 +78,10 @@ func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta 
 	notifications, err := findNotificationsByTwoPartKey(ctx, conn, flex.ExpandStringValueSet(d.Get("group_names").(*schema.Set)), d.Id())
 
 	if err == nil && len(notifications) == 0 {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Notification %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -155,13 +160,13 @@ func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, met
 
 func addNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autoscaling.Client, groups, notificationTypes []*string, topic string) error {
 	for _, group := range groups {
-		input := &autoscaling.PutNotificationConfigurationInput{
+		input := autoscaling.PutNotificationConfigurationInput{
 			AutoScalingGroupName: group,
 			NotificationTypes:    aws.ToStringSlice(notificationTypes),
 			TopicARN:             aws.String(topic),
 		}
 
-		_, err := conn.PutNotificationConfiguration(ctx, input)
+		_, err := conn.PutNotificationConfiguration(ctx, &input)
 
 		if err != nil {
 			return err
@@ -173,12 +178,12 @@ func addNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autoscali
 
 func removeNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autoscaling.Client, groups []*string, topic string) error {
 	for _, group := range groups {
-		input := &autoscaling.DeleteNotificationConfigurationInput{
+		input := autoscaling.DeleteNotificationConfigurationInput{
 			AutoScalingGroupName: group,
 			TopicARN:             aws.String(topic),
 		}
 
-		_, err := conn.DeleteNotificationConfiguration(ctx, input)
+		_, err := conn.DeleteNotificationConfiguration(ctx, &input)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "doesn't exist") {
 			continue
@@ -193,16 +198,16 @@ func removeNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autosc
 }
 
 func findNotificationsByTwoPartKey(ctx context.Context, conn *autoscaling.Client, groups []string, topic string) ([]awstypes.NotificationConfiguration, error) {
-	input := &autoscaling.DescribeNotificationConfigurationsInput{
+	input := autoscaling.DescribeNotificationConfigurationsInput{
 		AutoScalingGroupNames: groups,
 	}
 
-	return findNotifications(ctx, conn, input, func(v *awstypes.NotificationConfiguration) bool {
+	return findNotifications(ctx, conn, &input, func(v awstypes.NotificationConfiguration) bool {
 		return aws.ToString(v.TopicARN) == topic
 	})
 }
 
-func findNotifications(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeNotificationConfigurationsInput, filter tfslices.Predicate[*awstypes.NotificationConfiguration]) ([]awstypes.NotificationConfiguration, error) {
+func findNotifications(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeNotificationConfigurationsInput, filter tfslices.Predicate[awstypes.NotificationConfiguration]) ([]awstypes.NotificationConfiguration, error) {
 	var output []awstypes.NotificationConfiguration
 
 	pages := autoscaling.NewDescribeNotificationConfigurationsPaginator(conn, input)
@@ -214,7 +219,7 @@ func findNotifications(ctx context.Context, conn *autoscaling.Client, input *aut
 		}
 
 		for _, v := range page.NotificationConfigurations {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}

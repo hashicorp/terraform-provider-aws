@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -16,32 +18,41 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names.
+	rfc1123LabelNameRelaxed = regexache.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
+)
+
 // @SDKResource("aws_eks_addon", name="Add-On")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("addon_name")
+// @ImportIDHandler("addonImportID")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Addon")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(name="Addon")
 func resourceAddon() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAddonCreate,
 		ReadWithoutTimeout:   resourceAddonRead,
 		UpdateWithoutTimeout: resourceAddonUpdate,
 		DeleteWithoutTimeout: resourceAddonDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -87,6 +98,24 @@ func resourceAddon() *schema.Resource {
 			"modified_at": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"namespace_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrNamespace: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringMatch(rfc1123LabelNameRelaxed, "must be a valid RFC 1123 DNS label"),
+						},
+					},
+				},
 			},
 			"pod_identity_association": {
 				Type:     schema.TypeSet,
@@ -139,10 +168,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get(names.AttrClusterName).(string)
-	id := AddonCreateResourceID(clusterName, addonName)
-	input := &eks.CreateAddonInput{
+	id := addonCreateResourceID(clusterName, addonName)
+	input := eks.CreateAddonInput{
 		AddonName:          aws.String(addonName),
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		ClusterName:        aws.String(clusterName),
 		Tags:               getTagsIn(ctx),
 	}
@@ -153,6 +182,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if v, ok := d.GetOk("configuration_values"); ok {
 		input.ConfigurationValues = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("namespace_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NamespaceConfig = expandAddonNamespaceConfigRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("pod_identity_association"); ok && v.(*schema.Set).Len() > 0 {
@@ -168,8 +201,8 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
-			return conn.CreateAddon(ctx, input)
+		func(ctx context.Context) (any, error) {
+			return conn.CreateAddon(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "CREATE_FAILED") {
@@ -211,14 +244,14 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, addonName, err := AddonParseResourceID(d.Id())
+	clusterName, addonName, err := addonParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	addon, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Add-On (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,11 +268,16 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
-	flatPIAs, err := flattenAddonPodIdentityAssociations(ctx, addon.PodIdentityAssociations, clusterName, meta)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "flattening pod_identity_association: %s", err)
+	if addon.NamespaceConfig != nil {
+		if err := d.Set("namespace_config", []any{flattenAddonNamespaceConfigResponse(addon.NamespaceConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting namespace_config: %s", err)
+		}
+	} else {
+		d.Set("namespace_config", nil)
 	}
-	if err := d.Set("pod_identity_association", flatPIAs); err != nil {
+	if tfList, err := flattenAddonPodIdentityAssociations(ctx, conn, addon.PodIdentityAssociations, clusterName); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	} else if err := d.Set("pod_identity_association", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting pod_identity_association: %s", err)
 	}
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
@@ -253,15 +291,15 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, addonName, err := AddonParseResourceID(d.Id())
+	clusterName, addonName, err := addonParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values", "pod_identity_association") {
-		input := &eks.UpdateAddonInput{
+		input := eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
-			ClientRequestToken: aws.String(sdkid.UniqueId()),
+			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			ClusterName:        aws.String(clusterName),
 		}
 
@@ -291,7 +329,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.ServiceAccountRoleArn = aws.String(d.Get("service_account_role_arn").(string))
 		}
 
-		output, err := conn.UpdateAddon(ctx, input)
+		output, err := conn.UpdateAddon(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Add-On (%s): %s", d.Id(), err)
@@ -317,22 +355,20 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, addonName, err := AddonParseResourceID(d.Id())
+	clusterName, addonName, err := addonParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &eks.DeleteAddonInput{
+	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
+	input := eks.DeleteAddonInput{
 		AddonName:   aws.String(addonName),
 		ClusterName: aws.String(clusterName),
 	}
-
 	if v, ok := d.GetOk("preserve"); ok {
 		input.Preserve = v.(bool)
 	}
-
-	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
-	_, err = conn.DeleteAddon(ctx, input)
+	_, err = conn.DeleteAddon(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -349,54 +385,81 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
+func expandAddonNamespaceConfigRequest(tfMap map[string]any) *types.AddonNamespaceConfigRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AddonNamespaceConfigRequest{}
+
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+		apiObject.Namespace = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenAddonNamespaceConfigResponse(apiObject *types.AddonNamespaceConfigResponse) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Namespace; v != nil {
+		tfMap[names.AttrNamespace] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
 func expandAddonPodIdentityAssociations(tfList []any) []types.AddonPodIdentityAssociations {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var addonPodIdentityAssociations []types.AddonPodIdentityAssociations
-	for _, raw := range tfList {
-		tfMap, ok := raw.(map[string]any)
+	var apiObjects []types.AddonPodIdentityAssociations
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		pia := types.AddonPodIdentityAssociations{}
-		if roleArn, ok := tfMap[names.AttrRoleARN].(string); ok {
-			pia.RoleArn = aws.String(roleArn)
+		apiObject := types.AddonPodIdentityAssociations{}
+		if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+			apiObject.RoleArn = aws.String(v)
 		}
-		if service_account, ok := tfMap["service_account"].(string); ok {
-			pia.ServiceAccount = aws.String(service_account)
+		if v, ok := tfMap["service_account"].(string); ok && v != "" {
+			apiObject.ServiceAccount = aws.String(v)
 		}
 
-		addonPodIdentityAssociations = append(addonPodIdentityAssociations, pia)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return addonPodIdentityAssociations
+	return apiObjects
 }
 
-func flattenAddonPodIdentityAssociations(ctx context.Context, associations []string, clusterName string, meta any) ([]any, error) {
-	if len(associations) == 0 {
+func flattenAddonPodIdentityAssociations(ctx context.Context, conn *eks.Client, podIdentityAssociationARNs []string, clusterName string) ([]any, error) {
+	if len(podIdentityAssociationARNs) == 0 {
 		return nil, nil
 	}
 
-	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 	var results []any
 
-	for _, associationArn := range associations {
+	for _, arn := range podIdentityAssociationARNs {
 		// CreateAddon returns the associationARN. The associationId is extracted from the end of the ARN,
 		// which is used in the DescribePodIdentityAssociation call to get the RoleARN and ServiceAccount
 		//
 		// Ex. "arn:aws:eks:<region>:<account-id>:podidentityassociation/<cluster-name>/a-1v95i5dqqiylbo3ud"
-		parts := strings.Split(associationArn, "/")
+		parts := strings.Split(arn, "/")
 		if len(parts) != 3 {
-			return nil, fmt.Errorf(`unable to extract association ID from ARN "%s"`, associationArn)
+			return nil, fmt.Errorf(`unable to extract association ID from ARN %q`, arn)
 		}
 
-		associationId := parts[2]
-		pia, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, associationId, clusterName)
+		associationID := parts[2]
+		pia, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, associationID, clusterName)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("reading EKS Pod Identity Association (%s, %s): %w", clusterName, associationID, err)
 		}
 
 		tfMap := map[string]any{
@@ -411,17 +474,20 @@ func flattenAddonPodIdentityAssociations(ctx context.Context, associations []str
 }
 
 func findAddonByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, addonName string) (*types.Addon, error) {
-	input := &eks.DescribeAddonInput{
+	input := eks.DescribeAddonInput{
 		AddonName:   aws.String(addonName),
 		ClusterName: aws.String(clusterName),
 	}
 
+	return findAddon(ctx, conn, &input)
+}
+
+func findAddon(ctx context.Context, conn *eks.Client, input *eks.DescribeAddonInput) (*types.Addon, error) {
 	output, err := conn.DescribeAddon(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -430,44 +496,27 @@ func findAddonByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, a
 	}
 
 	if output == nil || output.Addon == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Addon, nil
 }
 
 func findAddonUpdateByThreePartKey(ctx context.Context, conn *eks.Client, clusterName, addonName, id string) (*types.Update, error) {
-	input := &eks.DescribeUpdateInput{
+	input := eks.DescribeUpdateInput{
 		AddonName: aws.String(addonName),
 		Name:      aws.String(clusterName),
 		UpdateId:  aws.String(id),
 	}
 
-	output, err := conn.DescribeUpdate(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Update == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Update, nil
+	return findUpdate(ctx, conn, &input)
 }
 
-func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAddon(conn *eks.Client, clusterName, addonName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -479,11 +528,11 @@ func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName s
 	}
 }
 
-func statusAddonUpdate(ctx context.Context, conn *eks.Client, clusterName, addonName, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAddonUpdate(conn *eks.Client, clusterName, addonName, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAddonUpdateByThreePartKey(ctx, conn, clusterName, addonName, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -499,7 +548,7 @@ func waitAddonCreated(ctx context.Context, conn *eks.Client, clusterName, addonN
 	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.AddonStatusCreating, types.AddonStatusDegraded),
 		Target:  enum.Slice(types.AddonStatusActive),
-		Refresh: statusAddon(ctx, conn, clusterName, addonName),
+		Refresh: statusAddon(conn, clusterName, addonName),
 		Timeout: timeout,
 	}
 
@@ -507,7 +556,7 @@ func waitAddonCreated(ctx context.Context, conn *eks.Client, clusterName, addonN
 
 	if output, ok := outputRaw.(*types.Addon); ok {
 		if status, health := output.Status, output.Health; status == types.AddonStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, addonIssuesError(health.Issues))
+			retry.SetLastError(err, addonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -520,7 +569,7 @@ func waitAddonDeleted(ctx context.Context, conn *eks.Client, clusterName, addonN
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.AddonStatusActive, types.AddonStatusDeleting),
 		Target:  []string{},
-		Refresh: statusAddon(ctx, conn, clusterName, addonName),
+		Refresh: statusAddon(conn, clusterName, addonName),
 		Timeout: timeout,
 	}
 
@@ -528,7 +577,7 @@ func waitAddonDeleted(ctx context.Context, conn *eks.Client, clusterName, addonN
 
 	if output, ok := outputRaw.(*types.Addon); ok {
 		if status, health := output.Status, output.Health; status == types.AddonStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, addonIssuesError(health.Issues))
+			retry.SetLastError(err, addonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -541,7 +590,7 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterNam
 	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
-		Refresh: statusAddonUpdate(ctx, conn, clusterName, addonName, id),
+		Refresh: statusAddonUpdate(conn, clusterName, addonName, id),
 		Timeout: timeout,
 	}
 
@@ -549,7 +598,7 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterNam
 
 	if output, ok := outputRaw.(*types.Update); ok {
 		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -592,4 +641,47 @@ func errorDetailsError(apiObjects []types.ErrorDetail) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+const addonResourceIDSeparator = ":"
+
+func addonCreateResourceID(clusterName, addonName string) string {
+	parts := []string{clusterName, addonName}
+	id := strings.Join(parts, addonResourceIDSeparator)
+
+	return id
+}
+
+func addonParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, addonResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]saddon-name", id, addonResourceIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = addonImportID{}
+)
+
+type addonImportID struct{}
+
+func (addonImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, addonName, err := addonParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"addon_name":          addonName,
+		names.AttrClusterName: clusterName,
+	}
+
+	return id, result, nil
+}
+
+func (addonImportID) Create(d *schema.ResourceData) string {
+	return addonCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("addon_name").(string))
 }

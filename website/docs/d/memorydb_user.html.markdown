@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB User.
 ---
 
-# Resource: aws_memorydb_user
+# Data Source: aws_memorydb_user
 
 Provides information about a MemoryDB User.
 

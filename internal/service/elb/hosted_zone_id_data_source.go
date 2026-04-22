@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -28,6 +30,7 @@ var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
 	endpoints.ApSoutheast4RegionID: "Z09517862IB2WZLPXG76F",
 	endpoints.ApSoutheast5RegionID: "Z06010284QMVVW7WO5J",
+	endpoints.ApSoutheast6RegionID: "Z023301818UFJ50CIO0MV",
 	endpoints.ApSoutheast7RegionID: "Z0390008CMBRTHFGWBCB",
 	endpoints.CaCentral1RegionID:   "ZQSVJUPU6J1EY",
 	endpoints.CaWest1RegionID:      "Z06473681N0SF6OS049SD",

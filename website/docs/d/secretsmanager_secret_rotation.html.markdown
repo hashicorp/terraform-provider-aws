@@ -31,6 +31,12 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `rotation_enabled` - ARN of the secret.
-* `rotation_lambda_arn` - Decrypted part of the protected secret information that was originally provided as a string.
-* `rotation_rules` - Decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.
+* `rotation_enabled` - Specifies whether automatic rotation is enabled for this secret.
+* `rotation_lambda_arn` - Amazon Resource Name (ARN) of the lambda function used for rotation.
+* `rotation_rules` - Configuration block for rotation rules. See [`rotation_rules`](#rotation_rules) below.
+
+### rotation_rules
+
+* `automatically_after_days` - Number of days between automatic scheduled rotations of the secret.
+* `duration` - Length of the rotation window in hours.
+* `schedule_expression` - A `cron()` or `rate()` expression that defines the schedule for rotating the secret.

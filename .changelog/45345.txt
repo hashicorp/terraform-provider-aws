@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_resourceexplorer2_index: Deprecates `id`. Use `arn` instead.
+```
+
+```release-note:enhancement
+resource/aws_resourceexplorer2_view: Deprecates `id`. Use `arn` instead.
+```

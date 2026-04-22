@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -9,15 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +20,7 @@ func TestAccBackupRegionSettings_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccRegionSettings_basic,
-		"Identity":      testAccBackupRegionSettings_IdentitySerial,
+		"Identity":      testAccBackupRegionSettings_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -38,7 +31,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 	var settings backup.DescribeRegionSettingsOutput
 	resourceName := "aws_backup_region_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
@@ -51,7 +44,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_1(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
@@ -79,7 +72,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
@@ -101,7 +94,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_3(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
@@ -124,92 +117,9 @@ func testAccRegionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccBackupRegionSettings_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var settings backup.DescribeRegionSettingsOutput
-	resourceName := "aws_backup_region_settings.test"
-
-	resource.Test(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.BackupServiceID),
-		CheckDestroy: acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccRegionSettingsConfig_1(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccRegionSettingsConfig_1(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: knownvalue.Null(),
-						names.AttrRegion:    knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRegionSettingsConfig_1(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckRegionSettingsExists(ctx context.Context, n string, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
+func testAccCheckRegionSettingsExists(ctx context.Context, t *testing.T, n string, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindRegionSettings(ctx, conn)
 

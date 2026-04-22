@@ -358,6 +358,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example
+  identity = {
+    "arn" = "arn:aws:chime:us-east-1:123456789012:media-insights-pipeline-configuration/example-config"
+  }
+}
+
+resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Chime SDK media insights pipeline configuration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chime SDK Media Pipelines Media Insights Pipeline Configuration using the `id`. For example:
 
 ```terraform

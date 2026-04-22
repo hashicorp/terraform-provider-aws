@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,18 +23,18 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricFilterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", ""),
@@ -51,7 +50,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -62,19 +61,19 @@ func TestAccLogsMetricFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceMetricFilter(), resourceName),
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceMetricFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,19 +86,19 @@ func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,17 +109,17 @@ func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 func TestAccLogsMetricFilter_many(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricFilterConfig_many(rName, 15),
-				Check:  testAccCheckMetricFilterManyExists(ctx, resourceName, 15),
+				Check:  testAccCheckMetricFilterManyExists(ctx, t, resourceName, 15),
 			},
 		},
 	})
@@ -131,18 +130,18 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricFilterConfig_allAttributes1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", "2.5"),
@@ -159,13 +158,13 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccMetricFilterConfig_allAttributes2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", ""),
@@ -186,25 +185,56 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 	})
 }
 
-func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
+func TestAccLogsMetricFilter_longPatternInUTF8(t *testing.T) {
+	ctx := acctest.Context(t)
+	var mf types.MetricFilter
+	resourceName := "aws_cloudwatch_log_metric_filter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	// 1027 characters in UTF-8, which exceeds 1024-character limit
+	pattern1 := "[(msg = \"*ERROR*\") && (msg != \"*テスト除外パターン０１*\") && (msg != \"*テスト除外パターン０２*\") && (msg != \"*テスト除外パターン０３*\") && (msg != \"*テスト除外パターン０４*\") && (msg != \"*テスト除外パターン０５*\") && (msg != \"*テスト除外パターン０６*\") && (msg != \"*テスト除外パターン０７*\") && (msg != \"*テスト除外パターン０８*\") && (msg != \"*テスト除外パターン０９*\") && (msg != \"*テスト除外パターン１０*\") && (msg != \"*テスト除外パターン１１*\") && (msg != \"*テスト除外パターン１２*\") && (msg != \"*テスト除外パターン１３*\") && (msg != \"*テスト除外パターン１４*\") && (msg != \"*テスト除外パターン１５*\") && (msg != \"*テスト除外パターン１６*\") && (msg != \"*テスト除外パターン１７*\") && (msg != \"*テスト除外パターン１８*\") && (msg != \"*テスト除外パターン１９*\") && (msg != \"*テスト除外パターン２０*\") && (msg != \"*テスト除外パターン２１*\") && (msg != \"*テスト除外パターン２２*\") && (msg != \"*テスト除外パターン２３*\") && (msg != \"*テスト除外パターン２４*\") && (msg != \"*テスト除外パターン２５*\") && (msg != \"*テスト除外パターン２６*\") && (msg != \"*テスト除外パターン２７*\") && (msg != \"*テスト除外パターン２８*\") && (msg != \"*テスト除外パターン２９*\") && (msg != \"*テスト除外パターン３０*\") && (msg != \"*テスト除外パターン３１*\") && (msg != \"*テスト除外パターン３２*\") && (msg != \"*テスト除外パターン３３*\") && (msg != \"*テスト除外パターン３４*\") && (msg != \"*テスト除外パターン３５*\") && (msg != \"*テスト除外パターン３６*\")]"
+	// 806 characters in UTF-8, but exceeds 1024 in bytes
+	pattern2 := "[(msg = \"*ERROR*\") && (msg != \"*テスト除外パターン０１*\") && (msg != \"*テスト除外パターン０２*\") && (msg != \"*テスト除外パターン０３*\") && (msg != \"*テスト除外パターン０４*\") && (msg != \"*テスト除外パターン０５*\") && (msg != \"*テスト除外パターン０６*\") && (msg != \"*テスト除外パターン０７*\") && (msg != \"*テスト除外パターン０８*\") && (msg != \"*テスト除外パターン０９*\") && (msg != \"*テスト除外パターン１０*\") && (msg != \"*テスト除外パターン１１*\") && (msg != \"*テスト除外パターン１２*\") && (msg != \"*テスト除外パターン１３*\") && (msg != \"*テスト除外パターン１４*\") && (msg != \"*テスト除外パターン１５*\") && (msg != \"*テスト除外パターン１６*\") && (msg != \"*テスト除外パターン１７*\") && (msg != \"*テスト除外パターン１８*\") && (msg != \"*テスト除外パターン１９*\") && (msg != \"*テスト除外パターン２０*\") && (msg != \"*テスト除外パターン２１*\") && (msg != \"*テスト除外パターン２２*\") && (msg != \"*テスト除外パターン２３*\") && (msg != \"*テスト除外パターン２４*\") && (msg != \"*テスト除外パターン２５*\") && (msg != \"*テスト除外パターン２６*\") && (msg != \"*テスト除外パターン２７*\") && (msg != \"*テスト除外パターン２８*\")]"
 
-		return rs.Primary.Attributes[names.AttrLogGroupName] + ":" + rs.Primary.Attributes[names.AttrName], nil
-	}
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMetricFilterConfig_pattern(rName, pattern1),
+				ExpectError: regexache.MustCompile(`Error: Invalid character length`),
+			},
+			{
+				Config: testAccMetricFilterConfig_pattern(rName, pattern2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "pattern", pattern2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
-func testAccCheckMetricFilterExists(ctx context.Context, n string, v *types.MetricFilter) resource.TestCheckFunc {
+func testAccMetricFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ":", names.AttrLogGroupName, names.AttrName)
+}
+
+func testAccCheckMetricFilterExists(ctx context.Context, t *testing.T, n string, v *types.MetricFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
 
@@ -218,9 +248,9 @@ func testAccCheckMetricFilterExists(ctx context.Context, n string, v *types.Metr
 	}
 }
 
-func testAccCheckMetricFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMetricFilterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_metric_filter" {
@@ -229,7 +259,7 @@ func testAccCheckMetricFilterDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -244,13 +274,13 @@ func testAccCheckMetricFilterDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckMetricFilterManyExists(ctx context.Context, basename string, n int) resource.TestCheckFunc {
+func testAccCheckMetricFilterManyExists(ctx context.Context, t *testing.T, basename string, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for i := range n {
 			n := fmt.Sprintf("%s.%d", basename, i)
 			var v types.MetricFilter
 
-			err := testAccCheckMetricFilterExists(ctx, n, &v)(s)
+			err := testAccCheckMetricFilterExists(ctx, t, n, &v)(s)
 
 			if err != nil {
 				return err
@@ -354,4 +384,24 @@ EOS
   }
 }
 `, rName)
+}
+
+func testAccMetricFilterConfig_pattern(rName, pattern string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_metric_filter" "test" {
+  name           = %[1]q
+  pattern        = %[2]q
+  log_group_name = aws_cloudwatch_log_group.test.name
+
+  metric_transformation {
+    name      = "metric1"
+    namespace = "ns1"
+    value     = "1"
+  }
+}
+`, rName, pattern)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package interceptors
@@ -13,13 +13,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+type taggingAWSClient interface {
+	Partition(context.Context) string
+}
 
 type HTags unique.Handle[inttypes.ServicePackageResourceTags]
 
@@ -64,7 +68,7 @@ func (h HTags) Enabled() bool {
 }
 
 // If the service package has a generic resource list tags methods, call it.
-func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string) error {
+func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c taggingAWSClient, identifier string) error {
 	var err error
 
 	resourceType := h.value().ResourceType
@@ -91,7 +95,7 @@ func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c *conns.A
 		err = nil
 	case sp.ServicePackageName() == names.DynamoDB && err != nil:
 		// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
-		if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+		if retry.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 			err = nil
 		}
 	}
@@ -100,7 +104,7 @@ func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c *conns.A
 }
 
 // If the service package has a generic resource update tags methods, call it.
-func (h HTags) UpdateTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string, oldTags, newTags any) error {
+func (h HTags) UpdateTags(ctx context.Context, sp conns.ServicePackage, c taggingAWSClient, identifier string, oldTags, newTags any) error {
 	var err error
 
 	resourceType := h.value().ResourceType

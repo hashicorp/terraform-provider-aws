@@ -1,10 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: waiter
     languages: [go]
     message: Don't use AWS SDK for Go v2 waiters
     paths:
       exclude:
-        - "sweep.go"
+        - "**/sweep.go"
     patterns:
       - pattern: |
           $PKG.$FUNC($CONN)

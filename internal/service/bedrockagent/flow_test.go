@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,10 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,11 +28,11 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var flow bedrockagent.GetFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
 	foundationModel := "amazon.titan-text-express-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -42,12 +40,12 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -66,6 +64,23 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccFlowConfig_basicUpdate(rName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "update"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_encryption_key_arn"),
+				),
+			},
 		},
 	})
 }
@@ -74,11 +89,11 @@ func TestAccBedrockAgentFlow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var flow bedrockagent.GetFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
 	foundationModel := "amazon.titan-text-express-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -86,13 +101,13 @@ func TestAccBedrockAgentFlow_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceFlow, resourceName),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceFlow, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,11 +119,11 @@ func TestAccBedrockAgentFlow_withEncryptionKey(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var flow bedrockagent.GetFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
 	foundationModel := "amazon.titan-text-express-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -116,12 +131,12 @@ func TestAccBedrockAgentFlow_withEncryptionKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_withEncryptionKey(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -148,11 +163,11 @@ func TestAccBedrockAgentFlow_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var flow bedrockagent.GetFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
 	foundationModel := "amazon.titan-text-express-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -160,7 +175,7 @@ func TestAccBedrockAgentFlow_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_tags1(rName, foundationModel, acctest.CtKey1, acctest.CtValue1),
@@ -175,7 +190,7 @@ func TestAccBedrockAgentFlow_tags(t *testing.T) {
 					})),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 				),
 			},
 			{
@@ -197,7 +212,7 @@ func TestAccBedrockAgentFlow_tags(t *testing.T) {
 					})),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 				),
 			},
 			{
@@ -213,7 +228,7 @@ func TestAccBedrockAgentFlow_tags(t *testing.T) {
 					})),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 				),
 			},
 		},
@@ -224,11 +239,11 @@ func TestAccBedrockAgentFlow_withDefinition(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var flow bedrockagent.GetFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
 	foundationModel := "amazon.titan-text-express-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -236,12 +251,12 @@ func TestAccBedrockAgentFlow_withDefinition(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_withDefinition(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -330,9 +345,72 @@ func TestAccBedrockAgentFlow_withDefinition(t *testing.T) {
 	})
 }
 
-func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccBedrockAgentFlow_withPromptResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var flow bedrockagent.GetFlowOutput
+	flowName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	promptName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_flow.test"
+	foundationModel := "amazon.titan-text-express-v1"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckFlow(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowConfig_withPromptResource(flowName, promptName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, flowName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_encryption_key_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.#", "1"),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.name", "Prompt_1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.type", "Prompt"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.0.prompt.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.0.prompt.0.source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.0.prompt.0.source_configuration.0.resource.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "definition.0.node.0.configuration.0.prompt.0.source_configuration.0.resource.0.prompt_arn", "aws_bedrockagent_prompt.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.input.0.expression", "$.data"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.input.0.name", "topic"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.input.0.type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.0.name", "modelCompletion"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.0.type", "String"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckFlowDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagent_flow" {
@@ -340,7 +418,7 @@ func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfbedrockagent.FindFlowByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -354,7 +432,7 @@ func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFlowExists(ctx context.Context, name string, flow *bedrockagent.GetFlowOutput) resource.TestCheckFunc {
+func testAccCheckFlowExists(ctx context.Context, t *testing.T, name string, flow *bedrockagent.GetFlowOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -365,7 +443,7 @@ func testAccCheckFlowExists(ctx context.Context, name string, flow *bedrockagent
 			return create.Error(names.BedrockAgent, create.ErrActionCheckingExistence, tfbedrockagent.ResNameFlow, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		resp, err := tfbedrockagent.FindFlowByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -379,7 +457,7 @@ func testAccCheckFlowExists(ctx context.Context, name string, flow *bedrockagent
 }
 
 func testAccPreCheckFlow(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 	input := &bedrockagent.ListFlowsInput{}
 
@@ -441,6 +519,16 @@ resource "aws_bedrockagent_flow" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
   description        = "basic"
+}
+`, rName))
+}
+
+func testAccFlowConfig_basicUpdate(rName, model string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_bedrockagent_flow" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+  description        = "update"
 }
 `, rName))
 }
@@ -595,4 +683,46 @@ resource "aws_bedrockagent_flow" "test" {
   }
 }
 `, rName, model))
+}
+
+func testAccFlowConfig_withPromptResource(flowName, promptName, model string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_bedrockagent_prompt" "test" {
+  name        = %[1]q
+  description = "My prompt description."
+}
+
+resource "aws_bedrockagent_flow" "test" {
+  name               = %[2]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  definition {
+    node {
+      name = "Prompt_1"
+      type = "Prompt"
+
+      configuration {
+        prompt {
+          source_configuration {
+            resource {
+              prompt_arn = aws_bedrockagent_prompt.test.arn
+            }
+          }
+        }
+      }
+
+      input {
+        expression = "$.data"
+        name       = "topic"
+        type       = "String"
+      }
+
+      output {
+        name = "modelCompletion"
+        type = "String"
+      }
+    }
+  }
+}
+`, promptName, flowName, model))
 }

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_networkmanager_connect_peer: Support 4 byte ASNs in `configuration.bgp_configurations.peer_asn`
+```
+
+```release-note:bug
+resource/aws_networkmanager_connect_peer: Change `bgp_options` and `bgp_options.peer_asn` to Optional, Computed and ForceNew
+```

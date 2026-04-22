@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=Bench -v ./internal/provider
+// To run this benchmark:
+// go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=^$ -v ./internal/provider/sdkv2
 func BenchmarkSDKProviderInitialization(b *testing.B) {
 	ctx := b.Context()
 	for b.Loop() {

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_servicequotas_service_quota: Fix error when updating a pending service quota request
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -50,7 +50,7 @@ func sweepAccessPolicies(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	input := &opensearchserverless.ListAccessPoliciesInput{
@@ -97,7 +97,7 @@ func sweepCollections(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	input := &opensearchserverless.ListCollectionsInput{}
@@ -140,7 +140,7 @@ func sweepSecurityConfigs(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	input := &opensearchserverless.ListSecurityConfigsInput{
@@ -185,7 +185,7 @@ func sweepSecurityPolicies(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	inputEncryption := &opensearchserverless.ListSecurityPoliciesInput{
@@ -259,7 +259,7 @@ func sweepVPCEndpoints(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	input := &opensearchserverless.ListVpcEndpointsInput{}

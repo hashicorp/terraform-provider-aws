@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dax
 
@@ -18,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -259,21 +261,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		resp, err = conn.CreateCluster(ctx, input)
 		if errs.IsA[*awstypes.InvalidParameterValueException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateCluster(ctx, input)
-	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DAX cluster: %s", err)
 	}
@@ -288,7 +287,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     []string{"available"},
-		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
+		Refresh:    clusterStateRefreshFunc(conn, d.Id(), "available", pending),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -457,7 +456,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		stateConf := &retry.StateChangeConf{
 			Pending:    pending,
 			Target:     []string{"available"},
-			Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
+			Refresh:    clusterStateRefreshFunc(conn, d.Id(), "available", pending),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second,
@@ -498,22 +497,18 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
 	}
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteCluster(ctx, req)
 		if errs.IsA[*awstypes.InvalidClusterStateFault](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCluster(ctx, req)
-	}
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags
@@ -527,7 +522,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network"},
 		Target:     []string{},
-		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "", []string{}),
+		Refresh:    clusterStateRefreshFunc(conn, d.Id(), "", []string{}),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -541,8 +536,8 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func clusterStateRefreshFunc(ctx context.Context, conn *dax.Client, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func clusterStateRefreshFunc(conn *dax.Client, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := dax.DescribeClustersInput{
 			ClusterNames: []string{clusterID},
 		}

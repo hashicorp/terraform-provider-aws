@@ -104,7 +104,9 @@ This resource supports the following arguments:
 * `apply_immediately` - (Optional, Default: false) Indicates whether the changes should be applied immediately or during the next maintenance window. Only used when updating an existing resource.
 * `auto_minor_version_upgrade` - (Optional, Default: false) Indicates that minor engine upgrades will be applied automatically to the replication instance during the maintenance window.
 * `availability_zone` - (Optional) The EC2 Availability Zone that the replication instance will be created in.
+* `dns_name_servers` - (Optional) A list of custom DNS name servers supported for the replication instance to access your on-premise source or target database. This list overrides the default name servers supported by the replication instance. You can specify a comma-separated list of internet addresses for up to four on-premise DNS name servers.
 * `engine_version` - (Optional) The engine version number of the replication instance.
+* `kerberos_authentication_settings` - (Optional) Configuration block for settings required for Kerberos authentication. See below.
 * `kms_key_arn` - (Optional) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
 * `network_type` - (Optional) The type of IP address protocol used by a replication instance. Valid values: `IPV4`, `DUAL`.
@@ -115,6 +117,14 @@ This resource supports the following arguments:
 * `replication_subnet_group_id` - (Optional) A subnet group to associate with the replication instance.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
+
+## kerberos_authentication_settings
+
+-> Additional information can be found in the [Using Kerberos Authentication with AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.Kerberos.html).
+
+* `key_cache_secret_iam_arn` - (Required) ARN of the IAM role that grants AWS DMS access to the secret containing key cache file for the Kerberos authentication.
+* `key_cache_secret_id` - (Required) Secret ID that stores the key cache file required for Kerberos authentication.
+* `krb5_file_contents` - (Required) Contents of krb5 configuration file required for Kerberos authentication.
 
 ## Attribute Reference
 

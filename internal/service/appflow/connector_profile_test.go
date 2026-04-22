@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appflow_test
@@ -9,39 +9,30 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectorProfiles types.ConnectorProfile
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &connectorProfiles),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "appflow", "connectorprofile/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
@@ -64,26 +55,26 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectorProfiles types.ConnectorProfile
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 	testPrefix := "test-prefix"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &connectorProfiles),
 				),
 			},
 			{
 				Config: testAccConnectorProfileConfig_update(rName, testPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.redshift.0.bucket_prefix", testPrefix),
 				),
 			},
@@ -94,20 +85,20 @@ func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectorProfiles types.ConnectorProfile
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappflow.ResourceConnectorProfile(), resourceName),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &connectorProfiles),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappflow.ResourceConnectorProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,128 +106,9 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV5(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var v types.ConnectorProfile
-	resourceName := "aws_appflow_connector_profile.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.AppFlowServiceID),
-		CheckDestroy: testAccCheckConnectorProfileDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccConnectorProfileConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			// v6.0 has an error refreshing state
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccConnectorProfileConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrName:      knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
-				},
-			},
-		},
-	})
-}
-
-func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV6(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var v types.ConnectorProfile
-	resourceName := "aws_appflow_connector_profile.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.AppFlowServiceID),
-		CheckDestroy: testAccCheckConnectorProfileDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccConnectorProfileConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrName:      knownvalue.NotNull(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccConnectorProfileConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrName:      knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectorProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFlowClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appflow_connector_profile" {
@@ -245,7 +117,7 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -260,14 +132,14 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckConnectorProfileExists(ctx context.Context, n string, v *types.ConnectorProfile) resource.TestCheckFunc {
+func testAccCheckConnectorProfileExists(ctx context.Context, t *testing.T, n string, v *types.ConnectorProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFlowClient(ctx)
 
 		output, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

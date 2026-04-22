@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -9,13 +9,11 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,20 +22,20 @@ func TestAccIAMSigningCertificate_basic(t *testing.T) {
 	var cred awstypes.SigningCertificate
 
 	resourceName := "aws_iam_signing_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
+					testAccCheckSigningCertificateExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_body"),
@@ -58,20 +56,20 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 	var cred awstypes.SigningCertificate
 
 	resourceName := "aws_iam_signing_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
+					testAccCheckSigningCertificateExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
@@ -83,14 +81,14 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 			{
 				Config: testAccSigningCertificateConfig_status(rName, "Active", certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
+					testAccCheckSigningCertificateExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 				),
 			},
 			{
 				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
+					testAccCheckSigningCertificateExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
@@ -103,22 +101,22 @@ func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 	var cred awstypes.SigningCertificate
 	resourceName := "aws_iam_signing_certificate.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
+					testAccCheckSigningCertificateExists(ctx, t, resourceName, &cred),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceSigningCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceSigningCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,56 +124,44 @@ func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSigningCertificateExists(ctx context.Context, n string, cred *awstypes.SigningCertificate) resource.TestCheckFunc {
+func testAccCheckSigningCertificateExists(ctx context.Context, t *testing.T, n string, v *awstypes.SigningCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Server Cert ID is set")
-		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
-		certId, userName, err := tfiam.DecodeSigningCertificateId(rs.Primary.ID)
+		output, err := tfiam.FindSigningCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["certificate_id"])
+
 		if err != nil {
 			return err
 		}
 
-		output, err := tfiam.FindSigningCertificate(ctx, conn, userName, certId)
-		if err != nil {
-			return err
-		}
-
-		*cred = *output
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckSigningCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSigningCertificateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_signing_certificate" {
 				continue
 			}
 
-			certId, userName, err := tfiam.DecodeSigningCertificateId(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
+			output, err := tfiam.FindSigningCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["certificate_id"])
 
-			output, err := tfiam.FindSigningCertificate(ctx, conn, userName, certId)
-
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
 			if output != nil {
-				return fmt.Errorf("IAM Service Specific Credential (%s) still exists", rs.Primary.ID)
+				return fmt.Errorf("IAM Signing Certificate (%s) still exists", rs.Primary.ID)
 			}
 		}
 

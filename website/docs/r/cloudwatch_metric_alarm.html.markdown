@@ -12,6 +12,8 @@ Provides a CloudWatch Metric Alarm resource.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar5"
@@ -27,7 +29,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 }
 ```
 
-## Example in Conjunction with Scaling Policies
+### With Scaling Policies
 
 ```terraform
 resource "aws_autoscaling_policy" "bat" {
@@ -57,7 +59,7 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
 }
 ```
 
-## Example with an Expression
+### With a Metrics Math Expression
 
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "foobar" {
@@ -109,6 +111,27 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 }
 ```
 
+### With PromQL
+
+```terraform
+resource "aws_cloudwatch_metric_alarm" "promql_alarm" {
+  alarm_name        = "high-cpu-promql"
+  alarm_description = "Alarm when average CPU exceeds 80% using PromQL"
+
+  evaluation_criteria {
+    promql_criteria {
+      query           = "avg(cpu_utilization_percent) > 80"
+      pending_period  = 300 # 5 minutes
+      recovery_period = 120 # 2 minutes
+    }
+  }
+
+  evaluation_interval = 30 # seconds
+
+  alarm_actions = [aws_sns_topic.alerts.arn]
+}
+```
+
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
   alarm_name                = "terraform-test-foobar"
@@ -143,7 +166,36 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
 }
 ```
 
-## Example of monitoring Healthy Hosts on NLB using Target Group and NLB
+### With a Metrics Insights Query
+
+```terraform
+resource "aws_cloudwatch_metric_alarm" "example" {
+  alarm_name          = "example-alarm"
+  alarm_description   = "Triggers if the smallest per-instance maximum load during the evaluation period exceeds the threshold"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  threshold           = 0.6
+  treat_missing_data  = "notBreaching"
+
+  metric_query {
+    id          = "q1"
+    expression  = <<-EOT
+      SELECT
+        MAX(DBLoadRelativeToNumVCPUs)
+      FROM SCHEMA("AWS/RDS", DBInstanceIdentifier)
+      WHERE DBInstanceIdentifier != 'example-rds-instance'
+      GROUP BY DBInstanceIdentifier
+      ORDER BY MIN() ASC
+      LIMIT 1
+    EOT
+    period      = 60
+    return_data = true
+    label       = "Max DB Load of the Least-Loaded RDS Instance"
+  }
+}
+```
+
+### Monitoring Healthy NLB Hosts with Target Group and NLB
 
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
@@ -167,7 +219,7 @@ resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
 ```
 
 ~> **NOTE:**  You cannot create a metric alarm consisting of both `statistic` and `extended_statistic` parameters.
-You must choose one or the other
+You must choose one or the other.
 
 ## Argument Reference
 
@@ -175,8 +227,10 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
-* `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
-* `evaluation_periods` - (Required) The number of periods over which data is compared to the specified threshold.
+* `comparison_operator` - (Optional) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
+* `evaluation_criteria` - (Optional) The evaluation criteria for PromQL alarms. Cannot be used with traditional metric alarm parameters.
+* `evaluation_interval` - (Optional) The frequency, in seconds, at which the alarm is evaluated. Valid values are `10`, `20`, `30`, and any multiple of `60`. Required when using `evaluation_criteria`.
+* `evaluation_periods` - (Optional) The number of periods over which data is compared to the specified threshold. Required for traditional metric alarms.
 * `metric_name` - (Optional) The name for the alarm's associated metric.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `namespace` - (Optional) The namespace for the alarm's associated metric. See docs for the [list of namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/aws-namespaces.html).
@@ -190,7 +244,7 @@ This resource supports the following arguments:
 * `actions_enabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
 * `alarm_actions` - (Optional) The list of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an Amazon Resource Name (ARN).
 * `alarm_description` - (Optional) The description for the alarm.
-* `datapoints_to_alarm` - (Optional) The number of datapoints that must be breaching to trigger the alarm.
+* `datapoints_to_alarm` - (Optional) The number of data points that must be breaching to trigger the alarm.
 * `dimensions` - (Optional) The dimensions for the alarm's associated metric.  For the list of available dimensions see the AWS documentation [here](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `insufficient_data_actions` - (Optional) The list of actions to execute when this alarm transitions into an INSUFFICIENT_DATA state from any other state. Each action is specified as an Amazon Resource Name (ARN).
 * `ok_actions` - (Optional) The list of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an Amazon Resource Name (ARN).
@@ -215,7 +269,9 @@ for details about valid values.
 
 * `id` - (Required) A short name used to tie this object to the results in the response. If you are performing math expressions on this set of data, this name represents that data and can serve as a variable in the mathematical expression. The valid characters are letters, numbers, and underscore. The first character must be a lowercase letter.
 * `account_id` - (Optional) The ID of the account where the metrics are located, if this is a cross-account alarm.
-* `expression` - (Optional) The math expression to be performed on the returned data, if this object is performing a math expression. This expression can use the id of the other metrics to refer to those metrics, and can also use the id of other expressions to use the result of those expressions. For more information about metric math expressions, see Metric Math Syntax and Functions in the [Amazon CloudWatch User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax).
+* `expression` - (Optional) A Metrics Insights query or a metric math expression to be evaluated on the returned data.
+  For details about Metrics Insights queries, see [Metrics Insights query components and syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch-metrics-insights-querylanguage) in the AWS documentation.
+  For details about metric math expressions, see [Metric Math Syntax and Functions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax) in the AWS documentation.
 * `label` - (Optional) A human-readable label for this metric or expression. This is especially useful if this is an expression, so that you know what the value represents.
 * `metric` - (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.
 * `period` - (Optional) Granularity in seconds of returned data points.
@@ -224,6 +280,16 @@ for details about valid values.
 * `return_data` - (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.
+
+#### `evaluation_criteria`
+
+* `promql_criteria` - (Required) The PromQL criteria for the alarm evaluation.
+
+#### `promql_criteria`
+
+* `query` - (Required) The PromQL query that the alarm evaluates. The query must return a result of vector type. Each entry in the vector result represents an alarm contributor.
+* `pending_period` - (Optional) The duration, in seconds, that a contributor must be continuously breaching before it transitions to the ALARM state. Valid range: 0-86400.
+* `recovery_period` - (Optional) The duration, in seconds, that a contributor must continuously not be breaching before it transitions back to the OK state. Valid range: 0-86400.
 
 #### `metric`
 
@@ -249,11 +315,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_metric_alarm.example
+  identity = {
+    alarm_name = "alarm-12345"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `alarm_name` (String) Name of the CloudWatch metric alarm.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_metric_alarm.test
+  to = aws_cloudwatch_metric_alarm.example
   id = "alarm-12345"
 }
 ```
@@ -261,5 +353,5 @@ import {
 Using `terraform import`, import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_metric_alarm.test alarm-12345
+% terraform import aws_cloudwatch_metric_alarm.example alarm-12345
 ```

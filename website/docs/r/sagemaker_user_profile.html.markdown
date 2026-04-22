@@ -230,11 +230,39 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sagemaker_user_profile.example
+  identity = {
+    domain_id         = "domain-id"
+    user_profile_name = "profile-name"
+  }
+}
+
+resource "aws_sagemaker_user_profile" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_id` (String) SageMaker domain ID.
+* `user_profile_name` (String) Name of the user profile.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI User Profiles using the `arn`. For example:
 
 ```terraform
 import {
-  to = aws_sagemaker_user_profile.test_user_profile
+  to = aws_sagemaker_user_profile.example
   id = "arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name"
 }
 ```
@@ -242,5 +270,5 @@ import {
 Using `terraform import`, import SageMaker AI User Profiles using the `arn`. For example:
 
 ```console
-% terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
+% terraform import aws_sagemaker_user_profile.example arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```

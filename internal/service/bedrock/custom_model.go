@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrock
 
@@ -28,8 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -37,6 +38,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -48,6 +50,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetModelCustomizationJobOutput")
 // @Testing(serialize=true)
 // @Testing(importIgnore="base_model_identifier", plannableImportAction="Replace")
+// @Testing(preIdentityVersion="v5.100.0")
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
@@ -280,11 +283,11 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(id.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 	input.CustomModelTags = getTagsIn(ctx)
 	input.JobTags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateModelCustomizationJob(ctx, input)
 	}, errCodeValidationException, "Could not assume provided IAM role")
 
@@ -327,7 +330,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 	jobARN := data.JobARN.ValueString()
 	outputGJ, err := findModelCustomizationJobByID(ctx, conn, jobARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -368,7 +371,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 		customModelARN := aws.ToString(outputGJ.OutputModelArn)
 		outputGM, err := findCustomModelByID(ctx, conn, customModelARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 			response.State.RemoveResource(ctx)
 
@@ -477,8 +480,7 @@ func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -487,7 +489,7 @@ func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -506,8 +508,7 @@ func findModelCustomizationJobByID(ctx context.Context, conn *bedrock.Client, id
 
 	if status := output.Status; status == awstypes.ModelCustomizationJobStatusStopped {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
@@ -519,8 +520,7 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -529,20 +529,20 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusModelCustomizationJob(conn *bedrock.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &bedrock.GetModelCustomizationJobInput{
 			JobIdentifier: aws.String(id),
 		}
 		output, err := findModelCustomizationJob(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -558,14 +558,14 @@ func waitModelCustomizationJobCompleted(ctx context.Context, conn *bedrock.Clien
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelCustomizationJobStatusInProgress),
 		Target:  enum.Slice(awstypes.ModelCustomizationJobStatusCompleted),
-		Refresh: statusModelCustomizationJob(ctx, conn, id),
+		Refresh: statusModelCustomizationJob(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*bedrock.GetModelCustomizationJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 
 		return output, err
 	}
@@ -577,14 +577,14 @@ func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelCustomizationJobStatusStopping),
 		Target:  enum.Slice(awstypes.ModelCustomizationJobStatusStopped),
-		Refresh: statusModelCustomizationJob(ctx, conn, id),
+		Refresh: statusModelCustomizationJob(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*bedrock.GetModelCustomizationJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 
 		return output, err
 	}

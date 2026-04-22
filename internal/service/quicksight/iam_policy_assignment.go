@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package quicksight
 
@@ -16,16 +18,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,23 +58,9 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, request resour
 				CustomType: fwtypes.StringEnumType[awstypes.AssignmentStatus](),
 				Required:   true,
 			},
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrNamespace: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString("default"),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
+			names.AttrID:           framework.IDAttribute(),
+			names.AttrNamespace:    quicksightschema.NamespaceAttribute(),
 			"policy_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -109,7 +97,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, request resour
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if data.AWSAccountID.IsUnknown() || data.AWSAccountID.IsNull() {
+	if data.AWSAccountID.IsUnknown() {
 		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 
@@ -176,7 +164,7 @@ func (r *iamPolicyAssignmentResource) Read(ctx context.Context, request resource
 
 	output, err := findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -315,8 +303,7 @@ func findIAMPolicyAssignment(ctx context.Context, conn *quicksight.Client, input
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -325,7 +312,7 @@ func findIAMPolicyAssignment(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil || output.IAMPolicyAssignment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IAMPolicyAssignment, nil

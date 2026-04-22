@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package paymentcryptography
 
@@ -21,13 +23,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,6 +41,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/paymentcryptography;paymentcryptography.GetKeyOutput")
 // @Testing(generator=false)
 // @Testing(importIgnore="deletion_window_in_days")
+// @Testing(preIdentityVersion="v5.100.0")
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -314,7 +317,7 @@ func (r *keyResource) Read(ctx context.Context, request resource.ReadRequest, re
 	}
 
 	out, err := findKeyByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -434,7 +437,7 @@ func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.KeyStateCreateInProgress),
 		Target:                    enum.Slice(awstypes.KeyStateCreateComplete),
-		Refresh:                   statusKey(ctx, conn, id),
+		Refresh:                   statusKey(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -452,7 +455,7 @@ func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreateComplete),
 		Target:  []string{},
-		Refresh: statusKey(ctx, conn, id),
+		Refresh: statusKey(conn, id),
 		Timeout: timeout,
 	}
 
@@ -464,10 +467,10 @@ func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id st
 	return nil, err
 }
 
-func statusKey(ctx context.Context, conn *paymentcryptography.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKey(conn *paymentcryptography.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findKeyByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -488,8 +491,7 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -497,14 +499,13 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	}
 
 	if out == nil || out.Key == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// If the key is either Pending or Complete deletion state Terraform considers it logically deleted.
 	if state := out.Key.KeyState; state == awstypes.KeyStateDeletePending || state == awstypes.KeyStateDeleteComplete {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: in,
+			Message: string(state),
 		}
 	}
 

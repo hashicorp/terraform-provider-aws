@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -14,11 +16,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -27,17 +30,20 @@ import (
 
 // @SDKResource("aws_ebs_volume", name="EBS Volume")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Volume")
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(importIgnore="final_snapshot")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(name="Volume")
+// @Testing(generator=false)
 func resourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSVolumeCreate,
 		ReadWithoutTimeout:   resourceEBSVolumeRead,
 		UpdateWithoutTimeout: resourceEBSVolumeUpdate,
 		DeleteWithoutTimeout: resourceEBSVolumeDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -114,12 +120,17 @@ func resourceEBSVolume() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(125, 1000),
+				ValidateFunc: validation.IntBetween(125, 2000),
 			},
 			names.AttrType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"volume_initialization_rate": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(100, 300),
 			},
 		},
 	}
@@ -131,7 +142,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	input := ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVolume),
 	}
 
@@ -171,6 +182,10 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.VolumeType = awstypes.VolumeType(value.(string))
 	}
 
+	if value, ok := d.GetOk("volume_initialization_rate"); ok {
+		input.VolumeInitializationRate = aws.Int32(int32(value.(int)))
+	}
+
 	output, err := conn.CreateVolume(ctx, &input)
 
 	if err != nil {
@@ -193,7 +208,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	volume, err := findEBSVolumeByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EBS Volume %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -203,22 +218,57 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
-	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
-	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
-	d.Set(names.AttrEncrypted, volume.Encrypted)
-	d.Set(names.AttrIOPS, volume.Iops)
-	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
-	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
-	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set(names.AttrSize, volume.Size)
-	d.Set(names.AttrSnapshotID, volume.SnapshotId)
-	d.Set(names.AttrThroughput, volume.Throughput)
-	d.Set(names.AttrType, volume.VolumeType)
+	if err := resourceEBSVolumeFlatten(ctx, c, volume, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceEBSVolumeFlatten(ctx context.Context, awsClient *conns.AWSClient, volume *awstypes.Volume, d *schema.ResourceData) error {
+	if err := d.Set(names.AttrARN, ebsVolumeARN(ctx, awsClient, aws.ToString(volume.VolumeId))); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrARN, err)
+	}
+	if err := d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrAvailabilityZone, err)
+	}
+	if err := d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339)); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrCreateTime, err)
+	}
+	if err := d.Set(names.AttrEncrypted, volume.Encrypted); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrEncrypted, err)
+	}
+	if err := d.Set(names.AttrIOPS, volume.Iops); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrIOPS, err)
+	}
+	if err := d.Set(names.AttrKMSKeyID, volume.KmsKeyId); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrKMSKeyID, err)
+	}
+	if err := d.Set("multi_attach_enabled", volume.MultiAttachEnabled); err != nil {
+		return fmt.Errorf("setting multi_attach_enabled: %w", err)
+	}
+	if err := d.Set("outpost_arn", volume.OutpostArn); err != nil {
+		return fmt.Errorf("setting outpost_arn: %w", err)
+	}
+	if err := d.Set(names.AttrSize, volume.Size); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSize, err)
+	}
+	if err := d.Set(names.AttrSnapshotID, volume.SnapshotId); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSnapshotID, err)
+	}
+	if err := d.Set(names.AttrThroughput, volume.Throughput); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrThroughput, err)
+	}
+	if err := d.Set(names.AttrType, volume.VolumeType); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrType, err)
+	}
+	if err := d.Set("volume_initialization_rate", volume.VolumeInitializationRate); err != nil {
+		return fmt.Errorf("setting volume_initialization_rate: %w", err)
+	}
 
 	setTagsOut(ctx, volume.Tags)
 
-	return diags
+	return nil
 }
 
 func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -282,7 +332,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.CreateSnapshot(ctx, &input)
 			},
 			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
@@ -294,7 +344,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		snapshotID := aws.ToString(outputRaw.(*ec2.CreateSnapshotOutput).SnapshotId)
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return waitSnapshotCompleted(ctx, conn, snapshotID, d.Timeout(schema.TimeoutDelete))
 			},
 			errCodeResourceNotReady)
@@ -309,7 +359,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		VolumeId: aws.String(d.Id()),
 	}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteVolume(ctx, &input)
 		},
 		errCodeVolumeInUse)
@@ -366,6 +416,13 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 		// Throughput is valid only for gp3 volumes.
 		if throughput > 0 && volumeType != awstypes.VolumeTypeGp3 {
 			return fmt.Errorf("'throughput' must not be set when 'type' is '%s'", volumeType)
+		}
+
+		config := diff.GetRawConfig()
+		if v := config.GetAttr(names.AttrSnapshotID); v.IsKnown() && v.IsNull() {
+			if v := config.GetAttr("volume_initialization_rate"); v.IsKnown() && !v.IsNull() {
+				return fmt.Errorf("'volume_initialization_rate' must not be set unless 'snapshot_id' is set")
+			}
 		}
 	} else {
 		// Update.

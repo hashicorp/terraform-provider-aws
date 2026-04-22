@@ -14,6 +14,8 @@ Provides a DynamoDB table resource.
 
 ~> **Note:** When using [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html) with this resource, use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `replica`, _e.g._, `lifecycle { ignore_changes = [replica] }`.
 
+~> **Note:** If autoscaling creates drift for your `global_secondary_index` blocks and/or more granular `lifecycle` management for GSIs, we recommend using the new **experimental** resource [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index).
+
 ## DynamoDB Table attributes
 
 Only define attributes on the table object that are going to be used as:
@@ -22,6 +24,8 @@ Only define attributes on the table object that are going to be used as:
 * LSI or GSI hash key or range key
 
 The DynamoDB API expects attribute structure (name and type) to be passed along when creating or updating GSI/LSIs or creating the initial table. In these cases it expects the Hash / Range keys to be provided. Because these get re-used in numerous places (i.e the table's range key could be a part of one or more GSIs), they are stored on the table object to prevent duplication and increase consistency. If you add attributes here that are not used in these scenarios it can cause an infinite loop in planning.
+
+~> **Note:** When using the [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index) resource, you do not need to define the attributes for externally managed GSIs in the `aws_dynamodb_table` resource.
 
 ## Example Usage
 
@@ -75,6 +79,115 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }
 ```
 
+### Basic Example containing Global Secondary Indexes using Multi-attribute keys pattern
+
+The following dynamodb table description models the table and GSIs shown in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
+
+~> **Note:** Multi-attribute keys for GSIs use the `key_schema` block instead of `hash_key`/`range_key`. The `hash_key` and `range_key` arguments are deprecated in favor of `key_schema`.
+
+```terraform
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name           = "TournamentMatches"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 20
+  write_capacity = 20
+  hash_key       = "matchId"
+
+  attribute {
+    name = "matchId"
+    type = "S"
+  }
+
+  attribute {
+    name = "tournamentId"
+    type = "S"
+  }
+
+  attribute {
+    name = "region"
+    type = "S"
+  }
+
+  attribute {
+    name = "round"
+    type = "S"
+  }
+
+  attribute {
+    name = "bracket"
+    type = "S"
+  }
+
+  attribute {
+    name = "playerId"
+    type = "N"
+  }
+
+  attribute {
+    name = "matchDate"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = "TimeToExist"
+    enabled        = true
+  }
+
+  # GSI with multiple HASH keys and multiple RANGE keys using key_schema
+  global_secondary_index {
+    name = "TournamentRegionIndex"
+    key_schema {
+      attribute_name = "tournamentId"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "region"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "round"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "bracket"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "matchId"
+      key_type       = "RANGE"
+    }
+    write_capacity  = 10
+    read_capacity   = 10
+    projection_type = "ALL"
+  }
+
+  # GSI with single HASH key and multiple RANGE keys using key_schema
+  global_secondary_index {
+    name = "PlayerMatchHistoryIndex"
+    key_schema {
+      attribute_name = "playerId"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "matchDate"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "round"
+      key_type       = "RANGE"
+    }
+    write_capacity  = 10
+    read_capacity   = 10
+    projection_type = "ALL"
+  }
+
+  tags = {
+    Name        = "dynamodb-table-1"
+    Environment = "production"
+  }
+}
+```
+
 ### Global Tables
 
 This resource implements support for [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) via `replica` configuration blocks. For working with [DynamoDB Global Tables V1 (version 2017.11.29)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html), see the [`aws_dynamodb_global_table` resource](/docs/providers/aws/r/dynamodb_global_table.html).
@@ -108,9 +221,13 @@ resource "aws_dynamodb_table" "example" {
 
 A global table configured for Multi-Region strong consistency (MRSC) provides the ability to perform a strongly consistent read with multi-Region scope. Performing a strongly consistent read on an MRSC table ensures you're always reading the latest version of an item, irrespective of the Region in which you're performing the read.
 
+You can configure a MRSC global table with three replicas, or with two replicas and one witness. A witness is a component of a MRSC global table that contains data written to global table replicas, and provides an optional alternative to a full replica while supporting MRSC's availability architecture. You cannot perform read or write operations on a witness. A witness is located in a different Region than the two replicas.
+
 **Note** Please see detailed information, restrictions, caveats etc on the [AWS Support Page](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/multi-region-strong-consistency-gt.html).
 
-Consistency Mode (`consistency_mode`) is a new argument on the embedded `replica` that allows you to configure consistency mode for Global Tables.
+Consistency Mode (`consistency_mode`) on the embedded `replica` allows you to configure consistency mode for Global Tables.
+
+##### Consistency mode with 3 Replicas
 
 ```terraform
 resource "aws_dynamodb_table" "example" {
@@ -133,6 +250,32 @@ resource "aws_dynamodb_table" "example" {
   replica {
     region_name      = "us-west-2"
     consistency_mode = "STRONG"
+  }
+}
+```
+
+##### Consistency Mode with 2 Replicas and Witness Region
+
+```terraform
+resource "aws_dynamodb_table" "example" {
+  name             = "example"
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name      = "us-east-2"
+    consistency_mode = "STRONG"
+  }
+
+  global_table_witness {
+    region_name = "us-west-2"
   }
 }
 ```
@@ -177,11 +320,11 @@ resource "aws_dynamodb_table" "example" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name    = data.aws_region.third.name
+    region_name    = data.aws_region.third.region
     propagate_tags = true
   }
 
@@ -192,7 +335,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_tag" "example" {
-  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.region)
   key          = "Architect"
   value        = "Gigi"
 }
@@ -213,24 +356,29 @@ The following arguments are optional:
 * `deletion_protection_enabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
 * `import_table` - (Optional) Import Amazon S3 data into a new table. See below.
 * `global_secondary_index` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
+* `global_table_witness` - (Optional) Witness Region in a Multi-Region Strong Consistency deployment. **Note** This must be used alongside a single `replica` with `consistency_mode` set to `STRONG`. Other combinations will fail to provision. See below.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options. See below.
 * `range_key` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `read_capacity` - (Optional) Number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. See below.
+* `restore_backup_arn` - (Optional) ARN of backup to restore.
 * `restore_date_time` - (Optional) Time of the point-in-time recovery point to restore.
 * `restore_source_name` - (Optional) Name of the table to restore. Must match the name of an existing table.
 * `restore_source_table_arn` - (Optional) ARN of the source table to restore. Must be supplied for cross-region restores.
 * `restore_to_latest_time` - (Optional) If set, restores table to the most recent point-in-time recovery point.
 * `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. Must be supplied for cross-region restores. See below.
 * `stream_enabled` - (Optional) Whether Streams are enabled.
-* `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
+* `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream.
+  Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
+  Only valid when `stream_enabled` is true.
 * `table_class` - (Optional) Storage class of the table.
   Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
   Default value is `STANDARD`.
 * `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Configuration block for TTL. See below.
+* `warm_throughput` - (Optional) Sets the number of warm read and write units for the specified table. See below.
 * `write_capacity` - (Optional) Number of write units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 
 ### `attribute`
@@ -264,14 +412,25 @@ The following arguments are optional:
 
 ### `global_secondary_index`
 
-* `hash_key` - (Required) Name of the hash key in the index; must be defined as an attribute in the resource.
+* `hash_key` - (Optional, **Deprecated**) Name of the hash key in the index; must be defined as an attribute in the resource. Mutually exclusive with `key_schema`. Use `key_schema` instead.
+* `key_schema` - (Optional) Configuration block(s) for the key schema. Mutually exclusive with `hash_key` and `range_key`. Required if `hash_key` is not specified. Supports multi-attribute keys for the [Multi-Attribute Keys design pattern](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html). See below.
 * `name` - (Required) Name of the index.
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
-* `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
-* `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
-* `range_key` - (Optional) Name of the range key; must be defined
+* `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
+* `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects into the index only the table and index hash_key and sort_key attributes, `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that `KEYS_ONLY` project.
+* `range_key` - (Optional, **Deprecated**) Name of the range key; must be defined as an attribute in the resource. Mutually exclusive with `key_schema`. Use `key_schema` instead.
 * `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
+* `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
 * `write_capacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
+
+#### `key_schema`
+
+* `attribute_name` - (Required) Name of the attribute; must be defined as an attribute in the resource.
+* `key_type` - (Required) The type of key. Valid values are `HASH` (partition key) or `RANGE` (sort key). You can specify up to 4 attributes with `key_type = "HASH"` and up to 4 attributes with `key_type = "RANGE"`.
+
+### `global_table_witness`
+
+* `region_name` - (Required) Name of the AWS Region that serves as a witness for the MRSC global table.
 
 ### `local_secondary_index`
 
@@ -297,6 +456,7 @@ The following arguments are optional:
   **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
   **Note:** Changing this value will recreate the replica.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
+* `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the replica. Default is `false`.
 * `propagate_tags` - (Optional) Whether to propagate the global table's tags to a replica.
   Default is `false`.
   Changes to tags only move in one direction: from global (source) to replica.
@@ -317,6 +477,13 @@ The following arguments are optional:
   Required if `enabled` is `true`, must not be set otherwise.
 * `enabled` - (Optional) Whether TTL is enabled.
   Default value is `false`.
+
+### `warm_throughput`
+
+~> **Note:** Explicitly configuring both `read_units_per_second` and `write_units_per_second` to the default/minimum values will cause Terraform to report differences.
+
+* `read_units_per_second` - (Optional) Number of read operations a table or index can instantaneously support. For the base table, decreasing this value will force a new resource. For a global secondary index, this value can be increased or decreased without recreation. Minimum value of `12000` (default).
+* `write_units_per_second` - (Optional) Number of write operations a table or index can instantaneously support. For the base table, decreasing this value will force a new resource. For a global secondary index, this value can be increased or decreased without recreation. Minimum value of `4000` (default).
 
 ## Attribute Reference
 
@@ -342,6 +509,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dynamodb_table.example
+  identity = {
+    name = "GameScores"
+  }
+}
+
+resource "aws_dynamodb_table" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the DynamoDB Table.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB tables using the `name`. For example:
 

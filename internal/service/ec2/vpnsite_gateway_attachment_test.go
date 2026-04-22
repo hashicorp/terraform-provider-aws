@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,13 +9,11 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,18 +21,18 @@ func TestAccSiteVPNGatewayAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
+				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckVPNGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
@@ -45,19 +43,19 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
+				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNGatewayAttachment(), resourceName),
+					testAccCheckVPNGatewayAttachmentExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,7 +63,7 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *awstypes.VpcAttachment) resource.TestCheckFunc {
+func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, t *testing.T, n string, v *awstypes.VpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -76,7 +74,7 @@ func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *aw
 			return fmt.Errorf("No EC2 VPN Gateway Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes[names.AttrVPCID])
 
@@ -90,9 +88,9 @@ func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *aw
 	}
 }
 
-func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_gateway_attachment" {
@@ -101,7 +99,7 @@ func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfec2.FindVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes[names.AttrVPCID])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -116,7 +114,7 @@ func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccSiteVPNGatewayAttachmentConfig_basic(rName string) string {
+func testAccVPNGatewayAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

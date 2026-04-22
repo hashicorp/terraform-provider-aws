@@ -31,8 +31,10 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network interface.
-* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.
+* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See [association](#association) below.
+* `attachment` - Attachment of the ENI. See [attachment](#attachment) below.
 * `availability_zone` - Availability Zone.
+* `ena_srd_specification` - ENA Express configuration for the network interface. See [ena_srd_specification](#ena_srd_specification) below.
 * `description` - Description of the network interface.
 * `interface_type` - Type of interface.
 * `ipv6_addresses` - List of IPv6 addresses to assign to the ENI.
@@ -57,6 +59,23 @@ This data source exports the following attributes in addition to the arguments a
 * `ip_owner_id` - ID of the Elastic IP address owner.
 * `public_dns_name` - Public DNS name.
 * `public_ip` - Address of the Elastic IP address bound to the network interface.
+
+### `attachment`
+
+* `attachment_id` - ID of the network interface attachment.
+* `device_index` - Device index of the network interface attachment on the instance.
+* `instance_id` - ID of the instance.
+* `instance_owner_id` - AWS account ID of the owner of the instance.
+* `network_card_index` - Index of the network card.
+
+### `ena_srd_specification`
+
+* `ena_srd_enabled` - Whether ENA Express is enabled for the network interface.
+* `ena_srd_udp_specification` - ENA Express UDP configuration. See below.
+
+#### `ena_srd_udp_specification`
+
+* `ena_srd_udp_enabled` - Whether UDP traffic uses ENA Express.
 
 ## Timeouts
 

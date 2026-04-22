@@ -1,0 +1,23 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_glue_schema" "test" {
+  region = var.region
+
+  schema_name       = var.rName
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+  data_format       = "AVRO"
+  compatibility     = "NONE"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
+}

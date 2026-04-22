@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB ACL.
 ---
 
-# Resource: aws_memorydb_acl
+# Data Source: aws_memorydb_acl
 
 Provides information about a MemoryDB ACL.
 

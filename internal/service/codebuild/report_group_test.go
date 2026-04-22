@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild_test
@@ -8,41 +8,32 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportGroup types.ReportGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckReportGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckReportGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "NO_EXPORT"),
@@ -63,19 +54,19 @@ func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportGroup types.ReportGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckReportGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckReportGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_s3Export(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
@@ -96,7 +87,7 @@ func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 			{
 				Config: testAccReportGroupConfig_s3ExportUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
@@ -114,19 +105,19 @@ func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportGroup types.ReportGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckReportGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckReportGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -140,7 +131,7 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 			{
 				Config: testAccReportGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -149,7 +140,7 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 			{
 				Config: testAccReportGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -161,19 +152,19 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 func TestAccCodeBuildReportGroup_deleteReports(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportGroup types.ReportGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckReportGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckReportGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_delete(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -190,20 +181,20 @@ func TestAccCodeBuildReportGroup_deleteReports(t *testing.T) {
 func TestAccCodeBuildReportGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportGroup types.ReportGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckReportGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckReportGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &reportGroup),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodebuild.ResourceReportGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -211,86 +202,8 @@ func TestAccCodeBuildReportGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildReportGroup_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var reportGroup types.ReportGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_codebuild_report_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheckReportGroup(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy: testAccCheckReportGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccReportGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccReportGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccReportGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("codebuild", regexache.MustCompile(`report-group/.+`)),
-					}),
-				},
-			},
-		},
-	})
-}
-
 func testAccPreCheckReportGroup(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CodeBuildClient(ctx)
 
 	input := &codebuild.ListReportGroupsInput{}
 
@@ -305,9 +218,9 @@ func testAccPreCheckReportGroup(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckReportGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckReportGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeBuildClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codebuild_report_group" {
@@ -316,7 +229,7 @@ func testAccCheckReportGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfcodebuild.FindReportGroupByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -331,14 +244,14 @@ func testAccCheckReportGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckReportGroupExists(ctx context.Context, n string, v *types.ReportGroup) resource.TestCheckFunc {
+func testAccCheckReportGroupExists(ctx context.Context, t *testing.T, n string, v *types.ReportGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeBuildClient(ctx)
 
 		output, err := tfcodebuild.FindReportGroupByARN(ctx, conn, rs.Primary.ID)
 

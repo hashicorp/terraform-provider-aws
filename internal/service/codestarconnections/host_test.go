@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codestarconnections_test
@@ -11,18 +11,11 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,21 +23,21 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codestar-connections", regexache.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codestar-connections", regexache.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -65,22 +58,22 @@ func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodestarconnections.ResourceHost(), resourceName),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodestarconnections.ResourceHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,21 +85,21 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codestar-connections", regexache.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codestar-connections", regexache.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -128,92 +121,14 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarConnectionsHost_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v codestarconnections.GetHostOutput
-	resourceName := "aws_codestarconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
-		CheckDestroy: testAccCheckHostDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccHostConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccHostConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccHostConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("codestar-connections", regexache.MustCompile("host/.+")),
-					}),
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckHostExists(ctx context.Context, n string, v *codestarconnections.GetHostOutput) resource.TestCheckFunc {
+func testAccCheckHostExists(ctx context.Context, t *testing.T, n string, v *codestarconnections.GetHostOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeStarConnectionsClient(ctx)
 
 		output, err := tfcodestarconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
@@ -227,9 +142,9 @@ func testAccCheckHostExists(ctx context.Context, n string, v *codestarconnection
 	}
 }
 
-func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHostDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeStarConnectionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codestarconnections_host" {
@@ -238,7 +153,7 @@ func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodestarconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

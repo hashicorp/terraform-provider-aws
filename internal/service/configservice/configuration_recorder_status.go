@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -11,26 +13,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_configuration_recorder_status", name="Configuration Recorder Status")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigurationRecorderStatus")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceConfigurationRecorderStatus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationRecorderStatusPut,
 		ReadWithoutTimeout:   resourceConfigurationRecorderStatusRead,
 		UpdateWithoutTimeout: resourceConfigurationRecorderStatusPut,
 		DeleteWithoutTimeout: resourceConfigurationRecorderStatusDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"is_enabled": {
@@ -40,6 +42,7 @@ func resourceConfigurationRecorderStatus() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -53,21 +56,21 @@ func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.Resou
 
 	if d.HasChange("is_enabled") {
 		if d.Get("is_enabled").(bool) {
-			input := &configservice.StartConfigurationRecorderInput{
+			input := configservice.StartConfigurationRecorderInput{
 				ConfigurationRecorderName: aws.String(name),
 			}
 
-			_, err := conn.StartConfigurationRecorder(ctx, input)
+			_, err := conn.StartConfigurationRecorder(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "starting ConfigService Configuration Recorder (%s): %s", name, err)
 			}
 		} else {
-			input := &configservice.StopConfigurationRecorderInput{
+			input := configservice.StopConfigurationRecorderInput{
 				ConfigurationRecorderName: aws.String(name),
 			}
 
-			_, err := conn.StopConfigurationRecorder(ctx, input)
+			_, err := conn.StopConfigurationRecorder(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "stopping ConfigService Configuration Recorder (%s): %s", name, err)
@@ -75,7 +78,9 @@ func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	d.SetId(name)
+	if d.IsNewResource() {
+		d.SetId(name)
+	}
 
 	return append(diags, resourceConfigurationRecorderStatusRead(ctx, d, meta)...)
 }
@@ -86,7 +91,7 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 
 	recorderStatus, err := findConfigurationRecorderStatusByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Configuration Recorder Status (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -97,7 +102,7 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("is_enabled", recorderStatus.Recording)
-	d.Set(names.AttrName, d.Id())
+	d.Set(names.AttrName, recorderStatus.Name)
 
 	return diags
 }
@@ -123,11 +128,11 @@ func resourceConfigurationRecorderStatusDelete(ctx context.Context, d *schema.Re
 }
 
 func findConfigurationRecorderStatusByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigurationRecorderStatus, error) {
-	input := &configservice.DescribeConfigurationRecorderStatusInput{
+	input := configservice.DescribeConfigurationRecorderStatusInput{
 		ConfigurationRecorderNames: []string{name},
 	}
 
-	return findConfigurationRecorderStatus(ctx, conn, input)
+	return findConfigurationRecorderStatus(ctx, conn, &input)
 }
 
 func findConfigurationRecorderStatus(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationRecorderStatusInput) (*types.ConfigurationRecorderStatus, error) {
@@ -145,8 +150,7 @@ func findConfigurationRecorderStatuses(ctx context.Context, conn *configservice.
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -155,7 +159,7 @@ func findConfigurationRecorderStatuses(ctx context.Context, conn *configservice.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConfigurationRecordersStatus, nil

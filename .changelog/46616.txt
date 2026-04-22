@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_dms_endpoint: Add missing `mongodb_settings.use_update_lookup` attribute to fix "invalid address to set" error
+```

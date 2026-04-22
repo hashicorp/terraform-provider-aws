@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,14 +9,12 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,9 +24,9 @@ func testAccTransitGatewayRoute_basic(t *testing.T, semaphore tfsync.Semaphore) 
 	resourceName := "aws_ec2_transit_gateway_route.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -36,12 +34,12 @@ func testAccTransitGatewayRoute_basic(t *testing.T, semaphore tfsync.Semaphore) 
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
@@ -63,9 +61,9 @@ func testAccTransitGatewayRoute_basic_ipv6(t *testing.T, semaphore tfsync.Semaph
 	resourceName := "aws_ec2_transit_gateway_route.test_ipv6"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -73,12 +71,12 @@ func testAccTransitGatewayRoute_basic_ipv6(t *testing.T, semaphore tfsync.Semaph
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "2001:db8::/56"),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
@@ -99,9 +97,9 @@ func testAccTransitGatewayRoute_blackhole(t *testing.T, semaphore tfsync.Semapho
 	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test_blackhole"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -109,12 +107,12 @@ func testAccTransitGatewayRoute_blackhole(t *testing.T, semaphore tfsync.Semapho
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
@@ -134,9 +132,9 @@ func testAccTransitGatewayRoute_disappears(t *testing.T, semaphore tfsync.Semaph
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -144,13 +142,13 @@ func testAccTransitGatewayRoute_disappears(t *testing.T, semaphore tfsync.Semaph
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayRoute(), resourceName),
+					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -163,9 +161,9 @@ func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T
 	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -173,13 +171,13 @@ func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayVPCAttachment(), transitGatewayVpcAttachmentResourceName),
+					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayVPCAttachment(), transitGatewayVpcAttachmentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,14 +185,14 @@ func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T
 	})
 }
 
-func testAccCheckTransitGatewayRouteExists(ctx context.Context, n string, v *awstypes.TransitGatewayRoute) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteExists(ctx context.Context, t *testing.T, n string, v *awstypes.TransitGatewayRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayStaticRoute(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
 
@@ -208,9 +206,9 @@ func testAccCheckTransitGatewayRouteExists(ctx context.Context, n string, v *aws
 	}
 }
 
-func testAccCheckTransitGatewayRouteDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_route" {
@@ -219,7 +217,7 @@ func testAccCheckTransitGatewayRouteDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfec2.FindTransitGatewayStaticRoute(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

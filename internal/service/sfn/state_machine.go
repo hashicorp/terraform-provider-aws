@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sfn
 
@@ -16,8 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -35,16 +37,15 @@ import (
 
 // @SDKResource("aws_sfn_state_machine", name="State Machine")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sfn;sfn.DescribeStateMachineOutput")
+// @Testing(preIdentityVersion="v6.13.0")
 func resourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,
 		ReadWithoutTimeout:   resourceStateMachineRead,
 		UpdateWithoutTimeout: resourceStateMachineUpdate,
 		DeleteWithoutTimeout: resourceStateMachineDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -114,6 +115,10 @@ func resourceStateMachine() *schema.Resource {
 						"log_destination": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.All(
+								verify.ValidARN,
+								validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+							),
 						},
 					},
 				},
@@ -137,7 +142,7 @@ func resourceStateMachine() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
+					validation.StringLenBetween(1, 80-sdkid.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
@@ -204,7 +209,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
@@ -230,7 +235,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	// Note: the instance may be in a deleting mode, hence the retry
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateStateMachine(ctx, input)
 	}, "StateMachineDeleting", "AccessDeniedException")
 
@@ -249,7 +254,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findStateMachineByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Step Functions State Machine (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -359,11 +364,11 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		// Handle eventual consistency after update.
-		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
+		err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
 			output, err := findStateMachineByARN(ctx, conn, d.Id())
 
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 
 			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.ToString(output.Definition)), []byte(d.Get("definition").(string))) ||
@@ -375,7 +380,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 				d.HasChange("encryption_configuration.0.kms_key_id") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsKeyId != nil && aws.ToString(output.EncryptionConfiguration.KmsKeyId) != d.Get("encryption_configuration.0.kms_key_id") ||
 				d.HasChange("encryption_configuration.0.encryption_type") && output.EncryptionConfiguration != nil && string(output.EncryptionConfiguration.Type) != d.Get("encryption_configuration.0.encryption_type").(string) ||
 				d.HasChange("encryption_configuration.0.kms_data_key_reuse_period_seconds") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds != nil && aws.ToInt32(output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds) != int32(d.Get("encryption_configuration.0.kms_data_key_reuse_period_seconds").(int)) {
-				return retry.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
+				return tfresource.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
 			}
 
 			return nil
@@ -418,8 +423,7 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 
 	if errs.IsA[*awstypes.StateMachineDoesNotExist](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -428,17 +432,17 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStateMachine(conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStateMachineByARN(ctx, conn, stateMachineArn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -454,7 +458,7 @@ func waitStateMachineDeleted(ctx context.Context, conn *sfn.Client, stateMachine
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateMachineStatusActive, awstypes.StateMachineStatusDeleting),
 		Target:  []string{},
-		Refresh: statusStateMachine(ctx, conn, stateMachineArn),
+		Refresh: statusStateMachine(conn, stateMachineArn),
 		Timeout: timeout,
 	}
 

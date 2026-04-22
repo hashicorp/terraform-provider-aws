@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagent
 
@@ -26,15 +28,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -118,9 +119,6 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 					Blocks: map[string]schema.Block{
 						"connection": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeBetween(0, 20),
-							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrName: schema.StringAttribute{
@@ -204,9 +202,6 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 						},
 						"node": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeBetween(0, 40),
-							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrName: schema.StringAttribute{
@@ -812,7 +807,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					names.AttrResourceARN: schema.StringAttribute{
+																					"prompt_arn": schema.StringAttribute{
 																						CustomType: fwtypes.ARNType,
 																						Required:   true,
 																					},
@@ -979,7 +974,7 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateFlow(ctx, &input)
@@ -1010,7 +1005,7 @@ func (r *flowResource) Read(ctx context.Context, request resource.ReadRequest, r
 
 	output, err := findFlowByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -1076,7 +1071,7 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 		}
 
 		// Set values for unknowns.
-		new.CreatedAt = timetypes.NewRFC3339TimePointerValue(output.CreatedAt)
+		new.CreatedAt = old.CreatedAt
 		new.UpdatedAt = timetypes.NewRFC3339TimePointerValue(output.UpdatedAt)
 		new.Version = fwflex.StringToFramework(ctx, output.Version)
 		new.Status = fwtypes.StringEnumValue(output.Status)
@@ -1125,8 +1120,7 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1135,7 +1129,7 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1690,7 +1684,7 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 		}
 
 		if t.Value.AdditionalModelRequestFields != nil {
-			json, err := smithyjson.SmithyDocumentToString(t.Value.AdditionalModelRequestFields)
+			json, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalModelRequestFields)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Encoding JSON",
@@ -1739,7 +1733,7 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 
 		additionalFields := promptFlowNodeSourceConfigurationInline.AdditionalModelRequestFields
 		if !additionalFields.IsNull() {
-			json, err := smithyjson.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
+			json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Decoding JSON",
@@ -1781,7 +1775,7 @@ type promptFlowNodeInlineConfigurationModel struct {
 }
 
 type promptFlowNodeResourceConfigurationModel struct {
-	ResourceARN fwtypes.ARN `tfsdk:"resource_arn"`
+	PromptARN fwtypes.ARN `tfsdk:"prompt_arn"`
 }
 
 type retrievalFlowNodeConfigurationModel struct {

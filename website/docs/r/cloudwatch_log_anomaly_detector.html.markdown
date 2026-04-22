@@ -66,7 +66,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudWatch Log Anomaly Detector using the `example_id_arg`. For example:
+Using `terraform import`, import CloudWatch Log Anomaly Detector using the `arn`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_anomaly_detector.example log_anomaly_detector-arn-12345678

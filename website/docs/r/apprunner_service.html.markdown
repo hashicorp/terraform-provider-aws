@@ -273,6 +273,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apprunner_service.example
+  identity = {
+    "arn" = "arn:aws:apprunner:us-east-1:123456789012:service/example-app-service/8fe1e10304f84fd2b0df550fe98a71fa"
+  }
+}
+
+resource "aws_apprunner_service" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the App Runner service.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Services using the `arn`. For example:
 
 ```terraform

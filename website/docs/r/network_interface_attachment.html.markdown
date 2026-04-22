@@ -28,6 +28,7 @@ This resource supports the following arguments:
 * `instance_id` - (Required) Instance ID to attach.
 * `network_interface_id` - (Required) ENI ID to attach.
 * `device_index` - (Required) Network interface index (int).
+* `network_card_index` - (Optional) Index of the network card. Specify a value greater than 0 when using multiple network cards, which are supported by [some instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards). The default is 0.
 
 ## Attribute Reference
 

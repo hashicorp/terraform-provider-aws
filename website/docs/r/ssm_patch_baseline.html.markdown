@@ -169,6 +169,7 @@ The following arguments are optional:
 * `approved_patches_compliance_level` - (Optional) Compliance level for approved patches. This means that if an approved patch is reported as missing, this is the severity of the compliance violation. Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `approved_patches_enable_non_security` - (Optional) Whether the list of approved patches includes non-security updates that should be applied to the instances. Applies to Linux instances only.
 * `approved_patches` - (Optional) List of explicitly approved patches for the baseline. Cannot be specified with `approval_rule`.
+* `available_security_updates_compliance_status` - (Optional) Indicates the compliance status of managed nodes for which security-related patches are available but were not approved. Supported for Windows Server managed nodes only. Valid values are `COMPLIANT`, `NON_COMPLIANT`.
 * `description` - (Optional) Description of the patch baseline.
 * `global_filter` - (Optional) Set of global filters used to exclude patches from the baseline. Up to 4 global filters can be specified using Key/Value pairs. Valid Keys are `PRODUCT`, `CLASSIFICATION`, `MSRC_SEVERITY`, and `PATCH_ID`.
 * `operating_system` - (Optional) Operating system the patch baseline applies to. Valid values are `ALMA_LINUX`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `AMAZON_LINUX_2022`, `AMAZON_LINUX_2023`, `CENTOS`, `DEBIAN`, `MACOS`, `ORACLE_LINUX`, `RASPBIAN`, `REDHAT_ENTERPRISE_LINUX`, `ROCKY_LINUX`, `SUSE`, `UBUNTU`, and `WINDOWS`. The default value is `WINDOWS`.
@@ -205,6 +206,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_patch_baseline.example
+  identity = {
+    id = "pb-12345678"
+  }
+}
+
+resource "aws_ssm_patch_baseline" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the patch baseline.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Patch Baselines using their baseline ID. For example:
 

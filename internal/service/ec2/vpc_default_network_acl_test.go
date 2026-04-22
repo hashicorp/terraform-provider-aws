@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -10,24 +10,22 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -36,7 +34,7 @@ func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-acl/acl-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -57,11 +55,11 @@ func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -70,7 +68,7 @@ func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
@@ -86,11 +84,11 @@ func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -99,7 +97,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -112,7 +110,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -121,7 +119,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -132,11 +130,11 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -145,7 +143,7 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_denyIngress(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						names.AttrProtocol:  "-1",
@@ -164,11 +162,11 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -177,7 +175,7 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_includingIPv6Rule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -196,11 +194,11 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -209,7 +207,7 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", names.AttrID),
@@ -221,7 +219,7 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_subnetsRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -231,11 +229,11 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -244,7 +242,7 @@ func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", names.AttrID),
@@ -270,7 +268,7 @@ func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_subnetsMove(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
 				),
 			},
@@ -288,7 +286,7 @@ func testAccCheckDefaultNetworkACLDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *types.NetworkAcl) resource.TestCheckFunc {
+func testAccCheckDefaultNetworkACLExists(ctx context.Context, t *testing.T, n string, v *awstypes.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -299,7 +297,7 @@ func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *types
 			return fmt.Errorf("No EC2 Default Network ACL ID is set: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindNetworkACLByID(ctx, conn, rs.Primary.ID)
 

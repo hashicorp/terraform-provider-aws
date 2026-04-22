@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package acmpca
 
@@ -21,14 +23,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,7 +42,7 @@ import (
 // @SDKResource("aws_acmpca_certificate", name="Certificate")
 // @ArnIdentity
 // @V60SDKv2Fix
-// @WrappedImport(false)
+// @CustomImport
 // @Testing(importIgnore="certificate_signing_request;signing_algorithm;template_arn;validity")
 // @Testing(plannableImportAction="Replace")
 func resourceCertificate() *schema.Resource {
@@ -53,7 +55,7 @@ func resourceCertificate() *schema.Resource {
 		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, d, names.AttrARN, []string{names.AttrID}); err != nil {
+				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
 
@@ -142,7 +144,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := acmpca.IssueCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
-		IdempotencyToken:        aws.String(id.UniqueId()),
+		IdempotencyToken:        aws.String(create.UniqueId(ctx)),
 		SigningAlgorithm:        types.SigningAlgorithm(d.Get("signing_algorithm").(string)),
 	}
 
@@ -164,7 +166,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Validity = validity
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func(ctx context.Context) (any, error) {
 		return conn.IssueCertificate(ctx, &input)
 	}, "The certificate authority is not in a valid state for issuing certificates")
 
@@ -175,7 +177,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*acmpca.IssueCertificateOutput).CertificateArn))
 
 	// Wait for certificate status to become ISSUED.
-	_, err = tfresource.RetryWhenIsA[*types.RequestInProgressException](ctx, certificateIssueTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *types.RequestInProgressException](ctx, certificateIssueTimeout, func(ctx context.Context) (any, error) {
 		return findCertificateByTwoPartKey(ctx, conn, d.Id(), certificateAuthorityARN)
 	})
 
@@ -192,7 +194,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	output, err := findCertificateByTwoPartKey(ctx, conn, d.Id(), d.Get("certificate_authority_arn").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -264,8 +266,7 @@ func findCertificate(ctx context.Context, conn *acmpca.Client, input *acmpca.Get
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -274,7 +275,7 @@ func findCertificate(ctx context.Context, conn *acmpca.Client, input *acmpca.Get
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

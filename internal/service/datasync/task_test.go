@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -13,39 +13,33 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataSyncTask_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSyncDestinationLocationResourceName := "aws_datasync_location_s3.test"
 	dataSyncSourceLocationResourceName := "aws_datasync_location_nfs.test"
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`task/task-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCloudWatchLogGroupARN, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, names.AttrARN),
@@ -86,20 +80,20 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 func TestAccDataSyncTask_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceTask(), resourceName),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,21 +104,22 @@ func TestAccDataSyncTask_disappears(t *testing.T) {
 func TestAccDataSyncTask_schedule(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_schedule(rName, "cron(0 12 ? * SUN,WED *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusEnabled)),
 				),
 			},
 			{
@@ -135,15 +130,36 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 			{
 				Config: testAccTaskConfig_schedule(rName, "cron(0 12 ? * SUN,MON *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusEnabled)),
+				),
+			},
+			{
+				// Disable the schedule by setting status to DISABLED
+				Config: testAccTaskConfig_scheduleWithStatus(rName, "cron(0 12 ? * SUN,MON *)", string(awstypes.ScheduleStatusDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusDisabled)),
+				),
+			},
+			{
+				// Re-enable the schedule by setting status to ENABLED
+				Config: testAccTaskConfig_scheduleWithStatus(rName, "cron(0 12 ? * SUN,MON *)", string(awstypes.ScheduleStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusEnabled)),
 				),
 			},
 			{
 				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
 				),
 			},
@@ -154,19 +170,19 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_cloudWatchLogGroupARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCloudWatchLogGroupARN, "aws_cloudwatch_log_group.test1", names.AttrARN),
 				),
 			},
@@ -178,7 +194,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 			{
 				Config: testAccTaskConfig_cloudWatchLogGroupARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCloudWatchLogGroupARN, "aws_cloudwatch_log_group.test2", names.AttrARN)),
 			},
 		},
@@ -188,19 +204,19 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 func TestAccDataSyncTask_excludes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_excludes(rName, "/folder1|/folder2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "excludes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.value", "/folder1|/folder2"),
@@ -214,7 +230,7 @@ func TestAccDataSyncTask_excludes(t *testing.T) {
 			{
 				Config: testAccTaskConfig_excludes(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "excludes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.value", "/test"),
@@ -227,19 +243,19 @@ func TestAccDataSyncTask_excludes(t *testing.T) {
 func TestAccDataSyncTask_includes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_includes(rName, "/folder1|/folder2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "includes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "includes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "includes.0.value", "/folder1|/folder2"),
@@ -253,7 +269,7 @@ func TestAccDataSyncTask_includes(t *testing.T) {
 			{
 				Config: testAccTaskConfig_includes(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "includes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "includes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "includes.0.value", "/test"),
@@ -266,19 +282,19 @@ func TestAccDataSyncTask_includes(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsAtimeMtime(rName, "NONE", "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.mtime", "NONE"),
@@ -292,7 +308,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsAtimeMtime(rName, "BEST_EFFORT", "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "BEST_EFFORT"),
@@ -306,19 +322,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_bytesPerSecond(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsBytesPerSecond(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", "1"),
 				),
@@ -331,7 +347,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_bytesPerSecond(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsBytesPerSecond(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", "2"),
@@ -344,19 +360,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_bytesPerSecond(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsGID(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "NONE"),
 				),
@@ -369,7 +385,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsGID(rName, "INT_VALUE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "INT_VALUE"),
@@ -382,19 +398,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsLogLevel(rName, "OFF"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "OFF"),
 				),
@@ -407,7 +423,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsLogLevel(rName, "BASIC"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "BASIC"),
@@ -420,19 +436,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_objectTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "NONE"),
 				),
@@ -445,7 +461,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_objectTags(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "PRESERVE"),
@@ -458,19 +474,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_objectTags(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_overwriteMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsOverwriteMode(rName, "NEVER"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.overwrite_mode", "NEVER"),
 				),
@@ -483,7 +499,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_overwriteMode(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsOverwriteMode(rName, "ALWAYS"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.overwrite_mode", "ALWAYS"),
@@ -496,19 +512,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_overwriteMode(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_posixPermissions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsPOSIXPermissions(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "NONE"),
 				),
@@ -521,7 +537,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_posixPermissions(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsPOSIXPermissions(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "PRESERVE"),
@@ -534,19 +550,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_posixPermissions(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_preserveDeletedFiles(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsPreserveDeletedFiles(rName, "REMOVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_deleted_files", "REMOVE"),
 				),
@@ -559,7 +575,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDeletedFiles(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsPreserveDeletedFiles(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_deleted_files", "PRESERVE"),
@@ -572,19 +588,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDeletedFiles(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsPreserveDevices(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_devices", "PRESERVE"),
 				),
@@ -597,7 +613,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsPreserveDevices(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_devices", "NONE"),
@@ -610,20 +626,20 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 	domainName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, domainName, "OWNER_DACL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "NONE"),
@@ -639,7 +655,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testi
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, domainName, "OWNER_DACL_SACL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "NONE"),
@@ -655,19 +671,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testi
 func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsQueueing(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.task_queueing", "ENABLED"),
 				),
@@ -680,7 +696,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsQueueing(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.task_queueing", "DISABLED"),
@@ -693,19 +709,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_transferMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsTransferMode(rName, "CHANGED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.transfer_mode", "CHANGED"),
 				),
@@ -718,7 +734,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_transferMode(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsTransferMode(rName, "ALL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.transfer_mode", "ALL"),
@@ -731,19 +747,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_transferMode(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_uid(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsUID(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "NONE"),
 				),
@@ -756,7 +772,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_uid(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsUID(rName, "INT_VALUE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "INT_VALUE"),
@@ -769,19 +785,19 @@ func TestAccDataSyncTask_DefaultSyncOptions_uid(t *testing.T) {
 func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2, task3 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsVerifyMode(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "NONE"),
 				),
@@ -794,7 +810,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsVerifyMode(rName, "POINT_IN_TIME_CONSISTENT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
@@ -803,7 +819,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 			{
 				Config: testAccTaskConfig_defaultSyncOptionsVerifyMode(rName, "ONLY_FILES_TRANSFERRED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task3),
+					testAccCheckTaskExists(ctx, t, resourceName, &task3),
 					testAccCheckTaskNotRecreated(&task2, &task3),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "ONLY_FILES_TRANSFERRED"),
@@ -816,20 +832,20 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 func TestAccDataSyncTask_taskMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_taskMode_enhanced(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "ONLY_FILES_TRANSFERRED"),
 					resource.TestCheckResourceAttr(resourceName, "task_mode", "ENHANCED"),
@@ -848,7 +864,7 @@ func TestAccDataSyncTask_taskMode(t *testing.T) {
 			{
 				Config: testAccTaskConfig_taskMode_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
 					resource.TestCheckResourceAttr(resourceName, "task_mode", "BASIC"),
@@ -866,19 +882,19 @@ func TestAccDataSyncTask_taskMode(t *testing.T) {
 func TestAccDataSyncTask_taskReportConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_taskReportConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.output_type", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_level", "SUCCESSES_AND_ERRORS"),
@@ -906,19 +922,19 @@ func TestAccDataSyncTask_taskReportConfig(t *testing.T) {
 func TestAccDataSyncTask_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2, task3 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -931,7 +947,7 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 			{
 				Config: testAccTaskConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskExists(ctx, t, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -941,7 +957,7 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 			{
 				Config: testAccTaskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task3),
+					testAccCheckTaskExists(ctx, t, resourceName, &task3),
 					testAccCheckTaskNotRecreated(&task2, &task3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -951,84 +967,9 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncTask_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var task1 datasync.DescribeTaskOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_datasync_task.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy: testAccCheckTaskDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccTaskConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccTaskConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccTaskConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`task/task-.+`)),
-					}),
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckTaskDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTaskDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_task" {
@@ -1037,7 +978,7 @@ func testAccCheckTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfdatasync.FindTaskByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1052,14 +993,14 @@ func testAccCheckTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTaskExists(ctx context.Context, resourceName string, task *datasync.DescribeTaskOutput) resource.TestCheckFunc {
+func testAccCheckTaskExists(ctx context.Context, t *testing.T, resourceName string, task *datasync.DescribeTaskOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindTaskByARN(ctx, conn, rs.Primary.ID)
 
@@ -1089,7 +1030,7 @@ func testAccCheckTaskNotRecreated(i, j *datasync.DescribeTaskOutput) resource.Te
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 	input := &datasync.ListTasksInput{
 		MaxResults: aws.Int32(1),
@@ -1186,6 +1127,24 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName, cron))
+}
+
+func testAccTaskConfig_scheduleWithStatus(rName, cron, status string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationNFS(rName),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.test.arn
+
+  schedule {
+    schedule_expression = %[2]q
+    status              = %[3]q
+  }
+}
+`, rName, cron, status))
 }
 
 func testAccTaskConfig_cloudWatchLogGroupARN(rName string) string {

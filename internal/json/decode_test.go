@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package json_test
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 func TestDecodeFromString(t *testing.T) {
@@ -62,7 +62,7 @@ func TestDecodeFromString(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			err := json.DecodeFromString(testCase.input, testCase.output)
+			err := tfjson.DecodeFromString(testCase.input, testCase.output)
 			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
 				t.Errorf("DecodeFromString(%s) err %t, want %t", testCase.input, got, want)
 			}

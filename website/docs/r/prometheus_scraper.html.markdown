@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_prometheus_scraper
 
--> **Note:** If you change a Scraper's source (EKS cluster), Terraform
+-> **Note:** If you change a Scraper's source (EKS cluster or VPC configuration), Terraform
 will delete the current Scraper and create a new one.
 
 Provides an Amazon Managed Service for Prometheus fully managed collector
@@ -90,6 +90,42 @@ scrape_configs:
       target_label: __address__
       regex: (.+?)(\\:\\d+)?
       replacement: $1:10249
+EOT
+}
+```
+
+### VPC Configuration
+
+```terraform
+resource "aws_prometheus_scraper" "example" {
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.example.id]
+      subnet_ids         = [aws_subnet.example1.id, aws_subnet.example2.id]
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.example.arn
+    }
+  }
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: 'my-service'
+    dns_sd_configs:
+      - names: ['my-service.my-namespace']
+        type: A
+        port: 8080
+    metrics_path: '/metrics'
+    relabel_configs:
+      - target_label: service_name
+        replacement: 'my-service'
+      - target_label: discovery_method
+        replacement: 'cloudmap-dns'
 EOT
 }
 ```
@@ -207,8 +243,8 @@ This resource supports the following arguments:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias` - (Optional) a name to associate with the managed scraper. This is for your use, and does not need to be unique.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 * `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration`](#role_configuration) below.
 
@@ -222,13 +258,21 @@ The following arguments are optional:
 
 ### `source`
 
-* `eks` - (Required) Configuration block for an EKS cluster source. See [`eks`](#eks).
+* `eks` - (Optional) Configuration block for an EKS cluster source. See [`eks`](#eks).
+* `vpc` - (Optional) Configuration block for a VPC source. See [`vpc`](#vpc).
+
+~> **NOTE:** Either `eks` or `vpc` must be specified, but not both.
 
 #### `eks`
 
-* `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the source EKS cluster.
+* `cluster_arn` - (Required) The Amazon Resource Name (ARN) of the source EKS cluster.
 * `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
 * `security_group_ids` - (Optional) List of the security group IDs for the Amazon EKS cluster VPC configuration.
+
+#### `vpc`
+
+* `security_group_ids` - (Required) List of security group IDs for the VPC configuration.
+* `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
 
 ### `role_configuration`
 

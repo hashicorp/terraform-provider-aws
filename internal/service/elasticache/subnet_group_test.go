@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -67,7 +67,7 @@ func TestAccElastiCacheSubnetGroup_disappears(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, t, resourceName, &csg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceSubnetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

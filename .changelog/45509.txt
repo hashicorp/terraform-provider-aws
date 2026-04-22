@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_odb_network_peering_connection: Add network peering creation using `odb_network_arn` for resource sharing model.
+```

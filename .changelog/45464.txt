@@ -1,0 +1,9 @@
+```release-note:enhancement
+provider: The [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta) is now supported. The `user_agent` argument enables module authors to include additional product information in the `User-Agent` header sent during all AWS API requests made during Create, Read, Update, and Delete operations.
+```
+```release-note:enhancement
+provider: Add `user_agent` argument
+```
+```release-note:new-function
+user_agent
+```

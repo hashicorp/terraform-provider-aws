@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -21,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,6 +38,7 @@ import (
 // @ArnFormat("key-value-store/{id}", attribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.KeyValueStore")
 // @Testing(importStateIdAttribute="name")
+// @Testing(preIdentityVersion="v5.100.0")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyValueStoreResource{}
 
@@ -141,7 +144,7 @@ func (r *keyValueStoreResource) Read(ctx context.Context, request resource.ReadR
 
 	output, err := findKeyValueStoreByName(ctx, conn, data.Name.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -263,17 +266,17 @@ func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name 
 	}
 
 	if output == nil || output.KeyValueStore == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKeyValueStore(conn *cloudfront.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findKeyValueStoreByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -289,7 +292,7 @@ func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyValueStoreStatusProvisioning},
 		Target:  []string{keyValueStoreStatusReady},
-		Refresh: statusKeyValueStore(ctx, conn, name),
+		Refresh: statusKeyValueStore(conn, name),
 		Timeout: timeout,
 	}
 

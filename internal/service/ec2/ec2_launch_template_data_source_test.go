@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,15 +14,15 @@ import (
 
 func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchTemplateDataSourceConfig_name(rName),
@@ -74,15 +73,15 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 
 func TestAccEC2LaunchTemplateDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchTemplateDataSourceConfig_id(rName),
@@ -97,15 +96,15 @@ func TestAccEC2LaunchTemplateDataSource_id(t *testing.T) {
 
 func TestAccEC2LaunchTemplateDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchTemplateDataSourceConfig_filter(rName),
@@ -120,15 +119,15 @@ func TestAccEC2LaunchTemplateDataSource_filter(t *testing.T) {
 
 func TestAccEC2LaunchTemplateDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchTemplateDataSourceConfig_matchTags(rName),
@@ -259,6 +258,32 @@ data "aws_launch_template" "test" {
 `, rName)
 }
 
+func TestAccEC2LaunchTemplateDataSource_placementGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateDataSourceConfig_placementGroupID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "placement.#", dataSourceName, "placement.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "placement.0.group_id", dataSourceName, "placement.0.group_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "placement.0.group_name", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccLaunchTemplateDataSourceConfig_matchTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -273,6 +298,27 @@ data "aws_launch_template" "test" {
   tags = {
     Name = aws_launch_template.test.tags["Name"]
   }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateDataSourceConfig_placementGroupID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  placement {
+    group_id = aws_placement_group.test.placement_group_id
+  }
+}
+
+data "aws_launch_template" "test" {
+  name = aws_launch_template.test.name
 }
 `, rName)
 }

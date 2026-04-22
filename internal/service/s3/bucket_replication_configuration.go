@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -12,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -332,23 +334,19 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := retry.RetryContext(ctx, bucketPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, bucketPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.PutBucketReplication(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, errCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketReplication(ctx, input)
-	}
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "ReplicationConfiguration is not valid, expected CreateBucketConfiguration") {
 		err = errDirectoryBucket(err)
@@ -382,7 +380,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 
 	rc, err := findReplicationConfiguration(ctx, conn, bucket)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Replication Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -473,8 +471,7 @@ func findReplicationConfiguration(ctx context.Context, conn *s3.Client, bucket s
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeReplicationConfigurationNotFound) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -483,7 +480,7 @@ func findReplicationConfiguration(ctx context.Context, conn *s3.Client, bucket s
 	}
 
 	if output == nil || output.ReplicationConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReplicationConfiguration, nil

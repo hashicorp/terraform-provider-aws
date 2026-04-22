@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB Parameter Group.
 ---
 
-# Resource: aws_memorydb_parameter_group
+# Data Source: aws_memorydb_parameter_group
 
 Provides information about a MemoryDB Parameter Group.
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -118,6 +118,10 @@ func (e *invocationEphemeralResource) Open(ctx context.Context, req ephemeral.Op
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 	data.Result = flex.StringValueToFramework(ctx, string(output.Payload))
+	// data.Payload field is originally meant to hold the input payload.
+	// However, during the flattening process, it is populated with the result payload.
+	// To correct this, the original input payload needs to be manually restored to data.Payload after flattening.
+	data.Payload = flex.StringValueToFramework(ctx, string(input.Payload))
 	resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
 }
 

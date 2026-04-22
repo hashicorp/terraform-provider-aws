@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_service: Add `deployment_configuration.lifecycle_hook.hook_details` argument
+```

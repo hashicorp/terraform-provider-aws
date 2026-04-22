@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -10,11 +9,11 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math/rand"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for reproducible test fixture generation
 	"os"
 	"strings"
 
-	"syreclabs.com/go/faker"
+	"github.com/jaswdr/faker/v2"
 )
 
 const (
@@ -41,9 +40,9 @@ var comedyWords = []string{
 func main() {
 	log.SetFlags(0)
 
-	seed := int64(1) // Default rand seed
+	seed := int64(48) // Default rand seed
 	r := rand.New(rand.NewSource(seed))
-	faker.Seed(seed)
+	fake := faker.NewWithSeedInt64(seed)
 
 	// documentFile, err := os.OpenFile("./test-fixtures/document_classifier_multilabel/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	documentFile, err := os.OpenFile("../../../test-fixtures/document_classifier_multilabel/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
@@ -62,7 +61,7 @@ func main() {
 			doctype = strings.Join(doctypes, defaultSeparator)
 		}
 
-		title := faker.Lorem().Word()
+		title := fake.Lorem().Word()
 
 		var desc string
 		if doctype == "DRAMA" {

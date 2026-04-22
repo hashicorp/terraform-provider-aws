@@ -10,12 +10,6 @@ description: |-
 
 Provides a resource to create a VPC routing table.
 
-~> **NOTE on Route Tables and Routes:** Terraform currently
-provides both a standalone [Route resource](route.html) and a Route Table resource with routes
-defined in-line. At this time you cannot use a Route Table with in-line routes
-in conjunction with any Route resources. Doing so will cause
-a conflict of rule settings and will overwrite rules.
-
 ~> **NOTE on `gateway_id` and `nat_gateway_id`:** The AWS API is very forgiving with these two
 attributes and the `aws_route_table` resource can be created with a NAT ID specified as a Gateway ID attribute.
 This _will_ lead to a permanent diff between your configuration and statefile, as the API returns the correct
@@ -125,6 +119,9 @@ This resource supports the following arguments:
 * `vpc_id` - (Required) The VPC ID.
 * `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
+
+~> **NOTE on Route Tables and Routes:** Terraform currently provides both a standalone Route resource ([`aws_route`](route.html)) and a Route Table resource with routes defined in-line ([`aws_route_table`](route_table.html)). At this time you cannot use a [`aws_route_table`](route_table.html) inline `route` blocks in conjunction with any [`aws_route`](route.html) resources. Doing so will cause a conflict of rule settings and will overwrite rules.
+
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `propagating_vgws` - (Optional) A list of virtual gateways for propagation.
 
@@ -174,6 +171,32 @@ attribute once the route resource is created.
 - `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route_table.example
+  identity = {
+    id = "rtb-4e616f6d69"
+  }
+}
+
+resource "aws_route_table" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the routing table.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route Tables using the route table `id`. For example:
 

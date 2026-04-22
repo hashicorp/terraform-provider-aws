@@ -519,7 +519,7 @@ The `dimension` block supports the following argument:
 
 The `destination` block supports the following argument:
 
-* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4 and IPv6.
 
 ### Destination Port
 
@@ -533,7 +533,7 @@ The `destination_port` block supports the following arguments:
 
 The `source` block supports the following argument:
 
-* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4 and IPv6.
 
 ### Source Port
 

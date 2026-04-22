@@ -40,6 +40,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughput` - (Optional) Throughput that the volume supports, in MiB/s. Only valid for `type` of `gp3`.
 * `type` - (Optional) Type of EBS volume. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
+* `volume_initialization_rate` - (Optional) EBS provisioned rate for volume initialization, in MiB/s, at which to download the snapshot blocks from Amazon S3 to the volume. This argument can only be set if `snapshot_id` is specified.
 
 ~> **NOTE:** At least one of `size` or `snapshot_id` is required.
 
@@ -64,6 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ebs_volume.id
+  identity = {
+    id = "vol-049df61146c4d7901"
+  }
+}
+```
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EBS Volumes using the `id`. For example:
 
 ```terraform
@@ -78,3 +90,14 @@ Using `terraform import`, import EBS Volumes using the `id`. For example:
 ```console
 % terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Volume ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.

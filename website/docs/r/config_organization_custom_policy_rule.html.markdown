@@ -45,29 +45,29 @@ resource "aws_config_organization_custom_policy_rule" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) name of the rule
-* `policy_text` - (Required) policy definition containing the logic for your organization AWS Config Custom Policy rule
-* `policy_runtime` - (Required)  runtime system for your organization AWS Config Custom Policy rules
-* `trigger_types` - (Required) List of notification types that trigger AWS Config to run an evaluation for the rule. Valid values: `ConfigurationItemChangeNotification`, `OversizedConfigurationItemChangeNotification`
+* `name` - (Required) Name of the rule.
+* `policy_text` - (Required) Policy definition containing the rule logic.
+* `policy_runtime` - (Required)  Runtime system for policy rules.
+* `trigger_types` - (Required) List of notification types that trigger AWS Config to run an evaluation for the rule. Valid values: `ConfigurationItemChangeNotification`, `OversizedConfigurationItemChangeNotification`.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) Description of the rule
-* `debug_log_delivery_accounts` - (Optional) List of AWS account identifiers to exclude from the rule
-* `excluded_accounts` - (Optional) List of AWS account identifiers to exclude from the rule
-* `input_parameters` - (Optional) A string in JSON format that is passed to the AWS Config Rule Lambda Function
+* `description` - (Optional) Description of the rule.
+* `debug_log_delivery_accounts` - (Optional) List of accounts that you can enable debug logging for. The list is null when debug logging is enabled for all accounts.
+* `excluded_accounts` - (Optional) List of AWS account identifiers to exclude from the rule.
+* `input_parameters` - (Optional) A string in JSON format that is passed to the AWS Config Rule Lambda Function.
 * `maximum_execution_frequency` - (Optional) Maximum frequency with which AWS Config runs evaluations for a rule, if the rule is triggered at a periodic frequency. Defaults to `TwentyFour_Hours` for periodic frequency triggered rules. Valid values: `One_Hour`, `Three_Hours`, `Six_Hours`, `Twelve_Hours`, or `TwentyFour_Hours`.
-* `resource_id_scope` - (Optional) Identifier of the AWS resource to evaluate
-* `resource_types_scope` - (Optional) List of types of AWS resources to evaluate
-* `tag_key_scope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate
-* `tag_value_scope` - (Optional) Tag value of AWS resources to evaluate
+* `resource_id_scope` - (Optional) Identifier of the AWS resource to evaluate.
+* `resource_types_scope` - (Optional) List of types of AWS resources to evaluate.
+* `tag_key_scope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate.
+* `tag_value_scope` - (Optional) Tag value of AWS resources to evaluate.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the rule
+* `arn` - Amazon Resource Name (ARN) of the rule.
 
 ## Timeouts
 
@@ -79,17 +79,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Config Organization Custom Policy Rule using the `name` argument. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_config_organization_custom_policy_rule.example
-  id = "example_rule_name"
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_organization_custom_policy_rule" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import a Config Organization Custom Policy Rule using the `name` argument. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Custom Policy Rules using the `name`. For example:
+
+```terraform
+import {
+  to = aws_config_organization_custom_policy_rule.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import Config Organization Custom Policy Rules using the `name`. For example:
 
 ```console
-% terraform import aws_config_organization_custom_policy_rule.example example_rule_name
+% terraform import aws_config_organization_custom_policy_rule.example example
 ```

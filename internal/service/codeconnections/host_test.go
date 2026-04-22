@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeconnections_test
@@ -10,18 +10,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codeconnections/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodeconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codeconnections"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,20 +22,20 @@ func TestAccCodeConnectionsHost_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("host/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -63,21 +56,21 @@ func TestAccCodeConnectionsHost_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcodeconnections.ResourceHost, resourceName),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcodeconnections.ResourceHost, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,20 +82,20 @@ func TestAccCodeConnectionsHost_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_vpcNoCertificate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("host/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -123,7 +116,7 @@ func TestAccCodeConnectionsHost_vpc(t *testing.T) {
 			{
 				Config: testAccHostConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("host/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -140,88 +133,14 @@ func TestAccCodeConnectionsHost_vpc(t *testing.T) {
 	})
 }
 
-func TestAccCodeConnectionsHost_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v types.Host
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_codeconnections_host.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
-		CheckDestroy: testAccCheckHostDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccHostConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccHostConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccHostConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckHostExists(ctx context.Context, n string, v *types.Host) resource.TestCheckFunc {
+func testAccCheckHostExists(ctx context.Context, t *testing.T, n string, v *types.Host) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeConnectionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeConnectionsClient(ctx)
 
 		output, err := tfcodeconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
@@ -235,9 +154,9 @@ func testAccCheckHostExists(ctx context.Context, n string, v *types.Host) resour
 	}
 }
 
-func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHostDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeConnectionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeConnectionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codeconnections_host" {
@@ -246,7 +165,7 @@ func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodeconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

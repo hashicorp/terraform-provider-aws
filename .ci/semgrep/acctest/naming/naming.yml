@@ -1,10 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: destroy-check
     languages: [go]
     message: The check destroy function should match the pattern "testAccCheck<Resource>Destroy". See https://hashicorp.github.io/terraform-provider-aws/naming/#test-support-functions
     paths:
       include:
-        - "internal/**/*_test.go"
+        - "/internal/**/*_test.go"
     patterns:
       - pattern: func $FUNCNAME(...) { ... }
       - metavariable-regex:
@@ -18,7 +21,7 @@ rules:
     message: The check destroy with provider function should match the pattern "testAccCheck<Resource>DestroyWithProvider".
     paths:
       include:
-        - "internal/**/*_test.go"
+        - "/internal/**/*_test.go"
     patterns:
       - pattern: func $FUNCNAME(...) { ... }
       - metavariable-regex:
@@ -31,7 +34,7 @@ rules:
     message: The check destroy with region function should match the pattern "testAccCheck<Resource>DestroyWithRegion".
     paths:
       include:
-        - "internal/**/*_test.go"
+        - "/internal/**/*_test.go"
     patterns:
       - pattern: func $FUNCNAME(...) { ... }
       - metavariable-regex:
@@ -44,7 +47,7 @@ rules:
     message: The check destroy function should have the correct signature
     paths:
       include:
-        - "internal/**/*_test.go"
+        - "/internal/**/*_test.go"
     patterns:
       - pattern: func $FUNCNAME(...) { ... }
       - metavariable-regex:

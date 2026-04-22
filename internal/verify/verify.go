@@ -1,10 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verify
 
 import (
-	"gopkg.in/yaml.v3"
+	tfyaml "github.com/hashicorp/terraform-provider-aws/internal/yaml"
 )
 
 const UUIDRegexPattern = `[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[ab89][0-9a-f]{3}-[0-9a-f]{12}`
@@ -13,15 +13,15 @@ const UUIDRegexPattern = `[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[ab89][0-9a-f
 // the YAML parser. Returns either a parsing
 // error or original YAML string.
 func checkYAMLString(yamlString any) (string, error) {
-	var y any
-
 	if yamlString == nil || yamlString.(string) == "" {
 		return "", nil
 	}
 
+	var y any
+
 	s := yamlString.(string)
 
-	err := yaml.Unmarshal([]byte(s), &y)
+	err := tfyaml.DecodeFromString(s, &y)
 
 	return s, err
 }

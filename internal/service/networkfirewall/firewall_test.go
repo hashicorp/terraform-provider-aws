@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -13,34 +13,32 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	policyResourceName := "aws_networkfirewall_firewall_policy.test"
 	subnetResourceName := "aws_subnet.test.0"
 	vpcResourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -74,22 +72,22 @@ func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 
 func TestAccNetworkFirewallFirewall_dualstackSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	policyResourceName := "aws_networkfirewall_firewall_policy.test"
 	subnetResourceName := "aws_subnet.test.0"
 	vpcResourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallConfig_dualstackSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -123,33 +121,33 @@ func TestAccNetworkFirewallFirewall_dualstackSubnet(t *testing.T) {
 
 func TestAccNetworkFirewallFirewall_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_description(rName, "updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
@@ -164,34 +162,34 @@ func TestAccNetworkFirewallFirewall_description(t *testing.T) {
 
 func TestAccNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 
 			{
 				Config: testAccFirewallConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 				),
 			},
@@ -206,19 +204,19 @@ func TestAccNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 
 func TestAccNetworkFirewallFirewall_enabledAnalysisTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallConfig_enabledAnalysisTypes(rName, []string{"HTTP_HOST"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.0", "HTTP_HOST"),
 				),
@@ -226,7 +224,7 @@ func TestAccNetworkFirewallFirewall_enabledAnalysisTypes(t *testing.T) {
 			{
 				Config: testAccFirewallConfig_enabledAnalysisTypes(rName, []string{"TLS_SNI"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.0", "TLS_SNI"),
 				),
@@ -234,7 +232,7 @@ func TestAccNetworkFirewallFirewall_enabledAnalysisTypes(t *testing.T) {
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.#", "0"),
 				),
 			},
@@ -249,19 +247,19 @@ func TestAccNetworkFirewallFirewall_enabledAnalysisTypes(t *testing.T) {
 
 func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 				),
@@ -274,14 +272,14 @@ func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 				),
@@ -289,7 +287,7 @@ func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
 			{
 				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 				),
@@ -300,22 +298,22 @@ func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
 
 func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	subnetResourceName := "aws_subnet.test.0"
 	updateSubnetResourceName := "aws_subnet.example"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 				),
@@ -323,7 +321,7 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 			{
 				Config: testAccFirewallConfig_updateSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", updateSubnetResourceName, names.AttrAvailabilityZone),
@@ -346,21 +344,21 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 
 func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	subnetResourceName := "aws_subnet.test.0"
 	updateSubnetResourceName := "aws_subnet.example"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 				),
@@ -368,7 +366,7 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 			{
 				Config: testAccFirewallConfig_updateMultipleSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, names.AttrAvailabilityZone),
@@ -383,7 +381,7 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, names.AttrAvailabilityZone),
@@ -406,18 +404,18 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 
 func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -430,7 +428,7 @@ func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 			{
 				Config: testAccFirewallConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -439,7 +437,7 @@ func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 			{
 				Config: testAccFirewallConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -448,22 +446,134 @@ func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, true, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateAvailabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 1, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceFirewall(), resourceName),
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkfirewall.ResourceFirewall(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -471,18 +581,18 @@ func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFirewallDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFirewallDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_firewall" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 			_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -497,14 +607,14 @@ func testAccCheckFirewallDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFirewallExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckFirewallExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
@@ -513,7 +623,7 @@ func testAccCheckFirewallExists(ctx context.Context, n string) resource.TestChec
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 	input := &networkfirewall.ListFirewallsInput{}
 
@@ -528,7 +638,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccFirewallConfig_base(rName string) string {
+func testAccFirewallConfig_baseVPC(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
@@ -542,7 +652,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
@@ -556,7 +666,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_deleteProtection(rName string, deleteProtection bool) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   delete_protection   = %[1]t
   name                = %[2]q
@@ -571,7 +681,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
@@ -589,7 +699,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
@@ -608,7 +718,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_description(rName, description string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   description         = %[2]q
@@ -623,7 +733,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_enabledAnalysisTypes(rName string, enabledAnalysisTypes []string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                   = %[1]q
   enabled_analysis_types = ["%[2]s"]
@@ -638,7 +748,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_updateSubnet(rName string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_subnet" "example" {
   availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
@@ -666,7 +776,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_updateMultipleSubnets(rName string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_subnet" "example" {
   availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
@@ -702,7 +812,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_encryptionConfiguration(rName, description string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   enable_key_rotation     = true
@@ -748,4 +858,41 @@ resource "aws_networkfirewall_firewall" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFirewallConfig_baseTGW(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_transitGatewayAttachment(rName string, changeProtection bool, availabilityZoneStartIndex, availabilityZoneEndIndex int) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseTGW(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                                = %[1]q
+  firewall_policy_arn                 = aws_networkfirewall_firewall_policy.test.arn
+  transit_gateway_id                  = aws_ec2_transit_gateway.test.id
+  availability_zone_change_protection = %[2]t
+
+  dynamic "availability_zone_mapping" {
+    for_each = slice(data.aws_availability_zones.available.zone_ids, %[3]d, %[4]d)
+    content {
+      availability_zone_id = availability_zone_mapping.value
+    }
+  }
+}
+`, rName, changeProtection, availabilityZoneStartIndex, availabilityZoneEndIndex))
 }

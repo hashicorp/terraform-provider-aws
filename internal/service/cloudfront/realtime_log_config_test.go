@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -9,43 +9,34 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RealtimeLogConfig
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	samplingRate := sdkacctest.RandIntRange(1, 100)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	samplingRate := acctest.RandIntRange(t, 1, 100)
 	resourceName := "aws_cloudfront_realtime_log_config.test"
 	roleResourceName := "aws_iam_role.test.0"
 	streamResourceName := "aws_kinesis_stream.test.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
@@ -71,21 +62,21 @@ func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 func TestAccCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RealtimeLogConfig
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	samplingRate := sdkacctest.RandIntRange(1, 100)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	samplingRate := acctest.RandIntRange(t, 1, 100)
 	resourceName := "aws_cloudfront_realtime_log_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,25 +87,25 @@ func TestAccCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RealtimeLogConfig
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	samplingRate1 := sdkacctest.RandIntRange(1, 100)
-	samplingRate2 := sdkacctest.RandIntRange(1, 100)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	samplingRate1 := acctest.RandIntRange(t, 1, 100)
+	samplingRate2 := acctest.RandIntRange(t, 1, 100)
 	resourceName := "aws_cloudfront_realtime_log_config.test"
 	role1ResourceName := "aws_iam_role.test.0"
 	stream1ResourceName := "aws_kinesis_stream.test.0"
 	role2ResourceName := "aws_iam_role.test.1"
 	stream2ResourceName := "aws_kinesis_stream.test.1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
@@ -131,7 +122,7 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 			{
 				Config: testAccRealtimeLogConfigConfig_updated(rName, samplingRate2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
@@ -155,88 +146,9 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.RealtimeLogConfig
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	samplingRate := sdkacctest.RandIntRange(1, 100)
-	resourceName := "aws_cloudfront_realtime_log_config.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		CheckDestroy: testAccCheckRealtimeLogConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.GlobalARNRegexp("cloudfront", regexache.MustCompile(`realtime-log-config/.+`)),
-					}),
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckRealtimeLogConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRealtimeLogConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_realtime_log_config" {
@@ -245,7 +157,7 @@ func testAccCheckRealtimeLogConfigDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfcloudfront.FindRealtimeLogConfigByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -260,14 +172,14 @@ func testAccCheckRealtimeLogConfigDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckRealtimeLogConfigExists(ctx context.Context, n string, v *awstypes.RealtimeLogConfig) resource.TestCheckFunc {
+func testAccCheckRealtimeLogConfigExists(ctx context.Context, t *testing.T, n string, v *awstypes.RealtimeLogConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindRealtimeLogConfigByARN(ctx, conn, rs.Primary.ID)
 

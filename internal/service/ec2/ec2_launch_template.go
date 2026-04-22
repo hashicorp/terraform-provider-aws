@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -10,14 +12,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,9 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,16 +35,16 @@ import (
 // @SDKResource("aws_launch_template", name="Launch Template")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(idAttrDuplicates="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.LaunchTemplate")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchTemplateCreate,
 		ReadWithoutTimeout:   resourceLaunchTemplateRead,
 		UpdateWithoutTimeout: resourceLaunchTemplateUpdate,
 		DeleteWithoutTimeout: resourceLaunchTemplateDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -84,9 +84,13 @@ func resourceLaunchTemplate() *schema.Resource {
 										Optional: true,
 									},
 									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+										Type:     schema.TypeString,
+										Optional: true,
+										// Allow empty string for backwards compatibility with verify.ValidARN.
+										ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
+											validation.StringIsEmpty,
+											verify.ValidKMSKeyID,
+										),
 									},
 									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
@@ -96,7 +100,7 @@ func resourceLaunchTemplate() *schema.Resource {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									"volume_initialization_rate": {
 										Type:         schema.TypeInt,
@@ -177,6 +181,11 @@ func resourceLaunchTemplate() *schema.Resource {
 						"core_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
+						},
+						"nested_virtualization": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.NestedVirtualizationSpecification](),
 						},
 						"threads_per_core": {
 							Type:     schema.TypeInt,
@@ -884,6 +893,20 @@ func resourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"network_performance_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bandwidth_weighting": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceBandwidthWeighting](),
+						},
+					},
+				},
+			},
 			"placement": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -898,9 +921,15 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"group_id": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"placement.0.group_name"},
+						},
 						names.AttrGroupName: {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"placement.0.group_id"},
 						},
 						"host_id": {
 							Type:     schema.TypeString,
@@ -954,6 +983,47 @@ func resourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"secondary_interfaces": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDeleteOnTermination: {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"device_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"interface_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SecondaryInterfaceType](),
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"private_ip_address_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"private_ip_addresses": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPv4Address,
+							},
+						},
+						"secondary_subnet_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"security_group_names": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -993,6 +1063,15 @@ func resourceLaunchTemplate() *schema.Resource {
 			},
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    launchTemplateSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: launchTemplateStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		// Enable downstream updates for resources referencing schema attributes
 		// to prevent non-empty plans after "terraform apply"
 		CustomizeDiff: customdiff.Sequence(
@@ -1026,9 +1105,9 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := ec2.CreateLaunchTemplateInput{
-		ClientToken:        aws.String(id.UniqueId()),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		LaunchTemplateName: aws.String(name),
 		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeLaunchTemplate),
 	}
@@ -1059,11 +1138,12 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	lt, err := findLaunchTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Launch Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1079,14 +1159,17 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	if err := resourceLaunchTemplateFlatten(ctx, conn, c, lt, ltv, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	setTagsOut(ctx, lt.Tags)
+
+	return diags
+}
+
+func resourceLaunchTemplateFlatten(ctx context.Context, conn *ec2.Client, c *conns.AWSClient, lt *awstypes.LaunchTemplate, ltv *awstypes.LaunchTemplateVersion, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, launchTemplateARN(ctx, c, aws.ToString(lt.LaunchTemplateId)))
 	d.Set("default_version", lt.DefaultVersionNumber)
 	d.Set(names.AttrDescription, ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)
@@ -1094,12 +1177,10 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lt.LaunchTemplateName)))
 
 	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
-	setTagsOut(ctx, lt.Tags)
-
-	return diags
+	return nil
 }
 
 func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1129,9 +1210,11 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"metadata_options",
 		"monitoring",
 		"network_interfaces",
+		"network_performance_options",
 		"placement",
 		"private_dns_name_options",
 		"ram_disk_id",
+		"secondary_interfaces",
 		"security_group_names",
 		"tag_specifications",
 		"user_data",
@@ -1141,7 +1224,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges(updateKeys...) {
 		input := ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:      aws.String(id.UniqueId()),
+			ClientToken:      aws.String(create.UniqueId(ctx)),
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
@@ -1206,48 +1289,6 @@ func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
-}
-
-const (
-	LaunchTemplateFound = "Found"
-)
-
-func statusLaunchTemplate(ctx context.Context, conn *ec2.Client, id string, idIsName bool) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		var output *awstypes.LaunchTemplate
-		var err error
-		if idIsName {
-			output, err = findLaunchTemplateByName(ctx, conn, id)
-		} else {
-			output, err = findLaunchTemplateByID(ctx, conn, id)
-		}
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, LaunchTemplateFound, nil
-	}
-}
-
-func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{""},
-		Target:                    enum.Slice(LaunchTemplateFound),
-		Refresh:                   statusLaunchTemplate(ctx, conn, id, idIsName),
-		Timeout:                   timeout,
-		Delay:                     5 * time.Second,
-		NotFoundChecks:            5,
-		ContinuousTargetOccurence: 3,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
 }
 
 func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *schema.ResourceData) (*awstypes.RequestLaunchTemplateData, error) {
@@ -1369,6 +1410,10 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 		apiObject.NetworkInterfaces = expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(v.([]any))
 	}
 
+	if v, ok := d.GetOk("network_performance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.NetworkPerformanceOptions = expandLaunchTemplateNetworkPerformanceOptionsRequest(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.Placement = expandLaunchTemplatePlacementRequest(v.([]any)[0].(map[string]any))
 	}
@@ -1379,6 +1424,10 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 
 	if v, ok := d.GetOk("ram_disk_id"); ok {
 		apiObject.RamDiskId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("secondary_interfaces"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.SecondaryInterfaces = expandLaunchTemplateSecondaryInterfacesRequests(v.([]any))
 	}
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
@@ -1515,6 +1564,10 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]any) *awstypes.Launc
 
 	if v, ok := tfMap["core_count"].(int); ok && v != 0 {
 		apiObject.CoreCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["nested_virtualization"].(string); ok && v != "" {
+		apiObject.NestedVirtualization = awstypes.NestedVirtualizationSpecification(v)
 	}
 
 	if v, ok := tfMap["threads_per_core"].(int); ok && v != 0 {
@@ -2080,6 +2133,78 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(tfList []
 	return apiObjects
 }
 
+func expandLaunchTemplateSecondaryInterfacesRequests(tfList []any) []awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, expandLaunchTemplateInstanceSecondaryInterfaceSpecificationRequest(tfMap))
+	}
+
+	return apiObjects
+}
+
+func expandLaunchTemplateInstanceSecondaryInterfaceSpecificationRequest(tfMap map[string]any) awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest {
+	apiObject := awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest{}
+
+	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
+		apiObject.DeleteOnTermination = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["device_index"].(int); ok {
+		apiObject.DeviceIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["interface_type"].(string); ok && v != "" {
+		apiObject.InterfaceType = awstypes.SecondaryInterfaceType(v)
+	}
+
+	if v, ok := tfMap["network_card_index"].(int); ok {
+		apiObject.NetworkCardIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["private_ip_address_count"].(int); ok && v != 0 {
+		apiObject.PrivateIpAddressCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["private_ip_addresses"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.PrivateIpAddresses = tfslices.ApplyToAll(flex.ExpandStringValueSet(v), func(v string) awstypes.SecondaryInterfacePrivateIpAddressSpecificationRequest {
+			return awstypes.SecondaryInterfacePrivateIpAddressSpecificationRequest{
+				PrivateIpAddress: aws.String(v),
+			}
+		})
+	}
+
+	if v, ok := tfMap["secondary_subnet_id"].(string); ok && v != "" {
+		apiObject.SecondarySubnetId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateNetworkPerformanceOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateNetworkPerformanceOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.LaunchTemplateNetworkPerformanceOptionsRequest{}
+
+	if v, ok := tfMap["bandwidth_weighting"].(string); ok && v != "" {
+		apiObject.BandwidthWeighting = awstypes.InstanceBandwidthWeighting(v)
+	}
+
+	return apiObject
+}
+
 func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.LaunchTemplatePlacementRequest {
 	if tfMap == nil {
 		return nil
@@ -2093,6 +2218,10 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.Launch
 
 	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
+	}
+
+	if v, ok := tfMap["group_id"].(string); ok && v != "" {
+		apiObject.GroupId = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
@@ -2293,6 +2422,13 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
 		return fmt.Errorf("setting network_interfaces: %w", err)
 	}
+	if apiObject.NetworkPerformanceOptions != nil {
+		if err := d.Set("network_performance_options", []any{flattenLaunchTemplateNetworkPerformanceOptions(apiObject.NetworkPerformanceOptions)}); err != nil {
+			return fmt.Errorf("setting network_performance_options: %w", err)
+		}
+	} else {
+		d.Set("network_performance_options", nil)
+	}
 	if apiObject.Placement != nil {
 		if err := d.Set("placement", []any{flattenLaunchTemplatePlacement(apiObject.Placement)}); err != nil {
 			return fmt.Errorf("setting placement: %w", err)
@@ -2308,6 +2444,13 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 		d.Set("private_dns_name_options", nil)
 	}
 	d.Set("ram_disk_id", apiObject.RamDiskId)
+	if apiObject.SecondaryInterfaces != nil {
+		if err := d.Set("secondary_interfaces", flattenLaunchTemplateInstanceSecondaryInterfaceSpecifications(apiObject.SecondaryInterfaces)); err != nil {
+			return fmt.Errorf("setting secondary_interfaces: %w", err)
+		}
+	} else {
+		d.Set("secondary_interfaces", nil)
+	}
 	d.Set("security_group_names", apiObject.SecurityGroups)
 	if err := d.Set("tag_specifications", flattenLaunchTemplateTagSpecifications(ctx, apiObject.TagSpecifications)); err != nil {
 		return fmt.Errorf("setting tag_specifications: %w", err)
@@ -2431,6 +2574,10 @@ func flattenLaunchTemplateCPUOptions(apiObject *awstypes.LaunchTemplateCpuOption
 
 	if v := apiObject.CoreCount; v != nil {
 		tfMap["core_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.NestedVirtualization; v != "" {
+		tfMap["nested_virtualization"] = v
 	}
 
 	if v := apiObject.ThreadsPerCore; v != nil {
@@ -2892,13 +3039,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.PrivateIpAddresses; len(v) > 0 {
-		var ipv4Addresses []string
-
-		for _, v := range v {
-			ipv4Addresses = append(ipv4Addresses, aws.ToString(v.PrivateIpAddress))
-		}
-
-		tfMap["ipv4_addresses"] = ipv4Addresses
+		tfMap["ipv4_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.PrivateIpAddressSpecification) string {
+			return aws.ToString(v.PrivateIpAddress)
+		})
 	}
 
 	if v := apiObject.Ipv4PrefixCount; v != nil {
@@ -2906,13 +3049,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv4Prefixes; v != nil {
-		var ipv4Prefixes []string
-
-		for _, v := range v {
-			ipv4Prefixes = append(ipv4Prefixes, aws.ToString(v.Ipv4Prefix))
-		}
-
-		tfMap["ipv4_prefixes"] = ipv4Prefixes
+		tfMap["ipv4_prefixes"] = tfslices.ApplyToAll(v, func(v awstypes.Ipv4PrefixSpecificationResponse) string {
+			return aws.ToString(v.Ipv4Prefix)
+		})
 	}
 
 	if v := apiObject.Ipv6AddressCount; v != nil {
@@ -2920,13 +3059,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv6Addresses; len(v) > 0 {
-		var ipv6Addresses []string
-
-		for _, v := range v {
-			ipv6Addresses = append(ipv6Addresses, aws.ToString(v.Ipv6Address))
-		}
-
-		tfMap["ipv6_addresses"] = ipv6Addresses
+		tfMap["ipv6_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.InstanceIpv6Address) string {
+			return aws.ToString(v.Ipv6Address)
+		})
 	}
 
 	if v := apiObject.Ipv6PrefixCount; v != nil {
@@ -2934,13 +3069,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv6Prefixes; v != nil {
-		var ipv6Prefixes []string
-
-		for _, v := range v {
-			ipv6Prefixes = append(ipv6Prefixes, aws.ToString(v.Ipv6Prefix))
-		}
-
-		tfMap["ipv6_prefixes"] = ipv6Prefixes
+		tfMap["ipv6_prefixes"] = tfslices.ApplyToAll(v, func(v awstypes.Ipv6PrefixSpecificationResponse) string {
+			return aws.ToString(v.Ipv6Prefix)
+		})
 	}
 
 	if v := apiObject.NetworkCardIndex; v != nil {
@@ -2984,6 +3115,20 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObjects []aw
 	return tfList
 }
 
+func flattenLaunchTemplateNetworkPerformanceOptions(apiObject *awstypes.LaunchTemplateNetworkPerformanceOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.BandwidthWeighting; v != "" {
+		tfMap["bandwidth_weighting"] = v
+	}
+
+	return tfMap
+}
+
 func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement) map[string]any {
 	if apiObject == nil {
 		return nil
@@ -2997,6 +3142,10 @@ func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement)
 
 	if v := apiObject.AvailabilityZone; v != nil {
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
+	}
+
+	if v := apiObject.GroupId; v != nil {
+		tfMap["group_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.GroupName; v != nil {
@@ -3211,6 +3360,56 @@ func flattenLaunchTemplateEnaSrdSpecification(apiObject *awstypes.LaunchTemplate
 	return tfMap
 }
 
+func flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecification) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.DeleteOnTermination; v != nil {
+		tfMap[names.AttrDeleteOnTermination] = aws.ToBool(v)
+	}
+
+	if v := apiObject.DeviceIndex; v != nil {
+		tfMap["device_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.InterfaceType; v != "" {
+		tfMap["interface_type"] = v
+	}
+
+	if v := apiObject.NetworkCardIndex; v != nil {
+		tfMap["network_card_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.PrivateIpAddressCount; v != nil {
+		tfMap["private_ip_address_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.PrivateIpAddresses; len(v) > 0 {
+		tfMap["private_ip_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.SecondaryInterfacePrivateIpAddressSpecification) string {
+			return aws.ToString(v.PrivateIpAddress)
+		})
+	}
+
+	if v := apiObject.SecondarySubnetId; v != nil {
+		tfMap["secondary_subnet_id"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateInstanceSecondaryInterfaceSpecifications(apiObjects []awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecification) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject))
+	}
+
+	return tfList
+}
+
 func expandEnaSrdUdpSpecificationRequest(tfMap map[string]any) *awstypes.EnaSrdUdpSpecificationRequest {
 	if tfMap == nil {
 		return nil
@@ -3233,4 +3432,8 @@ func flattenLaunchTemplateEnaSrdUdpSpecification(apiObject *awstypes.LaunchTempl
 	}
 
 	return tfMap
+}
+
+func launchTemplateARN(ctx context.Context, c *conns.AWSClient, templateID string) string {
+	return c.RegionalARN(ctx, names.EC2, "launch-template/"+templateID)
 }

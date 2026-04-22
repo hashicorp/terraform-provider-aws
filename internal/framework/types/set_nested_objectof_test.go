@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types_test
@@ -91,11 +91,11 @@ func TestSetNestedObjectTypeOfValueFromTerraform(t *testing.T) {
 		},
 		"valid value": {
 			tfVal:   objectASetValue,
-			wantVal: fwtypes.NewSetNestedObjectValueOfPtrMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &objectA),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBSetValue,
-			wantVal: fwtypes.NewSetNestedObjectValueOfPtrMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &objectA),
 			wantErr: true,
 		},
 	}
