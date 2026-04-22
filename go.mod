@@ -78,7 +78,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.33.23
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.60.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.22
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.9
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.2
 	github.com/aws/aws-sdk-go-v2/service/connect v1.171.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.40.1
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.21
 	github.com/aws/aws-sdk-go-v2/service/fms v1.44.23
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.8
-	github.com/aws/aws-sdk-go-v2/service/gamelift v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/gamelift v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.17
 	github.com/aws/aws-sdk-go-v2/service/glue v1.139.3
@@ -181,7 +181,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.10
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.22
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.8
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.11.10
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.9
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.13.14
@@ -232,7 +232,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.13
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.7
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.241.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.242.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.23
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.13
