@@ -165,8 +165,8 @@ github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.60.1 h1:DdaA4M1S
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.60.1/go.mod h1:jV4WhWx/pQMmXGp2u97+b+sOsagzQoM2T1EycFXfhj4=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.22 h1:7MNj0a4Zn/KSjxkQ7iN9Jez/1C7nwlgS4SSNZSTAtyQ=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.22/go.mod h1:zcXrNuQnIqmk/xv+L8CIe00W323k8vpRYFp3z7BlDHo=
-github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.9 h1:vwYHVqJ69V9S7P2/eihBjP6FTxn6fLum45wDlVU37MM=
-github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.9/go.mod h1:EgYxzBhZ3iVHkKCze+CFQWGlgzARVQjyaRpJA7dJd2Y=
+github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.50.0 h1:EKeXNj8orPXhrKC+rse6+ngz1OHLbAYHpd0Cb6KsVAs=
+github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.50.0/go.mod h1:EgYxzBhZ3iVHkKCze+CFQWGlgzARVQjyaRpJA7dJd2Y=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.62.2 h1:iyAjN2NU9dMlpnN1ykTQaN/yMfI4HSae10cfLykqiXw=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.62.2/go.mod h1:zesNwMWxY+ZQZzN+npfj6KwNWPSXUGNmsXGv93b4GYA=
 github.com/aws/aws-sdk-go-v2/service/connect v1.171.0 h1:CPPXxizCTmluSHKgzYREKjoFnNo/RXN5WAq9ZzH1dBU=
@@ -265,8 +265,8 @@ github.com/aws/aws-sdk-go-v2/service/fms v1.44.23 h1:MDIQtiIi+AS6khyKKTtZYWOUh4P
 github.com/aws/aws-sdk-go-v2/service/fms v1.44.23/go.mod h1:IshvG0Z1qQJhb6O+ljDPGCpVH7QQlXySbAm2rgrht2w=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.65.8 h1:Izf3qx0tdfoT27cj6VLbb9XfBiQ3HtLIzKhLfmyB+F0=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.65.8/go.mod h1:3BfxCKiQTGhvLHWCgCCXvV4sCbHX87K/AjCuewlD92M=
-github.com/aws/aws-sdk-go-v2/service/gamelift v1.52.1 h1:FLdoZL7kNBlm262e5bBPk0qzss4/RBgVU+mkIWXMSxA=
-github.com/aws/aws-sdk-go-v2/service/gamelift v1.52.1/go.mod h1:GQbXeQUBpz8fSrJFp8SwhFMBhXCrt1lsRvgWUvryzYQ=
+github.com/aws/aws-sdk-go-v2/service/gamelift v1.53.0 h1:RKUgMnd4lD9Lb2R9RqDWDyVkEEBoyb0ZW5iBzWULRF8=
+github.com/aws/aws-sdk-go-v2/service/gamelift v1.53.0/go.mod h1:GQbXeQUBpz8fSrJFp8SwhFMBhXCrt1lsRvgWUvryzYQ=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.32.7 h1:nHho+BHxliywn+a7ojNuL+wdd2vS0wv8TB3O2+hWR4M=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.32.7/go.mod h1:miGKr/mwXGyQrJ4OzZvfqDN3mw0yoi4uVtOkJyfLNyU=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.17 h1:RSt7dSdOkgqNcgXsjNI+U3EgJbgOXVgF9pK2oww5uRI=
@@ -381,8 +381,8 @@ github.com/aws/aws-sdk-go-v2/service/neptune v1.44.4 h1:G7cfE96vHtWTK1fFOmRpperk
 github.com/aws/aws-sdk-go-v2/service/neptune v1.44.4/go.mod h1:/Trrd77PVznZodZiKPhQEhyKXXzxt2eUZFJ5EgVDwt4=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.22 h1:GE/chx3flSIwmoT9PWGy4GPfTeVasXGOy4JpHSIGFR8=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.22/go.mod h1:8n6SiXES2bL2aAr9B4a2B4kNi79Kcq16mv3JHQQABU0=
-github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.8 h1:9+ApdbUZeNa2AJNzxo7JkQ13JlvaDzH5GJjEOCbo3vY=
-github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.8/go.mod h1:sfJGDHpakN4ZOe1k+DvD/ZVYnfalAJ+GzBrx5FYQN+w=
+github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.60.0 h1:m4dFEJee5tpnA1qVSlcJbfOOWvsk/iifKxmwOX8nhAc=
+github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.60.0/go.mod h1:sfJGDHpakN4ZOe1k+DvD/ZVYnfalAJ+GzBrx5FYQN+w=
 github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.11.10 h1:M45e7xcbQAZe0RW58Ycql/0uCsSsR06FWpO+pYKaorg=
 github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.11.10/go.mod h1:VSlfk74wL95BG84RcPLMHB0jKYGz/o/7dNxu9gTv5nc=
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.9 h1:VTyA02mxjWhWmmg01rebjD+hElqJrtMZ5QHfWN077pw=
@@ -483,8 +483,8 @@ github.com/aws/aws-sdk-go-v2/service/s3tables v1.15.1 h1:3mQxvXAzMRfnc1md8Op2sYF
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.15.1/go.mod h1:F3WPcRjnxxFfS5ljI+H7Tg/SZ/IXP8j8HSh0UWRIFiI=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.7 h1:SAykAaB5imdpynv51EM0h/VNZxJQKVR/bSggFhSlb8w=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.7/go.mod h1:jdlSmFgTXUKYY8x8JMt/qgb+l+5lizpZxqp8ByWOjdM=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.241.0 h1:27Zr90pfDt/wjDiPsdJfFJj8GXTcLwBmabtypAiVfNQ=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.241.0/go.mod h1:oAe+LZp2AOfZYv+jje3T9mZkH4cZnFWwfTy/VXr9g4c=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.242.0 h1:oPfr3pmwZv8UCsLDqzCNAUSAUBr71iBmwyulxPsWZQ8=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.242.0/go.mod h1:oAe+LZp2AOfZYv+jje3T9mZkH4cZnFWwfTy/VXr9g4c=
 github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.3 h1:sLIDXhsr62Dmqnc1Egd8HNnmNUU7M2+G1PbbJnZkgV8=
 github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.3/go.mod h1:FPoFIXknZh+1laBSDlSguo9zao2zmW6sfaIiyU2MS9M=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.23 h1:/kq9tNjhT15QTD/C1R09/h/lGeGPbIVQL1IZloAytLQ=
