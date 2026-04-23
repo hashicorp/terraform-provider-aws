@@ -86,3 +86,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Policy's ID.
 * `name` - Name of the attachment.
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_policy_attachment.example
+  identity = {
+      "name" = "example-attachment"
+      "policy_arn" = "arn:aws:iam::123456789012:policy/example-policy"
+  }
+}
+
+resource "aws_iam_policy_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the attachment. This cannot be an empty string.
+* `policy_arn` (String) ARN of the policy you want to apply.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
