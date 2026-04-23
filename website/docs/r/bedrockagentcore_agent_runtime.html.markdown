@@ -107,6 +107,30 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 }
 ```
 
+### AG-UI Protocol
+
+```terraform
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  agent_runtime_name = "example_agui_runtime"
+  description        = "Agent runtime with AG-UI streaming protocol"
+  role_arn           = aws_iam_role.example.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = "${aws_ecr_repository.example.repository_url}:v1.0"
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  protocol_configuration {
+    server_protocol = "AGUI"
+  }
+}
+```
+
 ### Agent runtime artifact from S3 with Code Configuration
 
 ```terraform
@@ -251,7 +275,7 @@ The `network_mode_config` block supports the following:
 
 The `protocol_configuration` block supports the following:
 
-* `server_protocol` - (Optional) Server protocol for the agent runtime. Valid values: `HTTP`, `MCP`, `A2A`.
+* `server_protocol` - (Optional) Server protocol for the agent runtime. Valid values: `HTTP`, `MCP`, `A2A`, `AGUI`.
 
 ### `request_header_configuration`
 
