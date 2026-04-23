@@ -9,6 +9,8 @@ import (
 )
 
 func TestResourceSecretVersion_Timeouts(t *testing.T) {
+	t.Parallel()
+
 	r := resourceSecretVersion()
 
 	if r.Timeouts == nil {
