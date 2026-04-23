@@ -8,7 +8,9 @@ package iam
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -29,6 +31,11 @@ import (
 )
 
 // @SDKResource("aws_iam_policy_attachment", name="Policy Attachment")
+// @IdentityAttribute("name")
+// @IdentityAttribute("policy_arn")
+// @IdAttrFormat("{name}/{policy_arn}")
+// @ImportIDHandler("policyAttachmentImportID")
+// @Testing(preIdentityVersion="6.42.0")
 func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
@@ -95,7 +102,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	d.SetId(d.Get(names.AttrName).(string))
+	d.SetId(createPolicyAttachmentImportID(d))
 
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
@@ -334,4 +341,32 @@ func findEntitiesForPolicy(ctx context.Context, conn *iam.Client, input *iam.Lis
 	}
 
 	return groups, roles, users, nil
+}
+
+func createPolicyAttachmentImportID(d *schema.ResourceData) string {
+	return (policyAttachmentImportID{}).Create(d)
+}
+
+type policyAttachmentImportID struct{}
+
+func (v policyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return v.create(d.Get(names.AttrName).(string), d.Get("policy_arn").(string))
+}
+
+func (v policyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, "/", 2)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		result := map[string]any{
+			"name":       parts[0],
+			"policy_arn": parts[1],
+		}
+		return id, result, nil
+	}
+
+	return "", nil, fmt.Errorf("unexpected format for ID (%s), expected NAME/POLICY_ARN", id)
+}
+
+func (policyAttachmentImportID) create(name, policyARN string) string {
+	return name + "/" + policyARN
 }
