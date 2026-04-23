@@ -3081,7 +3081,7 @@ func waitVolumeCreated(ctx context.Context, conn *ec2.Client, id string, timeout
 	return nil, err
 }
 
-func waitVolumeDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
+func waitVolumeDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VolumeStateDeleting),
 		Target:     []string{},

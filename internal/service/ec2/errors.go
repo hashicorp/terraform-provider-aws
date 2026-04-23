@@ -17,6 +17,7 @@ const (
 	errCodeAuthFailure                                             = "AuthFailure"
 	errCodeClientInvalidHostIDNotFound                             = "Client.InvalidHostID.NotFound"
 	errCodeConcurrentMutationLimitExceeded                         = "ConcurrentMutationLimitExceeded"
+	errCodeCopyVolumesLimitExceeded                                = "CopyVolumesLimitExceeded"
 	errCodeDefaultSubnetAlreadyExistsInAvailabilityZone            = "DefaultSubnetAlreadyExistsInAvailabilityZone"
 	errCodeDependencyViolation                                     = "DependencyViolation"
 	errCodeGatewayNotAttached                                      = "Gateway.NotAttached"

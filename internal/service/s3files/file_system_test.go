@@ -109,6 +109,44 @@ func TestAccS3FilesFileSystem_kmsKey(t *testing.T) {
 	})
 }
 
+func TestAccS3FilesFileSystem_acceptBucketWarning(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fileSystem s3files.GetFileSystemOutput
+	resourceName := "aws_s3files_file_system.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemConfig_acceptBucketWarning(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystemExists(ctx, t, resourceName, &fileSystem),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3files", regexache.MustCompile(`file-system/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "accept_bucket_warning", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.LifeCycleStateAvailable)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"accept_bucket_warning",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckFileSystemExists(ctx context.Context, t *testing.T, n string, v *s3files.GetFileSystemOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -316,6 +354,25 @@ resource "aws_s3files_file_system" "test" {
   bucket     = aws_s3_bucket.test.arn
   role_arn   = aws_iam_role.test.arn
   kms_key_id = aws_kms_key.test.arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccFileSystemConfig_acceptBucketWarning(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFileSystemConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_s3files_file_system" "test" {
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+
+  accept_bucket_warning = true
 
   depends_on = [aws_s3_bucket_versioning.test]
 

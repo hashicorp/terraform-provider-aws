@@ -7,6 +7,7 @@ package dynamodb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -579,7 +580,7 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 		}
 
 		// exit if error says the table is being deleted
-		if err, ok := errs.As[*awstypes.ResourceInUseException](err); ok && err != nil && strings.Contains(err.Error(), "Table is being deleted") {
+		if err, ok := errors.AsType[*awstypes.ResourceInUseException](err); ok && err != nil && strings.Contains(err.Error(), "Table is being deleted") {
 			return
 		}
 

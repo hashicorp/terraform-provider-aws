@@ -125,6 +125,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.WithVersion(1),
 			),
 		},
+		{
+			Factory:  newQueuePolicyResourceAsListResource,
+			TypeName: "aws_sqs_queue_policy",
+			Name:     "Queue Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalCustomInherentRegionIdentity("queue_url", parseQueueURL,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithVersion(1),
+			),
+		},
 	})
 }
 

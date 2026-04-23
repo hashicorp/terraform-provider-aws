@@ -119,6 +119,7 @@ func TestAccLogsSubscriptionFilter_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_cloudwatch_log_subscription_filter.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("distribution"), tfknownvalue.StringExact(awstypes.DistributionByLogStream)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("filter_pattern"), knownvalue.StringExact("logtype test")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					}),
 				},

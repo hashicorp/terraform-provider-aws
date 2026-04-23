@@ -297,7 +297,7 @@ func subscriptionFilterParseImportID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected log-group-name%[2]sfilter-name>", id, subscriptionFilterImportIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected log-group-name%[2]sfilter-name", id, subscriptionFilterImportIDSeparator)
 }
 
 var (

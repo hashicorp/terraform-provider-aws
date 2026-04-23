@@ -12,10 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func strPtr(str string) *string {
-	return &str
-}
-
 func nameWithSuffix(ctx context.Context, name string, namePrefix string, nameSuffix string) string {
 	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix), WithSuffix(nameSuffix)).Generate(ctx)
 }
@@ -253,28 +249,28 @@ func TestNamePrefixFromName(t *testing.T) {
 		{
 			TestName: "prefix without hyphen, correct suffix",
 			Input:    "test20060102150405000000000001",
-			Expected: strPtr("test"),
+			Expected: new("test"),
 		},
 		{
 			TestName: "prefix with hyphen, correct suffix",
 			Input:    "test-20060102150405000000000001",
-			Expected: strPtr("test-"),
+			Expected: new("test-"),
 		},
 		{
 			TestName: "prefix with hyphen, correct suffix with hex",
 			Input:    "test-200601021504050000000000f1",
-			Expected: strPtr("test-"),
+			Expected: new("test-"),
 		},
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
 		{
 			TestName: "terraform prefix, correct suffix",
 			Input:    "terraform-20060102150405000000000001",
-			Expected: strPtr("terraform-"),
+			Expected: new("terraform-"),
 		},
 		{
 			TestName: "KMS alias prefix",
 			Input:    "alias/20210723150229087000000002",
-			Expected: strPtr("alias/"),
+			Expected: new("alias/"),
 		},
 	}
 
@@ -344,7 +340,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 		{
 			TestName: "prefix without hyphen, correct suffix",
 			Input:    "test20060102150405000000000001suffix",
-			Expected: strPtr("test"),
+			Expected: new("test"),
 		},
 		{
 			TestName: "prefix with hyphen, missing additional suffix",
@@ -354,7 +350,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 		{
 			TestName: "prefix with hyphen, correct suffix",
 			Input:    "test-20060102150405000000000001suffix",
-			Expected: strPtr("test-"),
+			Expected: new("test-"),
 		},
 		{
 			TestName: "prefix with hyphen, missing additional suffix with hex",
@@ -364,7 +360,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 		{
 			TestName: "prefix with hyphen, correct suffix with hex",
 			Input:    "test-200601021504050000000000f1suffix",
-			Expected: strPtr("test-"),
+			Expected: new("test-"),
 		},
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
 		{
@@ -375,7 +371,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 		{
 			TestName: "terraform prefix, correct suffix",
 			Input:    "terraform-20060102150405000000000001suffix",
-			Expected: strPtr("terraform-"),
+			Expected: new("terraform-"),
 		},
 	}
 

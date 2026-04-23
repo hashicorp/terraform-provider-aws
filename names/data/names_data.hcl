@@ -1617,7 +1617,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_"]
+  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_"]
   brand                    = "AWS"
 }
 
@@ -9489,7 +9489,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "outposts_"
-    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway"]
+    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway", "ec2_service_link_virtual_interface"]
     brand               = "AWS"
     exclude             = true
     allowed_subcategory = true

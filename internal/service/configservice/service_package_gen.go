@@ -189,6 +189,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
 		},
+		{
+			Factory:  newRemediationConfigurationResourceAsListResource,
+			TypeName: "aws_config_remediation_configuration",
+			Name:     "Remediation Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity("config_rule_name"),
+		},
 	})
 }
 

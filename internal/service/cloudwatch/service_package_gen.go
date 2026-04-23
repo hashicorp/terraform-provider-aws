@@ -66,6 +66,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newOTelEnrichmentResource,
+			TypeName: "aws_cloudwatch_otel_enrichment",
+			Name:     "OTel Enrichment",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 

@@ -54,6 +54,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("capability_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      capabilityImportID{},
+			},
 		},
 		{
 			Factory:  newPodIdentityAssociationResource,
@@ -63,6 +71,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "association_arn",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute(names.AttrAssociationID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      podIdentityAssociationImportID{},
+				SetIDAttr:     true,
+			},
 		},
 	}
 }
@@ -134,12 +151,29 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: "access_entry_arn",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("principal_arn", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      accessEntryImportID{},
+			},
 		},
 		{
 			Factory:  resourceAccessPolicyAssociation,
 			TypeName: "aws_eks_access_policy_association",
 			Name:     "Access Policy Association",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("principal_arn", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      accessPolicyAssociationImportID{},
+			},
 		},
 		{
 			Factory:  resourceAddon,
@@ -149,6 +183,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("addon_name", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      addonImportID{},
+			},
 		},
 		{
 			Factory:  resourceCluster,
@@ -171,6 +213,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("fargate_profile_name", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      fargateProfileImportID{},
+			},
 		},
 		{
 			Factory:  resourceIdentityProviderConfig,
@@ -180,6 +230,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("identity_provider_config_name", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      identityProviderConfigImportID{},
+			},
 		},
 		{
 			Factory:  resourceNodeGroup,
@@ -189,6 +247,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("node_group_name", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      nodeGroupImportID{},
+			},
 		},
 	}
 }

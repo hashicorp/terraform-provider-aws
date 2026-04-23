@@ -69,7 +69,6 @@ jobs:
           verbose: "yes"
           config: ".ci/.markdownlinkcheck.json"
           directory: "website/docs"
-          # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.markdown.
           depth: 2
           extension: ".md"
           # Checking only modified files in the PR does not respect 'mex-depth'.
@@ -83,8 +82,6 @@ jobs:
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "website/docs"
-          # Ignore CDKTF translated guides.
-          ignore: "website/docs/cdktf/*/guides/*"
 
   misspell:
     runs-on: ubuntu-latest
@@ -194,6 +191,6 @@ jobs:
           }
           export -f validate_file
 
-          find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | \
+          find ./website/docs -type f -name '*.markdown' | \
             sort -u | \
             parallel -j 16 --halt soon,fail=1 validate_file {}

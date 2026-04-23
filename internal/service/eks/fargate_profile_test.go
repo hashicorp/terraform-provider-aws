@@ -204,18 +204,9 @@ func testAccCheckFargateProfileExists(ctx context.Context, t *testing.T, n strin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EKS Fargate Profile ID is set")
-		}
-
-		clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
-		output, err := tfeks.FindFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
+		output, err := tfeks.FindFargateProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["fargate_profile_name"])
 
 		if err != nil {
 			return err
@@ -236,12 +227,7 @@ func testAccCheckFargateProfileDestroy(ctx context.Context, t *testing.T) resour
 				continue
 			}
 
-			clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfeks.FindFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
+			_, err := tfeks.FindFargateProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["fargate_profile_name"])
 
 			if retry.NotFound(err) {
 				continue
