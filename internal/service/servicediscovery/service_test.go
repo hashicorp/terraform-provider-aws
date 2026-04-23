@@ -298,52 +298,52 @@ func TestAccServiceDiscoveryService_HealthCheckCustomConfigRemoveNoReplace(t *te
 	resourceName := "aws_service_discovery_service.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
- 		PreCheck: func() {
- 			acctest.PreCheck(ctx, t)
- 			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
- 		},
- 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
- 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
- 		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
- 		Steps: []resource.TestStep{
- 			{
- 				Config: testAccServiceConfig_healthCheckCustomConfig(rName),
- 				Check: resource.ComposeAggregateTestCheckFunc(
- 					testAccCheckServiceExists(ctx, t, resourceName),
- 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
- 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "SRV"),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
- 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
- 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
- 				),
- 			},
- 			{
- 				Config: testAccServiceConfig_noHealthCheckCustomConfig(rName),
- 				Check: resource.ComposeAggregateTestCheckFunc(
- 					testAccCheckServiceExists(ctx, t, resourceName),
- 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
- 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "SRV"),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
- 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
- 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
- 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
- 				),
- 				ExpectNonEmptyPlan: true,
- 				ConfigPlanChecks: resource.ConfigPlanChecks{
- 					PreApply: []plancheck.PlanCheck{
- 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
- 					},
- 				},
- 			},
- 		},
- 	})
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_healthCheckCustomConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "SRV"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_noHealthCheckCustomConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "SRV"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
 }
 
 func testAccCheckServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
