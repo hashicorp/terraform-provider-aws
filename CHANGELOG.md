@@ -122,6 +122,7 @@ ENHANCEMENTS:
 * resource/aws_elasticache_user: Add `passwords_wo` and `passwords_wo_version` write-only arguments ([#45988](https://github.com/hashicorp/terraform-provider-aws/issues/45988))
 * resource/aws_launch_configuration: Add Resource Identity support ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
 * resource/aws_opensearch_domain: Add `deployment_strategy_options` configuration block ([#47401](https://github.com/hashicorp/terraform-provider-aws/issues/47401))
+* resource/aws_wafv2_web_acl_rule: Add schema caching to reduce allocations for the resource on provider initialization ([#47335](https://github.com/hashicorp/terraform-provider-aws/issues/47335))
 
 BUG FIXES:
 
