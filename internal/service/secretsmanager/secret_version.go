@@ -50,6 +50,17 @@ func resourceSecretVersion() *schema.Resource {
 		UpdateWithoutTimeout: resourceSecretVersionUpdate,
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("has_secret_string_wo", false)
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(propagationTimeout),
+			Delete: schema.DefaultTimeout(propagationTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -152,7 +163,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	versionID := aws.ToString(output.VersionId)
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findSecretVersionForExistence(ctx, conn, secretID, versionID, secretStringWO != "")
 	})
 
@@ -369,7 +380,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
 		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID, hasWriteOnly)
 
