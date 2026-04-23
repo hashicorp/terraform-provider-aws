@@ -346,7 +346,6 @@ func TestAccServiceDiscoveryService_HealthCheckCustomConfigRemoveNoReplace(t *te
 	})
 }
 
-
 func testAccCheckServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ServiceDiscoveryClient(ctx)
