@@ -50,13 +50,6 @@ func resourceSecretVersion() *schema.Resource {
 		UpdateWithoutTimeout: resourceSecretVersionUpdate,
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set("has_secret_string_wo", false)
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(propagationTimeout),
 			Delete: schema.DefaultTimeout(propagationTimeout),
