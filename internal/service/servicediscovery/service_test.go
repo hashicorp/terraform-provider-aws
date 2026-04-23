@@ -294,7 +294,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 
 func TestAccServiceDiscoveryService_HealthCheckCustomConfigRemoveNoReplace(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -309,7 +309,7 @@ func TestAccServiceDiscoveryService_HealthCheckCustomConfigRemoveNoReplace(t *te
 			{
 				Config: testAccServiceConfig_healthCheckCustomConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName),
+					testAccCheckServiceExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
@@ -324,7 +324,7 @@ func TestAccServiceDiscoveryService_HealthCheckCustomConfigRemoveNoReplace(t *te
 			{
 				Config: testAccServiceConfig_noHealthCheckCustomConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName),
+					testAccCheckServiceExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
