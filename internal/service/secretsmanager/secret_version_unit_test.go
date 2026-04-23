@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager
@@ -15,12 +15,12 @@ func TestResourceSecretVersion_Timeouts(t *testing.T) {
 		t.Fatal("expected resource timeouts to be configured")
 	}
 
-	if got, want := r.Timeouts.Create.Timeout, 2*time.Minute; got != want {
-		t.Fatalf("expected create timeout %s, got %s", want, got)
+	if got, want := r.Timeouts.Create, 2*time.Minute; got == nil || *got != want {
+		t.Fatalf("expected create timeout %s, got %#v", want, got)
 	}
 
-	if got, want := r.Timeouts.Delete.Timeout, 2*time.Minute; got != want {
-		t.Fatalf("expected delete timeout %s, got %s", want, got)
+	if got, want := r.Timeouts.Delete, 2*time.Minute; got == nil || *got != want {
+		t.Fatalf("expected delete timeout %s, got %#v", want, got)
 	}
 
 	if got := r.Timeouts.Update; got != nil {
