@@ -34,7 +34,6 @@ This data source exports the following attributes in addition to the arguments a
 * `delete_requested_at` - Timestamp when deletion was requested (if applicable).
 * `execution_role_arn` - ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `family` - Family name of the daemon task definition.
-* `id` - ARN of the daemon task definition.
 * `memory` - Amount (in MiB) of memory used by the task.
 * `registered_at` - Timestamp when the daemon task definition was registered.
 * `registered_by` - Principal that registered the daemon task definition.

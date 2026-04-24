@@ -17,7 +17,6 @@ resource "aws_ecs_daemon_task_definition" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  region = var.region
   name   = var.rName
 
   assume_role_policy = jsonencode({

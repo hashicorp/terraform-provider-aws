@@ -4,15 +4,15 @@ resource "aws_ecs_daemon_task_definition" "test" {
   execution_role_arn = aws_iam_role.test.arn
 
   container_definition {
-    name   = "test"
-    image  = "nginx:latest"
-    memory = 128
+    name      = "test"
+    image     = "nginx:latest"
+    essential = true
+    memory    = 128
   }
 {{- template "tags" . }}
 }
 
 resource "aws_iam_role" "test" {
-{{- template "region" }}
   name = var.rName
 
   assume_role_policy = jsonencode({

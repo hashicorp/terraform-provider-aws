@@ -31,7 +31,6 @@ This data source exports the following attributes in addition to the arguments a
 * `capacity_provider_arns` - List of capacity provider ARNs associated with the daemon.
 * `cluster` - ARN of the ECS cluster.
 * `daemon_task_definition` - ARN of the daemon task definition.
-* `id` - ARN of the daemon.
 * `name` - Name of the daemon.
 * `status` - Status of the daemon.
 * `tags` - Key-value map of resource tags.

@@ -97,7 +97,7 @@ resource "aws_iam_role" "infra" {
 
 resource "aws_iam_role_policy_attachment" "infra" {
   role       = aws_iam_role.infra.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonECSInfrastructureRolePolicyForManagedInstances"
 }
 
 resource "aws_iam_role" "instance" {

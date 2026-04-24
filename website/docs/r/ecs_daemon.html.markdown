@@ -64,13 +64,13 @@ resource "aws_ecs_daemon" "example" {
 
 This resource supports the following arguments:
 
-* `name` - (Required, Forces new resource) Name of the daemon.
-* `cluster` - (Optional, Forces new resource) ARN of the ECS cluster where the daemon will run.
-* `daemon_task_definition` - (Required) ARN of the daemon task definition to use for the daemon.
 * `capacity_provider_arns` - (Required) List of capacity provider ARNs to use for the daemon.
+* `cluster` - (Optional, Forces new resource) ARN of the ECS cluster where the daemon will run.
+* `daemon_task_definition` - (Required) ARN of the daemon task definition to use for the daemon. Drift is not detected on this attribute because the API may report a stale revision while a deployment is in progress.
 * `deployment_configuration` - (Optional) Configuration for daemon deployments. See [Deployment Configuration](#deployment-configuration) below.
 * `enable_ecs_managed_tags` - (Optional) Whether to enable Amazon ECS managed tags for the tasks within the daemon.
 * `enable_execute_command` - (Optional) Whether to enable Amazon ECS Exec for the tasks within the daemon.
+* `name` - (Required, Forces new resource) Name of the daemon.
 * `propagate_tags` - (Optional) Whether to propagate tags from the daemon to tasks. Valid values are `DAEMON` or `NONE`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -115,7 +115,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_ecs_daemon.example
   identity = {
-    "arn" = "arn:aws:ecs:us-east-1:123456789012:daemon/example-cluster/example-daemon"
+    arn = "arn:aws:ecs:us-east-1:123456789012:daemon/example-cluster/example-daemon"
   }
 }
 

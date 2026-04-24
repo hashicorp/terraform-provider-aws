@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,12 +26,12 @@ func TestAccECSDaemon_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
@@ -69,12 +68,12 @@ func TestAccECSDaemon_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceDaemon, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,12 +91,12 @@ func TestAccECSDaemon_deploymentConfiguration(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_deploymentConfiguration(rName, 50.0, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.drain_percent", "50"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "10"),
 				),
@@ -120,7 +119,7 @@ func TestAccECSDaemon_deploymentConfiguration(t *testing.T) {
 			{
 				Config: testAccDaemonConfig_deploymentConfiguration(rName, 75.0, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.drain_percent", "75"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "20"),
 				),
@@ -138,12 +137,12 @@ func TestAccECSDaemon_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -166,7 +165,7 @@ func TestAccECSDaemon_tags(t *testing.T) {
 			{
 				Config: testAccDaemonConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -175,7 +174,7 @@ func TestAccECSDaemon_tags(t *testing.T) {
 			{
 				Config: testAccDaemonConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -194,12 +193,12 @@ func TestAccECSDaemon_minimumValues(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_deploymentConfiguration(rName, 1.0, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -216,12 +215,12 @@ func TestAccECSDaemon_boundaryValues(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_deploymentConfiguration(rName, 100.0, 1440),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -239,18 +238,18 @@ func TestAccECSDaemon_alarms(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_alarms(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_alarms(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -266,19 +265,19 @@ func TestAccECSDaemon_enableECSManagedTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_enableECSManagedTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_enableECSManagedTags(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "false"),
 				),
 			},
@@ -295,19 +294,19 @@ func TestAccECSDaemon_enableExecuteCommand(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_enableExecuteCommand(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_enableExecuteCommand(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
 				),
 			},
@@ -324,19 +323,19 @@ func TestAccECSDaemon_propagateTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_propagateTags(rName, "DAEMON"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "DAEMON"),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_propagateTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "NONE"),
 				),
 			},
@@ -353,27 +352,27 @@ func TestAccECSDaemon_updateTaskDefinition(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonConfig_updateTaskDefinition(rName, "nginx:latest"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_updateTaskDefinition(rName, "nginx:alpine"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonExists(ctx, resourceName),
+					testAccCheckDaemonExists(ctx, t, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDaemonDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDaemonDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_daemon" {
@@ -399,14 +398,14 @@ func testAccCheckDaemonDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDaemonExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDaemonExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
 		arn := rs.Primary.Attributes["arn"]
 
@@ -418,7 +417,7 @@ func testAccCheckDaemonExists(ctx context.Context, n string) resource.TestCheckF
 
 func testAccDaemonConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -437,28 +436,10 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets         = [aws_subnet.test.id]
+        subnets         = [aws_subnet.test[0].id]
         security_groups = [aws_security_group.test.id]
       }
     }
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
   }
 }
 
@@ -493,7 +474,7 @@ resource "aws_iam_role" "infra" {
 
 resource "aws_iam_role_policy_attachment" "infra" {
   role       = aws_iam_role.infra.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonECSInfrastructureRolePolicyForManagedInstances"
 }
 
 resource "aws_iam_role" "instance" {
@@ -664,7 +645,7 @@ resource "aws_ecs_daemon" "test" {
 
 func testAccDaemonConfig_updateTaskDefinition(rName, image string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -683,28 +664,10 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets         = [aws_subnet.test.id]
+        subnets         = [aws_subnet.test[0].id]
         security_groups = [aws_security_group.test.id]
       }
     }
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
   }
 }
 
@@ -739,7 +702,7 @@ resource "aws_iam_role" "infra" {
 
 resource "aws_iam_role_policy_attachment" "infra" {
   role       = aws_iam_role.infra.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonECSInfrastructureRolePolicyForManagedInstances"
 }
 
 resource "aws_iam_role" "instance" {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -36,11 +37,7 @@ func (d *daemonsDataSource) Schema(ctx context.Context, request datasource.Schem
 			"cluster": schema.StringAttribute{
 				Required: true,
 			},
-			"daemon_arns": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				Computed:    true,
-				ElementType: types.StringType,
-			},
+			"daemons": framework.DataSourceComputedListOfObjectAttribute[daemonSummaryModel](ctx),
 		},
 	}
 }
@@ -69,21 +66,39 @@ func (d *daemonsDataSource) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	var daemonArns []string
+	var results []daemonSummaryModel
 	for _, summary := range summaries {
-		if summary.DaemonArn != nil {
-			daemonArns = append(daemonArns, aws.ToString(summary.DaemonArn))
+		s := daemonSummaryModel{
+			DaemonArn: types.StringPointerValue(summary.DaemonArn),
+			Status:    types.StringValue(string(summary.Status)),
 		}
+
+		if summary.CreatedAt != nil {
+			s.CreatedAt = timetypes.NewRFC3339TimePointerValue(summary.CreatedAt)
+		}
+
+		if summary.UpdatedAt != nil {
+			s.UpdatedAt = timetypes.NewRFC3339TimePointerValue(summary.UpdatedAt)
+		}
+
+		results = append(results, s)
 	}
 
-	data.DaemonArns = fwflex.FlattenFrameworkStringValueListOfString(ctx, daemonArns)
+	data.Daemons = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, results)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type daemonsDataSourceModel struct {
-	CapacityProviderArns fwtypes.ListOfString `tfsdk:"capacity_provider_arns"`
-	Cluster              types.String         `tfsdk:"cluster"`
-	DaemonArns           fwtypes.ListOfString `tfsdk:"daemon_arns"`
-	Region               types.String         `tfsdk:"region"`
+	CapacityProviderArns fwtypes.ListOfString                                    `tfsdk:"capacity_provider_arns"`
+	Cluster              types.String                                            `tfsdk:"cluster"`
+	Daemons              fwtypes.ListNestedObjectValueOf[daemonSummaryModel]     `tfsdk:"daemons"`
+	Region               types.String                                            `tfsdk:"region"`
+}
+
+type daemonSummaryModel struct {
+	CreatedAt timetypes.RFC3339 `tfsdk:"created_at"`
+	DaemonArn types.String      `tfsdk:"daemon_arn"`
+	Status    types.String      `tfsdk:"status"`
+	UpdatedAt timetypes.RFC3339 `tfsdk:"updated_at"`
 }

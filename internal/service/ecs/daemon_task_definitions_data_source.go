@@ -5,15 +5,16 @@ package ecs
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
@@ -61,29 +62,13 @@ func (d *daemonTaskDefinitionsDataSource) Read(ctx context.Context, request data
 
 	conn := d.Meta().ECSClient(ctx)
 
-	input := &ecs.ListDaemonTaskDefinitionsInput{}
-
-	if !data.Family.IsNull() {
-		input.Family = aws.String(data.Family.ValueString())
+	var input ecs.ListDaemonTaskDefinitionsInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if !data.FamilyPrefix.IsNull() {
-		input.FamilyPrefix = aws.String(data.FamilyPrefix.ValueString())
-	}
-
-	if !data.Revision.IsNull() {
-		input.Revision = data.Revision.ValueEnum()
-	}
-
-	if !data.Sort.IsNull() {
-		input.Sort = data.Sort.ValueEnum()
-	}
-
-	if !data.Status.IsNull() {
-		input.Status = data.Status.ValueEnum()
-	}
-
-	results, err := findDaemonTaskDefinitions(ctx, conn, input)
+	results, err := findDaemonTaskDefinitions(ctx, conn, &input)
 	if err != nil {
 		response.Diagnostics.AddError("listing ECS Daemon Task Definitions", err.Error())
 		return
@@ -97,7 +82,7 @@ func (d *daemonTaskDefinitionsDataSource) Read(ctx context.Context, request data
 		}
 
 		if summary.RegisteredAt != nil {
-			s.RegisteredAt = types.StringValue(aws.ToTime(summary.RegisteredAt).Format(time.RFC3339))
+			s.RegisteredAt = timetypes.NewRFC3339TimePointerValue(summary.RegisteredAt)
 		}
 
 		if summary.RegisteredBy != nil {
@@ -105,7 +90,7 @@ func (d *daemonTaskDefinitionsDataSource) Read(ctx context.Context, request data
 		}
 
 		if summary.DeleteRequestedAt != nil {
-			s.DeleteRequestedAt = types.StringValue(aws.ToTime(summary.DeleteRequestedAt).Format(time.RFC3339))
+			s.DeleteRequestedAt = timetypes.NewRFC3339TimePointerValue(summary.DeleteRequestedAt)
 		}
 
 		summaries = append(summaries, s)
@@ -128,8 +113,8 @@ type daemonTaskDefinitionsDataSourceModel struct {
 
 type daemonTaskDefinitionSummaryModel struct {
 	Arn               types.String `tfsdk:"arn"`
-	RegisteredAt      types.String `tfsdk:"registered_at"`
+	RegisteredAt      timetypes.RFC3339 `tfsdk:"registered_at"`
 	RegisteredBy      types.String `tfsdk:"registered_by"`
-	DeleteRequestedAt types.String `tfsdk:"delete_requested_at"`
+	DeleteRequestedAt timetypes.RFC3339 `tfsdk:"delete_requested_at"`
 	Status            types.String `tfsdk:"status"`
 }

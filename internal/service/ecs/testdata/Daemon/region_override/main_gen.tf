@@ -1,11 +1,9 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  region = var.region
-}
-
 resource "aws_ecs_daemon" "test" {
+  region = var.region
+
   name                   = var.rName
   cluster                = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
@@ -13,10 +11,14 @@ resource "aws_ecs_daemon" "test" {
 }
 
 resource "aws_ecs_cluster" "test" {
+  region = var.region
+
   name = var.rName
 }
 
 resource "aws_ecs_daemon_task_definition" "test" {
+  region = var.region
+
   family             = var.rName
   execution_role_arn = aws_iam_role.test.arn
 
@@ -41,10 +43,11 @@ resource "aws_iam_role" "test" {
   })
 }
 
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_ecs_capacity_provider" "test" {
+  region = var.region
+
   name    = var.rName
   cluster = aws_ecs_cluster.test.name
 
@@ -55,26 +58,16 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets         = [aws_subnet.test.id]
+        subnets         = [aws_subnet.test[0].id]
         security_groups = [aws_security_group.test.id]
       }
     }
   }
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = { Name = var.rName }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  tags = { Name = var.rName }
-}
-
 resource "aws_security_group" "test" {
+  region = var.region
+
   name   = var.rName
   vpc_id = aws_vpc.test.id
   egress {
@@ -100,7 +93,7 @@ resource "aws_iam_role" "infra" {
 
 resource "aws_iam_role_policy_attachment" "infra" {
   role       = aws_iam_role.infra.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonECSInfrastructureRolePolicyForManagedInstances"
 }
 
 resource "aws_iam_role" "instance" {
@@ -125,9 +118,31 @@ resource "aws_iam_instance_profile" "test" {
   role = aws_iam_role.instance.name
 }
 
+# acctest.ConfigVPCWithSubnets(rName, 1)
+
+resource "aws_vpc" "test" {
+  region = var.region
+
+  cidr_block = "10.0.0.0/16"
+}
+
+# acctest.ConfigSubnets(rName, 1)
+
+resource "aws_subnet" "test" {
+  region = var.region
+
+  count = 1
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
+  region = var.region
+
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 

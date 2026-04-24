@@ -63,4 +63,3 @@ This data source exports the following attributes in addition to the arguments a
   * `registered_at` - Timestamp when the daemon task definition was registered.
   * `registered_by` - Principal that registered the daemon task definition.
   * `status` - Status of the daemon task definition.
-* `id` - AWS Region.

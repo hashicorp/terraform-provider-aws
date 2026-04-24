@@ -207,7 +207,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_ecs_daemon_task_definition.example
   identity = {
-    "arn" = "arn:aws:ecs:us-east-1:012345678910:daemon-task-definition/mydaemonfamily:123"
+    arn = "arn:aws:ecs:us-east-1:012345678910:daemon-task-definition/mydaemonfamily:123"
   }
 }
 

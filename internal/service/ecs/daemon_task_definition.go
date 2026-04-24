@@ -4,14 +4,15 @@
 package ecs
 
 import (
+	"fmt"
 	"context"
 	"log"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -63,7 +64,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 				},
 			},
 			"delete_requested_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -91,7 +93,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 				},
 			},
 			"registered_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -493,7 +496,7 @@ func (r *daemonTaskDefinitionResource) Create(ctx context.Context, request resou
 
 	output, err := conn.RegisterDaemonTaskDefinition(ctx, &input)
 	if err != nil {
-		response.Diagnostics.AddError("creating ECS Daemon Task Definition ("+plan.Family.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating ECS Daemon Task Definition (%s)", plan.Family.ValueString()), err.Error())
 		return
 	}
 
@@ -502,7 +505,7 @@ func (r *daemonTaskDefinitionResource) Create(ctx context.Context, request resou
 	// Read back to populate all computed attributes
 	dtd, err := findDaemonTaskDefinitionByARN(ctx, conn, plan.DaemonTaskDefinitionArn.ValueString())
 	if err != nil {
-		response.Diagnostics.AddError("reading ECS Daemon Task Definition ("+plan.DaemonTaskDefinitionArn.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Task Definition (%s)", plan.DaemonTaskDefinitionArn.ValueString()), err.Error())
 		return
 	}
 
@@ -530,7 +533,7 @@ func (r *daemonTaskDefinitionResource) Read(ctx context.Context, request resourc
 		return
 	}
 	if err != nil {
-		response.Diagnostics.AddError("reading ECS Daemon Task Definition ("+state.DaemonTaskDefinitionArn.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Task Definition (%s)", state.DaemonTaskDefinitionArn.ValueString()), err.Error())
 		return
 	}
 
@@ -562,7 +565,7 @@ func (r *daemonTaskDefinitionResource) Delete(ctx context.Context, request resou
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("deleting ECS Daemon Task Definition ("+state.DaemonTaskDefinitionArn.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting ECS Daemon Task Definition (%s)", state.DaemonTaskDefinitionArn.ValueString()), err.Error())
 	}
 }
 
@@ -576,19 +579,6 @@ func flattenDaemonTaskDefinition(ctx context.Context, dtd *awstypes.DaemonTaskDe
 	diags.Append(fwflex.Flatten(ctx, dtd, model)...)
 	if diags.HasError() {
 		return diags
-	}
-
-	// Manual: time formatting
-	if dtd.RegisteredAt != nil {
-		model.RegisteredAt = types.StringValue(aws.ToTime(dtd.RegisteredAt).Format(time.RFC3339))
-	} else {
-		model.RegisteredAt = types.StringNull()
-	}
-
-	if dtd.DeleteRequestedAt != nil {
-		model.DeleteRequestedAt = types.StringValue(aws.ToTime(dtd.DeleteRequestedAt).Format(time.RFC3339))
-	} else {
-		model.DeleteRequestedAt = types.StringNull()
 	}
 
 	// Manual: volumes (structural mismatch — Host.SourcePath → HostPath)
@@ -635,12 +625,12 @@ type daemonTaskDefinitionResourceModel struct {
 	DaemonTaskDefinitionArn types.String                                              `tfsdk:"arn"`
 	ContainerDefinitions    fwtypes.ListNestedObjectValueOf[containerDefinitionModel] `tfsdk:"container_definition"`
 	Cpu                     types.String                                              `tfsdk:"cpu"`
-	DeleteRequestedAt       types.String                                              `tfsdk:"delete_requested_at"`
+	DeleteRequestedAt       timetypes.RFC3339                                         `tfsdk:"delete_requested_at"`
 	ExecutionRoleArn        types.String                                              `tfsdk:"execution_role_arn"`
 	Family                  types.String                                              `tfsdk:"family"`
 	Memory                  types.String                                              `tfsdk:"memory"`
 	Region                  types.String                                              `tfsdk:"region"`
-	RegisteredAt            types.String                                              `tfsdk:"registered_at"`
+	RegisteredAt            timetypes.RFC3339                                         `tfsdk:"registered_at"`
 	RegisteredBy            types.String                                              `tfsdk:"registered_by"`
 	Revision                types.Int64                                               `tfsdk:"revision"`
 	Status                  types.String                                              `tfsdk:"status"`

@@ -4,11 +4,12 @@
 package ecs
 
 import (
+	"fmt"
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -39,7 +40,8 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 				Computed: true,
 			},
 			"delete_requested_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
 				Computed: true,
@@ -51,7 +53,8 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 				Computed: true,
 			},
 			"registered_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"registered_by": schema.StringAttribute{
 				Computed: true,
@@ -419,7 +422,7 @@ func (d *daemonTaskDefinitionDataSource) Read(ctx context.Context, request datas
 
 	output, err := conn.DescribeDaemonTaskDefinition(ctx, input)
 	if err != nil {
-		response.Diagnostics.AddError("reading ECS Daemon Task Definition ("+data.TaskDefinition.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Task Definition (%s)", data.TaskDefinition.ValueString()), err.Error())
 		return
 	}
 
@@ -430,15 +433,6 @@ func (d *daemonTaskDefinitionDataSource) Read(ctx context.Context, request datas
 	response.Diagnostics.Append(fwflex.Flatten(ctx, dtd, &data)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	// Manual: time formatting
-	if dtd.RegisteredAt != nil {
-		data.RegisteredAt = types.StringValue(aws.ToTime(dtd.RegisteredAt).Format(time.RFC3339))
-	}
-
-	if dtd.DeleteRequestedAt != nil {
-		data.DeleteRequestedAt = types.StringValue(aws.ToTime(dtd.DeleteRequestedAt).Format(time.RFC3339))
 	}
 
 	// Manual: volumes (structural mismatch — Host.SourcePath → HostPath)
@@ -460,12 +454,12 @@ type daemonTaskDefinitionDataSourceModel struct {
 	DaemonTaskDefinitionArn types.String                                              `tfsdk:"arn"`
 	ContainerDefinitions    fwtypes.ListNestedObjectValueOf[containerDefinitionModel] `tfsdk:"container_definition"`
 	Cpu                     types.String                                              `tfsdk:"cpu"`
-	DeleteRequestedAt       types.String                                              `tfsdk:"delete_requested_at"`
+	DeleteRequestedAt       timetypes.RFC3339                                         `tfsdk:"delete_requested_at"`
 	ExecutionRoleArn        types.String                                              `tfsdk:"execution_role_arn"`
 	Family                  types.String                                              `tfsdk:"family"`
 	Memory                  types.String                                              `tfsdk:"memory"`
 	Region                  types.String                                              `tfsdk:"region"`
-	RegisteredAt            types.String                                              `tfsdk:"registered_at"`
+	RegisteredAt            timetypes.RFC3339                                         `tfsdk:"registered_at"`
 	RegisteredBy            types.String                                              `tfsdk:"registered_by"`
 	Revision                types.Int64                                               `tfsdk:"revision"`
 	Status                  types.String                                              `tfsdk:"status"`

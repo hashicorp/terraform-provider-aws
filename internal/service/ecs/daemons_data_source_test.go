@@ -26,7 +26,7 @@ func TestAccECSDaemonsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDaemonsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "daemon_arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "daemons.#", "1"),
 				),
 			},
 		},
@@ -46,7 +46,7 @@ func TestAccECSDaemonsDataSource_multiple(t *testing.T) {
 			{
 				Config: testAccDaemonsDataSourceConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "daemon_arns.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "daemons.#", "2"),
 				),
 			},
 		},
@@ -66,7 +66,7 @@ func TestAccECSDaemonsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccDaemonsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "daemon_arns.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "daemons.#", "0"),
 				),
 			},
 		},
@@ -87,7 +87,7 @@ data "aws_ecs_daemons" "test" {
 
 func testAccDaemonsDataSourceConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -106,28 +106,10 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets         = [aws_subnet.test.id]
+        subnets         = [aws_subnet.test[0].id]
         security_groups = [aws_security_group.test.id]
       }
     }
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
   }
 }
 
@@ -162,7 +144,7 @@ resource "aws_iam_role" "infra" {
 
 resource "aws_iam_role_policy_attachment" "infra" {
   role       = aws_iam_role.infra.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonECSInfrastructureRolePolicyForManagedInstances"
 }
 
 resource "aws_iam_role" "instance" {

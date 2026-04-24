@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
+	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -120,6 +121,57 @@ func TestAccECSDaemon_List_RegionOverride(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_ecs_daemon.test", identity1.Checks()),
 
 					tfquerycheck.ExpectIdentityFunc("aws_ecs_daemon.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSDaemon_List_IncludeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_ecs_daemon.test[0]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Daemon/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Daemon/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_ecs_daemon.test", identity1.Checks()),
+					querycheck.ExpectResourceKnownValues("aws_ecs_daemon.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("cluster"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("daemon_task_definition"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					}),
 				},
 			},
 		},

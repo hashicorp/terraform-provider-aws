@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ecs_daemon" "test" {
@@ -17,10 +17,10 @@ resource "aws_ecs_daemon_task_definition" "test" {
   execution_role_arn = aws_iam_role.test.arn
 
   container_definition {
-    name   = "test"
-    image  = "nginx:latest"
+    name      = "test"
+    image     = "nginx:latest"
     essential = true
-    memory = 128
+    memory    = 128
   }
 }
 
@@ -37,8 +37,7 @@ resource "aws_iam_role" "test" {
   })
 }
 
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_ecs_capacity_provider" "test" {
   name    = var.rName
@@ -51,23 +50,11 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets         = [aws_subnet.test.id]
+        subnets         = [aws_subnet.test[0].id]
         security_groups = [aws_security_group.test.id]
       }
     }
   }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = { Name = var.rName }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  tags = { Name = var.rName }
 }
 
 resource "aws_security_group" "test" {
@@ -96,7 +83,7 @@ resource "aws_iam_role" "infra" {
 
 resource "aws_iam_role_policy_attachment" "infra" {
   role       = aws_iam_role.infra.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonECSInfrastructureRolePolicyForManagedInstances"
 }
 
 resource "aws_iam_role" "instance" {
@@ -119,6 +106,22 @@ resource "aws_iam_role_policy_attachment" "instance" {
 resource "aws_iam_instance_profile" "test" {
   name = var.rName
   role = aws_iam_role.instance.name
+}
+
+# acctest.ConfigVPCWithSubnets(rName, 1)
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+# acctest.ConfigSubnets(rName, 1)
+
+resource "aws_subnet" "test" {
+  count = 1
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude

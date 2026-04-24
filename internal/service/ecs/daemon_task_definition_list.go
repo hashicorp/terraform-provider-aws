@@ -6,9 +6,11 @@ package ecs
 import (
 	"context"
 	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -49,41 +51,56 @@ func (r *listResourceDaemonTaskDefinition) List(ctx context.Context, request lis
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := &ecs.ListDaemonTaskDefinitionsInput{}
 
-		for {
-			output, err := conn.ListDaemonTaskDefinitions(ctx, input)
+		for summary, err := range listDaemonTaskDefinitionSummaries(ctx, conn, input) {
 			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing ECS Daemon Task Definitions: %w", err))
+				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			for _, summary := range output.DaemonTaskDefinitions {
-				result := request.NewListResult(ctx)
+			result := request.NewListResult(ctx)
 
-				var data daemonTaskDefinitionResourceModel
-				r.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
-					dtd, err := findDaemonTaskDefinitionByARN(ctx, conn, aws.ToString(summary.Arn))
-					if err != nil {
-						result.Diagnostics.AddError("reading ECS Daemon Task Definition ("+aws.ToString(summary.Arn)+")", err.Error())
-						return
-					}
-
-					result.Diagnostics.Append(flattenDaemonTaskDefinition(ctx, dtd, &data)...)
-					if result.Diagnostics.HasError() {
-						return
-					}
-
-					setTagsOut(ctx, nil)
-					result.DisplayName = aws.ToString(summary.Arn)
-				})
-
-				if result.Diagnostics.HasError() {
-					result = list.ListResult{Diagnostics: result.Diagnostics}
-					yield(result)
+			var data daemonTaskDefinitionResourceModel
+			r.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
+				dtd, err := findDaemonTaskDefinitionByARN(ctx, conn, aws.ToString(summary.Arn))
+				if err != nil {
+					result.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Task Definition (%s)", aws.ToString(summary.Arn)), err.Error())
 					return
 				}
 
-				if !yield(result) {
+				result.Diagnostics.Append(flattenDaemonTaskDefinition(ctx, dtd, &data)...)
+				if result.Diagnostics.HasError() {
+					return
+				}
+
+				setTagsOut(ctx, nil)
+				result.DisplayName = aws.ToString(summary.Arn)
+			})
+
+			if result.Diagnostics.HasError() {
+				result = list.ListResult{Diagnostics: result.Diagnostics}
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+func listDaemonTaskDefinitionSummaries(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonTaskDefinitionsInput) iter.Seq2[awstypes.DaemonTaskDefinitionSummary, error] {
+	return func(yield func(awstypes.DaemonTaskDefinitionSummary, error) bool) {
+		for {
+			output, err := conn.ListDaemonTaskDefinitions(ctx, input)
+			if err != nil {
+				yield(awstypes.DaemonTaskDefinitionSummary{}, fmt.Errorf("listing ECS Daemon Task Definitions: %w", err))
+				return
+			}
+
+			for _, summary := range output.DaemonTaskDefinitions {
+				if !yield(summary, nil) {
 					return
 				}
 			}

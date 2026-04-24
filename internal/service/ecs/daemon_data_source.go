@@ -4,6 +4,7 @@
 package ecs
 
 import (
+	"fmt"
 	"context"
 	"strings"
 
@@ -69,7 +70,7 @@ func (d *daemonDataSource) Read(ctx context.Context, request datasource.ReadRequ
 	daemon, err := findDaemonByARN(ctx, conn, arn)
 
 	if err != nil {
-		response.Diagnostics.AddError("reading ECS Daemon ("+arn+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", arn), err.Error())
 		return
 	}
 
@@ -94,7 +95,7 @@ func (d *daemonDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		if currentRevision.Arn != nil {
 			revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(currentRevision.Arn))
 			if err != nil {
-				response.Diagnostics.AddError("reading ECS Daemon Revision ("+aws.ToString(currentRevision.Arn)+")", err.Error())
+				response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(currentRevision.Arn)), err.Error())
 				return
 			}
 			if revision.DaemonTaskDefinitionArn != nil {

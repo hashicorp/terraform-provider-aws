@@ -8,25 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-// ============================================
-// UNIT TESTS
-// ============================================
-
-// ============================================
-// ACCEPTANCE TESTS
-// ============================================
 
 func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -38,12 +29,12 @@ func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "family", rName),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "512"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "1024"),
@@ -79,12 +70,12 @@ func TestAccECSDaemonTaskDefinition_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceDaemonTaskDefinition, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,12 +94,12 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -123,7 +114,7 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -132,7 +123,7 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -151,12 +142,12 @@ func TestAccECSDaemonTaskDefinition_executionRole(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_executionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.execution", "arn"),
 				),
 			},
@@ -181,12 +172,12 @@ func TestAccECSDaemonTaskDefinition_taskRole(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_taskRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.task", "arn"),
 				),
 			},
@@ -211,12 +202,12 @@ func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_volume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "2"),
 				),
 			},
@@ -226,6 +217,30 @@ func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "0"),
+				),
+			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_volume(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "2"),
+				),
 			},
 		},
 	})
@@ -241,12 +256,12 @@ func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_multipleContainers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "2"),
 				),
 			},
@@ -257,13 +272,36 @@ func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "1"),
+				),
+			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_multipleContainers(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "2"),
+				),
+			},
 		},
 	})
 }
 
 func TestAccECSDaemonTaskDefinition_containerDefinitionsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef1, taskDef2 awstypes.DaemonTaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -271,21 +309,25 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionsUpdate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef1),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
 				),
 			},
 			{
 				Config: testAccDaemonTaskDefinitionConfig_containerDefinitionsUpdated(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef2),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
-					testAccCheckDaemonTaskDefinitionNotEqual(&taskDef1, &taskDef2),
 				),
 			},
 		},
@@ -302,12 +344,12 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionHealthCheck(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_healthCheck(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.command.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.interval", "30"),
@@ -330,12 +372,12 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testi
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_logConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awslogs"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-group", "/ecs/daemon"),
@@ -357,12 +399,12 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionEnvironment(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_environment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.environment.#", "2"),
 				),
 			},
@@ -380,12 +422,12 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionMountPoint(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_mountPoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.source_volume", "data"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.container_path", "/usr/share/nginx/html"),
@@ -407,12 +449,12 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionAllNestedBlocks(t *testin
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_allNestedBlocks(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awslogs"),
@@ -435,12 +477,12 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionOptionalFields(t *testing
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_optionalFields(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.working_directory", "/app"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.user", "nginx"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.privileged", "false"),
@@ -461,12 +503,12 @@ func TestAccECSDaemonTaskDefinition_volumeWithoutHostPath(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_volumeWithoutHostPath(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName: "scratch",
@@ -487,12 +529,12 @@ func TestAccECSDaemonTaskDefinition_noCpuMemory(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaemonTaskDefinitionConfig_noCpuMemory(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "family", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "cpu"),
 					resource.TestCheckNoResourceAttr(resourceName, "memory"),
@@ -504,14 +546,14 @@ func TestAccECSDaemonTaskDefinition_noCpuMemory(t *testing.T) {
 
 // Helper functions
 
-func testAccCheckDaemonTaskDefinitionExists(ctx context.Context, n string, v ...*awstypes.DaemonTaskDefinition) resource.TestCheckFunc {
+func testAccCheckDaemonTaskDefinitionExists(ctx context.Context, t *testing.T, n string, v ...*awstypes.DaemonTaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
 		output, err := tfecs.FindDaemonTaskDefinitionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
@@ -527,9 +569,9 @@ func testAccCheckDaemonTaskDefinitionExists(ctx context.Context, n string, v ...
 	}
 }
 
-func testAccCheckDaemonTaskDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDaemonTaskDefinitionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_daemon_task_definition" {
@@ -546,23 +588,9 @@ func testAccCheckDaemonTaskDefinitionDestroy(ctx context.Context) resource.TestC
 				return err
 			}
 
-			// Accept DELETE_IN_PROGRESS as destroyed (temporary workaround for backend issue)
-			if dtd.Status == "DELETE_IN_PROGRESS" {
-				continue
-			}
-
 			return fmt.Errorf("ECS Daemon Task Definition %s still exists with status %s", rs.Primary.ID, dtd.Status)
 		}
 
-		return nil
-	}
-}
-
-func testAccCheckDaemonTaskDefinitionNotEqual(v1, v2 *awstypes.DaemonTaskDefinition) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(v1.DaemonTaskDefinitionArn) == aws.ToString(v2.DaemonTaskDefinitionArn) {
-			return fmt.Errorf("ECS Daemon Task Definitions are equal")
-		}
 		return nil
 	}
 }

@@ -1,10 +1,10 @@
-# Copyright IBM Corp. 2014, 2026
+# Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ecs_daemon_task_definition" "test" {
-  region = var.region
+  count = var.resource_count
 
-  family             = var.rName
+  family             = "${var.rName}-${count.index}"
   execution_role_arn = aws_iam_role.test.arn
 
   container_definition {
@@ -34,8 +34,9 @@ variable "rName" {
   nullable    = false
 }
 
-variable "region" {
-  description = "Region to deploy resource in"
-  type        = string
+variable "resource_count" {
+  description = "The number of resources to create"
+  type        = number
   nullable    = false
 }
+

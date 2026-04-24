@@ -22,12 +22,15 @@ data "aws_ecs_daemons" "all" {
 
 This data source supports the following arguments:
 
-* `cluster` - (Required) ARN of the ECS cluster to list daemons for.
 * `capacity_provider_arns` - (Optional) List of capacity provider ARNs to filter the daemons by.
+* `cluster` - (Required) ARN of the ECS cluster to list daemons for.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `daemon_arns` - List of daemon ARNs in the cluster.
-* `id` - ARN of the ECS cluster.
+* `daemons` - List of daemon summaries. Each element contains:
+    * `created_at` - Timestamp when the daemon was created.
+    * `daemon_arn` - ARN of the daemon.
+    * `status` - Status of the daemon.
+    * `updated_at` - Timestamp when the daemon was last updated.

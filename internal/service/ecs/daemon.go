@@ -113,6 +113,7 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 		},
 		Blocks: map[string]schema.Block{
 			"deployment_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[deploymentConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -133,6 +134,7 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 					},
 					Blocks: map[string]schema.Block{
 						"alarms": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[alarmConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -151,14 +153,13 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
-
-	s.Blocks[names.AttrTimeouts] = timeouts.Block(ctx, timeouts.Opts{
-		Create: true,
-		Update: true,
-		Delete: true,
-	})
 
 	response.Schema = s
 }
@@ -181,13 +182,10 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	// Fields AutoFlex can't handle
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
-	if len(plan.DeploymentConfiguration) > 0 {
-		input.DeploymentConfiguration = expandDaemonDeploymentConfigurationFromModel(plan.DeploymentConfiguration[0])
-	}
 
 	output, err := conn.CreateDaemon(ctx, &input)
 	if err != nil {
-		response.Diagnostics.AddError("creating ECS Daemon ("+plan.DaemonName.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating ECS Daemon (%s)", plan.DaemonName.ValueString()), err.Error())
 		return
 	}
 
@@ -195,26 +193,29 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	if _, err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), createTimeout); err != nil {
-		response.Diagnostics.AddError("waiting for ECS Daemon ("+plan.DaemonArn.ValueString()+") create", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) create", plan.DaemonArn.ValueString()), err.Error())
 		return
 	}
-
-	origDTD := plan.DaemonTaskDefinitionArn
 
 	daemon, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
 	if err != nil {
-		response.Diagnostics.AddError("reading ECS Daemon ("+plan.DaemonArn.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
 		return
 	}
 
-	response.Diagnostics.Append(flattenDaemon(ctx, conn, daemon, &plan)...)
+	response.Diagnostics.Append(flattenDaemon(ctx, daemon, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Preserve the planned value — the API may report a stale revision
-	// while the new revision is still rolling out.
-	plan.DaemonTaskDefinitionArn = origDTD
+	if len(daemon.CurrentRevisions) > 0 && daemon.CurrentRevisions[0].Arn != nil {
+		revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(daemon.CurrentRevisions[0].Arn))
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(daemon.CurrentRevisions[0].Arn)), err.Error())
+			return
+		}
+		flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], &plan)
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
@@ -235,21 +236,22 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 	if err != nil {
-		response.Diagnostics.AddError("reading ECS Daemon ("+state.DaemonArn.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", state.DaemonArn.ValueString()), err.Error())
 		return
 	}
 
-	origDTD := state.DaemonTaskDefinitionArn
-
-	response.Diagnostics.Append(flattenDaemon(ctx, conn, daemon, &state)...)
+	response.Diagnostics.Append(flattenDaemon(ctx, daemon, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Preserve the task definition ARN from state — the API's CurrentRevisions
-	// may not reflect the latest update while a deployment is in progress.
-	if !origDTD.IsNull() {
-		state.DaemonTaskDefinitionArn = origDTD
+	if len(daemon.CurrentRevisions) > 0 && daemon.CurrentRevisions[0].Arn != nil {
+		revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(daemon.CurrentRevisions[0].Arn))
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(daemon.CurrentRevisions[0].Arn)), err.Error())
+			return
+		}
+		flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], &state)
 	}
 
 	// Set defaults for write-only fields not returned by the API (needed for import)
@@ -288,10 +290,6 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Fields AutoFlex can't handle
-		if len(plan.DeploymentConfiguration) > 0 {
-			input.DeploymentConfiguration = expandDaemonDeploymentConfigurationFromModel(plan.DeploymentConfiguration[0])
-		}
-
 		if !plan.EnableECSManagedTags.Equal(state.EnableECSManagedTags) {
 			input.EnableECSManagedTags = plan.EnableECSManagedTags.ValueBool()
 		}
@@ -302,31 +300,36 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 
 		_, err := conn.UpdateDaemon(ctx, &input)
 		if err != nil {
-			response.Diagnostics.AddError("updating ECS Daemon ("+plan.DaemonArn.ValueString()+")", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
 			return
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		if _, err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), updateTimeout); err != nil {
-			response.Diagnostics.AddError("waiting for ECS Daemon ("+plan.DaemonArn.ValueString()+") update", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) update", plan.DaemonArn.ValueString()), err.Error())
 			return
 		}
 	}
 
-	origDTD := plan.DaemonTaskDefinitionArn
-
 	daemon, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
 	if err != nil {
-		response.Diagnostics.AddError("reading ECS Daemon ("+plan.DaemonArn.ValueString()+")", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
 		return
 	}
 
-	response.Diagnostics.Append(flattenDaemon(ctx, conn, daemon, &plan)...)
+	response.Diagnostics.Append(flattenDaemon(ctx, daemon, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	plan.DaemonTaskDefinitionArn = origDTD
+	if len(daemon.CurrentRevisions) > 0 && daemon.CurrentRevisions[0].Arn != nil {
+		revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(daemon.CurrentRevisions[0].Arn))
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(daemon.CurrentRevisions[0].Arn)), err.Error())
+			return
+		}
+		flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], &plan)
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
@@ -349,22 +352,19 @@ func (r *daemonResource) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "deployment deletion is ongoing") {
-		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-		if _, err := waitDaemonDeleted(ctx, conn, state.DaemonArn.ValueString(), deleteTimeout); err != nil {
-			response.Diagnostics.AddError("waiting for ECS Daemon ("+state.DaemonArn.ValueString()+") delete", err.Error())
-		}
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError("deleting ECS Daemon ("+state.DaemonArn.ValueString()+")", err.Error())
+	switch {
+	case err == nil:
+		// no-op, continue on to waiter
+	case errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "deployment deletion is ongoing"):
+		// no-op, continue on to waiter
+	default:
+		response.Diagnostics.AddError(fmt.Sprintf("deleting ECS Daemon (%s)", state.DaemonArn.ValueString()), err.Error())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	if _, err := waitDaemonDeleted(ctx, conn, state.DaemonArn.ValueString(), deleteTimeout); err != nil {
-		response.Diagnostics.AddError("waiting for ECS Daemon ("+state.DaemonArn.ValueString()+") delete", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) delete", state.DaemonArn.ValueString()), err.Error())
 	}
 }
 
@@ -389,7 +389,7 @@ func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnos
 
 // flattenDaemon populates the model from a DaemonDetail using AutoFlex for matching fields
 // and manual handling for fields that require additional API calls or transformation.
-func flattenDaemon(ctx context.Context, conn *ecs.Client, daemon *awstypes.DaemonDetail, model *daemonResourceModel) diag.Diagnostics {
+func flattenDaemon(ctx context.Context, daemon *awstypes.DaemonDetail, model *daemonResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// AutoFlex handles DaemonArn, ClusterArn, Status
@@ -406,61 +406,27 @@ func flattenDaemon(ctx context.Context, conn *ecs.Client, daemon *awstypes.Daemo
 		}
 	}
 
-	// Manual: get task definition and capacity providers from current revision
-	if len(daemon.CurrentRevisions) > 0 {
-		currentRevision := daemon.CurrentRevisions[0]
-
-		if currentRevision.Arn != nil {
-			revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(currentRevision.Arn))
-			if err != nil {
-				diags.AddError("reading ECS Daemon Revision ("+aws.ToString(currentRevision.Arn)+")", err.Error())
-				return diags
-			}
-			model.DaemonTaskDefinitionArn = types.StringPointerValue(revision.DaemonTaskDefinitionArn)
-		}
-
-		if len(currentRevision.CapacityProviders) > 0 {
-			cpArns := make([]string, 0, len(currentRevision.CapacityProviders))
-			for _, cp := range currentRevision.CapacityProviders {
-				if cp.Arn != nil {
-					cpArns = append(cpArns, aws.ToString(cp.Arn))
-				}
-			}
-			model.CapacityProviderArns = fwflex.FlattenFrameworkStringValueListOfString(ctx, cpArns)
-		}
-	}
-
 	return diags
 }
 
-func expandDaemonDeploymentConfigurationFromModel(m deploymentConfigurationModel) *awstypes.DaemonDeploymentConfiguration {
-	apiObject := &awstypes.DaemonDeploymentConfiguration{}
-
-	if !m.DrainPercent.IsNull() {
-		apiObject.DrainPercent = aws.Float64(m.DrainPercent.ValueFloat64())
+// flattenDaemonRevision populates task definition ARN and capacity provider ARNs
+// from a DaemonRevision and DaemonRevisionDetail. DaemonTaskDefinitionArn is only
+// set when the model's value is null (e.g., during import) to avoid overwriting
+// the plan value with potentially stale revision data during Create/Update.
+func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevision, revisionDetail awstypes.DaemonRevisionDetail, model *daemonResourceModel) {
+	if model.DaemonTaskDefinitionArn.IsNull() {
+		model.DaemonTaskDefinitionArn = types.StringPointerValue(revision.DaemonTaskDefinitionArn)
 	}
 
-	if !m.BakeTimeInMinutes.IsNull() {
-		apiObject.BakeTimeInMinutes = int32(m.BakeTimeInMinutes.ValueInt64())
-	}
-
-	if len(m.Alarms) > 0 {
-		alarm := m.Alarms[0]
-		apiObject.Alarms = &awstypes.DaemonAlarmConfiguration{
-			Enable: alarm.Enable.ValueBool(),
-		}
-		if !alarm.AlarmNames.IsNull() {
-			var alarmNames []string
-			for _, v := range alarm.AlarmNames.Elements() {
-				if sv, ok := v.(types.String); ok {
-					alarmNames = append(alarmNames, sv.ValueString())
-				}
+	if len(revisionDetail.CapacityProviders) > 0 {
+		cpArns := make([]string, 0, len(revisionDetail.CapacityProviders))
+		for _, cp := range revisionDetail.CapacityProviders {
+			if cp.Arn != nil {
+				cpArns = append(cpArns, aws.ToString(cp.Arn))
 			}
-			apiObject.Alarms.AlarmNames = alarmNames
 		}
+		model.CapacityProviderArns = fwflex.FlattenFrameworkStringValueListOfString(ctx, cpArns)
 	}
-
-	return apiObject
 }
 
 type daemonResourceModel struct {
@@ -468,7 +434,7 @@ type daemonResourceModel struct {
 	CapacityProviderArns    fwtypes.ListOfString                             `tfsdk:"capacity_provider_arns"`
 	ClusterArn              types.String                                     `tfsdk:"cluster"`
 	DaemonTaskDefinitionArn types.String                                     `tfsdk:"daemon_task_definition"`
-	DeploymentConfiguration []deploymentConfigurationModel                   `tfsdk:"deployment_configuration" autoflex:"-"`
+	DeploymentConfiguration fwtypes.ListNestedObjectValueOf[deploymentConfigurationModel] `tfsdk:"deployment_configuration"`
 	EnableECSManagedTags    types.Bool                                       `tfsdk:"enable_ecs_managed_tags"`
 	EnableExecuteCommand    types.Bool                                       `tfsdk:"enable_execute_command"`
 	DaemonName              types.String                                     `tfsdk:"name"`
@@ -481,14 +447,14 @@ type daemonResourceModel struct {
 }
 
 type deploymentConfigurationModel struct {
-	Alarms            []alarmConfigurationModel `tfsdk:"alarms"`
-	BakeTimeInMinutes types.Int64               `tfsdk:"bake_time_in_minutes"`
-	DrainPercent      types.Float64             `tfsdk:"drain_percent"`
+	Alarms            fwtypes.ListNestedObjectValueOf[alarmConfigurationModel] `tfsdk:"alarms"`
+	BakeTimeInMinutes types.Int64                                              `tfsdk:"bake_time_in_minutes"`
+	DrainPercent      types.Float64                                            `tfsdk:"drain_percent"`
 }
 
 type alarmConfigurationModel struct {
-	AlarmNames types.Set  `tfsdk:"alarm_names"`
-	Enable     types.Bool `tfsdk:"enable"`
+	AlarmNames fwtypes.SetOfString `tfsdk:"alarm_names"`
+	Enable     types.Bool          `tfsdk:"enable"`
 }
 
 // Finder, status, and waiter functions.

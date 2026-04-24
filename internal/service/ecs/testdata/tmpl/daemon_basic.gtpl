@@ -1,23 +1,19 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
 resource "aws_ecs_daemon" "test" {
-  count  = var.resource_count
-  region = var.region
-
-  name                   = "${var.rName}-${count.index}"
+{{- template "region" }}
+  name                   = var.rName
   cluster                = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+{{- template "tags" . }}
 }
 
 resource "aws_ecs_cluster" "test" {
-  region = var.region
-  name   = var.rName
+{{- template "region" }}
+  name = var.rName
 }
 
 resource "aws_ecs_daemon_task_definition" "test" {
-  region             = var.region
+{{- template "region" }}
   family             = var.rName
   execution_role_arn = aws_iam_role.test.arn
 
@@ -45,7 +41,7 @@ resource "aws_iam_role" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_ecs_capacity_provider" "test" {
-  region  = var.region
+{{- template "region" }}
   name    = var.rName
   cluster = aws_ecs_cluster.test.name
 
@@ -56,29 +52,15 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets         = [aws_subnet.test.id]
+        subnets         = [aws_subnet.test[0].id]
         security_groups = [aws_security_group.test.id]
       }
     }
   }
 }
 
-resource "aws_vpc" "test" {
-  region     = var.region
-  cidr_block = "10.0.0.0/16"
-  tags       = { Name = var.rName }
-}
-
-resource "aws_subnet" "test" {
-  region            = var.region
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  tags              = { Name = var.rName }
-}
-
 resource "aws_security_group" "test" {
-  region = var.region
+{{- template "region" }}
   name   = var.rName
   vpc_id = aws_vpc.test.id
   egress {
@@ -129,35 +111,4 @@ resource "aws_iam_instance_profile" "test" {
   role = aws_iam_role.instance.name
 }
 
-data "aws_availability_zones" "available" {
-  region           = var.region
-  exclude_zone_ids = local.default_exclude_zone_ids
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-locals {
-  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
-variable "resource_count" {
-  description = "The number of resources to create"
-  type        = number
-  nullable    = false
-}
-
-variable "region" {
-  description = "Region override"
-  type        = string
-  nullable    = false
-}
+{{ template "acctest.ConfigVPCWithSubnets" 1 }}
