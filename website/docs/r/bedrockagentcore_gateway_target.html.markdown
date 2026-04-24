@@ -233,6 +233,31 @@ resource "aws_bedrockagentcore_gateway_target" "oauth_example" {
 }
 ```
 
+### Target with IAM SigV4 Authentication (MCP Server)
+
+Use this for `mcp_server` targets pointing at AWS-hosted SigV4-protected endpoints (e.g. another Bedrock AgentCore Runtime). The gateway signs upstream requests using its own IAM role.
+
+```terraform
+resource "aws_bedrockagentcore_gateway_target" "sigv4_example" {
+  name               = "sigv4-target"
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {
+      service = "bedrock-agentcore"
+    }
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example-runtime.bedrock-agentcore.us-east-1.amazonaws.com/runtimes/example/invocations?qualifier=DEFAULT"
+      }
+    }
+  }
+}
+```
+
 ### Complex Schema with JSON Serialization
 
 ```terraform
@@ -333,7 +358,7 @@ The following arguments are optional:
 
 The `credential_provider_configuration` block supports exactly one of the following:
 
-* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. This is an empty configuration block.
+* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. See [`gateway_iam_role`](#gateway_iam_role) below.
 * `api_key` - (Optional) API key-based authentication configuration. See [`api_key`](#api_key) below.
 * `oauth` - (Optional) OAuth-based authentication configuration. See [`oauth`](#oauth) below.
 
@@ -355,6 +380,13 @@ The `oauth` block supports the following:
 * `default_return_url` - (Optional) The URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
 * `scopes` - (Optional) Set of OAuth scopes to request.
 * `custom_parameters` - (Optional) Map of custom parameters to include in OAuth requests.
+
+### `gateway_iam_role`
+
+The `gateway_iam_role` block supports the following:
+
+* `service` - (Optional) The target AWS service name used for SigV4 signing of upstream requests. Required when calling SigV4-protected endpoints such as another Bedrock AgentCore Runtime (use `bedrock-agentcore`). Omit for non-SigV4 IAM-role-based authentication, in which case the block can be empty (`gateway_iam_role {}`).
+* `region` - (Optional) AWS Region used for SigV4 signing of upstream requests. Defaults to the gateway's Region when omitted. Only meaningful when `service` is set.
 
 ### `metadata_configuration`
 

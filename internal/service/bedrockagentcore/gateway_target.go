@@ -448,7 +448,22 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 								),
 							},
 							NestedObject: schema.NestedBlockObject{
-								// Empty block - no attributes needed for Gateway IAM Role
+								Attributes: map[string]schema.Attribute{
+									"service": schema.StringAttribute{
+										Optional: true,
+										Description: "The target AWS service name used for SigV4 signing of upstream requests. " +
+											"Required when calling SigV4-protected endpoints such as another Bedrock AgentCore " +
+											"Runtime (use `bedrock-agentcore`). Omit for non-SigV4 IAM-role-based authentication.",
+									},
+									names.AttrRegion: schema.StringAttribute{
+										Optional: true,
+										Description: "AWS Region used for SigV4 signing of upstream requests. " +
+											"Defaults to the gateway's Region when omitted. Only meaningful when `service` is set.",
+										Validators: []validator.String{
+											stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("service")),
+										},
+									},
+								},
 							},
 						},
 					},
@@ -1095,7 +1110,14 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 			}
 
 		case awstypes.CredentialProviderTypeGatewayIamRole:
-			m.GatewayIAMRole = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &gatewayIAMRoleProviderModel{})
+			var model gatewayIAMRoleProviderModel
+			if iamProvider, ok := t.CredentialProvider.(*awstypes.CredentialProviderMemberIamCredentialProvider); ok {
+				smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, iamProvider.Value, &model))
+				if diags.HasError() {
+					return diags
+				}
+			}
+			m.GatewayIAMRole = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		default:
 			diags.AddError(
@@ -1150,8 +1172,23 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, 
 		return &c, diags
 
 	case !m.GatewayIAMRole.IsNull():
+		gatewayIAMRoleData, d := m.GatewayIAMRole.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
 		c.CredentialProviderType = awstypes.CredentialProviderTypeGatewayIamRole
-		c.CredentialProvider = nil
+		if gatewayIAMRoleData != nil && !gatewayIAMRoleData.Service.IsNull() {
+			var r awstypes.CredentialProviderMemberIamCredentialProvider
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, gatewayIAMRoleData, &r.Value))
+			if diags.HasError() {
+				return nil, diags
+			}
+			c.CredentialProvider = &r
+		} else {
+			c.CredentialProvider = nil
+		}
 		return &c, diags
 
 	default:
@@ -1385,7 +1422,8 @@ type oauthCredentialProviderModel struct {
 }
 
 type gatewayIAMRoleProviderModel struct {
-	// Empty struct - Gateway IAM Role provider requires no configuration
+	Service types.String `tfsdk:"service"`
+	Region  types.String `tfsdk:"region"`
 }
 
 type mcpApiGatewayConfigurationModel struct {

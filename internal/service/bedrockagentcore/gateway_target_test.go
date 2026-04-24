@@ -43,6 +43,8 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "target_id"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", ""),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region", ""),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.#", "1"),
@@ -405,6 +407,8 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", ""),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region", ""),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
 				),
@@ -458,6 +462,8 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", ""),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region", ""),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
 				),
@@ -475,6 +481,8 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", ""),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region", ""),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
 				),
@@ -516,6 +524,64 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.
 			{
 				Config:      testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_empty()),
 				ExpectError: regexache.MustCompile("Invalid Credential Provider Configuration|At least one credential provider must be configured"),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_credentialProviderGatewayIAMRoleSigV4(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderMCPServer(rName, testAccCredentialProvider_gatewayIAMRoleSigV4()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", "bedrock-agentcore"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderMCPServer(rName, `    gateway_iam_role {
+      service = "bedrock-agentcore"
+      region  = data.aws_region.current.region
+    }`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", "bedrock-agentcore"),
+					resource.TestCheckResourceAttrSet(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -889,6 +955,29 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, credentialProviderContent))
 }
 
+func testAccGatewayTargetConfig_credentialProviderMCPServer(rName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[2]s
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+}
+`, rName, credentialProviderContent))
+}
+
 func testAccGatewayTargetConfig_credentialProviderSmithy(rName, credentialProviderContent string) string {
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
@@ -1153,6 +1242,12 @@ func testAccSchema_invalidUnsupportedType() string {
 
 func testAccCredentialProvider_gatewayIAMRole() string {
 	return `    gateway_iam_role {}`
+}
+
+func testAccCredentialProvider_gatewayIAMRoleSigV4() string {
+	return `    gateway_iam_role {
+      service = "bedrock-agentcore"
+    }`
 }
 
 func testAccCredentialProvider_apiKey() string {
