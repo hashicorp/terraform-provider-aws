@@ -362,8 +362,8 @@ func (v policyAttachmentImportID) Parse(id string) (string, map[string]any, erro
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		result := map[string]any{
-			"name":       parts[0],
-			"policy_arn": parts[1],
+			names.AttrName: parts[0],
+			"policy_arn":   parts[1],
 		}
 		return id, result, nil
 	}
