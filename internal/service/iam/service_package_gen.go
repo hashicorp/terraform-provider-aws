@@ -503,6 +503,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.GlobalARNIdentity(),
 		},
 		{
+			Factory:  newPolicyAttachmentResourceAsListResource,
+			TypeName: "aws_iam_policy_attachment",
+			Name:     "Policy Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+		},
+		{
 			Factory:  newRoleResourceAsListResource,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
