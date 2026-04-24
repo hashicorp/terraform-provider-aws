@@ -124,11 +124,15 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy Attachment (%s): %s", d.Id(), err)
 	}
 
+	resourcePolicyAttachmentFlatten(d, groups, roles, users)
+
+	return diags
+}
+
+func resourcePolicyAttachmentFlatten(d *schema.ResourceData, groups, roles, users []string) {
 	d.Set("groups", groups)
 	d.Set("roles", roles)
 	d.Set("users", users)
-
-	return diags
 }
 
 func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
