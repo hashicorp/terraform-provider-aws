@@ -1,9 +1,5 @@
 ## 6.43.0 (Unreleased)
 
-FEATURES:
-
-* **New Resource:** `aws_sesv2_email_identity_configuration_set_attributes` ([#XXXXX](https://github.com/hashicorp/terraform-provider-aws/issues/XXXXX))
-
 ENHANCEMENTS:
 
 * resource/aws_bedrockagentcore_memory_strategy: Support `EPISODIC` as a valid value for `type` ([#47589](https://github.com/hashicorp/terraform-provider-aws/issues/47589))
