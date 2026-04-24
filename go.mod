@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.21
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.58.3
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.57.1
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.17
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.14
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.38.9
@@ -190,14 +190,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.16
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.10.1
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.65.0
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.15
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.59.1
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.22
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.17.2
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.22
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.21

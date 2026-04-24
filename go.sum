@@ -193,8 +193,8 @@ github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.21 h1:nf24M+H6CmlRFUptYP
 github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.21/go.mod h1:4id/NDutsGnPwNhMh5jvFDXnLChtMX7lYm0lSGNceVQ=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.58.3 h1:mRD1ae9Mq4o3hu871hO6YYmc1i2j/ewAIunr/fcWOLk=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.58.3/go.mod h1:305c9rQs+4ZfNBXWtMBq1AzrDAniSHQ3YoznqU88d40=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.57.1 h1:0+1uX2L4BygDNkgcHvYzRXG0v/O8YyTBRpYzUsmpsRI=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.57.1/go.mod h1:RkHYn6XWCfWX4z1CwNI9r3GGQtDx3/Q9ZdvoAp9hvuY=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.58.0 h1:F2dLIXmk/P4pVeMSNcBFxx/+e32RlWx67nCUcKGRcVk=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.58.0/go.mod h1:RkHYn6XWCfWX4z1CwNI9r3GGQtDx3/Q9ZdvoAp9hvuY=
 github.com/aws/aws-sdk-go-v2/service/dax v1.29.17 h1:ACXk9F0Qt6/wYoE0aABq2nMueeTPpDWYHLYHmptzk1E=
 github.com/aws/aws-sdk-go-v2/service/dax v1.29.17/go.mod h1:OFF+R4k+NZhvt9yxcuPgtJUH7C2oKUqNLqZZ3jaKYNU=
 github.com/aws/aws-sdk-go-v2/service/detective v1.38.14 h1:FJ8iRprCfzN6RW73dYHNM2ge/XXMmAiY2aPLsFf8EOY=
@@ -399,8 +399,8 @@ github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.14.0 h1:i16SkU8gh/L7K
 github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.14.0/go.mod h1:f71E6brUWPKT9Mvs0/H55q63NRHOJSSik4PQ9g1hsUI=
 github.com/aws/aws-sdk-go-v2/service/odb v1.10.1 h1:J2R0WqYrwjO8CPMd7RWLsaB0zrDVcupFI56kDs1rvtc=
 github.com/aws/aws-sdk-go-v2/service/odb v1.10.1/go.mod h1:zokH599B/fy+Ul/HZ7/3/eDh/Xp3CORTnTZC0bNwbE8=
-github.com/aws/aws-sdk-go-v2/service/opensearch v1.65.0 h1:BNK4yrZygHUkdeHIA4U/Q4v2Qs9P6x3mASOy4yuPlbA=
-github.com/aws/aws-sdk-go-v2/service/opensearch v1.65.0/go.mod h1:Vl2mkiFwxo+XTJ5VKSfhmlpiYCQFC93c6NB/EhV5lfA=
+github.com/aws/aws-sdk-go-v2/service/opensearch v1.66.0 h1:aBPbUvfgXI9M05r8y5vxaceF17LbL0orIWDz6l/LpU4=
+github.com/aws/aws-sdk-go-v2/service/opensearch v1.66.0/go.mod h1:Vl2mkiFwxo+XTJ5VKSfhmlpiYCQFC93c6NB/EhV5lfA=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.2 h1:udfl9K9HOcf0dnL3zv0r+LBe466WXy774GS7s0Ym0v8=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.2/go.mod h1:QoaB0H1FjeOoUWL496gWcNjanf9W/6gl2dKaDuLwzuo=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.51.2 h1:2TDersSNowBwSRTrnD0LxLilpr6Dr5coXwVsWO7f2rw=
@@ -413,8 +413,8 @@ github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.28.1 h1:WnSffaSV0/mR
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.28.1/go.mod h1:W9Fef2zT198guo06c6vdm+EAlx+ouWTEtTplyrx++fk=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.22 h1:6tfkWkROv0fpvBgQmYJcw7wcaq+xVPBha/h47hb517k=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.22/go.mod h1:w7H0qjVn7kaz+7bpwNlCd3D25Yn/eIa+ucjhHcGwLKQ=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.17.2 h1:VdOEpmc5/vAs5J5j9WN0+qCtFkfgn1bLyTVvKCfi/58=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.17.2/go.mod h1:NIsOooJp6IObFmvJKzod7EpzG6t8ii9HYZXdfDstjBY=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.17.3 h1:3qmzqn0CnCzVtKs1kJFZWVhxoLI6lNTxYHh0GlnfMJk=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.17.3/go.mod h1:NIsOooJp6IObFmvJKzod7EpzG6t8ii9HYZXdfDstjBY=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.22 h1:xH3/FppliEOXlzMn272gieCUFigy+JY6t0XdxKHgogw=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.22/go.mod h1:4B3cvjaUMtVWTKUWBq4TEc9hRqjNw0L2A+vTfT6OmHM=
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.28.1 h1:/VHcMhlAlke9EAA00VbUu/Qi7QTfqSn/ubE7+G063f8=
