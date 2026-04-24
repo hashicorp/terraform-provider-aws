@@ -1989,10 +1989,6 @@ resource "aws_elasticache_replication_group" "test" {
   num_cache_clusters = 2
 
   automatic_failover_enabled = %[3]s
-
-  lifecycle {
-    ignore_changes = [automatic_failover_enabled]
-  }
 }
 `, rName, primaryReplicationGroupId, automaticFailover, globalAutomaticFailover)
 }
@@ -2013,10 +2009,6 @@ resource "aws_elasticache_replication_group" "test" {
   engine             = "redis"
   engine_version     = "5.0.6"
   num_cache_clusters = 2
-
-  lifecycle {
-    ignore_changes = [automatic_failover_enabled]
-  }
 }
 `, rName, primaryReplicationGroupId, globalAutomaticFailover)
 }
@@ -2464,4 +2456,95 @@ data "aws_availability_zones" "%[1]s" {
   }
 }
 `, name, provider)
+}
+
+func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_memberDiffSuppressed(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	primaryReplicationGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	secondaryReplicationGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalReplicationGroup(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create global (AF=true) with primary (AF=true) and secondary (AF=true).
+				Config: testAccGlobalReplicationGroupConfig_automaticFailover_memberDiffSuppressed(
+					rName, primaryReplicationGroupId, secondaryReplicationGroupId,
+					acctest.CtTrue, acctest.CtTrue, acctest.CtTrue,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				// Step 2: Change primary and secondary AF to false, keep global AF=true.
+				// Expect empty plan — AF on members is controlled by the global.
+				Config: testAccGlobalReplicationGroupConfig_automaticFailover_memberDiffSuppressed(
+					rName, primaryReplicationGroupId, secondaryReplicationGroupId,
+					acctest.CtTrue, acctest.CtFalse, acctest.CtFalse,
+				),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func testAccGlobalReplicationGroupConfig_automaticFailover_memberDiffSuppressed(rName, primaryReplicationGroupId, secondaryReplicationGroupId, globalAF, primaryAF, secondaryAF string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 2),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[2]q
+  description          = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
+
+  node_type          = "cache.m5.large"
+  engine             = "redis"
+  engine_version     = "7.1"
+  num_cache_clusters = 2
+
+  automatic_failover_enabled = %[5]s
+}
+
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+
+  automatic_failover_enabled = %[4]s
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = awsalternate
+
+  replication_group_id        = %[3]q
+  description                 = "secondary"
+  global_replication_group_id = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  subnet_group_name = aws_elasticache_subnet_group.secondary.name
+
+  num_cache_clusters = 2
+
+  automatic_failover_enabled = %[6]s
+}
+`, rName, primaryReplicationGroupId, secondaryReplicationGroupId, globalAF, primaryAF, secondaryAF),
+	)
 }

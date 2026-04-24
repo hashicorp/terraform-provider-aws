@@ -99,7 +99,7 @@ func resourceReplicationGroup() *schema.Resource {
 			"automatic_failover_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"cluster_enabled": {
 				Type:     schema.TypeBool,
@@ -512,6 +512,7 @@ func resourceReplicationGroup() *schema.Resource {
 				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			replicationGroupValidateAutomaticFailoverNumCacheClusters,
+			replicationGroupSuppressAutomaticFailoverForGlobalMember,
 		),
 	}
 }
@@ -776,6 +777,14 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("automatic_failover_enabled", true)
 	default:
 		log.Printf("Unknown AutomaticFailover state %q", string(rgp.AutomaticFailover))
+		afValue := d.Get("automatic_failover_enabled")
+		if rawConfig := d.GetRawConfig(); !rawConfig.IsNull() && rawConfig.IsKnown() {
+			rawAF := rawConfig.GetAttr("automatic_failover_enabled")
+			if rawAF.IsKnown() && !rawAF.IsNull() && rawAF.Type() == cty.Bool {
+				afValue = rawAF.True()
+			}
+		}
+		d.Set("automatic_failover_enabled", afValue)
 	}
 
 	switch rgp.MultiAZ {
@@ -936,8 +945,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("automatic_failover_enabled") {
-			input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
-			requestUpdate = true
+			if _, isMember := d.GetOk("global_replication_group_id"); !isMember {
+				input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -1620,6 +1631,35 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
 }
 
+func replicationGroupSuppressAutomaticFailoverForGlobalMember(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+	if diff.Id() == "" || !diff.HasChange("automatic_failover_enabled") {
+		return nil
+	}
+
+	if v, ok := diff.Get("global_replication_group_id").(string); ok && v != "" {
+		diff.Clear("automatic_failover_enabled")
+		return nil
+	}
+	if oldGRG, _ := diff.GetChange("global_replication_group_id"); oldGRG != nil {
+		if v, ok := oldGRG.(string); ok && v != "" {
+			diff.Clear("automatic_failover_enabled")
+			return nil
+		}
+	}
+
+	if meta != nil {
+		conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+		rgp, err := findReplicationGroupByID(ctx, conn, diff.Id())
+		if err == nil && rgp != nil &&
+			rgp.GlobalReplicationGroupInfo != nil &&
+			rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil &&
+			aws.ToString(rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId) != "" {
+			diff.Clear("automatic_failover_enabled")
+		}
+	}
+	return nil
+}
+
 func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
 	// Use GetRawConfig to check if auth_token is configured, even if unknown at plan time
@@ -1641,6 +1681,16 @@ func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDif
 func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
 	_, has_global_replication_group := d.GetOk("global_replication_group_id")
 	return has_global_replication_group && !d.IsNewResource()
+}
+
+func suppressAutomaticFailoverDiffForGlobalMember(k, old, new string, d *schema.ResourceData) bool {
+	if d.Id() == "" {
+		return false
+	}
+	if v, ok := d.Get("global_replication_group_id").(string); ok && v != "" {
+		return true
+	}
+	return false
 }
 
 func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {
