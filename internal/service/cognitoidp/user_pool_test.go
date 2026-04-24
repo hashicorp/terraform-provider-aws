@@ -1858,7 +1858,6 @@ func TestAccCognitoIDPUserPool_webAuthnConfiguration(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 	relyingPartyID := "123456789"
-	userVerification := awstypes.UserVerificationTypePreferred
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -1867,12 +1866,28 @@ func TestAccCognitoIDPUserPool_webAuthnConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_webAuthnConfiguration(rName, relyingPartyID, userVerification),
+				Config: testAccUserPoolConfig_webAuthnConfiguration(rName, relyingPartyID, awstypes.UserVerificationTypePreferred),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.relying_party_id", relyingPartyID),
-					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.user_verification", string(userVerification)),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.user_verification", string(awstypes.UserVerificationTypePreferred)),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.factor_configuration", string(awstypes.WebAuthnFactorConfigurationTypeSingleFactor)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_webAuthnConfiguration(rName, relyingPartyID, awstypes.UserVerificationTypeRequired),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.relying_party_id", relyingPartyID),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.user_verification", string(awstypes.UserVerificationTypeRequired)),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.factor_configuration", string(awstypes.WebAuthnFactorConfigurationTypeSingleFactor)),
 				),
 			},
 		},
