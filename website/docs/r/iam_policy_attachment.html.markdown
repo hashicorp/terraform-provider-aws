@@ -95,8 +95,8 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_iam_policy_attachment.example
   identity = {
-      "name" = "example-attachment"
-      "policy_arn" = "arn:aws:iam::123456789012:policy/example-policy"
+    "name"       = "example-attachment"
+    "policy_arn" = "arn:aws:iam::123456789012:policy/example-policy"
   }
 }
 

@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"iter"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -101,18 +102,25 @@ func listPolicyAttachmentListItems(ctx context.Context, conn *iam.Client) ([]pol
 
 	result := make([]policyAttachmentListItem, 0, len(items))
 	for _, item := range items {
-		sort.Strings(item.groups)
-		sort.Strings(item.roles)
-		sort.Strings(item.users)
+		slices.Sort(item.groups)
+		slices.Sort(item.roles)
+		slices.Sort(item.users)
 		result = append(result, *item)
 	}
 
-	sort.Slice(result, func(i, j int) bool {
-		if result[i].name == result[j].name {
-			return result[i].policyARN < result[j].policyARN
+	slices.SortFunc(result, func(a, b policyAttachmentListItem) int {
+		if a.name != b.name {
+			if a.name < b.name {
+				return -1
+			}
+			return 1
 		}
-
-		return result[i].name < result[j].name
+		if a.policyARN < b.policyARN {
+			return -1
+		} else if a.policyARN > b.policyARN {
+			return 1
+		}
+		return 0
 	})
 
 	return result, nil
@@ -145,7 +153,7 @@ func collectPolicyAttachmentsForGroups(ctx context.Context, conn *iam.Client, it
 
 			for _, attachedPolicy := range page.AttachedPolicies {
 				item := putPolicyAttachmentListItem(items, attachedPolicy)
-				item.groups = appendUnique(item.groups, groupName)
+				item.groups = tfslices.AppendUnique(item.groups, groupName)
 			}
 		}
 	}
@@ -180,7 +188,7 @@ func collectPolicyAttachmentsForRoles(ctx context.Context, conn *iam.Client, ite
 
 			for _, attachedPolicy := range page.AttachedPolicies {
 				item := putPolicyAttachmentListItem(items, attachedPolicy)
-				item.roles = appendUnique(item.roles, roleName)
+				item.roles = tfslices.AppendUnique(item.roles, roleName)
 			}
 		}
 	}
@@ -215,7 +223,7 @@ func collectPolicyAttachmentsForUsers(ctx context.Context, conn *iam.Client, ite
 
 			for _, attachedPolicy := range page.AttachedPolicies {
 				item := putPolicyAttachmentListItem(items, attachedPolicy)
-				item.users = appendUnique(item.users, userName)
+				item.users = tfslices.AppendUnique(item.users, userName)
 			}
 		}
 	}
@@ -251,16 +259,6 @@ func resourcePolicyAttachmentListItemLoggingContext(ctx context.Context, item po
 
 func resourcePolicyAttachmentImportIDFromData(item policyAttachmentListItem) string {
 	return (policyAttachmentImportID{}).create(item.name, item.policyARN)
-}
-
-func appendUnique(vs []string, v string) []string {
-	for _, existing := range vs {
-		if existing == v {
-			return vs
-		}
-	}
-
-	return append(vs, v)
 }
 
 func listGroups(ctx context.Context, conn *iam.Client, input *iam.ListGroupsInput) iter.Seq2[awstypes.Group, error] {
