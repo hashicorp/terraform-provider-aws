@@ -41,6 +41,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newFoundationModelAgreementOffersDataSource,
+			TypeName: "aws_bedrock_foundation_model_agreement_offers",
+			Name:     "Foundation Model Agreement Offers",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newFoundationModelsDataSource,
 			TypeName: "aws_bedrock_foundation_models",
 			Name:     "Foundation Models",
