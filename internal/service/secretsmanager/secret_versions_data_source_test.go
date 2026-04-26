@@ -33,6 +33,7 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "versions.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.%"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.created_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.last_accessed_date"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.version_id"),
 				),
 			},
