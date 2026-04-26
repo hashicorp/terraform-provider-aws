@@ -112,7 +112,7 @@ type secretVersionsDataSourceModel struct {
 
 type dsVersionsData struct {
 	CreatedDate      timetypes.RFC3339                 `tfsdk:"created_time"`
-	LastAccessedDate types.String                      `tfsdk:"last_accessed_date"`
+	LastAccessedDate timetypes.RFC3339                 `tfsdk:"last_accessed_date"`
 	VersionID        types.String                      `tfsdk:"version_id"`
 	VersionStages    fwtypes.ListValueOf[types.String] `tfsdk:"version_stages"`
 }
