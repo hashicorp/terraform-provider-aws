@@ -796,7 +796,7 @@ type cloudVmClusterResourceModel struct {
 	ScanDnsRecordId               types.String                                                                `tfsdk:"scan_dns_record_id"`
 	ScanIpIds                     fwtypes.ListValueOf[types.String]                                           `tfsdk:"scan_ip_ids"`
 	Shape                         types.String                                                                `tfsdk:"shape"`
-	SshPublicKeys                 fwtypes.SetValueOf[types.String]                                            `tfsdk:"ssh_public_keys"`
+	SshPublicKeys                 fwtypes.SetValueOf[types.String]                                            `tfsdk:"ssh_public_keys" autoflex:",noflatten"`
 	Status                        fwtypes.StringEnum[odbtypes.ResourceStatus]                                 `tfsdk:"status"`
 	StatusReason                  types.String                                                                `tfsdk:"status_reason"`
 	StorageSizeInGBs              types.Int32                                                                 `tfsdk:"storage_size_in_gbs"`
