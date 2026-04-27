@@ -101,7 +101,7 @@ func testAccPreCheckManagedResourceVisibility(ctx context.Context, t *testing.T)
 func testAccManagedResourceVisibilityConfig_basic(visibility string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_resource_visibility" "test" {
-  default_visibility = %[1]q
+	default_visibility = %[1]q
 }
 `, visibility)
 }
