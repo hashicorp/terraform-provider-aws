@@ -67,7 +67,7 @@ func resourceDataIntegration() *schema.Resource {
 			"schedule_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
