@@ -1156,12 +1156,12 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.TimeoutInMinutes = aws.Int32(int32(d.Get("build_timeout").(int)))
 		}
 
-		if d.HasChange(names.AttrVPCConfig) {
-			if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.VpcConfig = expandVPCConfig(v.([]any)[0].(map[string]any))
-			} else {
-				input.VpcConfig = &types.VpcConfig{}
-			}
+		// VpcConfig is always sent when set, so SCPs that require it on every
+		// UpdateProject call do not reject updates that touch only non-VPC attributes.
+		if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.VpcConfig = expandVPCConfig(v.([]any)[0].(map[string]any))
+		} else if d.HasChange(names.AttrVPCConfig) {
+			input.VpcConfig = &types.VpcConfig{}
 		}
 
 		// The documentation clearly says "The replacement set of tags for this build project."
