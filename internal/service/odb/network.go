@@ -852,13 +852,13 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 	switch targetStatus {
 	case odbtypes.AccessEnabled:
 		stateConf := &sdkretry.StateChangeConf{
-			Pending: []string{
-				string(odbtypes.ManagedResourceStatusEnabling),
+			Pending: enum.Slice(
+				odbtypes.ManagedResourceStatusEnabling,
 				"",
-			},
-			Target: []string{
-				string(odbtypes.ManagedResourceStatusEnabled),
-			},
+			),
+			Target: enum.Slice(
+				odbtypes.ManagedResourceStatusEnabled,
+			),
 			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
@@ -869,13 +869,13 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 		return nil, err
 	case odbtypes.AccessDisabled:
 		stateConf := &sdkretry.StateChangeConf{
-			Pending: []string{
-				string(odbtypes.ManagedResourceStatusDisabling),
-			},
-			Target: []string{
-				string(odbtypes.ManagedResourceStatusDisabled),
+			Pending: enum.Slice(
+				odbtypes.ManagedResourceStatusDisabling,
+			),
+			Target: enum.Slice(
+				odbtypes.ManagedResourceStatusDisabled,
 				"",
-			},
+			),
 			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
