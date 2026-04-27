@@ -88,7 +88,8 @@ func testAccEC2ManagedResourceVisibility_update(t *testing.T) {
 func testAccPreCheckManagedResourceVisibility(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-	_, err := conn.GetManagedResourceVisibility(ctx, &ec2.GetManagedResourceVisibilityInput{})
+	input := ec2.GetManagedResourceVisibilityInput{}
+	_, err := conn.GetManagedResourceVisibility(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
