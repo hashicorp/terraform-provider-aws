@@ -852,8 +852,13 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 	switch targetStatus {
 	case odbtypes.AccessEnabled:
 		stateConf := &sdkretry.StateChangeConf{
-			Pending: enum.Slice(odbtypes.ManagedResourceStatusEnabling),
-			Target:  enum.Slice(odbtypes.ManagedResourceStatusEnabled),
+			Pending: []string{
+				string(odbtypes.ManagedResourceStatusEnabling),
+				"",
+			},
+			Target: []string{
+				string(odbtypes.ManagedResourceStatusEnabled),
+			},
 			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
@@ -864,8 +869,13 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 		return nil, err
 	case odbtypes.AccessDisabled:
 		stateConf := &sdkretry.StateChangeConf{
-			Pending: enum.Slice(odbtypes.ManagedResourceStatusDisabling),
-			Target:  enum.Slice(odbtypes.ManagedResourceStatusDisabled),
+			Pending: []string{
+				string(odbtypes.ManagedResourceStatusDisabling),
+			},
+			Target: []string{
+				string(odbtypes.ManagedResourceStatusDisabled),
+				"",
+			},
 			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
@@ -875,7 +885,7 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 		}
 		return nil, err
 	default:
-		return nil, errors.New("odb network invalid manged service status")
+		return nil, errors.New("odb network invalid managed service status")
 	}
 }
 
