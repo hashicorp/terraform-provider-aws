@@ -18,19 +18,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCManagedResourceVisibility_serial(t *testing.T) {
+func TestAccEC2ManagedResourceVisibility_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccVPCManagedResourceVisibility_basic,
-		"update":        testAccVPCManagedResourceVisibility_update,
+		acctest.CtBasic: testAccEC2ManagedResourceVisibility_basic,
+		"update":        testAccEC2ManagedResourceVisibility_update,
 		"Identity":      testAccVPCManagedResourceVisibility_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccVPCManagedResourceVisibility_basic(t *testing.T) {
+func testAccEC2ManagedResourceVisibility_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_resource_visibility.test"
 	visibility := string(awstypes.ManagedResourceDefaultVisibilityHidden)
@@ -54,7 +54,7 @@ func testAccVPCManagedResourceVisibility_basic(t *testing.T) {
 	})
 }
 
-func testAccVPCManagedResourceVisibility_update(t *testing.T) {
+func testAccEC2ManagedResourceVisibility_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_resource_visibility.test"
 	visibility1 := string(awstypes.ManagedResourceDefaultVisibilityHidden)
@@ -101,7 +101,7 @@ func testAccPreCheckManagedResourceVisibility(ctx context.Context, t *testing.T)
 func testAccManagedResourceVisibilityConfig_basic(visibility string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_resource_visibility" "test" {
-	default_visibility = %[1]q
+  default_visibility = %[1]q
 }
 `, visibility)
 }

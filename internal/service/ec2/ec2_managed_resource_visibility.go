@@ -47,7 +47,6 @@ func (r *managedResourceVisibilityResource) Schema(ctx context.Context, req reso
 }
 
 func (r *managedResourceVisibilityResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	var data managedResourceVisibilityResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -56,11 +55,11 @@ func (r *managedResourceVisibilityResource) Create(ctx context.Context, req reso
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.ModifyManagedResourceVisibilityInput{
+	input := ec2.ModifyManagedResourceVisibilityInput{
 		DefaultVisibility: data.DefaultVisibility.ValueEnum(),
 	}
 
-	_, err := conn.ModifyManagedResourceVisibility(ctx, input)
+	_, err := conn.ModifyManagedResourceVisibility(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError("creating EC2 Managed Resource Visibility", err.Error())
 		return
@@ -68,7 +67,6 @@ func (r *managedResourceVisibilityResource) Create(ctx context.Context, req reso
 
 	data.ID = types.StringValue(r.Meta().Region(ctx))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
 }
 
 func (r *managedResourceVisibilityResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -80,7 +78,8 @@ func (r *managedResourceVisibilityResource) Read(ctx context.Context, req resour
 
 	conn := r.Meta().EC2Client(ctx)
 
-	output, err := conn.GetManagedResourceVisibility(ctx, &ec2.GetManagedResourceVisibilityInput{})
+	input := ec2.GetManagedResourceVisibilityInput{}
+	output, err := conn.GetManagedResourceVisibility(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("reading EC2 Managed Resource Visibility (%s)", data.ID.ValueString()), err.Error())
 		return
@@ -88,7 +87,6 @@ func (r *managedResourceVisibilityResource) Read(ctx context.Context, req resour
 
 	data.DefaultVisibility = fwtypes.StringEnumValue(output.Visibility.DefaultVisibility)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
 }
 
 func (r *managedResourceVisibilityResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -100,11 +98,11 @@ func (r *managedResourceVisibilityResource) Update(ctx context.Context, req reso
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.ModifyManagedResourceVisibilityInput{
+	input := ec2.ModifyManagedResourceVisibilityInput{
 		DefaultVisibility: data.DefaultVisibility.ValueEnum(),
 	}
 
-	_, err := conn.ModifyManagedResourceVisibility(ctx, input)
+	_, err := conn.ModifyManagedResourceVisibility(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("updating EC2 Managed Resource Visibility (%s)", data.ID.ValueString()), err.Error())
 		return
@@ -121,11 +119,11 @@ func (r *managedResourceVisibilityResource) Delete(ctx context.Context, req reso
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.ModifyManagedResourceVisibilityInput{
+	input := ec2.ModifyManagedResourceVisibilityInput{
 		DefaultVisibility: awstypes.ManagedResourceDefaultVisibilityVisible,
 	}
 
-	_, err := conn.ModifyManagedResourceVisibility(ctx, input)
+	_, err := conn.ModifyManagedResourceVisibility(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Managed Resource Visibility (%s)", data.ID.ValueString()), err.Error())
 		return
