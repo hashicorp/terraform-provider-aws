@@ -28,7 +28,7 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 			Factory:  newCreateInvalidationAction,
 			TypeName: "aws_cloudfront_create_invalidation",
 			Name:     "Create Invalidation",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newDistributionTenantDataSource,
@@ -51,13 +51,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newOriginAccessControlDataSource,
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -71,7 +71,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newResourceConnectionFunction,
@@ -80,7 +80,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "connection_function_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newConnectionGroupResource,
@@ -89,13 +89,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newContinuousDeploymentPolicyResource,
 			TypeName: "aws_cloudfront_continuous_deployment_policy",
 			Name:     "Continuous Deployment Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newDistributionTenantResource,
@@ -104,14 +104,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newKeyValueStoreResource,
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -123,7 +123,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newTrustStoreResource,
@@ -132,7 +132,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newVPCOriginResource,
@@ -141,7 +141,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -152,8 +152,8 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newKeyValueStoreResourceAsListResource,
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})
 }
@@ -164,7 +164,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCachePolicy,
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceDistribution,
@@ -173,49 +173,49 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceFunction,
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceLogDeliveryCanonicalUserID,
 			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
 			Name:     "Log Delivery Canonical User ID",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceOriginAccessIdentities,
 			TypeName: "aws_cloudfront_origin_access_identities",
 			Name:     "Origin Access Identities",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceOriginAccessIdentity,
 			TypeName: "aws_cloudfront_origin_access_identity",
 			Name:     "Origin Access Identity",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceOriginRequestPolicy,
 			TypeName: "aws_cloudfront_origin_request_policy",
 			Name:     "Origin Request Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceRealtimeLogConfig,
 			TypeName: "aws_cloudfront_realtime_log_config",
 			Name:     "Real-time Log Config",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceResponseHeadersPolicy,
 			TypeName: "aws_cloudfront_response_headers_policy",
 			Name:     "Response Headers Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -226,7 +226,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCachePolicy,
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceDistribution,
@@ -235,67 +235,71 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceFieldLevelEncryptionConfig,
 			TypeName: "aws_cloudfront_field_level_encryption_config",
 			Name:     "Field-level Encryption Config",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceFieldLevelEncryptionProfile,
 			TypeName: "aws_cloudfront_field_level_encryption_profile",
 			Name:     "Field-level Encryption Profile",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceFunction,
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceKeyGroup,
 			TypeName: "aws_cloudfront_key_group",
 			Name:     "Key Group",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceMonitoringSubscription,
 			TypeName: "aws_cloudfront_monitoring_subscription",
 			Name:     "Monitoring Subscription",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceOriginAccessControl,
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceOriginAccessIdentity,
 			TypeName: "aws_cloudfront_origin_access_identity",
 			Name:     "Origin Access Identity",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceOriginRequestPolicy,
 			TypeName: "aws_cloudfront_origin_request_policy",
 			Name:     "Origin Request Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourcePublicKey,
 			TypeName: "aws_cloudfront_public_key",
 			Name:     "Public Key",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceRealtimeLogConfig,
 			TypeName: "aws_cloudfront_realtime_log_config",
 			Name:     "Real-time Log Config",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
@@ -308,9 +312,24 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceResponseHeadersPolicy,
 			TypeName: "aws_cloudfront_response_headers_policy",
 			Name:     "Response Headers Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newDistributionResourceAsListResource,
+			TypeName: "aws_cloudfront_distribution",
+			Name:     "Distribution",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

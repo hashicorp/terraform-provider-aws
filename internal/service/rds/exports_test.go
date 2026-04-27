@@ -65,6 +65,7 @@ var (
 	FindOptionGroupByName                      = findOptionGroupByName
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
 	FindRolePolicyForProxy                     = findRolePolicyForProxy
+	IntegrationIDFromARN                       = integrationIDFromARN
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
 	ParameterChunksForModify                   = parameterChunksForModify

@@ -100,17 +100,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
-	d.Set(names.AttrOwner, attributes[topicAttributeNameOwner])
-
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
-
-	return diags
+	return append(diags, resourceTopicPolicyFlatten(ctx, d, attributes)...)
 }
 
 func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -165,4 +155,20 @@ func defaultTopicPolicy(topicARN, accountID string) string {
 
 func putTopicPolicy(ctx context.Context, conn *sns.Client, arn string, policy string) error {
 	return putTopicAttribute(ctx, conn, arn, topicAttributeNamePolicy, policy)
+}
+
+func resourceTopicPolicyFlatten(_ context.Context, d *schema.ResourceData, attributes map[string]string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
+	d.Set(names.AttrOwner, attributes[topicAttributeNameOwner])
+
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), attributes[topicAttributeNamePolicy])
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return diags
 }

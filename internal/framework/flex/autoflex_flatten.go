@@ -911,7 +911,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 }
 
 // map_ copies an AWS API map value to a compatible Plugin Framework value.
-func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
@@ -1004,26 +1004,6 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
 						logAttrKeySourceSize: len(from),
 					})
-
-					// Check for omitempty: if all inner maps are empty, return null
-					if fieldOpts.omitempty {
-						allEmpty := true
-						for _, innerMap := range from {
-							if len(innerMap) > 0 {
-								allEmpty = false
-								break
-							}
-						}
-						if allEmpty {
-							tflog.SubsystemTrace(ctx, subsystemName, "All inner maps empty with omitempty, returning null")
-							to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
-							diags.Append(d...)
-							if !diags.HasError() {
-								vTo.Set(reflect.ValueOf(to))
-							}
-							return diags
-						}
-					}
 
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
@@ -1321,8 +1301,7 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 	// Check if source is a regular struct with all zero values and omitempty
 	if !potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
 		allFieldsZero := true
-		for i := 0; i < vFrom.NumField(); i++ {
-			sourceField := vFrom.Field(i)
+		for _, sourceField := range vFrom.Fields() {
 			isFieldZero := sourceField.Kind() == reflect.Pointer && sourceField.IsNil() ||
 				sourceField.Kind() == reflect.Pointer && sourceField.Elem().IsZero() ||
 				sourceField.Kind() != reflect.Pointer && sourceField.IsZero()
@@ -1770,8 +1749,8 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, sourcePat
 		if sourceStructType.Kind() == reflect.Struct {
 			// Count fields, excluding noSmithyDocumentSerde
 			fieldCount := 0
-			for i := 0; i < sourceStructType.NumField(); i++ {
-				fieldName := sourceStructType.Field(i).Name
+			for field := range sourceStructType.Fields() {
+				fieldName := field.Name
 				if fieldName != "noSmithyDocumentSerde" {
 					fieldCount++
 				}
@@ -2982,8 +2961,7 @@ func (flattener autoFlattener) isXMLWrapperSplitSource(structType reflect.Type) 
 	hasValidQuantity := false
 	hasOtherFields := false
 
-	for i := 0; i < structType.NumField(); i++ {
-		field := structType.Field(i)
+	for field := range structType.Fields() {
 		fieldName := field.Name
 		fieldType := field.Type
 

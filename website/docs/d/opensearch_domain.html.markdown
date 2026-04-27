@@ -75,6 +75,8 @@ This data source exports the following attributes in addition to the arguments a
 * `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 * `dashboard_endpoint_v2` - V2 domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html)
 * `deleted` - Status of the deletion of the domain.
+* `deployment_strategy_options` - Deployment strategy options for the domain.
+    * `deployment_strategy` - Deployment strategy for the domain.
 * `domain_endpoint_v2_hosted_zone_id` -  Dual stack hosted zone ID for the domain.
 * `domain_id` - Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.

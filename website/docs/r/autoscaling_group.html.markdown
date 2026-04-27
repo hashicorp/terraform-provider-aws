@@ -834,17 +834,43 @@ for more information.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_autoscaling_group.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_autoscaling_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the Auto Scaling Group.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Auto Scaling Groups using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_autoscaling_group.web
-  id = "web-asg"
+  to = aws_autoscaling_group.example
+  id = "example"
 }
 ```
 
 Using `terraform import`, import Auto Scaling Groups using the `name`. For example:
 
 ```console
-% terraform import aws_autoscaling_group.web web-asg
+% terraform import aws_autoscaling_group.example example
 ```

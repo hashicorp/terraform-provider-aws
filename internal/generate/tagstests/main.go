@@ -10,8 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"iter"
 	"os"
 	"path"
@@ -85,7 +83,19 @@ func main() {
 		g: g,
 	}
 
-	v.processDir(".")
+	for file, err := range common.ScanDirectory(".") {
+		if err != nil {
+			g.Fatalf("%s", err.Error())
+		}
+
+		v.packageName = file.PackageName()
+		v.fileName = file.Name()
+
+		v.processFile(file.File())
+
+		v.fileName = ""
+		v.packageName = ""
+	}
 
 	if err := errors.Join(v.errs...); err != nil {
 		g.Fatalf("%s", err.Error())
@@ -471,35 +481,6 @@ type visitor struct {
 	packageName  string
 
 	taggedResources []ResourceDatum
-}
-
-// processDir scans a single service package directory and processes contained Go sources files.
-func (v *visitor) processDir(path string) {
-	fileSet := token.NewFileSet()
-	packageMap, err := parser.ParseDir(fileSet, path, func(fi os.FileInfo) bool {
-		// Skip tests.
-		return !strings.HasSuffix(fi.Name(), "_test.go")
-	}, parser.ParseComments)
-
-	if err != nil {
-		v.errs = append(v.errs, fmt.Errorf("parsing (%s): %w", path, err))
-
-		return
-	}
-
-	for name, pkg := range packageMap {
-		v.packageName = name
-
-		for name, file := range pkg.Files {
-			v.fileName = name
-
-			v.processFile(file)
-
-			v.fileName = ""
-		}
-
-		v.packageName = ""
-	}
 }
 
 // processFile processes a single Go source file.

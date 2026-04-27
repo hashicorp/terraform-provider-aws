@@ -13,7 +13,7 @@ rules:
       exclude:
         - "/internal/service/securitylake/aws_log_source.go"
         - "/internal/service/securitylake/aws_log_source_test.go"
-        - "/internal/service/*/service_endpoints_gen_test.go"
+        - "/internal/service/*/*_gen_test.go"
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:

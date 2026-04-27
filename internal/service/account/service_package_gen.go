@@ -7,7 +7,6 @@ package account
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
@@ -26,13 +25,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newPrimaryContactDataSource,
 			TypeName: "aws_account_primary_contact",
 			Name:     "Primary Contact",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newDataSourceRegions,
 			TypeName: "aws_account_regions",
 			Name:     "Regions",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -51,19 +50,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAlternateContact,
 			TypeName: "aws_account_alternate_contact",
 			Name:     "Alternate Contact",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourcePrimaryContact,
 			TypeName: "aws_account_primary_contact",
 			Name:     "Primary Contact",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceRegion,
 			TypeName: "aws_account_region",
 			Name:     "Region",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }

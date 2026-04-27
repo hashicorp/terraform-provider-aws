@@ -28,16 +28,19 @@ import (
 )
 
 // @SDKResource("aws_securityhub_configuration_policy_association", name="Configuration Policy Association")
+// @IdentityAttribute("target_id")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// Alternate account not working
+// @Testing(identityTest=false)
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationMemberAccount")
 func resourceConfigurationPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationPolicyAssociationCreateOrUpdate,
 		ReadWithoutTimeout:   resourceConfigurationPolicyAssociationRead,
 		UpdateWithoutTimeout: resourceConfigurationPolicyAssociationCreateOrUpdate,
 		DeleteWithoutTimeout: resourceConfigurationPolicyAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(90 * time.Second),
@@ -70,12 +73,12 @@ func resourceConfigurationPolicyAssociationCreateOrUpdate(ctx context.Context, d
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	targetID := d.Get("target_id").(string)
-	input := &securityhub.StartConfigurationPolicyAssociationInput{
+	input := securityhub.StartConfigurationPolicyAssociationInput{
 		ConfigurationPolicyIdentifier: aws.String(d.Get("policy_id").(string)),
 		Target:                        expandTarget(targetID),
 	}
 
-	_, err := conn.StartConfigurationPolicyAssociation(ctx, input)
+	_, err := conn.StartConfigurationPolicyAssociation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting Security Hub Configuration Policy Association (%s): %s", targetID, err)
@@ -122,10 +125,11 @@ func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Configuration Policy Association: %s", d.Id())
-	_, err := conn.StartConfigurationPolicyDisassociation(ctx, &securityhub.StartConfigurationPolicyDisassociationInput{
+	input := securityhub.StartConfigurationPolicyDisassociationInput{
 		ConfigurationPolicyIdentifier: aws.String(d.Get("policy_id").(string)),
 		Target:                        expandTarget(d.Id()),
-	})
+	}
+	_, err := conn.StartConfigurationPolicyDisassociation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
@@ -139,11 +143,11 @@ func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema
 }
 
 func findConfigurationPolicyAssociationByID(ctx context.Context, conn *securityhub.Client, id string) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {
-	input := &securityhub.GetConfigurationPolicyAssociationInput{
+	input := securityhub.GetConfigurationPolicyAssociationInput{
 		Target: expandTarget(id),
 	}
 
-	return findConfigurationPolicyAssociation(ctx, conn, input)
+	return findConfigurationPolicyAssociation(ctx, conn, &input)
 }
 
 func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyAssociationInput) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {

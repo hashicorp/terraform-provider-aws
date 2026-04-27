@@ -26,6 +26,7 @@ var (
 	ResourceEBSSnapshotCopy                               = resourceEBSSnapshotCopy
 	ResourceEBSSnapshotImport                             = resourceEBSSnapshotImport
 	ResourceEBSVolume                                     = resourceEBSVolume
+	ResourceEBSVolumeCopy                                 = newEBSVolumeCopyResource
 	ResourceEIP                                           = resourceEIP
 	ResourceEIPAssociation                                = resourceEIPAssociation
 	ResourceEIPDomainName                                 = newEIPDomainNameResource
@@ -292,6 +293,7 @@ var (
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules
 	NetworkACLRuleImportIDSeparator                             = networkACLRuleImportIDSeparator
+	IanaProtocolIToA                                            = ianaProtocolIToA
 	NewAttributeFilterList                                      = newAttributeFilterList
 	NewCustomFilterList                                         = newCustomFilterList
 	NewTagFilterList                                            = newTagFilterList

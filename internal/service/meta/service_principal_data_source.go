@@ -108,7 +108,9 @@ func servicePrincipalNameForPartition(service string, partition endpoints.Partit
 			switch service {
 			case "codedeploy",
 				"elasticmapreduce",
-				"logs":
+				"logs",
+				"ec2",
+				"s3":
 				return partition.DNSSuffix()
 			}
 		}

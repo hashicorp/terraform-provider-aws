@@ -18,17 +18,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,6 +40,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.CollectionDetail")
 // @Testing(preIdentityVersion="v6.28.0")
+// @Testing(tagsTest=false)
 func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := collectionResource{}
 
@@ -50,18 +52,25 @@ func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, e
 
 type collectionResourceModel struct {
 	framework.WithRegionModel
-	ARN                types.String   `tfsdk:"arn"`
-	CollectionEndpoint types.String   `tfsdk:"collection_endpoint"`
-	DashboardEndpoint  types.String   `tfsdk:"dashboard_endpoint"`
-	Description        types.String   `tfsdk:"description"`
-	ID                 types.String   `tfsdk:"id"`
-	KmsKeyARN          types.String   `tfsdk:"kms_key_arn"`
-	Name               types.String   `tfsdk:"name"`
-	StandbyReplicas    types.String   `tfsdk:"standby_replicas"`
-	Tags               tftags.Map     `tfsdk:"tags"`
-	TagsAll            tftags.Map     `tfsdk:"tags_all"`
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
-	Type               types.String   `tfsdk:"type"`
+	ARN                 types.String                                           `tfsdk:"arn"`
+	CollectionEndpoint  types.String                                           `tfsdk:"collection_endpoint"`
+	CollectionGroupName types.String                                           `tfsdk:"collection_group_name"`
+	DashboardEndpoint   types.String                                           `tfsdk:"dashboard_endpoint"`
+	Description         types.String                                           `tfsdk:"description"`
+	EncryptionConfig    fwtypes.ListNestedObjectValueOf[encryptionConfigModel] `tfsdk:"encryption_config"`
+	ID                  types.String                                           `tfsdk:"id"`
+	KmsKeyARN           types.String                                           `tfsdk:"kms_key_arn"`
+	Name                types.String                                           `tfsdk:"name"`
+	StandbyReplicas     types.String                                           `tfsdk:"standby_replicas"`
+	Tags                tftags.Map                                             `tfsdk:"tags"`
+	TagsAll             tftags.Map                                             `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                         `tfsdk:"timeouts"`
+	Type                types.String                                           `tfsdk:"type"`
+}
+
+type encryptionConfigModel struct {
+	AWSOwnedKey types.Bool   `tfsdk:"aws_owned_key"`
+	KmsKeyArn   types.String `tfsdk:"kms_key_arn"`
 }
 
 const (
@@ -85,6 +94,18 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"collection_group_name": schema.StringAttribute{
+				Description: "Name of the collection group to associate with this collection.",
+				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 32),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][0-9a-z-]+$`),
+						`must start with any lower case letter and can include any lower case letter, number, or "-"`),
+				},
+			},
 			"dashboard_endpoint": schema.StringAttribute{
 				Description: "Collection-specific endpoint used to access OpenSearch Dashboards.",
 				Computed:    true,
@@ -99,7 +120,8 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringvalidator.LengthBetween(0, 1000),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"encryption_config": framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigModel](ctx, 1, nil, listplanmodifier.RequiresReplace(), listplanmodifier.UseStateForUnknown()),
+			names.AttrID:        framework.IDAttribute(),
 			names.AttrKMSKeyARN: schema.StringAttribute{
 				Description: "The ARN of the Amazon Web Services KMS key used to encrypt the collection.",
 				Computed:    true,
@@ -174,7 +196,7 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	in.ClientToken = aws.String(sdkid.UniqueId())
+	in.ClientToken = aws.String(create.UniqueId(ctx))
 	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateCollection(ctx, in)
@@ -205,6 +227,10 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	if state.EncryptionConfig.IsNull() || state.EncryptionConfig.IsUnknown() {
+		state.EncryptionConfig = fwtypes.NewListNestedObjectValueOfNull[encryptionConfigModel](ctx)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -233,9 +259,12 @@ func (r *collectionResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if state.EncryptionConfig.IsNull() || state.EncryptionConfig.IsUnknown() {
+		state.EncryptionConfig = fwtypes.NewListNestedObjectValueOfNull[encryptionConfigModel](ctx)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -260,7 +289,7 @@ func (r *collectionResource) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		out, err := conn.UpdateCollection(ctx, input)
 
@@ -292,7 +321,7 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	_, err := conn.DeleteCollection(ctx, &opensearchserverless.DeleteCollectionInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          state.ID.ValueStringPointer(),
 	})
 

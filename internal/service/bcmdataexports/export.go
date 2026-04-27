@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -120,12 +121,17 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 				},
 				"table_configurations": schema.MapAttribute{
+					// TODO: Because `Computed` can only be speciied at the top level, default values for specific tables must be specified if any values are specified.
+					// This should be resolved when we can use `schema.MapNestedAttribute` with protov6.
 					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
 					Computed:   true,
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.UseStateForUnknown(),
 						mapplanmodifier.RequiresReplace(),
+					},
+					Validators: []validator.Map{
+						mapvalidator.SizeAtMost(1),
 					},
 				},
 			},
@@ -500,7 +506,7 @@ type exportData struct {
 
 type dataQueryData struct {
 	QueryStatement      types.String             `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations" autoflex:",omitempty"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
 }
 
 type s3OutputConfigurations struct {

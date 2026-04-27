@@ -83,7 +83,7 @@ func main() {
 
 		switch packageName {
 		// TODO: This case should be handled in service data
-		case "costoptimizationhub", "cur", "globalaccelerator", "mpa", "notifications", "notificationscontacts", "route53domains", "route53recoverycontrolconfig", "route53recoveryreadiness":
+		case "costoptimizationhub", "cur", "globalaccelerator", "mpa", "notifications", "notificationscontacts", "route53domains", "route53recoverycontrolconfig", "route53recoveryreadiness", "uxc":
 			td.OverrideRegionRegionalEndpoint = true
 
 		case "chatbot":

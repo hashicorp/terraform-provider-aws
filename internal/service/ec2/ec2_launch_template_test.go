@@ -1641,7 +1641,7 @@ func TestAccEC2LaunchTemplate_primaryIPv6(t *testing.T) {
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_memoryMiBAndVCPUCount(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_memoryMiBAndVCPUCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -1704,7 +1704,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_memoryMiBAndVCPUCount(t *test
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorCount(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_acceleratorCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -1790,7 +1790,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorCount(t *testing.T
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorManufacturers(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_acceleratorManufacturers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -1850,7 +1850,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorManufacturers(t *t
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorNames(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_acceleratorNames(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -1913,7 +1913,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorNames(t *testing.T
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorTotalMemoryMiB(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_acceleratorTotalMemoryMiB(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -1999,7 +1999,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorTotalMemoryMiB(t *
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorTypes(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_acceleratorTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2058,7 +2058,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_acceleratorTypes(t *testing.T
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_allowedInstanceTypes(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_allowedInstanceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2117,7 +2117,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_allowedInstanceTypes(t *testi
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_bareMetal(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_bareMetal(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2192,7 +2192,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_bareMetal(t *testing.T) {
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_baselineEBSBandwidthMbps(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_baselineEBSBandwidthMbps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2278,7 +2278,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_baselineEBSBandwidthMbps(t *t
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_burstablePerformance(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_burstablePerformance(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2353,7 +2353,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_burstablePerformance(t *testi
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_cpuManufacturers(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_cpuManufacturers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2412,7 +2412,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_cpuManufacturers(t *testing.T
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_excludedInstanceTypes(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_excludedInstanceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2471,7 +2471,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_excludedInstanceTypes(t *test
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_instanceGenerations(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_instanceGenerations(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2529,7 +2529,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_instanceGenerations(t *testin
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_localStorage(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_localStorage(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2604,7 +2604,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_localStorage(t *testing.T) {
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_localStorageTypes(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_localStorageTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2662,7 +2662,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_localStorageTypes(t *testing.
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_maxSpotPriceAsPercentageOfOptimalOnDemandPrice(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_maxSpotPriceAsPercentageOfOptimalOnDemandPrice(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2697,7 +2697,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_maxSpotPriceAsPercentageOfOpt
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_memoryGiBPerVCPU(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_memoryGiBPerVCPU(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2783,7 +2783,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_memoryGiBPerVCPU(t *testing.T
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_networkBandwidthGbps(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_networkBandwidthGbps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2869,7 +2869,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_networkBandwidthGbps(t *testi
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_networkInterfaceCount(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_networkInterfaceCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2955,7 +2955,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_networkInterfaceCount(t *test
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_onDemandMaxPricePercentageOverLowestPrice(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_onDemandMaxPricePercentageOverLowestPrice(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -2990,7 +2990,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_onDemandMaxPricePercentageOve
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_requireHibernateSupport(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_requireHibernateSupport(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -3045,7 +3045,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_requireHibernateSupport(t *te
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_spotMaxPricePercentageOverLowestPrice(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_spotMaxPricePercentageOverLowestPrice(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -3080,7 +3080,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_spotMaxPricePercentageOverLow
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_totalLocalStorageGB(t *testing.T) {
+func TestAccEC2LaunchTemplate_InstanceRequirements_totalLocalStorageGB(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
 	resourceName := "aws_launch_template.test"

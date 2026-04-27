@@ -86,17 +86,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an existing Security Hub configuration policy association using the target id. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_securityhub_configuration_policy_association.example_account_association
+  to = aws_securityhub_configuration_policy_association.example
+  identity = {
+    target_id = "123456789012"
+  }
+}
+
+resource "aws_securityhub_configuration_policy_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `target_id` (String) Identifier of the target account, organizational unit, or the root that is associated with the configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub configuration policy associations using `target_id`. For example:
+
+```terraform
+import {
+  to = aws_securityhub_configuration_policy_association.example
   id = "123456789012"
 }
 ```
 
-Using `terraform import`, import an existing Security Hub enabled account using the target id. For example:
+Using `terraform import`, import Security Hub configuration policy associations using `target_id`. For example:
 
 ```console
-% terraform import aws_securityhub_configuration_policy_association.example_account_association 123456789012
+% terraform import aws_securityhub_configuration_policy_association.example 123456789012
 ```

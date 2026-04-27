@@ -185,6 +185,46 @@ func TestAccWAFV2WebACLRule_managedRuleGroup(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_managedRuleGroupWithRuleActionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupWithRuleActionOverride(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesCommonRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.name", "SizeRestrictions_BODY"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.count.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.count.0.custom_request_handling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.count.0.custom_request_handling.0.insert_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.count.0.custom_request_handling.0.insert_header.0.name", "X-Test-Header1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.count.0.custom_request_handling.0.insert_header.0.value", "TestValue1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.name", "NoUserAgent_HEADER"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.0.custom_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.0.custom_response.0.response_code", "403"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.0.custom_response.0.custom_response_body_key", "CustomResponseBody"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.0.custom_response.0.response_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.0.custom_response.0.response_header.0.name", "X-Test-Header2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.0.custom_response.0.response_header.0.value", "TestValue2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRule_managedRuleGroupBotControl(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1529,6 +1569,87 @@ resource "aws_wafv2_web_acl_rule" "test" {
     managed_rule_group_statement {
       name        = "AWSManagedRulesCommonRuleSet"
       vendor_name = "AWS"
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_managedRuleGroupWithRuleActionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  custom_response_body {
+    key          = "CustomResponseBody"
+    content      = "{\"message\": \"Custom response body\"}"
+    content_type = "APPLICATION_JSON"
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  override_action {
+    none {}
+  }
+
+  statement {
+    managed_rule_group_statement {
+      name        = "AWSManagedRulesCommonRuleSet"
+      vendor_name = "AWS"
+
+      rule_action_override {
+        name = "SizeRestrictions_BODY"
+        action_to_use {
+          count {
+            custom_request_handling {
+              insert_header {
+                name  = "X-Test-Header1"
+                value = "TestValue1"
+              }
+            }
+          }
+        }
+      }
+      rule_action_override {
+        name = "NoUserAgent_HEADER"
+        action_to_use {
+          block {
+            custom_response {
+              response_code            = "403"
+              custom_response_body_key = "CustomResponseBody"
+              response_header {
+                name  = "X-Test-Header2"
+                value = "TestValue2"
+              }
+            }
+          }
+        }
+      }
     }
   }
 

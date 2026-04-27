@@ -37,6 +37,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtDisappears: testAccActionTarget_disappears,
 			"Description":        testAccActionTarget_Description,
 			"Name":               testAccActionTarget_Name,
+			"Identity":           testAccSecurityHubActionTarget_identitySerial,
 		},
 		"ConfigurationPolicy": {
 			acctest.CtBasic:      testAccConfigurationPolicy_basic,
@@ -51,6 +52,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		"FindingAggregator": {
 			acctest.CtBasic:      testAccFindingAggregator_basic,
 			acctest.CtDisappears: testAccFindingAggregator_disappears,
+			"Identity":           testAccSecurityHubFindingAggregator_identitySerial,
 		},
 		"Insight": {
 			acctest.CtBasic:      testAccInsight_basic,
@@ -64,18 +66,25 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"Name":               testAccInsight_Name,
 			"NumberFilters":      testAccInsight_NumberFilters,
 			"WorkflowStatus":     testAccInsight_WorkflowStatus,
+			"StringFilters":      testAccInsight_StringFilters,
+			"Identity":           testAccSecurityHubInsight_identitySerial,
 		},
 		"InviteAccepter": {
 			acctest.CtBasic: testAccInviteAccepter_basic,
 		},
 		"Member": {
-			acctest.CtBasic: testAccMember_basic,
-			"invite":        testAccMember_invite,
+			acctest.CtBasic:            testAccMember_basic,
+			acctest.CtDisappears:       testAccMember_disappears,
+			"inviteTrue":               testAccMember_inviteTrue,
+			"inviteFalse":              testAccMember_inviteFalse,
+			"inviteOrganizationMember": testAccMember_inviteOrganizationMember,
+			"Identity":                 testAccSecurityHubMember_identitySerial,
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
 			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
 			"MultiRegion":        testAccOrganizationAdminAccount_MultiRegion,
+			"Identity":           testAccSecurityHubOrganizationAdminAccount_identitySerial,
 		},
 		"OrganizationConfiguration": {
 			acctest.CtBasic:        testAccOrganizationConfiguration_basic,
@@ -83,15 +92,19 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
 		},
 		"ProductSubscription": {
-			acctest.CtBasic: testAccProductSubscription_basic,
+			acctest.CtBasic:      testAccProductSubscription_basic,
+			acctest.CtDisappears: testAccProductSubscription_disappears,
+			"Identity":           testAccSecurityHubProductSubscription_identitySerial,
 		},
 		"StandardsControl": {
 			acctest.CtBasic:                         testAccStandardsControl_basic,
 			"DisabledControlStatus":                 testAccStandardsControl_disabledControlStatus,
 			"EnabledControlStatusAndDisabledReason": testAccStandardsControl_enabledControlStatusAndDisabledReason,
+			"Identity":                              testAccSecurityHubStandardsControl_identitySerial,
 		},
 		"StandardsControlAssociation": {
 			acctest.CtBasic: testAccStandardsControlAssociation_basic,
+			"Identity":      testAccSecurityHubStandardsControlAssociation_identitySerial,
 		},
 		"StandardsControlAssociationsDataSource": {
 			acctest.CtBasic: testAccStandardsControlAssociationsDataSource_basic,
@@ -99,6 +112,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		"StandardsSubscription": {
 			acctest.CtBasic:      testAccStandardsSubscription_basic,
 			acctest.CtDisappears: testAccStandardsSubscription_disappears,
+			"Identity":           testAccSecurityHubStandardsSubscription_identitySerial,
 		},
 	}
 

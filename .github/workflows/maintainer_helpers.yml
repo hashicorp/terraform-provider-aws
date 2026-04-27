@@ -42,7 +42,7 @@ jobs:
       CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
       GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
     steps:
-      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: token
         with:
           app-id: ${{ secrets.APP_ID }}
@@ -223,7 +223,7 @@ jobs:
               ]
             }
 
-      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         if: github.event_name == 'schedule'
         id: token
         with:

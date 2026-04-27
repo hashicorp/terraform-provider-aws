@@ -18,6 +18,41 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccCloudWatchMetricAlarm_promql(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_promql(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_criteria.0.promql_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_criteria.0.promql_criteria.0.query", "histogram_quantile(0.99, CPUUtilization) > 0.5"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_criteria.0.promql_criteria.0.pending_period", "120"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_criteria.0.promql_criteria.0.recovery_period", "300"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_interval", "600"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudwatch", regexache.MustCompile(`alarm:.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var alarm types.MetricAlarm
@@ -1131,6 +1166,23 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   dimensions = {
     InstanceId = "i-abcd1234"
   }
+}
+`, rName)
+}
+func testAccMetricAlarmConfig_promql(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name = %[1]q
+
+  evaluation_criteria {
+    promql_criteria {
+      query           = "histogram_quantile(0.99, CPUUtilization) > 0.5"
+      pending_period  = 120
+      recovery_period = 300
+    }
+  }
+
+  evaluation_interval = 600
 }
 `, rName)
 }

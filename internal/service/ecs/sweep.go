@@ -167,7 +167,7 @@ func sweepServices(region string) error {
 				Cluster: aws.String(clusterARN),
 			}
 
-			pages := ecs.NewListServicesPaginator(conn, input)
+			pages := newListRegularServicesPaginator(conn, input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 

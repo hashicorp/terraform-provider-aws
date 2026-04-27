@@ -28,7 +28,7 @@ import (
 func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +69,7 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +105,7 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -158,7 +158,7 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

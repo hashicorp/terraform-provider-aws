@@ -18,10 +18,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -260,7 +260,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get(names.AttrName).(string)
 	input := vpclattice.CreateRuleInput{
 		Action:             expandRuleActions(d.Get(names.AttrAction).([]any)),
-		ClientToken:        aws.String(sdkid.UniqueId()),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
 		Match:              expandRuleMatches(d.Get("match").([]any)),
 		Name:               aws.String(name),
