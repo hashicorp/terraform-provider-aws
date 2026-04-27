@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_instance: Allow `cpu_options.core_count`, `cpu_options.nested_virtualization`, and `cpu_options.threads_per_core` to be updated in-place
+```

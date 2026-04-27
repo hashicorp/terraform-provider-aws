@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package smerr
@@ -24,14 +24,36 @@ func Append(ctx context.Context, diags sdkdiag.Diagnostics, err error, keyvals .
 	return smarterr.Append(ctx, diags, err, injectContext(ctx, keyvals...)...)
 }
 
+// AppendOne enriches smarterr.AppendOne with resource and service context if available.
+func AppendOne(ctx context.Context, existing sdkdiag.Diagnostics, incoming sdkdiag.Diagnostic, keyvals ...any) sdkdiag.Diagnostics {
+	return smarterr.AppendOne(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
+}
+
+// AppendEnrich enriches smarterr.AppendEnrich with resource and service context if available.
+func AppendEnrich(ctx context.Context, existing sdkdiag.Diagnostics, incoming sdkdiag.Diagnostics, keyvals ...any) sdkdiag.Diagnostics {
+	return smarterr.AppendEnrich(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
+}
+
 // AddError enriches smarterr.AddError with resource and service context if available.
 func AddError(ctx context.Context, diags *fwdiag.Diagnostics, err error, keyvals ...any) {
 	smarterr.AddError(ctx, diags, err, injectContext(ctx, keyvals...)...)
 }
 
+// AddOne enriches smarterr.AddOne with resource and service context if available.
+func AddOne(ctx context.Context, existing *fwdiag.Diagnostics, incoming fwdiag.Diagnostic, keyvals ...any) {
+	smarterr.AddOne(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
+}
+
+// AddEnrich enriches smarterr.AddEnrich with resource and service context if available.
+func AddEnrich(ctx context.Context, existing *fwdiag.Diagnostics, incoming fwdiag.Diagnostics, keyvals ...any) {
+	smarterr.AddEnrich(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
+}
+
 // EnrichAppend enriches smarterr.EnrichAppend with resource and service context if available.
+//
+// Deprecated: Use AddEnrich instead.
 func EnrichAppend(ctx context.Context, existing *fwdiag.Diagnostics, incoming fwdiag.Diagnostics, keyvals ...any) {
-	smarterr.EnrichAppend(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
+	smarterr.AddEnrich(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
 }
 
 func injectContext(ctx context.Context, keyvals ...any) []any {

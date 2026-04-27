@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -16,8 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -25,6 +29,10 @@ const (
 )
 
 // @SDKResource("aws_ssm_patch_group", name="Patch Group")
+// @IdentityAttribute("patch_group")
+// @IdentityAttribute("baseline_id")
+// @ImportIDHandler("patchGroupImportID")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourcePatchGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchGroupCreate,
@@ -91,7 +99,7 @@ func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta an
 	patchGroup, baselineID := parts[0], parts[1]
 	group, err := findPatchGroupByTwoPartKey(ctx, conn, patchGroup, baselineID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Patch Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -182,4 +190,29 @@ func findPatchGroups(ctx context.Context, conn *ssm.Client, input *ssm.DescribeP
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = patchGroupImportID{}
+
+type patchGroupImportID struct{}
+
+func (patchGroupImportID) Parse(id string) (string, map[string]any, error) {
+	parts, err := flex.ExpandResourceId(id, patchGroupResourceIDPartCount, false)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"patch_group": parts[0],
+		"baseline_id": parts[1],
+	}
+
+	return id, result, nil
+}
+
+func (patchGroupImportID) Create(d *schema.ResourceData) string {
+	patchGroup := d.Get("patch_group").(string)
+	baselineID := d.Get("baseline_id").(string)
+	id, _ := flex.FlattenResourceId([]string{patchGroup, baselineID}, patchGroupResourceIDPartCount, false)
+	return id
 }

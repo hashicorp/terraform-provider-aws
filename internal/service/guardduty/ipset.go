@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -11,17 +13,17 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +43,10 @@ func resourceIPSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"activate": {
+				Type:     schema.TypeBool,
+				Required: true,
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -50,22 +56,22 @@ func resourceIPSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			names.AttrFormat: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.IpSetFormat](),
 			},
+			"ip_set_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"activate": {
-				Type:     schema.TypeBool,
+			names.AttrName: {
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -79,77 +85,60 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	detectorID := d.Get("detector_id").(string)
-	input := &guardduty.CreateIPSetInput{
+	name := d.Get(names.AttrName).(string)
+	input := guardduty.CreateIPSetInput{
+		Activate:   aws.Bool(d.Get("activate").(bool)),
 		DetectorId: aws.String(detectorID),
-		Name:       aws.String(d.Get(names.AttrName).(string)),
 		Format:     awstypes.IpSetFormat(d.Get(names.AttrFormat).(string)),
 		Location:   aws.String(d.Get(names.AttrLocation).(string)),
-		Activate:   aws.Bool(d.Get("activate").(bool)),
+		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateIPSet(ctx, input)
+	output, err := conn.CreateIPSet(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): %s", name, err)
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.IpSetStatusActivating, awstypes.IpSetStatusDeactivating),
-		Target:     enum.Slice(awstypes.IpSetStatusActive, awstypes.IpSetStatusInactive),
-		Refresh:    ipsetRefreshStatusFunc(ctx, conn, *resp.IpSetId, detectorID),
-		Timeout:    5 * time.Minute,
-		MinTimeout: 3 * time.Second,
-	}
+	ipSetID := aws.ToString(output.IpSetId)
+	d.SetId(ipSetCreateResourceID(detectorID, ipSetID))
 
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): waiting for completion: %s", d.Get(names.AttrName).(string), err)
+	if _, err := waitIPSetCreated(ctx, conn, detectorID, ipSetID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty IPSet (%s) create: %s", d.Id(), err)
 	}
-
-	d.SetId(fmt.Sprintf("%s:%s", detectorID, aws.ToString(resp.IpSetId)))
 
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
 
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
-	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
+	detectorID, ipSetID, err := ipSetParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): %s", d.Id(), err)
-	}
-	input := &guardduty.GetIPSetInput{
-		DetectorId: aws.String(detectorId),
-		IpSetId:    aws.String(ipSetId),
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.GetIPSet(ctx, input)
+	output, err := findIPSetByTwoPartKey(ctx, conn, detectorID, ipSetID)
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] GuardDuty IPSet (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 	if err != nil {
-		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-			log.Printf("[WARN] GuardDuty IPSet (%s) not found, removing from state", ipSetId)
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("detector/%s/ipset/%s", detectorId, ipSetId),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("activate", output.Status == awstypes.IpSetStatusActive)
+	d.Set(names.AttrARN, ipSetARN(ctx, c, detectorID, ipSetID))
+	d.Set("detector_id", detectorID)
+	d.Set(names.AttrFormat, output.Format)
+	d.Set("ip_set_id", ipSetID)
+	d.Set(names.AttrLocation, output.Location)
+	d.Set(names.AttrName, output.Name)
 
-	d.Set("detector_id", detectorId)
-	d.Set(names.AttrFormat, resp.Format)
-	d.Set(names.AttrLocation, resp.Location)
-	d.Set(names.AttrName, resp.Name)
-	d.Set("activate", resp.Status == awstypes.IpSetStatusActive)
-
-	setTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -158,28 +147,28 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating GuardDuty IPSet (%s): %s", d.Id(), err)
-	}
-
-	if d.HasChanges("activate", names.AttrLocation, names.AttrName) {
-		input := &guardduty.UpdateIPSetInput{
-			DetectorId: aws.String(detectorId),
-			IpSetId:    aws.String(ipSetId),
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		detectorID, ipSetID, err := ipSetParseResourceID(d.Id())
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		if d.HasChange(names.AttrName) {
-			input.Name = aws.String(d.Get(names.AttrName).(string))
+		input := guardduty.UpdateIPSetInput{
+			DetectorId: aws.String(detectorID),
+			IpSetId:    aws.String(ipSetID),
+		}
+
+		if d.HasChange("activate") {
+			input.Activate = aws.Bool(d.Get("activate").(bool))
 		}
 		if d.HasChange(names.AttrLocation) {
 			input.Location = aws.String(d.Get(names.AttrLocation).(string))
 		}
-		if d.HasChange("activate") {
-			input.Activate = aws.Bool(d.Get("activate").(bool))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		_, err = conn.UpdateIPSet(ctx, input)
+		_, err = conn.UpdateIPSet(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty IPSet (%s): %s", d.Id(), err)
 		}
@@ -192,20 +181,129 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
+	detectorID, ipSetID, err := ipSetParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	input := guardduty.DeleteIPSetInput{
+		DetectorId: aws.String(detectorID),
+		IpSetId:    aws.String(ipSetID),
+	}
+	_, err = conn.DeleteIPSet(ctx, &input)
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
-	input := &guardduty.DeleteIPSetInput{
-		DetectorId: aws.String(detectorId),
-		IpSetId:    aws.String(ipSetId),
+
+	if _, err := waitIPSetDeleted(ctx, conn, detectorID, ipSetID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty IPSet (%s) delete: %s", d.Id(), err)
 	}
 
-	_, err = conn.DeleteIPSet(ctx, input)
+	return diags
+}
+
+const ipSetResourceIDSeparator = ":"
+
+func ipSetCreateResourceID(detectorID, ipSetID string) string {
+	parts := []string{detectorID, ipSetID}
+	id := strings.Join(parts, ipSetResourceIDSeparator)
+
+	return id
+}
+
+func ipSetParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ipSetResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <Detector ID>%[2]s<IPSet ID>", id, ipSetResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findIPSetByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, ipSetID string) (*guardduty.GetIPSetOutput, error) {
+	input := guardduty.GetIPSetInput{
+		DetectorId: aws.String(detectorID),
+		IpSetId:    aws.String(ipSetID),
+	}
+
+	output, err := findIPSet(ctx, conn, &input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty IPSet (%s): %s", d.Id(), err)
+		return nil, err
 	}
 
+	if status := output.Status; status == awstypes.IpSetStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message: string(status),
+		}
+	}
+
+	return output, nil
+}
+
+func findIPSet(ctx context.Context, conn *guardduty.Client, input *guardduty.GetIPSetInput) (*guardduty.GetIPSetOutput, error) {
+	output, err := conn.GetIPSet(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func statusIPSet(conn *guardduty.Client, detectorID, ipSetID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findIPSetByTwoPartKey(ctx, conn, detectorID, ipSetID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitIPSetCreated(ctx context.Context, conn *guardduty.Client, detectorID, ipSetID string) (*guardduty.GetIPSetOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.IpSetStatusActivating, awstypes.IpSetStatusDeactivating),
+		Target:     enum.Slice(awstypes.IpSetStatusActive, awstypes.IpSetStatusInactive),
+		Refresh:    statusIPSet(conn, detectorID, ipSetID),
+		Timeout:    timeout,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*guardduty.GetIPSetOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPSetDeleted(ctx context.Context, conn *guardduty.Client, detectorID, ipSetID string) (*guardduty.GetIPSetOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.IpSetStatusActive,
@@ -214,41 +312,20 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 			awstypes.IpSetStatusDeactivating,
 			awstypes.IpSetStatusDeletePending,
 		),
-		Target:     enum.Slice(awstypes.IpSetStatusDeleted),
-		Refresh:    ipsetRefreshStatusFunc(ctx, conn, ipSetId, detectorId),
-		Timeout:    5 * time.Minute,
+		Target:     []string{},
+		Refresh:    statusIPSet(conn, detectorID, ipSetID),
+		Timeout:    timeout,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty IPSet (%s): waiting for completion: %s", d.Id(), err)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*guardduty.GetIPSetOutput); ok {
+		return output, err
 	}
 
-	return diags
+	return nil, err
 }
 
-func ipsetRefreshStatusFunc(ctx context.Context, conn *guardduty.Client, ipSetID, detectorID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		input := &guardduty.GetIPSetInput{
-			DetectorId: aws.String(detectorID),
-			IpSetId:    aws.String(ipSetID),
-		}
-		resp, err := conn.GetIPSet(ctx, input)
-		if err != nil {
-			return nil, "failed", err
-		}
-		return resp, string(resp.Status), nil
-	}
-}
-
-func DecodeIPSetID(id string) (ipsetID, detectorID string, err error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		err = fmt.Errorf("GuardDuty IPSet ID must be of the form <Detector ID>:<IPSet ID>, was provided: %s", id)
-		return
-	}
-	ipsetID = parts[1]
-	detectorID = parts[0]
-	return
+func ipSetARN(ctx context.Context, c *conns.AWSClient, detectorID, ipSetID string) string {
+	return c.RegionalARN(ctx, "guardduty", "detector/"+detectorID+"/ipset/"+ipSetID)
 }

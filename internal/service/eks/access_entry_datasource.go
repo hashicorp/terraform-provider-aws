@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -18,6 +20,8 @@ import (
 )
 
 // @SDKDataSource("aws_eks_access_entry", name="Access Entry")
+// @Tags
+// @Testing(tagsTest=false)
 func dataSourceAccessEntry() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessEntryRead,
@@ -60,8 +64,14 @@ func dataSourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTagsAll: {
+				Type:       schema.TypeMap,
+				Optional:   true,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `tags_all is deprecated.`,
+			},
 		},
 	}
 }

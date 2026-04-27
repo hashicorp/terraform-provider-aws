@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to create a routing table entry (a route) in a VPC routing table.
 
-~> **NOTE on Route Tables and Routes:** Terraform currently provides both a standalone Route resource and a [Route Table](route_table.html) resource with routes defined in-line. At this time you cannot use a Route Table with in-line routes in conjunction with any Route resources. Doing so will cause a conflict of rule settings and will overwrite rules.
+~> **NOTE on Route Tables and Routes:** Terraform currently provides both a standalone Route resource ([`aws_route`](route.html)) and a Route Table resource with routes defined in-line ([`aws_route_table`](route_table.html)). At this time you cannot use a [`aws_route_table`](route_table.html) inline `route` blocks in conjunction with any [`aws_route`](route.html) resources. Doing so will cause a conflict of rule settings and will overwrite rules.
 
 ~> **NOTE on `gateway_id` attribute:** The AWS API is very forgiving with the resource ID passed in the `gateway_id` attribute. For example an `aws_route` resource can be created with an [`aws_nat_gateway`](nat_gateway.html) or [`aws_egress_only_internet_gateway`](egress_only_internet_gateway.html) ID specified for the `gateway_id` attribute. Specifying anything other than an [`aws_internet_gateway`](internet_gateway.html) or [`aws_vpn_gateway`](vpn_gateway.html) ID will lead to Terraform reporting a permanent diff between your configuration and recorded state, as the AWS API returns the more-specific attribute. If you are experiencing constant diffs with an `aws_route` resource, the first thing to check is that the correct attribute is being specified.
 

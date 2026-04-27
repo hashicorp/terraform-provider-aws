@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package odb
 
@@ -13,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -58,7 +60,7 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 			},
 			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed:    true,
-				Description: "he name of the Availability Zone (AZ) where the Exadata infrastructure is located.",
+				Description: "The name of the Availability Zone (AZ) where the Exadata infrastructure is located.",
 			},
 			"availability_zone_id": schema.StringAttribute{
 				Computed:    true,
@@ -164,7 +166,7 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 			},
 			"storage_count": schema.Int32Attribute{
 				Computed:    true,
-				Description: "he number of storage servers that are activated for the Exadata infrastructure.",
+				Description: "The number of storage servers that are activated for the Exadata infrastructure.",
 			},
 			"storage_server_version": schema.StringAttribute{
 				Computed:    true,
@@ -244,7 +246,7 @@ func FindExaDataInfraForDataSourceByID(ctx context.Context, conn *odb.Client, id
 	out, err := conn.GetCloudExadataInfrastructure(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -254,7 +256,7 @@ func FindExaDataInfraForDataSourceByID(ctx context.Context, conn *odb.Client, id
 	}
 
 	if out == nil || out.CloudExadataInfrastructure == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CloudExadataInfrastructure, nil

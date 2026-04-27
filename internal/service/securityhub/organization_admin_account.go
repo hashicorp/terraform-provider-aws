@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -13,26 +15,27 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_securityhub_organization_admin_account", name="Organization Admin Account")
+// @IdentityAttribute("admin_account_id", identityDuplicateAttributes="id")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 func resourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
 		ReadWithoutTimeout:   resourceOrganizationAdminAccountRead,
 		DeleteWithoutTimeout: resourceOrganizationAdminAccountDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"admin_account_id": {
@@ -50,7 +53,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	adminAccountID := d.Get("admin_account_id").(string)
-	input := &securityhub.EnableOrganizationAdminAccountInput{
+	input := securityhub.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
 	}
 
@@ -58,7 +61,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 		timeout = 2 * time.Minute
 	)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.EnableOrganizationAdminAccount(ctx, input)
+		return conn.EnableOrganizationAdminAccount(ctx, &input)
 	}, errCodeResourceConflictException)
 
 	if err != nil {
@@ -80,7 +83,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 
 	adminAccount, err := findAdminAccountByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -99,11 +102,11 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.DisableOrganizationAdminAccountInput{
+	log.Printf("[DEBUG] Deleting Security Hub Organization Admin Account: %s", d.Id())
+	input := securityhub.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),
 	}
-
-	_, err := conn.DisableOrganizationAdminAccount(ctx, input)
+	_, err := conn.DisableOrganizationAdminAccount(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
@@ -121,14 +124,14 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 }
 
 func findAdminAccountByID(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
-	input := &securityhub.ListOrganizationAdminAccountsInput{}
+	var input securityhub.ListOrganizationAdminAccountsInput
 
-	return findAdminAccount(ctx, conn, input, func(v *types.AdminAccount) bool {
+	return findAdminAccount(ctx, conn, &input, func(v types.AdminAccount) bool {
 		return aws.ToString(v.AccountId) == adminAccountID
 	})
 }
 
-func findAdminAccount(ctx context.Context, conn *securityhub.Client, input *securityhub.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[*types.AdminAccount]) (*types.AdminAccount, error) {
+func findAdminAccount(ctx context.Context, conn *securityhub.Client, input *securityhub.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[types.AdminAccount]) (*types.AdminAccount, error) {
 	output, err := findAdminAccounts(ctx, conn, input, filter)
 
 	if err != nil {
@@ -138,7 +141,7 @@ func findAdminAccount(ctx context.Context, conn *securityhub.Client, input *secu
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *securityhub.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[*types.AdminAccount]) ([]types.AdminAccount, error) {
+func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *securityhub.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[types.AdminAccount]) ([]types.AdminAccount, error) {
 	var output []types.AdminAccount
 
 	pages := securityhub.NewListOrganizationAdminAccountsPaginator(conn, input)
@@ -147,8 +150,7 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 
 		if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Your account is not a member of an organization") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -157,7 +159,7 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 		}
 
 		for _, v := range page.AdminAccounts {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
@@ -166,11 +168,11 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 	return output, nil
 }
 
-func statusAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccountID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAdminAccount(conn *securityhub.Client, adminAccountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAdminAccountByID(ctx, conn, adminAccountID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -182,10 +184,6 @@ func statusAdminAccount(ctx context.Context, conn *securityhub.Client, adminAcco
 	}
 }
 
-const (
-	adminAccountDeletedTimeout = 5 * time.Minute
-)
-
 func waitAdminAccountCreated(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
 	const (
 		timeout = 5 * time.Minute
@@ -193,7 +191,7 @@ func waitAdminAccountCreated(ctx context.Context, conn *securityhub.Client, admi
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.AdminStatusEnabled),
-		Refresh: statusAdminAccount(ctx, conn, adminAccountID),
+		Refresh: statusAdminAccount(conn, adminAccountID),
 		Timeout: timeout,
 	}
 
@@ -207,11 +205,14 @@ func waitAdminAccountCreated(ctx context.Context, conn *securityhub.Client, admi
 }
 
 func waitAdminAccountDeleted(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.AdminStatusDisableInProgress),
 		Target:  []string{},
-		Refresh: statusAdminAccount(ctx, conn, adminAccountID),
-		Timeout: adminAccountDeletedTimeout,
+		Refresh: statusAdminAccount(conn, adminAccountID),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

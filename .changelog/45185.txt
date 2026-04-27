@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_notifications_managed_notification_account_contact_association
+```

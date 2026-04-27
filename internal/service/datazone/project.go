@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -26,13 +28,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -78,7 +81,6 @@ func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"glossary_terms": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
-
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 20),
 					listvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}$ ")),
@@ -208,7 +210,7 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	out, err := findProjectByID(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -288,10 +290,10 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteProject(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-			return
-		}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil && !errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "is already DELETING") {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameProject, state.ID.String(), err),
 			err.Error(),
@@ -302,7 +304,7 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitProjectDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString(), deleteTimeout)
 
-	if err != nil && !errs.IsA[*awstypes.AccessDeniedException](err) {
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.String(), err),
 			err.Error(),
@@ -327,7 +329,7 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ProjectStatusActive),
-		Refresh:                   statusProject(ctx, conn, domain, identifier),
+		Refresh:                   statusProject(conn, domain, identifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            40,
 		ContinuousTargetOccurence: 10,
@@ -343,10 +345,12 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 
 func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
-		Target:  []string{},
-		Refresh: statusProject(ctx, conn, domain, identifier),
-		Timeout: timeout,
+		Pending:      enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
+		Target:       []string{},
+		Refresh:      statusProject(conn, domain, identifier),
+		Delay:        5 * time.Second,
+		PollInterval: 10 * time.Second,
+		Timeout:      timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -357,10 +361,10 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 	return nil, err
 }
 
-func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProject(conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -368,7 +372,15 @@ func statusProject(ctx context.Context, conn *datazone.Client, domain string, id
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.ProjectStatus)), nil
+		if len(out.FailureReasons) > 0 {
+			if err := errors.Join(tfslices.ApplyToAll(out.FailureReasons, func(e awstypes.ProjectDeletionError) error {
+				return errors.New(aws.ToString(e.Message))
+			})...); err != nil {
+				return nil, "", err
+			}
+		}
+
+		return out, string(out.ProjectStatus), nil
 	}
 }
 
@@ -381,15 +393,14 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 
-	if out == nil || !(out.FailureReasons == nil) {
-		return nil, tfresource.NewEmptyResultError(in)
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

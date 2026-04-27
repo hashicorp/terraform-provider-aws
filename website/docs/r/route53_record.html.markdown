@@ -279,9 +279,9 @@ resource "aws_route53_record" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `set_identifier` (String) Set identifier for the record.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Records using the hosted zone ID, record name, record type, and set identifier. For example:
 
-Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
+Using the hosted zone ID, record name, and record type, separated by underscores (`_`):
 
 ```terraform
 import {
@@ -308,9 +308,9 @@ import {
 }
 ```
 
-**Using `terraform import` to import** Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
+**Using `terraform import` to import** Route53 Records using the hosted zone ID, record name, record type, and set identifier. For example:
 
-Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
+Using the hosted zone ID, record name, and record type, separated by underscores (`_`):
 
 ```console
 % terraform import aws_route53_record.example Z4KAPRWWNC7JR_dev_NS

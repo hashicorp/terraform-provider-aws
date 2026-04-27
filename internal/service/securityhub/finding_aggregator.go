@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -11,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -37,6 +40,10 @@ func linkingMode_Values() []string {
 }
 
 // @SDKResource("aws_securityhub_finding_aggregator", name="Finding Aggregator")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
 func resourceFindingAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFindingAggregatorCreate,
@@ -44,11 +51,11 @@ func resourceFindingAggregator() *schema.Resource {
 		UpdateWithoutTimeout: resourceFindingAggregatorUpdate,
 		DeleteWithoutTimeout: resourceFindingAggregatorDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"linking_mode": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -71,7 +78,7 @@ func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	linkingMode := d.Get("linking_mode").(string)
-	input := &securityhub.CreateFindingAggregatorInput{
+	input := securityhub.CreateFindingAggregatorInput{
 		RegionLinkingMode: aws.String(linkingMode),
 	}
 
@@ -79,7 +86,7 @@ func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData
 		input.Regions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateFindingAggregator(ctx, input)
+	output, err := conn.CreateFindingAggregator(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Finding Aggregator: %s", err)
@@ -96,7 +103,7 @@ func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, 
 
 	output, err := findFindingAggregatorByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Finding Aggregator (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -106,9 +113,10 @@ func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub finding aggregator to find %s: %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, output.FindingAggregatorArn)
 	d.Set("linking_mode", output.RegionLinkingMode)
 	if len(output.Regions) > 0 {
-		d.Set("specified_regions", flex.FlattenStringValueList(output.Regions))
+		d.Set("specified_regions", output.Regions)
 	}
 
 	return diags
@@ -119,7 +127,7 @@ func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	linkingMode := d.Get("linking_mode").(string)
-	input := &securityhub.UpdateFindingAggregatorInput{
+	input := securityhub.UpdateFindingAggregatorInput{
 		FindingAggregatorArn: aws.String(d.Id()),
 		RegionLinkingMode:    aws.String(linkingMode),
 	}
@@ -128,7 +136,7 @@ func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData
 		input.Regions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := conn.UpdateFindingAggregator(ctx, input)
+	_, err := conn.UpdateFindingAggregator(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Finding Aggregator (%s): %s", d.Id(), err)
@@ -142,9 +150,10 @@ func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Finding Aggregator: %s", d.Id())
-	_, err := conn.DeleteFindingAggregator(ctx, &securityhub.DeleteFindingAggregatorInput{
+	input := securityhub.DeleteFindingAggregatorInput{
 		FindingAggregatorArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFindingAggregator(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
@@ -158,11 +167,11 @@ func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func findFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
-	input := &securityhub.GetFindingAggregatorInput{
+	input := securityhub.GetFindingAggregatorInput{
 		FindingAggregatorArn: aws.String(arn),
 	}
 
-	return findFindingAggregator(ctx, conn, input)
+	return findFindingAggregator(ctx, conn, &input)
 }
 
 func findFindingAggregator(ctx context.Context, conn *securityhub.Client, input *securityhub.GetFindingAggregatorInput) (*securityhub.GetFindingAggregatorOutput, error) {
@@ -170,8 +179,7 @@ func findFindingAggregator(ctx context.Context, conn *securityhub.Client, input 
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -180,7 +188,7 @@ func findFindingAggregator(ctx context.Context, conn *securityhub.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

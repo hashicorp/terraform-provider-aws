@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -42,10 +41,10 @@ func testAccCheckInvocationResult(name, expectedResult string) resource.TestChec
 
 func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,10 +61,10 @@ func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 
 func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,10 +81,10 @@ func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 
 func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -94,6 +93,26 @@ func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
 				Config: testAccInvocationDataSourceConfig_complex(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocationDataSource_tenantId(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	testData := "value3"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvocationDataSourceConfig_tenantId(rName, testData),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -225,6 +244,40 @@ data "aws_lambda_invocation" "invocation_test" {
       "a": "b"
     }
   }
+}
+JSON
+}
+`, rName, testData)
+}
+
+func testAccInvocationDataSourceConfig_tenantId(rName, testData string) string {
+	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
+resource "aws_lambda_function" "lambda" {
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = "%s"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs20.x"
+  tenancy_config {
+    tenant_isolation_mode = "PER_TENANT"
+  }
+
+  environment {
+    variables = {
+      TEST_DATA = "%s"
+    }
+  }
+}
+
+data "aws_lambda_invocation" "invocation_test" {
+  function_name = aws_lambda_function.lambda.function_name
+  tenant_id     = "tenant-1"
+  input         = <<JSON
+{
+  "key1": "value1",
+  "key2": "value2"
 }
 JSON
 }

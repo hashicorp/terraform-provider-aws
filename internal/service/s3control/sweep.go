@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -372,7 +372,7 @@ func sweepStorageLensConfigurations(region string) error {
 
 			r := resourceStorageLensConfiguration()
 			d := r.Data(nil)
-			d.SetId(StorageLensConfigurationCreateResourceID(accountID, configID))
+			d.SetId(storageLensConfigurationCreateResourceID(accountID, configID))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

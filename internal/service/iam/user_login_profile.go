@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -89,9 +91,9 @@ const (
 	charSymbols = "!@#$%^&*()_+-=[]{}|'"
 )
 
-// GeneratePassword generates a random password of a given length, matching the
+// generatePassword generates a random password of a given length, matching the
 // most restrictive iam password policy.
-func GeneratePassword(length int) (string, error) {
+func generatePassword(length int) (string, error) {
 	const charset = charLower + charUpper + charNumbers + charSymbols
 
 	result := make([]byte, length)
@@ -117,7 +119,7 @@ func GeneratePassword(length int) (string, error) {
 			result[i] = charset[r.Int64()]
 		}
 
-		if !CheckPwdPolicy(result) {
+		if !checkPwdPolicy(result) {
 			continue
 		}
 
@@ -129,7 +131,7 @@ func GeneratePassword(length int) (string, error) {
 
 // Check the generated password contains all character classes listed in the
 // IAM password policy.
-func CheckPwdPolicy(pass []byte) bool {
+func checkPwdPolicy(pass []byte) bool {
 	return (bytes.ContainsAny(pass, charLower) &&
 		bytes.ContainsAny(pass, charNumbers) &&
 		bytes.ContainsAny(pass, charSymbols) &&
@@ -142,7 +144,7 @@ func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData,
 	username := d.Get("user").(string)
 
 	passwordLength := d.Get("password_length").(int)
-	initialPassword, err := GeneratePassword(passwordLength)
+	initialPassword, err := generatePassword(passwordLength)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM User Login Profile for %q: %s", username, err)
 	}

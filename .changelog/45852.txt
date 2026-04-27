@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_windows_file_system: Add `domain_join_service_account_secret` argument to `self_managed_active_directory` configuration block
+```
+
+```release-note:enhancement
+resource/aws_fsx_windows_file_system: Change `self_managed_active_directory.password` to Optional and `self_managed_active_directory.username` to Optional and Computed
+```

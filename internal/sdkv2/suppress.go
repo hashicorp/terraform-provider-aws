@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -21,6 +21,18 @@ func SuppressEquivalentStringCaseInsensitive(k, old, new string, _ *schema.Resou
 // SuppressEquivalentJSONDocuments provides custom difference suppression
 // for JSON documents in the given strings that are equivalent.
 func SuppressEquivalentJSONDocuments(k, old, new string, _ *schema.ResourceData) bool {
+	return json.EqualStrings(old, new)
+}
+
+// SuppressEquivalentJSONDocumentsWithEmpty provides custom difference suppression
+// for JSON documents in the given strings that are equivalent, handling empty
+// strings (`""`) and empty JSON strings (`"{}"`) as equivalent.
+// This is useful for suppressing diffs for non-IAM JSON policy documents.
+func SuppressEquivalentJSONDocumentsWithEmpty(k, old, new string, _ *schema.ResourceData) bool {
+	if equalEmptyJSONStrings(old, new) {
+		return true
+	}
+
 	return json.EqualStrings(old, new)
 }
 
@@ -78,4 +90,12 @@ func SuppressEquivalentIAMPolicyDocuments(k, old, new string, _ *schema.Resource
 func equalEmptyJSONStrings(old, new string) bool {
 	old, new = strings.TrimSpace(old), strings.TrimSpace(new)
 	return (old == "" || old == "{}") && (new == "" || new == "{}")
+}
+
+// SuppressNewStringValueEquivalentToUnset provides custom difference suppression
+// for new string values that are equivalent to the unset (unconfigured) value.
+func SuppressNewStringValueEquivalentToUnset[T ~string](v T) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		return d.Id() != "" && old == "" && T(new) == v
+	}
 }

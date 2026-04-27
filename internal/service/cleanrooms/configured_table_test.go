@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms_test
@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcleanrooms "github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,19 +23,19 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var configuredTable cleanrooms.GetConfiguredTableOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_configured_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckConfiguredTable(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
 					resource.TestCheckResourceAttr(resourceName, "analysis_method", TEST_ANALYSIS_METHOD),
@@ -59,20 +57,20 @@ func TestAccCleanRoomsConfiguredTable_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var configuredTable cleanrooms.GetConfiguredTableOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_configured_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcleanrooms.ResourceConfiguredTable(), resourceName),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcleanrooms.ResourceConfiguredTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,19 +82,19 @@ func TestAccCleanRoomsConfiguredTable_mutableProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var configuredTable cleanrooms.GetConfiguredTableOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_configured_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
 				),
 			},
 			{
@@ -116,19 +114,19 @@ func TestAccCleanRoomsConfiguredTable_updateAllowedColumns(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var configuredTable cleanrooms.GetConfiguredTableOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_configured_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfiguredTableConfig_allowedColumns(TEST_ALLOWED_COLUMNS, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
@@ -150,21 +148,21 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var configuredTable cleanrooms.GetConfiguredTableOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	firstDatabaseName := rName
-	secondDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	secondDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_configured_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfiguredTableConfig_additionalTables(rName, firstDatabaseName, secondDatabaseName, firstDatabaseName, TEST_FIRST_ADDITIONAL_TABLE_NAME),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
 				),
 			},
 			{
@@ -185,21 +183,21 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyDatabase(t *testi
 	ctx := acctest.Context(t)
 
 	var configuredTable cleanrooms.GetConfiguredTableOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	firstDatabaseName := rName
-	secondDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	secondDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_configured_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfiguredTableConfig_additionalTables(rName, firstDatabaseName, secondDatabaseName, firstDatabaseName, TEST_FIRST_ADDITIONAL_TABLE_NAME),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
 				),
 			},
 			{
@@ -220,21 +218,21 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyTable(t *testing.
 	ctx := acctest.Context(t)
 
 	var configuredTable cleanrooms.GetConfiguredTableOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	firstDatabaseName := rName
-	secondDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	secondDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_configured_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfiguredTableConfig_additionalTables(rName, firstDatabaseName, secondDatabaseName, firstDatabaseName, TEST_FIRST_ADDITIONAL_TABLE_NAME),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
 				),
 			},
 			{
@@ -252,7 +250,7 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyTable(t *testing.
 }
 
 func testAccPreCheckConfiguredTable(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 
 	input := &cleanrooms.ListConfiguredTablesInput{}
 	_, err := conn.ListConfiguredTables(ctx, input)
@@ -266,9 +264,9 @@ func testAccPreCheckConfiguredTable(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckConfiguredTableDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfiguredTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != tfcleanrooms.ResNameConfiguredTable {
@@ -289,7 +287,7 @@ func testAccCheckConfiguredTableDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckConfiguredTableExists(ctx context.Context, name string, configuredTable *cleanrooms.GetConfiguredTableOutput) resource.TestCheckFunc {
+func testAccCheckConfiguredTableExists(ctx context.Context, t *testing.T, name string, configuredTable *cleanrooms.GetConfiguredTableOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -300,7 +298,7 @@ func testAccCheckConfiguredTableExists(ctx context.Context, name string, configu
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, name, errors.New("not set"))
 		}
 
-		client := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		client := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 		input := cleanrooms.GetConfiguredTableInput{
 			ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
 		}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package odb
 
@@ -23,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -31,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,8 +55,6 @@ func newResourceCloudExadataInfrastructure(_ context.Context) (resource.Resource
 const (
 	ResNameCloudExadataInfrastructure = "Cloud Exadata Infrastructure"
 )
-
-var ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
 
 type resourceCloudExadataInfrastructure struct {
 	framework.ResourceWithModel[cloudExadataInfrastructureResourceModel]
@@ -353,7 +354,7 @@ func (r *resourceCloudExadataInfrastructure) Create(ctx context.Context, req res
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	createdExaInfra, err := waitCloudExadataInfrastructureCreated(ctx, conn, *out.CloudExadataInfrastructureId, createTimeout)
+	createdExaInfra, err := waitCloudExadataInfrastructureCreated(ctx, conn, aws.ToString(out.CloudExadataInfrastructureId), createTimeout)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(out.CloudExadataInfrastructureId))...)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -379,8 +380,8 @@ func (r *resourceCloudExadataInfrastructure) Read(ctx context.Context, req resou
 		return
 	}
 
-	out, err := FindExadataInfraResourceByID(ctx, conn, state.CloudExadataInfrastructureId.ValueString())
-	if tfresource.NotFound(err) {
+	out, err := findExadataInfraResourceByID(ctx, conn, state.CloudExadataInfrastructureId.ValueString())
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -486,7 +487,7 @@ func (r *resourceCloudExadataInfrastructure) Delete(ctx context.Context, req res
 }
 
 func waitCloudExadataInfrastructureCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudExadataInfrastructure, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:       enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
 		Refresh:      statusCloudExadataInfrastructure(ctx, conn, id),
@@ -502,7 +503,7 @@ func waitCloudExadataInfrastructureCreated(ctx context.Context, conn *odb.Client
 }
 
 func waitCloudExadataInfrastructureUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudExadataInfrastructure, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(odbtypes.ResourceStatusUpdating),
 		Target:       enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
 		Refresh:      statusCloudExadataInfrastructure(ctx, conn, id),
@@ -519,7 +520,7 @@ func waitCloudExadataInfrastructureUpdated(ctx context.Context, conn *odb.Client
 }
 
 func waitCloudExadataInfrastructureDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudExadataInfrastructure, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
 		Refresh: statusCloudExadataInfrastructure(ctx, conn, id),
@@ -534,10 +535,10 @@ func waitCloudExadataInfrastructureDeleted(ctx context.Context, conn *odb.Client
 	return nil, err
 }
 
-func statusCloudExadataInfrastructure(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
+func statusCloudExadataInfrastructure(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindExadataInfraResourceByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		out, err := findExadataInfraResourceByID(ctx, conn, id)
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -549,7 +550,7 @@ func statusCloudExadataInfrastructure(ctx context.Context, conn *odb.Client, id 
 	}
 }
 
-func FindExadataInfraResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudExadataInfrastructure, error) {
+func findExadataInfraResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudExadataInfrastructure, error) {
 	input := odb.GetCloudExadataInfrastructureInput{
 		CloudExadataInfrastructureId: aws.String(id),
 	}
@@ -557,7 +558,7 @@ func FindExadataInfraResourceByID(ctx context.Context, conn *odb.Client, id stri
 	out, err := conn.GetCloudExadataInfrastructure(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -567,7 +568,7 @@ func FindExadataInfraResourceByID(ctx context.Context, conn *odb.Client, id stri
 	}
 
 	if out == nil || out.CloudExadataInfrastructure == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CloudExadataInfrastructure, nil

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -15,11 +17,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -113,7 +115,7 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 
 	output, err := findDBClusterRoleByTwoPartKey(ctx, conn, dbClusterID, roleARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster (%s) IAM Role (%s) Association not found, removing from state", dbClusterID, roleARN)
 		d.SetId("")
 		return diags
@@ -207,11 +209,11 @@ func findDBClusterRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbClus
 	return output, nil
 }
 
-func statusDBClusterRole(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBClusterRole(conn *rds.Client, dbClusterID, roleARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBClusterRoleByTwoPartKey(ctx, conn, dbClusterID, roleARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -227,7 +229,7 @@ func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterRoleStatusPending},
 		Target:     []string{clusterRoleStatusActive},
-		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
+		Refresh:    statusDBClusterRole(conn, dbClusterID, roleARN),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -246,7 +248,7 @@ func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterRoleStatusActive, clusterRoleStatusPending},
 		Target:     []string{},
-		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
+		Refresh:    statusDBClusterRole(conn, dbClusterID, roleARN),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

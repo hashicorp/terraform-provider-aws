@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -16,12 +18,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,16 +31,17 @@ import (
 // @SDKResource("aws_eip", name="EIP")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Address")
+// @Testing(generator=false)
+// @Testing(idAttrDuplicates="id")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceEIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPCreate,
 		ReadWithoutTimeout:   resourceEIPRead,
 		UpdateWithoutTimeout: resourceEIPUpdate,
 		DeleteWithoutTimeout: resourceEIPDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Read:   schema.DefaultTimeout(15 * time.Minute),
@@ -206,7 +208,8 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.EC2Client(ctx)
 
 	if !eipID(d.Id()).IsVPC() {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, awstypes.DomainTypeStandard)
@@ -216,7 +219,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -226,29 +229,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s): %s", d.Id(), err)
 	}
 
-	allocationID := aws.ToString(address.AllocationId)
-	d.Set("allocation_id", allocationID)
-	d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))
-	d.Set(names.AttrAssociationID, address.AssociationId)
-	d.Set("carrier_ip", address.CarrierIp)
-	d.Set("customer_owned_ip", address.CustomerOwnedIp)
-	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
-	d.Set(names.AttrDomain, address.Domain)
-	d.Set("instance", address.InstanceId)
-	if v := aws.ToString(address.PublicIpv4Pool); strings.HasPrefix(v, publicIPv4PoolIDIPAMPoolPrefix) {
-		d.Set("ipam_pool_id", v)
-	}
-	d.Set("network_border_group", address.NetworkBorderGroup)
-	d.Set("network_interface", address.NetworkInterfaceId)
-	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
-	d.Set("private_ip", address.PrivateIpAddress)
-	if v := aws.ToString(address.PrivateIpAddress); v != "" {
-		d.Set("private_dns", meta.(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, v))
-	}
-	d.Set("public_ip", address.PublicIp)
-	if v := aws.ToString(address.PublicIp); v != "" {
-		d.Set("public_dns", meta.(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, v))
-	}
+	resourceEIPFlatten(ctx, awsClient, address, d)
 
 	// Force ID to be an Allocation ID if we're on a VPC.
 	// This allows users to import the EIP based on the IP if they are in a VPC.
@@ -261,9 +242,11 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	switch {
 	case err == nil:
 		d.Set("ptr_record", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("ptr_record", nil)
-	case tfawserr.ErrMessageContains(err, "InvalidAction", "not valid for this web service"):
+	// Fallback for ISO regions
+	case tfawserr.ErrMessageContains(err, "InvalidAction", "not valid for this web service"),
+		tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not available in this region"):
 		d.Set("ptr_record", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
@@ -339,7 +322,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			timeout = 10 * time.Minute // IPAM eventual consistency
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
-			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
+			return findIPAMPoolAllocationForResource(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
 		})
 
 		if err != nil {
@@ -385,7 +368,7 @@ func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceI
 			return findEIPByAssociationID(ctx, conn, aws.ToString(output.AssociationId))
 		},
 		func(err error) (bool, error) {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return true, err
 			}
 
@@ -431,24 +414,38 @@ func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string
 	return c.RegionalARN(ctx, names.EC2, "elastic-ip/"+allocationID)
 }
 
-func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]awstypes.IpamPoolAllocation, error) {
-	input := ec2.GetIpamPoolAllocationsInput{
-		IpamPoolId: aws.String(ipamPoolID),
+func resourceEIPFlatten(ctx context.Context, awsClient *conns.AWSClient, address *awstypes.Address, d *schema.ResourceData) {
+	allocationID := aws.ToString(address.AllocationId)
+
+	d.Set("allocation_id", allocationID)
+	d.Set(names.AttrARN, eipARN(ctx, awsClient, allocationID))
+	d.Set(names.AttrAssociationID, address.AssociationId)
+	d.Set("carrier_ip", address.CarrierIp)
+	d.Set("customer_owned_ip", address.CustomerOwnedIp)
+	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
+	d.Set(names.AttrDomain, address.Domain)
+	d.Set("instance", address.InstanceId)
+
+	if v := aws.ToString(address.PublicIpv4Pool); strings.HasPrefix(v, publicIPv4PoolIDIPAMPoolPrefix) {
+		d.Set("ipam_pool_id", v)
+	} else {
+		d.Set("ipam_pool_id", nil)
 	}
 
-	output, err := findIPAMPoolAllocations(ctx, conn, &input)
-
-	if err != nil {
-		return nil, err
+	d.Set("network_border_group", address.NetworkBorderGroup)
+	d.Set("network_interface", address.NetworkInterfaceId)
+	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
+	d.Set("private_ip", address.PrivateIpAddress)
+	if v := aws.ToString(address.PrivateIpAddress); v != "" {
+		d.Set("private_dns", awsClient.EC2PrivateDNSNameForIP(ctx, v))
+	} else {
+		d.Set("private_dns", nil)
 	}
 
-	output = tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
-		return v.ResourceType == awstypes.IpamPoolAllocationResourceTypeEip && aws.ToString(v.ResourceId) == eipAllocationID
-	})
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
+	d.Set("public_ip", address.PublicIp)
+	if v := aws.ToString(address.PublicIp); v != "" {
+		d.Set("public_dns", awsClient.EC2PublicDNSNameForIP(ctx, v))
+	} else {
+		d.Set("public_dns", nil)
 	}
-
-	return output, nil
 }

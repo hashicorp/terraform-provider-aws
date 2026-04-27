@@ -46,7 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cpu_core_count` - The number of CPU cores enabled on the database server.
 * `created_at` - The date and time when the database server was created.
 * `db_node_storage_size_in_gbs` - The amount of local node storage, in gigabytes (GB), that's allocated on the database server.
-* `db_server_id` - The unique identifier of the database server.
+* `id` - The unique identifier of the database server.
 * `db_server_patching_details` - The scheduling details for the quarterly maintenance window. Patching and system updates take place during the maintenance window.
 * `display_name` - The user-friendly name of the database server. The name doesn't need to be unique.
 * `exadata_infrastructure_id` - The ID of the Exadata infrastructure that hosts the database server.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -13,27 +15,27 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_iam_user_policy_attachment", name="User Policy Attachment")
+// @IdentityAttribute("user")
+// @IdentityAttribute("policy_arn")
+// @IdAttrFormat("{user}/{policy_arn}")
+// @ImportIDHandler("userPolicyAttachmentImportID")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceUserPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceUserPolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceUserPolicyAttachmentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceUserPolicyAttachmentImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"policy_arn": {
@@ -62,8 +64,7 @@ func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", user)))
+	d.SetId(createUserPolicyAttachmentImportID(d))
 
 	return append(diags, resourceUserPolicyAttachmentRead(ctx, d, meta)...)
 }
@@ -77,11 +78,11 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", user, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	attachedPolicy, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.AttachedPolicy, error) {
 		return findAttachedUserPolicyByTwoPartKey(ctx, conn, user, policyARN)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM User Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
@@ -90,6 +91,8 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy Attachment (%s): %s", id, err)
 	}
+
+	resourceUserPolicyAttachmentFlatten(d, user, attachedPolicy)
 
 	return diags
 }
@@ -103,22 +106,6 @@ func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	return diags
-}
-
-func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user-name>/<policy_arn>", d.Id())
-	}
-
-	userName := idParts[0]
-	policyARN := idParts[1]
-
-	d.Set("user", userName)
-	d.Set("policy_arn", policyARN)
-	d.SetId(fmt.Sprintf("%s-%s", userName, policyARN))
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
@@ -184,8 +171,7 @@ func findAttachedUserPolicies(ctx context.Context, conn *iam.Client, input *iam.
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -201,4 +187,37 @@ func findAttachedUserPolicies(ctx context.Context, conn *iam.Client, input *iam.
 	}
 
 	return output, nil
+}
+
+func resourceUserPolicyAttachmentFlatten(d *schema.ResourceData, user string, attachedPolicy *awstypes.AttachedPolicy) {
+	d.Set("user", user)
+	d.Set("policy_arn", attachedPolicy.PolicyArn)
+}
+
+func createUserPolicyAttachmentImportID(d *schema.ResourceData) string {
+	return (userPolicyAttachmentImportID{}).Create(d)
+}
+
+type userPolicyAttachmentImportID struct{}
+
+func (v userPolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return v.create(d.Get("user").(string), d.Get("policy_arn").(string))
+}
+
+func (userPolicyAttachmentImportID) create(userName, policyARN string) string {
+	return fmt.Sprintf("%s/%s", userName, policyARN)
+}
+
+func (userPolicyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <user-name>/<policy_arn>", id)
+	}
+
+	result := map[string]any{
+		"user":       parts[0],
+		"policy_arn": parts[1],
+	}
+
+	return id, result, nil
 }

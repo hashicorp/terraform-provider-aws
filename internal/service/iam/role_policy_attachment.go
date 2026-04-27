@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -13,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -81,7 +83,7 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 		return findAttachedRolePolicyByTwoPartKey(ctx, conn, role, policyARN)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Role Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
@@ -170,8 +172,7 @@ func findAttachedRolePolicies(ctx context.Context, conn *iam.Client, input *iam.
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -195,17 +196,21 @@ func createRolePolicyAttachmentImportID(d *schema.ResourceData) string {
 
 type rolePolicyAttachmentImportID struct{}
 
-func (rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
-	return fmt.Sprintf("%s/%s", d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
+func (v rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return v.create(d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
 }
 
-func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
+func (rolePolicyAttachmentImportID) create(roleName, policyARN string) string {
+	return fmt.Sprintf("%s/%s", roleName, policyARN)
+}
+
+func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <role-name>/<policy_arn>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrRole: parts[0],
 		"policy_arn":   parts[1],
 	}

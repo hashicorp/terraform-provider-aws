@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
@@ -26,6 +26,11 @@ const (
 	targetStateTrue  targetState = "TRUE"
 )
 
+const (
+	// Required so that we're not returning a zero-value from the `refresh` function
+	dummy string = "x"
+)
+
 // WaitUntil waits for the function `f` to return `true`.
 // If `f` returns an error, return immediately with that error.
 // If `timeout` is exceeded before `f` returns `true`, return an error.
@@ -39,10 +44,10 @@ func WaitUntil(ctx context.Context, timeout time.Duration, f func(context.Contex
 		}
 
 		if done {
-			return "", targetStateTrue, nil
+			return dummy, targetStateTrue, nil
 		}
 
-		return "", targetStateFalse, nil
+		return dummy, targetStateFalse, nil
 	}
 
 	stateConf := &retry.StateChangeConfOf[any, targetState]{

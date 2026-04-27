@@ -1,11 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -15,25 +16,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_action_target", name="Action Target")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
 func resourceActionTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActionTargetCreate,
 		ReadWithoutTimeout:   resourceActionTargetRead,
 		UpdateWithoutTimeout: resourceActionTargetUpdate,
 		DeleteWithoutTimeout: resourceActionTargetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -69,13 +71,13 @@ func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	id := d.Get(names.AttrIdentifier).(string)
-	input := &securityhub.CreateActionTargetInput{
+	input := securityhub.CreateActionTargetInput{
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Id:          aws.String(id),
 		Name:        aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	output, err := conn.CreateActionTarget(ctx, input)
+	output, err := conn.CreateActionTarget(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Action Target (%s): %s", id, err)
@@ -90,14 +92,9 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	actionTargetIdentifier, err := actionTargetParseID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	output, err := findActionTargetByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Action Target %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -107,9 +104,15 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Action Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.ActionTargetArn)
+	arn := aws.ToString(output.ActionTargetArn)
+	parts := strings.Split(arn, "/")
+	if len(parts) != 3 {
+		return sdkdiag.AppendErrorf(diags, "expected Security Hub Custom Action ARN, got: %s", arn)
+	}
+
+	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, output.Description)
-	d.Set(names.AttrIdentifier, actionTargetIdentifier)
+	d.Set(names.AttrIdentifier, parts[2])
 	d.Set(names.AttrName, output.Name)
 
 	return diags
@@ -119,13 +122,15 @@ func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.UpdateActionTargetInput{
+	input := securityhub.UpdateActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
 		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if _, err := conn.UpdateActionTarget(ctx, input); err != nil {
+	_, err := conn.UpdateActionTarget(ctx, &input)
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Action Target (%s): %s", d.Id(), err)
 	}
 
@@ -137,9 +142,10 @@ func resourceActionTargetDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Action Target: %s", d.Id())
-	_, err := conn.DeleteActionTarget(ctx, &securityhub.DeleteActionTargetInput{
+	input := securityhub.DeleteActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteActionTarget(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
@@ -152,22 +158,12 @@ func resourceActionTargetDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func actionTargetParseID(arn string) (string, error) {
-	parts := strings.Split(arn, "/")
-
-	if len(parts) != 3 {
-		return "", fmt.Errorf("expected Security Hub Custom action ARN, received: %s", arn)
-	}
-
-	return parts[2], nil
-}
-
 func findActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
-	input := &securityhub.DescribeActionTargetsInput{
+	input := securityhub.DescribeActionTargetsInput{
 		ActionTargetArns: []string{arn},
 	}
 
-	return findActionTarget(ctx, conn, input)
+	return findActionTarget(ctx, conn, &input)
 }
 
 func findActionTarget(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeActionTargetsInput) (*types.ActionTarget, error) {
@@ -189,8 +185,7 @@ func findActionTargets(ctx context.Context, conn *securityhub.Client, input *sec
 
 		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

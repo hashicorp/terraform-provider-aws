@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkfirewall
 
@@ -15,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -60,6 +62,11 @@ func resourceFirewallPolicy() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"enable_tls_session_holding": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 							"policy_variables": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -274,7 +281,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findFirewallPolicyByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -362,8 +369,7 @@ func findFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, input
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -372,7 +378,7 @@ func findFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, input
 	}
 
 	if output == nil || output.FirewallPolicyResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -386,11 +392,11 @@ func findFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.Client, 
 	return findFirewallPolicy(ctx, conn, input)
 }
 
-func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFirewallPolicy(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFirewallPolicyByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -406,7 +412,7 @@ func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusFirewallPolicy(ctx, conn, arn),
+		Refresh: statusFirewallPolicy(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -561,6 +567,10 @@ func expandFirewallPolicy(tfList []any) *awstypes.FirewallPolicy {
 		StatelessFragmentDefaultActions: flex.ExpandStringValueSet(tfMap["stateless_fragment_default_actions"].(*schema.Set)),
 	}
 
+	if v, ok := tfMap["enable_tls_session_holding"].(bool); ok {
+		apiObject.EnableTLSSessionHolding = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["policy_variables"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.PolicyVariables = expandPolicyVariables(v.([]any)[0].(map[string]any))
 	}
@@ -598,6 +608,10 @@ func flattenFirewallPolicy(apiObject *awstypes.FirewallPolicy) []any {
 	}
 
 	tfMap := map[string]any{}
+
+	if apiObject.EnableTLSSessionHolding != nil {
+		tfMap["enable_tls_session_holding"] = aws.ToBool(apiObject.EnableTLSSessionHolding)
+	}
 
 	if apiObject.PolicyVariables != nil {
 		tfMap["policy_variables"] = flattenPolicyVariables(apiObject.PolicyVariables)

@@ -38,6 +38,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the Group.
 * `group_id` - The identifier of the newly created group in the identity store.
 * `external_ids` - A list of external IDs that contains the identifiers issued to this resource by an external identity provider. See [External IDs](#external-ids) below.
 

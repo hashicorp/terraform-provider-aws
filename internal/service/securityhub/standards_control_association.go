@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -19,19 +21,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_securityhub_standards_control_association", name="Standards Control Association")
+// @IdentityAttribute("security_control_id")
+// @IdentityAttribute("standards_arn")
+// @ImportIDHandler("standardsControlAssociationImportID", setIDAttribute=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsControlAssociationSummary")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(importStateIdFunc=testAccCheckStandardsControlAssociationImportStateIDFunc)
 func newStandardsControlAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &standardsControlAssociationResource{}
 
@@ -41,6 +54,7 @@ func newStandardsControlAssociationResource(_ context.Context) (resource.Resourc
 type standardsControlAssociationResource struct {
 	framework.ResourceWithModel[standardsControlAssociationResourceModel]
 	framework.WithNoOpDelete
+	framework.WithImportByIdentity
 }
 
 func (r *standardsControlAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -83,31 +97,31 @@ func (r *standardsControlAssociationResource) Create(ctx context.Context, reques
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	input := &securityhub.BatchUpdateStandardsControlAssociationsInput{
-		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{
-			{
-				AssociationStatus: awstypes.AssociationStatus(data.AssociationStatus.ValueString()),
-				SecurityControlId: data.SecurityControlID.ValueStringPointer(),
-				StandardsArn:      data.StandardsARN.ValueStringPointer(),
-				UpdatedReason:     data.UpdatedReason.ValueStringPointer(),
-			},
-		},
+	var apiObject awstypes.StandardsControlAssociationUpdate
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &apiObject)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
+	securityControlID, standardsARN := fwflex.StringValueFromFramework(ctx, data.SecurityControlID), fwflex.StringValueFromFramework(ctx, data.StandardsARN)
+	id := standardsControlAssociationCreateResourceID(securityControlID, standardsARN)
+	input := securityhub.BatchUpdateStandardsControlAssociationsInput{
+		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{apiObject},
+	}
+
+	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, &input)
 
 	if err == nil {
 		err = unprocessedAssociationUpdatesError(output.UnprocessedAssociationUpdates)
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("creating Standards Control Association", err.Error())
-
+		response.Diagnostics.AddError(fmt.Sprintf("creating SecurityHub Standards Control Association (%s)", id), err.Error())
 		return
 	}
 
 	// Set values for unknowns.
-	data.setID()
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -119,26 +133,25 @@ func (r *standardsControlAssociationResource) Read(ctx context.Context, request 
 		return
 	}
 
-	if err := data.InitFromID(ctx); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	securityControlID, standardsARN, err := standardsControlAssociationParseResourceID(id)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	securityControlID, standardsARN := data.SecurityControlID.ValueString(), data.StandardsARN.ValueString()
 	output, err := findStandardsControlAssociationByTwoPartKey(ctx, conn, securityControlID, standardsARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SecurityHub Standards Control Association (%s/%s)", securityControlID, standardsARN), err.Error())
-
+		response.Diagnostics.AddError(fmt.Sprintf("reading SecurityHub Standards Control Association (%s)", id), err.Error())
 		return
 	}
 
@@ -159,26 +172,25 @@ func (r *standardsControlAssociationResource) Update(ctx context.Context, reques
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	input := &securityhub.BatchUpdateStandardsControlAssociationsInput{
-		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{
-			{
-				AssociationStatus: awstypes.AssociationStatus(data.AssociationStatus.ValueString()),
-				SecurityControlId: data.SecurityControlID.ValueStringPointer(),
-				StandardsArn:      data.StandardsARN.ValueStringPointer(),
-				UpdatedReason:     data.UpdatedReason.ValueStringPointer(),
-			},
-		},
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	var apiObject awstypes.StandardsControlAssociationUpdate
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &apiObject)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
+	input := securityhub.BatchUpdateStandardsControlAssociationsInput{
+		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{apiObject},
+	}
+
+	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, &input)
 
 	if err == nil {
 		err = unprocessedAssociationUpdatesError(output.UnprocessedAssociationUpdates)
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("updating Standards Control Association", err.Error())
-
+		response.Diagnostics.AddError(fmt.Sprintf("updating SecurityHub Standards Control Association (%s)", id), err.Error())
 		return
 	}
 
@@ -222,38 +234,31 @@ const (
 	standardsControlAssociationResourceIDPartCount = 2
 )
 
-func (m *standardsControlAssociationResourceModel) InitFromID(ctx context.Context) error {
-	parts, err := flex.ExpandResourceId(m.ID.ValueString(), standardsControlAssociationResourceIDPartCount, false)
+func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) string {
+	id, _ := intflex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
+	return id
+}
+
+func standardsControlAssociationParseResourceID(id string) (string, string, error) {
+	parts, err := intflex.ExpandResourceId(id, standardsControlAssociationResourceIDPartCount, false)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
-	m.SecurityControlID = types.StringValue(parts[0])
-	m.StandardsARN = fwtypes.ARNValue(parts[1])
-
-	return nil
-}
-
-func (m *standardsControlAssociationResourceModel) setID() {
-	id, _ := standardsControlAssociationCreateResourceID(m.SecurityControlID.ValueString(), m.StandardsARN.ValueString())
-	m.ID = types.StringValue(id)
-}
-
-func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) (string, error) {
-	return flex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
+	return parts[0], parts[1], nil
 }
 
 func findStandardsControlAssociationByTwoPartKey(ctx context.Context, conn *securityhub.Client, securityControlID string, standardsARN string) (*awstypes.StandardsControlAssociationSummary, error) {
-	input := &securityhub.ListStandardsControlAssociationsInput{
+	input := securityhub.ListStandardsControlAssociationsInput{
 		SecurityControlId: aws.String(securityControlID),
 	}
 
-	return findStandardsControlAssociation(ctx, conn, input, func(v *awstypes.StandardsControlAssociationSummary) bool {
+	return findStandardsControlAssociation(ctx, conn, &input, func(v awstypes.StandardsControlAssociationSummary) bool {
 		return aws.ToString(v.StandardsArn) == standardsARN
 	})
 }
 
-func findStandardsControlAssociation(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput, filter tfslices.Predicate[*awstypes.StandardsControlAssociationSummary]) (*awstypes.StandardsControlAssociationSummary, error) {
+func findStandardsControlAssociation(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput, filter tfslices.Predicate[awstypes.StandardsControlAssociationSummary]) (*awstypes.StandardsControlAssociationSummary, error) {
 	output, err := findStandardsControlAssociations(ctx, conn, input, filter)
 
 	if err != nil {
@@ -263,7 +268,7 @@ func findStandardsControlAssociation(ctx context.Context, conn *securityhub.Clie
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput, filter tfslices.Predicate[*awstypes.StandardsControlAssociationSummary]) ([]awstypes.StandardsControlAssociationSummary, error) {
+func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput, filter tfslices.Predicate[awstypes.StandardsControlAssociationSummary]) ([]awstypes.StandardsControlAssociationSummary, error) {
 	var output []awstypes.StandardsControlAssociationSummary
 
 	pages := securityhub.NewListStandardsControlAssociationsPaginator(conn, input)
@@ -272,8 +277,7 @@ func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Cli
 
 		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -282,7 +286,7 @@ func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Cli
 		}
 
 		for _, v := range page.StandardsControlAssociationSummaries {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
@@ -297,7 +301,7 @@ func unprocessedAssociationUpdatesError(apiObjects []awstypes.UnprocessedStandar
 	for _, apiObject := range apiObjects {
 		err := unprocessedAssociationUpdateError(&apiObject)
 		if v := apiObject.StandardsControlAssociationUpdate; v != nil {
-			id, _ := standardsControlAssociationCreateResourceID(aws.ToString(v.SecurityControlId), aws.ToString(v.StandardsArn))
+			id := standardsControlAssociationCreateResourceID(aws.ToString(v.SecurityControlId), aws.ToString(v.StandardsArn))
 			err = fmt.Errorf("%s: %w", id, err)
 		}
 		errs = append(errs, err)
@@ -312,4 +316,34 @@ func unprocessedAssociationUpdateError(apiObject *awstypes.UnprocessedStandardsC
 	}
 
 	return fmt.Errorf("%s: %s", apiObject.ErrorCode, aws.ToString(apiObject.ErrorReason))
+}
+
+var (
+	_ inttypes.ImportIDParser           = standardsControlAssociationImportID{}
+	_ inttypes.FrameworkImportIDCreator = standardsControlAssociationImportID{}
+)
+
+type standardsControlAssociationImportID struct{}
+
+func (standardsControlAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	securityControlID, standardsARN, err := standardsControlAssociationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"security_control_id": securityControlID,
+		"standards_arn":       standardsARN,
+	}
+
+	return id, result, nil
+}
+
+func (standardsControlAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var securityControlID types.String
+	state.GetAttribute(ctx, path.Root("security_control_id"), &securityControlID)
+	var standardsARN fwtypes.ARN
+	state.GetAttribute(ctx, path.Root("standards_arn"), &standardsARN)
+
+	return standardsControlAssociationCreateResourceID(fwflex.StringValueFromFramework(ctx, securityControlID), fwflex.StringValueFromFramework(ctx, standardsARN))
 }
