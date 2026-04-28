@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_grafana_workspace: Fix `apply` failing with `missing required field, UpdateWorkspaceInput.NetworkAccessControl.VpceIds` (or its `PrefixListIds` counterpart) when only one of the two `network_access_control` lists is non-empty
+```
