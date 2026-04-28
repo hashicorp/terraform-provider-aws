@@ -884,8 +884,8 @@ resource "aws_msk_replicator" "test" {
     }
 
     consumer_group_replication {
-      consumer_groups_to_replicate        = ["group1", "group2", "group3"]
-      consumer_group_offset_sync_mode     = %[4]q
+      consumer_groups_to_replicate    = ["group1", "group2", "group3"]
+      consumer_group_offset_sync_mode = %[4]q
     }
   }
 }
