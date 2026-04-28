@@ -69,7 +69,7 @@ func resourcePrivateVirtualInterface() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{1, 4294967294}),
+				ValidateFunc: validation.IntBetween(1, 4294967294),
 			},
 			"bgp_auth_key": {
 				Type:     schema.TypeString,
