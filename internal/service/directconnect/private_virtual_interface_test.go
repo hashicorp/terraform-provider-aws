@@ -26,7 +26,7 @@ func TestAccDirectConnectPrivateVirtualInterface_basic(t *testing.T) {
 	resourceName := "aws_dx_private_virtual_interface.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(t, 9))
-	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	bgpAsn := acctest.RandIntRange(t, 1, 4294967294)
 	vlan := acctest.RandIntRange(t, 2049, 4094)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
