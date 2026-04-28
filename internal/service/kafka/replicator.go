@@ -216,6 +216,13 @@ func resourceReplicator() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"consumer_group_offset_sync_mode": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[types.ConsumerGroupOffsetSyncMode](),
+									},
 									"consumer_groups_to_exclude": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -553,6 +560,10 @@ func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) 
 
 	tfMap := map[string]any{}
 
+	if v := apiObject.ConsumerGroupOffsetSyncMode; v != "" {
+		tfMap["consumer_group_offset_sync_mode"] = string(v)
+	}
+
 	if v := apiObject.ConsumerGroupsToReplicate; v != nil {
 		tfMap["consumer_groups_to_replicate"] = v
 	}
@@ -794,6 +805,10 @@ func expandReplicationInfo(tfMap map[string]any) types.ReplicationInfo {
 
 func expandConsumerGroupReplication(tfMap map[string]any) *types.ConsumerGroupReplication {
 	apiObject := &types.ConsumerGroupReplication{}
+
+	if v, ok := tfMap["consumer_group_offset_sync_mode"].(string); ok && v != "" {
+		apiObject.ConsumerGroupOffsetSyncMode = types.ConsumerGroupOffsetSyncMode(v)
+	}
 
 	if v, ok := tfMap["consumer_groups_to_replicate"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.ConsumerGroupsToReplicate = flex.ExpandStringValueSet(v)
