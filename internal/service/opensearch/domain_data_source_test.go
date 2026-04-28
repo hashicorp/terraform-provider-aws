@@ -31,6 +31,8 @@ func TestAccOpenSearchDomainDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_strategy_options.#", resourceName, "deployment_strategy_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_strategy_options.0.deployment_strategy", resourceName, "deployment_strategy_options.0.deployment_strategy"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
@@ -68,6 +70,8 @@ func TestAccOpenSearchDomainDataSource_complex(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_count", resourceName, "cluster_config.0.instance_count"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.dedicated_master_enabled", resourceName, "cluster_config.0.dedicated_master_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.zone_awareness_enabled", resourceName, "cluster_config.0.zone_awareness_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_strategy_options.#", resourceName, "deployment_strategy_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_strategy_options.0.deployment_strategy", resourceName, "deployment_strategy_options.0.deployment_strategy"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),

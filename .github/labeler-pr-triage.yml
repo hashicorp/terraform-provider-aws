@@ -495,10 +495,12 @@ service/cloudwatch:
       - changed-files:
           - any-glob-to-any-file:
               - 'internal/service/cloudwatch/**/*'
+              - 'website/**/cloudwatch_alarm_*'
               - 'website/**/cloudwatch_dashboard*'
               - 'website/**/cloudwatch_metric_*'
               - 'website/**/cloudwatch_composite_*'
               - 'website/**/cloudwatch_contributor_*'
+              - 'website/**/cloudwatch_otel_*'
 service/codeartifact:
   - any:
       - changed-files:
@@ -841,6 +843,7 @@ service/ec2outposts:
               - 'internal/service/ec2/**/outposts_*'
               - 'website/**/ec2_coip_pool*'
               - 'website/**/ec2_local_gateway*'
+              - 'website/**/ec2_service_link_virtual_interface*'
 service/ecr:
   - any:
       - changed-files:
@@ -1978,6 +1981,12 @@ service/s3control:
               - 'website/**/s3control*'
               - 'website/**/s3_account_*'
               - 'website/**/s3_access_*'
+service/s3files:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/s3files/**/*'
+              - 'website/**/s3files_*'
 service/s3outposts:
   - any:
       - changed-files:

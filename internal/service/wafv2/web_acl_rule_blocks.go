@@ -17,58 +17,56 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Common reusable block builders using sync.OnceValue pattern
-
-var emptyBlock = sync.OnceValue(func() func(context.Context) schema.ListNestedBlock {
-	return func(ctx context.Context) schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-			Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-			NestedObject: schema.NestedBlockObject{},
-		}
+var emptyBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+		Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{},
 	}
 })
 
-var nameOnlyBlock = sync.OnceValue(func() func(context.Context, string) schema.ListNestedBlock {
-	return func(ctx context.Context, description string) schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleHeaderModel](ctx),
-			Validators: []validator.List{listvalidator.SizeAtMost(1)},
-			NestedObject: schema.NestedBlockObject{
-				Attributes: map[string]schema.Attribute{
-					names.AttrName: schema.StringAttribute{
-						Required:    true,
-						Description: description,
-					},
+// nameOnlyBlock cannot be cached because of the description parameter
+func nameOnlyBlock(ctx context.Context, description string) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleHeaderModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrName: schema.StringAttribute{
+					Required:    true,
+					Description: description,
 				},
 			},
-		}
+		},
+	}
+}
+
+var jaFingerprintBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"fallback_behavior": fallbackBehaviorAttrRequired(),
+			},
+		},
 	}
 })
 
-var jaFingerprintBlock = sync.OnceValue(func() func(context.Context) schema.ListNestedBlock {
-	return func(ctx context.Context) schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
-			Validators: []validator.List{listvalidator.SizeAtMost(1)},
-			NestedObject: schema.NestedBlockObject{
-				Attributes: map[string]schema.Attribute{
-					"fallback_behavior": schema.StringAttribute{
-						CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
-						Required:   true,
-					},
-				},
-			},
-		}
+var fallbackBehaviorAttrRequired = sync.OnceValue(func() schema.Attribute {
+	return schema.StringAttribute{
+		CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+		Required:   true,
 	}
 })
 
 // statementBlock and related functions are generated in web_acl_rule_statement_models_gen.go
 
-func ipSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var ipSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIPSetReferenceStatementModel](ctx),
 		Validators: []validator.List{
@@ -88,20 +86,13 @@ func ipSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.OneOf("MATCH", "NO_MATCH"),
-								},
-							},
+							"fallback_behavior": fallbackBehaviorAttrRequired(),
 							"header_name": schema.StringAttribute{
 								Required: true,
 							},
 							"position": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.OneOf("FIRST", "LAST", "ANY"),
-								},
+								CustomType: fwtypes.StringEnumType[awstypes.ForwardedIPPosition](),
+								Required:   true,
 							},
 						},
 					},
@@ -110,9 +101,9 @@ func ipSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "IP set reference statement.",
 	}
-}
+})
 
-func geoMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var geoMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleGeoMatchStatementModel](ctx),
 		Validators: []validator.List{
@@ -133,12 +124,7 @@ func geoMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.OneOf("MATCH", "NO_MATCH"),
-								},
-							},
+							"fallback_behavior": fallbackBehaviorAttrRequired(),
 							"header_name": schema.StringAttribute{
 								Required: true,
 							},
@@ -149,9 +135,9 @@ func geoMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Geo match statement.",
 	}
-}
+})
 
-func ruleGroupReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var ruleGroupReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRuleGroupReferenceStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -172,9 +158,9 @@ func ruleGroupReferenceStatementBlock(ctx context.Context) schema.ListNestedBloc
 		},
 		Description: "Rule statement used to run the rules that are defined in a RuleGroup.",
 	}
-}
+})
 
-func excludedRuleBlock(ctx context.Context) schema.ListNestedBlock {
+var excludedRuleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleExcludedRuleModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(100)},
@@ -192,9 +178,9 @@ func excludedRuleBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Rules in the referenced rule group whose actions are set to Count. Deprecated: use rule_action_override instead.",
 	}
-}
+})
 
-func managedRuleGroupStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var managedRuleGroupStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleManagedRuleGroupStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -231,9 +217,9 @@ func managedRuleGroupStatementBlock(ctx context.Context) schema.ListNestedBlock 
 		},
 		Description: "Managed rule group statement.",
 	}
-}
+})
 
-func regexPatternSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var regexPatternSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRegexPatternSetReferenceStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -254,9 +240,9 @@ func regexPatternSetReferenceStatementBlock(ctx context.Context) schema.ListNest
 		},
 		Description: "Rule statement used to search web request components for matches with regular expressions from a RegexPatternSet.",
 	}
-}
+})
 
-func rateBasedStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var rateBasedStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -291,9 +277,9 @@ func rateBasedStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Rate-based statement.",
 	}
-}
+})
 
-func byteMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var byteMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleByteMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -307,11 +293,9 @@ func byteMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 				"positional_constraint": schema.StringAttribute{
+					CustomType:  fwtypes.StringEnumType[awstypes.PositionalConstraint](),
 					Required:    true,
 					Description: "Area within the portion of a web request that you want AWS WAF to search for SearchString.",
-					Validators: []validator.String{
-						stringvalidator.OneOf("EXACTLY", "STARTS_WITH", "ENDS_WITH", "CONTAINS", "CONTAINS_WORD"),
-					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -321,9 +305,9 @@ func byteMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Byte match statement.",
 	}
-}
+})
 
-func sqliMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var sqliMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSqliMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -344,9 +328,9 @@ func sqliMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "SQL injection match statement.",
 	}
-}
+})
 
-func xssMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var xssMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleXssMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -358,9 +342,9 @@ func xssMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Cross-site scripting match statement.",
 	}
-}
+})
 
-func sizeConstraintStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var sizeConstraintStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSizeConstraintStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -384,9 +368,9 @@ func sizeConstraintStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Size constraint statement.",
 	}
-}
+})
 
-func regexMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var regexMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRegexMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -407,9 +391,9 @@ func regexMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Rule statement used to search web request components for a match against a single regular expression.",
 	}
-}
+})
 
-func labelMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var labelMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleLabelMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -432,9 +416,9 @@ func labelMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Label match statement.",
 	}
-}
+})
 
-func asnMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var asnMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAsnMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -456,9 +440,9 @@ func asnMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "ASN match statement.",
 	}
-}
+})
 
-func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
+var managedRuleGroupConfigsBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleManagedRuleGroupConfigModel](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -488,9 +472,9 @@ func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func identifierFieldBlock(ctx context.Context) schema.ListNestedBlock {
+var identifierFieldBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIdentifierFieldModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -505,7 +489,7 @@ func identifierFieldBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 func identifierFieldBlockDeprecated(ctx context.Context, deprecationMessage string) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -525,7 +509,7 @@ func identifierFieldBlockDeprecated(ctx context.Context, deprecationMessage stri
 	}
 }
 
-func identifiersFieldBlock(ctx context.Context) schema.ListNestedBlock {
+var identifiersFieldBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIdentifiersFieldModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -539,9 +523,9 @@ func identifiersFieldBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func awsManagedRulesBotControlRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+var awsManagedRulesBotControlRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesBotControlRuleSetModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -558,9 +542,9 @@ func awsManagedRulesBotControlRuleSetBlock(ctx context.Context) schema.ListNeste
 			},
 		},
 	}
-}
+})
 
-func awsManagedRulesACFPRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+var awsManagedRulesACFPRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesACFPRuleSetModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -589,9 +573,9 @@ func awsManagedRulesACFPRuleSetBlock(ctx context.Context) schema.ListNestedBlock
 			},
 		},
 	}
-}
+})
 
-func awsManagedRulesATPRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+var awsManagedRulesATPRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesATPRuleSetModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -614,9 +598,9 @@ func awsManagedRulesATPRuleSetBlock(ctx context.Context) schema.ListNestedBlock 
 			},
 		},
 	}
-}
+})
 
-func awsManagedRulesAntiDDoSRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+var awsManagedRulesAntiDDoSRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesAntiDDoSRuleSetModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -633,9 +617,9 @@ func awsManagedRulesAntiDDoSRuleSetBlock(ctx context.Context) schema.ListNestedB
 			},
 		},
 	}
-}
+})
 
-func clientSideActionConfigBlock(ctx context.Context) schema.ListNestedBlock {
+var clientSideActionConfigBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleClientSideActionConfigModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -645,9 +629,9 @@ func clientSideActionConfigBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func clientSideActionBlock(ctx context.Context) schema.ListNestedBlock {
+var clientSideActionBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleClientSideActionModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -681,9 +665,9 @@ func clientSideActionBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func requestInspectionBlock(ctx context.Context) schema.ListNestedBlock {
+var requestInspectionBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRequestInspectionModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -700,9 +684,9 @@ func requestInspectionBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func requestInspectionACFPBlock(ctx context.Context) schema.ListNestedBlock {
+var requestInspectionACFPBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRequestInspectionACFPModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -722,9 +706,9 @@ func requestInspectionACFPBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func responseInspectionBlock(ctx context.Context) schema.ListNestedBlock {
+var responseInspectionBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleResponseInspectionModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -817,9 +801,9 @@ func responseInspectionBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func ruleActionOverrideBlock(ctx context.Context) schema.ListNestedBlock {
+var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRuleActionOverrideModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(100)},
@@ -893,9 +877,9 @@ func ruleActionOverrideBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Action settings to use in place of rule actions configured inside the rule group.",
 	}
-}
+})
 
-func scopeDownStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -915,9 +899,9 @@ func scopeDownStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Scope down statement for managed rule groups.",
 	}
-}
+})
 
-func customRequestHandlingBlock(ctx context.Context) schema.ListNestedBlock {
+var customRequestHandlingBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleCustomRequestHandlingModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -936,9 +920,9 @@ func customRequestHandlingBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func customResponseBlock(ctx context.Context) schema.ListNestedBlock {
+var customResponseBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleCustomResponseModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -964,27 +948,24 @@ func customResponseBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
-func forwardedIPConfigBlock(ctx context.Context) schema.ListNestedBlock {
+})
+
+var forwardedIPConfigBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleForwardedIPConfigModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"fallback_behavior": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.OneOf("MATCH", "NO_MATCH"),
-					},
-				},
+				"fallback_behavior": fallbackBehaviorAttrRequired(),
 				"header_name": schema.StringAttribute{
 					Required: true,
 				},
 			},
 		},
 	}
-}
-func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
+})
+
+var fieldToMatchBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleFieldToMatchModel](ctx),
 		Validators: []validator.List{
@@ -993,7 +974,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"all_query_arguments": emptyBlock()(ctx),
+				"all_query_arguments": emptyBlock(ctx),
 				"body": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBodyModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1040,7 +1021,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 										},
 									},
 									Blocks: map[string]schema.Block{
-										"all": emptyBlock()(ctx),
+										"all": emptyBlock(ctx),
 									},
 								},
 							},
@@ -1100,8 +1081,8 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"ja3_fingerprint": jaFingerprintBlock()(ctx),
-				"ja4_fingerprint": jaFingerprintBlock()(ctx),
+				"ja3_fingerprint": jaFingerprintBlock(ctx),
+				"ja4_fingerprint": jaFingerprintBlock(ctx),
 				"json_body": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJsonBodyModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1147,10 +1128,10 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"method":                emptyBlock()(ctx),
-				"query_string":          emptyBlock()(ctx),
-				"single_header":         nameOnlyBlock()(ctx, "Header name"),
-				"single_query_argument": nameOnlyBlock()(ctx, "Query argument name"),
+				"method":                emptyBlock(ctx),
+				"query_string":          emptyBlock(ctx),
+				"single_header":         nameOnlyBlock(ctx, "Header name"),
+				"single_query_argument": nameOnlyBlock(ctx, "Query argument name"),
 				"uri_fragment": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleUriFragmentModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1164,13 +1145,13 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"uri_path": emptyBlock()(ctx),
+				"uri_path": emptyBlock(ctx),
 			},
 		},
 	}
-}
+})
 
-func textTransformationBlock(ctx context.Context) schema.ListNestedBlock {
+var textTransformationBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleTextTransformModel](ctx),
 		Validators: []validator.List{
@@ -1183,22 +1164,21 @@ func textTransformationBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 				},
 				names.AttrType: schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.OneOf("NONE", "COMPRESS_WHITE_SPACE", "HTML_ENTITY_DECODE", "LOWERCASE", "CMD_LINE", "URL_DECODE", "BASE64_DECODE", "HEX_DECODE", "MD5", "REPLACE_COMMENTS", "ESCAPE_SEQ_DECODE", "SQL_HEX_DECODE", "CSS_DECODE", "JS_DECODE", "NORMALIZE_PATH", "NORMALIZE_PATH_WIN", "REMOVE_NULLS", "REPLACE_NULLS", "BASE64_DECODE_EXT", "URL_DECODE_UNI", "UTF8_TO_UNICODE"),
-					},
+					CustomType: fwtypes.StringEnumType[awstypes.TextTransformationType](),
+					Required:   true,
 				},
 			},
 		},
 	}
-}
-func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlock {
+})
+
+var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(5)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"asn": emptyBlock()(ctx),
+				"asn": emptyBlock(ctx),
 				"cookie": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyCookieModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1213,7 +1193,7 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 						},
 					},
 				},
-				"forwarded_ip": emptyBlock()(ctx),
+				"forwarded_ip": emptyBlock(ctx),
 				names.AttrHeader: schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyHeaderModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1228,10 +1208,10 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 						},
 					},
 				},
-				"http_method":     emptyBlock()(ctx),
-				"ip":              emptyBlock()(ctx),
-				"ja3_fingerprint": jaFingerprintBlock()(ctx),
-				"ja4_fingerprint": jaFingerprintBlock()(ctx),
+				"http_method":     emptyBlock(ctx),
+				"ip":              emptyBlock(ctx),
+				"ja3_fingerprint": jaFingerprintBlock(ctx),
+				"ja4_fingerprint": jaFingerprintBlock(ctx),
 				"label_namespace": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1278,6 +1258,6 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 			},
 		},
 	}
-}
+})
 
 // andStatementBlock and related functions are generated in web_acl_rule_statement_models_gen.go

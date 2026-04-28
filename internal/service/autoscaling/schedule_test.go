@@ -37,12 +37,12 @@ func TestAccAutoScalingSchedule_basic(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", rName1, rName2),
+				ImportStateIdFunc: testAccScheduleImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -68,7 +68,7 @@ func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,13 +92,13 @@ func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_recurrence(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "recurrence", "0 8 * * *"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateIdFunc: testAccScheduleImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -123,12 +123,12 @@ func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_zeroValues(rName, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateIdFunc: testAccScheduleImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -153,14 +153,14 @@ func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_negativeOne(rName, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 					testAccCheckScalingScheduleHasNoDesiredCapacity(&v),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "-1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateIdFunc: testAccScheduleImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -185,7 +185,7 @@ func testAccScheduleTime(t *testing.T, duration string) string {
 	return n.Add(d).Format(tfautoscaling.ScheduleTimeLayout)
 }
 
-func testAccCheckScalingScheduleExists(ctx context.Context, t *testing.T, n string, v *awstypes.ScheduledUpdateGroupAction) resource.TestCheckFunc {
+func testAccCheckScheduleExists(ctx context.Context, t *testing.T, n string, v *awstypes.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -240,6 +240,10 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(v *awstypes.ScheduledUpdate
 
 		return fmt.Errorf("Expected not to set desired capacity, got %v", aws.ToInt32(v.DesiredCapacity))
 	}
+}
+
+func testAccScheduleImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, "/", "autoscaling_group_name", "scheduled_action_name")
 }
 
 func testAccScheduleConfig_base(rName string) string {

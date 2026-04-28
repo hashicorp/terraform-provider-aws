@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"iter"
 	"slices"
 	"strconv"
 	"strings"
@@ -409,7 +410,7 @@ func findInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstyp
 }
 
 func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
-	output, err := findInstances(ctx, conn, input)
+	output, err := tfslices.CollectWithError(listInstances(ctx, conn, input))
 
 	if err != nil {
 		return nil, err
@@ -418,20 +419,34 @@ func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInst
 	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
 }
 
-func findInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) ([]awstypes.Instance, error) {
-	output, err := tfslices.CollectAndConcatWithError(listInstancePages(ctx, conn, input))
+// DescribeInstances is an "All-Or-Some" call.
+func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) iter.Seq2[awstypes.Instance, error] {
+	return func(yield func(awstypes.Instance, error) bool) {
+		pages := ec2.NewDescribeInstancesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+				yield(awstypes.Instance{}, &retry.NotFoundError{
+					LastError: err,
+				})
+				return
+			}
+
+			if err != nil {
+				yield(awstypes.Instance{}, err)
+				return
+			}
+
+			for _, v := range page.Reservations {
+				for _, instance := range v.Instances {
+					if !yield(instance, nil) {
+						return
+					}
+				}
+			}
 		}
 	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
 }
 
 func findInstanceCreditSpecifications(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceCreditSpecificationsInput) ([]awstypes.InstanceCreditSpecification, error) {
@@ -1245,6 +1260,36 @@ func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, insta
 	return nil, &retry.NotFoundError{}
 }
 
+func findVolumeAttachments(ctx context.Context, conn *ec2.Client, instanceID string) ([]awstypes.VolumeAttachment, error) {
+	input := ec2.DescribeVolumesInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"attachment.instance-id": instanceID,
+		}),
+	}
+
+	volumes, err := findEBSVolumes(ctx, conn, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	attachments := make([]awstypes.VolumeAttachment, 0)
+	for _, volume := range volumes {
+		for _, attachment := range volume.Attachments {
+			if attachment.State == awstypes.VolumeAttachmentStateDetached {
+				continue
+			}
+
+			if aws.ToString(attachment.InstanceId) != instanceID {
+				continue
+			}
+
+			attachments = append(attachments, attachment)
+		}
+	}
+
+	return attachments, nil
+}
+
 func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
 	input := ec2.DescribeInstancesInput{
 		InstanceIds: []string{id},
@@ -1376,6 +1421,36 @@ func findSpotPrice(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpo
 	return tfresource.AssertSingleValueResult(output)
 }
 
+func findServiceLinkVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) (*awstypes.ServiceLinkVirtualInterface, error) {
+	output, err := findServiceLinkVirtualInterfaces(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServiceLinkVirtualInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) ([]awstypes.ServiceLinkVirtualInterface, error) {
+	var output []awstypes.ServiceLinkVirtualInterface
+
+	err := describeServiceLinkVirtualInterfacesPages(ctx, conn, input, func(page *ec2.DescribeServiceLinkVirtualInterfacesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.ServiceLinkVirtualInterfaces...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func findSubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Subnet, error) {
 	input := ec2.DescribeSubnetsInput{
 		SubnetIds: []string{id},
@@ -1406,16 +1481,23 @@ func findSubnet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnet
 }
 
 func findSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
-	output, err := tfslices.CollectAndConcatWithError(listSubnetPages(ctx, conn, input))
+	var output []awstypes.Subnet
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+	pages := ec2.NewDescribeSubnetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Subnets...)
 	}
 
 	return output, nil
@@ -1604,16 +1686,23 @@ func findVPC(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput
 }
 
 func findVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput, optFns ...func(*ec2.Options)) ([]awstypes.Vpc, error) {
-	output, err := tfslices.CollectAndConcatWithError(listVPCPages(ctx, conn, input, optFns...))
+	var output []awstypes.Vpc
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+	pages := ec2.NewDescribeVpcsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Vpcs...)
 	}
 
 	return output, nil
@@ -1694,7 +1783,7 @@ func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) 
 	return findNetworkACL(ctx, conn, &input)
 }
 
-func batchFindVPCDefaultNetworkACLs(ctx context.Context, conn *ec2.Client, ids []string) (map[string]awstypes.NetworkAcl, error) {
+func batchFindVPCDefaultNetworkACLs(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.NetworkAcl, error) {
 	input := ec2.DescribeNetworkAclsInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
 			"default": {"true"},
@@ -1708,9 +1797,9 @@ func batchFindVPCDefaultNetworkACLs(ctx context.Context, conn *ec2.Client, ids [
 		return nil, err
 	}
 
-	results := make(map[string]awstypes.NetworkAcl, len(output))
+	results := make(map[string]*awstypes.NetworkAcl, len(output))
 	for i, v := range output {
-		results[aws.ToString(v.VpcId)] = output[i]
+		results[aws.ToString(v.VpcId)] = &output[i]
 	}
 
 	return results, nil
@@ -1933,7 +2022,7 @@ func findVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.Client, id strin
 	return findSecurityGroup(ctx, conn, &input)
 }
 
-func batchFindVPCDefaultSecurityGroups(ctx context.Context, conn *ec2.Client, ids []string) (map[string]awstypes.SecurityGroup, error) {
+func batchFindVPCDefaultSecurityGroups(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.SecurityGroup, error) {
 	input := ec2.DescribeSecurityGroupsInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
 			"group-name": {defaultSecurityGroupName},
@@ -1947,9 +2036,9 @@ func batchFindVPCDefaultSecurityGroups(ctx context.Context, conn *ec2.Client, id
 		return nil, err
 	}
 
-	results := make(map[string]awstypes.SecurityGroup, len(output))
+	results := make(map[string]*awstypes.SecurityGroup, len(output))
 	for i, v := range output {
-		results[aws.ToString(v.VpcId)] = output[i]
+		results[aws.ToString(v.VpcId)] = &output[i]
 	}
 
 	return results, nil
@@ -1982,7 +2071,7 @@ func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*a
 	return findRouteTable(ctx, conn, &input)
 }
 
-func batchFindVPCMainRouteTables(ctx context.Context, conn *ec2.Client, ids []string) (map[string]awstypes.RouteTable, error) {
+func batchFindVPCMainRouteTables(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.RouteTable, error) {
 	input := ec2.DescribeRouteTablesInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
 			"association.main": {"true"},
@@ -1996,9 +2085,9 @@ func batchFindVPCMainRouteTables(ctx context.Context, conn *ec2.Client, ids []st
 		return nil, err
 	}
 
-	results := make(map[string]awstypes.RouteTable, len(output))
+	results := make(map[string]*awstypes.RouteTable, len(output))
 	for i, v := range output {
-		results[aws.ToString(v.VpcId)] = output[i]
+		results[aws.ToString(v.VpcId)] = &output[i]
 	}
 
 	return results, nil
@@ -2015,16 +2104,23 @@ func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRo
 }
 
 func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
-	output, err := tfslices.CollectAndConcatWithError(listRouteTablePages(ctx, conn, input))
+	var output []awstypes.RouteTable
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+	pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RouteTables...)
 	}
 
 	return output, nil
@@ -2041,16 +2137,23 @@ func findSecurityGroup(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 }
 
 func findSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
-	output, err := tfslices.CollectAndConcatWithError(listSecurityGroupPages(ctx, conn, input))
+	var output []awstypes.SecurityGroup
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+	pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecurityGroups...)
 	}
 
 	return output, nil
@@ -2127,16 +2230,23 @@ func findSecurityGroupRule(ctx context.Context, conn *ec2.Client, input *ec2.Des
 }
 
 func findSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) ([]awstypes.SecurityGroupRule, error) {
-	output, err := tfslices.CollectAndConcatWithError(listSecurityGroupRulePages(ctx, conn, input))
+	var output []awstypes.SecurityGroupRule
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+	pages := ec2.NewDescribeSecurityGroupRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecurityGroupRules...)
 	}
 
 	return output, nil
@@ -2586,17 +2696,24 @@ func findVPCEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput, optFns ...func(*ec2.Options)) ([]awstypes.VpcEndpoint, error) {
-	output, err := tfslices.CollectAndConcatWithError(listVPCEndpointPages(ctx, conn, input, optFns...))
+func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
+	var output []awstypes.VpcEndpoint
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+	pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VpcEndpoints...)
 	}
 
 	return output, nil
@@ -5235,7 +5352,7 @@ func findTransitGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.
 }
 
 func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) ([]awstypes.TransitGatewayMeteringPolicy, error) {
-	output, err := tfslices.CollectAndConcatWithError(listTransitGatewayMeteringPolicyPages(ctx, conn, input))
+	output, err := tfslices.CollectWithError(listTransitGatewayMeteringPolicies(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
 		return nil, &retry.NotFoundError{
@@ -5243,11 +5360,30 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
 	return output, nil
+}
+
+func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
+	return func(yield func(awstypes.TransitGatewayMeteringPolicy, error) bool) {
+		err := describeTransitGatewayMeteringPoliciesPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayMeteringPoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.TransitGatewayMeteringPolicies {
+				if !yield(v, nil) {
+					return false
+				}
+			}
+
+			return !lastPage
+		})
+
+		if err != nil {
+			yield(inttypes.Zero[awstypes.TransitGatewayMeteringPolicy](), fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
+			return
+		}
+	}
 }
 
 func findTransitGatewayMeteringPolicy(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) (*awstypes.TransitGatewayMeteringPolicy, error) {
@@ -7202,16 +7338,23 @@ func findSecondaryNetwork(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 }
 
 func findSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) ([]awstypes.SecondaryNetwork, error) {
-	output, err := tfslices.CollectAndConcatWithError(listSecondaryNetworkPages(ctx, conn, input))
+	var output []awstypes.SecondaryNetwork
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+	pages := ec2.NewDescribeSecondaryNetworksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecondaryNetworks...)
 	}
 
 	return output, nil
@@ -7254,16 +7397,23 @@ func findSecondarySubnet(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 }
 
 func findSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) ([]awstypes.SecondarySubnet, error) {
-	output, err := tfslices.CollectAndConcatWithError(listSecondarySubnetPages(ctx, conn, input))
+	var output []awstypes.SecondarySubnet
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+	pages := ec2.NewDescribeSecondarySubnetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecondarySubnets...)
 	}
 
 	return output, nil

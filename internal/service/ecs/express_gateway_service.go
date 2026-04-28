@@ -248,6 +248,9 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		return
 	}
 
+	// Set a state value to trigger replacement on error
+	resp.State.SetAttribute(ctx, path.Root("service_arn"), out.Service.ServiceArn)
+
 	serviceARN := aws.ToString(out.Service.ServiceArn)
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	var waitOut *awstypes.ECSExpressGatewayService
@@ -376,8 +379,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 	conn := r.Meta().ECSClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("active_configurations"), fwflex.WithIgnoredField("current_deployment"),
-		fwflex.WithIgnoredField("scaling_target"), fwflex.WithIgnoredField(names.AttrTags), fwflex.WithIgnoredField(names.AttrTags),
-		fwflex.WithIgnoredField(names.AttrTagsAll))
+		fwflex.WithIgnoredField("scaling_target"), fwflex.WithIgnoredField(names.AttrTags), fwflex.WithIgnoredField(names.AttrTagsAll))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -487,12 +489,12 @@ func (r *expressGatewayServiceResource) Delete(ctx context.Context, req resource
 	_, err := conn.DeleteExpressGatewayService(ctx, &input)
 	if err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
-			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") ||
-			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Service is in DRAINING status") {
+			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
 			// Service was already deleted/inactive/draining - deletion is already in progress or complete
 			return
-		} else {
-			// Real error occurred
+		} else if !errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Service is in DRAINING status") {
+			// Real error occurred.
+			// If service is in DRAINING status, fall-through to wait for it to become INACTIVE
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 			return
 		}
@@ -553,8 +555,8 @@ func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gate
 
 func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending:    []string{gatewayServiceStatusActive},
-		Target:     []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
+		Pending:    []string{gatewayServiceStatusActive, gatewayServiceStatusDraining},
+		Target:     []string{gatewayServiceStatusInactive},
 		Refresh:    statusExpressGatewayServiceForDeletion(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
@@ -587,15 +589,8 @@ func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Clien
 	return func() (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if err != nil {
-			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
-				errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
-				mockService := &awstypes.ECSExpressGatewayService{
-					ServiceArn: aws.String(gatewayServiceARN),
-					Status: &awstypes.ExpressGatewayServiceStatus{
-						StatusCode: awstypes.ExpressGatewayServiceStatusCodeInactive,
-					},
-				}
-				return mockService, gatewayServiceStatusInactive, nil
+			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
+				return nil, "", nil
 			}
 			return nil, "", smarterr.NewError(err)
 		}
@@ -950,14 +945,7 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.CreateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
-				return true, err
-			}
-			return false, err
-		},
+		expressGatewayRetryable,
 	)
 	if err != nil {
 		return nil, err
@@ -974,17 +962,29 @@ func retryExpressGatewayServiceUpdate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.UpdateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
-				return true, err
-			}
-			return false, err
-		},
+		expressGatewayRetryable,
 	)
 	if err != nil {
 		return nil, err
 	}
 	return outputRaw.(*ecs.UpdateExpressGatewayServiceOutput), nil
+}
+
+func expressGatewayRetryable(err error) (bool, error) {
+	if errs.Contains(err, "is not authorized to perform") || // This message can occur with at least AccessDeniedException, ClientException, and InvalidParameterException
+		errs.Contains(err, "AWS was not able to validate the provided access credentials") || // This message can occur with at least ClientException and InvalidParameterException
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
+		errs.IsAErrorMessageContains[*awstypes.ClientException](err, "The security token included in the request is invalid") {
+		return true, err
+	}
+	return false, err
+}
+
+// newListExpressGatewayServicesPaginator returns a new paginator for ListServices that only returns Customer-managed Services.
+func newListExpressGatewayServicesPaginator(conn *ecs.Client, input *ecs.ListServicesInput) *ecs.ListServicesPaginator {
+	return ecs.NewListServicesPaginator(conn, &ecs.ListServicesInput{
+		Cluster:                input.Cluster,
+		LaunchType:             input.LaunchType,
+		ResourceManagementType: awstypes.ResourceManagementTypeEcs,
+	})
 }

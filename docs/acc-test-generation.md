@@ -221,6 +221,22 @@ If the `id` resource attribute can be exactly composed from known attribute valu
 add the annotation `@IdAttrFormat(<format>)`, where `<format>` is the exact string to match, with the attribute values replaced by the attribute name surrounded by braces (`{` and `}`).
 For example, the ID format for `aws_iam_role_policy_attachment` is `{role}/{policy_arn}`.
 
+#### Multiple Identity Test Cases
+
+In some cases, a resource type may behave differently depending on certain configurations or "modes".
+For example, the Route Table underlying the resource type `aws_route_table_association` is either
+a [Subnet Route Table](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-route-tables.html) which manages routing for traffic from a Subnet
+or a [Gateway Route Table](https://docs.aws.amazon.com/vpc/latest/userguide/gateway-route-tables.html) which manages incoming traffic for an Internet Gateway or Virtual Private Gateway.
+The creation and import behavior is different, so both "modes" should be tested.
+
+Add the annotation `@Testing(identityTestCases="...")`, listing each mode, separated by `;`.
+
+Each test case should have a separate configuration template, named `<resource file name>_<test case>.gtpl`.
+
+For example, the resource type `aws_route_table_association` has
+the annotation `@Testing(identityTestCases="subnet;gateway")`
+and the test case templates `vpc_route_table_association_subnet.gtpl` and `vpc_route_table_association_gateway.gtpl`.
+
 #### Adding Resource Identity to an Existing Resource Type
 
 When adding Resource Identity to an existing resource type, we require additional acceptance tests to ensure that the Resource Identity is added to the resource correctly.

@@ -1301,8 +1301,7 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 	// Check if source is a regular struct with all zero values and omitempty
 	if !potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
 		allFieldsZero := true
-		for i := 0; i < vFrom.NumField(); i++ {
-			sourceField := vFrom.Field(i)
+		for _, sourceField := range vFrom.Fields() {
 			isFieldZero := sourceField.Kind() == reflect.Pointer && sourceField.IsNil() ||
 				sourceField.Kind() == reflect.Pointer && sourceField.Elem().IsZero() ||
 				sourceField.Kind() != reflect.Pointer && sourceField.IsZero()
@@ -1750,8 +1749,8 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, sourcePat
 		if sourceStructType.Kind() == reflect.Struct {
 			// Count fields, excluding noSmithyDocumentSerde
 			fieldCount := 0
-			for i := 0; i < sourceStructType.NumField(); i++ {
-				fieldName := sourceStructType.Field(i).Name
+			for field := range sourceStructType.Fields() {
+				fieldName := field.Name
 				if fieldName != "noSmithyDocumentSerde" {
 					fieldCount++
 				}
@@ -2962,8 +2961,7 @@ func (flattener autoFlattener) isXMLWrapperSplitSource(structType reflect.Type) 
 	hasValidQuantity := false
 	hasOtherFields := false
 
-	for i := 0; i < structType.NumField(); i++ {
-		field := structType.Field(i)
+	for field := range structType.Fields() {
 		fieldName := field.Name
 		fieldType := field.Type
 

@@ -6,6 +6,7 @@ package securityhub
 // Exports for use in tests only.
 var (
 	ResourceAccount                        = resourceAccount
+	ResourceAccountV2                      = newAccountV2Resource
 	ResourceActionTarget                   = resourceActionTarget
 	ResourceAutomationRule                 = newAutomationRuleResource
 	ResourceConfigurationPolicy            = resourceConfigurationPolicy
@@ -22,6 +23,7 @@ var (
 	ResourceStandardsSubscription          = resourceStandardsSubscription
 
 	AccountHubARN                                 = accountHubARN
+	FindAccountV2                                 = findAccountV2
 	FindActionTargetByARN                         = findActionTargetByARN
 	FindAdminAccountByID                          = findAdminAccountByID
 	FindAutomationRuleByARN                       = findAutomationRuleByARN

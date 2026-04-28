@@ -123,29 +123,28 @@ func dataSourceFileSystem() *schema.Resource {
 
 func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.EFSClient(ctx)
-	ignoreTagsConfig := c.IgnoreTagsConfig(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	var inputDFS efs.DescribeFileSystemsInput
+	input := &efs.DescribeFileSystemsInput{}
 
 	if v, ok := d.GetOk("creation_token"); ok {
-		inputDFS.CreationToken = aws.String(v.(string))
+		input.CreationToken = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
-		inputDFS.FileSystemId = aws.String(v.(string))
+		input.FileSystemId = aws.String(v.(string))
 	}
 
-	filter := tfslices.PredicateTrue[awstypes.FileSystemDescription]()
+	filter := tfslices.PredicateTrue[*awstypes.FileSystemDescription]()
 
 	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
-		filter = func(v awstypes.FileSystemDescription) bool {
+		filter = func(v *awstypes.FileSystemDescription) bool {
 			return keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
 	}
 
-	fs, err := findFileSystem(ctx, conn, &inputDFS, tfslices.WithFilter(filter))
+	fs, err := findFileSystem(ctx, conn, input, filter)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS File System", err))
@@ -157,7 +156,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
-	d.Set(names.AttrDNSName, c.RegionalHostname(ctx, d.Id()+".efs"))
+	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrEncrypted, fs.Encrypted)
 	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
@@ -174,10 +173,9 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	setTagsOut(ctx, fs.Tags)
 
-	inputDLC := efs.DescribeLifecycleConfigurationInput{
+	output, err := conn.DescribeLifecycleConfiguration(ctx, &efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
-	}
-	output, err := conn.DescribeLifecycleConfiguration(ctx, &inputDLC)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS File System (%s) lifecycle configuration: %s", d.Id(), err)

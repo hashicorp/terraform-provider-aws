@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -132,7 +133,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabel(t *testing.
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabelUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v awstypes.SiteToSiteVpnAttachment
+	var v1, v2 awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bgpASN := acctest.RandIntRange(t, 64512, 65534)
@@ -151,16 +152,38 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabelUpdate(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label1),
 				),
 			},
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label2),
+				),
+			},
+			{
+				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabelRemoved(rName, bgpASN, vpnIP, label2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", ""),
 				),
 			},
 		},
@@ -335,6 +358,24 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
 }
 `, label))
+}
+
+func testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabelRemoved(rName string, bgpASN int, vpnIP, label string) string {
+	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName, bgpASN, vpnIP, label), `
+resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
+  core_network_id    = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpn_connection_arn = aws_vpn_connection.test.arn
+
+  tags = {
+    segment = "shared"
+  }
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.test.id
+  attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
+}
+`)
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName string, bgpASN int, vpnIP, label string) string {

@@ -10,12 +10,14 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -94,24 +96,23 @@ func dataSourceMountTarget() *schema.Resource {
 
 func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.EFSClient(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	var inputDMT efs.DescribeMountTargetsInput
+	input := &efs.DescribeMountTargetsInput{}
 
 	if v, ok := d.GetOk("access_point_id"); ok {
-		inputDMT.AccessPointId = aws.String(v.(string))
+		input.AccessPointId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
-		inputDMT.FileSystemId = aws.String(v.(string))
+		input.FileSystemId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("mount_target_id"); ok {
-		inputDMT.MountTargetId = aws.String(v.(string))
+		input.MountTargetId = aws.String(v.(string))
 	}
 
-	mt, err := findMountTarget(ctx, conn, &inputDMT)
+	mt, err := findMountTarget(ctx, conn, input, tfslices.PredicateTrue[*awstypes.MountTargetDescription]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target: %s", err)
@@ -119,10 +120,17 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(mt.MountTargetId))
 	fsID := aws.ToString(mt.FileSystemId)
+	fsARN := arn.ARN{
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Resource:  "file-system/" + fsID,
+		Service:   "elasticfilesystem",
+	}.String()
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set(names.AttrDNSName, c.RegionalHostname(ctx, fsID+".efs"))
-	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
+	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
+	d.Set("file_system_arn", fsARN)
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrIPAddress, mt.IpAddress)
 	if mt.IpAddress != nil && mt.Ipv6Address != nil {
@@ -141,10 +149,9 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrOwnerID, mt.OwnerId)
 	d.Set(names.AttrSubnetID, mt.SubnetId)
 
-	inputDMTSG := efs.DescribeMountTargetSecurityGroupsInput{
+	output, err := conn.DescribeMountTargetSecurityGroups(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
-	}
-	output, err := conn.DescribeMountTargetSecurityGroups(ctx, &inputDMTSG)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)

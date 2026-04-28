@@ -39,9 +39,19 @@ func TestAccIAMRole_basic(t *testing.T) {
 				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "role{path}{name}"),
+					resource.TestCheckResourceAttrSet(resourceName, "assume_role_policy"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "role/{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
 				),
 			},
 			{
@@ -157,7 +167,8 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 func TestAccIAMRole_testNameChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Role
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -167,22 +178,84 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 		CheckDestroy:             testAccCheckRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_pre(rName),
+				Config: testAccRoleConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"inline_policy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleConfig_post(rName),
+				Config: testAccRoleConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMRole_path(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Role
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	path1 := "/" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix) + "/"
+	path2 := "/" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix) + "/"
+	resourceName := "aws_iam_role.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_path(path1, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "role{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoleConfig_path(path2, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "role{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1304,13 +1377,8 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_service_principal" "ec2" {
-  service_name = "ec2"
-}
-
 resource "aws_iam_role" "test" {
   name = %[1]q
-  path = "/"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -1323,6 +1391,10 @@ resource "aws_iam_role" "test" {
       Sid    = ""
     }]
   })
+}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
 }
 `, rName)
 }
@@ -1540,16 +1612,11 @@ resource "aws_iam_role" "test" {
 `, rName)
 }
 
-func testAccRoleConfig_pre(rName string) string {
+func testAccRoleConfig_path(path, rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_service_principal" "ec2" {
-  service_name = "ec2"
-}
-
 resource "aws_iam_role" "test" {
-  name = %[1]q
-  path = "/test/"
+  name = %[2]q
+  path = %[1]q
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -1564,86 +1631,10 @@ resource "aws_iam_role" "test" {
   })
 }
 
-resource "aws_iam_role_policy" "role_update_test" {
-  name = "%[1]s-2"
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetBucketLocation",
-        "s3:ListAllMyBuckets"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_instance_profile" "role_update_test" {
-  name = "%[1]s-2"
-  path = "/test/"
-  role = aws_iam_role.test.name
-}
-`, rName)
-}
-
-func testAccRoleConfig_post(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
 data "aws_service_principal" "ec2" {
   service_name = "ec2"
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-  path = "/test/"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = data.aws_service_principal.ec2.name,
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "role_update_test" {
-  name = "%[1]s-2"
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetBucketLocation",
-        "s3:ListAllMyBuckets"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_instance_profile" "role_update_test" {
-  name = "%[1]s-2"
-  path = "/test/"
-  role = aws_iam_role.test.name
-}
-`, rName)
+`, path, rName)
 }
 
 func testAccRoleConfig_badJSON(rName string) string {

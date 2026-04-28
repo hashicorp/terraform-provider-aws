@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"iter"
 	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -140,10 +138,6 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 		}
 	}
-}
-
-func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.Instance, error] {
-	return tfiter.ConcatValuesWithError(listInstancePages(ctx, conn, input, optFns...))
 }
 
 func translateDiags(in diag.Diagnostics) frameworkdiag.Diagnostics {

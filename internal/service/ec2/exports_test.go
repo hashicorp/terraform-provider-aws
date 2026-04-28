@@ -26,6 +26,7 @@ var (
 	ResourceEBSSnapshotCopy                               = resourceEBSSnapshotCopy
 	ResourceEBSSnapshotImport                             = resourceEBSSnapshotImport
 	ResourceEBSVolume                                     = resourceEBSVolume
+	ResourceEBSVolumeCopy                                 = newEBSVolumeCopyResource
 	ResourceEIP                                           = resourceEIP
 	ResourceEIPAssociation                                = resourceEIPAssociation
 	ResourceEIPDomainName                                 = newEIPDomainNameResource
@@ -318,6 +319,9 @@ var (
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
+	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
+	FindGuardDutySecurityGroupsForVPC                           = findGuardDutySecurityGroupsForVPC
+	GuardDutySecurityGroupNameForVPC                            = guardDutySecurityGroupNameForVPC
 )
 
 type (

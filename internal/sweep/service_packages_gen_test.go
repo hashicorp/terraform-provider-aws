@@ -223,6 +223,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
@@ -490,6 +491,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		rum.ServicePackage(ctx),
 		s3.ServicePackage(ctx),
 		s3control.ServicePackage(ctx),
+		s3files.ServicePackage(ctx),
 		s3outposts.ServicePackage(ctx),
 		s3tables.ServicePackage(ctx),
 		s3vectors.ServicePackage(ctx),

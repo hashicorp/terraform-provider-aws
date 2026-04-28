@@ -7,8 +7,6 @@ package cloudwatch
 
 import (
 	"context"
-	"fmt"
-	"iter"
 	"log"
 
 	"github.com/YakDriver/smarterr"
@@ -23,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -244,43 +241,21 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findCompositeAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.CompositeAlarm, error) {
-	input := cloudwatch.DescribeAlarmsInput{
+	input := &cloudwatch.DescribeAlarmsInput{
 		AlarmNames: []string{name},
 		AlarmTypes: []types.AlarmType{types.AlarmTypeCompositeAlarm},
 	}
 
-	return findCompositeAlarm(ctx, conn, &input)
-}
-
-func findCompositeAlarm(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) (*types.CompositeAlarm, error) {
-	output, err := findCompositeAlarms(ctx, conn, input)
-
+	output, err := conn.DescribeAlarms(ctx, input)
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
-	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
-}
-
-func findCompositeAlarms(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) ([]types.CompositeAlarm, error) {
-	return tfslices.CollectAndConcatWithError(listCompositeAlarmPages(ctx, conn, input))
-}
-
-func listCompositeAlarmPages(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput, optFns ...func(*cloudwatch.Options)) iter.Seq2[[]types.CompositeAlarm, error] {
-	return func(yield func([]types.CompositeAlarm, error) bool) {
-		pages := cloudwatch.NewDescribeAlarmsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx, optFns...)
-			if err != nil {
-				yield(nil, fmt.Errorf("listing CloudWatch Composite Alarms: %w", err))
-				return
-			}
-
-			if !yield(page.CompositeAlarms, nil) {
-				return
-			}
-		}
+	if output == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
+
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output.CompositeAlarms))
 }
 
 func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutCompositeAlarmInput {
