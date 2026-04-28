@@ -1838,7 +1838,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceVPCEndpointConnectionAccepter,
 			TypeName: "aws_vpc_endpoint_connection_accepter",
 			Name:     "VPC Endpoint Connection Accepter",
-			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "vpc_endpoint_connection_id",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceVPCEndpointConnectionNotification,

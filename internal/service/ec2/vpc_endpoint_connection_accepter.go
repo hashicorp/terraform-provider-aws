@@ -19,14 +19,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_connection_accepter", name="VPC Endpoint Connection Accepter")
+// @Tags(identifierAttribute="vpc_endpoint_connection_id")
+// @Testing(tagsTest=false)
 func resourceVPCEndpointConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointConnectionAccepterCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointConnectionAccepterRead,
+		UpdateWithoutTimeout: resourceVPCEndpointConnectionAccepterUpdate,
 		DeleteWithoutTimeout: resourceVPCEndpointConnectionAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -34,6 +38,12 @@ func resourceVPCEndpointConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"vpc_endpoint_connection_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -72,8 +82,15 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 
 	d.SetId(id)
 
-	if _, err := waitVPCEndpointConnectionAccepted(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate)); err != nil {
+	output, err := waitVPCEndpointConnectionAccepted(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Connection (%s) accept: %s", d.Id(), err)
+	}
+
+	if vpcEndpointConnectionID := aws.ToString(output.VpcEndpointConnectionId); vpcEndpointConnectionID != "" {
+		if err := createTags(ctx, conn, vpcEndpointConnectionID, getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting VPC Endpoint Connection (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceVPCEndpointConnectionAccepterRead(ctx, d, meta)...)
@@ -101,10 +118,21 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 	}
 
 	d.Set(names.AttrVPCEndpointID, vpcEndpointConnection.VpcEndpointId)
+	d.Set("vpc_endpoint_connection_id", vpcEndpointConnection.VpcEndpointConnectionId)
 	d.Set("vpc_endpoint_service_id", vpcEndpointConnection.ServiceId)
 	d.Set("vpc_endpoint_state", vpcEndpointConnection.VpcEndpointState)
 
+	setTagsOut(ctx, vpcEndpointConnection.Tags)
+
 	return diags
+}
+
+func resourceVPCEndpointConnectionAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceVPCEndpointConnectionAccepterRead(ctx, d, meta)...)
 }
 
 func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

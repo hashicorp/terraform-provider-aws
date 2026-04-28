@@ -44,6 +44,7 @@ resource "aws_vpc_endpoint_connection_accepter" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the VPC Endpoint Connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_endpoint_id` - (Required) AWS VPC Endpoint ID.
 * `vpc_endpoint_service_id` - (Required) AWS VPC Endpoint Service ID.
 
@@ -52,6 +53,8 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Endpoint Connection.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vpc_endpoint_connection_id` - ID of the VPC Endpoint Connection (for example, `vpce-conn-12345678`). Used by AWS as the resource identifier when tagging the connection.
 * `vpc_endpoint_state` - State of the VPC Endpoint.
 
 ## Import

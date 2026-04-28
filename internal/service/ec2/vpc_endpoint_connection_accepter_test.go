@@ -31,16 +31,66 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCEndpointConnectionAccepterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConnectionAccepterConfig_crossAccount(rName),
+				Config: testAccVPCEndpointConnectionAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_state", "available"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_endpoint_connection_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
-				Config:            testAccVPCEndpointConnectionAccepterConfig_crossAccount(rName),
+				Config:            testAccVPCEndpointConnectionAccepterConfig_basic(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpointConnectionAccepter_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint_connection_accepter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckVPCEndpointConnectionAccepterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConnectionAccepterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_state", "available"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_endpoint_connection_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				Config:            testAccVPCEndpointConnectionAccepterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointConnectionAccepterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccVPCEndpointConnectionAccepterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -72,7 +122,7 @@ func testAccCheckVPCEndpointConnectionAccepterDestroy(ctx context.Context, t *te
 	}
 }
 
-func testAccVPCEndpointConnectionAccepterConfig_crossAccount(rName string) string {
+func testAccVPCEndpointConnectionAccepterConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -256,10 +306,41 @@ resource "aws_vpc_endpoint" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccVPCEndpointConnectionAccepterConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConnectionAccepterConfig_base(rName), `
 resource "aws_vpc_endpoint_connection_accepter" "test" {
   vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
   vpc_endpoint_id         = aws_vpc_endpoint.test.id
 }
-`, rName))
+`)
+}
+
+func testAccVPCEndpointConnectionAccepterConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConnectionAccepterConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpc_endpoint_connection_accepter" "test" {
+  vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
+  vpc_endpoint_id         = aws_vpc_endpoint.test.id
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccVPCEndpointConnectionAccepterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConnectionAccepterConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpc_endpoint_connection_accepter" "test" {
+  vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
+  vpc_endpoint_id         = aws_vpc_endpoint.test.id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
