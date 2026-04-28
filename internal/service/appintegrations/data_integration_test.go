@@ -67,6 +67,44 @@ func TestAccAppIntegrationsDataIntegration_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppIntegrationsDataIntegration_sourceURI_s3(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataIntegration appintegrations.GetDataIntegrationOutput
+
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	bucketName := acctest.RandomWithPrefix(t, "tf-appintegrations-di")
+	description := "example description"
+
+	resourceName := "aws_appintegrations_data_integration.test"
+	sourceURI := fmt.Sprintf("S3://%s", bucketName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppIntegrationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataIntegrationConfig_sourceURI_s3(rName, bucketName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataIntegrationExists(ctx, t, resourceName, &dataIntegration),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "app-integrations", "data-integration/{id}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "schedule_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_uri", sourceURI),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAppIntegrationsDataIntegration_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataIntegration appintegrations.GetDataIntegrationOutput
@@ -321,6 +359,58 @@ resource "aws_appintegrations_data_integration" "test" {
   }
 }
 `, rName, description, sourceUri, firstExecutionFrom))
+}
+
+func testAccDataIntegrationConfig_sourceURI_s3(rName, bucketName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "KMS key for app integrations data integration"
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+	sid    = "AllowAppIntegrations"
+	effect = "Allow"
+
+	principals {
+	  type        = "Service"
+	  identifiers = ["app-integrations.amazonaws.com"]
+	}
+
+	actions = [
+	  "s3:ListBucket",
+	  "s3:GetObject",
+	  "s3:GetBucketLocation",
+	]
+
+	resources = [
+	  aws_s3_bucket.test.arn,
+	  "${aws_s3_bucket.test.arn}/*",
+	]
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+  policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_appintegrations_data_integration" "test" {
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name        = %[2]q
+  description = %[3]q
+  kms_key     = aws_kms_key.test.arn
+  source_uri  = "S3://${aws_s3_bucket.test.bucket}"
+}
+`, bucketName, rName, description)
 }
 
 func testAccDataIntegrationConfig_tags(rName, description, sourceUri, firstExecutionFrom string) string {
