@@ -366,10 +366,14 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	if dir.Type == awstypes.DirectoryTypeMicrosoftAd {
 		dda, err := getDirectoryDataAccess(ctx, conn, d.Id())
-		if err != nil {
+		if errs.IsA[*awstypes.UnsupportedOperationException](err) {
+			// Directory Service Data is not available in all regions (e.g. GovCloud).
+			d.Set("enable_directory_data_access", false)
+		} else if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading directory data access: %s", err)
+		} else {
+			d.Set("enable_directory_data_access", dda.DataAccessStatus == awstypes.DataAccessStatusEnabled)
 		}
-		d.Set("enable_directory_data_access", dda.DataAccessStatus == awstypes.DataAccessStatusEnabled)
 	} else {
 		d.Set("enable_directory_data_access", false)
 	}
