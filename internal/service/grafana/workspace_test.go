@@ -503,6 +503,49 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 	})
 }
 
+// testAccWorkspace_networkAccessOnlyOneSide is a regression test for #30062:
+// the AWS API treats prefixListIds and vpceIds as required but accepts an
+// empty array for either, so the provider must transmit an empty slice rather
+// than a nil slice when the user supplies only one of the two.
+func testAccWorkspace_networkAccessOnlyOneSide(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WorkspaceDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_networkAccessOnlyPrefixList(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.prefix_list_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.vpce_ids.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspaceConfig_networkAccessOnlyVPCE(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.vpce_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccWorkspace_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 awstypes.WorkspaceDescription
@@ -831,6 +874,64 @@ resource "aws_grafana_workspace" "test" {
   name                     = %[1]q
   description              = %[1]q
   role_arn                 = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccWorkspaceConfig_networkAccessOnlyPrefixList(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  name           = %[1]q
+  address_family = "IPv4"
+  max_entries    = 5
+}
+
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  description              = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+
+  network_access_control {
+    prefix_list_ids = [aws_ec2_managed_prefix_list.test.id]
+    vpce_ids        = []
+  }
+}
+`, rName))
+}
+
+func testAccWorkspaceConfig_networkAccessOnlyVPCE(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  private_dns_enabled = false
+  security_group_ids  = [aws_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.grafana-workspace"
+  subnet_ids          = aws_subnet.test[*].id
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
+}
+
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  description              = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+
+  network_access_control {
+    prefix_list_ids = []
+    vpce_ids        = [aws_vpc_endpoint.test.id]
+  }
 }
 `, rName))
 }

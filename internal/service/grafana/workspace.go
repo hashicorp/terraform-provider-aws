@@ -588,11 +588,15 @@ func expandNetworkAccessControl(tfList []any) *awstypes.NetworkAccessConfigurati
 	tfMap := tfList[0].(map[string]any)
 	apiObject := awstypes.NetworkAccessConfiguration{}
 
-	if v, ok := tfMap["prefix_list_ids"].(*schema.Set); ok && v.Len() > 0 {
+	// The NetworkAccessConfiguration API treats prefixListIds and vpceIds as
+	// required but accepts an empty array for either, so always populate both
+	// fields rather than leaving an empty user-supplied set as a nil slice
+	// (which the API rejects as missing).
+	if v, ok := tfMap["prefix_list_ids"].(*schema.Set); ok {
 		apiObject.PrefixListIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["vpce_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["vpce_ids"].(*schema.Set); ok {
 		apiObject.VpceIds = flex.ExpandStringValueSet(v)
 	}
 

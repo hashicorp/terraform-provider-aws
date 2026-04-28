@@ -37,6 +37,7 @@ func TestAccGrafana_serial(t *testing.T) {
 			"vpc":                      testAccWorkspace_vpc,
 			"configuration":            testAccWorkspace_configuration,
 			"networkAccess":            testAccWorkspace_networkAccess,
+			"networkAccessOnlyOneSide": testAccWorkspace_networkAccessOnlyOneSide,
 			"version":                  testAccWorkspace_version,
 			"kmsKeyId":                 testAccWorkspace_kmsKeyID,
 			"dataSourceBasic":          testAccWorkspaceDataSource_basic,
