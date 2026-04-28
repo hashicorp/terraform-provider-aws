@@ -145,7 +145,7 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPrivateVirtualInterface: &awstypes.NewPrivateVirtualInterface{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
-			Asn:                  int64(d.Get("bgp_asn").(int)),
+			AsnLong:              aws.Int64(int64(d.Get("bgp_asn").(int))),
 			EnableSiteLink:       aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                  aws.Int32(int32(d.Get("mtu").(int))),
 			Tags:                 getTagsIn(ctx),
@@ -217,7 +217,7 @@ func resourcePrivateVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
-	d.Set("bgp_asn", vif.Asn)
+	d.Set("bgp_asn", vif.AsnLong)
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
