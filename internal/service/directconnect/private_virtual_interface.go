@@ -66,9 +66,10 @@ func resourcePrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 			},
 			"bgp_asn": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntInSlice([]int{1, 4294967294}),
 			},
 			"bgp_auth_key": {
 				Type:     schema.TypeString,
@@ -144,7 +145,7 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPrivateVirtualInterface: &awstypes.NewPrivateVirtualInterface{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
-			Asn:                  int32(d.Get("bgp_asn").(int)),
+			Asn:                  int64(d.Get("bgp_asn").(int)),
 			EnableSiteLink:       aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                  aws.Int32(int32(d.Get("mtu").(int))),
 			Tags:                 getTagsIn(ctx),
