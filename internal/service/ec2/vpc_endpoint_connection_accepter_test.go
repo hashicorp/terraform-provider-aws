@@ -31,7 +31,7 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCEndpointConnectionAccepterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConnectionAccepterConfig_basic(rName),
+				Config: testAccVPCEndpointConnectionAccepterConfig_noTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_state", "available"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_endpoint_connection_id"),
@@ -39,7 +39,7 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccVPCEndpointConnectionAccepterConfig_basic(rName),
+				Config:            testAccVPCEndpointConnectionAccepterConfig_noTags(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -309,7 +309,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVPCEndpointConnectionAccepterConfig_basic(rName string) string {
+func testAccVPCEndpointConnectionAccepterConfig_noTags(rName string) string {
 	return acctest.ConfigCompose(testAccVPCEndpointConnectionAccepterConfig_base(rName), `
 resource "aws_vpc_endpoint_connection_accepter" "test" {
   vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
