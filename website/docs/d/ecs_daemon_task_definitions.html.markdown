@@ -58,8 +58,8 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `daemon_task_definitions` - List of daemon task definition summaries. Each element contains:
-  * `arn` - ARN of the daemon task definition.
-  * `delete_requested_at` - Timestamp when deletion was requested (if applicable).
-  * `registered_at` - Timestamp when the daemon task definition was registered.
-  * `registered_by` - Principal that registered the daemon task definition.
-  * `status` - Status of the daemon task definition.
+    * `arn` - ARN of the daemon task definition.
+    * `delete_requested_at` - Timestamp when deletion was requested (if applicable).
+    * `registered_at` - Timestamp when the daemon task definition was registered.
+    * `registered_by` - Principal that registered the daemon task definition.
+    * `status` - Status of the daemon task definition.

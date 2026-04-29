@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ecs_daemon_task_definition" "test" {
@@ -8,10 +8,10 @@ resource "aws_ecs_daemon_task_definition" "test" {
   execution_role_arn = aws_iam_role.test.arn
 
   container_definition {
-    name   = "test"
-    image  = "nginx:latest"
+    name      = "test"
+    image     = "nginx:latest"
     essential = true
-    memory = 128
+    memory    = 128
   }
 }
 

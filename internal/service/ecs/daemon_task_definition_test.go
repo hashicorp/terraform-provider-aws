@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -6,26 +6,25 @@ package ecs_test
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,18 +34,18 @@ func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
-					resource.TestCheckResourceAttr(resourceName, "family", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, rName),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "512"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "1024"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.name", "nginx"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.image", "nginx:latest"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.cpu", "256"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.memory", "512"),
-					resource.TestCheckResourceAttr(resourceName, "container_definition.0.essential", "true"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.essential", acctest.CtTrue),
 				),
 			},
 			{
@@ -63,10 +62,10 @@ func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 func TestAccECSDaemonTaskDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -87,17 +86,17 @@ func TestAccECSDaemonTaskDefinition_disappears(t *testing.T) {
 func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -112,7 +111,7 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccDaemonTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDaemonTaskDefinitionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -121,7 +120,7 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,10 +134,10 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 func TestAccECSDaemonTaskDefinition_executionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -165,10 +164,10 @@ func TestAccECSDaemonTaskDefinition_executionRole(t *testing.T) {
 func TestAccECSDaemonTaskDefinition_taskRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -195,10 +194,10 @@ func TestAccECSDaemonTaskDefinition_taskRole(t *testing.T) {
 func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -249,10 +248,10 @@ func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -302,10 +301,10 @@ func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_containerDefinitionsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -337,10 +336,10 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionsUpdate(t *testing.T) {
 func TestAccECSDaemonTaskDefinition_containerDefinitionHealthCheck(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -365,10 +364,10 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionHealthCheck(t *testing.T)
 func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -381,7 +380,7 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testi
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awslogs"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-group", "/ecs/daemon"),
-					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-region", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-stream-prefix", "ecs"),
 				),
 			},
@@ -392,10 +391,10 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testi
 func TestAccECSDaemonTaskDefinition_containerDefinitionEnvironment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -415,10 +414,10 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionEnvironment(t *testing.T)
 func TestAccECSDaemonTaskDefinition_containerDefinitionMountPoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -442,10 +441,10 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionMountPoint(t *testing.T) 
 func TestAccECSDaemonTaskDefinition_containerDefinitionAllNestedBlocks(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -470,10 +469,10 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionAllNestedBlocks(t *testin
 func TestAccECSDaemonTaskDefinition_containerDefinitionOptionalFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -496,10 +495,10 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionOptionalFields(t *testing
 func TestAccECSDaemonTaskDefinition_volumeWithoutHostPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -519,23 +518,23 @@ func TestAccECSDaemonTaskDefinition_volumeWithoutHostPath(t *testing.T) {
 	})
 }
 
-func TestAccECSDaemonTaskDefinition_noCpuMemory(t *testing.T) {
+func TestAccECSDaemonTaskDefinition_noCPUMemory(t *testing.T) {
 	ctx := acctest.Context(t)
 	var taskDef awstypes.DaemonTaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaemonTaskDefinitionConfig_noCpuMemory(rName),
+				Config: testAccDaemonTaskDefinitionConfig_noCPUMemory(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
-					resource.TestCheckResourceAttr(resourceName, "family", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "cpu"),
 					resource.TestCheckNoResourceAttr(resourceName, "memory"),
 				),
@@ -580,7 +579,7 @@ func testAccCheckDaemonTaskDefinitionDestroy(ctx context.Context, t *testing.T) 
 
 			dtd, err := tfecs.FindDaemonTaskDefinitionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -832,6 +831,8 @@ resource "aws_ecs_daemon_task_definition" "test" {
 
 func testAccDaemonTaskDefinitionConfig_logConfiguration(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_iam_role" "execution" {
   name = "%[1]s-execution"
 
@@ -862,7 +863,7 @@ resource "aws_ecs_daemon_task_definition" "test" {
       log_driver = "awslogs"
       options = {
         "awslogs-group"         = "/ecs/daemon"
-        "awslogs-region"        = "us-west-2"
+        "awslogs-region"        = data.aws_region.current.name
         "awslogs-stream-prefix" = "ecs"
       }
     }
@@ -930,6 +931,8 @@ resource "aws_ecs_daemon_task_definition" "test" {
 
 func testAccDaemonTaskDefinitionConfig_allNestedBlocks(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_iam_role" "execution" {
   name = "%[1]s-execution"
 
@@ -967,7 +970,7 @@ resource "aws_ecs_daemon_task_definition" "test" {
       log_driver = "awslogs"
       options = {
         "awslogs-group"         = "/ecs/daemon"
-        "awslogs-region"        = "us-west-2"
+        "awslogs-region"        = data.aws_region.current.name
         "awslogs-stream-prefix" = "ecs"
       }
     }
@@ -1041,7 +1044,7 @@ resource "aws_ecs_daemon_task_definition" "test" {
 `, rName)
 }
 
-func testAccDaemonTaskDefinitionConfig_noCpuMemory(rName string) string {
+func testAccDaemonTaskDefinitionConfig_noCPUMemory(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_daemon_task_definition" "test" {
   family = %[1]q

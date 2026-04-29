@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -24,12 +24,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -191,7 +192,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							CustomType: fwtypes.NewListNestedObjectTypeOf[containerDependencyModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"condition": schema.StringAttribute{
+									names.AttrCondition: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ContainerCondition](),
 										Required:   true,
 									},
@@ -201,7 +202,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 								},
 							},
 						},
-						"environment": schema.SetNestedBlock{
+						names.AttrEnvironment: schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[keyValuePairModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -244,7 +245,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 								},
 							},
 						},
-						"health_check": schema.ListNestedBlock{
+						names.AttrHealthCheck: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[healthCheckModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -252,7 +253,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 										CustomType: fwtypes.ListOfStringType,
 										Required:   true,
 									},
-									"interval": schema.Int64Attribute{
+									names.AttrInterval: schema.Int64Attribute{
 										Optional: true,
 									},
 									"retries": schema.Int64Attribute{
@@ -261,7 +262,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 									"start_period": schema.Int64Attribute{
 										Optional: true,
 									},
-									"timeout": schema.Int64Attribute{
+									names.AttrTimeout: schema.Int64Attribute{
 										Optional: true,
 									},
 								},
@@ -301,7 +302,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 												"host_path": schema.StringAttribute{
 													Required: true,
 												},
-												"permissions": schema.ListAttribute{
+												names.AttrPermissions: schema.ListAttribute{
 													Optional:    true,
 													ElementType: types.StringType,
 												},
@@ -319,7 +320,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 													CustomType: fwtypes.ListOfStringType,
 													Optional:   true,
 												},
-												"size": schema.Int64Attribute{
+												names.AttrSize: schema.Int64Attribute{
 													Required: true,
 												},
 											},
@@ -419,7 +420,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							CustomType: fwtypes.NewListNestedObjectTypeOf[systemControlModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"namespace": schema.StringAttribute{
+									names.AttrNamespace: schema.StringAttribute{
 										Optional: true,
 									},
 									names.AttrValue: schema.StringAttribute{
@@ -527,7 +528,7 @@ func (r *daemonTaskDefinitionResource) Read(ctx context.Context, request resourc
 	conn := r.Meta().ECSClient(ctx)
 
 	dtd, err := findDaemonTaskDefinitionByARN(ctx, conn, state.DaemonTaskDefinitionArn.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -557,7 +558,7 @@ func (r *daemonTaskDefinitionResource) Delete(ctx context.Context, request resou
 	log.Printf("[DEBUG] Deleting ECS Daemon Task Definition: %s", state.DaemonTaskDefinitionArn.ValueString())
 
 	_, err := conn.DeleteDaemonTaskDefinition(ctx, &ecs.DeleteDaemonTaskDefinitionInput{
-		DaemonTaskDefinition: aws.String(state.DaemonTaskDefinitionArn.ValueString()),
+		DaemonTaskDefinition: state.DaemonTaskDefinitionArn.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ClientException](err) {
@@ -582,21 +583,25 @@ func flattenDaemonTaskDefinition(ctx context.Context, dtd *awstypes.DaemonTaskDe
 	}
 
 	// Manual: volumes (structural mismatch — Host.SourcePath → HostPath)
-	volumes := make([]volumeModel, len(dtd.Volumes))
-	for i, v := range dtd.Volumes {
-		vm := volumeModel{
+	model.Volumes, diags = flattenDaemonVolumes(ctx, dtd.Volumes)
+
+	return diags
+}
+
+// flattenDaemonVolumes converts SDK Volume types to the Terraform model.
+// AutoFlex cannot handle this because the SDK nests SourcePath under Host
+// (Volume.Host.SourcePath) while the Terraform model flattens it (volumeModel.HostPath).
+func flattenDaemonVolumes(ctx context.Context, volumes []awstypes.DaemonVolume) (fwtypes.SetNestedObjectValueOf[volumeModel], diag.Diagnostics) {
+	models := make([]volumeModel, len(volumes))
+	for i, v := range volumes {
+		models[i] = volumeModel{
 			Name: types.StringPointerValue(v.Name),
 		}
 		if v.Host != nil && v.Host.SourcePath != nil {
-			vm.HostPath = types.StringPointerValue(v.Host.SourcePath)
+			models[i].HostPath = types.StringPointerValue(v.Host.SourcePath)
 		}
-		volumes[i] = vm
 	}
-	var volumeDiags diag.Diagnostics
-	model.Volumes, volumeDiags = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, volumes)
-	diags.Append(volumeDiags...)
-
-	return diags
+	return fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, models)
 }
 
 func expandDaemonVolumesFromModel(volumes []*volumeModel) []awstypes.DaemonVolume {
@@ -607,11 +612,11 @@ func expandDaemonVolumesFromModel(volumes []*volumeModel) []awstypes.DaemonVolum
 	var apiObjects []awstypes.DaemonVolume
 	for _, v := range volumes {
 		apiObject := awstypes.DaemonVolume{
-			Name: aws.String(v.Name.ValueString()),
+			Name: v.Name.ValueStringPointer(),
 		}
 		if !v.HostPath.IsNull() && v.HostPath.ValueString() != "" {
 			apiObject.Host = &awstypes.HostVolumeProperties{
-				SourcePath: aws.String(v.HostPath.ValueString()),
+				SourcePath: v.HostPath.ValueStringPointer(),
 			}
 		}
 		apiObjects = append(apiObjects, apiObject)
@@ -622,6 +627,7 @@ func expandDaemonVolumesFromModel(volumes []*volumeModel) []awstypes.DaemonVolum
 // Helper functions used by both resource and data sources.
 
 type daemonTaskDefinitionResourceModel struct {
+	framework.WithRegionModel
 	DaemonTaskDefinitionArn types.String                                              `tfsdk:"arn"`
 	ContainerDefinitions    fwtypes.ListNestedObjectValueOf[containerDefinitionModel] `tfsdk:"container_definition"`
 	Cpu                     types.String                                              `tfsdk:"cpu"`
@@ -629,7 +635,6 @@ type daemonTaskDefinitionResourceModel struct {
 	ExecutionRoleArn        types.String                                              `tfsdk:"execution_role_arn"`
 	Family                  types.String                                              `tfsdk:"family"`
 	Memory                  types.String                                              `tfsdk:"memory"`
-	Region                  types.String                                              `tfsdk:"region"`
 	RegisteredAt            timetypes.RFC3339                                         `tfsdk:"registered_at"`
 	RegisteredBy            types.String                                              `tfsdk:"registered_by"`
 	Revision                types.Int64                                               `tfsdk:"revision"`
@@ -760,7 +765,7 @@ func findDaemonTaskDefinitionByARN(ctx context.Context, conn *ecs.Client, arn st
 	output, err := conn.DescribeDaemonTaskDefinition(ctx, input)
 
 	if errs.Contains(err, "DaemonTaskDefinitionNotFoundException") || errs.Contains(err, "not found") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -775,7 +780,7 @@ func findDaemonTaskDefinitionByARN(ctx context.Context, conn *ecs.Client, arn st
 	}
 
 	if output.DaemonTaskDefinition.Status == awstypes.DaemonTaskDefinitionStatusDeleteInProgress || output.DaemonTaskDefinition.Status == awstypes.DaemonTaskDefinitionStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(output.DaemonTaskDefinition.Status),
 			LastRequest: input,
 		}

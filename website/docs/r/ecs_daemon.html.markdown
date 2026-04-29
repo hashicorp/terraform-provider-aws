@@ -17,7 +17,7 @@ Provides an ECS Daemon resource, which manages a daemon that runs exactly one ta
 ```terraform
 resource "aws_ecs_daemon" "example" {
   name                   = "example-daemon"
-  cluster                = aws_ecs_cluster.example.arn
+  cluster_arn            = aws_ecs_cluster.example.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.example.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
 }
@@ -28,7 +28,7 @@ resource "aws_ecs_daemon" "example" {
 ```terraform
 resource "aws_ecs_daemon" "example" {
   name                   = "example-daemon"
-  cluster                = aws_ecs_cluster.example.arn
+  cluster_arn            = aws_ecs_cluster.example.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.example.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
 
@@ -49,7 +49,7 @@ resource "aws_ecs_daemon" "example" {
 ```terraform
 resource "aws_ecs_daemon" "example" {
   name                   = "example-daemon"
-  cluster                = aws_ecs_cluster.example.arn
+  cluster_arn            = aws_ecs_cluster.example.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.example.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
 
@@ -65,11 +65,11 @@ resource "aws_ecs_daemon" "example" {
 This resource supports the following arguments:
 
 * `capacity_provider_arns` - (Required) List of capacity provider ARNs to use for the daemon.
-* `cluster` - (Optional, Forces new resource) ARN of the ECS cluster where the daemon will run.
+* `cluster_arn` - (Optional, Forces new resource) ARN of the ECS cluster where the daemon will run.
 * `daemon_task_definition` - (Required) ARN of the daemon task definition to use for the daemon. Drift is not detected on this attribute because the API may report a stale revision while a deployment is in progress.
 * `deployment_configuration` - (Optional) Configuration for daemon deployments. See [Deployment Configuration](#deployment-configuration) below.
-* `enable_ecs_managed_tags` - (Optional) Whether to enable Amazon ECS managed tags for the tasks within the daemon.
-* `enable_execute_command` - (Optional) Whether to enable Amazon ECS Exec for the tasks within the daemon.
+* `enable_ecs_managed_tags` - (Optional, Write-only) Whether to enable Amazon ECS managed tags for the tasks within the daemon.
+* `enable_execute_command` - (Optional, Write-only) Whether to enable Amazon ECS Exec for the tasks within the daemon.
 * `name` - (Required, Forces new resource) Name of the daemon.
 * `propagate_tags` - (Optional) Whether to propagate tags from the daemon to tasks. Valid values are `DAEMON` or `NONE`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

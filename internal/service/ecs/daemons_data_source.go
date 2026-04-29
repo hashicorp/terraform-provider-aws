@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -34,7 +34,7 @@ func (d *daemonsDataSource) Schema(ctx context.Context, request datasource.Schem
 				Optional:    true,
 				ElementType: types.StringType,
 			},
-			"cluster": schema.StringAttribute{
+			"cluster_arn": schema.StringAttribute{
 				Required: true,
 			},
 			"daemons": framework.DataSourceComputedListOfObjectAttribute[daemonSummaryModel](ctx),
@@ -90,10 +90,10 @@ func (d *daemonsDataSource) Read(ctx context.Context, request datasource.ReadReq
 }
 
 type daemonsDataSourceModel struct {
-	CapacityProviderArns fwtypes.ListOfString                                    `tfsdk:"capacity_provider_arns"`
-	Cluster              types.String                                            `tfsdk:"cluster"`
-	Daemons              fwtypes.ListNestedObjectValueOf[daemonSummaryModel]     `tfsdk:"daemons"`
-	Region               types.String                                            `tfsdk:"region"`
+	framework.WithRegionModel
+	CapacityProviderArns fwtypes.ListOfString                                `tfsdk:"capacity_provider_arns"`
+	Cluster              types.String                                        `tfsdk:"cluster_arn"`
+	Daemons              fwtypes.ListNestedObjectValueOf[daemonSummaryModel] `tfsdk:"daemons"`
 }
 
 type daemonSummaryModel struct {

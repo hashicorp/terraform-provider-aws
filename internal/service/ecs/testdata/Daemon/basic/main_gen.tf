@@ -3,7 +3,7 @@
 
 resource "aws_ecs_daemon" "test" {
   name                   = var.rName
-  cluster                = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -6,23 +6,22 @@ package ecs_test
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECSDaemon_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,7 +34,7 @@ func TestAccECSDaemon_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "daemon_task_definition"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_provider_arns.#", "1"),
 				),
@@ -49,8 +48,6 @@ func TestAccECSDaemon_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"capacity_provider_arns",   // API doesn't return this
 					"daemon_task_definition",   // API doesn't return this
-					"enable_ecs_managed_tags",  // API doesn't return this
-					"enable_execute_command",   // API doesn't return this
 					"propagate_tags",           // API doesn't return this
 					"deployment_configuration", // API doesn't return this
 				},
@@ -61,10 +58,10 @@ func TestAccECSDaemon_basic(t *testing.T) {
 
 func TestAccECSDaemon_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,10 +81,10 @@ func TestAccECSDaemon_disappears(t *testing.T) {
 
 func TestAccECSDaemon_deploymentConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -110,8 +107,6 @@ func TestAccECSDaemon_deploymentConfiguration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"capacity_provider_arns",
 					"daemon_task_definition",
-					"enable_ecs_managed_tags",
-					"enable_execute_command",
 					"propagate_tags",
 					"deployment_configuration",
 				},
@@ -130,17 +125,17 @@ func TestAccECSDaemon_deploymentConfiguration(t *testing.T) {
 
 func TestAccECSDaemon_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaemonConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDaemonConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -156,14 +151,12 @@ func TestAccECSDaemon_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"daemon_task_definition",
 					"capacity_provider_arns",
-					"enable_ecs_managed_tags",
-					"enable_execute_command",
 					"propagate_tags",
 					"deployment_configuration",
 				},
 			},
 			{
-				Config: testAccDaemonConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDaemonConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -172,7 +165,7 @@ func TestAccECSDaemon_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDaemonConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDaemonConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -185,11 +178,11 @@ func TestAccECSDaemon_tags(t *testing.T) {
 
 func TestAccECSDaemon_minimumValues(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
 	// Verifies the API accepts minimum values for deployment_configuration without error.
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -207,11 +200,11 @@ func TestAccECSDaemon_minimumValues(t *testing.T) {
 
 func TestAccECSDaemon_boundaryValues(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
 	// Verifies the API accepts boundary values for deployment_configuration without error.
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -229,12 +222,12 @@ func TestAccECSDaemon_boundaryValues(t *testing.T) {
 
 func TestAccECSDaemon_alarms(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
 	// Note: deployment_configuration (including alarms) is write-only.
 	// We verify the API accepts alarm configuration without error.
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -256,29 +249,27 @@ func TestAccECSDaemon_alarms(t *testing.T) {
 	})
 }
 
-func TestAccECSDaemon_enableECSManagedTags(t *testing.T) {
+func TestAccECSDaemon_enableManagedTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaemonConfig_enableECSManagedTags(rName, true),
+				Config: testAccDaemonConfig_enableManagedTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
 				),
 			},
 			{
-				Config: testAccDaemonConfig_enableECSManagedTags(rName, false),
+				Config: testAccDaemonConfig_enableManagedTags(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "false"),
 				),
 			},
 		},
@@ -287,10 +278,10 @@ func TestAccECSDaemon_enableECSManagedTags(t *testing.T) {
 
 func TestAccECSDaemon_enableExecuteCommand(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -300,14 +291,12 @@ func TestAccECSDaemon_enableExecuteCommand(t *testing.T) {
 				Config: testAccDaemonConfig_enableExecuteCommand(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_enableExecuteCommand(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
 				),
 			},
 		},
@@ -316,10 +305,10 @@ func TestAccECSDaemon_enableExecuteCommand(t *testing.T) {
 
 func TestAccECSDaemon_propagateTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -345,10 +334,10 @@ func TestAccECSDaemon_propagateTags(t *testing.T) {
 
 func TestAccECSDaemon_updateTaskDefinition(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -383,7 +372,7 @@ func testAccCheckDaemonDestroy(ctx context.Context, t *testing.T) resource.TestC
 
 			_, err := tfecs.FindDaemonByARN(ctx, conn, arn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -535,7 +524,7 @@ func testAccDaemonConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                    = %[1]q
-  cluster                 = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition  = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns  = [aws_ecs_capacity_provider.test.arn]
 }
@@ -546,7 +535,7 @@ func testAccDaemonConfig_deploymentConfiguration(rName string, drainPercent floa
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                   = %[1]q
-  cluster                = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 
@@ -562,7 +551,7 @@ func testAccDaemonConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                   = %[1]q
-  cluster                = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 
@@ -577,7 +566,7 @@ func testAccDaemonConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 str
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                   = %[1]q
-  cluster                = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 
@@ -593,7 +582,7 @@ func testAccDaemonConfig_alarms(rName string, enable bool) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                   = %[1]q
-  cluster                = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 
@@ -607,11 +596,11 @@ resource "aws_ecs_daemon" "test" {
 `, rName, enable))
 }
 
-func testAccDaemonConfig_enableECSManagedTags(rName string, enable bool) string {
+func testAccDaemonConfig_enableManagedTags(rName string, enable bool) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                    = %[1]q
-  cluster                 = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition  = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns  = [aws_ecs_capacity_provider.test.arn]
   enable_ecs_managed_tags = %[2]t
@@ -623,7 +612,7 @@ func testAccDaemonConfig_enableExecuteCommand(rName string, enable bool) string 
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                    = %[1]q
-  cluster                 = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition  = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns  = [aws_ecs_capacity_provider.test.arn]
   enable_execute_command  = %[2]t
@@ -635,7 +624,7 @@ func testAccDaemonConfig_propagateTags(rName string, propagate string) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                   = %[1]q
-  cluster                = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
   propagate_tags         = %[2]q
@@ -755,7 +744,7 @@ resource "aws_ecs_daemon_task_definition" "test" {
 
 resource "aws_ecs_daemon" "test" {
   name                   = %[1]q
-  cluster                = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 }

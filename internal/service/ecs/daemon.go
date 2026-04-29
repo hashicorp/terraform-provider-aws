@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -21,20 +21,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,7 +61,7 @@ type daemonResource struct {
 }
 
 func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	s := schema.Schema{
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
@@ -74,7 +74,7 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Required:    true,
 				ElementType: types.StringType,
 			},
-			"cluster": schema.StringAttribute{
+			"cluster_arn": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -86,14 +86,12 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Required: true,
 			},
 			"enable_ecs_managed_tags": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(false),
+				Optional:  true,
+				WriteOnly: true,
 			},
 			"enable_execute_command": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(false),
+				Optional:  true,
+				WriteOnly: true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -101,7 +99,7 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"propagate_tags": schema.StringAttribute{
+			names.AttrPropagateTags: schema.StringAttribute{
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.DaemonPropagateTags](),
 			},
@@ -161,7 +159,6 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 		},
 	}
 
-	response.Schema = s
 }
 
 func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -183,6 +180,19 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
+	// Write-only fields — read from config
+	var config daemonResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if !config.EnableECSManagedTags.IsNull() {
+		input.EnableECSManagedTags = config.EnableECSManagedTags.ValueBool()
+	}
+	if !config.EnableExecuteCommand.IsNull() {
+		input.EnableExecuteCommand = config.EnableExecuteCommand.ValueBool()
+	}
+
 	output, err := conn.CreateDaemon(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating ECS Daemon (%s)", plan.DaemonName.ValueString()), err.Error())
@@ -203,7 +213,8 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	response.Diagnostics.Append(flattenDaemon(ctx, daemon, &plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, daemon, &plan)...)
+	plan.DaemonName = daemonNameFromARN(plan.DaemonArn.ValueString())
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -230,7 +241,7 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 	conn := r.Meta().ECSClient(ctx)
 
 	daemon, err := findDaemonByARN(ctx, conn, state.DaemonArn.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -240,7 +251,8 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	response.Diagnostics.Append(flattenDaemon(ctx, daemon, &state)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, daemon, &state)...)
+	state.DaemonName = daemonNameFromARN(state.DaemonArn.ValueString())
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -252,14 +264,6 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 			return
 		}
 		flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], &state)
-	}
-
-	// Set defaults for write-only fields not returned by the API (needed for import)
-	if state.EnableECSManagedTags.IsNull() {
-		state.EnableECSManagedTags = types.BoolValue(false)
-	}
-	if state.EnableExecuteCommand.IsNull() {
-		state.EnableExecuteCommand = types.BoolValue(false)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
@@ -289,13 +293,17 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		// Fields AutoFlex can't handle
-		if !plan.EnableECSManagedTags.Equal(state.EnableECSManagedTags) {
-			input.EnableECSManagedTags = plan.EnableECSManagedTags.ValueBool()
+		// Write-only fields — read from config, always send
+		var config daemonResourceModel
+		response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
-
-		if !plan.EnableExecuteCommand.Equal(state.EnableExecuteCommand) {
-			input.EnableExecuteCommand = plan.EnableExecuteCommand.ValueBool()
+		if !config.EnableECSManagedTags.IsNull() {
+			input.EnableECSManagedTags = config.EnableECSManagedTags.ValueBool()
+		}
+		if !config.EnableExecuteCommand.IsNull() {
+			input.EnableExecuteCommand = config.EnableExecuteCommand.ValueBool()
 		}
 
 		_, err := conn.UpdateDaemon(ctx, &input)
@@ -317,7 +325,8 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		return
 	}
 
-	response.Diagnostics.Append(flattenDaemon(ctx, daemon, &plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, daemon, &plan)...)
+	plan.DaemonName = daemonNameFromARN(plan.DaemonArn.ValueString())
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -345,7 +354,7 @@ func (r *daemonResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	log.Printf("[DEBUG] Deleting ECS Daemon: %s", state.DaemonArn.ValueString())
 	_, err := conn.DeleteDaemon(ctx, &ecs.DeleteDaemonInput{
-		DaemonArn: aws.String(state.DaemonArn.ValueString()),
+		DaemonArn: state.DaemonArn.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.DaemonNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "not found") {
@@ -387,26 +396,12 @@ func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnos
 	return obj, diags
 }
 
-// flattenDaemon populates the model from a DaemonDetail using AutoFlex for matching fields
-// and manual handling for fields that require additional API calls or transformation.
-func flattenDaemon(ctx context.Context, daemon *awstypes.DaemonDetail, model *daemonResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// AutoFlex handles DaemonArn, ClusterArn, Status
-	diags.Append(fwflex.Flatten(ctx, daemon, model)...)
-	if diags.HasError() {
-		return diags
+func daemonNameFromARN(arn string) types.String {
+	arnParts := strings.Split(arn, "/")
+	if len(arnParts) >= 3 {
+		return types.StringValue(arnParts[len(arnParts)-1])
 	}
-
-	// Manual: extract daemon name from ARN
-	if daemon.DaemonArn != nil {
-		arnParts := strings.Split(aws.ToString(daemon.DaemonArn), "/")
-		if len(arnParts) >= 3 {
-			model.DaemonName = types.StringValue(arnParts[len(arnParts)-1])
-		}
-	}
-
-	return diags
+	return types.StringNull()
 }
 
 // flattenDaemonRevision populates task definition ARN and capacity provider ARNs
@@ -430,20 +425,20 @@ func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevisio
 }
 
 type daemonResourceModel struct {
-	DaemonArn               types.String                                     `tfsdk:"arn"`
-	CapacityProviderArns    fwtypes.ListOfString                             `tfsdk:"capacity_provider_arns"`
-	ClusterArn              types.String                                     `tfsdk:"cluster"`
-	DaemonTaskDefinitionArn types.String                                     `tfsdk:"daemon_task_definition"`
+	framework.WithRegionModel
+	DaemonArn               types.String                                                  `tfsdk:"arn"`
+	CapacityProviderArns    fwtypes.ListOfString                                          `tfsdk:"capacity_provider_arns"`
+	ClusterArn              types.String                                                  `tfsdk:"cluster_arn"`
+	DaemonTaskDefinitionArn types.String                                                  `tfsdk:"daemon_task_definition"`
 	DeploymentConfiguration fwtypes.ListNestedObjectValueOf[deploymentConfigurationModel] `tfsdk:"deployment_configuration"`
-	EnableECSManagedTags    types.Bool                                       `tfsdk:"enable_ecs_managed_tags"`
-	EnableExecuteCommand    types.Bool                                       `tfsdk:"enable_execute_command"`
-	DaemonName              types.String                                     `tfsdk:"name"`
-	PropagateTags           fwtypes.StringEnum[awstypes.DaemonPropagateTags] `tfsdk:"propagate_tags"`
-	Region                  types.String                                     `tfsdk:"region"`
-	Status                  types.String                                     `tfsdk:"status"`
-	Tags                    tftags.Map                                       `tfsdk:"tags"`
-	TagsAll                 tftags.Map                                       `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value                                   `tfsdk:"timeouts"`
+	EnableECSManagedTags    types.Bool                                                    `tfsdk:"enable_ecs_managed_tags"`
+	EnableExecuteCommand    types.Bool                                                    `tfsdk:"enable_execute_command"`
+	DaemonName              types.String                                                  `tfsdk:"name"`
+	PropagateTags           fwtypes.StringEnum[awstypes.DaemonPropagateTags]              `tfsdk:"propagate_tags"`
+	Status                  types.String                                                  `tfsdk:"status"`
+	Tags                    tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                    `tfsdk:"tags_all"`
+	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
 }
 
 type deploymentConfigurationModel struct {
@@ -467,7 +462,7 @@ func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstyp
 	output, err := conn.DescribeDaemon(ctx, input)
 
 	if errs.IsA[*awstypes.DaemonNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -482,7 +477,7 @@ func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstyp
 	}
 
 	if output.Daemon.Status == "DELETE_IN_PROGRESS" {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     "DELETE_IN_PROGRESS",
 			LastRequest: input,
 		}
@@ -506,11 +501,11 @@ func findDaemons(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonsIn
 	return result, nil
 }
 
-func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDaemonByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -523,7 +518,7 @@ func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) retry.State
 }
 
 func waitDaemonActive(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.DaemonDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.DaemonStatusActive),
 		Refresh: statusDaemon(ctx, conn, arn),
@@ -540,7 +535,7 @@ func waitDaemonActive(ctx context.Context, conn *ecs.Client, arn string, timeout
 }
 
 func waitDaemonDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.DaemonDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DaemonStatusActive, "DELETE_IN_PROGRESS"),
 		Target:  []string{},
 		Refresh: statusDaemon(ctx, conn, arn),

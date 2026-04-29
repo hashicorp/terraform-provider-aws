@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -92,23 +92,16 @@ func (r *listResourceDaemonTaskDefinition) List(ctx context.Context, request lis
 
 func listDaemonTaskDefinitionSummaries(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonTaskDefinitionsInput) iter.Seq2[awstypes.DaemonTaskDefinitionSummary, error] {
 	return func(yield func(awstypes.DaemonTaskDefinitionSummary, error) bool) {
-		for {
-			output, err := conn.ListDaemonTaskDefinitions(ctx, input)
-			if err != nil {
-				yield(awstypes.DaemonTaskDefinitionSummary{}, fmt.Errorf("listing ECS Daemon Task Definitions: %w", err))
-				return
-			}
-
-			for _, summary := range output.DaemonTaskDefinitions {
+		err := listDaemonTaskDefinitionsPages(ctx, conn, input, func(page *ecs.ListDaemonTaskDefinitionsOutput, lastPage bool) bool {
+			for _, summary := range page.DaemonTaskDefinitions {
 				if !yield(summary, nil) {
-					return
+					return false
 				}
 			}
-
-			if output.NextToken == nil {
-				break
-			}
-			input.NextToken = output.NextToken
+			return true
+		})
+		if err != nil {
+			yield(awstypes.DaemonTaskDefinitionSummary{}, err)
 		}
 	}
 }

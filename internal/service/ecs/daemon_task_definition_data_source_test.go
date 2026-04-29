@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,9 +17,9 @@ func TestAccECSDaemonTaskDefinitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_daemon_task_definition.test"
 	resourceName := "aws_ecs_daemon_task_definition.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -34,7 +33,7 @@ func TestAccECSDaemonTaskDefinitionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "container_definition.0.image", "nginx:latest"),
 					resource.TestCheckResourceAttr(dataSourceName, "container_definition.0.cpu", "256"),
 					resource.TestCheckResourceAttr(dataSourceName, "container_definition.0.memory", "512"),
-					resource.TestCheckResourceAttr(dataSourceName, "container_definition.0.essential", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "container_definition.0.essential", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, "cpu", "256"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrFamily, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "memory", "512"),
@@ -52,9 +51,9 @@ func TestAccECSDaemonTaskDefinitionDataSource_withVolumes(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_daemon_task_definition.test"
 	resourceName := "aws_ecs_daemon_task_definition.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -86,9 +85,9 @@ func TestAccECSDaemonTaskDefinitionDataSource_withRoles(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_daemon_task_definition.test"
 	resourceName := "aws_ecs_daemon_task_definition.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -126,7 +125,7 @@ resource "aws_ecs_daemon_task_definition" "test" {
 }
 
 data "aws_ecs_daemon_task_definition" "test" {
-  task_definition = aws_ecs_daemon_task_definition.test.arn
+  daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
 }
 `, rName)
 }
@@ -156,7 +155,7 @@ resource "aws_ecs_daemon_task_definition" "test" {
 }
 
 data "aws_ecs_daemon_task_definition" "test" {
-  task_definition = aws_ecs_daemon_task_definition.test.arn
+  daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
 }
 `, rName)
 }
@@ -208,7 +207,7 @@ resource "aws_ecs_daemon_task_definition" "test" {
 }
 
 data "aws_ecs_daemon_task_definition" "test" {
-  task_definition = aws_ecs_daemon_task_definition.test.arn
+  daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
 }
 `, rName)
 }

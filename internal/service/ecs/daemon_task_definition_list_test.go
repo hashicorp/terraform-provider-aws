@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -6,6 +6,7 @@ package ecs_test
 import (
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -14,13 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccECSDaemonTaskDefinition_List_Basic(t *testing.T) {
+func TestAccECSDaemonTaskDefinition_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_ecs_daemon_task_definition.test[0]"
@@ -49,10 +51,10 @@ func TestAccECSDaemonTaskDefinition_List_Basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`-0:\d+$`))),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`-1:\d+$`))),
 				},
 			},
 			{
@@ -72,7 +74,7 @@ func TestAccECSDaemonTaskDefinition_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccECSDaemonTaskDefinition_List_RegionOverride(t *testing.T) {
+func TestAccECSDaemonTaskDefinition_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_ecs_daemon_task_definition.test[0]"
@@ -103,10 +105,10 @@ func TestAccECSDaemonTaskDefinition_List_RegionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`-0:\d+$`))),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`-1:\d+$`))),
 				},
 			},
 			{
@@ -127,7 +129,7 @@ func TestAccECSDaemonTaskDefinition_List_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccECSDaemonTaskDefinition_List_IncludeResource(t *testing.T) {
+func TestAccECSDaemonTaskDefinition_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_ecs_daemon_task_definition.test[0]"
@@ -154,7 +156,7 @@ func TestAccECSDaemonTaskDefinition_List_IncludeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`-0:\d+$`))),
 				},
 			},
 			{
@@ -167,10 +169,15 @@ func TestAccECSDaemonTaskDefinition_List_IncludeResource(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ecs_daemon_task_definition.test", identity1.Checks()),
 					querycheck.ExpectResourceKnownValues("aws_ecs_daemon_task_definition.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrFamily), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`-0:\d+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("container_definition"), knownvalue.ListSizeExact(1)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("execution_role_arn"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrFamily), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("registered_at"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("registered_by"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("revision"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),
 					}),
 				},
 			},

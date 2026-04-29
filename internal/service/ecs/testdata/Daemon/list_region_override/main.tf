@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ecs_daemon" "test" {
@@ -6,7 +6,7 @@ resource "aws_ecs_daemon" "test" {
   region = var.region
 
   name                   = "${var.rName}-${count.index}"
-  cluster                = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 }

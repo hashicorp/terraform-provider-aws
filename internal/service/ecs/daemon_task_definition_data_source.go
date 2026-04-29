@@ -1,16 +1,15 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -39,6 +38,9 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 			"cpu": schema.StringAttribute{
 				Computed: true,
 			},
+			"daemon_task_definition": schema.StringAttribute{
+				Required: true,
+			},
 			"delete_requested_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -64,9 +66,6 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 			},
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
-			},
-			"task_definition": schema.StringAttribute{
-				Required: true,
 			},
 			"task_role_arn": schema.StringAttribute{
 				Computed: true,
@@ -133,7 +132,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 							CustomType: fwtypes.NewListNestedObjectTypeOf[containerDependencyModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"condition": schema.StringAttribute{
+									names.AttrCondition: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ContainerCondition](),
 										Computed:   true,
 									},
@@ -143,7 +142,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 								},
 							},
 						},
-						"environment": schema.SetNestedBlock{
+						names.AttrEnvironment: schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[keyValuePairModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -186,7 +185,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 								},
 							},
 						},
-						"health_check": schema.ListNestedBlock{
+						names.AttrHealthCheck: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[healthCheckModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -194,7 +193,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 										CustomType: fwtypes.ListOfStringType,
 										Computed:   true,
 									},
-									"interval": schema.Int64Attribute{
+									names.AttrInterval: schema.Int64Attribute{
 										Computed: true,
 									},
 									"retries": schema.Int64Attribute{
@@ -203,7 +202,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 									"start_period": schema.Int64Attribute{
 										Computed: true,
 									},
-									"timeout": schema.Int64Attribute{
+									names.AttrTimeout: schema.Int64Attribute{
 										Computed: true,
 									},
 								},
@@ -243,7 +242,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 												"host_path": schema.StringAttribute{
 													Computed: true,
 												},
-												"permissions": schema.ListAttribute{
+												names.AttrPermissions: schema.ListAttribute{
 													Computed:    true,
 													ElementType: types.StringType,
 												},
@@ -261,7 +260,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 													CustomType: fwtypes.ListOfStringType,
 													Computed:   true,
 												},
-												"size": schema.Int64Attribute{
+												names.AttrSize: schema.Int64Attribute{
 													Computed: true,
 												},
 											},
@@ -361,7 +360,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 							CustomType: fwtypes.NewListNestedObjectTypeOf[systemControlModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"namespace": schema.StringAttribute{
+									names.AttrNamespace: schema.StringAttribute{
 										Computed: true,
 									},
 									names.AttrValue: schema.StringAttribute{
@@ -417,7 +416,7 @@ func (d *daemonTaskDefinitionDataSource) Read(ctx context.Context, request datas
 	conn := d.Meta().ECSClient(ctx)
 
 	input := &ecs.DescribeDaemonTaskDefinitionInput{
-		DaemonTaskDefinition: aws.String(data.TaskDefinition.ValueString()),
+		DaemonTaskDefinition: data.TaskDefinition.ValueStringPointer(),
 	}
 
 	output, err := conn.DescribeDaemonTaskDefinition(ctx, input)
@@ -451,6 +450,7 @@ func (d *daemonTaskDefinitionDataSource) Read(ctx context.Context, request datas
 }
 
 type daemonTaskDefinitionDataSourceModel struct {
+	framework.WithRegionModel
 	DaemonTaskDefinitionArn types.String                                              `tfsdk:"arn"`
 	ContainerDefinitions    fwtypes.ListNestedObjectValueOf[containerDefinitionModel] `tfsdk:"container_definition"`
 	Cpu                     types.String                                              `tfsdk:"cpu"`
@@ -458,12 +458,11 @@ type daemonTaskDefinitionDataSourceModel struct {
 	ExecutionRoleArn        types.String                                              `tfsdk:"execution_role_arn"`
 	Family                  types.String                                              `tfsdk:"family"`
 	Memory                  types.String                                              `tfsdk:"memory"`
-	Region                  types.String                                              `tfsdk:"region"`
 	RegisteredAt            timetypes.RFC3339                                         `tfsdk:"registered_at"`
 	RegisteredBy            types.String                                              `tfsdk:"registered_by"`
 	Revision                types.Int64                                               `tfsdk:"revision"`
 	Status                  types.String                                              `tfsdk:"status"`
-	TaskDefinition          types.String                                              `tfsdk:"task_definition"`
+	TaskDefinition          types.String                                              `tfsdk:"daemon_task_definition"`
 	TaskRoleArn             types.String                                              `tfsdk:"task_role_arn"`
 	Volumes                 fwtypes.SetNestedObjectValueOf[volumeModel]               `tfsdk:"volume"`
 }

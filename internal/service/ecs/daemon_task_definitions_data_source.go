@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -6,7 +6,6 @@ package ecs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -30,6 +29,7 @@ type daemonTaskDefinitionsDataSource struct {
 func (d *daemonTaskDefinitionsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"daemon_task_definitions": framework.DataSourceComputedListOfObjectAttribute[daemonTaskDefinitionSummaryModel](ctx),
 			"family": schema.StringAttribute{
 				Optional: true,
 			},
@@ -48,7 +48,6 @@ func (d *daemonTaskDefinitionsDataSource) Schema(ctx context.Context, request da
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.DaemonTaskDefinitionStatusFilter](),
 			},
-			"daemon_task_definitions": framework.DataSourceComputedListOfObjectAttribute[daemonTaskDefinitionSummaryModel](ctx),
 		},
 	}
 }
@@ -76,23 +75,8 @@ func (d *daemonTaskDefinitionsDataSource) Read(ctx context.Context, request data
 
 	var summaries []daemonTaskDefinitionSummaryModel
 	for _, summary := range results {
-		s := daemonTaskDefinitionSummaryModel{
-			Arn:    types.StringValue(aws.ToString(summary.Arn)),
-			Status: types.StringValue(string(summary.Status)),
-		}
-
-		if summary.RegisteredAt != nil {
-			s.RegisteredAt = timetypes.NewRFC3339TimePointerValue(summary.RegisteredAt)
-		}
-
-		if summary.RegisteredBy != nil {
-			s.RegisteredBy = types.StringPointerValue(summary.RegisteredBy)
-		}
-
-		if summary.DeleteRequestedAt != nil {
-			s.DeleteRequestedAt = timetypes.NewRFC3339TimePointerValue(summary.DeleteRequestedAt)
-		}
-
+		var s daemonTaskDefinitionSummaryModel
+		response.Diagnostics.Append(fwflex.Flatten(ctx, summary, &s)...)
 		summaries = append(summaries, s)
 	}
 
@@ -102,9 +86,9 @@ func (d *daemonTaskDefinitionsDataSource) Read(ctx context.Context, request data
 }
 
 type daemonTaskDefinitionsDataSourceModel struct {
+	framework.WithRegionModel
 	Family                types.String                                                      `tfsdk:"family"`
 	FamilyPrefix          types.String                                                      `tfsdk:"family_prefix"`
-	Region                types.String                                                      `tfsdk:"region"`
 	Revision              fwtypes.StringEnum[awstypes.DaemonTaskDefinitionRevisionFilter]   `tfsdk:"revision"`
 	Sort                  fwtypes.StringEnum[awstypes.SortOrder]                            `tfsdk:"sort"`
 	Status                fwtypes.StringEnum[awstypes.DaemonTaskDefinitionStatusFilter]     `tfsdk:"status"`
@@ -112,9 +96,9 @@ type daemonTaskDefinitionsDataSourceModel struct {
 }
 
 type daemonTaskDefinitionSummaryModel struct {
-	Arn               types.String `tfsdk:"arn"`
+	Arn               types.String      `tfsdk:"arn"`
 	RegisteredAt      timetypes.RFC3339 `tfsdk:"registered_at"`
-	RegisteredBy      types.String `tfsdk:"registered_by"`
+	RegisteredBy      types.String      `tfsdk:"registered_by"`
 	DeleteRequestedAt timetypes.RFC3339 `tfsdk:"delete_requested_at"`
-	Status            types.String `tfsdk:"status"`
+	Status            types.String      `tfsdk:"status"`
 }

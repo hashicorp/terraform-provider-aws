@@ -14,7 +14,7 @@ The ECS daemons data source allows access to a list of AWS ECS daemons in a spec
 
 ```terraform
 data "aws_ecs_daemons" "all" {
-  cluster = "arn:aws:ecs:us-west-2:123456789012:cluster/my-cluster"
+  cluster_arn = "arn:aws:ecs:us-west-2:123456789012:cluster/my-cluster"
 }
 ```
 
@@ -23,7 +23,7 @@ data "aws_ecs_daemons" "all" {
 This data source supports the following arguments:
 
 * `capacity_provider_arns` - (Optional) List of capacity provider ARNs to filter the daemons by.
-* `cluster` - (Required) ARN of the ECS cluster to list daemons for.
+* `cluster_arn` - (Required) ARN of the ECS cluster to list daemons for.
 
 ## Attribute Reference
 

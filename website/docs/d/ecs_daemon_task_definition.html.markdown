@@ -14,7 +14,7 @@ The ECS daemon task definition data source allows access to details of a specifi
 
 ```terraform
 data "aws_ecs_daemon_task_definition" "example" {
-  task_definition = "arn:aws:ecs:us-west-2:123456789012:daemon-task-definition/my-daemon-family:1"
+  daemon_task_definition = "arn:aws:ecs:us-west-2:123456789012:daemon-task-definition/my-daemon-family:1"
 }
 ```
 
@@ -22,7 +22,7 @@ data "aws_ecs_daemon_task_definition" "example" {
 
 This data source supports the following arguments:
 
-* `task_definition` - (Required) ARN of the daemon task definition to access.
+* `daemon_task_definition` - (Required) ARN of the daemon task definition to access.
 
 ## Attribute Reference
 

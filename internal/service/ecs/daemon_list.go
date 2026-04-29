@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -35,7 +35,7 @@ type listResourceDaemon struct {
 func (r *listResourceDaemon) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"cluster": listschema.StringAttribute{
+			"cluster_arn": listschema.StringAttribute{
 				Required: true,
 			},
 		},
@@ -58,7 +58,7 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := &ecs.ListDaemonsInput{}
 		if !query.ClusterArn.IsNull() {
-			input.ClusterArn = aws.String(query.ClusterArn.ValueString())
+			input.ClusterArn = query.ClusterArn.ValueStringPointer()
 		}
 
 		for summary, err := range listDaemonSummaries(ctx, conn, input) {
@@ -80,7 +80,8 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 
 				data.CapacityProviderArns = fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{})
 
-				result.Diagnostics.Append(flattenDaemon(ctx, daemon, &data)...)
+				result.Diagnostics.Append(fwflex.Flatten(ctx, daemon, &data)...)
+				data.DaemonName = daemonNameFromARN(data.DaemonArn.ValueString())
 				if result.Diagnostics.HasError() {
 					return
 				}
@@ -119,28 +120,21 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 
 func listDaemonSummaries(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonsInput) iter.Seq2[awstypes.DaemonSummary, error] {
 	return func(yield func(awstypes.DaemonSummary, error) bool) {
-		for {
-			output, err := conn.ListDaemons(ctx, input)
-			if err != nil {
-				yield(awstypes.DaemonSummary{}, fmt.Errorf("listing ECS Daemons: %w", err))
-				return
-			}
-
-			for _, summary := range output.DaemonSummariesList {
+		err := listDaemonsPages(ctx, conn, input, func(page *ecs.ListDaemonsOutput, lastPage bool) bool {
+			for _, summary := range page.DaemonSummariesList {
 				if !yield(summary, nil) {
-					return
+					return false
 				}
 			}
-
-			if output.NextToken == nil {
-				break
-			}
-			input.NextToken = output.NextToken
+			return true
+		})
+		if err != nil {
+			yield(awstypes.DaemonSummary{}, err)
 		}
 	}
 }
 
 type daemonListModel struct {
 	framework.WithRegionModel
-	ClusterArn types.String `tfsdk:"cluster"`
+	ClusterArn types.String `tfsdk:"cluster_arn"`
 }

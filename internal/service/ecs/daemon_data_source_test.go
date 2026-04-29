@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccECSDaemonDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ecs_daemon.test"
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -30,7 +29,7 @@ func TestAccECSDaemonDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", resourceName, "cluster"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arn", resourceName, "cluster_arn"),
 				),
 			},
 		},
@@ -39,11 +38,11 @@ func TestAccECSDaemonDataSource_basic(t *testing.T) {
 
 func TestAccECSDaemonDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ecs_daemon.test"
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,7 +53,7 @@ func TestAccECSDaemonDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", resourceName, "cluster"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arn", resourceName, "cluster_arn"),
 				),
 			},
 		},
@@ -63,11 +62,11 @@ func TestAccECSDaemonDataSource_tags(t *testing.T) {
 
 func TestAccECSDaemonDataSource_optionalFields(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ecs_daemon.test"
 	resourceName := "aws_ecs_daemon.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -78,7 +77,7 @@ func TestAccECSDaemonDataSource_optionalFields(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", resourceName, "cluster"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arn", resourceName, "cluster_arn"),
 				),
 			},
 		},
@@ -97,7 +96,7 @@ data "aws_ecs_daemon" "test" {
 
 func testAccDaemonDataSourceConfig_tags(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDaemonConfig_tags1(rName, "key1", "value1"),
+		testAccDaemonConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 		`
 data "aws_ecs_daemon" "test" {
   arn = aws_ecs_daemon.test.arn
@@ -111,7 +110,7 @@ func testAccDaemonDataSourceConfig_optionalFields(rName string) string {
 		fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                    = %[1]q
-  cluster                 = aws_ecs_cluster.test.arn
+  cluster_arn            = aws_ecs_cluster.test.arn
   daemon_task_definition  = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns  = [aws_ecs_capacity_provider.test.arn]
   enable_ecs_managed_tags = true

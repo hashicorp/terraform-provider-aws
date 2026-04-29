@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -40,7 +40,7 @@ func (d *daemonDataSource) Schema(ctx context.Context, request datasource.Schema
 				Computed:    true,
 				ElementType: types.StringType,
 			},
-			"cluster": schema.StringAttribute{
+			"cluster_arn": schema.StringAttribute{
 				Computed: true,
 			},
 			"daemon_task_definition": schema.StringAttribute{
@@ -116,12 +116,12 @@ func (d *daemonDataSource) Read(ctx context.Context, request datasource.ReadRequ
 }
 
 type daemonDataSourceModel struct {
+	framework.WithRegionModel
 	DaemonArn               types.String         `tfsdk:"arn"`
 	CapacityProviderArns    fwtypes.ListOfString `tfsdk:"capacity_provider_arns"`
-	ClusterArn              types.String         `tfsdk:"cluster"`
+	ClusterArn              types.String         `tfsdk:"cluster_arn"`
 	DaemonTaskDefinitionArn types.String         `tfsdk:"daemon_task_definition"`
 	DaemonName              types.String         `tfsdk:"name"`
-	Region                  types.String         `tfsdk:"region"`
 	Status                  types.String         `tfsdk:"status"`
 	Tags                    tftags.Map           `tfsdk:"tags"`
 }
