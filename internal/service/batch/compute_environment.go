@@ -209,6 +209,11 @@ func resourceComputeEnvironment() *schema.Resource {
 							StateFunc:        sdkv2.ToUpperSchemaStateFunc,
 							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CRType](),
 						},
+						"update_to_latest_image_version": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -372,7 +377,12 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrName, computeEnvironment.ComputeEnvironmentName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
 	if computeEnvironment.ComputeResources != nil {
-		if err := d.Set("compute_resources", []any{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
+		tfMap := flattenComputeResource(ctx, computeEnvironment.ComputeResources)
+		// update_to_latest_image_version is a write-only update flag with no
+		// counterpart on the Describe response, so carry the configured value
+		// forward to avoid perpetual drift.
+		tfMap["update_to_latest_image_version"] = d.Get("compute_resources.0.update_to_latest_image_version")
+		if err := d.Set("compute_resources", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting compute_resources: %s", err)
 		}
 	} else {
@@ -523,6 +533,12 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 						computeResourceUpdate.Tags = map[string]string{}
 					}
 				}
+
+				// Always send the configured value. The API treats this as a
+				// per-call flag (no Describe counterpart), and ignores it
+				// whenever an AMI ID is set on the compute resource, launch
+				// template, or ec2_configuration.
+				computeResourceUpdate.UpdateToLatestImageVersion = aws.Bool(d.Get("compute_resources.0.update_to_latest_image_version").(bool))
 			}
 
 			input.ComputeResources = computeResourceUpdate
@@ -680,7 +696,9 @@ func resourceComputeEnvironmentCustomizeDiff(ctx context.Context, diff *schema.R
 					if v := v.AsValueSlice()[0].GetAttr(names.AttrVersion); !v.IsKnown() {
 						out := expandComputeResource(ctx, diff.Get("compute_resources").([]any)[0].(map[string]any))
 						out.LaunchTemplate.Version = aws.String(" ") // set version to a new empty value  to trigger a replacement
-						if err := diff.SetNew("compute_resources", []any{flattenComputeResource(ctx, out)}); err != nil {
+						tfMap := flattenComputeResource(ctx, out)
+						tfMap["update_to_latest_image_version"] = diff.Get("compute_resources.0.update_to_latest_image_version")
+						if err := diff.SetNew("compute_resources", []any{tfMap}); err != nil {
 							return err
 						}
 					}
