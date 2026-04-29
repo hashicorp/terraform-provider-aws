@@ -8,6 +8,7 @@ package elasticache
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -132,6 +133,9 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				StateFunc: func(val interface{}) string {
+					return strings.ToLower(val.(string))
+				},
 			},
 			names.AttrUserName: {
 				Type:     schema.TypeString,
