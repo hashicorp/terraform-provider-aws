@@ -101,7 +101,7 @@ func resourceDataIntegration() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
-					validation.StringMatch(regexache.MustCompile(`^\w+\:\/\/\w+\/[\w/!@#+=.-]+$`), "should be a valid source uri"),
+					validation.StringMatch(regexache.MustCompile(`^(\w+\:\/\/[\w.-]+[\w/!@#+=.-]+$)|(\w+\:\/\/[\w.-]+[\w/!@#+=.-]+[\w/!@#+=.-]+[\w/!@#+=.,-]+$)`), "should be a valid source uri"),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),

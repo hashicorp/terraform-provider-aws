@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_s3files_mount_target
+```
+
+```release-note:new-list-resource
+aws_s3files_mount_target
+```
+
+```release-note:new-data-source
+aws_s3files_mount_target
+```

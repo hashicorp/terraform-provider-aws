@@ -30,6 +30,12 @@ import (
 )
 
 // @SDKResource("aws_securityhub_standards_control", name="Standards Control")
+// @ArnIdentity("standards_control_arn", identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsControl")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
 func resourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStandardsControlPut,
@@ -92,13 +98,13 @@ func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	standardsControlARN := d.Get("standards_control_arn").(string)
-	input := &securityhub.UpdateStandardsControlInput{
+	input := securityhub.UpdateStandardsControlInput{
 		ControlStatus:       types.ControlStatus(d.Get("control_status").(string)),
 		DisabledReason:      aws.String(d.Get("disabled_reason").(string)),
 		StandardsControlArn: aws.String(standardsControlARN),
 	}
 
-	_, err := conn.UpdateStandardsControl(ctx, input)
+	_, err := conn.UpdateStandardsControl(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Standards Control (%s): %s", d.Id(), err)
@@ -180,16 +186,16 @@ func standardsControlARNToStandardsSubscriptionARN(inputARN string) (string, err
 }
 
 func findStandardsControlByTwoPartKey(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
-	input := &securityhub.DescribeStandardsControlsInput{
+	input := securityhub.DescribeStandardsControlsInput{
 		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
 	}
 
-	return findStandardsControl(ctx, conn, input, func(v *types.StandardsControl) bool {
+	return findStandardsControl(ctx, conn, &input, func(v types.StandardsControl) bool {
 		return aws.ToString(v.StandardsControlArn) == standardsControlARN
 	})
 }
 
-func findStandardsControl(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeStandardsControlsInput, filter tfslices.Predicate[*types.StandardsControl]) (*types.StandardsControl, error) {
+func findStandardsControl(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeStandardsControlsInput, filter tfslices.Predicate[types.StandardsControl]) (*types.StandardsControl, error) {
 	output, err := findStandardsControls(ctx, conn, input, filter)
 
 	if err != nil {
@@ -199,7 +205,7 @@ func findStandardsControl(ctx context.Context, conn *securityhub.Client, input *
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findStandardsControls(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeStandardsControlsInput, filter tfslices.Predicate[*types.StandardsControl]) ([]types.StandardsControl, error) {
+func findStandardsControls(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeStandardsControlsInput, filter tfslices.Predicate[types.StandardsControl]) ([]types.StandardsControl, error) {
 	var output []types.StandardsControl
 
 	pages := securityhub.NewDescribeStandardsControlsPaginator(conn, input)
@@ -217,7 +223,7 @@ func findStandardsControls(ctx context.Context, conn *securityhub.Client, input 
 		}
 
 		for _, v := range page.Controls {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}

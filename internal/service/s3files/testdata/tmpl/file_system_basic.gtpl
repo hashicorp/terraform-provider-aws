@@ -1,3 +1,12 @@
+resource "aws_s3files_file_system" "test" {
+{{- template "region" }}
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+{{- template "tags" . }}
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {
@@ -133,13 +142,4 @@ resource "aws_iam_role_policy" "test" {
       }
     ]
   })
-}
-
-resource "aws_s3files_file_system" "test" {
-{{- template "region" }}
-  bucket   = aws_s3_bucket.test.arn
-  role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_s3_bucket_versioning.test]
-{{- template "tags" . }}
 }

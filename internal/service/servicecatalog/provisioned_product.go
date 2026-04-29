@@ -522,7 +522,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if _, err := waitProvisionedProductReady(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		if failureErr, ok := errs.As[*provisionedProductFailureError](err); ok {
+		if failureErr, ok := errors.AsType[*provisionedProductFailureError](err); ok {
 			log.Printf("[WARN] Service Catalog Provisioned Product (%s) update failed with status %s, refreshing state", d.Id(), failureErr.Status)
 			refreshDiags := resourceProvisionedProductRead(ctx, d, meta)
 			if refreshDiags.HasError() {

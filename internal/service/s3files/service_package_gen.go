@@ -25,16 +25,28 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newAccessPointDataSource,
+			TypeName: "aws_s3files_access_point",
+			Name:     "Access Point",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newFileSystemDataSource,
 			TypeName: "aws_s3files_file_system",
 			Name:     "File System",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newFileSystemsDataSource,
 			TypeName: "aws_s3files_file_systems",
 			Name:     "File Systems",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newMountTargetDataSource,
+			TypeName: "aws_s3files_mount_target",
+			Name:     "Mount Target",
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -42,14 +54,57 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccessPointResource,
+			TypeName: "aws_s3files_access_point",
+			Name:     "Access Point",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newFileSystemResource,
 			TypeName: "aws_s3files_file_system",
 			Name:     "File System",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newFileSystemPolicyResource,
+			TypeName: "aws_s3files_file_system_policy",
+			Name:     "File System Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrFileSystemID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newMountTargetResource,
+			TypeName: "aws_s3files_mount_target",
+			Name:     "Mount Target",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newSynchronizationConfigurationResource,
+			TypeName: "aws_s3files_synchronization_configuration",
+			Name:     "Synchronization Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrFileSystemID, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -60,14 +115,45 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newAccessPointResourceAsListResource,
+			TypeName: "aws_s3files_access_point",
+			Name:     "Access Point",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
 			Factory:  newFileSystemResourceAsListResource,
 			TypeName: "aws_s3files_file_system",
 			Name:     "File System",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newFileSystemPolicyResourceAsListResource,
+			TypeName: "aws_s3files_file_system_policy",
+			Name:     "File System Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrFileSystemID, true)),
+		},
+		{
+			Factory:  newMountTargetResourceAsListResource,
+			TypeName: "aws_s3files_mount_target",
+			Name:     "Mount Target",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newSynchronizationConfigurationResourceAsListResource,
+			TypeName: "aws_s3files_synchronization_configuration",
+			Name:     "Synchronization Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrFileSystemID, true)),
 		},
 	})
 }

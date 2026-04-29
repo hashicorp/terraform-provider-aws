@@ -43,6 +43,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_api_gateway_resource.example
+  identity = {
+    rest_api_id = "12345abcde"
+    id          = "67890fghij"
+  }
+}
+
+resource "aws_api_gateway_resource" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `rest_api_id` (String) ID of the associated REST API.
+* `id` (String) Resource's identifier.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_resource` using `REST-API-ID/RESOURCE-ID`. For example:
 
 ```terraform

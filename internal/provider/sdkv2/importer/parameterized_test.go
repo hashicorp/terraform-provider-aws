@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -21,15 +21,15 @@ var regionalSingleParameterizedSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
-func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(attrName)
+func regionalSingleParameterizedIdentitySpec(name string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterizedIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
@@ -326,12 +326,12 @@ var globalSingleParameterizedSchema = map[string]*schema.Schema{
 	},
 }
 
-func globalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(attrName)
+func globalSingleParameterizedIdentitySpec(name string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func globalSingleParameterizedIdentitySpecWithMappedName(attrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentityWithMappedName(attrName, resourceAttrName)
+func globalSingleParameterizedIdentitySpecWithMappedName(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
@@ -544,7 +544,7 @@ var regionalMultipleParameterizedSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 func regionalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identity {

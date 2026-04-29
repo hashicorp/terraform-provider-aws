@@ -1,6 +1,13 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_s3files_file_system" "test" {
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {
@@ -133,13 +140,6 @@ resource "aws_iam_role_policy" "test" {
       }
     ]
   })
-}
-
-resource "aws_s3files_file_system" "test" {
-  bucket   = aws_s3_bucket.test.arn
-  role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_s3_bucket_versioning.test]
 }
 
 variable "rName" {

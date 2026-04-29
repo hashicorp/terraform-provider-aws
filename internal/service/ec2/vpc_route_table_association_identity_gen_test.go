@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCRouteTableAssociation_Identity_basic(t *testing.T) {
+func TestAccVPCRouteTableAssociation_Identity_Subnet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.RouteTableAssociation
@@ -39,7 +39,7 @@ func TestAccVPCRouteTableAssociation_Identity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/subnet_basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &v),
@@ -57,7 +57,7 @@ func TestAccVPCRouteTableAssociation_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/RouteTableAssociation/basic/"),
+				ConfigDirectory:   config.StaticDirectory("testdata/RouteTableAssociation/subnet_basic/"),
 				ConfigVariables:   config.Variables{},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: testAccRouteTabAssocImportStateIdFunc(resourceName),
@@ -68,7 +68,7 @@ func TestAccVPCRouteTableAssociation_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/RouteTableAssociation/basic/"),
+				ConfigDirectory:   config.StaticDirectory("testdata/RouteTableAssociation/subnet_basic/"),
 				ConfigVariables:   config.Variables{},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -84,7 +84,7 @@ func TestAccVPCRouteTableAssociation_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/subnet_basic/"),
 				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -100,7 +100,7 @@ func TestAccVPCRouteTableAssociation_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCRouteTableAssociation_Identity_regionOverride(t *testing.T) {
+func TestAccVPCRouteTableAssociation_Identity_Subnet_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route_table_association.test"
@@ -116,7 +116,7 @@ func TestAccVPCRouteTableAssociation_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/subnet_region_override/"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -133,7 +133,7 @@ func TestAccVPCRouteTableAssociation_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/subnet_region_override/"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -146,7 +146,7 @@ func TestAccVPCRouteTableAssociation_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/subnet_region_override/"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -164,7 +164,7 @@ func TestAccVPCRouteTableAssociation_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/subnet_region_override/"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -183,7 +183,7 @@ func TestAccVPCRouteTableAssociation_Identity_regionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.39.0
-func TestAccVPCRouteTableAssociation_Identity_ExistingResource_basic(t *testing.T) {
+func TestAccVPCRouteTableAssociation_Identity_Subnet_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.RouteTableAssociation
@@ -199,7 +199,7 @@ func TestAccVPCRouteTableAssociation_Identity_ExistingResource_basic(t *testing.
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/basic_v6.39.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/subnet_v6.39.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &v),
@@ -212,7 +212,7 @@ func TestAccVPCRouteTableAssociation_Identity_ExistingResource_basic(t *testing.
 			// Step 2: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RouteTableAssociation/basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/RouteTableAssociation/subnet_basic/"),
 				ConfigVariables:          config.Variables{},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -236,7 +236,7 @@ func TestAccVPCRouteTableAssociation_Identity_ExistingResource_basic(t *testing.
 }
 
 // Resource Identity was added after v6.39.0
-func TestAccVPCRouteTableAssociation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func TestAccVPCRouteTableAssociation_Identity_Subnet_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.RouteTableAssociation
@@ -257,7 +257,7 @@ func TestAccVPCRouteTableAssociation_Identity_ExistingResource_noRefreshNoChange
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/basic_v6.39.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/subnet_v6.39.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &v),
@@ -270,7 +270,273 @@ func TestAccVPCRouteTableAssociation_Identity_ExistingResource_noRefreshNoChange
 			// Step 2: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RouteTableAssociation/basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/RouteTableAssociation/subnet_basic/"),
+				ConfigVariables:          config.Variables{},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCRouteTableAssociation_Identity_Gateway_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.RouteTableAssociation
+	resourceName := "aws_route_table_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/gateway_basic/"),
+				ConfigVariables: config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrID)),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/RouteTableAssociation/gateway_basic/"),
+				ConfigVariables:   config.Variables{},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateIdFunc: testAccRouteTabAssocImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/RouteTableAssociation/gateway_basic/"),
+				ConfigVariables:   config.Variables{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: testAccRouteTabAssocImportStateIdFunc(resourceName),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/gateway_basic/"),
+				ConfigVariables: config.Variables{},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCRouteTableAssociation_Identity_Gateway_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_route_table_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/gateway_region_override/"),
+				ConfigVariables: config.Variables{
+					"region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						names.AttrID:        knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrID)),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/gateway_region_override/"),
+				ConfigVariables: config.Variables{
+					"region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccRouteTabAssocImportStateIdFunc),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/gateway_region_override/"),
+				ConfigVariables: config.Variables{
+					"region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccRouteTabAssocImportStateIdFunc),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/gateway_region_override/"),
+				ConfigVariables: config.Variables{
+					"region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.39.0
+func TestAccVPCRouteTableAssociation_Identity_Gateway_ExistingResource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.RouteTableAssociation
+	resourceName := "aws_route_table_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckRouteTableAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/gateway_v6.39.0/"),
+				ConfigVariables: config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/RouteTableAssociation/gateway_basic/"),
+				ConfigVariables:          config.Variables{},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrID)),
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.39.0
+func TestAccVPCRouteTableAssociation_Identity_Gateway_ExistingResource_noRefreshNoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.RouteTableAssociation
+	resourceName := "aws_route_table_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckRouteTableAssociationDestroy(ctx, t),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/gateway_v6.39.0/"),
+				ConfigVariables: config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/RouteTableAssociation/gateway_basic/"),
 				ConfigVariables:          config.Variables{},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

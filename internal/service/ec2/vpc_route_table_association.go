@@ -34,6 +34,7 @@ import (
 // @Testing(importStateIdFunc=testAccRouteTabAssocImportStateIdFunc)
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v6.39.0")
+// @Testing(identityTestCases="subnet;gateway")
 func resourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
