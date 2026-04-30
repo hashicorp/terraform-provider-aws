@@ -1,0 +1,58 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: "Close Stale Draft PRs"
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Describe actions without commenting or closing PRs"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  pull-requests: write
+
+jobs:
+  close-stale-drafts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close stale draft PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' &&
+            github.event.inputs.dry_run || 'true' }}
+        run: |
+          # Calculate the date 60 days ago in ISO format (YYYY-MM-DD) GNU/BSD compatible
+          DATE=$(date -u -d "60 days ago" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-60d +%Y-%m-%dT%H:%M:%SZ)
+
+          echo "Finding draft PRs updated before $DATE (dry_run=$DRY_RUN)..."
+
+          # Use gh search prs to find open draft PRs matching the criteria
+          PRS=$(gh search prs \
+            --state open \
+            --repo ${{ github.repository }} \
+            --draft \
+            --updated "<$DATE" \
+            --json number \
+            -q '.[].number')
+
+          if [ -z "$PRS" ]; then
+            echo "No stale draft PRs found."
+            exit 0
+          fi
+
+          for PR in $PRS; do
+            echo "Processing PR #$PR"
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "[DRY RUN] Would comment on and close PR #$PR"
+            else
+              echo -e "This draft pull request is being closed because it has been inactive for _60 days_ ⏳. This helps our maintainers find and focus on active contributions.\n\nIf you would like to continue working on this, please reopen the pull request and mark it as ready for review when complete. Thank you!" \
+              | gh pr comment $PR --body-file -
+              gh pr close $PR
+            fi
+          done

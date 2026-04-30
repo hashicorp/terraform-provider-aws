@@ -65,6 +65,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_acm_certificate_validation",
 			Name:     "Certificate Validation",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrCertificateARN,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
 		},
 	}
 }

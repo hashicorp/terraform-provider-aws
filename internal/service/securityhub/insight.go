@@ -7,6 +7,7 @@ package securityhub
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -199,12 +200,9 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, insight.InsightArn)
-	if err := d.Set("filters", flattenSecurityFindingFilters(insight.Filters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting filters: %s", err)
+	if err := resourceInsightFlatten(ctx, insight, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("group_by_attribute", insight.GroupByAttribute)
-	d.Set(names.AttrName, insight.Name)
 
 	return diags
 }
@@ -257,6 +255,17 @@ func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	return diags
+}
+
+func resourceInsightFlatten(_ context.Context, insight *types.Insight, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, insight.InsightArn)
+	if err := d.Set("filters", flattenSecurityFindingFilters(insight.Filters)); err != nil {
+		return fmt.Errorf("setting filters: %w", err)
+	}
+	d.Set("group_by_attribute", insight.GroupByAttribute)
+	d.Set(names.AttrName, insight.Name)
+
+	return nil
 }
 
 func findInsightByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {

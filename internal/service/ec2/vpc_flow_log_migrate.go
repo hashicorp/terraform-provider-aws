@@ -117,11 +117,17 @@ func flowLogSchemaV0() *schema.Resource {
 	}
 }
 
-func flowLogStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+func flowLogStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		rawState = map[string]any{}
 	}
 
+	name, ok := rawState[names.AttrLogGroupName]
+	if ok && name != "" {
+		c := meta.(regionalARNMaker)
+
+		rawState["log_destination"] = cloudwatchLogGroupARNFromName(ctx, c, name.(string))
+	}
 	delete(rawState, names.AttrLogGroupName)
 
 	return rawState, nil
