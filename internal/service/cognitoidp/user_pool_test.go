@@ -2796,7 +2796,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_kms_key" "test" {
@@ -2853,7 +2853,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -2899,7 +2899,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -2953,7 +2953,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -3009,7 +3009,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
