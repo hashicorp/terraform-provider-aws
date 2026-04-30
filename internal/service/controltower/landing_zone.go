@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -73,6 +74,14 @@ func resourceLandingZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"remediation_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[types.RemediationType](),
+				},
+			},
 			"manifest_json": {
 				Type:                  schema.TypeString,
 				Required:              true,
@@ -107,6 +116,10 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 		Manifest: manifest,
 		Tags:     getTagsIn(ctx),
 		Version:  aws.String(d.Get(names.AttrVersion).(string)),
+	}
+
+	if v, ok := d.GetOk("remediation_types"); ok && v.(*schema.Set).Len() > 0 {
+		input.RemediationTypes = flex.ExpandStringyValueSet[types.RemediationType](v.(*schema.Set))
 	}
 
 	output, err := conn.CreateLandingZone(ctx, input)
@@ -154,6 +167,11 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("drift_status", nil)
 	}
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
+
+	if err := d.Set("remediation_types", landingZone.RemediationTypes); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting remediation_types: %s", err)
+	}
+
 	if landingZone.Manifest != nil {
 		v, err := tfsmithy.DocumentToJSONString(landingZone.Manifest)
 
@@ -184,6 +202,10 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 			LandingZoneIdentifier: aws.String(d.Id()),
 			Manifest:              manifest,
 			Version:               aws.String(d.Get(names.AttrVersion).(string)),
+		}
+
+		if v, ok := d.GetOk("remediation_types"); ok && v.(*schema.Set).Len() > 0 {
+			input.RemediationTypes = flex.ExpandStringyValueSet[types.RemediationType](v.(*schema.Set))
 		}
 
 		output, err := conn.UpdateLandingZone(ctx, input)

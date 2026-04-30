@@ -34,13 +34,16 @@ import (
 
 // @FrameworkResource("aws_auditmanager_control", name="Control")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/auditmanager/types;awstypes;awstypes.Control")
 func newControlResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &controlResource{}, nil
 }
 
 type controlResource struct {
 	framework.ResourceWithModel[controlResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *controlResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

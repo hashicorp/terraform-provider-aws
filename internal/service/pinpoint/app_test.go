@@ -289,7 +289,7 @@ func TestAccPinpointApp_limits(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"daily":               knownvalue.Int64Exact(3),
 							"maximum_duration":    knownvalue.Int64Exact(600),
-							"messages_per_second": knownvalue.Int64Exact(50),
+							"messages_per_second": knownvalue.Int64Exact(1),
 							"total":               knownvalue.Int64Exact(100),
 						}),
 					})),
@@ -586,7 +586,7 @@ resource "aws_pinpoint_app" "test" {
   limits {
     daily               = 3
     maximum_duration    = 600
-    messages_per_second = 50
+    messages_per_second = 1
     total               = 100
   }
 }

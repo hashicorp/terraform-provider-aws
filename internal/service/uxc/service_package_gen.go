@@ -7,7 +7,6 @@ package uxc
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/uxc"
@@ -27,7 +26,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newServicesDataSource,
 			TypeName: "aws_uxc_services",
 			Name:     "Services",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -38,7 +37,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAccountCustomizationsResource,
 			TypeName: "aws_uxc_account_customizations",
 			Name:     "Account Customizations",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalSingletonIdentity(),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,

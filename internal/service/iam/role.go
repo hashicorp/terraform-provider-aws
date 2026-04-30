@@ -648,17 +648,12 @@ func findRole(ctx context.Context, conn *iam.Client, input *iam.GetRoleInput) (*
 	return output.Role, nil
 }
 
-const (
-	roleARNIsUniqueIDState = "uniqueid"
-	roleNotFoundState      = "notfound"
-)
-
-func statusRoleCreate(conn *iam.Client, id string) retry.StateRefreshFunc {
+func statusRoleARNValue(conn *iam.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		role, err := findRoleByName(ctx, conn, id)
 
 		if retry.NotFound(err) {
-			return nil, roleNotFoundState, nil
+			return nil, arnStateNotFound, nil
 		}
 
 		if err != nil {
@@ -666,10 +661,10 @@ func statusRoleCreate(conn *iam.Client, id string) retry.StateRefreshFunc {
 		}
 
 		if arn.IsARN(aws.ToString(role.Arn)) {
-			return role, names.AttrARN, nil
+			return role, arnStateIsARN, nil
 		}
 
-		return role, roleARNIsUniqueIDState, nil
+		return role, arnStateIsUniqueID, nil
 	}
 }
 
@@ -679,13 +674,14 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.Client, id string, 
 	}
 
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{roleARNIsUniqueIDState, roleNotFoundState},
-		Target:                    []string{names.AttrARN},
-		Refresh:                   statusRoleCreate(conn, id),
+		Pending:                   []string{arnStateIsUniqueID, arnStateNotFound},
+		Target:                    []string{arnStateIsARN},
+		Refresh:                   statusRoleARNValue(conn, id),
 		Timeout:                   propagationTimeout,
-		NotFoundChecks:            10,
+		NotFoundChecks:            5,
 		ContinuousTargetOccurence: 5,
-		Delay:                     10 * time.Second,
+		Delay:                     5 * time.Second,
+		PollInterval:              1 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

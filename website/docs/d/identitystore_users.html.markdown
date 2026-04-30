@@ -70,4 +70,5 @@ This data source exports the following attributes in addition to the arguments a
     * `title` - User's title.
     * `user_id` - Identifier of the user in the Identity Store.
     * `user_name` - User's user name value.
+    * `user_status` - Current status of the user account.
     * `user_type` - User type.

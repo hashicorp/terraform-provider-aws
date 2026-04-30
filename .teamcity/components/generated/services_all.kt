@@ -209,6 +209,7 @@ val services = mapOf(
     "rum" to ServiceSpec("CloudWatch RUM"),
     "s3" to ServiceSpec("S3 (Simple Storage)"),
     "s3control" to ServiceSpec("S3 Control"),
+    "s3files" to ServiceSpec("S3 Files"),
     "s3outposts" to ServiceSpec("S3 on Outposts"),
     "s3tables" to ServiceSpec("S3 Tables"),
     "s3vectors" to ServiceSpec("S3 Vectors"),

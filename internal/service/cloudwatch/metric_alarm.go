@@ -8,22 +8,28 @@ package cloudwatch
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -49,276 +55,298 @@ func resourceMetricAlarm() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  MetricAlarmMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			"actions_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"alarm_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						verify.ValidARN,
-						validEC2AutomateARN,
-					),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"actions_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
 				},
-			},
-			"alarm_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"alarm_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"comparison_operator": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ComparisonOperator](),
-			},
-			"datapoints_to_alarm": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"dimensions": {
-				Type:          schema.TypeMap,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"metric_query"},
-			},
-			"evaluate_low_sample_count_percentiles": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(lowSampleCountPercentiles_Values(), true),
-			},
-			"evaluation_periods": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"extended_statistic": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"statistic", "metric_query"},
-				ValidateFunc: validation.StringMatch(
-					// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-					regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
-					"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
-				),
-			},
-			"insufficient_data_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						verify.ValidARN,
-						validEC2AutomateARN,
-					),
+				"alarm_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							verify.ValidARN,
+							validEC2AutomateARN,
+						),
+					},
 				},
-			},
-			names.AttrMetricName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"metric_query"},
-				ValidateFunc:  validation.StringLenBetween(1, 255),
-			},
-			"metric_query": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrMetricName},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAccountID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						names.AttrExpression: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"metric": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dimensions": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrMetricName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									names.AttrNamespace: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 255),
-											validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
-										),
-									},
-									"period": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ValidateFunc: validation.Any(
-											validation.IntInSlice([]int{1, 5, 10, 20, 30}),
-											validation.IntDivisibleBy(60),
-										),
-									},
-									"stat": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateDiagFunc: validation.AnyDiag(
-											enum.Validate[types.Statistic](),
-											validation.ToDiagFunc(
-												validation.StringMatch(
-													// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-													regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
-													"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
-												),
-											),
-										),
-									},
-									names.AttrUnit: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.StandardUnit](),
+				"alarm_description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"alarm_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"comparison_operator": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
+				},
+				"datapoints_to_alarm": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"dimensions": {
+					Type:          schema.TypeMap,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"metric_query"},
+				},
+				"evaluate_low_sample_count_percentiles": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(lowSampleCountPercentiles_Values(), true),
+				},
+				"evaluation_criteria": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ExactlyOneOf:  []string{"evaluation_criteria", names.AttrMetricName, "metric_query"},
+					ConflictsWith: []string{names.AttrNamespace, names.AttrMetricName, "dimensions", "period", names.AttrUnit, "statistic", "extended_statistic", "metric_query", "threshold", "comparison_operator", "threshold_metric_id", "evaluation_periods", "datapoints_to_alarm"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"promql_criteria": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"pending_period": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(0, 86400),
+										},
+										"query": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 10000),
+										},
+										"recovery_period": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(0, 86400),
+										},
 									},
 								},
 							},
 						},
-						"label": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"period": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{1, 5, 10, 20, 30}),
-								validation.IntDivisibleBy(60),
-							),
-						},
-						"return_data": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+					},
+				},
+				"evaluation_interval": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrMetricName, "metric_query"},
+					RequiredWith:  []string{"evaluation_criteria"},
+					ValidateFunc: validation.Any(
+						validation.IntInSlice([]int{10, 20, 30}),
+						validation.IntDivisibleBy(60),
+					),
+				},
+				"evaluation_periods": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"extended_statistic": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"statistic", "metric_query"},
+					ValidateFunc: validation.StringMatch(
+						// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
+						regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+						"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+					),
+				},
+				"insufficient_data_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							verify.ValidARN,
+							validEC2AutomateARN,
+						),
+					},
+				},
+				names.AttrMetricName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"metric_query"},
+					ValidateFunc:  validation.StringLenBetween(1, 255),
+				},
+				"metric_query": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrMetricName},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAccountID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							names.AttrExpression: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"metric": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dimensions": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrMetricName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										names.AttrNamespace: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 255),
+												validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
+											),
+										},
+										"period": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ValidateFunc: validation.Any(
+												validation.IntInSlice([]int{1, 5, 10, 20, 30}),
+												validation.IntDivisibleBy(60),
+											),
+										},
+										"stat": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateDiagFunc: validation.AnyDiag(
+												enum.Validate[awstypes.Statistic](),
+												validation.ToDiagFunc(
+													validation.StringMatch(
+														// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
+														regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+														"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+													),
+												),
+											),
+										},
+										names.AttrUnit: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.StandardUnit](),
+										},
+									},
+								},
+							},
+							"label": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"period": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{1, 5, 10, 20, 30}),
+									validation.IntDivisibleBy(60),
+								),
+							},
+							"return_data": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			names.AttrNamespace: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"metric_query"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
-				),
-			},
-			"ok_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						verify.ValidARN,
-						validEC2AutomateARN,
+				names.AttrNamespace: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"metric_query"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
 					),
 				},
-			},
-			"period": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"metric_query"},
-				ValidateFunc: validation.Any(
-					validation.IntInSlice([]int{10, 20, 30}),
-					validation.IntDivisibleBy(60),
-				),
-			},
-			"statistic": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ConflictsWith:    []string{"extended_statistic", "metric_query"},
-				ValidateDiagFunc: enum.Validate[types.Statistic](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"threshold": {
-				Type:          schema.TypeFloat,
-				Optional:      true,
-				ConflictsWith: []string{"threshold_metric_id"},
-			},
-			"threshold_metric_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"threshold"},
-				ValidateFunc:  validation.StringLenBetween(1, 255),
-			},
-			"treat_missing_data": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      missingDataMissing,
-				ValidateFunc: validation.StringInSlice(missingData_Values(), true),
-			},
-			names.AttrUnit: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.StandardUnit](),
-			},
+				"ok_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							verify.ValidARN,
+							validEC2AutomateARN,
+						),
+					},
+				},
+				"period": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{"metric_query"},
+					ValidateFunc: validation.Any(
+						validation.IntInSlice([]int{10, 20, 30}),
+						validation.IntDivisibleBy(60),
+					),
+				},
+				"statistic": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ConflictsWith:    []string{"extended_statistic", "metric_query"},
+					ValidateDiagFunc: enum.Validate[awstypes.Statistic](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"threshold": {
+					Type:          schema.TypeFloat,
+					Optional:      true,
+					ConflictsWith: []string{"threshold_metric_id"},
+				},
+				"threshold_metric_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"threshold"},
+					ValidateFunc:  validation.StringLenBetween(1, 255),
+				},
+				"treat_missing_data": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      missingDataMissing,
+					ValidateFunc: validation.StringInSlice(missingData_Values(), true),
+				},
+				names.AttrUnit: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.StandardUnit](),
+				},
+			}
 		},
 
-		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
-				_, metricNameOk := diff.GetOk(names.AttrMetricName)
-				_, statisticOk := diff.GetOk("statistic")
-				_, extendedStatisticOk := diff.GetOk("extended_statistic")
-
-				if metricNameOk && ((!statisticOk && !extendedStatisticOk) || (statisticOk && extendedStatisticOk)) {
-					return errors.New("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm")
-				}
-
-				if v := diff.Get("metric_query"); v != nil {
-					for _, v := range v.(*schema.Set).List() {
-						tfMap := v.(map[string]any)
-						if v, ok := tfMap[names.AttrExpression]; ok && v.(string) != "" {
-							if v := tfMap["metric"]; v != nil {
-								if len(v.([]any)) > 0 {
-									return errors.New("No metric_query may have both `expression` and a `metric` specified")
-								}
-							}
-						}
-					}
-				}
-
-				return nil
-			},
-		),
+		CustomizeDiff: resourceMetricAlarmCustomizeDiff,
 	}
 }
 
@@ -383,7 +411,9 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta a
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	resourceMetricAlarmFlatten(ctx, d, alarm)
+	if err := resourceMetricAlarmFlatten(ctx, d, alarm); err != nil {
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+	}
 
 	return diags
 }
@@ -415,7 +445,7 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 	_, err := conn.DeleteAlarms(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -426,10 +456,56 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.MetricAlarm, error) {
+func resourceMetricAlarmCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, v any) error {
+	var plan metricAlarmResourceModel
+	if err := tfcty.ToFramework(ctx, diff.GetRawPlan(), &plan); err != nil {
+		return smarterr.NewError(fmt.Errorf("RawPlan to framework model: %w", err))
+	}
+
+	// Traditional metric alarm validation.
+	if !plan.MetricName.IsUnknown() && !plan.MetricQuery.IsUnknown() && !plan.Statistic.IsUnknown() && !plan.ExtendedStatistic.IsUnknown() {
+		metricNameOk := fwflex.StringValueFromFramework(ctx, plan.MetricName) != ""
+		metricQueryOk := plan.MetricQuery.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) > 0
+
+		// Traditional metric alarms require comparison_operator and evaluation_periods.
+		if metricNameOk || metricQueryOk {
+			if fwflex.StringValueFromFramework(ctx, plan.ComparisonOperator) == "" {
+				return errors.New("comparison_operator is required for traditional metric alarms")
+			}
+			if plan.EvaluationPeriods.ValueInt64() == 0 {
+				return errors.New("evaluation_periods is required for traditional metric alarms")
+			}
+		}
+
+		statisticOk := fwflex.StringValueFromFramework(ctx, plan.Statistic) != ""
+		extendedStatisticOk := fwflex.StringValueFromFramework(ctx, plan.ExtendedStatistic) != ""
+		if metricNameOk && ((!statisticOk && !extendedStatisticOk) || (statisticOk && extendedStatisticOk)) {
+			return errors.New("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm")
+		}
+	}
+
+	if plan.MetricQuery.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true, UnhandledUnknownAsZero: true}) > 0 {
+		if mdqs, diags := plan.MetricQuery.ToSlice(ctx); !diags.HasError() {
+			for _, mdq := range mdqs {
+				if mdq == nil {
+					continue
+				}
+				if fwflex.StringValueFromFramework(ctx, mdq.Expression) != "" {
+					if mdq.Metric.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true, UnhandledUnknownAsZero: true}) > 0 {
+						return errors.New("No metric_query may have both `expression` and a `metric` specified")
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*awstypes.MetricAlarm, error) {
 	input := &cloudwatch.DescribeAlarmsInput{
 		AlarmNames: []string{name},
-		AlarmTypes: []types.AlarmType{types.AlarmTypeMetricAlarm},
+		AlarmTypes: []awstypes.AlarmType{awstypes.AlarmTypeMetricAlarm},
 	}
 
 	output, err := conn.DescribeAlarms(ctx, input)
@@ -447,23 +523,45 @@ func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name st
 
 func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutMetricAlarmInput {
 	apiObject := &cloudwatch.PutMetricAlarmInput{
-		AlarmName:          aws.String(d.Get("alarm_name").(string)),
-		ComparisonOperator: types.ComparisonOperator(d.Get("comparison_operator").(string)),
-		EvaluationPeriods:  aws.Int32(int32(d.Get("evaluation_periods").(int))),
-		Tags:               getTagsIn(ctx),
-		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
+		AlarmName: aws.String(d.Get("alarm_name").(string)),
+		Tags:      getTagsIn(ctx),
 	}
 
-	if v := d.Get("actions_enabled"); v != nil {
-		apiObject.ActionsEnabled = aws.Bool(v.(bool))
-	}
-
+	// Set common fields for both PromQL and traditional alarms.
 	if v, ok := d.GetOk("alarm_actions"); ok && v.(*schema.Set).Len() > 0 {
 		apiObject.AlarmActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("alarm_description"); ok {
 		apiObject.AlarmDescription = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("insufficient_data_actions"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.InsufficientDataActions = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("ok_actions"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.OKActions = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	// Handle evaluation_criteria (PromQL alarms).
+	if v, ok := d.GetOk("evaluation_criteria"); ok && len(v.([]any)) > 0 {
+		apiObject.EvaluationCriteria = expandEvaluationCriteria(v.([]any)[0].(map[string]any))
+
+		if v, ok := d.GetOk("evaluation_interval"); ok {
+			apiObject.EvaluationInterval = aws.Int32(int32(v.(int)))
+		}
+
+		return apiObject
+	}
+
+	// Handle traditional metric alarms - set fields that are only for traditional alarms.
+	if v := d.Get("actions_enabled"); v != nil {
+		apiObject.ActionsEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("comparison_operator"); ok {
+		apiObject.ComparisonOperator = awstypes.ComparisonOperator(v.(string))
 	}
 
 	if v, ok := d.GetOk("datapoints_to_alarm"); ok {
@@ -478,12 +576,12 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.EvaluateLowSampleCountPercentile = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("extended_statistic"); ok {
-		apiObject.ExtendedStatistic = aws.String(v.(string))
+	if v, ok := d.GetOk("evaluation_periods"); ok {
+		apiObject.EvaluationPeriods = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("insufficient_data_actions"); ok && v.(*schema.Set).Len() > 0 {
-		apiObject.InsufficientDataActions = flex.ExpandStringValueSet(v.(*schema.Set))
+	if v, ok := d.GetOk("extended_statistic"); ok {
+		apiObject.ExtendedStatistic = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrMetricName); ok {
@@ -498,16 +596,12 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.Namespace = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ok_actions"); ok && v.(*schema.Set).Len() > 0 {
-		apiObject.OKActions = flex.ExpandStringValueSet(v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("period"); ok {
 		apiObject.Period = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("statistic"); ok {
-		apiObject.Statistic = types.Statistic(v.(string))
+		apiObject.Statistic = awstypes.Statistic(v.(string))
 	}
 
 	if v, ok := d.GetOk("threshold_metric_id"); ok {
@@ -516,14 +610,43 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.Threshold = aws.Float64(d.Get("threshold").(float64))
 	}
 
+	apiObject.TreatMissingData = aws.String(d.Get("treat_missing_data").(string))
+
 	if v, ok := d.GetOk(names.AttrUnit); ok {
-		apiObject.Unit = types.StandardUnit(v.(string))
+		apiObject.Unit = awstypes.StandardUnit(v.(string))
 	}
 
 	return apiObject
 }
 
-func flattenMetricAlarmDimensions(apiObjects []types.Dimension) map[string]any {
+func flattenEvaluationCriteria(apiObject awstypes.EvaluationCriteria) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	switch v := apiObject.(type) {
+	case *awstypes.EvaluationCriteriaMemberPromQLCriteria:
+		promqlMap := map[string]any{
+			"query": aws.ToString(v.Value.Query),
+		}
+
+		if v.Value.PendingPeriod != nil {
+			promqlMap["pending_period"] = aws.ToInt32(v.Value.PendingPeriod)
+		}
+
+		if v.Value.RecoveryPeriod != nil {
+			promqlMap["recovery_period"] = aws.ToInt32(v.Value.RecoveryPeriod)
+		}
+
+		tfMap["promql_criteria"] = []any{promqlMap}
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMetricAlarmDimensions(apiObjects []awstypes.Dimension) map[string]any {
 	tfMap := map[string]any{}
 
 	for _, apiObject := range apiObjects {
@@ -533,7 +656,7 @@ func flattenMetricAlarmDimensions(apiObjects []types.Dimension) map[string]any {
 	return tfMap
 }
 
-func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []any {
+func flattenMetricAlarmMetrics(apiObjects []awstypes.MetricDataQuery) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -563,7 +686,7 @@ func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []any {
 	return tfList
 }
 
-func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string]any {
+func flattenMetricAlarmMetricsMetricStat(apiObject *awstypes.MetricStat) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -583,8 +706,8 @@ func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string
 	return tfMap
 }
 
-func expandMetricAlarmMetrics(tfList []any) []types.MetricDataQuery {
-	var apiObjects []types.MetricDataQuery
+func expandMetricAlarmMetrics(tfList []any) []awstypes.MetricDataQuery {
+	var apiObjects []awstypes.MetricDataQuery
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
@@ -597,7 +720,7 @@ func expandMetricAlarmMetrics(tfList []any) []types.MetricDataQuery {
 			continue
 		}
 
-		apiObject := types.MetricDataQuery{
+		apiObject := awstypes.MetricDataQuery{
 			Id: aws.String(id),
 		}
 
@@ -635,13 +758,13 @@ func expandMetricAlarmMetrics(tfList []any) []types.MetricDataQuery {
 	return apiObjects
 }
 
-func expandMetricAlarmMetricsMetric(tfMap map[string]any) *types.MetricStat {
+func expandMetricAlarmMetricsMetric(tfMap map[string]any) *awstypes.MetricStat {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.MetricStat{
-		Metric: &types.Metric{
+	apiObject := &awstypes.MetricStat{
+		Metric: &awstypes.Metric{
 			MetricName: aws.String(tfMap[names.AttrMetricName].(string)),
 		},
 		Stat: aws.String(tfMap["stat"].(string)),
@@ -660,21 +783,49 @@ func expandMetricAlarmMetricsMetric(tfMap map[string]any) *types.MetricStat {
 	}
 
 	if v, ok := tfMap[names.AttrUnit]; ok && v.(string) != "" {
-		apiObject.Unit = types.StandardUnit(v.(string))
+		apiObject.Unit = awstypes.StandardUnit(v.(string))
 	}
 
 	return apiObject
 }
 
-func expandMetricAlarmDimensions(tfMap map[string]any) []types.Dimension {
+func expandEvaluationCriteria(tfMap map[string]any) awstypes.EvaluationCriteria {
+	if tfMap == nil {
+		return nil
+	}
+
+	if v, ok := tfMap["promql_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		apiObject := awstypes.AlarmPromQLCriteria{
+			Query: aws.String(tfMap["query"].(string)),
+		}
+
+		if v, ok := tfMap["pending_period"]; ok && v.(int) != 0 {
+			apiObject.PendingPeriod = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := tfMap["recovery_period"]; ok && v.(int) != 0 {
+			apiObject.RecoveryPeriod = aws.Int32(int32(v.(int)))
+		}
+
+		return &awstypes.EvaluationCriteriaMemberPromQLCriteria{
+			Value: apiObject,
+		}
+	}
+
+	return nil
+}
+
+func expandMetricAlarmDimensions(tfMap map[string]any) []awstypes.Dimension {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	var apiObjects []types.Dimension
+	var apiObjects []awstypes.Dimension
 
 	for k, v := range tfMap {
-		apiObjects = append(apiObjects, types.Dimension{
+		apiObjects = append(apiObjects, awstypes.Dimension{
 			Name:  aws.String(k),
 			Value: aws.String(v.(string)),
 		})
@@ -683,33 +834,129 @@ func expandMetricAlarmDimensions(tfMap map[string]any) []types.Dimension {
 	return apiObjects
 }
 
-func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm *types.MetricAlarm) {
+func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm *awstypes.MetricAlarm) error {
 	d.Set("actions_enabled", alarm.ActionsEnabled)
 	d.Set("alarm_actions", alarm.AlarmActions)
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
 	d.Set(names.AttrARN, alarm.AlarmArn)
-	d.Set("comparison_operator", alarm.ComparisonOperator)
-	d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
-	d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions))
-	d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
-	d.Set("evaluation_periods", alarm.EvaluationPeriods)
-	d.Set("extended_statistic", alarm.ExtendedStatistic)
 	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
-	d.Set(names.AttrMetricName, alarm.MetricName)
-	if len(alarm.Metrics) > 0 {
-		d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics))
-	}
-	d.Set(names.AttrNamespace, alarm.Namespace)
 	d.Set("ok_actions", alarm.OKActions)
-	d.Set("period", alarm.Period)
-	d.Set("statistic", alarm.Statistic)
-	d.Set("threshold", alarm.Threshold)
-	d.Set("threshold_metric_id", alarm.ThresholdMetricId)
+
+	// Handle EvaluationCriteria (PromQL alarms).
+	if alarm.EvaluationCriteria != nil {
+		if err := d.Set("evaluation_criteria", flattenEvaluationCriteria(alarm.EvaluationCriteria)); err != nil {
+			return smarterr.NewError(fmt.Errorf("setting evaluation_criteria: %w", err))
+		}
+		d.Set("evaluation_interval", alarm.EvaluationInterval)
+
+		// Clear traditional metric alarm fields for PromQL alarms
+		d.Set("comparison_operator", nil)
+		d.Set("evaluation_periods", nil)
+		d.Set("datapoints_to_alarm", nil)
+		d.Set("dimensions", nil)
+		d.Set("evaluate_low_sample_count_percentiles", nil)
+		d.Set("extended_statistic", nil)
+		d.Set(names.AttrMetricName, nil)
+		d.Set("metric_query", nil)
+		d.Set(names.AttrNamespace, nil)
+		d.Set("period", nil)
+		d.Set("statistic", nil)
+		d.Set("threshold", nil)
+		d.Set("threshold_metric_id", nil)
+		d.Set(names.AttrUnit, nil)
+	} else {
+		// Handle traditional metric alarms
+		d.Set("comparison_operator", alarm.ComparisonOperator)
+		d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
+		if err := d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions)); err != nil {
+			return smarterr.NewError(fmt.Errorf("setting dimensions: %w", err))
+		}
+		d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
+		d.Set("evaluation_periods", alarm.EvaluationPeriods)
+		d.Set("extended_statistic", alarm.ExtendedStatistic)
+		d.Set(names.AttrMetricName, alarm.MetricName)
+		if len(alarm.Metrics) > 0 {
+			if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
+				return smarterr.NewError(fmt.Errorf("setting metric_query: %w", err))
+			}
+		}
+		d.Set(names.AttrNamespace, alarm.Namespace)
+		d.Set("period", alarm.Period)
+		d.Set("statistic", alarm.Statistic)
+		d.Set("threshold", alarm.Threshold)
+		d.Set("threshold_metric_id", alarm.ThresholdMetricId)
+		d.Set(names.AttrUnit, alarm.Unit)
+
+		// Clear PromQL fields for traditional alarms
+		d.Set("evaluation_criteria", nil)
+		d.Set("evaluation_interval", nil)
+	}
+
 	if alarm.TreatMissingData != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("treat_missing_data", alarm.TreatMissingData)
 	} else {
 		d.Set("treat_missing_data", missingDataMissing)
 	}
-	d.Set(names.AttrUnit, alarm.Unit)
+
+	return nil
+}
+
+type metricAlarmResourceModel struct {
+	framework.WithRegionModel
+	ActionsEnabled                    types.Bool                                               `tfsdk:"actions_enabled"`
+	AlarmActions                      fwtypes.SetOfString                                      `tfsdk:"alarm_actions"`
+	AlarmDescription                  types.String                                             `tfsdk:"alarm_description"`
+	AlarmName                         types.String                                             `tfsdk:"alarm_name"`
+	ARN                               types.String                                             `tfsdk:"arn"`
+	ComparisonOperator                fwtypes.StringEnum[awstypes.ComparisonOperator]          `tfsdk:"comparison_operator"`
+	DatapointsToAlarm                 types.Int64                                              `tfsdk:"datapoints_to_alarm"`
+	Dimensions                        fwtypes.MapOfString                                      `tfsdk:"dimensions"`
+	EvaluateLowSampleCountPercentiles types.String                                             `tfsdk:"evaluate_low_sample_count_percentiles"`
+	EvaluationCriteria                fwtypes.ListNestedObjectValueOf[evaluationCriteriaModel] `tfsdk:"evaluation_criteria"`
+	EvaluationInterval                types.Int64                                              `tfsdk:"evaluation_interval"`
+	EvaluationPeriods                 types.Int64                                              `tfsdk:"evaluation_periods"`
+	ExtendedStatistic                 types.String                                             `tfsdk:"extended_statistic"`
+	InsufficientDataActions           fwtypes.SetOfString                                      `tfsdk:"insufficient_data_actions"`
+	MetricName                        types.String                                             `tfsdk:"metric_name"`
+	MetricQuery                       fwtypes.SetNestedObjectValueOf[metricDataQueryModel]     `tfsdk:"metric_query"`
+	Namespace                         types.String                                             `tfsdk:"namespace"`
+	OKActions                         fwtypes.SetOfString                                      `tfsdk:"ok_actions"`
+	Period                            types.Int64                                              `tfsdk:"period"`
+	Statistic                         fwtypes.StringEnum[awstypes.Statistic]                   `tfsdk:"statistic"`
+	Tags                              tftags.Map                                               `tfsdk:"tags"`
+	TagsAll                           tftags.Map                                               `tfsdk:"tags_all"`
+	Threshold                         types.Float64                                            `tfsdk:"threshold"`
+	ThresholdMetricID                 types.String                                             `tfsdk:"threshold_metric_id"`
+	TreatMissingData                  types.String                                             `tfsdk:"treat_missing_data"`
+	Unit                              fwtypes.StringEnum[awstypes.StandardUnit]                `tfsdk:"unit"`
+}
+
+type evaluationCriteriaModel struct {
+	PromQLCriteria fwtypes.ListNestedObjectValueOf[alarmPromQLCriteriaModel] `tfsdk:"promql_criteria"`
+}
+
+type alarmPromQLCriteriaModel struct {
+	PendingPeriod  types.Int64  `tfsdk:"pending_period"`
+	Query          types.String `tfsdk:"query"`
+	RecoveryPeriod types.Int64  `tfsdk:"recovery_period"`
+}
+
+type metricDataQueryModel struct {
+	AccountID  types.String                                     `tfsdk:"account_id"`
+	Expression types.String                                     `tfsdk:"expression"`
+	ID         types.String                                     `tfsdk:"id"`
+	Metric     fwtypes.ListNestedObjectValueOf[metricStatModel] `tfsdk:"metric"`
+	Label      types.String                                     `tfsdk:"label"`
+	Period     types.Int64                                      `tfsdk:"period"`
+	ReturnData types.Bool                                       `tfsdk:"return_data"`
+}
+
+type metricStatModel struct {
+	Dimensions fwtypes.MapOfString                       `tfsdk:"dimensions"`
+	MetricName types.String                              `tfsdk:"metric_name"`
+	Namespace  types.String                              `tfsdk:"namespace"`
+	Period     types.Int64                               `tfsdk:"period"`
+	Stat       types.String                              `tfsdk:"stat"`
+	Unit       fwtypes.StringEnum[awstypes.StandardUnit] `tfsdk:"unit"`
 }

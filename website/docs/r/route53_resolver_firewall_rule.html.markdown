@@ -70,7 +70,7 @@ This resource supports the following arguments:
 * `block_override_ttl` - (Required if `block_response` is `OVERRIDE`) The recommended amount of time, in seconds, for the DNS resolver or web browser to cache the provided override record. Minimum value of 0. Maximum value of 604800.
 * `block_response` - (Required if `action` is `BLOCK`) The way that you want DNS Firewall to block the request. Valid values: `NODATA`, `NXDOMAIN`, `OVERRIDE`.
 * `confidence_threshold` - (Optional) The confidence threshold for DNS Firewall Advanced rules. You must provide this value when creating a DNS Firewall Advanced rule. Valid values: `LOW`, `MEDIUM`, `HIGH`. Conflicts with `firewall_domain_list_id`.
-* `dns_threat_protection` - (Optional) The type of DNS Firewall Advanced rule. You must provide this value when creating a DNS Firewall Advanced rule. Valid values: `DGA`, `DNS_TUNNELING`. Conflicts with `firewall_domain_list_id`.
+* `dns_threat_protection` - (Optional) The type of DNS Firewall Advanced rule. You must provide this value when creating a DNS Firewall Advanced rule. Valid values: `DGA`, `DICTIONARY_DGA`, `DNS_TUNNELING`. Conflicts with `firewall_domain_list_id`.
 * `firewall_domain_list_id` - (Optional) The ID of the domain list that you want to use in the rule. Required for standard rules. Conflicts with `dns_threat_protection` and `confidence_threshold`.
 * `firewall_domain_redirection_action` - (Optional) Evaluate DNS redirection in the DNS redirection chain, such as CNAME, DNAME, ot ALIAS. Valid values are `INSPECT_REDIRECTION_DOMAIN` and `TRUST_REDIRECTION_DOMAIN`. Default value is `INSPECT_REDIRECTION_DOMAIN`.
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group where you want to create the rule.

@@ -50,7 +50,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -158,7 +158,7 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -216,22 +216,15 @@ func TestAccLogsMetricFilter_longPatternInUTF8(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrLogGroupName] + ":" + rs.Primary.Attributes[names.AttrName], nil
-	}
+func testAccMetricFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ":", names.AttrLogGroupName, names.AttrName)
 }
 
 func testAccCheckMetricFilterExists(ctx context.Context, t *testing.T, n string, v *types.MetricFilter) resource.TestCheckFunc {
