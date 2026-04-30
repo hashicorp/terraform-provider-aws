@@ -43,6 +43,7 @@ var routeTableValidTargets = []string{
 	"gateway_id",
 	"local_gateway_id",
 	"nat_gateway_id",
+	"odb_network_arn",
 	names.AttrNetworkInterfaceID,
 	names.AttrTransitGatewayID,
 	names.AttrVPCEndpointID,
@@ -147,6 +148,10 @@ func resourceRouteTable() *schema.Resource {
 							Optional: true,
 						},
 						"vpc_peering_connection_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"odb_network_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -442,6 +447,10 @@ func resourceRouteTableHash(v any) int {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
+	if v, ok := m["odb_network_arn"]; ok {
+		fmt.Fprintf(&buf, "%s-", v.(string))
+	}
+
 	if v, ok := m[names.AttrNetworkInterfaceID]; ok && !natGatewaySet {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
@@ -708,6 +717,10 @@ func expandCreateRouteInput(tfMap map[string]any) *ec2.CreateRouteInput {
 		apiObject.VpcPeeringConnectionId = aws.String(v)
 	}
 
+	if v, ok := tfMap["odb_network_arn"].(string); ok && v != "" {
+		apiObject.OdbNetworkArn = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -774,6 +787,10 @@ func expandReplaceRouteInput(tfMap map[string]any) *ec2.ReplaceRouteInput {
 		apiObject.VpcPeeringConnectionId = aws.String(v)
 	}
 
+	if v, ok := tfMap["odb_network_arn"].(string); ok && v != "" {
+		apiObject.OdbNetworkArn = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -834,6 +851,10 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 
 	if v := apiObject.VpcPeeringConnectionId; v != nil {
 		tfMap["vpc_peering_connection_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.OdbNetworkArn; v != nil {
+		tfMap["odb_network_arn"] = aws.ToString(v)
 	}
 
 	return tfMap

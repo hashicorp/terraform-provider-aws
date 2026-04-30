@@ -4876,3 +4876,87 @@ resource "aws_route" "test" {
 }
 `, rName, destinationCidr)
 }
+
+func testAccVPCRouteConfig_resourceIPv4ODBNetwork(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+data "aws_odb_networks" "all" {}
+
+data "aws_odb_network" "first" {
+  id = data.aws_odb_networks.all.odb_networks[0].id
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  odb_network_arn        = data.aws_odb_network.first.arn
+}
+`, rName, destinationCidr)
+}
+
+func TestAccVPCRoute_ipv4ToODBNetwork(t *testing.T) {
+	ctx := acctest.Context(t)
+	var route awstypes.Route
+	resourceName := "aws_route.test"
+	odbNetworkDataSourceName := "data.aws_odb_network.first"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	destinationCidr := "172.16.2.0/24"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ODB)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteConfig_resourceIPv4ODBNetwork(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteExists(ctx, t, resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "odb_network_arn", odbNetworkDataSourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}

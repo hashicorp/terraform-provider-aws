@@ -136,6 +136,10 @@ func dataSourceRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"odb_network_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
