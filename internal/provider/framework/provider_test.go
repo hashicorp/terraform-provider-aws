@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 )
 
-// go test -bench=. -benchmem -run=Bench -v ./internal/provider/framework
+// To run these benchmarks:
+// go test -bench=. -benchmem -run=^$ -v ./internal/provider/framework
 
 // This logs Initialization an annoying number of times
 // func BenchmarkFrameworkProviderInitialization(b *testing.B) {
@@ -31,7 +32,30 @@ import (
 // 	}
 // }
 
-func BenchmarkFrameworkProviderDataSourceSchemaInitialization(b *testing.B) {
+func BenchmarkFrameworkProvider_validateResourceSchemas(b *testing.B) {
+	ctx := b.Context()
+	primary, err := sdkv2.NewProvider(ctx)
+	if err != nil {
+		b.Fatalf("Initializing SDKv2 provider: %s", err)
+	}
+	p, err := NewProvider(ctx, primary)
+	if err != nil {
+		b.Fatalf("Initializing Framework provider: %s", err)
+	}
+
+	provider := p.(*frameworkProvider)
+
+	// Reset memory counters to zero, so that we only measure the schema validation.
+	b.ResetTimer()
+	for b.Loop() {
+		err := provider.validateResourceSchemas(ctx)
+		if err != nil {
+			b.Fatalf("Validating resource schemas: %s", err)
+		}
+	}
+}
+
+func BenchmarkFrameworkProvider_SchemaInitialization_DataSource(b *testing.B) {
 	ctx := b.Context()
 	primary, err := sdkv2.NewProvider(ctx)
 	if err != nil {
@@ -53,7 +77,7 @@ func BenchmarkFrameworkProviderDataSourceSchemaInitialization(b *testing.B) {
 	}
 }
 
-func BenchmarkFrameworkProviderResourceSchemaInitialization(b *testing.B) {
+func BenchmarkFrameworkProvider_SchemaInitialization_Resource(b *testing.B) {
 	ctx := b.Context()
 	primary, err := sdkv2.NewProvider(ctx)
 	if err != nil {

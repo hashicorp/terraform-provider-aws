@@ -53,6 +53,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `attachment` - (Optional) Configuration block to define the attachment of the ENI. See [Attachment](#attachment) below for more details!
 * `description` - (Optional) Description for the network interface.
+* `ena_srd_specification` - (Optional) Configures ENA Express for the network interface. The ENI must be attached to an instance to configure ENA Express. See [ENA SRD Specification](#ena-srd-specification) below for more details.
 * `enable_primary_ipv6` - (Optional) Enables assigning a primary IPv6 Global Unicast Address (GUA) to the network interface (ENI) in dual-stack or IPv6-only subnets. This ensures the instance attached to the ENI retains a consistent IPv6 address. Once enabled, the first IPv6 GUA becomes the primary IPv6 address and cannot be disabled. The primary IPv6 address remains assigned until the instance is terminated or the ENI is detached. Enabling and subsequent disabling forces recreation of the ENI.
 * `interface_type` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter. Changing `interface_type` will cause the resource to be destroyed and re-created.
 * `ipv4_prefix_count` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
@@ -78,6 +79,17 @@ The `attachment` block supports the following:
 * `instance` - (Required) ID of the instance to attach to.
 * `device_index` - (Required) Integer to define the devices index.
 * `network_card_index` - (Optional) Index of the network card. Specify a value greater than 0 when using multiple network cards, which are supported by [some instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards). The default is 0.
+
+### ENA SRD Specification
+
+Configures [ENA Express](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-express.html) which uses AWS Scalable Reliable Datagram (SRD) technology to increase the maximum bandwidth used per stream and minimize tail latency of network traffic between EC2 instances. The ENI must be attached to an instance to configure ENA Express.
+
+* `ena_srd_enabled` - (Optional) Indicates whether ENA Express is enabled for the network interface.
+* `ena_srd_udp_specification` - (Optional) Configures ENA Express for UDP network traffic. See [ENA SRD UDP Specification](#ena-srd-udp-specification) below for more details.
+
+### ENA SRD UDP Specification
+
+* `ena_srd_udp_enabled` - (Optional) Indicates whether UDP traffic uses ENA Express. Requires `ena_srd_enabled` to be `true`.
 
 ## Attribute Reference
 

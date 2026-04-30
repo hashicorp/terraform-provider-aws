@@ -118,7 +118,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ecr_lifecycle_policy",
 			Name:     "Lifecycle Policy",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity("repository"),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("repository", true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -155,7 +155,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -171,7 +171,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ecr_repository_policy",
 			Name:     "Repository Policy",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity("repository"),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("repository", true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -189,7 +189,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})
 }

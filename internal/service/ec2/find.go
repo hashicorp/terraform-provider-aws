@@ -1260,6 +1260,36 @@ func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, insta
 	return nil, &retry.NotFoundError{}
 }
 
+func findVolumeAttachments(ctx context.Context, conn *ec2.Client, instanceID string) ([]awstypes.VolumeAttachment, error) {
+	input := ec2.DescribeVolumesInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"attachment.instance-id": instanceID,
+		}),
+	}
+
+	volumes, err := findEBSVolumes(ctx, conn, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	attachments := make([]awstypes.VolumeAttachment, 0)
+	for _, volume := range volumes {
+		for _, attachment := range volume.Attachments {
+			if attachment.State == awstypes.VolumeAttachmentStateDetached {
+				continue
+			}
+
+			if aws.ToString(attachment.InstanceId) != instanceID {
+				continue
+			}
+
+			attachments = append(attachments, attachment)
+		}
+	}
+
+	return attachments, nil
+}
+
 func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
 	input := ec2.DescribeInstancesInput{
 		InstanceIds: []string{id},
@@ -1389,6 +1419,36 @@ func findSpotPrice(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpo
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServiceLinkVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) (*awstypes.ServiceLinkVirtualInterface, error) {
+	output, err := findServiceLinkVirtualInterfaces(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServiceLinkVirtualInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) ([]awstypes.ServiceLinkVirtualInterface, error) {
+	var output []awstypes.ServiceLinkVirtualInterface
+
+	err := describeServiceLinkVirtualInterfacesPages(ctx, conn, input, func(page *ec2.DescribeServiceLinkVirtualInterfacesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.ServiceLinkVirtualInterfaces...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findSubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Subnet, error) {

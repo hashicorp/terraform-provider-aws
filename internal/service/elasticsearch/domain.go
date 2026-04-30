@@ -913,7 +913,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			newTypes := tfslices.ApplyToAll(ns.List(), func(v any) string {
 				return v.(map[string]any)["log_type"].(string)
 			})
-			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, func(s1, s2 string) bool { return s1 == s2 })
+			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, flex.Equal)
 			for _, logType := range remove {
 				input.LogPublishingOptions[logType] = awstypes.LogPublishingOption{
 					Enabled: aws.Bool(false),

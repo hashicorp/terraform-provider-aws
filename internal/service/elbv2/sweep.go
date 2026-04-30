@@ -23,6 +23,7 @@ func RegisterSweepers() {
 		F:    sweepLoadBalancers,
 		Dependencies: []string{
 			"aws_api_gateway_vpc_link",
+			"aws_ecs_express_gateway_service",
 			"aws_vpc_endpoint_service",
 			"aws_lb_listener",
 		},
@@ -32,6 +33,7 @@ func RegisterSweepers() {
 		Name: "aws_lb_target_group",
 		F:    sweepTargetGroups,
 		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
 			"aws_lb",
 		},
 	})
@@ -39,6 +41,9 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_lb_listener", &resource.Sweeper{
 		Name: "aws_lb_listener",
 		F:    sweepListeners,
+		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
+		},
 	})
 
 	awsv2.Register("aws_lb_trust_store", sweepTrustStore)

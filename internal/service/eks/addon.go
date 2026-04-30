@@ -33,6 +33,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names.
+	rfc1123LabelNameRelaxed = regexache.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
+)
+
 // @SDKResource("aws_eks_addon", name="Add-On")
 // @IdentityAttribute("cluster_name")
 // @IdentityAttribute("addon_name")
@@ -93,6 +98,24 @@ func resourceAddon() *schema.Resource {
 			"modified_at": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"namespace_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrNamespace: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringMatch(rfc1123LabelNameRelaxed, "must be a valid RFC 1123 DNS label"),
+						},
+					},
+				},
 			},
 			"pod_identity_association": {
 				Type:     schema.TypeSet,
@@ -159,6 +182,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if v, ok := d.GetOk("configuration_values"); ok {
 		input.ConfigurationValues = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("namespace_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NamespaceConfig = expandAddonNamespaceConfigRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("pod_identity_association"); ok && v.(*schema.Set).Len() > 0 {
@@ -241,6 +268,13 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
+	if addon.NamespaceConfig != nil {
+		if err := d.Set("namespace_config", []any{flattenAddonNamespaceConfigResponse(addon.NamespaceConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting namespace_config: %s", err)
+		}
+	} else {
+		d.Set("namespace_config", nil)
+	}
 	if tfList, err := flattenAddonPodIdentityAssociations(ctx, conn, addon.PodIdentityAssociations, clusterName); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else if err := d.Set("pod_identity_association", tfList); err != nil {
@@ -349,6 +383,34 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+func expandAddonNamespaceConfigRequest(tfMap map[string]any) *types.AddonNamespaceConfigRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AddonNamespaceConfigRequest{}
+
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+		apiObject.Namespace = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenAddonNamespaceConfigResponse(apiObject *types.AddonNamespaceConfigResponse) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Namespace; v != nil {
+		tfMap[names.AttrNamespace] = aws.ToString(v)
+	}
+
+	return tfMap
 }
 
 func expandAddonPodIdentityAssociations(tfList []any) []types.AddonPodIdentityAssociations {

@@ -3950,3 +3950,12 @@ func (serviceImportID) Parse(id string) (string, map[string]any, error) {
 	}
 	return id, result, nil
 }
+
+// newListRegularServicesPaginator returns a new paginator for ListServices that only returns Customer-managed Services.
+func newListRegularServicesPaginator(conn *ecs.Client, input *ecs.ListServicesInput) *ecs.ListServicesPaginator {
+	return ecs.NewListServicesPaginator(conn, &ecs.ListServicesInput{
+		Cluster:                input.Cluster,
+		LaunchType:             input.LaunchType,
+		ResourceManagementType: awstypes.ResourceManagementTypeCustomer,
+	})
+}
