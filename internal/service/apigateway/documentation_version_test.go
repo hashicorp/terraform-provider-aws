@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ import (
 func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationVersionOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 	resourceName := "aws_api_gateway_documentation_version.test"
@@ -52,7 +51,7 @@ func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationVersionOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_method_%s", rString)
 	stageName := fmt.Sprintf("tf-acc-test_stage_%s", rString)
@@ -96,7 +95,7 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationVersionOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 	resourceName := "aws_api_gateway_documentation_version.test"

@@ -119,6 +119,10 @@ func TestAccOpenSearchServerlessLifecyclePolicy_update(t *testing.T) {
 	})
 }
 
+func testAccLifecyclePolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, "/", names.AttrName, names.AttrType)
+}
+
 func testAccCheckLifecyclePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)

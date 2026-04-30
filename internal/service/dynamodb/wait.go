@@ -14,18 +14,16 @@ import (
 )
 
 const (
-	createTableTimeout                         = 30 * time.Minute
-	deleteTableTimeout                         = 10 * time.Minute
-	kinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
-	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
-	pitrUpdateTimeout                          = 30 * time.Second
-	replicaUpdateTimeout                       = 30 * time.Minute
-	replicaDelayDefault                        = 0 * time.Second
-	replicaPropagationDelay                    = 90 * time.Second
-	ttlUpdateTimeout                           = 30 * time.Second
-	updateTableContinuousBackupsTimeout        = 20 * time.Minute
-	updateTableTimeout                         = 20 * time.Minute
-	updateTableTimeoutTotal                    = 60 * time.Minute
+	createTableTimeout                  = 30 * time.Minute
+	deleteTableTimeout                  = 10 * time.Minute
+	pitrUpdateTimeout                   = 30 * time.Second
+	replicaUpdateTimeout                = 30 * time.Minute
+	replicaDelayDefault                 = 0 * time.Second
+	replicaPropagationDelay             = 90 * time.Second
+	ttlUpdateTimeout                    = 30 * time.Second
+	updateTableContinuousBackupsTimeout = 20 * time.Minute
+	updateTableTimeout                  = 20 * time.Minute
+	updateTableTimeoutTotal             = 60 * time.Minute
 )
 
 func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
@@ -34,6 +32,7 @@ func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName strin
 		Target:                    enum.Slice(awstypes.TableStatusActive),
 		Refresh:                   statusTable(conn, tableName),
 		Timeout:                   max(createTableTimeout, timeout),
+		Delay:                     5 * time.Second,
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 2,
 	}

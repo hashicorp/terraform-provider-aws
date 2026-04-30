@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -219,11 +218,11 @@ func testAccUser_UserName_Validation(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:      testAccUserConfig_nameValidation(rName, sdkacctest.RandString(2)),
+				Config:      testAccUserConfig_nameValidation(rName, acctest.RandString(t, 2)),
 				ExpectError: regexache.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config: testAccUserConfig_nameValidation(rName, sdkacctest.RandString(33)),
+				Config: testAccUserConfig_nameValidation(rName, acctest.RandString(t, 33)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -231,7 +230,7 @@ func testAccUser_UserName_Validation(t *testing.T) {
 				},
 			},
 			{
-				Config:      testAccUserConfig_nameValidation(rName, sdkacctest.RandString(101)),
+				Config:      testAccUserConfig_nameValidation(rName, acctest.RandString(t, 101)),
 				ExpectError: regexache.MustCompile(`Invalid "user_name": `),
 			},
 			{

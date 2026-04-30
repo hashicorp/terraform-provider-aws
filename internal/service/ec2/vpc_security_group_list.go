@@ -130,7 +130,7 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 				result.DisplayName = aws.ToString(item.GroupName)
 			}
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting result", map[string]any{
 					names.AttrID: groupID,

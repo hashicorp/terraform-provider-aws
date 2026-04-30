@@ -34,8 +34,10 @@ var (
 	FunctionEventInvokeConfigParseResourceID     = functionEventInvokeConfigParseResourceID
 	GetFunctionNameFromARN                       = getFunctionNameFromARN
 	GetQualifierFromAliasOrVersionARN            = getQualifierFromAliasOrVersionARN
+	LayerNameFromARN                             = layerNameFromARN
 	LayerVersionParseResourceID                  = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID        = layerVersionPermissionParseResourceID
+	ParseLayerVersionARN                         = parseLayerVersionARN
 	SignerServiceIsAvailable                     = signerServiceIsAvailable
 	InvocationParseResourceID                    = invocationParseResourceID
 

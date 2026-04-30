@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -42,7 +41,7 @@ func TestAccWAFRateBasedRule_serial(t *testing.T) {
 func testAccWAFRateBasedRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RateBasedRule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -73,8 +72,8 @@ func testAccWAFRateBasedRule_basic(t *testing.T) {
 func testAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.RateBasedRule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
-	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
+	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -113,7 +112,7 @@ func testAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 func testAccWAFRateBasedRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RateBasedRule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -140,7 +139,7 @@ func testAccWAFRateBasedRule_changePredicates(t *testing.T) {
 	var byteMatchSet awstypes.ByteMatchSet
 
 	var before, after awstypes.RateBasedRule
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -189,7 +188,7 @@ func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ipset awstypes.IPSet
 	var before, after awstypes.RateBasedRule
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -238,7 +237,7 @@ func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 func testAccWAFRateBasedRule_noPredicates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.RateBasedRule
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -267,7 +266,7 @@ func testAccWAFRateBasedRule_noPredicates(t *testing.T) {
 func testAccWAFRateBasedRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.RateBasedRule
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
 	acctest.Test(ctx, t, resource.TestCase{

@@ -1,6 +1,6 @@
 module exampleresource
 
-go 1.25.7
+go 1.26.2
 
 require github.com/aws-cloudformation/cloudformation-cli-go-plugin v1.2.0
 

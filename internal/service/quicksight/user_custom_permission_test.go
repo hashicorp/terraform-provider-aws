@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,7 +23,7 @@ import (
 
 func TestAccQuickSightUserCustomPermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user_custom_permission.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +68,7 @@ func TestAccQuickSightUserCustomPermission_basic(t *testing.T) {
 
 func TestAccQuickSightUserCustomPermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user_custom_permission.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -92,7 +91,7 @@ func TestAccQuickSightUserCustomPermission_disappears(t *testing.T) {
 
 func TestAccQuickSightUserCustomPermission_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user_custom_permission.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,19 +27,19 @@ func TestAccVPCIPv6CIDRBlockAssociation_basic(t *testing.T) {
 	var associationSecondary, associationTertiary awstypes.VpcIpv6CidrBlockAssociation
 	resource1Name := "aws_vpc_ipv6_cidr_block_association.secondary_cidr"
 	resource2Name := "aws_vpc_ipv6_cidr_block_association.tertiary_cidr"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv6CIDRBlockAssociationConfig_amazonProvided(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, resource1Name, &associationSecondary),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, resource2Name, &associationTertiary),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -77,19 +75,19 @@ func TestAccVPCIPv6CIDRBlockAssociation_disappears(t *testing.T) {
 	var associationSecondary, associationTertiary awstypes.VpcIpv6CidrBlockAssociation
 	resource1Name := "aws_vpc_ipv6_cidr_block_association.secondary_cidr"
 	resource2Name := "aws_vpc_ipv6_cidr_block_association.tertiary_cidr"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv6CIDRBlockAssociationConfig_amazonProvided(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, resource1Name, &associationSecondary),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, resource2Name, &associationTertiary),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCIPv6CIDRBlockAssociation(), resource1Name),
 				),
 				ExpectNonEmptyPlan: true,
@@ -102,18 +100,18 @@ func TestAccVPCIPv6CIDRBlockAssociation_ipamBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var associationSecondary awstypes.VpcIpv6CidrBlockAssociation
 	resourceName := "aws_vpc_ipv6_cidr_block_association.secondary_cidr"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv6CIDRBlockAssociationConfig_ipam(rName, 56),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resourceName, &associationSecondary),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, resourceName, &associationSecondary),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -148,18 +146,18 @@ func TestAccVPCIPv6CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
 	var associationSecondary awstypes.VpcIpv6CidrBlockAssociation
 	resourceName := "aws_vpc_ipv6_cidr_block_association.secondary_cidr"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv6CIDRBlockAssociationConfig_ipamExplicit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resourceName, &associationSecondary),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, resourceName, &associationSecondary),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -189,9 +187,9 @@ func TestAccVPCIPv6CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipv6_cidr_block_association" {
@@ -215,14 +213,14 @@ func testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx context.Context, n string, v *awstypes.VpcIpv6CidrBlockAssociation) resource.TestCheckFunc {
+func testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.VpcIpv6CidrBlockAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, _, err := tfec2.FindVPCIPv6CIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
 

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -93,8 +92,8 @@ func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 	rUserPoolName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rUserName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rClientName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rUserPassword := sdkacctest.RandString(16)
-	rUserPasswordUpdated := sdkacctest.RandString(16)
+	rUserPassword := acctest.RandString(t, 16)
+	rUserPasswordUpdated := acctest.RandString(t, 16)
 	userResourceName := "aws_cognito_user.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
@@ -150,8 +149,8 @@ func TestAccCognitoIDPUser_password(t *testing.T) {
 	rUserPoolName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rUserName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rClientName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rUserPassword := sdkacctest.RandString(16)
-	rUserPasswordUpdated := sdkacctest.RandString(16)
+	rUserPassword := acctest.RandString(t, 16)
+	rUserPasswordUpdated := acctest.RandString(t, 16)
 	userResourceName := "aws_cognito_user.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
 

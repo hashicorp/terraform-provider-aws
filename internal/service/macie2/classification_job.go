@@ -652,7 +652,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := macie2.CreateClassificationJobInput{
-		ClientToken:     aws.String(sdkid.UniqueId()),
+		ClientToken:     aws.String(create.UniqueId(ctx)),
 		JobType:         awstypes.JobType(d.Get("job_type").(string)),
 		Name:            aws.String(name),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]any)),

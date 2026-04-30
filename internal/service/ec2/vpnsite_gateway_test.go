@@ -11,11 +11,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,7 +25,7 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	testNotEqual := func(*terraform.State) error {
 		if len(v1.VpcAttachments) == 0 {
@@ -44,16 +42,16 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName, &v1),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-gateway/vgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -66,7 +64,7 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 			{
 				Config: testAccVPNGatewayConfig_changeVPC(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName, &v2),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName, &v2),
 					testNotEqual,
 				),
 			},
@@ -79,18 +77,18 @@ func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	var v awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	azDataSourceName := "data.aws_availability_zones.available"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, azDataSourceName, "names.0"),
 				),
 			},
@@ -108,18 +106,18 @@ func TestAccSiteVPNGateway_amazonSideASN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayConfig_asn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "amazon_side_asn", "4294967294"),
 				),
@@ -137,18 +135,18 @@ func TestAccSiteVPNGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -165,7 +163,7 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 	vpcResourceName2 := "aws_vpc.test2"
 	resourceName1 := "aws_vpn_gateway.test1"
 	resourceName2 := "aws_vpn_gateway.test2"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	testAttachmentFunc := func(vgw *awstypes.VpnGateway, vpc *awstypes.Vpc) func(*terraform.State) error {
 		return func(*terraform.State) error {
@@ -199,19 +197,19 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 		}
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayConfig_reattach(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, vpcResourceName1, &vpc1),
 					acctest.CheckVPCExists(ctx, t, vpcResourceName2, &vpc2),
-					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
-					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName1, &vgw1),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName2, &vgw2),
 					testAttachmentFunc(&vgw1, &vpc1),
 					testAttachmentFunc(&vgw2, &vpc2),
 				),
@@ -229,8 +227,8 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 			{
 				Config: testAccVPNGatewayConfig_reattachChange(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
-					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName1, &vgw1),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName2, &vgw2),
 					testAttachmentFunc(&vgw2, &vpc1),
 					testAttachmentFunc(&vgw1, &vpc2),
 				),
@@ -238,8 +236,8 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 			{
 				Config: testAccVPNGatewayConfig_reattach(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
-					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName1, &vgw1),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName2, &vgw2),
 					testAttachmentFunc(&vgw1, &vpc1),
 					testAttachmentFunc(&vgw2, &vpc2),
 				),
@@ -252,18 +250,18 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -276,7 +274,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 			{
 				Config: testAccVPNGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -285,7 +283,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 			{
 				Config: testAccVPNGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
+					testAccCheckVPNGatewayExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -294,9 +292,9 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVPNGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPNGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_gateway" {
@@ -320,14 +318,14 @@ func testAccCheckVPNGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVPNGatewayExists(ctx context.Context, n string, v *awstypes.VpnGateway) resource.TestCheckFunc {
+func testAccCheckVPNGatewayExists(ctx context.Context, t *testing.T, n string, v *awstypes.VpnGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVPNGatewayByID(ctx, conn, rs.Primary.ID)
 

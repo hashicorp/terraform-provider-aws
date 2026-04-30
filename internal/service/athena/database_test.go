@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +24,7 @@ import (
 func TestAccAthenaDatabase_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -58,7 +57,7 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 func TestAccAthenaDatabase_properties(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -89,7 +88,7 @@ func TestAccAthenaDatabase_properties(t *testing.T) {
 func TestAccAthenaDatabase_acl(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -120,7 +119,7 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 func TestAccAthenaDatabase_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -151,7 +150,7 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := "_" + sdkacctest.RandString(8)
+	dbName := "_" + acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -180,7 +179,7 @@ func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 func TestAccAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := "A" + sdkacctest.RandString(8)
+	dbName := "A" + acctest.RandString(t, 8)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -199,7 +198,7 @@ func TestAccAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 func TestAccAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -224,7 +223,7 @@ func TestAccAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 func TestAccAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -247,7 +246,7 @@ func TestAccAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 func TestAccAthenaDatabase_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -277,7 +276,7 @@ func TestAccAthenaDatabase_description(t *testing.T) {
 func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -307,7 +306,7 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 func TestAccAthenaDatabase_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 
 	resourceName := "aws_athena_database.test"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -331,8 +330,8 @@ func TestAccAthenaDatabase_disappears(t *testing.T) {
 func TestAccAthenaDatabase_withWorkgroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
-	wgName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
+	wgName := acctest.RandString(t, 8)
 
 	resourceName := "aws_athena_database.test"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -354,7 +353,7 @@ func TestAccAthenaDatabase_withWorkgroup(t *testing.T) {
 func TestAccAthenaDatabase_upgradeV6_5_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(8)
+	dbName := acctest.RandString(t, 8)
 	resourceName := "aws_athena_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

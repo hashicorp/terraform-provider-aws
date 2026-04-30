@@ -19,10 +19,6 @@ import (
 
 func TestAccEKSAccessEntry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -60,10 +56,6 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 
 func TestAccEKSAccessEntry_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -91,10 +83,6 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 
 func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -123,10 +111,6 @@ func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 
 func TestAccEKSAccessEntry_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -176,10 +160,6 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 
 func TestAccEKSAccessEntry_type(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -213,10 +193,6 @@ func TestAccEKSAccessEntry_type(t *testing.T) {
 
 func TestAccEKSAccessEntry_username(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -261,10 +237,6 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 
 func TestAccEKSAccessEntry_eventualConsistency(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"

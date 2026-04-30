@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ import (
 func TestAccSyntheticsGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.Group
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -52,7 +51,7 @@ func TestAccSyntheticsGroup_basic(t *testing.T) {
 func TestAccSyntheticsGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.Group
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -76,7 +75,7 @@ func TestAccSyntheticsGroup_disappears(t *testing.T) {
 func TestAccSyntheticsGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.Group
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

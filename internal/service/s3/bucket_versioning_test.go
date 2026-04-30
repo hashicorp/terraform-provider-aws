@@ -793,7 +793,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     status = %[2]q
   }
@@ -808,7 +808,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     mfa_delete = %[2]q
     status     = "Enabled"
@@ -824,7 +824,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     status = %[2]q
   }
@@ -839,7 +839,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     mfa_delete = %[2]q
     status     = "Enabled"
@@ -855,7 +855,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   expected_bucket_owner = data.aws_caller_identity.current.account_id
 

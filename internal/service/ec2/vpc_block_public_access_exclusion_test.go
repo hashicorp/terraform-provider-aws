@@ -9,14 +9,12 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,22 +23,22 @@ import (
 func TestAccVPCBlockPublicAccessExclusion_basicVPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	internetGatewayExclusionMode := string(awstypes.InternetGatewayExclusionModeAllowEgress)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode)),
@@ -61,22 +59,22 @@ func TestAccVPCBlockPublicAccessExclusion_basicVPC(t *testing.T) {
 func TestAccVPCBlockPublicAccessExclusion_basicSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	internetGatewayExclusionMode := string(awstypes.InternetGatewayExclusionModeAllowEgress)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicSubnet(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode)),
@@ -97,22 +95,22 @@ func TestAccVPCBlockPublicAccessExclusion_basicSubnet(t *testing.T) {
 func TestAccVPCBlockPublicAccessExclusion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	internetGatewayExclusionMode := string(awstypes.InternetGatewayExclusionModeAllowEgress)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCBlockPublicAccessExclusion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -124,23 +122,23 @@ func TestAccVPCBlockPublicAccessExclusion_disappears(t *testing.T) {
 func TestAccVPCBlockPublicAccessExclusion_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	internetGatewayExclusionMode1 := string(awstypes.InternetGatewayExclusionModeAllowBidirectional)
 	internetGatewayExclusionMode2 := string(awstypes.InternetGatewayExclusionModeAllowEgress)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode1)),
@@ -154,7 +152,7 @@ func TestAccVPCBlockPublicAccessExclusion_update(t *testing.T) {
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode2)),
@@ -164,9 +162,9 @@ func TestAccVPCBlockPublicAccessExclusion_update(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_block_public_access_exclusion" {
@@ -190,14 +188,14 @@ func testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx context.Context) resou
 	}
 }
 
-func testAccCheckVPCBlockPublicAccessExclusionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVPCBlockPublicAccessExclusionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindVPCBlockPublicAccessExclusionByID(ctx, conn, rs.Primary.ID)
 

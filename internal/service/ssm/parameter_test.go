@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/go-version"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -31,7 +30,7 @@ import (
 func TestAccSSMParameter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -110,7 +109,7 @@ func TestAccSSMParameter_multiple(t *testing.T) {
 func TestAccSSMParameter_updateValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -156,7 +155,7 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 func TestAccSSMParameter_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -345,7 +344,7 @@ func TestAccSSMParameter_changeValueToWriteOnly(t *testing.T) {
 func TestAccSSMParameter_tier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var parameter1, parameter2, parameter3 awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -388,7 +387,7 @@ func TestAccSSMParameter_tier(t *testing.T) {
 func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 	ctx := acctest.Context(t)
 	var parameter awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -437,7 +436,7 @@ func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 	ctx := acctest.Context(t)
 	var parameter1, parameter2 awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -487,10 +486,10 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 func TestAccSSMParameter_Tier_intelligentTieringOnCreation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var parameter awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
-	value := sdkacctest.RandString(5000) // Maximum size for Standard tier is 4 KB
+	value := acctest.RandString(t, 5000) // Maximum size for Standard tier is 4 KB
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -518,11 +517,11 @@ func TestAccSSMParameter_Tier_intelligentTieringOnCreation(t *testing.T) {
 func TestAccSSMParameter_Tier_intelligentTieringOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var parameter awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
-	standardSizedValue := sdkacctest.RandString(10)
-	advancedSizedValue := sdkacctest.RandString(5000)
+	standardSizedValue := acctest.RandString(t, 10)
+	advancedSizedValue := acctest.RandString(t, 5000)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -551,7 +550,7 @@ func TestAccSSMParameter_Tier_intelligentTieringOnUpdate(t *testing.T) {
 func TestAccSSMParameter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -575,7 +574,7 @@ func TestAccSSMParameter_disappears(t *testing.T) {
 func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -636,7 +635,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12213
 func TestAccSSMParameter_Overwrite_cascade(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test_upstream"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -680,7 +679,7 @@ func TestAccSSMParameter_Overwrite_cascade(t *testing.T) {
 func TestAccSSMParameter_Overwrite_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -714,7 +713,7 @@ func TestAccSSMParameter_Overwrite_tags(t *testing.T) {
 func TestAccSSMParameter_Overwrite_noOverwriteTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -748,7 +747,7 @@ func TestAccSSMParameter_Overwrite_noOverwriteTags(t *testing.T) {
 func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -791,7 +790,7 @@ func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 func TestAccSSMParameter_Overwrite_removeAttribute(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -827,7 +826,7 @@ func TestAccSSMParameter_Overwrite_removeAttribute(t *testing.T) {
 func TestAccSSMParameter_updateType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -859,7 +858,7 @@ func TestAccSSMParameter_updateType(t *testing.T) {
 func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -891,8 +890,8 @@ func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var beforeParam, afterParam awstypes.Parameter
-	before := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
-	after := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	before := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
+	after := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -927,7 +926,7 @@ func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
 func TestAccSSMParameter_fullPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("/path/%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("/path/%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -958,7 +957,7 @@ func TestAccSSMParameter_fullPath(t *testing.T) {
 func TestAccSSMParameter_Secure_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1115,7 +1114,7 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	webhookName := sdkacctest.RandString(16)
+	webhookName := acctest.RandString(t, 16)
 	rName := fmt.Sprintf("/d9d01087-4a3f-49e0-b0b4-d568d7826553/ssm/integrations/webhook/%s", webhookName)
 	resourceName := "aws_ssm_parameter.test"
 
@@ -1181,7 +1180,7 @@ func TestAccSSMParameter_DataType_update(t *testing.T) {
 func TestAccSSMParameter_Secure_key(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	randString := sdkacctest.RandString(10)
+	randString := acctest.RandString(t, 10)
 	name := fmt.Sprintf("%s_%s", t.Name(), randString)
 	resourceName := "aws_ssm_parameter.test"
 
@@ -1213,7 +1212,7 @@ func TestAccSSMParameter_Secure_key(t *testing.T) {
 func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	randString := sdkacctest.RandString(10)
+	randString := acctest.RandString(t, 10)
 	name := fmt.Sprintf("%s_%s", t.Name(), randString)
 	resourceName := "aws_ssm_parameter.test"
 
@@ -1255,7 +1254,7 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 func TestAccSSMParameter_importByARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
 	resourceName := "aws_ssm_parameter.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

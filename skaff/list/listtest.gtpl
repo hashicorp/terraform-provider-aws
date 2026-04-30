@@ -39,31 +39,30 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAcc{{ .ListResource }}PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
+		CheckDestroy:             testAccCheck{{ .ListResource }}Destroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .ListResource }}/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .ListResource }}/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("{{ .SDKPackage }}", "{{ .ListResourceLower }}:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("{{ .ARNNamespace }}", "{{ .ListResourceLower }}:"+rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("{{ .SDKPackage }}", "{{ .ListResourceLower }}:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("{{ .ARNNamespace }}", "{{ .ListResourceLower }}:"+rName+"-1")),
 				},
 			},
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .ListResource }}/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .ListResource }}/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -98,13 +97,13 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_includeResource(t *testing.T)
 			acctest.PreCheck(ctx, t)
 			testAcc{{ .ListResource }}PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
+		CheckDestroy:             testAccCheck{{ .ListResource }}Destroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .ListResource }}/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .ListResource }}/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -114,15 +113,14 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_includeResource(t *testing.T)
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("{{ .SDKPackage }}", "{{ .ListResourceLower }}:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("{{ .ARNNamespace }}", "{{ .ListResourceLower }}:"+rName+"-0")),
 				},
 			},
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .ListResource }}/list_include_resource/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .ListResource }}/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -138,7 +136,7 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_includeResource(t *testing.T)
 						// TIP: Add checks for _all_ resource attributes, including "region".
 						// If the resource is implemented in Plugin SDK, also include the "id" attribute.
 						{{- end }}
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("{{ .SDKPackage }}", "{{ .ListResourceLower }}:"+rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("{{ .ARNNamespace }}", "{{ .ListResourceLower }}:"+rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -173,13 +171,13 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_regionOverride(t *testing.T) 
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAcc{{ .ListResource }}PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
+		CheckDestroy:             testAccCheck{{ .ListResource }}Destroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .ListResource }}/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .ListResource }}/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -187,18 +185,17 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_regionOverride(t *testing.T) 
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("{{ .SDKPackage }}", "{{ .ListResourceLower }}:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("{{ .ARNNamespace }}", "{{ .ListResourceLower }}:"+rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("{{ .SDKPackage }}", "{{ .ListResourceLower }}:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("{{ .ARNNamespace }}", "{{ .ListResourceLower }}:"+rName+"-1")),
 				},
 			},
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .ListResource }}/list_region_override/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .ListResource }}/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),

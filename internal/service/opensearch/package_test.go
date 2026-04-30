@@ -20,7 +20,7 @@ import (
 
 func TestAccOpenSearchPackage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	pkgName := testAccRandomDomainName()
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -56,7 +56,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 
 func TestAccOpenSearchPackage_packageTypeZipPlugin(t *testing.T) {
 	ctx := acctest.Context(t)
-	pkgName := testAccRandomDomainName()
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -98,7 +98,7 @@ func TestAccOpenSearchPackage_packageTypeZipPlugin(t *testing.T) {
 
 func TestAccOpenSearchPackage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	pkgName := testAccRandomDomainName()
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

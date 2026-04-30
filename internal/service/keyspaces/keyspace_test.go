@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,7 +24,7 @@ func testAccPreCheck(t *testing.T) {
 
 func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -54,7 +53,7 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 
 func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_keyspace.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -92,7 +91,7 @@ func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 
 func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -115,7 +114,7 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 
 func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

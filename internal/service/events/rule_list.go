@@ -81,7 +81,7 @@ func (l *listResourceRule) List(ctx context.Context, request list.ListRequest, s
 
 			result.DisplayName = name
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

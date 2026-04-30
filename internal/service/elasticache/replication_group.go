@@ -289,7 +289,7 @@ func resourceReplicationGroup() *schema.Resource {
 						"replica_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"slots": {
 							Type:         schema.TypeString,
@@ -360,7 +360,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"num_cache_clusters"},
-				ValidateFunc:  validation.IntBetween(0, 5),
+				ValidateFunc:  validation.IntAtLeast(0),
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
