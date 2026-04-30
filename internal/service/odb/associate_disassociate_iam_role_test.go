@@ -10,6 +10,7 @@ import (
 
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -120,6 +121,41 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 					}
 
 					return "iam_role_arn=" + iamRoleARN + ",resource_arn=" + resourceARN, nil
+				},
+			},
+		},
+	})
+}
+
+func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var iamRole odbtypes.IamRole
+	resourceName := "aws_odb_associate_disassociate_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &iamRole),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.AssociateDisassociateIAMRole, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 				},
 			},
 		},
