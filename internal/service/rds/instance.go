@@ -1395,6 +1395,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			if v, ok := d.GetOk("performance_insights_retention_period"); ok {
 				modifyDbInstanceInput.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
 			}
+
+			if v := d.Get("database_insights_mode"); v.(string) != "" {
+				modifyDbInstanceInput.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+			}
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
@@ -1613,6 +1617,23 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		if passwordWO != "" {
 			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
 			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("performance_insights_enabled"); ok {
+			modifyDbInstanceInput.EnablePerformanceInsights = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+
+			if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+				modifyDbInstanceInput.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+				modifyDbInstanceInput.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
+			}
+
+			if v := d.Get("database_insights_mode"); v.(string) != "" {
+				modifyDbInstanceInput.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+			}
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
