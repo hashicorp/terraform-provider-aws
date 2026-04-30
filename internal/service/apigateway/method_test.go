@@ -375,7 +375,7 @@ resource "aws_lambda_function" "authorizer" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
 }
 
 resource "aws_api_gateway_authorizer" "test" {
