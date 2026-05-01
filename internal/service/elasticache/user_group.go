@@ -8,7 +8,6 @@ package elasticache
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -63,9 +62,7 @@ func resourceUserGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(val interface{}) string {
-					return strings.ToLower(val.(string))
-				},
+				StateFunc: sdkv2.ToLowerSchemaStateFunc,
 			},
 			"user_ids": {
 				Type:     schema.TypeSet,
