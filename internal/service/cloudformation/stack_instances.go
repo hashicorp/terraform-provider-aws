@@ -426,13 +426,28 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 		oRaw, nRaw := d.GetChange(AttrDTAccounts)
 		o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
 
-		if axe := o.Difference(n); axe.Len() > 0 {
+		var axe, add *schema.Set
+
+		// Revisamos si el filtro es de tipo "DIFFERENCE" (lista de exclusión)
+		filterType := d.Get("deployment_targets.0.account_filter_type").(string)
+		if filterType == string(awstypes.AccountFilterTypeDifference) {
+			// Invertimos la lógica: agregar a la lista significa borrar de AWS,
+			// sacar de la lista significa crear en AWS
+			axe = n.Difference(o)
+			add = o.Difference(n)
+		} else {
+			// Lógica normal
+			axe = o.Difference(n)
+			add = n.Difference(o)
+		}
+
+		if axe.Len() > 0 {
 			if err := deleteStackInstances(ctx, d, meta, accounts, regions, flex.ExpandStringValueSet(axe), dtOUs); err != nil {
 				return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionDeleting, ResNameStackInstances, d.Id(), err)
 			}
 		}
 
-		if add := n.Difference(o); add.Len() > 0 {
+		if add.Len() > 0 {
 			diags = append(diags, resourceStackInstancesCreate(ctx, d, meta)...)
 			if diags.HasError() {
 				return diags
