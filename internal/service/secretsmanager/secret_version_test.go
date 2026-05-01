@@ -239,8 +239,9 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 				Config: testAccSecretVersionConfig_string(rName, "test-string"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, resourceName, "secret_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "has_secret_string_wo"),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "secret_id", secretResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "secret_binary", ""),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
@@ -278,8 +279,9 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 				Config: testAccSecretVersionConfig_binary(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, resourceName, "secret_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "has_secret_string_wo"),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "secret_id", secretResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "secret_binary", inttypes.Base64EncodeOnce([]byte("test-binary"))),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", ""),
@@ -612,7 +614,8 @@ func TestAccSecretsManagerSecretVersion_StringWriteOnly_sameWOVersion(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, resourceName, "secret_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -620,7 +623,7 @@ func TestAccSecretsManagerSecretVersion_StringWriteOnly_sameWOVersion(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -658,7 +661,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnlyLimitedPermissions(t *tes
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
 					resource.TestCheckResourceAttr(resourceName, "has_secret_string_wo", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -666,7 +669,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnlyLimitedPermissions(t *tes
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -693,7 +696,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesSingle(rName, "test-secret", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
@@ -703,7 +706,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesSingleUpdated(rName, "test-secret", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),
@@ -718,7 +721,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesMultiple(rName, "test-secret", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", secretResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),
