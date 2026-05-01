@@ -5,6 +5,8 @@ package b2bi
 
 // Exports for use in other modules.
 var (
+	FindCapabilityByID  = findCapabilityByID
+	FindPartnershipByID = findPartnershipByID
 	FindProfileByID     = findProfileByID
 	FindTransformerByID = findTransformerByID
 )

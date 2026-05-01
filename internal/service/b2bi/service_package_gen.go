@@ -35,6 +35,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
+			Factory:  resourceCapability,
+			TypeName: "aws_b2bi_capability",
+			Name:     "Capability",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "capability_arn",
+			}),
+		},
+		{
+			Factory:  resourcePartnership,
+			TypeName: "aws_b2bi_partnership",
+			Name:     "Partnership",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "partnership_arn",
+			}),
+		},
+		{
 			Factory:  resourceProfile,
 			TypeName: "aws_b2bi_profile",
 			Name:     "Profile",
