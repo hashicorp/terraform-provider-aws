@@ -1157,7 +1157,7 @@ func testAccReplicatorConfig_logDeliveryBase(rName, sourceCluster, targetCluster
 		testAccReplicatorConfig_source(sourceCluster),
 		testAccReplicatorConfig_target(targetCluster),
 		fmt.Sprintf(`
-`+extraResources+`
+%[2]s
 
 resource "aws_msk_replicator" "test" {
   replicator_name            = %[1]q
@@ -1199,7 +1199,7 @@ resource "aws_msk_replicator" "test" {
       consumer_groups_to_replicate = [".*"]
     }
   }
-`+logDelivery+`
+%[3]s
 }
-`, rName, sourceCluster, targetCluster))
+`, rName, extraResources, logDelivery))
 }
