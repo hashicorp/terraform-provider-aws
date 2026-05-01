@@ -135,3 +135,144 @@ resource "aws_b2bi_partnership" "test" {
 }
 `, rName))
 }
+
+func TestAccB2BIPartnership_tags(t *testing.T) {
+	ctx := acctest2.Context(t)
+	resourceName := "aws_b2bi_partnership.test"
+	rName := acctest.RandomWithPrefix(acctest2.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest2.PreCheck(ctx, t) },
+		ErrorCheck:               acctest2.ErrorCheck(t, names.B2BIServiceID),
+		ProtoV5ProviderFactories: acctest2.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartnershipDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPartnershipConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartnershipExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccPartnershipConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartnershipExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccPartnershipConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartnershipExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPartnershipConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest2.ConfigCompose(testAccCapabilityConfig_base(rName), fmt.Sprintf(`
+resource "aws_b2bi_profile" "test" {
+  name          = %[1]q
+  business_name = "Test Business"
+  phone         = "5555555555"
+  logging       = "ENABLED"
+}
+
+resource "aws_b2bi_capability" "test" {
+  name = %[1]q
+  type = "edi"
+
+  configuration {
+    edi {
+      input_location {
+        bucket_name = aws_s3_bucket.test.bucket
+        key         = "input/"
+      }
+
+      output_location {
+        bucket_name = aws_s3_bucket.test.bucket
+        key         = "output/"
+      }
+
+      transformer_id = aws_b2bi_transformer.test.transformer_id
+
+      type {
+        x12_details {
+          transaction_set = "X12_110"
+          version         = "VERSION_4010"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_b2bi_partnership" "test" {
+  name         = %[1]q
+  email        = "test@example.com"
+  profile_id   = aws_b2bi_profile.test.profile_id
+  capabilities = [aws_b2bi_capability.test.capability_id]
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccPartnershipConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest2.ConfigCompose(testAccCapabilityConfig_base(rName), fmt.Sprintf(`
+resource "aws_b2bi_profile" "test" {
+  name          = %[1]q
+  business_name = "Test Business"
+  phone         = "5555555555"
+  logging       = "ENABLED"
+}
+
+resource "aws_b2bi_capability" "test" {
+  name = %[1]q
+  type = "edi"
+
+  configuration {
+    edi {
+      input_location {
+        bucket_name = aws_s3_bucket.test.bucket
+        key         = "input/"
+      }
+
+      output_location {
+        bucket_name = aws_s3_bucket.test.bucket
+        key         = "output/"
+      }
+
+      transformer_id = aws_b2bi_transformer.test.transformer_id
+
+      type {
+        x12_details {
+          transaction_set = "X12_110"
+          version         = "VERSION_4010"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_b2bi_partnership" "test" {
+  name         = %[1]q
+  email        = "test@example.com"
+  profile_id   = aws_b2bi_profile.test.profile_id
+  capabilities = [aws_b2bi_capability.test.capability_id]
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}

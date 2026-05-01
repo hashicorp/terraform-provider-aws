@@ -289,6 +289,22 @@ func resourceTransformerUpdate(ctx context.Context, d *schema.ResourceData, meta
 			TransformerId: aws.String(d.Id()),
 		}
 
+		// An active transformer cannot be updated. Deactivate first if needed.
+		wasActive := false
+		if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, names.AttrStatus) {
+			oldStatus, _ := d.GetChange(names.AttrStatus)
+			if awstypes.TransformerStatus(oldStatus.(string)) == awstypes.TransformerStatusActive {
+				wasActive = true
+				_, err := conn.UpdateTransformer(ctx, &b2bi.UpdateTransformerInput{
+					TransformerId: aws.String(d.Id()),
+					Status:        awstypes.TransformerStatusInactive,
+				})
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "deactivating B2BI Transformer (%s) for update: %s", d.Id(), err)
+				}
+			}
+		}
+
 		if d.HasChange("input_conversion") {
 			input.InputConversion = expandInputConversion(d.Get("input_conversion").([]any))
 		}
@@ -307,6 +323,9 @@ func resourceTransformerUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange(names.AttrStatus) {
 			input.Status = awstypes.TransformerStatus(d.Get(names.AttrStatus).(string))
+		} else if wasActive {
+			// Re-activate after update if it was active before.
+			input.Status = awstypes.TransformerStatusActive
 		}
 
 		_, err := conn.UpdateTransformer(ctx, input)

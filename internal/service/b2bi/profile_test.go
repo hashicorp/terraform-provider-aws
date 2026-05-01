@@ -130,3 +130,115 @@ resource "aws_b2bi_profile" "test" {
 }
 `, rName)
 }
+
+func TestAccB2BIProfile_tags(t *testing.T) {
+	ctx := acctest2.Context(t)
+	resourceName := "aws_b2bi_profile.test"
+	rName := acctest.RandomWithPrefix(acctest2.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest2.PreCheck(ctx, t) },
+		ErrorCheck:               acctest2.ErrorCheck(t, names.B2BIServiceID),
+		ProtoV5ProviderFactories: acctest2.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccProfileConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccB2BIProfile_email(t *testing.T) {
+	ctx := acctest2.Context(t)
+	resourceName := "aws_b2bi_profile.test"
+	rName := acctest.RandomWithPrefix(acctest2.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest2.PreCheck(ctx, t) },
+		ErrorCheck:               acctest2.ErrorCheck(t, names.B2BIServiceID),
+		ProtoV5ProviderFactories: acctest2.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_email(rName, "test@example.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "email", "test@example.com"),
+				),
+			},
+			{
+				Config: testAccProfileConfig_email(rName, "updated@example.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "email", "updated@example.com"),
+				),
+			},
+		},
+	})
+}
+
+func testAccProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_b2bi_profile" "test" {
+  name          = %[1]q
+  business_name = "Test Business"
+  phone         = "5555555555"
+  logging       = "ENABLED"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_b2bi_profile" "test" {
+  name          = %[1]q
+  business_name = "Test Business"
+  phone         = "5555555555"
+  logging       = "ENABLED"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccProfileConfig_email(rName, email string) string {
+	return fmt.Sprintf(`
+resource "aws_b2bi_profile" "test" {
+  name          = %[1]q
+  business_name = "Test Business"
+  phone         = "5555555555"
+  email         = %[2]q
+  logging       = "ENABLED"
+}
+`, rName, email)
+}
