@@ -42,6 +42,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: "profile_arn",
 			}),
 		},
+		{
+			Factory:  resourceTransformer,
+			TypeName: "aws_b2bi_transformer",
+			Name:     "Transformer",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "transformer_arn",
+			}),
+		},
 	}
 }
 

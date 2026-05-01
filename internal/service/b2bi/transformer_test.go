@@ -1,0 +1,169 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package b2bi_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	tfb2bi "github.com/hashicorp/terraform-provider-aws/internal/service/b2bi"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	acctest2 "github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccB2BITransformer_basic(t *testing.T) {
+	ctx := acctest2.Context(t)
+	resourceName := "aws_b2bi_transformer.test"
+	rName := acctest.RandomWithPrefix(acctest2.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest2.PreCheck(ctx, t) },
+		ErrorCheck:               acctest2.ErrorCheck(t, names.B2BIServiceID),
+		ProtoV5ProviderFactories: acctest2.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformerConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "input_conversion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_conversion.0.from_format", "X12"),
+					resource.TestCheckResourceAttr(resourceName, "mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mapping.0.template_language", "JSONATA"),
+					resource.TestCheckResourceAttrSet(resourceName, "transformer_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "transformer_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccB2BITransformer_update(t *testing.T) {
+	ctx := acctest2.Context(t)
+	resourceName := "aws_b2bi_transformer.test"
+	rName := acctest.RandomWithPrefix(acctest2.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest2.PreCheck(ctx, t) },
+		ErrorCheck:               acctest2.ErrorCheck(t, names.B2BIServiceID),
+		ProtoV5ProviderFactories: acctest2.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformerConfig_mapping(rName, "{}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mapping.0.template", "{}"),
+				),
+			},
+			{
+				Config: testAccTransformerConfig_mapping(rName, "$"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mapping.0.template", "$"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckTransformerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest2.ProviderMeta(ctx, t).B2BIClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_b2bi_transformer" {
+				continue
+			}
+
+			_, err := tfb2bi.FindTransformerByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("B2BI Transformer %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTransformerExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest2.ProviderMeta(ctx, t).B2BIClient(ctx)
+
+		_, err := tfb2bi.FindTransformerByID(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+func testAccTransformerConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_b2bi_transformer" "test" {
+  name = %[1]q
+
+  input_conversion {
+    from_format = "X12"
+
+    format_options {
+      x12 {
+        transaction_set = "X12_110"
+        version         = "VERSION_4010"
+      }
+    }
+  }
+
+  mapping {
+    template_language = "JSONATA"
+    template          = "{}"
+  }
+}
+`, rName)
+}
+
+func testAccTransformerConfig_mapping(rName, template string) string {
+	return fmt.Sprintf(`
+resource "aws_b2bi_transformer" "test" {
+  name = %[1]q
+
+  input_conversion {
+    from_format = "X12"
+
+    format_options {
+      x12 {
+        transaction_set = "X12_110"
+        version         = "VERSION_4010"
+      }
+    }
+  }
+
+  mapping {
+    template_language = "JSONATA"
+    template          = %[2]q
+  }
+}
+`, rName, template)
+}

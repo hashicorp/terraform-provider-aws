@@ -5,5 +5,6 @@ package b2bi
 
 // Exports for use in other modules.
 var (
-	FindProfileByID = findProfileByID
+	FindProfileByID     = findProfileByID
+	FindTransformerByID = findTransformerByID
 )
