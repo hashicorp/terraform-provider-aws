@@ -117,7 +117,7 @@ func resourceReplicator() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -345,6 +345,10 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("log_delivery"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.LogDelivery = expandLogDelivery(v.([]any)[0].(map[string]any))
+
+		if input.LogDelivery == nil || input.LogDelivery.ReplicatorLogDelivery == nil {
+			return sdkdiag.AppendErrorf(diags, "creating MSK Replicator (%s): log_delivery must include at least one of %q, %q, or %q", name, names.AttrCloudWatchLogs, "firehose", "s3")
+		}
 	}
 
 	output, err := conn.CreateReplicator(ctx, input)
@@ -1009,7 +1013,7 @@ func expandLogDelivery(tfMap map[string]any) *types.LogDelivery {
 
 	apiObject := &types.LogDelivery{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ReplicatorLogDelivery = &types.ReplicatorLogDelivery{
 			CloudWatchLogs: expandReplicatorCloudWatchLogs(v[0].(map[string]any)),
 		}
@@ -1098,7 +1102,7 @@ func flattenLogDelivery(apiObject *types.LogDelivery) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.ReplicatorLogDelivery.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = []any{flattenReplicatorCloudWatchLogs(v)}
+		tfMap[names.AttrCloudWatchLogs] = []any{flattenReplicatorCloudWatchLogs(v)}
 	}
 
 	if v := apiObject.ReplicatorLogDelivery.Firehose; v != nil {

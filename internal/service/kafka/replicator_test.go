@@ -159,6 +159,254 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 	})
 }
 
+func TestAccKafkaReplicator_logDelivery(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicator kafka.DescribeReplicatorOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_replicator.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicatorConfig_logDelivery(rName, sourceCluster, targetCluster),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`replicator/`+rName+`/`+kafkaUUIDRegexPattern+`$`)),
+					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "log_delivery.0.cloudwatch_logs.0.log_group", "aws_cloudwatch_log_group.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "log_delivery.0.s3.0.bucket", "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.0.prefix", "logs/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaReplicator_logDelivery_cloudWatchOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicator kafka.DescribeReplicatorOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_replicator.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicatorConfig_logDeliveryCloudWatchOnly(rName, sourceCluster, targetCluster),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "log_delivery.0.cloudwatch_logs.0.log_group", "aws_cloudwatch_log_group.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaReplicator_logDelivery_s3Only(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicator kafka.DescribeReplicatorOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_replicator.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicatorConfig_logDeliveryS3Only(rName, sourceCluster, targetCluster),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "log_delivery.0.s3.0.bucket", "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.0.prefix", "logs/s3-only/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaReplicator_logDelivery_firehoseOnlyDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicator kafka.DescribeReplicatorOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_replicator.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicatorConfig_logDeliveryFirehoseOnlyDisabled(rName, sourceCluster, targetCluster),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.firehose.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.firehose.0.delivery_stream", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaReplicator_logDelivery_allDestinations(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicator kafka.DescribeReplicatorOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_replicator.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicatorConfig_logDeliveryAllDestinations(rName, sourceCluster, targetCluster),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.firehose.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.s3.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaReplicator_logDelivery_empty(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicatorConfig_logDeliveryEmpty(rName, sourceCluster, targetCluster),
+				ExpectError: regexache.MustCompile(`log_delivery must include at least one of`),
+			},
+		},
+	})
+}
+
 func TestAccKafkaReplicator_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -768,10 +1016,11 @@ resource "aws_msk_replicator" "test" {
 }
 
 func testAccReplicatorConfig_logDelivery(rName, sourceCluster, targetCluster string) string {
-	return acctest.ConfigCompose(
-		testAccReplicatorConfig_source(sourceCluster),
-		testAccReplicatorConfig_target(targetCluster),
-		fmt.Sprintf(`
+	return testAccReplicatorConfig_logDeliveryBase(
+		rName,
+		sourceCluster,
+		targetCluster,
+		`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -779,6 +1028,136 @@ resource "aws_cloudwatch_log_group" "test" {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
+`,
+		`
+  log_delivery {
+    cloudwatch_logs {
+      enabled   = true
+      log_group = aws_cloudwatch_log_group.test.name
+    }
+
+    s3 {
+      enabled = true
+      bucket  = aws_s3_bucket.test.id
+      prefix  = "logs/"
+    }
+  }
+`,
+	)
+}
+
+func testAccReplicatorConfig_logDeliveryCloudWatchOnly(rName, sourceCluster, targetCluster string) string {
+	return testAccReplicatorConfig_logDeliveryBase(
+		rName,
+		sourceCluster,
+		targetCluster,
+		`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+`,
+		`
+  log_delivery {
+    cloudwatch_logs {
+      enabled   = true
+      log_group = aws_cloudwatch_log_group.test.name
+    }
+  }
+`,
+	)
+}
+
+func testAccReplicatorConfig_logDeliveryS3Only(rName, sourceCluster, targetCluster string) string {
+	return testAccReplicatorConfig_logDeliveryBase(
+		rName,
+		sourceCluster,
+		targetCluster,
+		`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+`,
+		`
+  log_delivery {
+    s3 {
+      enabled = true
+      bucket  = aws_s3_bucket.test.id
+      prefix  = "logs/s3-only/"
+    }
+  }
+`,
+	)
+}
+
+func testAccReplicatorConfig_logDeliveryFirehoseOnlyDisabled(rName, sourceCluster, targetCluster string) string {
+	return testAccReplicatorConfig_logDeliveryBase(
+		rName,
+		sourceCluster,
+		targetCluster,
+		"",
+		`
+  log_delivery {
+    firehose {
+      enabled = false
+    }
+  }
+`,
+	)
+}
+
+func testAccReplicatorConfig_logDeliveryAllDestinations(rName, sourceCluster, targetCluster string) string {
+	return testAccReplicatorConfig_logDeliveryBase(
+		rName,
+		sourceCluster,
+		targetCluster,
+		`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+`,
+		`
+  log_delivery {
+    cloudwatch_logs {
+      enabled   = true
+      log_group = aws_cloudwatch_log_group.test.name
+    }
+
+    firehose {
+      enabled = false
+    }
+
+    s3 {
+      enabled = true
+      bucket  = aws_s3_bucket.test.id
+      prefix  = "logs/all-destinations/"
+    }
+  }
+`,
+	)
+}
+
+func testAccReplicatorConfig_logDeliveryEmpty(rName, sourceCluster, targetCluster string) string {
+	return testAccReplicatorConfig_logDeliveryBase(
+		rName,
+		sourceCluster,
+		targetCluster,
+		"",
+		`
+  log_delivery {}
+`,
+	)
+}
+
+func testAccReplicatorConfig_logDeliveryBase(rName, sourceCluster, targetCluster, extraResources, logDelivery string) string {
+	return acctest.ConfigCompose(
+		testAccReplicatorConfig_source(sourceCluster),
+		testAccReplicatorConfig_target(targetCluster),
+		fmt.Sprintf(`
+`+extraResources+`
 
 resource "aws_msk_replicator" "test" {
   replicator_name            = %[1]q
@@ -820,19 +1199,7 @@ resource "aws_msk_replicator" "test" {
       consumer_groups_to_replicate = [".*"]
     }
   }
-
-  log_delivery {
-    cloudwatch_logs {
-      enabled   = true
-      log_group = aws_cloudwatch_log_group.test.name
-    }
-
-    s3 {
-      enabled = true
-      bucket  = aws_s3_bucket.test.id
-      prefix  = "logs/"
-    }
-  }
+`+logDelivery+`
 }
 `, rName, sourceCluster, targetCluster))
 }

@@ -75,6 +75,7 @@ This resource supports the following arguments:
 * `service_execution_role_arn` - (Required) The ARN of the IAM role used by the replicator to access resources in the customer's account (e.g source and target clusters).
 * `replication_info_list` - (Required) A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 * `description` - (Optional) A summary description of the replicator.
+* `log_delivery` - (Optional) Configuration block for delivering replicator logs to customer destinations. Must include at least one of `cloudwatch_logs`, `firehose`, or `s3`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### kafka_cluster Argument Reference
@@ -115,6 +116,28 @@ This resource supports the following arguments:
 * `consumer_groups_to_exclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detect_and_copy_new_consumer_groups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchronise_consumer_group_offsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
+
+### log_delivery Argument Reference
+
+* `cloudwatch_logs` - (Optional) CloudWatch Logs destination configuration.
+* `firehose` - (Optional) Firehose destination configuration.
+* `s3` - (Optional) S3 destination configuration.
+
+### cloudwatch_logs Argument Reference
+
+* `enabled` - (Required) Whether log delivery to CloudWatch Logs is enabled.
+* `log_group` - (Optional) The CloudWatch log group destination.
+
+### firehose Argument Reference
+
+* `enabled` - (Required) Whether log delivery to Firehose is enabled.
+* `delivery_stream` - (Optional) The Firehose delivery stream destination.
+
+### s3 Argument Reference
+
+* `enabled` - (Required) Whether log delivery to S3 is enabled.
+* `bucket` - (Optional) The S3 bucket destination.
+* `prefix` - (Optional) The S3 prefix destination.
 
 ### topic_name_configuration
 
