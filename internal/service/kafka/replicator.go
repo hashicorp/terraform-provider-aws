@@ -110,6 +110,71 @@ func resourceReplicator() *schema.Resource {
 					},
 				},
 			},
+			"log_delivery": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"log_group": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"firehose": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"delivery_stream": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
+						"s3": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrBucket: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									names.AttrPrefix: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"replication_info_list": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -278,6 +343,10 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("log_delivery"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LogDelivery = expandLogDelivery(v.([]any)[0].(map[string]any))
+	}
+
 	output, err := conn.CreateReplicator(ctx, input)
 
 	if err != nil {
@@ -326,6 +395,11 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("current_version", output.CurrentVersion)
 	d.Set(names.AttrDescription, output.ReplicatorDescription)
 	d.Set("kafka_cluster", flattenKafkaClusterDescriptions(output.KafkaClusters))
+	if output.LogDelivery != nil {
+		d.Set("log_delivery", []any{flattenLogDelivery(output.LogDelivery)})
+	} else {
+		d.Set("log_delivery", nil)
+	}
 	d.Set("replication_info_list", flattenReplicationInfoDescriptions(output.ReplicationInfoList, sourceARN, targetARN))
 	d.Set("replicator_name", output.ReplicatorName)
 	d.Set("service_execution_role_arn", output.ServiceExecutionRoleArn)
@@ -926,4 +1000,172 @@ func expandAmazonMSKCluster(tfMap map[string]any) *types.AmazonMskCluster { // n
 	}
 
 	return apiObject
+}
+
+func expandLogDelivery(tfMap map[string]any) *types.LogDelivery {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.LogDelivery{}
+
+	if v, ok := tfMap["cloudwatch_logs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ReplicatorLogDelivery = &types.ReplicatorLogDelivery{
+			CloudWatchLogs: expandReplicatorCloudWatchLogs(v[0].(map[string]any)),
+		}
+	}
+
+	if v, ok := tfMap["firehose"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if apiObject.ReplicatorLogDelivery == nil {
+			apiObject.ReplicatorLogDelivery = &types.ReplicatorLogDelivery{}
+		}
+		apiObject.ReplicatorLogDelivery.Firehose = expandReplicatorFirehose(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if apiObject.ReplicatorLogDelivery == nil {
+			apiObject.ReplicatorLogDelivery = &types.ReplicatorLogDelivery{}
+		}
+		apiObject.ReplicatorLogDelivery.S3 = expandReplicatorS3(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandReplicatorCloudWatchLogs(tfMap map[string]any) *types.ReplicatorCloudWatchLogs {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorCloudWatchLogs{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+		apiObject.LogGroup = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorFirehose(tfMap map[string]any) *types.ReplicatorFirehose {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorFirehose{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
+		apiObject.DeliveryStream = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorS3(tfMap map[string]any) *types.ReplicatorS3 {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorS3{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
+		apiObject.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenLogDelivery(apiObject *types.LogDelivery) map[string]any {
+	if apiObject == nil || apiObject.ReplicatorLogDelivery == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ReplicatorLogDelivery.CloudWatchLogs; v != nil {
+		tfMap["cloudwatch_logs"] = []any{flattenReplicatorCloudWatchLogs(v)}
+	}
+
+	if v := apiObject.ReplicatorLogDelivery.Firehose; v != nil {
+		tfMap["firehose"] = []any{flattenReplicatorFirehose(v)}
+	}
+
+	if v := apiObject.ReplicatorLogDelivery.S3; v != nil {
+		tfMap["s3"] = []any{flattenReplicatorS3(v)}
+	}
+
+	return tfMap
+}
+
+func flattenReplicatorCloudWatchLogs(apiObject *types.ReplicatorCloudWatchLogs) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.LogGroup; v != nil {
+		tfMap["log_group"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenReplicatorFirehose(apiObject *types.ReplicatorFirehose) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.DeliveryStream; v != nil {
+		tfMap["delivery_stream"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenReplicatorS3(apiObject *types.ReplicatorS3) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.Bucket; v != nil {
+		tfMap[names.AttrBucket] = aws.ToString(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	return tfMap
 }

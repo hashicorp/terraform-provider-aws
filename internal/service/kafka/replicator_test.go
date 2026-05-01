@@ -766,3 +766,73 @@ resource "aws_msk_replicator" "test" {
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2, sourceCluster, targetCluster))
 }
+
+func testAccReplicatorConfig_logDelivery(rName, sourceCluster, targetCluster string) string {
+	return acctest.ConfigCompose(
+		testAccReplicatorConfig_source(sourceCluster),
+		testAccReplicatorConfig_target(targetCluster),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_msk_replicator" "test" {
+  replicator_name            = %[1]q
+  description                = "test-description"
+  service_execution_role_arn = aws_iam_role.source.arn
+
+  kafka_cluster {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.source.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
+    }
+  }
+
+  kafka_cluster {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.target.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
+    }
+  }
+
+  replication_info_list {
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
+    target_compression_type  = "NONE"
+
+    topic_replication {
+      topics_to_replicate = [".*"]
+    }
+
+    consumer_group_replication {
+      consumer_groups_to_replicate = [".*"]
+    }
+  }
+
+  log_delivery {
+    cloudwatch_logs {
+      enabled   = true
+      log_group = aws_cloudwatch_log_group.test.name
+    }
+
+    s3 {
+      enabled = true
+      bucket  = aws_s3_bucket.test.id
+      prefix  = "logs/"
+    }
+  }
+}
+`, rName, sourceCluster, targetCluster))
+}
