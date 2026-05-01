@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/b2bi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
@@ -303,6 +304,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		auditmanager.ServicePackage(ctx),
 		autoscaling.ServicePackage(ctx),
 		autoscalingplans.ServicePackage(ctx),
+		b2bi.ServicePackage(ctx),
 		backup.ServicePackage(ctx),
 		batch.ServicePackage(ctx),
 		bcmdataexports.ServicePackage(ctx),

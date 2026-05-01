@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
+	"github.com/aws/aws-sdk-go-v2/service/b2bi"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
@@ -372,6 +373,10 @@ func (c *AWSClient) AutoScalingClient(ctx context.Context) *autoscaling.Client {
 
 func (c *AWSClient) AutoScalingPlansClient(ctx context.Context) *autoscalingplans.Client {
 	return errs.Must(client[*autoscalingplans.Client](ctx, c, names.AutoScalingPlans, make(map[string]any)))
+}
+
+func (c *AWSClient) B2BIClient(ctx context.Context) *b2bi.Client {
+	return errs.Must(client[*b2bi.Client](ctx, c, names.B2BI, make(map[string]any)))
 }
 
 func (c *AWSClient) BCMDataExportsClient(ctx context.Context) *bcmdataexports.Client {

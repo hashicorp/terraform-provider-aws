@@ -859,6 +859,30 @@ service "backupgateway" {
   not_implemented          = true
 }
 
+service "b2bi" {
+  sdk {
+    id            = "B2BI"
+    arn_namespace = "b2bi"
+  }
+
+  names {
+    provider_name_upper = "B2BI"
+    human_friendly      = "B2B Data Interchange"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListProfiles"
+  }
+
+  resource_prefix {
+    correct = "aws_b2bi_"
+  }
+
+  provider_package_correct = "b2bi"
+  doc_prefix               = ["b2bi_"]
+  brand                    = "AWS"
+}
+
 service "batch" {
   sdk {
     id            = "Batch"

@@ -44,6 +44,7 @@ const (
 	AuditManagerEndpointID                 = "auditmanager"
 	AutoScalingPlansEndpointID             = "autoscaling-plans"
 	BCMDataExportsEndpointID               = "bcm-data-exports"
+	B2BIEndpointID                         = "b2bi"
 	BackupEndpointID                       = "backup"
 	BatchEndpointID                        = "batch"
 	BedrockAgentEndpointID                 = "bedrockagent"
