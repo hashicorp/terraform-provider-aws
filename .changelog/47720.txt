@@ -1,0 +1,1 @@
+resource/aws_msk_replicator: Add `log_delivery` configuration block to support CloudWatch Logs, Firehose, and S3 log delivery
