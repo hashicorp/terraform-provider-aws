@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float32validator"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -577,8 +579,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												names.AttrDescription: schema.StringAttribute{
-													Required:  true,
-													Sensitive: true,
+													Required: true,
 												},
 												"input_schema": schema.StringAttribute{
 													Required:  true,
@@ -703,7 +704,10 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		out, err = conn.CreateHarness(ctx, input)
 
-		if errs.Contains(err, errCodeValidationException) {
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Role validation failed") {
+			return tfresource.RetryableError(err)
+		}
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Access denied") {
 			return tfresource.RetryableError(err)
 		}
 
@@ -1283,8 +1287,12 @@ func flattenHarnessToModel(ctx context.Context, harness *awstypes.Harness, data 
 		data.AllowedTools = fwflex.FlattenFrameworkStringValueListOfString(ctx, harness.AllowedTools)
 	}
 
-	if len(harness.EnvironmentVariables) > 0 {
-		data.EnvironmentVariables = fwflex.FlattenFrameworkStringValueMapOfString(ctx, harness.EnvironmentVariables)
+	if !data.EnvironmentVariables.IsNull() {
+		if len(harness.EnvironmentVariables) > 0 {
+			data.EnvironmentVariables = fwflex.FlattenFrameworkStringValueMapOfString(ctx, harness.EnvironmentVariables)
+		} else {
+			data.EnvironmentVariables = fwtypes.NewMapValueOfNull[basetypes.StringValue](ctx)
+		}
 	}
 
 	// Model.
@@ -1435,15 +1443,47 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 	switch t := v.(type) {
 	case *awstypes.HarnessModelConfigurationMemberBedrockModelConfig:
 		var data harnessBedrockModelConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		data.ModelID = fwflex.StringToFramework(ctx, t.Value.ModelId)
+		if t.Value.MaxTokens != nil {
+			data.MaxTokens = types.Int32Value(*t.Value.MaxTokens)
+		}
+		if t.Value.Temperature != nil {
+			data.Temperature = types.Float32Value(*t.Value.Temperature)
+		}
+		if t.Value.TopP != nil {
+			data.TopP = types.Float32Value(*t.Value.TopP)
+		}
 		m.BedrockModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case *awstypes.HarnessModelConfigurationMemberOpenAiModelConfig:
 		var data harnessOpenAiModelConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		data.ModelID = fwflex.StringToFramework(ctx, t.Value.ModelId)
+		data.ApiKeyARN = fwflex.StringToFramework(ctx, t.Value.ApiKeyArn)
+		if t.Value.MaxTokens != nil {
+			data.MaxTokens = types.Int32Value(*t.Value.MaxTokens)
+		}
+		if t.Value.Temperature != nil {
+			data.Temperature = types.Float32Value(*t.Value.Temperature)
+		}
+		if t.Value.TopP != nil {
+			data.TopP = types.Float32Value(*t.Value.TopP)
+		}
 		m.OpenAiModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case *awstypes.HarnessModelConfigurationMemberGeminiModelConfig:
 		var data harnessGeminiModelConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		data.ModelID = fwflex.StringToFramework(ctx, t.Value.ModelId)
+		data.ApiKeyARN = fwflex.StringToFramework(ctx, t.Value.ApiKeyArn)
+		if t.Value.MaxTokens != nil {
+			data.MaxTokens = types.Int32Value(*t.Value.MaxTokens)
+		}
+		if t.Value.Temperature != nil {
+			data.Temperature = types.Float32Value(*t.Value.Temperature)
+		}
+		if t.Value.TopP != nil {
+			data.TopP = types.Float32Value(*t.Value.TopP)
+		}
+		if t.Value.TopK != nil {
+			data.TopK = types.Int32Value(*t.Value.TopK)
+		}
 		m.GeminiModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("model configuration flatten: %T", v))

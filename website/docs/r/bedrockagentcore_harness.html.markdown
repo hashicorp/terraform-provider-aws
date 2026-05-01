@@ -124,7 +124,6 @@ The following arguments are required:
 * `harness_name` - (Required, Forces new resource) Name of the harness. Must be 1-40 characters, alphanumeric and underscores only.
 * `execution_role_arn` - (Required) ARN of the IAM role that the harness assumes to access AWS services.
 * `model` - (Required) Model configuration for the harness. See [`model`](#model) below.
-* `system_prompt` - (Required) System prompt blocks for the harness. See [`system_prompt`](#system_prompt) below.
 
 The following arguments are optional:
 
@@ -137,6 +136,7 @@ The following arguments are optional:
 * `max_tokens` - (Optional) Maximum number of tokens in the model response.
 * `memory` - (Optional) Memory configuration. See [`memory`](#memory) below.
 * `skill` - (Optional) Skill configurations. See [`skill`](#skill) below.
+* `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt`](#system_prompt) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout_seconds` - (Optional) Timeout in seconds for the harness execution.
 * `timeouts` - (Optional) Configuration block for operation timeouts. See [Timeouts](#timeouts) below.
@@ -155,7 +155,7 @@ The `model` block supports exactly one of the following:
 
 * `model_id` - (Required) Bedrock model ID (e.g., `anthropic.claude-sonnet-4-20250514`).
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
-* `temperature` - (Optional) Temperature for sampling. Must be between 0 and 1.
+* `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
 * `top_p` - (Optional) Top-p (nucleus) sampling parameter. Must be between 0 and 1.
 
 ### `openai_model_config`
@@ -182,7 +182,7 @@ The `model` block supports exactly one of the following:
 ### `tool`
 
 * `type` - (Required) Type of tool. Valid values: `remote_mcp`, `agentcore_browser`, `agentcore_gateway`, `inline_function`, `agentcore_code_interpreter`.
-* `name` - (Required) Name of the tool.
+* `name` - (Optional) Name of the tool.
 * `config` - (Optional) Tool-specific configuration. See [`tool config`](#tool-config) below.
 
 ### Tool Config
@@ -202,7 +202,7 @@ The `config` block supports exactly one of the following:
 
 ### `agentcore_browser`
 
-* `browser_arn` - (Required) ARN of the AgentCore browser resource.
+* `browser_arn` - (Optional) ARN of the AgentCore browser resource.
 
 ### `agentcore_gateway`
 
@@ -220,19 +220,19 @@ Exactly one of the following must be specified:
 ### `oauth`
 
 * `provider_arn` - (Required) ARN of the OAuth credential provider.
-* `scopes` - (Optional) List of OAuth scopes.
+* `scopes` - (Required) List of OAuth scopes.
 * `custom_parameters` - (Optional) Map of custom parameters.
 * `grant_type` - (Optional) OAuth grant type.
 * `default_return_url` - (Optional) Default return URL for OAuth flow.
 
 ### `agentcore_code_interpreter`
 
-* `code_interpreter_arn` - (Required) ARN of the AgentCore code interpreter resource.
+* `code_interpreter_arn` - (Optional) ARN of the AgentCore code interpreter resource.
 
 ### `inline_function`
 
-* `description` - (Optional, Sensitive) Description of the inline function.
-* `input_schema` - (Optional, Sensitive) JSON string defining the input schema for the function.
+* `description` - (Required) Description of the inline function.
+* `input_schema` - (Required, Sensitive) JSON string defining the input schema for the function.
 
 ### `skill`
 
@@ -268,7 +268,7 @@ The `config` block supports exactly one of the following:
 
 * `lifecycle_configuration` - (Optional) Lifecycle configuration. See [`lifecycle_configuration`](#lifecycle_configuration) below.
 * `network_configuration` - (Optional) Network configuration. See [`network_configuration`](#network_configuration) below.
-* `filesystem_configurations` - (Optional) Filesystem configurations. See [`filesystem_configurations`](#filesystem_configurations) below.
+* `filesystem_configuration` - (Optional) Filesystem configurations. See [`filesystem_configuration`](#filesystem_configuration) below.
 
 ### `lifecycle_configuration`
 
@@ -285,7 +285,7 @@ The `config` block supports exactly one of the following:
 * `security_groups` - (Required) Security groups for the VPC.
 * `subnets` - (Required) Subnets for the VPC.
 
-### `filesystem_configurations`
+### `filesystem_configuration`
 
 * `session_storage` - (Optional) Session storage configuration. See [`session_storage`](#session_storage) below.
 
