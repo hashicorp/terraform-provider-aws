@@ -1,0 +1,1 @@
+release-note:enhancement service/ec2: Allow updating aws_instance placement_group without recreation
