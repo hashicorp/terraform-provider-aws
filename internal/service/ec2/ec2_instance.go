@@ -645,21 +645,18 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"host_resource_group_arn", "placement_group_id"},
 			},
 			"placement_group_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"host_resource_group_arn", "placement_group"},
 			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"primary_network_interface_id": {
 				Type:     schema.TypeString,
@@ -1948,6 +1945,40 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
+		}
+	}
+
+	if d.HasChanges("placement_group", "placement_group_id", "placement_partition_number") && !d.IsNewResource() {
+		if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input := &ec2.ModifyInstancePlacementInput{
+			InstanceId: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("placement_group"); ok {
+			input.GroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("placement_group_id"); ok {
+			input.GroupId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("placement_partition_number"); ok {
+			input.PartitionNumber = aws.Int32(int32(v.(int)))
+		}
+
+		log.Printf("[DEBUG] Modifying EC2 Instance placement: %s", d.Id())
+
+		_, err := conn.ModifyInstancePlacement(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) placement: %s", d.Id(), err)
+		}
+
+		if err := startInstance(ctx, conn, d.Id(), true, instanceStartTimeout); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
