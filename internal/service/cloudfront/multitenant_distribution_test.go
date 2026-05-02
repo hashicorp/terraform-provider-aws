@@ -328,22 +328,24 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_update("Initial comment", "http1.1", ""),
+				Config: testAccMultiTenantDistributionConfig_update("Initial comment", "http1.1", "", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Initial comment"),
 					resource.TestCheckResourceAttr(resourceName, "http_version", "http1.1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.response_completion_timeout", "30"),
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_update("Updated comment", "http2", "updated.html"),
+				Config: testAccMultiTenantDistributionConfig_update("Updated comment", "http2", "updated.html", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Updated comment"),
 					resource.TestCheckResourceAttr(resourceName, "http_version", "http2"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_object", "updated.html"),
+					resource.TestCheckNoResourceAttr(resourceName, "origin.0.response_completion_timeout"),
 				),
 			},
 			{
@@ -766,10 +768,15 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 `, tagConfig)
 }
 
-func testAccMultiTenantDistributionConfig_update(comment, httpVersion, defaultRootObject string) string {
+func testAccMultiTenantDistributionConfig_update(comment, httpVersion, defaultRootObject string, responseCompletionTimeoutEnabled bool) string {
 	defaultRootObjectConfig := ""
 	if defaultRootObject != "" {
 		defaultRootObjectConfig = fmt.Sprintf("default_root_object = %q", defaultRootObject)
+	}
+
+	responseCompletionTimeout := "null"
+	if responseCompletionTimeoutEnabled {
+		responseCompletionTimeout = "30"
 	}
 
 	return fmt.Sprintf(`
@@ -780,8 +787,9 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   %[3]s
 
   origin {
-    domain_name = "example.com"
-    id          = "example"
+    domain_name                 = "example.com"
+    id                          = "example"
+    response_completion_timeout = %[4]s
 
     custom_origin_config {
       http_port              = 80
@@ -824,7 +832,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
   }
 }
-`, comment, httpVersion, defaultRootObjectConfig)
+`, comment, httpVersion, defaultRootObjectConfig, responseCompletionTimeout)
 }
 
 func testAccMultiTenantDistributionConfig_s3OriginWithOAC(rName string) string {

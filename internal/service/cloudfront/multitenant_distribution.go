@@ -434,7 +434,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
-							Computed: true,
 						},
 					},
 					Blocks: map[string]schema.Block{
