@@ -6,6 +6,7 @@ package kafka_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -401,7 +402,7 @@ func TestAccKafkaReplicator_logDelivery_empty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicatorConfig_logDeliveryEmpty(rName, sourceCluster, targetCluster),
-				ExpectError: regexache.MustCompile(`log_delivery must include at least one of`),
+				ExpectError: regexache.MustCompile(`Missing required argument|must be specified`),
 			},
 		},
 	})
@@ -1153,6 +1154,13 @@ func testAccReplicatorConfig_logDeliveryEmpty(rName, sourceCluster, targetCluste
 }
 
 func testAccReplicatorConfig_logDeliveryBase(rName, sourceCluster, targetCluster, extraResources, logDelivery string) string {
+	if strings.Contains(extraResources, "%[1]") {
+		extraResources = fmt.Sprintf(extraResources, rName)
+	}
+	if strings.Contains(logDelivery, "%[1]") {
+		logDelivery = fmt.Sprintf(logDelivery, rName)
+	}
+
 	return acctest.ConfigCompose(
 		testAccReplicatorConfig_source(sourceCluster),
 		testAccReplicatorConfig_target(targetCluster),

@@ -118,9 +118,10 @@ func resourceReplicator() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCloudWatchLogs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							AtLeastOneOf: []string{"log_delivery.0.cloudwatch_logs", "log_delivery.0.firehose", "log_delivery.0.s3"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrEnabled: {
@@ -135,9 +136,10 @@ func resourceReplicator() *schema.Resource {
 							},
 						},
 						"firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							AtLeastOneOf: []string{"log_delivery.0.cloudwatch_logs", "log_delivery.0.firehose", "log_delivery.0.s3"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delivery_stream": {
@@ -152,9 +154,10 @@ func resourceReplicator() *schema.Resource {
 							},
 						},
 						"s3": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							AtLeastOneOf: []string{"log_delivery.0.cloudwatch_logs", "log_delivery.0.firehose", "log_delivery.0.s3"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrBucket: {
