@@ -38,3 +38,20 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Lightsail domain.
 * `id` - Name used for this domain.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Domain using the id attribute. For example:
+
+```terraform
+import {
+  to = aws_lightsail_domain.example
+  id = "example.com"
+}
+```
+
+Using `terraform import`, import Lightsail Domain using the id attribute. For example:
+
+```console
+% terraform import aws_lightsail_domain.example example.com
+```
