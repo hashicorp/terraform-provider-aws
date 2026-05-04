@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.14
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.16
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.57.2
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.7
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.6.5
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.25
@@ -62,8 +62,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.25
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.14
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.11
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.56.3
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.71.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.23
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.15
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.14
@@ -137,14 +137,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.75.3
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.15
-	github.com/aws/aws-sdk-go-v2/service/iam v1.53.9
+	github.com/aws/aws-sdk-go-v2/service/iam v1.53.10
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.22
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.6
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.16
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.9.10
-	github.com/aws/aws-sdk-go-v2/service/iot v1.72.8
+	github.com/aws/aws-sdk-go-v2/service/iot v1.73.0
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.22
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.51.0
@@ -205,7 +205,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.107.1
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.108.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.11
 	github.com/aws/aws-sdk-go-v2/service/rds v1.118.2
@@ -270,7 +270,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/uxc v1.0.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.32.3
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.13
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.14
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.22
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.23
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.5
