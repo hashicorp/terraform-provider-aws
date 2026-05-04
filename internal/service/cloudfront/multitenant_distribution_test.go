@@ -477,8 +477,14 @@ func TestAccCloudFrontMultiTenantDistribution_customOriginTimeouts(t *testing.T)
 				),
 			},
 			{
-				Config:             testAccMultiTenantDistributionConfig_customOriginTimeouts(),
-				PlanOnly:           true,
+				Config: testAccMultiTenantDistributionConfig_customOriginTimeouts(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", "5"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_keepalive_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout", "60"),
+				),
 				ExpectNonEmptyPlan: false,
 			},
 		},
