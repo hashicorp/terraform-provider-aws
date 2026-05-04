@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: removes schema-level defaults on origins set-element sub-attributes that were causing flip-flopping plans
+```

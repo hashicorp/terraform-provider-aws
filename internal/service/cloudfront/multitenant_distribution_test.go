@@ -42,6 +42,14 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 
 					// Check ResponseCompletionTimeout is not enabled with no value set
 					resource.TestCheckNoResourceAttr(resourceName, "origin.0.response_completion_timeout"),
+
+					// Check ConnectionAttempts and ConnectionTimeout exist in the state (server-side defaults)
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.connection_attempts"),
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.connection_timeout"),
+
+					// Check OriginKeepaliveTimeout and OriginReadTimeout exist in the state (server-side defaults)
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.custom_origin_config.0.origin_keepalive_timeout"),
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout"),
 				),
 			},
 			{
@@ -439,6 +447,39 @@ func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlock
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
+			},
+		},
+	})
+}
+
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/47735
+func TestAccCloudFrontMultiTenantDistribution_customOriginTimeouts(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_customOriginTimeouts(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", "5"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_keepalive_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout", "60"),
+				),
+			},
+			{
+				Config:             testAccMultiTenantDistributionConfig_customOriginTimeouts(),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -1197,4 +1238,52 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 }
 `, rName, lambdaFunctionAssociationBlocks)
+}
+
+func testAccMultiTenantDistributionConfig_customOriginTimeouts() string {
+	return `
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    connection_timeout = 5
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "https-only"
+      origin_ssl_protocols     = ["TLSv1.2"]
+      origin_keepalive_timeout = 30
+      origin_read_timeout      = 60
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {}
+}
+`
 }
