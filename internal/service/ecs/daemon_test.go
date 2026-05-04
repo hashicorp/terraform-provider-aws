@@ -6,6 +6,8 @@ package ecs_test
 import (
 	"context"
 	"fmt"
+
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"testing"
 
@@ -15,6 +17,59 @@ import (
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestDaemonNameFromARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+		isNull   bool
+	}{
+		{
+			name:     "valid daemon ARN",
+			input:    "arn:aws:ecs:us-west-2:123456789012:daemon/my-cluster/my-daemon",
+			expected: "my-daemon",
+		},
+		{
+			name:   "too few parts",
+			input:  "arn:aws:ecs:us-west-2:123456789012:daemon/my-cluster",
+			isNull: true,
+		},
+		{
+			name:   "too many parts",
+			input:  "arn:aws:ecs:us-west-2:123456789012:daemon/a/b/c",
+			isNull: true,
+		},
+		{
+			name:   "empty string",
+			input:  "",
+			isNull: true,
+		},
+		{
+			name:   "no slashes",
+			input:  "something",
+			isNull: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := tfecs.DaemonNameFromARN(tc.input)
+			if tc.isNull {
+				if !got.IsNull() {
+					t.Errorf("expected null, got %s", got.ValueString())
+				}
+			} else {
+				if got.ValueString() != tc.expected {
+					t.Errorf("got %s, expected %s", got.ValueString(), tc.expected)
+				}
+			}
+		})
+	}
+}
 
 func TestAccECSDaemon_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -33,9 +88,9 @@ func TestAccECSDaemon_basic(t *testing.T) {
 					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "daemon_task_definition"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", regexache.MustCompile(`daemon/.+/`+rName+`$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "cluster_arn", "ecs", regexache.MustCompile(`cluster/`+rName+`$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "daemon_task_definition", "ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`:\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_provider_arns.#", "1"),
 				),
 			},
@@ -48,7 +103,6 @@ func TestAccECSDaemon_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"capacity_provider_arns",   // API doesn't return this
 					"daemon_task_definition",   // API doesn't return this
-					"propagate_tags",           // API doesn't return this
 					"deployment_configuration", // API doesn't return this
 				},
 			},
@@ -107,7 +161,6 @@ func TestAccECSDaemon_deploymentConfiguration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"capacity_provider_arns",
 					"daemon_task_definition",
-					"propagate_tags",
 					"deployment_configuration",
 				},
 			},
@@ -138,8 +191,8 @@ func TestAccECSDaemon_tags(t *testing.T) {
 				Config: testAccDaemonConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -151,7 +204,6 @@ func TestAccECSDaemon_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"daemon_task_definition",
 					"capacity_provider_arns",
-					"propagate_tags",
 					"deployment_configuration",
 				},
 			},
@@ -159,17 +211,17 @@ func TestAccECSDaemon_tags(t *testing.T) {
 				Config: testAccDaemonConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -318,14 +370,14 @@ func TestAccECSDaemon_propagateTags(t *testing.T) {
 				Config: testAccDaemonConfig_propagateTags(rName, "DAEMON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "DAEMON"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, "DAEMON"),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_propagateTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, "NONE"),
 				),
 			},
 		},
@@ -368,7 +420,7 @@ func testAccCheckDaemonDestroy(ctx context.Context, t *testing.T) resource.TestC
 				continue
 			}
 
-			arn := rs.Primary.Attributes["arn"]
+			arn := rs.Primary.Attributes[names.AttrARN]
 
 			_, err := tfecs.FindDaemonByARN(ctx, conn, arn)
 
@@ -396,7 +448,7 @@ func testAccCheckDaemonExists(ctx context.Context, t *testing.T, n string) resou
 
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
-		arn := rs.Primary.Attributes["arn"]
+		arn := rs.Primary.Attributes[names.AttrARN]
 
 		_, err := tfecs.FindDaemonByARN(ctx, conn, arn)
 
@@ -454,8 +506,8 @@ resource "aws_iam_role" "infra" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ecs.${data.aws_partition.current.dns_suffix}" }
     }]
   })
@@ -472,8 +524,8 @@ resource "aws_iam_role" "instance" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ec2.${data.aws_partition.current.dns_suffix}" }
     }]
   })
@@ -523,10 +575,10 @@ resource "aws_iam_role" "test" {
 func testAccDaemonConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                    = %[1]q
+  name                   = %[1]q
   cluster_arn            = aws_ecs_cluster.test.arn
-  daemon_task_definition  = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns  = [aws_ecs_capacity_provider.test.arn]
+  daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
+  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 }
 `, rName))
 }
@@ -540,8 +592,8 @@ resource "aws_ecs_daemon" "test" {
   capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
 
   deployment_configuration {
-    drain_percent         = %[2]f
-    bake_time_in_minutes  = %[3]d
+    drain_percent        = %[2]f
+    bake_time_in_minutes = %[3]d
   }
 }
 `, rName, drainPercent, bakeTime))
@@ -600,7 +652,7 @@ func testAccDaemonConfig_enableManagedTags(rName string, enable bool) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                    = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  cluster_arn             = aws_ecs_cluster.test.arn
   daemon_task_definition  = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns  = [aws_ecs_capacity_provider.test.arn]
   enable_ecs_managed_tags = %[2]t
@@ -611,11 +663,11 @@ resource "aws_ecs_daemon" "test" {
 func testAccDaemonConfig_enableExecuteCommand(rName string, enable bool) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                    = %[1]q
+  name                   = %[1]q
   cluster_arn            = aws_ecs_cluster.test.arn
-  daemon_task_definition  = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns  = [aws_ecs_capacity_provider.test.arn]
-  enable_execute_command  = %[2]t
+  daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
+  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+  enable_execute_command = %[2]t
 }
 `, rName, enable))
 }
@@ -682,8 +734,8 @@ resource "aws_iam_role" "infra" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ecs.${data.aws_partition.current.dns_suffix}" }
     }]
   })
@@ -700,8 +752,8 @@ resource "aws_iam_role" "instance" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ec2.${data.aws_partition.current.dns_suffix}" }
     }]
   })
@@ -723,8 +775,8 @@ resource "aws_iam_role" "test" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
     }]
   })

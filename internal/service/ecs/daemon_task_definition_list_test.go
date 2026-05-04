@@ -171,7 +171,7 @@ func TestAccECSDaemonTaskDefinition_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_ecs_daemon_task_definition.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`-0:\d+$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("container_definition"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("execution_role_arn"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrFamily), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("registered_at"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("registered_by"), knownvalue.NotNull()),

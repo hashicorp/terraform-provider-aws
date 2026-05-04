@@ -17,15 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -105,6 +102,9 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 			},
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -362,9 +362,7 @@ func (r *daemonResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 
 	switch {
-	case err == nil:
-		// no-op, continue on to waiter
-	case errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "deployment deletion is ongoing"):
+	case err == nil, errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "deployment deletion is ongoing"):
 		// no-op, continue on to waiter
 	default:
 		response.Diagnostics.AddError(fmt.Sprintf("deleting ECS Daemon (%s)", state.DaemonArn.ValueString()), err.Error())
@@ -377,35 +375,16 @@ func (r *daemonResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 }
 
-func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
-	i, ok := typ.(attr.TypeWithAttributeTypes)
-	if !ok {
-		diags.AddError(
-			"Internal Error",
-			"An unexpected error occurred. "+
-				"This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected value type to implement attr.TypeWithAttributeTypes, got: %T", typ),
-		)
-		return
-	}
-
-	attrTypes := i.AttributeTypes()
-	obj = basetypes.NewObjectNull(attrTypes)
-
-	return obj, diags
-}
-
 func daemonNameFromARN(arn string) types.String {
 	arnParts := strings.Split(arn, "/")
-	if len(arnParts) >= 3 {
-		return types.StringValue(arnParts[len(arnParts)-1])
+	if len(arnParts) == 3 {
+		return types.StringValue(arnParts[2])
 	}
 	return types.StringNull()
 }
 
-// flattenDaemonRevision populates task definition ARN and capacity provider ARNs
-// from a DaemonRevision and DaemonRevisionDetail. DaemonTaskDefinitionArn is only
+// flattenDaemonRevision populates task definition ARN and capacity
+// provider ARNs from a DaemonRevision and DaemonRevisionDetail. DaemonTaskDefinitionArn is only
 // set when the model's value is null (e.g., during import) to avoid overwriting
 // the plan value with potentially stale revision data during Create/Update.
 func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevision, revisionDetail awstypes.DaemonRevisionDetail, model *daemonResourceModel) {
@@ -490,6 +469,9 @@ func findDaemons(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonsIn
 	var result []awstypes.DaemonSummary
 
 	err := listDaemonsPages(ctx, conn, input, func(page *ecs.ListDaemonsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 		result = append(result, page.DaemonSummariesList...)
 		return !lastPage
 	})

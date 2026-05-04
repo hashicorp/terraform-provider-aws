@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"iter"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -56,9 +55,8 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 	conn := awsClient.ECSClient(ctx)
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		input := &ecs.ListDaemonsInput{}
-		if !query.ClusterArn.IsNull() {
-			input.ClusterArn = query.ClusterArn.ValueStringPointer()
+		input := &ecs.ListDaemonsInput{
+			ClusterArn: query.ClusterArn.ValueStringPointer(),
 		}
 
 		for summary, err := range listDaemonSummaries(ctx, conn, input) {
@@ -98,10 +96,7 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 				setTagsOut(ctx, nil)
 
 				if summary.DaemonArn != nil {
-					arnParts := strings.Split(aws.ToString(summary.DaemonArn), "/")
-					if len(arnParts) >= 3 {
-						result.DisplayName = arnParts[len(arnParts)-1]
-					}
+					result.DisplayName = daemonNameFromARN(aws.ToString(summary.DaemonArn)).ValueString()
 				}
 			})
 
@@ -121,6 +116,9 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 func listDaemonSummaries(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonsInput) iter.Seq2[awstypes.DaemonSummary, error] {
 	return func(yield func(awstypes.DaemonSummary, error) bool) {
 		err := listDaemonsPages(ctx, conn, input, func(page *ecs.ListDaemonsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
 			for _, summary := range page.DaemonSummariesList {
 				if !yield(summary, nil) {
 					return false

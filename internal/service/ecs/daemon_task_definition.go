@@ -583,7 +583,7 @@ func flattenDaemonTaskDefinition(ctx context.Context, dtd *awstypes.DaemonTaskDe
 	}
 
 	// Manual: volumes (structural mismatch — Host.SourcePath → HostPath)
-	model.Volumes, diags = flattenDaemonVolumes(ctx, dtd.Volumes)
+	model.Volumes, diags = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, flattenDaemonVolumes(dtd.Volumes))
 
 	return diags
 }
@@ -591,7 +591,7 @@ func flattenDaemonTaskDefinition(ctx context.Context, dtd *awstypes.DaemonTaskDe
 // flattenDaemonVolumes converts SDK Volume types to the Terraform model.
 // AutoFlex cannot handle this because the SDK nests SourcePath under Host
 // (Volume.Host.SourcePath) while the Terraform model flattens it (volumeModel.HostPath).
-func flattenDaemonVolumes(ctx context.Context, volumes []awstypes.DaemonVolume) (fwtypes.SetNestedObjectValueOf[volumeModel], diag.Diagnostics) {
+func flattenDaemonVolumes(volumes []awstypes.DaemonVolume) []volumeModel {
 	models := make([]volumeModel, len(volumes))
 	for i, v := range volumes {
 		models[i] = volumeModel{
@@ -601,7 +601,7 @@ func flattenDaemonVolumes(ctx context.Context, volumes []awstypes.DaemonVolume) 
 			models[i].HostPath = types.StringPointerValue(v.Host.SourcePath)
 		}
 	}
-	return fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, models)
+	return models
 }
 
 func expandDaemonVolumesFromModel(volumes []*volumeModel) []awstypes.DaemonVolume {
@@ -793,6 +793,9 @@ func findDaemonTaskDefinitions(ctx context.Context, conn *ecs.Client, input *ecs
 	var result []awstypes.DaemonTaskDefinitionSummary
 
 	err := listDaemonTaskDefinitionsPages(ctx, conn, input, func(page *ecs.ListDaemonTaskDefinitionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 		result = append(result, page.DaemonTaskDefinitions...)
 		return !lastPage
 	})

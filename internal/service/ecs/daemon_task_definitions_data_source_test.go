@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,7 +32,7 @@ func TestAccECSDaemonTaskDefinitionsDataSource_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("daemon_task_definitions"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:         knownvalue.NotNull(),
+							names.AttrARN:         tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`.*:\d+$`)),
 							names.AttrStatus:      knownvalue.StringExact("ACTIVE"),
 							"registered_at":       knownvalue.NotNull(),
 							"registered_by":       knownvalue.NotNull(),
@@ -58,14 +60,14 @@ func TestAccECSDaemonTaskDefinitionsDataSource_familyPrefix(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("daemon_task_definitions"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:         knownvalue.NotNull(),
+							names.AttrARN:         tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`.*:\d+$`)),
 							names.AttrStatus:      knownvalue.StringExact("ACTIVE"),
 							"registered_at":       knownvalue.NotNull(),
 							"registered_by":       knownvalue.NotNull(),
 							"delete_requested_at": knownvalue.Null(),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:         knownvalue.NotNull(),
+							names.AttrARN:         tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`.*:\d+$`)),
 							names.AttrStatus:      knownvalue.StringExact("ACTIVE"),
 							"registered_at":       knownvalue.NotNull(),
 							"registered_by":       knownvalue.NotNull(),
@@ -93,7 +95,7 @@ func TestAccECSDaemonTaskDefinitionsDataSource_family(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("daemon_task_definitions"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:         knownvalue.NotNull(),
+							names.AttrARN:         tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`.*:\d+$`)),
 							names.AttrStatus:      knownvalue.StringExact("ACTIVE"),
 							"registered_at":       knownvalue.NotNull(),
 							"registered_by":       knownvalue.NotNull(),
@@ -121,7 +123,7 @@ func TestAccECSDaemonTaskDefinitionsDataSource_revision(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("daemon_task_definitions"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:         knownvalue.NotNull(),
+							names.AttrARN:         tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`.*:\d+$`)),
 							names.AttrStatus:      knownvalue.StringExact("ACTIVE"),
 							"registered_at":       knownvalue.NotNull(),
 							"registered_by":       knownvalue.NotNull(),
@@ -149,14 +151,14 @@ func TestAccECSDaemonTaskDefinitionsDataSource_sort(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("daemon_task_definitions"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:         knownvalue.NotNull(),
+							names.AttrARN:         tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`.*:\d+$`)),
 							names.AttrStatus:      knownvalue.StringExact("ACTIVE"),
 							"registered_at":       knownvalue.NotNull(),
 							"registered_by":       knownvalue.NotNull(),
 							"delete_requested_at": knownvalue.Null(),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:         knownvalue.NotNull(),
+							names.AttrARN:         tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`.*:\d+$`)),
 							names.AttrStatus:      knownvalue.StringExact("ACTIVE"),
 							"registered_at":       knownvalue.NotNull(),
 							"registered_by":       knownvalue.NotNull(),

@@ -171,10 +171,10 @@ func TestAccECSDaemon_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_ecs_daemon.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon/.+/`+rName+`-0$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("capacity_provider_arns"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("cluster_arn"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("daemon_task_definition"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("cluster_arn"), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`cluster/`+rName+`$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("daemon_task_definition"), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`:\d+$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("propagate_tags"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPropagateTags), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),
 					}),

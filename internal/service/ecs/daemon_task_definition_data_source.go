@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -35,6 +34,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
+			"container_definition": framework.DataSourceComputedListOfObjectAttribute[containerDefinitionModel](ctx),
 			"cpu": schema.StringAttribute{
 				Computed: true,
 			},
@@ -70,338 +70,7 @@ func (d *daemonTaskDefinitionDataSource) Schema(ctx context.Context, request dat
 			"task_role_arn": schema.StringAttribute{
 				Computed: true,
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"container_definition": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[containerDefinitionModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"command": schema.ListAttribute{
-							CustomType: fwtypes.ListOfStringType,
-							Computed:   true,
-						},
-						"cpu": schema.Int64Attribute{
-							Computed: true,
-						},
-						"entry_point": schema.ListAttribute{
-							CustomType: fwtypes.ListOfStringType,
-							Computed:   true,
-						},
-						"essential": schema.BoolAttribute{
-							Computed: true,
-						},
-						"image": schema.StringAttribute{
-							Computed: true,
-						},
-						"interactive": schema.BoolAttribute{
-							Computed: true,
-						},
-						"memory": schema.Int64Attribute{
-							Computed: true,
-						},
-						"memory_reservation": schema.Int64Attribute{
-							Computed: true,
-						},
-						names.AttrName: schema.StringAttribute{
-							Computed: true,
-						},
-						"privileged": schema.BoolAttribute{
-							Computed: true,
-						},
-						"pseudo_terminal": schema.BoolAttribute{
-							Computed: true,
-						},
-						"readonly_root_filesystem": schema.BoolAttribute{
-							Computed: true,
-						},
-						"start_timeout": schema.Int64Attribute{
-							Computed: true,
-						},
-						"stop_timeout": schema.Int64Attribute{
-							Computed: true,
-						},
-						"user": schema.StringAttribute{
-							Computed: true,
-						},
-						"working_directory": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"depends_on": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[containerDependencyModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrCondition: schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.ContainerCondition](),
-										Computed:   true,
-									},
-									"container_name": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						names.AttrEnvironment: schema.SetNestedBlock{
-							CustomType: fwtypes.NewSetNestedObjectTypeOf[keyValuePairModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrName: schema.StringAttribute{
-										Computed: true,
-									},
-									names.AttrValue: schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"environment_file": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[environmentFileModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrType: schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.EnvironmentFileType](),
-										Computed:   true,
-									},
-									names.AttrValue: schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"firelens_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[firelensConfigurationModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrType: schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.FirelensConfigurationType](),
-										Computed:   true,
-									},
-									"options": schema.MapAttribute{
-										CustomType:  fwtypes.MapOfStringType,
-										Computed:    true,
-										ElementType: types.StringType,
-									},
-								},
-							},
-						},
-						names.AttrHealthCheck: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[healthCheckModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"command": schema.ListAttribute{
-										CustomType: fwtypes.ListOfStringType,
-										Computed:   true,
-									},
-									names.AttrInterval: schema.Int64Attribute{
-										Computed: true,
-									},
-									"retries": schema.Int64Attribute{
-										Computed: true,
-									},
-									"start_period": schema.Int64Attribute{
-										Computed: true,
-									},
-									names.AttrTimeout: schema.Int64Attribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"linux_parameters": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[daemonLinuxParametersModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"init_process_enabled": schema.BoolAttribute{
-										Computed: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"capabilities": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[kernelCapabilitiesModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"add": schema.ListAttribute{
-													CustomType: fwtypes.ListOfStringType,
-													Computed:   true,
-												},
-												"drop": schema.ListAttribute{
-													CustomType: fwtypes.ListOfStringType,
-													Computed:   true,
-												},
-											},
-										},
-									},
-									"device": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[deviceModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"container_path": schema.StringAttribute{
-													Computed: true,
-												},
-												"host_path": schema.StringAttribute{
-													Computed: true,
-												},
-												names.AttrPermissions: schema.ListAttribute{
-													Computed:    true,
-													ElementType: types.StringType,
-												},
-											},
-										},
-									},
-									"tmpfs": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[tmpfsModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"container_path": schema.StringAttribute{
-													Computed: true,
-												},
-												"mount_options": schema.ListAttribute{
-													CustomType: fwtypes.ListOfStringType,
-													Computed:   true,
-												},
-												names.AttrSize: schema.Int64Attribute{
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"log_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[logConfigurationModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"log_driver": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.LogDriver](),
-										Computed:   true,
-									},
-									"options": schema.MapAttribute{
-										CustomType:  fwtypes.MapOfStringType,
-										Computed:    true,
-										ElementType: types.StringType,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"secret_option": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[secretModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												names.AttrName: schema.StringAttribute{
-													Computed: true,
-												},
-												"value_from": schema.StringAttribute{
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"mount_point": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[mountPointModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"container_path": schema.StringAttribute{
-										Computed: true,
-									},
-									"read_only": schema.BoolAttribute{
-										Computed: true,
-									},
-									"source_volume": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"repository_credentials": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[repositoryCredentialsModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"credentials_parameter": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"restart_policy": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[containerRestartPolicyModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrEnabled: schema.BoolAttribute{
-										Computed: true,
-									},
-									"ignored_exit_codes": schema.ListAttribute{
-										Computed:    true,
-										ElementType: types.Int64Type,
-									},
-									"restart_attempt_period": schema.Int64Attribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"secret": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[secretModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrName: schema.StringAttribute{
-										Computed: true,
-									},
-									"value_from": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"system_control": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[systemControlModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrNamespace: schema.StringAttribute{
-										Computed: true,
-									},
-									names.AttrValue: schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"ulimit": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[ulimitModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"hard_limit": schema.Int64Attribute{
-										Computed: true,
-									},
-									names.AttrName: schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.UlimitName](),
-										Computed:   true,
-									},
-									"soft_limit": schema.Int64Attribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"volume": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[volumeModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"host_path": schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrName: schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
+			"volume": framework.DataSourceComputedListOfObjectAttribute[volumeModel](ctx),
 		},
 	}
 }
@@ -416,12 +85,12 @@ func (d *daemonTaskDefinitionDataSource) Read(ctx context.Context, request datas
 	conn := d.Meta().ECSClient(ctx)
 
 	input := &ecs.DescribeDaemonTaskDefinitionInput{
-		DaemonTaskDefinition: data.TaskDefinition.ValueStringPointer(),
+		DaemonTaskDefinition: data.DaemonTaskDefinition.ValueStringPointer(),
 	}
 
 	output, err := conn.DescribeDaemonTaskDefinition(ctx, input)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Task Definition (%s)", data.TaskDefinition.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Task Definition (%s)", data.DaemonTaskDefinition.ValueString()), err.Error())
 		return
 	}
 
@@ -435,15 +104,8 @@ func (d *daemonTaskDefinitionDataSource) Read(ctx context.Context, request datas
 	}
 
 	// Manual: volumes (structural mismatch — Host.SourcePath → HostPath)
-	volumes := make([]volumeModel, len(dtd.Volumes))
-	for i, v := range dtd.Volumes {
-		volumes[i] = volumeModel{
-			HostPath: types.StringPointerValue(v.Host.SourcePath),
-			Name:     types.StringPointerValue(v.Name),
-		}
-	}
 	var volumeDiags diag.Diagnostics
-	data.Volumes, volumeDiags = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, volumes)
+	data.Volumes, volumeDiags = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, flattenDaemonVolumes(dtd.Volumes))
 	response.Diagnostics.Append(volumeDiags...)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -451,9 +113,10 @@ func (d *daemonTaskDefinitionDataSource) Read(ctx context.Context, request datas
 
 type daemonTaskDefinitionDataSourceModel struct {
 	framework.WithRegionModel
-	DaemonTaskDefinitionArn types.String                                              `tfsdk:"arn"`
 	ContainerDefinitions    fwtypes.ListNestedObjectValueOf[containerDefinitionModel] `tfsdk:"container_definition"`
 	Cpu                     types.String                                              `tfsdk:"cpu"`
+	DaemonTaskDefinition    types.String                                              `tfsdk:"daemon_task_definition"`
+	DaemonTaskDefinitionArn types.String                                              `tfsdk:"arn"`
 	DeleteRequestedAt       timetypes.RFC3339                                         `tfsdk:"delete_requested_at"`
 	ExecutionRoleArn        types.String                                              `tfsdk:"execution_role_arn"`
 	Family                  types.String                                              `tfsdk:"family"`
@@ -462,9 +125,8 @@ type daemonTaskDefinitionDataSourceModel struct {
 	RegisteredBy            types.String                                              `tfsdk:"registered_by"`
 	Revision                types.Int64                                               `tfsdk:"revision"`
 	Status                  types.String                                              `tfsdk:"status"`
-	TaskDefinition          types.String                                              `tfsdk:"daemon_task_definition"`
 	TaskRoleArn             types.String                                              `tfsdk:"task_role_arn"`
-	Volumes                 fwtypes.SetNestedObjectValueOf[volumeModel]               `tfsdk:"volume"`
+	Volumes                 fwtypes.ListNestedObjectValueOf[volumeModel]              `tfsdk:"volume"`
 }
 
 type volumeModel struct {

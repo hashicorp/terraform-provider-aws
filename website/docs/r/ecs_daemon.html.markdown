@@ -80,9 +80,9 @@ This resource supports the following arguments:
 
 The `deployment_configuration` block supports:
 
-* `drain_percent` - (Optional) Percentage of tasks to drain during deployment. Valid values are between 0.0 and 100.0.
-* `bake_time_in_minutes` - (Optional) Time in minutes to wait before considering a deployment successful. Valid values are between 0 and 1440.
 * `alarms` - (Optional) Alarm configuration for deployment monitoring. See [Alarms](#alarms) below.
+* `bake_time_in_minutes` - (Optional) Time in minutes to wait before considering a deployment successful. Valid values are between 0 and 1440.
+* `drain_percent` - (Optional) Percentage of tasks to drain during deployment. Valid values are between 0.0 and 100.0.
 
 ### Alarms
 

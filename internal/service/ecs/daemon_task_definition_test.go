@@ -6,10 +6,11 @@ package ecs_test
 import (
 	"context"
 	"fmt"
+
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,7 +21,6 @@ import (
 
 func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -33,11 +33,11 @@ func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, rName),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "512"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "1024"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`:\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "1"),
@@ -61,7 +61,6 @@ func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -74,7 +73,7 @@ func TestAccECSDaemonTaskDefinition_disappears(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceDaemonTaskDefinition, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,7 +84,6 @@ func TestAccECSDaemonTaskDefinition_disappears(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -98,9 +96,9 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -113,18 +111,18 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -133,7 +131,6 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_executionRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -146,8 +143,8 @@ func TestAccECSDaemonTaskDefinition_executionRole(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_executionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.execution", "arn"),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.execution", names.AttrARN),
 				),
 			},
 			{
@@ -163,7 +160,6 @@ func TestAccECSDaemonTaskDefinition_executionRole(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_taskRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -176,8 +172,8 @@ func TestAccECSDaemonTaskDefinition_taskRole(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_taskRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
-					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.task", "arn"),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.task", names.AttrARN),
 				),
 			},
 			{
@@ -193,7 +189,6 @@ func TestAccECSDaemonTaskDefinition_taskRole(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -206,7 +201,7 @@ func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_volume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "2"),
 				),
 			},
@@ -225,7 +220,7 @@ func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "0"),
 				),
 			},
@@ -237,7 +232,7 @@ func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "2"),
 				),
 			},
@@ -247,7 +242,6 @@ func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -260,7 +254,7 @@ func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_multipleContainers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "2"),
 				),
 			},
@@ -279,7 +273,7 @@ func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "1"),
 				),
 			},
@@ -291,7 +285,7 @@ func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "2"),
 				),
 			},
@@ -335,7 +329,6 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionsUpdate(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_containerDefinitionHealthCheck(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -348,7 +341,7 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionHealthCheck(t *testing.T)
 			{
 				Config: testAccDaemonTaskDefinitionConfig_healthCheck(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.command.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.interval", "30"),
@@ -363,7 +356,6 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionHealthCheck(t *testing.T)
 
 func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -376,7 +368,7 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testi
 			{
 				Config: testAccDaemonTaskDefinitionConfig_logConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awslogs"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-group", "/ecs/daemon"),
@@ -390,7 +382,6 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testi
 
 func TestAccECSDaemonTaskDefinition_containerDefinitionEnvironment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -403,7 +394,7 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionEnvironment(t *testing.T)
 			{
 				Config: testAccDaemonTaskDefinitionConfig_environment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.environment.#", "2"),
 				),
 			},
@@ -413,7 +404,6 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionEnvironment(t *testing.T)
 
 func TestAccECSDaemonTaskDefinition_containerDefinitionMountPoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -426,11 +416,11 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionMountPoint(t *testing.T) 
 			{
 				Config: testAccDaemonTaskDefinitionConfig_mountPoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.source_volume", "data"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.container_path", "/usr/share/nginx/html"),
-					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.read_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.read_only", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 				),
 			},
@@ -440,7 +430,6 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionMountPoint(t *testing.T) 
 
 func TestAccECSDaemonTaskDefinition_containerDefinitionAllNestedBlocks(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -453,7 +442,7 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionAllNestedBlocks(t *testin
 			{
 				Config: testAccDaemonTaskDefinitionConfig_allNestedBlocks(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awslogs"),
@@ -468,7 +457,6 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionAllNestedBlocks(t *testin
 
 func TestAccECSDaemonTaskDefinition_containerDefinitionOptionalFields(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -481,11 +469,11 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionOptionalFields(t *testing
 			{
 				Config: testAccDaemonTaskDefinitionConfig_optionalFields(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.working_directory", "/app"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.user", "nginx"),
-					resource.TestCheckResourceAttr(resourceName, "container_definition.0.privileged", "false"),
-					resource.TestCheckResourceAttr(resourceName, "container_definition.0.readonly_root_filesystem", "true"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.privileged", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.readonly_root_filesystem", acctest.CtTrue),
 				),
 			},
 		},
@@ -494,7 +482,6 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionOptionalFields(t *testing
 
 func TestAccECSDaemonTaskDefinition_volumeWithoutHostPath(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -507,7 +494,7 @@ func TestAccECSDaemonTaskDefinition_volumeWithoutHostPath(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_volumeWithoutHostPath(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName: "scratch",
@@ -520,7 +507,6 @@ func TestAccECSDaemonTaskDefinition_volumeWithoutHostPath(t *testing.T) {
 
 func TestAccECSDaemonTaskDefinition_noCPUMemory(t *testing.T) {
 	ctx := acctest.Context(t)
-	var taskDef awstypes.DaemonTaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon_task_definition.test"
 
@@ -533,7 +519,7 @@ func TestAccECSDaemonTaskDefinition_noCPUMemory(t *testing.T) {
 			{
 				Config: testAccDaemonTaskDefinitionConfig_noCPUMemory(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName, &taskDef),
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "cpu"),
 					resource.TestCheckNoResourceAttr(resourceName, "memory"),
@@ -545,7 +531,7 @@ func TestAccECSDaemonTaskDefinition_noCPUMemory(t *testing.T) {
 
 // Helper functions
 
-func testAccCheckDaemonTaskDefinitionExists(ctx context.Context, t *testing.T, n string, v ...*awstypes.DaemonTaskDefinition) resource.TestCheckFunc {
+func testAccCheckDaemonTaskDefinitionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -554,17 +540,9 @@ func testAccCheckDaemonTaskDefinitionExists(ctx context.Context, t *testing.T, n
 
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
-		output, err := tfecs.FindDaemonTaskDefinitionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		_, err := tfecs.FindDaemonTaskDefinitionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-		if err != nil {
-			return err
-		}
-
-		if len(v) > 0 {
-			*v[0] = *output
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -1003,14 +981,14 @@ resource "aws_ecs_daemon_task_definition" "test" {
   memory = "1024"
 
   container_definition {
-    name                    = "nginx"
-    image                   = "nginx:latest"
-    cpu                     = 256
-    memory                  = 512
-    essential               = true
-    working_directory       = "/app"
-    user                    = "nginx"
-    privileged              = false
+    name                     = "nginx"
+    image                    = "nginx:latest"
+    cpu                      = 256
+    memory                   = 512
+    essential                = true
+    working_directory        = "/app"
+    user                     = "nginx"
+    privileged               = false
     readonly_root_filesystem = true
   }
 }

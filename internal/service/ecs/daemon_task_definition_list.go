@@ -93,6 +93,9 @@ func (r *listResourceDaemonTaskDefinition) List(ctx context.Context, request lis
 func listDaemonTaskDefinitionSummaries(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonTaskDefinitionsInput) iter.Seq2[awstypes.DaemonTaskDefinitionSummary, error] {
 	return func(yield func(awstypes.DaemonTaskDefinitionSummary, error) bool) {
 		err := listDaemonTaskDefinitionsPages(ctx, conn, input, func(page *ecs.ListDaemonTaskDefinitionsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
 			for _, summary := range page.DaemonTaskDefinitions {
 				if !yield(summary, nil) {
 					return false

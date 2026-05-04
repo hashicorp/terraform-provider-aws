@@ -6,7 +6,6 @@ package ecs
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -82,10 +81,7 @@ func (d *daemonDataSource) Read(ctx context.Context, request datasource.ReadRequ
 
 	// Manual: extract daemon name from ARN
 	if daemon.DaemonArn != nil {
-		arnParts := strings.Split(aws.ToString(daemon.DaemonArn), "/")
-		if len(arnParts) >= 3 {
-			data.DaemonName = types.StringValue(arnParts[len(arnParts)-1])
-		}
+		data.DaemonName = daemonNameFromARN(aws.ToString(daemon.DaemonArn))
 	}
 
 	// Manual: get task definition and capacity providers from current revisions

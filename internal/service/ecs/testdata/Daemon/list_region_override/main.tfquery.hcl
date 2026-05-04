@@ -6,6 +6,6 @@ list "aws_ecs_daemon" "test" {
 
   config {
     cluster_arn = aws_ecs_cluster.test.arn
-    region  = var.region
+    region      = var.region
   }
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_ecs_daemon_task_definitions", name="Daemon Task Definitions")
@@ -30,7 +31,7 @@ func (d *daemonTaskDefinitionsDataSource) Schema(ctx context.Context, request da
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"daemon_task_definitions": framework.DataSourceComputedListOfObjectAttribute[daemonTaskDefinitionSummaryModel](ctx),
-			"family": schema.StringAttribute{
+			names.AttrFamily: schema.StringAttribute{
 				Optional: true,
 			},
 			"family_prefix": schema.StringAttribute{
@@ -44,7 +45,7 @@ func (d *daemonTaskDefinitionsDataSource) Schema(ctx context.Context, request da
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.SortOrder](),
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.DaemonTaskDefinitionStatusFilter](),
 			},
@@ -73,26 +74,19 @@ func (d *daemonTaskDefinitionsDataSource) Read(ctx context.Context, request data
 		return
 	}
 
-	var summaries []daemonTaskDefinitionSummaryModel
-	for _, summary := range results {
-		var s daemonTaskDefinitionSummaryModel
-		response.Diagnostics.Append(fwflex.Flatten(ctx, summary, &s)...)
-		summaries = append(summaries, s)
-	}
-
-	data.DaemonTaskDefinitions = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, summaries)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, results, &data.DaemonTaskDefinitions)...)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type daemonTaskDefinitionsDataSourceModel struct {
 	framework.WithRegionModel
+	DaemonTaskDefinitions fwtypes.ListNestedObjectValueOf[daemonTaskDefinitionSummaryModel] `tfsdk:"daemon_task_definitions"`
 	Family                types.String                                                      `tfsdk:"family"`
 	FamilyPrefix          types.String                                                      `tfsdk:"family_prefix"`
 	Revision              fwtypes.StringEnum[awstypes.DaemonTaskDefinitionRevisionFilter]   `tfsdk:"revision"`
 	Sort                  fwtypes.StringEnum[awstypes.SortOrder]                            `tfsdk:"sort"`
 	Status                fwtypes.StringEnum[awstypes.DaemonTaskDefinitionStatusFilter]     `tfsdk:"status"`
-	DaemonTaskDefinitions fwtypes.ListNestedObjectValueOf[daemonTaskDefinitionSummaryModel] `tfsdk:"daemon_task_definitions"`
 }
 
 type daemonTaskDefinitionSummaryModel struct {

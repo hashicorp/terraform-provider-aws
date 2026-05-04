@@ -66,25 +66,7 @@ func (d *daemonsDataSource) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	var results []daemonSummaryModel
-	for _, summary := range summaries {
-		s := daemonSummaryModel{
-			DaemonArn: types.StringPointerValue(summary.DaemonArn),
-			Status:    types.StringValue(string(summary.Status)),
-		}
-
-		if summary.CreatedAt != nil {
-			s.CreatedAt = timetypes.NewRFC3339TimePointerValue(summary.CreatedAt)
-		}
-
-		if summary.UpdatedAt != nil {
-			s.UpdatedAt = timetypes.NewRFC3339TimePointerValue(summary.UpdatedAt)
-		}
-
-		results = append(results, s)
-	}
-
-	data.Daemons = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, results)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, summaries, &data.Daemons)...)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
