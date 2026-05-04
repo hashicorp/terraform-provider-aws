@@ -23,35 +23,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_integration_response", name="Integration Response")
+// @IdAttrFormat("agir-{rest_api_id}-{resource_id}-{http_method}-{status_code}")
+// @IdentityAttribute("rest_api_id")
+// @IdentityAttribute("resource_id")
+// @IdentityAttribute("http_method")
+// @IdentityAttribute("status_code")
+// @ImportIDHandler("integrationResponseImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetIntegrationResponseOutput")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(importStateIdFunc="testAccIntegrationResponseImportStateIdFunc")
+// @Testing(plannableImportAction="NoOp")
 func resourceIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationResponsePut,
 		ReadWithoutTimeout:   resourceIntegrationResponseRead,
 		UpdateWithoutTimeout: resourceIntegrationResponsePut,
 		DeleteWithoutTimeout: resourceIntegrationResponseDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE", d.Id())
-				}
-				restApiID := idParts[0]
-				resourceID := idParts[1]
-				httpMethod := idParts[2]
-				statusCode := idParts[3]
-				d.Set("http_method", httpMethod)
-				d.Set(names.AttrStatusCode, statusCode)
-				d.Set(names.AttrResourceID, resourceID)
-				d.Set("rest_api_id", restApiID)
-				d.SetId(fmt.Sprintf("agir-%s-%s-%s-%s", restApiID, resourceID, httpMethod, statusCode))
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			"content_handling": {
@@ -131,7 +123,7 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("agir-%s-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string)))
+		d.SetId(resourceIntegrationResponseIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string)))
 	}
 
 	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
@@ -153,6 +145,12 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Integration Response (%s): %s", d.Id(), err)
 	}
 
+	resourceIntegrationResponseFlatten(d, integrationResponse)
+
+	return diags
+}
+
+func resourceIntegrationResponseFlatten(d *schema.ResourceData, integrationResponse *apigateway.GetIntegrationResponseOutput) {
 	d.Set("content_handling", integrationResponse.ContentHandling)
 	d.Set("response_parameters", integrationResponse.ResponseParameters)
 	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes.
@@ -160,8 +158,6 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	maps.Copy(responseTemplates, integrationResponse.ResponseTemplates)
 	d.Set("response_templates", responseTemplates)
 	d.Set("selection_pattern", integrationResponse.SelectionPattern)
-
-	return diags
 }
 
 func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -213,4 +209,36 @@ func findIntegrationResponseByFourPartKey(ctx context.Context, conn *apigateway.
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = integrationResponseImportID{}
+
+type integrationResponseImportID struct{}
+
+func integrationResponseCreateImportID(restApiID, resourceID, httpMethod, statusCode string) string {
+	return restApiID + "/" + resourceID + "/" + httpMethod + "/" + statusCode
+}
+
+func resourceIntegrationResponseIDAttr(restApiID, resourceID, httpMethod, statusCode string) string {
+	return fmt.Sprintf("agir-%s-%s-%s-%s", restApiID, resourceID, httpMethod, statusCode)
+}
+
+func (integrationResponseImportID) Create(d *schema.ResourceData) string {
+	return integrationResponseCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string))
+}
+
+func (integrationResponseImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
+		return "", nil, fmt.Errorf("id %q should be in the format <rest-api-id>/<resource-id>/<http-method>/<status-code>", id)
+	}
+
+	result := map[string]any{
+		"rest_api_id":        parts[0],
+		names.AttrResourceID: parts[1],
+		"http_method":        parts[2],
+		names.AttrStatusCode: parts[3],
+	}
+
+	return resourceIntegrationResponseIDAttr(parts[0], parts[1], parts[2], parts[3]), result, nil
 }

@@ -12,6 +12,8 @@ Manages an ECS Express service. The Express service provides a simplified way to
 
 Express services automatically handle infrastructure provisioning and updates through rolling deployments, ensuring high availability during service modifications. When you update an Express service, a new service revision is created and deployed with zero downtime.
 
+-> **Note:** To prevent a race condition during service deletion, make sure to set `depends_on` to the related `aws_iam_role_policy` or `aws_iam_role_policy_attachment` resources. Otherwise, the policy may be destroyed too soon and the ECS service will then get stuck in the `DRAINING` state.
+
 ## Example Usage
 
 ### Basic Usage
@@ -160,7 +162,7 @@ resource "aws_ecs_express_gateway_service" "example" {
 
 The `scaling_target` configuration block supports the following:
 
-* `auto_scaling_metric` - (Optional) Metric to use for auto-scaling. Valid values are `CPU` and `MEMORY`.
+* `auto_scaling_metric` - (Optional) Metric to use for auto-scaling. Valid values are `AVERAGE_CPU`, `AVERAGE_MEMORY` and `REQUEST_COUNT_PER_TARGET`.
 * `auto_scaling_target_value` - (Optional) Target value for the auto-scaling metric (as a percentage). Defaults to `60`.
 * `max_task_count` - (Optional) Maximum number of tasks to run.
 * `min_task_count` - (Optional) Minimum number of tasks to run.
@@ -169,7 +171,7 @@ The `scaling_target` configuration block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `current_deployment` - ARN of the current deployment.
+* `current_deployment` - (**Deprecated**) ARN of the current deployment.
 * `ingress_paths` - List of ingress paths with access type and endpoint information.
 * `service_arn` - ARN of the Express Gateway Service.
 * `service_revision_arn` - ARN of the service revision.

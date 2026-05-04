@@ -57,7 +57,7 @@ resource "aws_lambda_function" "example" {
   handler       = "index.handler"
   code_sha256   = data.archive_file.example.output_base64sha256
 
-  runtime = "nodejs20.x"
+  runtime = "nodejs24.x"
 
   environment {
     variables = {
@@ -104,7 +104,7 @@ resource "aws_lambda_layer_version" "example" {
   filename            = "layer.zip"
   layer_name          = "example_dependencies_layer"
   description         = "Common dependencies for Lambda functions"
-  compatible_runtimes = ["nodejs20.x", "python3.12"]
+  compatible_runtimes = ["nodejs24.x", "python3.12"]
 
   compatible_architectures = ["x86_64", "arm64"]
 }
@@ -115,7 +115,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_layered_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   layers = [aws_lambda_layer_version.example.arn]
 
@@ -208,7 +208,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_efs_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = var.subnet_ids
@@ -243,7 +243,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   # Advanced logging configuration
   logging_config {
@@ -361,7 +361,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   dead_letter_config {
     target_arn = aws_sqs_queue.dlq.arn
@@ -459,7 +459,7 @@ resource "aws_lambda_function" "example" {
   function_name = var.function_name
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   # Advanced logging configuration
   logging_config {
@@ -521,7 +521,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   memory_size   = 2048
 
   publish = true

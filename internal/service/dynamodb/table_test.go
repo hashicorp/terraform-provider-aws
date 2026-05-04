@@ -1934,6 +1934,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "range_key"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "restore_backup_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_date_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_source_name"),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_to_latest_time"),
@@ -3247,6 +3248,63 @@ func TestAccDynamoDBTable_GSI_keySchema_removeGSI(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_rangeKeyExplicitEmptyString(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var table awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy: testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.28.0",
+					},
+				},
+				Config: testAccTableConfig_GSI_rangeKeyExplicitEmptyString(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key":     knownvalue.StringExact(rName + "-hash"),
+							names.AttrName: knownvalue.StringExact(rName + "-index"),
+							"range_key":    knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccTableConfig_GSI_rangeKeyExplicitEmptyString(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &table),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -7967,6 +8025,44 @@ func TestAccDynamoDBTable_Replica_deletionProtection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.0.deletion_protection_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replica.1.deletion_protection_enabled", acctest.CtFalse),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_restoreBackupARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	resourceNameRestore := "aws_dynamodb_table.test_restore"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRestore := fmt.Sprintf("%s-restore", rName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_restoreBackupARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceNameRestore, names.AttrName, rNameRestore),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/.+$`)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceNameRestore, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/.+$`)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceNameRestore, "restore_backup_arn", "dynamodb", acctest.Region(), regexache.MustCompile(`table/.+/backup/.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -12882,6 +12978,51 @@ resource "aws_dynamodb_table" "test_restore" {
 `, rName))
 }
 
+func testAccTableConfig_restoreBackupARN(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+
+action "aws_dynamodb_create_backup" "test" {
+  config {
+    table_name  = aws_dynamodb_table.test.name
+    backup_name = "%[1]s-backup"
+  }
+}
+
+resource "terraform_data" "backup_trigger" {
+  input = "trigger-backup"
+
+  lifecycle {
+    action_trigger {
+      events  = [after_create]
+      actions = [action.aws_dynamodb_create_backup.test]
+    }
+  }
+}
+
+data "aws_dynamodb_backups" "test" {
+  table_name = aws_dynamodb_table.test.name
+
+  depends_on = [terraform_data.backup_trigger]
+}
+
+resource "aws_dynamodb_table" "test_restore" {
+  name               = "%[1]s-restore"
+  restore_backup_arn = data.aws_dynamodb_backups.test.backup_summaries[0].backup_arn
+}
+`, rName)
+}
+
 func testAccTableConfig_replica2_NoMultipleRegionProvider(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
@@ -13097,6 +13238,47 @@ variable "key_schemas" {
   default = [{
     attribute_name = %[1]q
     key_type       = "HASH"
+  }]
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_rangeKeyExplicitEmptyString(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "%[1]s-hash"
+
+  attribute {
+    name = "%[1]s-hash"
+    type = "S"
+  }
+
+  dynamic "global_secondary_index" {
+    for_each = var.global_secondary_index
+    content {
+      name               = global_secondary_index.value.name
+      hash_key           = global_secondary_index.value.hash_key
+      non_key_attributes = lookup(global_secondary_index.value, "non_key_attributes", null)
+      projection_type    = global_secondary_index.value.projection_type
+      range_key          = lookup(global_secondary_index.value, "range_key", null)
+      read_capacity      = global_secondary_index.value.read_capacity
+      write_capacity     = global_secondary_index.value.write_capacity
+    }
+  }
+}
+
+variable "global_secondary_index" {
+  default = [{
+    name               = "%[1]s-index"
+    hash_key           = "%[1]s-hash"
+    range_key          = ""
+    projection_type    = "ALL"
+    non_key_attributes = []
+    read_capacity      = 1
+    write_capacity     = 1
   }]
 }
 `, rName)

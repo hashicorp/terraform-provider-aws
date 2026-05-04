@@ -52,7 +52,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example-function"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_bedrockagentcore_gateway" "example" {

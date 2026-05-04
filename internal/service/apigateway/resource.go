@@ -22,30 +22,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_resource", name="Resource")
+// @IdentityAttribute("rest_api_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("apiResourceImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetResourceOutput")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(importStateIdFunc="testAccResourceImportStateIdFunc")
+// @Testing(plannableImportAction="NoOp")
 func resourceResource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceCreate,
 		ReadWithoutTimeout:   resourceResourceRead,
 		UpdateWithoutTimeout: resourceResourceUpdate,
 		DeleteWithoutTimeout: resourceResourceDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID", d.Id())
-				}
-				restApiID := idParts[0]
-				resourceID := idParts[1]
-				d.Set("rest_api_id", restApiID)
-				d.SetId(resourceID)
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			"parent_id": {
@@ -112,11 +106,15 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Resource (%s): %s", d.Id(), err)
 	}
 
+	resourceResourceFlatten(d, resource)
+
+	return diags
+}
+
+func resourceResourceFlatten(d *schema.ResourceData, resource *apigateway.GetResourceOutput) {
 	d.Set("parent_id", resource.ParentId)
 	d.Set("path_part", resource.PathPart)
 	d.Set(names.AttrPath, resource.Path)
-
-	return diags
 }
 
 func resourceResourceUpdateOperations(d *schema.ResourceData) []types.PatchOperation {
@@ -203,4 +201,25 @@ func findResourceByTwoPartKey(ctx context.Context, conn *apigateway.Client, reso
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = apiResourceImportID{}
+
+type apiResourceImportID struct{}
+
+func (apiResourceImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (apiResourceImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("id %q should be in the format <rest-api-id>/<resource-id>", id)
+	}
+
+	result := map[string]any{
+		"rest_api_id": parts[0],
+	}
+
+	return parts[1], result, nil
 }

@@ -157,7 +157,7 @@ func (r *userPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.Con
 		return err
 	}
 
-	create, remove, _ := intflex.DiffSlices(have, want, func(s1, s2 string) bool { return s1 == s2 })
+	create, remove, _ := intflex.DiffSlices(have, want, intflex.Equal)
 
 	for _, arn := range create {
 		err := attachPolicyToUser(ctx, conn, userName, arn)

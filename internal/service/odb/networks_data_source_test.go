@@ -48,7 +48,7 @@ func TestAccODBListNetworksDataSource_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(dataSourceName, "aws_odb_networks.#", strconv.Itoa(len(output.OdbNetworks)))
 						i := 0
 						for i < len(output.OdbNetworks) {
-							key := fmt.Sprintf("aws_odb_networks.%q.id", i)
+							key := fmt.Sprintf("aws_odb_networks.%d.id", i)
 							resource.TestMatchResourceAttr(dataSourceName, key, regexache.MustCompile(pattern))
 						}
 						return nil

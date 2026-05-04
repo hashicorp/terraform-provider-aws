@@ -28,12 +28,12 @@ func TestAccEC2EBSVolumeAttachment_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
+					testAccCheckEBSVolumeAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
@@ -56,12 +56,12 @@ func TestAccEC2EBSVolumeAttachment_skipDestroy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
+					testAccCheckEBSVolumeAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_base(rName),
@@ -110,7 +110,7 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 				PreConfig: stopInstance,
 				Config:    testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
+					testAccCheckEBSVolumeAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
@@ -133,7 +133,7 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_update(rName, false),
@@ -184,14 +184,14 @@ func TestAccEC2EBSVolumeAttachment_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeAttachmentInstanceExists(ctx, t, "aws_instance.test", &i),
 					testAccCheckVolumeExists(ctx, t, "aws_ebs_volume.test", &v),
-					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
+					testAccCheckEBSVolumeAttachmentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -209,12 +209,12 @@ func TestAccEC2EBSVolumeAttachment_stopInstance(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_stopInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
+					testAccCheckEBSVolumeAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
@@ -231,7 +231,7 @@ func TestAccEC2EBSVolumeAttachment_stopInstance(t *testing.T) {
 	})
 }
 
-func testAccCheckVolumeAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckEBSVolumeAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -275,7 +275,7 @@ func testAccCheckVolumeAttachmentInstanceExists(ctx context.Context, t *testing.
 	}
 }
 
-func testAccCheckVolumeAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckEBSVolumeAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
