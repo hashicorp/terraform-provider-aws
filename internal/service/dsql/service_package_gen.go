@@ -41,6 +41,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Cluster Peering",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newClusterPolicyResource,
+			TypeName: "aws_dsql_cluster_policy",
+			Name:     "Cluster Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
