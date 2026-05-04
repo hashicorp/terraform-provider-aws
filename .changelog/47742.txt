@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Fix `database_insights_mode` not being applied when restoring from `snapshot_identifier` or `restore_to_point_in_time`
+```
