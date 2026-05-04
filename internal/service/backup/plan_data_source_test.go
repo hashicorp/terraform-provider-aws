@@ -5,6 +5,7 @@ package backup_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -33,6 +34,9 @@ func TestAccBackupPlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtRulePound, resourceName, acctest.CtRulePound),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrRule, resourceName, names.AttrRule),
 					resource.TestCheckResourceAttrPair(datasourceName, "scan_setting", resourceName, "scan_setting"),
+					resource.TestMatchTypeSetElemNestedAttrs(datasourceName, "rule.*", map[string]*regexp.Regexp{
+						"rule_id": regexp.MustCompile(`^[a-f0-9-]+$`),
+					}),
 				),
 			},
 		},

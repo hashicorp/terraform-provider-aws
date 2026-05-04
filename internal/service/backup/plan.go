@@ -159,6 +159,10 @@ func resourcePlan() *schema.Resource {
 							},
 						},
 						"recovery_point_tags": tftags.TagsSchema(),
+						"rule_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"rule_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -575,12 +579,13 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"completion_window":                            aws.ToInt64(apiObject.CompletionWindowMinutes),
-			"enable_continuous_backup":                     aws.ToBool(apiObject.EnableContinuousBackup),
-			"rule_name":                                    aws.ToString(apiObject.RuleName),
-			names.AttrSchedule:                             aws.ToString(apiObject.ScheduleExpression),
-			"schedule_expression_timezone":                 aws.ToString(apiObject.ScheduleExpressionTimezone),
-			"start_window":                                 aws.ToInt64(apiObject.StartWindowMinutes),
+			"completion_window":            aws.ToInt64(apiObject.CompletionWindowMinutes),
+			"enable_continuous_backup":     aws.ToBool(apiObject.EnableContinuousBackup),
+			"rule_id":                      aws.ToString(apiObject.RuleId),
+			"rule_name":                    aws.ToString(apiObject.RuleName),
+			names.AttrSchedule:             aws.ToString(apiObject.ScheduleExpression),
+			"schedule_expression_timezone": aws.ToString(apiObject.ScheduleExpressionTimezone),
+			"start_window":                 aws.ToInt64(apiObject.StartWindowMinutes),
 			"target_logically_air_gapped_backup_vault_arn": aws.ToString(apiObject.TargetLogicallyAirGappedBackupVaultArn),
 			"target_vault_name":                            aws.ToString(apiObject.TargetBackupVaultName),
 		}

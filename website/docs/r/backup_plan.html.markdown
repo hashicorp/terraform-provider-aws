@@ -109,6 +109,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.
 
+### `rule` Block
+
+The `rule` configuration block exports the following attributes:
+
+* `rule_id` - Uniquely identifies a rule that is used to schedule the backup of a selection of resources.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup Plan using the `id`. For example:
