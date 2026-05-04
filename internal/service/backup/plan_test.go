@@ -47,7 +47,7 @@ func TestAccBackupPlan_basic(t *testing.T) {
 						"lifecycle.#":                  "0",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
-						"rule_id": regexp.MustCompile(`^[a-f0-9-]+$`),
+						"rule_id": regexache.MustCompile(`^[a-f0-9-]+$`),
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
