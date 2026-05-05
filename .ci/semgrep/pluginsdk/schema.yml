@@ -12,6 +12,7 @@ rules:
           pattern: "map[string]*schema.Schema{...}"
       - pattern-inside: |
           func $FUNC() *schema.Resource {
+            ...
             return &schema.Resource{
               ...,
             }

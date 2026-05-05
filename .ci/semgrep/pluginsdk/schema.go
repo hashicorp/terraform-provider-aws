@@ -55,3 +55,23 @@ func resourceNested() *schema.Resource {
 		},
 	}
 }
+
+func resourcePreamble() *schema.Resource {
+	x := somevalue()
+
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceVPCCreate,
+		ReadWithoutTimeout:   resourceVPCRead,
+		UpdateWithoutTimeout: resourceVPCUpdate,
+		DeleteWithoutTimeout: resourceVPCDelete,
+
+		// ruleid: use-schema-func
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+		},
+	}
+}
