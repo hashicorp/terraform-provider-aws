@@ -160,7 +160,7 @@ func resourceBroker() *schema.Resource {
 					},
 				},
 			},
-			"engine_type": {
+			attrEngineType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -368,7 +368,7 @@ func resourceBroker() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
-				if strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
+				if strings.EqualFold(diff.Get(attrEngineType).(string), string(types.EngineTypeRabbitmq)) {
 					if v, ok := diff.GetOk("logs.0.audit"); ok {
 						if v, _, _ := nullable.Bool(v.(string)).ValueBool(); v {
 							return errors.New("logs.audit: Can not be configured when engine is RabbitMQ")
@@ -388,7 +388,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
 
 	name := d.Get("broker_name").(string)
-	engineType := d.Get("engine_type").(string)
+	engineType := d.Get(attrEngineType).(string)
 	input := &mq.CreateBrokerInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		BrokerName:              aws.String(name),
@@ -477,7 +477,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("broker_name", output.BrokerName)
 	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
-	d.Set("engine_type", output.EngineType)
+	d.Set(attrEngineType, output.EngineType)
 	d.Set(names.AttrEngineVersion, normalizeEngineVersion(string(output.EngineType), aws.ToString(output.EngineVersion), aws.ToBool(output.AutoMinorVersionUpgrade)))
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
@@ -552,7 +552,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if d.HasChanges(names.AttrConfiguration, "logs", names.AttrEngineVersion) {
-		engineType := d.Get("engine_type").(string)
+		engineType := d.Get(attrEngineType).(string)
 		engineVersion := d.Get(names.AttrEngineVersion).(string)
 		autoMinorVersionUpgrade := d.Get(names.AttrAutoMinorVersionUpgrade).(bool)
 

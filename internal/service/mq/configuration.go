@@ -79,7 +79,7 @@ func resourceConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"engine_type": {
+			attrEngineType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -116,7 +116,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	name := d.Get(names.AttrName).(string)
 	input := &mq.CreateConfigurationInput{
-		EngineType:    types.EngineType(d.Get("engine_type").(string)),
+		EngineType:    types.EngineType(d.Get(attrEngineType).(string)),
 		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 		Name:          aws.String(name),
 		Tags:          getTagsIn(ctx),
@@ -174,7 +174,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, configuration.Arn)
 	d.Set("authentication_strategy", configuration.AuthenticationStrategy)
 	d.Set(names.AttrDescription, configuration.LatestRevision.Description)
-	d.Set("engine_type", configuration.EngineType)
+	d.Set(attrEngineType, configuration.EngineType)
 	d.Set(names.AttrEngineVersion, configuration.EngineVersion)
 	d.Set("latest_revision", configuration.LatestRevision.Revision)
 	d.Set(names.AttrName, configuration.Name)

@@ -31,7 +31,7 @@ func dataSourceBrokerEngineTypes() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"engine_type": {
+						attrEngineType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -50,7 +50,7 @@ func dataSourceBrokerEngineTypes() *schema.Resource {
 					},
 				},
 			},
-			"engine_type": {
+			attrEngineType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.EngineType](),
@@ -65,7 +65,7 @@ func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData
 
 	input := &mq.DescribeBrokerEngineTypesInput{}
 
-	if v, ok := d.GetOk("engine_type"); ok {
+	if v, ok := d.GetOk(attrEngineType); ok {
 		input.EngineType = aws.String(v.(string))
 	}
 
@@ -98,7 +98,7 @@ func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData
 func flattenBrokerList(types []types.BrokerEngineType) (brokers []map[string]any) {
 	for _, broker := range types {
 		brokers = append(brokers, map[string]any{
-			"engine_type":     broker.EngineType,
+			attrEngineType:    broker.EngineType,
 			"engine_versions": flattenEngineVersions(broker.EngineVersions),
 		})
 	}

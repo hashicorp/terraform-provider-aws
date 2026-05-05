@@ -42,7 +42,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 								},
 							},
 						},
-						"engine_type": {
+						attrEngineType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -67,7 +67,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 					},
 				},
 			},
-			"engine_type": {
+			attrEngineType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.EngineType](),
@@ -92,7 +92,7 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 
 	input := &mq.DescribeBrokerInstanceOptionsInput{}
 
-	if v, ok := d.GetOk("engine_type"); ok {
+	if v, ok := d.GetOk(attrEngineType); ok {
 		input.EngineType = aws.String(v.(string))
 	}
 
@@ -138,7 +138,7 @@ func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []any {
 
 	for _, bio := range bios {
 		tfMap := map[string]any{
-			"engine_type":                bio.EngineType,
+			attrEngineType:               bio.EngineType,
 			names.AttrStorageType:        bio.StorageType,
 			"supported_deployment_modes": bio.SupportedDeploymentModes,
 			"supported_engine_versions":  bio.SupportedEngineVersions,

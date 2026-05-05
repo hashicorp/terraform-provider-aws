@@ -88,7 +88,7 @@ func dataSourceBroker() *schema.Resource {
 					},
 				},
 			},
-			"engine_type": {
+			attrEngineType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -295,7 +295,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("broker_id", brokerID)
 	d.Set("broker_name", output.BrokerName)
 	d.Set("deployment_mode", output.DeploymentMode)
-	d.Set("engine_type", output.EngineType)
+	d.Set(attrEngineType, output.EngineType)
 	d.Set(names.AttrEngineVersion, output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
