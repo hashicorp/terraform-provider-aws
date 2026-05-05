@@ -38,7 +38,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"string_value": {
+									attrStringValue: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -62,7 +62,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"string_value": {
+						attrStringValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -93,7 +93,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"string_value": {
+									attrStringValue: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
