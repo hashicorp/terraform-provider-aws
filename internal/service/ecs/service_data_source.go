@@ -41,11 +41,11 @@ func dataSourceService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"base": {
+						attrBase: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"capacity_provider": {
+						attrCapacityProvider: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -83,11 +83,11 @@ func dataSourceService() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"enable": {
+									attrEnable: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"rollback": {
+									attrRollback: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -119,11 +119,11 @@ func dataSourceService() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enable": {
+									attrEnable: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"rollback": {
+									attrRollback: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -207,7 +207,7 @@ func dataSourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"desired_count": {
+						attrDesiredCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -227,7 +227,7 @@ func dataSourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"task_definition": {
+						attrTaskDefinition: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -238,7 +238,7 @@ func dataSourceService() *schema.Resource {
 					},
 				},
 			},
-			"desired_count": {
+			attrDesiredCount: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -278,7 +278,7 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"launch_type": {
+			attrLaunchType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -309,11 +309,11 @@ func dataSourceService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"container_name": {
+						attrContainerName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"container_port": {
+						attrContainerPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -321,7 +321,7 @@ func dataSourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"target_group_arn": {
+						attrTargetGroupARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -368,7 +368,7 @@ func dataSourceService() *schema.Resource {
 					},
 				},
 			},
-			"placement_constraints": {
+			attrPlacementConstraints: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -413,11 +413,11 @@ func dataSourceService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"container_name": {
+						attrContainerName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"container_port": {
+						attrContainerPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -440,7 +440,7 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"task_definition": {
+			attrTaskDefinition: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -477,7 +477,7 @@ func dataSourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"task_definition": {
+						attrTaskDefinition: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -526,7 +526,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	if err := d.Set("deployments", flattenDeployments(service.Deployments)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployments: %s", err)
 	}
-	d.Set("desired_count", service.DesiredCount)
+	d.Set(attrDesiredCount, service.DesiredCount)
 	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 	if err := d.Set("events", flattenServiceEvents(service.Events)); err != nil {
@@ -534,7 +534,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("iam_role", service.RoleArn)
-	d.Set("launch_type", service.LaunchType)
+	d.Set(attrLaunchType, service.LaunchType)
 	if service.LoadBalancers != nil {
 		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
@@ -546,7 +546,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
 	}
-	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
+	if err := d.Set(attrPlacementConstraints, flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
 	}
 	d.Set("platform_version", service.PlatformVersion)
@@ -560,7 +560,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	d.Set(names.AttrStatus, service.Status)
 	d.Set(names.AttrServiceName, service.ServiceName)
-	d.Set("task_definition", service.TaskDefinition)
+	d.Set(attrTaskDefinition, service.TaskDefinition)
 	if err := d.Set("task_sets", flattenTaskSets(service.TaskSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting task_sets: %s", err)
 	}
@@ -620,8 +620,8 @@ func flattenDeploymentConfigurationForDataSource(apiObject *awstypes.DeploymentC
 
 func flattenAlarmsForDataSource(apiObject *awstypes.DeploymentAlarms) map[string]any {
 	tfMap := map[string]any{
-		"enable":   apiObject.Enable,
-		"rollback": apiObject.Rollback,
+		attrEnable:   apiObject.Enable,
+		attrRollback: apiObject.Rollback,
 	}
 
 	if v := apiObject.AlarmNames; len(v) > 0 {
@@ -633,8 +633,8 @@ func flattenAlarmsForDataSource(apiObject *awstypes.DeploymentAlarms) map[string
 
 func flattenDeploymentCircuitBreakerForDataSource(apiObject *awstypes.DeploymentCircuitBreaker) map[string]any {
 	return map[string]any{
-		"enable":   apiObject.Enable,
-		"rollback": apiObject.Rollback,
+		attrEnable:   apiObject.Enable,
+		attrRollback: apiObject.Rollback,
 	}
 }
 
@@ -646,12 +646,12 @@ func flattenDeployments(apiObjects []awstypes.Deployment) []map[string]any {
 	var tfList []map[string]any
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"desired_count":   apiObject.DesiredCount,
-			names.AttrID:      aws.ToString(apiObject.Id),
-			"pending_count":   apiObject.PendingCount,
-			"running_count":   apiObject.RunningCount,
-			names.AttrStatus:  aws.ToString(apiObject.Status),
-			"task_definition": aws.ToString(apiObject.TaskDefinition),
+			attrDesiredCount:   apiObject.DesiredCount,
+			names.AttrID:       aws.ToString(apiObject.Id),
+			"pending_count":    apiObject.PendingCount,
+			"running_count":    apiObject.RunningCount,
+			names.AttrStatus:   aws.ToString(apiObject.Status),
+			attrTaskDefinition: aws.ToString(apiObject.TaskDefinition),
 		}
 		if apiObject.CreatedAt != nil {
 			tfMap[names.AttrCreatedAt] = apiObject.CreatedAt.Format(time.RFC3339)
@@ -697,7 +697,7 @@ func flattenTaskSets(apiObjects []awstypes.TaskSet) []map[string]any {
 			"running_count":    apiObject.RunningCount,
 			"stability_status": string(apiObject.StabilityStatus),
 			names.AttrStatus:   aws.ToString(apiObject.Status),
-			"task_definition":  aws.ToString(apiObject.TaskDefinition),
+			attrTaskDefinition: aws.ToString(apiObject.TaskDefinition),
 		}
 		if apiObject.CreatedAt != nil {
 			tfMap[names.AttrCreatedAt] = apiObject.CreatedAt.Format(time.RFC3339)

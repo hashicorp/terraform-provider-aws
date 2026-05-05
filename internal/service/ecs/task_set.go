@@ -52,16 +52,16 @@ func resourceTaskSet() *schema.Resource {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"launch_type"},
+				ConflictsWith: []string{attrLaunchType},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"base": {
+						attrBase: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
 						},
-						"capacity_provider": {
+						attrCapacityProvider: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -75,7 +75,7 @@ func resourceTaskSet() *schema.Resource {
 					},
 				},
 			},
-			"cluster": {
+			attrCluster: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +90,7 @@ func resourceTaskSet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"launch_type": {
+			attrLaunchType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -107,12 +107,12 @@ func resourceTaskSet() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"container_name": {
+						attrContainerName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"container_port": {
+						attrContainerPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ForceNew:     true,
@@ -123,7 +123,7 @@ func resourceTaskSet() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"target_group_arn": {
+						attrTargetGroupARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -201,12 +201,12 @@ func resourceTaskSet() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"container_name": {
+						attrContainerName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"container_port": {
+						attrContainerPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ForceNew:     true,
@@ -237,7 +237,7 @@ func resourceTaskSet() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"task_definition": {
+			attrTaskDefinition: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -278,14 +278,14 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 
-	cluster := d.Get("cluster").(string)
+	cluster := d.Get(attrCluster).(string)
 	service := d.Get("service").(string)
 	input := &ecs.CreateTaskSetInput{
 		ClientToken:    aws.String(create.UniqueId(ctx)),
 		Cluster:        aws.String(cluster),
 		Service:        aws.String(service),
 		Tags:           getTagsIn(ctx),
-		TaskDefinition: aws.String(d.Get("task_definition").(string)),
+		TaskDefinition: aws.String(d.Get(attrTaskDefinition).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok && v.(*schema.Set).Len() > 0 {
@@ -296,7 +296,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.ExternalId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("launch_type"); ok {
+	if v, ok := d.GetOk(attrLaunchType); ok {
 		input.LaunchType = awstypes.LaunchType(v.(string))
 	}
 
@@ -385,9 +385,9 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(taskSet.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
-	d.Set("cluster", cluster)
+	d.Set(attrCluster, cluster)
 	d.Set(names.AttrExternalID, taskSet.ExternalId)
-	d.Set("launch_type", taskSet.LaunchType)
+	d.Set(attrLaunchType, taskSet.LaunchType)
 	if err := d.Set("load_balancer", flattenTaskSetLoadBalancers(taskSet.LoadBalancers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
 	}
@@ -404,7 +404,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set("stability_status", taskSet.StabilityStatus)
 	d.Set(names.AttrStatus, taskSet.Status)
-	d.Set("task_definition", taskSet.TaskDefinition)
+	d.Set(attrTaskDefinition, taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
 
 	setTagsOut(ctx, taskSet.Tags)

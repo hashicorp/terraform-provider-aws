@@ -53,7 +53,7 @@ func validPlacementStrategy(stratType, stratField string) error {
 		// stratField is already cased to a string
 		return nil
 	case "binpack":
-		if stratField != "cpu" && stratField != "memory" {
+		if stratField != attrCPU && stratField != attrMemory {
 			return fmt.Errorf("Binpack type requires the field attribute to be either 'cpu' or 'memory'. Got: %s",
 				stratField)
 		}

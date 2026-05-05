@@ -28,11 +28,11 @@ func dataSourceContainerDefinition() *schema.Resource {
 		ReadWithoutTimeout: dataSourceContainerDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
-			"container_name": {
+			attrContainerName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"cpu": {
+			attrCPU: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func dataSourceContainerDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"memory": {
+			attrMemory: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -66,7 +66,7 @@ func dataSourceContainerDefinition() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"task_definition": {
+			attrTaskDefinition: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -78,15 +78,15 @@ func dataSourceContainerDefinitionRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	taskDefinition := d.Get("task_definition").(string)
-	def, err := findContainerDefinitionByTwoPartKey(ctx, conn, taskDefinition, d.Get("container_name").(string))
+	taskDefinition := d.Get(attrTaskDefinition).(string)
+	def, err := findContainerDefinitionByTwoPartKey(ctx, conn, taskDefinition, d.Get(attrContainerName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ECS Container Definition", err))
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", taskDefinition, aws.ToString(def.Name)))
-	d.Set("cpu", def.Cpu)
+	d.Set(attrCPU, def.Cpu)
 	d.Set("disable_networking", def.DisableNetworking)
 	d.Set("docker_labels", def.DockerLabels)
 	var environment = map[string]string{}
@@ -99,7 +99,7 @@ func dataSourceContainerDefinitionRead(ctx context.Context, d *schema.ResourceDa
 	if strings.Contains(image, ":") {
 		d.Set("image_digest", strings.Split(image, ":")[1])
 	}
-	d.Set("memory", def.Memory)
+	d.Set(attrMemory, def.Memory)
 	d.Set("memory_reservation", def.MemoryReservation)
 
 	return diags

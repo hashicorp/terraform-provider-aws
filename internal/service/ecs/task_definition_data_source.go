@@ -37,7 +37,7 @@ func dataSourceTaskDefinition() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"cpu": {
+				attrCPU: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -69,7 +69,7 @@ func dataSourceTaskDefinition() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"memory": {
+				attrMemory: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -81,7 +81,7 @@ func dataSourceTaskDefinition() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"placement_constraints": {
+				attrPlacementConstraints: {
 					Type:     schema.TypeSet,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -102,7 +102,7 @@ func dataSourceTaskDefinition() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"container_name": {
+							attrContainerName: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -149,7 +149,7 @@ func dataSourceTaskDefinition() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"task_definition": {
+				attrTaskDefinition: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -167,7 +167,7 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	taskDefinitionName := d.Get("task_definition").(string)
+	taskDefinitionName := d.Get(attrTaskDefinition).(string)
 	input := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(taskDefinitionName),
 	}
@@ -196,7 +196,7 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting container_definitions: %s", err)
 	}
 
-	d.Set("cpu", taskDefinition.Cpu)
+	d.Set(attrCPU, taskDefinition.Cpu)
 	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
@@ -204,10 +204,10 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
 	d.Set("ipc_mode", taskDefinition.IpcMode)
-	d.Set("memory", taskDefinition.Memory)
+	d.Set(attrMemory, taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("pid_mode", taskDefinition.PidMode)
-	if err := d.Set("placement_constraints", flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
+	if err := d.Set(attrPlacementConstraints, flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
 	}
 	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {

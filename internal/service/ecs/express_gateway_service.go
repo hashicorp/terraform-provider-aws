@@ -63,14 +63,14 @@ type expressGatewayServiceResource struct {
 func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"cluster": schema.StringAttribute{
+			attrCluster: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"cpu": schema.StringAttribute{
+			attrCPU: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -97,7 +97,7 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				},
 			},
 			"ingress_paths": framework.ResourceComputedListOfObjectsAttribute[ingressPathSummaryModel](ctx),
-			"memory": schema.StringAttribute{
+			attrMemory: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -146,7 +146,7 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 							ElementType: types.StringType,
 							Optional:    true,
 						},
-						"container_port": schema.Int64Attribute{
+						attrContainerPort: schema.Int64Attribute{
 							Optional: true,
 							Computed: true,
 							PlanModifiers: []planmodifier.Int64{

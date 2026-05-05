@@ -35,12 +35,12 @@ func dataSourceTaskExecution() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"base": {
+						attrBase: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
 						},
-						"capacity_provider": {
+						attrCapacityProvider: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -56,11 +56,11 @@ func dataSourceTaskExecution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"cluster": {
+			attrCluster: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"desired_count": {
+			attrDesiredCount: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 10),
@@ -77,7 +77,7 @@ func dataSourceTaskExecution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"launch_type": {
+			attrLaunchType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.LaunchType](),
@@ -122,7 +122,7 @@ func dataSourceTaskExecution() *schema.Resource {
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"cpu": {
+									attrCPU: {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
@@ -142,7 +142,7 @@ func dataSourceTaskExecution() *schema.Resource {
 											},
 										},
 									},
-									"memory": {
+									attrMemory: {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
@@ -174,7 +174,7 @@ func dataSourceTaskExecution() *schema.Resource {
 								},
 							},
 						},
-						"cpu": {
+						attrCPU: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -182,7 +182,7 @@ func dataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"memory": {
+						attrMemory: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -193,7 +193,7 @@ func dataSourceTaskExecution() *schema.Resource {
 					},
 				},
 			},
-			"placement_constraints": {
+			attrPlacementConstraints: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 10,
@@ -251,7 +251,7 @@ func dataSourceTaskExecution() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"task_definition": {
+			attrTaskDefinition: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -263,8 +263,8 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	cluster := d.Get("cluster").(string)
-	taskDefinition := d.Get("task_definition").(string)
+	cluster := d.Get(attrCluster).(string)
+	taskDefinition := d.Get(attrTaskDefinition).(string)
 	id := strings.Join([]string{cluster, taskDefinition}, ",")
 	input := &ecs.RunTaskInput{
 		Cluster:        aws.String(cluster),
@@ -283,7 +283,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("client_token"); ok {
 		input.ClientToken = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("desired_count"); ok {
+	if v, ok := d.GetOk(attrDesiredCount); ok {
 		input.Count = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk("enable_ecs_managed_tags"); ok {
@@ -295,7 +295,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("group"); ok {
 		input.Group = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("launch_type"); ok {
+	if v, ok := d.GetOk(attrLaunchType); ok {
 		input.LaunchType = awstypes.LaunchType(v.(string))
 	}
 	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok {
@@ -304,7 +304,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("overrides"); ok {
 		input.Overrides = expandTaskOverride(v.([]any))
 	}
-	if v, ok := d.GetOk("placement_constraints"); ok {
+	if v, ok := d.GetOk(attrPlacementConstraints); ok {
 		apiObject, err := expandPlacementConstraints(v.(*schema.Set).List())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -355,10 +355,10 @@ func expandTaskOverride(tfList []any) *awstypes.TaskOverride {
 	apiObject := &awstypes.TaskOverride{}
 	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["cpu"]; ok {
+	if v, ok := tfMap[attrCPU]; ok {
 		apiObject.Cpu = aws.String(v.(string))
 	}
-	if v, ok := tfMap["memory"]; ok {
+	if v, ok := tfMap[attrMemory]; ok {
 		apiObject.Memory = aws.String(v.(string))
 	}
 	if v, ok := tfMap[names.AttrExecutionRoleARN]; ok {
@@ -389,13 +389,13 @@ func expandContainerOverride(tfList []any) []awstypes.ContainerOverride {
 			commandStrings := v.([]any)
 			co.Command = flex.ExpandStringValueList(commandStrings)
 		}
-		if v, ok := tfMap["cpu"]; ok {
+		if v, ok := tfMap[attrCPU]; ok {
 			co.Cpu = aws.Int32(int32(v.(int)))
 		}
 		if v, ok := tfMap[names.AttrEnvironment]; ok {
 			co.Environment = expandTaskEnvironment(v.(*schema.Set))
 		}
-		if v, ok := tfMap["memory"]; ok {
+		if v, ok := tfMap[attrMemory]; ok {
 			co.Memory = aws.Int32(int32(v.(int)))
 		}
 		if v, ok := tfMap["memory_reservation"]; ok {

@@ -49,7 +49,7 @@ func resourceClusterCapacityProviders() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				// The API accepts both an ARN and a name in a generic "cluster"
+				// The API accepts both an ARN and a name in a generic attrCluster
 				// parameter, but allowing that would force the resource to guess
 				// which one to return on read.
 				ValidateFunc: validateClusterName,
@@ -59,13 +59,13 @@ func resourceClusterCapacityProviders() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"base": {
+						attrBase: {
 							Type:         schema.TypeInt,
 							Default:      0,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
 						},
-						"capacity_provider": {
+						attrCapacityProvider: {
 							Type:     schema.TypeString,
 							Required: true,
 						},

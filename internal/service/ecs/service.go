@@ -49,7 +49,7 @@ import (
 
 // @SDKResource("aws_ecs_service", name="Service")
 // @Tags(identifierAttribute="arn")
-// @IdentityAttribute("cluster")
+// @IdentityAttribute(attrCluster)
 // @IdentityAttribute("name)
 // @ImportIDHandler("serviceImportID")
 // @CustomImport
@@ -75,11 +75,11 @@ func resourceService() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"enable": {
+						attrEnable: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"rollback": {
+						attrRollback: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -91,11 +91,11 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"base": {
+						attrBase: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"capacity_provider": {
+						attrCapacityProvider: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -106,7 +106,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"cluster": {
+			attrCluster: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -118,11 +118,11 @@ func resourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enable": {
+						attrEnable: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"rollback": {
+						attrRollback: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -153,7 +153,7 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Default:  100,
 			},
-			"desired_count": {
+			attrDesiredCount: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -181,7 +181,7 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"launch_type": {
+			attrLaunchType: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -192,11 +192,11 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"container_name": {
+						attrContainerName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"container_port": {
+						attrContainerPort: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -204,7 +204,7 @@ func resourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"target_group_arn": {
+						attrTargetGroupARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -258,7 +258,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"placement_constraints": {
+			attrPlacementConstraints: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 10,
@@ -432,11 +432,11 @@ func resourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"container_name": {
+						attrContainerName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"container_port": {
+						attrContainerPort: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -453,7 +453,7 @@ func resourceService() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"task_definition": {
+			attrTaskDefinition: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -562,11 +562,11 @@ func resourceService() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"enable": {
+						attrEnable: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"rollback": {
+						attrRollback: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -588,12 +588,12 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"base": {
+						attrBase: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
 						},
-						"capacity_provider": {
+						attrCapacityProvider: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -605,7 +605,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"cluster": {
+			attrCluster: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -618,11 +618,11 @@ func resourceService() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enable": {
+						attrEnable: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"rollback": {
+						attrRollback: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -765,7 +765,7 @@ func resourceService() *schema.Resource {
 					return false
 				},
 			},
-			"desired_count": {
+			attrDesiredCount: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -801,7 +801,7 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"launch_type": {
+			attrLaunchType: {
 				Type:             schema.TypeString,
 				ForceNew:         true,
 				Optional:         true,
@@ -813,11 +813,11 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"container_name": {
+						attrContainerName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"container_port": {
+						attrContainerPort: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
@@ -826,7 +826,7 @@ func resourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"target_group_arn": {
+						attrTargetGroupARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -918,7 +918,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"placement_constraints": {
+			attrPlacementConstraints: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 10,
@@ -1165,11 +1165,11 @@ func resourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"container_name": {
+						attrContainerName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"container_port": {
+						attrContainerPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
@@ -1193,7 +1193,7 @@ func resourceService() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"task_definition": {
+			attrTaskDefinition: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -1312,7 +1312,7 @@ func resourceService() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"target_group_arn": {
+						attrTargetGroupARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -1401,7 +1401,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
 	}
 
-	if v, ok := d.GetOk("cluster"); ok {
+	if v, ok := d.GetOk(attrCluster); ok {
 		input.Cluster = aws.String(v.(string))
 	}
 
@@ -1410,7 +1410,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	} else if schedulingStrategy == awstypes.SchedulingStrategyReplica {
 		input.DeploymentConfiguration.MaximumPercent = aws.Int32(int32(d.Get("deployment_maximum_percent").(int)))
 		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int32(int32(deploymentMinimumHealthyPercent))
-		input.DesiredCount = aws.Int32(int32(d.Get("desired_count").(int)))
+		input.DesiredCount = aws.Int32(int32(d.Get(attrDesiredCount).(int)))
 	}
 
 	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -1475,7 +1475,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.Role = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("launch_type"); ok {
+	if v, ok := d.GetOk(attrLaunchType); ok {
 		input.LaunchType = awstypes.LaunchType(v.(string))
 		// When creating a service that uses the EXTERNAL deployment controller,
 		// you can specify only parameters that aren't controlled at the task set level
@@ -1499,7 +1499,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.PlacementStrategy = apiObject
 	}
 
-	if v, ok := d.Get("placement_constraints").(*schema.Set); ok {
+	if v, ok := d.Get(attrPlacementConstraints).(*schema.Set); ok {
 		apiObject, err := expandPlacementConstraints(v.List())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -1524,7 +1524,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.ServiceRegistries = expandServiceRegistries(v)
 	}
 
-	if v, ok := d.GetOk("task_definition"); ok {
+	if v, ok := d.GetOk(attrTaskDefinition); ok {
 		input.TaskDefinition = aws.String(v.(string))
 	}
 
@@ -1550,10 +1550,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrARN, output.Service.ServiceArn)
 
 	if d.Get("wait_for_steady_state").(bool) {
-		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get("cluster").(string), operationTime, d.Get("sigint_rollback").(bool), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get(attrCluster).(string), operationTime, d.Get("sigint_rollback").(bool), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 		}
-	} else if _, err := waitServiceActive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	} else if _, err := waitServiceActive(ctx, conn, d.Id(), d.Get(attrCluster).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 	}
 
@@ -1578,7 +1578,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	cluster := d.Get("cluster").(string)
+	cluster := d.Get(attrCluster).(string)
 	service, err := findServiceByTwoPartKeyWaitForActive(ctx, conn, d.Id(), cluster)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -1599,7 +1599,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrForceDelete, names.AttrTags, names.AttrTagsAll) {
-		cluster := d.Get("cluster").(string)
+		cluster := d.Get(attrCluster).(string)
 		input := ecs.UpdateServiceInput{
 			Cluster:            aws.String(cluster),
 			ForceNewDeployment: d.Get("force_new_deployment").(bool),
@@ -1723,8 +1723,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int32(int32(d.Get("deployment_minimum_healthy_percent").(int)))
 			}
 
-			if d.HasChange("desired_count") {
-				input.DesiredCount = aws.Int32(int32(d.Get("desired_count").(int)))
+			if d.HasChange(attrDesiredCount) {
+				input.DesiredCount = aws.Int32(int32(d.Get(attrDesiredCount).(int)))
 			}
 		}
 
@@ -1765,12 +1765,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
-		if d.HasChange("placement_constraints") {
+		if d.HasChange(attrPlacementConstraints) {
 			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementConstraints
 			// To remove all existing placement constraints, specify an empty array.
 			input.PlacementConstraints = []awstypes.PlacementConstraint{}
 
-			if v, ok := d.Get("placement_constraints").(*schema.Set); ok && v.Len() > 0 {
+			if v, ok := d.Get(attrPlacementConstraints).(*schema.Set); ok && v.Len() > 0 {
 				apiObject, err := expandPlacementConstraints(v.List())
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
@@ -1796,8 +1796,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]any))
 		}
 
-		if d.HasChange("task_definition") {
-			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
+		if d.HasChange(attrTaskDefinition) {
+			input.TaskDefinition = aws.String(d.Get(attrTaskDefinition).(string))
 		}
 
 		if d.HasChange("volume_configuration") {
@@ -1850,7 +1850,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	cluster := d.Get("cluster").(string)
+	cluster := d.Get(attrCluster).(string)
 	service, err := findServiceNoTagsByTwoPartKey(ctx, conn, d.Id(), cluster)
 
 	if retry.NotFound(err) {
@@ -1935,7 +1935,7 @@ func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta any
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("cluster/%s", clusterName),
 	}.String()
-	d.Set("cluster", clusterARN)
+	d.Set(attrCluster, clusterARN)
 
 	serviceARN := arn.ARN{
 		Partition: names.PartitionForRegion(region).ID(),
@@ -2513,11 +2513,11 @@ func expandAlarms(tfMap map[string]any) *awstypes.DeploymentAlarms {
 
 	apiObject := &awstypes.DeploymentAlarms{}
 
-	if v, ok := tfMap["enable"].(bool); ok {
+	if v, ok := tfMap[attrEnable].(bool); ok {
 		apiObject.Enable = v
 	}
 
-	if v, ok := tfMap["rollback"].(bool); ok {
+	if v, ok := tfMap[attrRollback].(bool); ok {
 		apiObject.Rollback = v
 	}
 
@@ -2539,9 +2539,9 @@ func flattenAlarms(apiObject *awstypes.DeploymentAlarms) map[string]any {
 		tfMap["alarm_names"] = v
 	}
 
-	tfMap["enable"] = apiObject.Enable
+	tfMap[attrEnable] = apiObject.Enable
 
-	tfMap["rollback"] = apiObject.Rollback
+	tfMap[attrRollback] = apiObject.Rollback
 
 	return tfMap
 }
@@ -2581,8 +2581,8 @@ func expandDeploymentCircuitBreaker(tfMap map[string]any) *awstypes.DeploymentCi
 
 	apiObject := &awstypes.DeploymentCircuitBreaker{}
 
-	apiObject.Enable = tfMap["enable"].(bool)
-	apiObject.Rollback = tfMap["rollback"].(bool)
+	apiObject.Enable = tfMap[attrEnable].(bool)
+	apiObject.Rollback = tfMap[attrRollback].(bool)
 
 	return apiObject
 }
@@ -2594,8 +2594,8 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 
 	tfMap := map[string]any{}
 
-	tfMap["enable"] = apiObject.Enable
-	tfMap["rollback"] = apiObject.Rollback
+	tfMap[attrEnable] = apiObject.Enable
+	tfMap[attrRollback] = apiObject.Rollback
 
 	return tfMap
 }
@@ -2834,7 +2834,7 @@ func expandVPCLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfi
 
 		apiObject := awstypes.VpcLatticeConfiguration{
 			RoleArn:        aws.String(config[names.AttrRoleARN].(string)),
-			TargetGroupArn: aws.String(config["target_group_arn"].(string)),
+			TargetGroupArn: aws.String(config[attrTargetGroupARN].(string)),
 			PortName:       aws.String(config["port_name"].(string)),
 		}
 
@@ -2854,7 +2854,7 @@ func flattenVPCLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfigurati
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
 			names.AttrRoleARN:  aws.ToString(apiObject.RoleArn),
-			"target_group_arn": aws.ToString(apiObject.TargetGroupArn),
+			attrTargetGroupARN: aws.ToString(apiObject.TargetGroupArn),
 			"port_name":        aws.ToString(apiObject.PortName),
 		}
 		tfList = append(tfList, tfMap)
@@ -3159,15 +3159,15 @@ func expandServiceLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.LoadBalancer{
-			ContainerName: aws.String(tfMap["container_name"].(string)),
-			ContainerPort: aws.Int32(int32(tfMap["container_port"].(int))),
+			ContainerName: aws.String(tfMap[attrContainerName].(string)),
+			ContainerPort: aws.Int32(int32(tfMap[attrContainerPort].(int))),
 		}
 
 		if v, ok := tfMap["elb_name"]; ok && v.(string) != "" {
 			apiObject.LoadBalancerName = aws.String(v.(string))
 		}
 
-		if v, ok := tfMap["target_group_arn"]; ok && v.(string) != "" {
+		if v, ok := tfMap[attrTargetGroupARN]; ok && v.(string) != "" {
 			apiObject.TargetGroupArn = aws.String(v.(string))
 		}
 
@@ -3194,8 +3194,8 @@ func flattenServiceLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"container_name": aws.ToString(apiObject.ContainerName),
-			"container_port": aws.ToInt32(apiObject.ContainerPort),
+			attrContainerName: aws.ToString(apiObject.ContainerName),
+			attrContainerPort: aws.ToInt32(apiObject.ContainerPort),
 		}
 
 		if apiObject.LoadBalancerName != nil {
@@ -3203,7 +3203,7 @@ func flattenServiceLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 		}
 
 		if apiObject.TargetGroupArn != nil {
-			tfMap["target_group_arn"] = aws.ToString(apiObject.TargetGroupArn)
+			tfMap[attrTargetGroupARN] = aws.ToString(apiObject.TargetGroupArn)
 		}
 
 		if apiObject.AdvancedConfiguration != nil {
@@ -3737,10 +3737,10 @@ func flattenServiceRegistries(apiObjects []awstypes.ServiceRegistry) []any {
 		}
 
 		if apiObject.ContainerName != nil {
-			tfMap["container_name"] = aws.ToString(apiObject.ContainerName)
+			tfMap[attrContainerName] = aws.ToString(apiObject.ContainerName)
 		}
 		if apiObject.ContainerPort != nil {
-			tfMap["container_port"] = aws.ToInt32(apiObject.ContainerPort)
+			tfMap[attrContainerPort] = aws.ToInt32(apiObject.ContainerPort)
 		}
 		if apiObject.Port != nil {
 			tfMap[names.AttrPort] = aws.ToInt32(apiObject.Port)
@@ -3762,9 +3762,9 @@ func resourceServiceFlatten(ctx context.Context, d *schema.ResourceData, service
 	}
 	// Save cluster in the same format.
 	if arn.IsARN(cluster) {
-		d.Set("cluster", service.ClusterArn)
+		d.Set(attrCluster, service.ClusterArn)
 	} else {
-		d.Set("cluster", clusterNameFromARN(aws.ToString(service.ClusterArn)))
+		d.Set(attrCluster, clusterNameFromARN(aws.ToString(service.ClusterArn)))
 	}
 	if service.DeploymentConfiguration != nil {
 		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
@@ -3793,7 +3793,7 @@ func resourceServiceFlatten(ctx context.Context, d *schema.ResourceData, service
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
 	}
-	d.Set("desired_count", service.DesiredCount)
+	d.Set(attrDesiredCount, service.DesiredCount)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
@@ -3805,7 +3805,7 @@ func resourceServiceFlatten(ctx context.Context, d *schema.ResourceData, service
 			d.Set("iam_role", roleNameFromARN(aws.ToString(service.RoleArn)))
 		}
 	}
-	d.Set("launch_type", service.LaunchType)
+	d.Set(attrLaunchType, service.LaunchType)
 	if service.LoadBalancers != nil {
 		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
@@ -3818,7 +3818,7 @@ func resourceServiceFlatten(ctx context.Context, d *schema.ResourceData, service
 	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
 	}
-	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
+	if err := d.Set(attrPlacementConstraints, flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
 	}
 	d.Set("platform_version", service.PlatformVersion)
@@ -3832,10 +3832,10 @@ func resourceServiceFlatten(ctx context.Context, d *schema.ResourceData, service
 	// hence TaskDefinition will not be set by aws sdk
 	if service.TaskDefinition != nil {
 		// Save task definition in the same format.
-		if arn.IsARN(d.Get("task_definition").(string)) {
-			d.Set("task_definition", service.TaskDefinition)
+		if arn.IsARN(d.Get(attrTaskDefinition).(string)) {
+			d.Set(attrTaskDefinition, service.TaskDefinition)
 		} else {
-			d.Set("task_definition", familyAndRevisionFromTaskDefinitionARN(aws.ToString(service.TaskDefinition)))
+			d.Set(attrTaskDefinition, familyAndRevisionFromTaskDefinitionARN(aws.ToString(service.TaskDefinition)))
 		}
 	}
 	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
@@ -3930,7 +3930,7 @@ func parseServiceImportID(id string) (string, string, error) {
 type serviceImportID struct{}
 
 func (serviceImportID) Create(d *schema.ResourceData) string {
-	cluster := d.Get("cluster").(string)
+	cluster := d.Get(attrCluster).(string)
 	if arn.IsARN(cluster) {
 		cluster = clusterNameFromARN(cluster)
 	}
@@ -3945,7 +3945,7 @@ func (serviceImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"cluster":      cluster,
+		attrCluster:    cluster,
 		names.AttrName: service,
 	}
 	return id, result, nil

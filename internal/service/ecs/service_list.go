@@ -41,11 +41,11 @@ type listResourceService struct {
 func (l *listResourceService) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"cluster": listschema.StringAttribute{
+			attrCluster: listschema.StringAttribute{
 				Required:    true,
 				Description: `The name of the ECS cluster`,
 			},
-			"launch_type": listschema.StringAttribute{
+			attrLaunchType: listschema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[awstypes.LaunchType](),
 				Optional:    true,
 				Description: `The launch type to use when filtering the ListServices results.`,
@@ -86,7 +86,7 @@ func (l *listResourceService) List(ctx context.Context, request list.ListRequest
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(serviceArn)
-			rd.Set("cluster", cluster)
+			rd.Set(attrCluster, cluster)
 
 			tflog.Info(ctx, "Reading ECS (Elastic Container) Service")
 			service, err := findServiceByTwoPartKey(ctx, conn, serviceArn, cluster)

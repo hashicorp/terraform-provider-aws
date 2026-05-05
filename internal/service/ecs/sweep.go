@@ -18,13 +18,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	serviceResource = "aws_ecs_service"
+)
+
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ecs_capacity_provider", &resource.Sweeper{
 		Name: "aws_ecs_capacity_provider",
 		F:    sweepCapacityProviders,
 		Dependencies: []string{
 			"aws_ecs_cluster",
-			"aws_ecs_service",
+			serviceResource,
 		},
 	})
 
@@ -33,14 +37,14 @@ func RegisterSweepers() {
 		F:    sweepClusters,
 		Dependencies: []string{
 			"aws_ecs_express_gateway_service",
-			"aws_ecs_service",
+			serviceResource,
 		},
 	})
 
 	awsv2.Register("aws_ecs_express_gateway_service", sweepExpressGatewayServices)
 
-	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
-		Name: "aws_ecs_service",
+	resource.AddTestSweepers(serviceResource, &resource.Sweeper{
+		Name: serviceResource,
 		F:    sweepServices,
 	})
 
@@ -49,7 +53,7 @@ func RegisterSweepers() {
 		F:    sweepTaskDefinitions,
 		Dependencies: []string{
 			"aws_ecs_express_gateway_service",
-			"aws_ecs_service",
+			serviceResource,
 		},
 	})
 }
@@ -221,7 +225,7 @@ func sweepServices(region string) error {
 					r := resourceService()
 					d := r.Data(nil)
 					d.SetId(v)
-					d.Set("cluster", clusterARN)
+					d.Set(attrCluster, clusterARN)
 					d.Set(names.AttrForceDelete, true)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

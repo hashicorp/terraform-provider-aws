@@ -18,11 +18,11 @@ func expandCapacityProviderStrategyItems(tfSet *schema.Set) []awstypes.CapacityP
 		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.CapacityProviderStrategyItem{}
 
-		if v, ok := tfMap["base"]; ok {
+		if v, ok := tfMap[attrBase]; ok {
 			apiObject.Base = int32(v.(int))
 		}
 
-		if v, ok := tfMap["capacity_provider"]; ok {
+		if v, ok := tfMap[attrCapacityProvider]; ok {
 			apiObject.CapacityProvider = aws.String(v.(string))
 		}
 
@@ -46,8 +46,8 @@ func flattenCapacityProviderStrategyItems(apiObjects []awstypes.CapacityProvider
 	for _, apiObject := range apiObjects {
 		tfMap := make(map[string]any)
 
-		tfMap["base"] = apiObject.Base
-		tfMap["capacity_provider"] = aws.ToString(apiObject.CapacityProvider)
+		tfMap[attrBase] = apiObject.Base
+		tfMap[attrCapacityProvider] = aws.ToString(apiObject.CapacityProvider)
 		tfMap[names.AttrWeight] = apiObject.Weight
 
 		tfList = append(tfList, tfMap)
@@ -68,11 +68,11 @@ func expandTaskSetLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 
 		apiObject := awstypes.LoadBalancer{}
 
-		if v, ok := tfMap["container_name"].(string); ok && v != "" {
+		if v, ok := tfMap[attrContainerName].(string); ok && v != "" {
 			apiObject.ContainerName = aws.String(v)
 		}
 
-		if v, ok := tfMap["container_port"].(int); ok {
+		if v, ok := tfMap[attrContainerPort].(int); ok {
 			apiObject.ContainerPort = aws.Int32(int32(v))
 		}
 
@@ -80,7 +80,7 @@ func expandTaskSetLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 			apiObject.LoadBalancerName = aws.String(v.(string))
 		}
 
-		if v, ok := tfMap["target_group_arn"]; ok && v.(string) != "" {
+		if v, ok := tfMap[attrTargetGroupARN]; ok && v.(string) != "" {
 			apiObject.TargetGroupArn = aws.String(v.(string))
 		}
 
@@ -95,8 +95,8 @@ func flattenTaskSetLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"container_name": aws.ToString(apiObject.ContainerName),
-			"container_port": aws.ToInt32(apiObject.ContainerPort),
+			attrContainerName: aws.ToString(apiObject.ContainerName),
+			attrContainerPort: aws.ToInt32(apiObject.ContainerPort),
 		}
 
 		if apiObject.LoadBalancerName != nil {
@@ -104,7 +104,7 @@ func flattenTaskSetLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 		}
 
 		if apiObject.TargetGroupArn != nil {
-			tfMap["target_group_arn"] = aws.ToString(apiObject.TargetGroupArn)
+			tfMap[attrTargetGroupARN] = aws.ToString(apiObject.TargetGroupArn)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -125,11 +125,11 @@ func expandServiceRegistries(tfList []any) []awstypes.ServiceRegistry {
 			RegistryArn: aws.String(tfMap["registry_arn"].(string)),
 		}
 
-		if v, ok := tfMap["container_name"].(string); ok && v != "" {
+		if v, ok := tfMap[attrContainerName].(string); ok && v != "" {
 			apiObject.ContainerName = aws.String(v)
 		}
 
-		if v, ok := tfMap["container_port"].(int); ok && v > 0 {
+		if v, ok := tfMap[attrContainerPort].(int); ok && v > 0 {
 			apiObject.ContainerPort = aws.Int32(int32(v))
 		}
 

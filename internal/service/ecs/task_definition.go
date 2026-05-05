@@ -125,7 +125,7 @@ func resourceTaskDefinition() *schema.Resource {
 					DiffSuppressOnRefresh: true,
 					ValidateFunc:          validTaskDefinitionContainerDefinitions,
 				},
-				"cpu": {
+				attrCPU: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
@@ -173,7 +173,7 @@ func resourceTaskDefinition() *schema.Resource {
 					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.IpcMode](),
 				},
-				"memory": {
+				attrMemory: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
@@ -191,7 +191,7 @@ func resourceTaskDefinition() *schema.Resource {
 					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.PidMode](),
 				},
-				"placement_constraints": {
+				attrPlacementConstraints: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					ForceNew: true,
@@ -219,7 +219,7 @@ func resourceTaskDefinition() *schema.Resource {
 					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"container_name": {
+							attrContainerName: {
 								Type:     schema.TypeString,
 								Required: true,
 								ForceNew: true,
@@ -619,7 +619,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("cpu"); ok {
+	if v, ok := d.GetOk(attrCPU); ok {
 		input.Cpu = aws.String(v.(string))
 	}
 
@@ -639,7 +639,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.IpcMode = awstypes.IpcMode(v.(string))
 	}
 
-	if v, ok := d.GetOk("memory"); ok {
+	if v, ok := d.GetOk(attrMemory); ok {
 		input.Memory = aws.String(v.(string))
 	}
 
@@ -651,7 +651,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.PidMode = awstypes.PidMode(v.(string))
 	}
 
-	if v := d.Get("placement_constraints").(*schema.Set).List(); len(v) > 0 {
+	if v := d.Get(attrPlacementConstraints).(*schema.Set).List(); len(v) > 0 {
 		apiObject, err := expandTaskDefinitionPlacementConstraints(v)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -881,7 +881,7 @@ func flattenProxyConfiguration(apiObject *awstypes.ProxyConfiguration) []any {
 	}
 
 	tfMap := make(map[string]any)
-	tfMap["container_name"] = aws.ToString(apiObject.ContainerName)
+	tfMap[attrContainerName] = aws.ToString(apiObject.ContainerName)
 	tfMap[names.AttrProperties] = meshProperties
 	tfMap[names.AttrType] = apiObject.Type
 
@@ -937,7 +937,7 @@ func expandProxyConfiguration(tfList []any) *awstypes.ProxyConfiguration {
 	}
 
 	apiObject := &awstypes.ProxyConfiguration{
-		ContainerName: aws.String(tfMap["container_name"].(string)),
+		ContainerName: aws.String(tfMap[attrContainerName].(string)),
 		Properties:    properties,
 		Type:          awstypes.ProxyConfigurationType(tfMap[names.AttrType].(string)),
 	}
@@ -1323,16 +1323,16 @@ func resourceTaskDefinitionFlatten(ctx context.Context, d *schema.ResourceData, 
 	arn := aws.ToString(taskDefinition.TaskDefinitionArn)
 	d.Set(names.AttrARN, arn)
 	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
-	d.Set("cpu", taskDefinition.Cpu)
+	d.Set(attrCPU, taskDefinition.Cpu)
 	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
 	d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage))
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
 	d.Set("ipc_mode", taskDefinition.IpcMode)
-	d.Set("memory", taskDefinition.Memory)
+	d.Set(attrMemory, taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("pid_mode", taskDefinition.PidMode)
-	d.Set("placement_constraints", flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints))
+	d.Set(attrPlacementConstraints, flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints))
 	d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration))
 	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
 	d.Set("revision", taskDefinition.Revision)
