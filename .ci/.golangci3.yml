@@ -81,7 +81,7 @@ linters:
         - strings.SplitN
 issues:
   max-issues-per-linter: 10
-  max-same-issues: 3
+  max-same-issues: 5
 formatters:
   enable:
     - gofmt

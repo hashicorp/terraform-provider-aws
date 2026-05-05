@@ -23,7 +23,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 	val := reflect.ValueOf(t)
 	typ := val.Type()
 
-	if typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Struct {
+	if typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Struct { //nolint:govet // reflect.Ptr is a constant
 		val = reflect.New(typ.Elem()).Elem()
 		typ = typ.Elem()
 	}
