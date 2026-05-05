@@ -1637,12 +1637,16 @@ func replicationGroupSuppressAutomaticFailoverForGlobalMember(ctx context.Contex
 	}
 
 	if v, ok := diff.Get("global_replication_group_id").(string); ok && v != "" {
-		diff.Clear("automatic_failover_enabled")
+		if err := diff.Clear("automatic_failover_enabled"); err != nil {
+			return err
+		}
 		return nil
 	}
 	if oldGRG, _ := diff.GetChange("global_replication_group_id"); oldGRG != nil {
 		if v, ok := oldGRG.(string); ok && v != "" {
-			diff.Clear("automatic_failover_enabled")
+			if err := diff.Clear("automatic_failover_enabled"); err != nil {
+				return err
+			}
 			return nil
 		}
 	}
@@ -1654,7 +1658,9 @@ func replicationGroupSuppressAutomaticFailoverForGlobalMember(ctx context.Contex
 			rgp.GlobalReplicationGroupInfo != nil &&
 			rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil &&
 			aws.ToString(rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId) != "" {
-			diff.Clear("automatic_failover_enabled")
+			if err := diff.Clear("automatic_failover_enabled"); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -1681,16 +1687,6 @@ func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDif
 func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
 	_, has_global_replication_group := d.GetOk("global_replication_group_id")
 	return has_global_replication_group && !d.IsNewResource()
-}
-
-func suppressAutomaticFailoverDiffForGlobalMember(k, old, new string, d *schema.ResourceData) bool {
-	if d.Id() == "" {
-		return false
-	}
-	if v, ok := d.Get("global_replication_group_id").(string); ok && v != "" {
-		return true
-	}
-	return false
 }
 
 func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {

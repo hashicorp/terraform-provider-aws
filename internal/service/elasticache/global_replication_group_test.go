@@ -2498,8 +2498,11 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_memberDiffSuppre
 					rName, primaryReplicationGroupId, secondaryReplicationGroupId,
 					acctest.CtTrue, acctest.CtFalse, acctest.CtFalse, "redis", "7.1",
 				),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -2545,8 +2548,11 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_memberDiffSuppre
 					rName, primaryReplicationGroupId, secondaryReplicationGroupId,
 					acctest.CtTrue, acctest.CtFalse, acctest.CtFalse, "valkey", "7.2",
 				),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
