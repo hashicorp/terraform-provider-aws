@@ -91,7 +91,7 @@ func ResourceKxVolume() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
 			},
-			"created_timestamp": {
+			attrCreatedTimestamp: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -243,7 +243,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrStatusReason, out.StatusReason)
 	d.Set("az_mode", out.AzMode)
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("created_timestamp", out.CreatedTimestamp.String())
+	d.Set(attrCreatedTimestamp, out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
 	d.Set(names.AttrAvailabilityZones, out.AvailabilityZoneIds)
 

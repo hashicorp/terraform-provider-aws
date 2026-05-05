@@ -50,7 +50,7 @@ func ResourceKxDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_timestamp": {
+			attrCreatedTimestamp: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -144,7 +144,7 @@ func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrName, out.DatabaseName)
 	d.Set("environment_id", out.EnvironmentId)
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("created_timestamp", out.CreatedTimestamp.String())
+	d.Set(attrCreatedTimestamp, out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
 
 	return diags

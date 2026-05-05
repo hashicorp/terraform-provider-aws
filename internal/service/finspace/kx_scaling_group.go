@@ -74,7 +74,7 @@ func ResourceKxScalingGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 32),
 			},
-			"created_timestamp": {
+			attrCreatedTimestamp: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -165,7 +165,7 @@ func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, out.ScalingGroupArn)
 	d.Set(names.AttrStatus, out.Status)
 	d.Set(names.AttrStatusReason, out.StatusReason)
-	d.Set("created_timestamp", out.CreatedTimestamp.String())
+	d.Set(attrCreatedTimestamp, out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
 	d.Set(names.AttrName, out.ScalingGroupName)
 	d.Set("availability_zone_id", out.AvailabilityZoneId)

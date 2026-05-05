@@ -185,7 +185,7 @@ func ResourceKxCluster() *schema.Resource {
 					validation.MapValueLenBetween(1, 1024),
 				),
 			},
-			"created_timestamp": {
+			attrCreatedTimestamp: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -541,7 +541,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.Set(names.AttrStatus, out.Status)
 	d.Set(names.AttrStatusReason, out.StatusReason)
-	d.Set("created_timestamp", out.CreatedTimestamp.String())
+	d.Set(attrCreatedTimestamp, out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
 	d.Set(names.AttrName, out.ClusterName)
 	d.Set(names.AttrType, out.ClusterType)

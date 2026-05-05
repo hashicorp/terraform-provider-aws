@@ -72,7 +72,7 @@ func ResourceKxDataview() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"created_timestamp": {
+			attrCreatedTimestamp: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -233,7 +233,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("changeset_id", out.ChangesetId)
 	d.Set("availability_zone_id", out.AvailabilityZoneId)
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("created_timestamp", out.CreatedTimestamp.String())
+	d.Set(attrCreatedTimestamp, out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
 	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("environment_id", out.EnvironmentId)

@@ -59,7 +59,7 @@ func ResourceKxEnvironment() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"created_timestamp": {
+			attrCreatedTimestamp: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -275,7 +275,7 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrStatus, out.Status)
 	d.Set(names.AttrAvailabilityZones, out.AvailabilityZoneIds)
 	d.Set("infrastructure_account_id", out.DedicatedServiceAccountId)
-	d.Set("created_timestamp", out.CreationTimestamp.String())
+	d.Set(attrCreatedTimestamp, out.CreationTimestamp.String())
 	d.Set("last_modified_timestamp", out.UpdateTimestamp.String())
 
 	if err := d.Set("transit_gateway_configuration", flattenTransitGatewayConfiguration(out.TransitGatewayConfiguration)); err != nil {
