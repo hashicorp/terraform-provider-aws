@@ -1,0 +1,1 @@
+release-note:bug resource/aws_cloudformation_stack_instances: Fix update behavior for DIFFERENCE filter
