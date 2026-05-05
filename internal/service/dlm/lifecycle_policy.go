@@ -54,7 +54,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 					validation.StringLenBetween(1, 500),
 				),
 			},
-			"default_policy": {
+			attrDefaultPolicy: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.DefaultPolicyTypeValues](),
@@ -112,7 +112,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"interval_unit": {
+															attrIntervalUnit: {
 																Type:             schema.TypeString,
 																Required:         true,
 																ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
@@ -143,18 +143,18 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Type:          schema.TypeBool,
 							Optional:      true,
 							Default:       false,
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
+							ConflictsWith: []string{attrPolicyDetails0Schedule},
+							RequiredWith:  []string{attrDefaultPolicy},
 						},
 						"create_interval": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							Default:       1,
 							ValidateFunc:  validation.IntBetween(1, 7),
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
+							ConflictsWith: []string{attrPolicyDetails0Schedule},
+							RequiredWith:  []string{attrDefaultPolicy},
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("default_policy").(string) == "" {
+								if d.Get(attrDefaultPolicy).(string) == "" {
 									if old == "0" && new == "1" {
 										return true
 									}
@@ -166,8 +166,8 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Type:          schema.TypeList,
 							Optional:      true,
 							MaxItems:      1,
-							RequiredWith:  []string{"default_policy"},
-							ConflictsWith: []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
+							RequiredWith:  []string{attrDefaultPolicy},
+							ConflictsWith: []string{"policy_details.0.resource_types", attrPolicyDetails0Schedule},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"exclude_boot_volumes": {
@@ -193,8 +193,8 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Type:          schema.TypeBool,
 							Optional:      true,
 							Default:       false,
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
+							ConflictsWith: []string{attrPolicyDetails0Schedule},
+							RequiredWith:  []string{attrDefaultPolicy},
 						},
 						"event_source": {
 							Type:     schema.TypeList,
@@ -281,8 +281,8 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
-							ConflictsWith:    []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
-							RequiredWith:     []string{"default_policy"},
+							ConflictsWith:    []string{"policy_details.0.resource_types", attrPolicyDetails0Schedule},
+							RequiredWith:     []string{attrDefaultPolicy},
 						},
 						"resource_types": {
 							Type:     schema.TypeList,
@@ -291,17 +291,17 @@ func resourceLifecyclePolicy() *schema.Resource {
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
 							},
-							ConflictsWith: []string{"policy_details.0.resource_type", "default_policy"},
+							ConflictsWith: []string{"policy_details.0.resource_type", attrDefaultPolicy},
 						},
 						"retain_interval": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							Default:       7,
 							ValidateFunc:  validation.IntBetween(2, 14),
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
+							ConflictsWith: []string{attrPolicyDetails0Schedule},
+							RequiredWith:  []string{attrDefaultPolicy},
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("default_policy").(string) == "" {
+								if d.Get(attrDefaultPolicy).(string) == "" {
 									if old == "0" && new == "7" {
 										return true
 									}
@@ -344,7 +344,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
 																		},
-																		"interval_unit": {
+																		attrIntervalUnit: {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
@@ -380,7 +380,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
 												},
-												"interval_unit": {
+												attrIntervalUnit: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													Computed:         true,
@@ -482,7 +482,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"interval_unit": {
+															attrIntervalUnit: {
 																Type:             schema.TypeString,
 																Required:         true,
 																ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
@@ -505,7 +505,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"interval_unit": {
+															attrIntervalUnit: {
 																Type:             schema.TypeString,
 																Required:         true,
 																ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
@@ -542,7 +542,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"interval_unit": {
+												attrIntervalUnit: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
@@ -573,7 +573,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"interval_unit": {
+												attrIntervalUnit: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
@@ -602,7 +602,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"interval_unit": {
+												attrIntervalUnit: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
@@ -682,12 +682,12 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		ExecutionRoleArn: aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
-		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]any), d.Get("default_policy").(string)),
+		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]any), d.Get(attrDefaultPolicy).(string)),
 		State:            awstypes.SettablePolicyStateValues(d.Get(names.AttrState).(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("default_policy"); ok {
+	if v, ok := d.GetOk(attrDefaultPolicy); ok {
 		input.DefaultPolicy = awstypes.DefaultPolicyTypeValues(v.(string))
 	}
 
@@ -725,7 +725,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrARN, output.Policy.PolicyArn)
 	if aws.ToBool(output.Policy.DefaultPolicy) {
-		d.Set("default_policy", d.Get("default_policy"))
+		d.Set(attrDefaultPolicy, d.Get(attrDefaultPolicy))
 	}
 	d.Set(names.AttrDescription, output.Policy.Description)
 	d.Set(names.AttrExecutionRoleARN, output.Policy.ExecutionRoleArn)
@@ -755,7 +755,7 @@ func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.ExecutionRoleArn = aws.String(d.Get(names.AttrExecutionRoleARN).(string))
 		}
 		if d.HasChange("policy_details") {
-			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]any), d.Get("default_policy").(string))
+			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]any), d.Get(attrDefaultPolicy).(string))
 		}
 		if d.HasChange(names.AttrState) {
 			input.State = awstypes.SettablePolicyStateValues(d.Get(names.AttrState).(string))
@@ -1230,7 +1230,7 @@ func expandCrossRegionCopyRuleDeprecateRule(tfList []any) *awstypes.CrossRegionC
 
 	return &awstypes.CrossRegionCopyDeprecateRule{
 		Interval:     aws.Int32(int32(tfMap[names.AttrInterval].(int))),
-		IntervalUnit: awstypes.RetentionIntervalUnitValues(tfMap["interval_unit"].(string)),
+		IntervalUnit: awstypes.RetentionIntervalUnitValues(tfMap[attrIntervalUnit].(string)),
 	}
 }
 
@@ -1243,7 +1243,7 @@ func expandCrossRegionCopyRuleRetainRule(tfList []any) *awstypes.CrossRegionCopy
 
 	return &awstypes.CrossRegionCopyRetainRule{
 		Interval:     aws.Int32(int32(tfMap[names.AttrInterval].(int))),
-		IntervalUnit: awstypes.RetentionIntervalUnitValues(tfMap["interval_unit"].(string)),
+		IntervalUnit: awstypes.RetentionIntervalUnitValues(tfMap[attrIntervalUnit].(string)),
 	}
 }
 
@@ -1254,7 +1254,7 @@ func flattenCrossRegionCopyRuleDeprecateRule(apiObject *awstypes.CrossRegionCopy
 
 	tfMap := map[string]any{
 		names.AttrInterval: aws.ToInt32(apiObject.Interval),
-		"interval_unit":    apiObject.IntervalUnit,
+		attrIntervalUnit:   apiObject.IntervalUnit,
 	}
 
 	return []any{tfMap}
@@ -1267,7 +1267,7 @@ func flattenCrossRegionCopyRuleRetainRule(apiObject *awstypes.CrossRegionCopyRet
 
 	tfMap := map[string]any{
 		names.AttrInterval: aws.ToInt32(apiObject.Interval),
-		"interval_unit":    apiObject.IntervalUnit,
+		attrIntervalUnit:   apiObject.IntervalUnit,
 	}
 
 	return []any{tfMap}
@@ -1284,7 +1284,7 @@ func expandCreateRule(tfList []any) *awstypes.CreateRule {
 	if v, ok := tfMap[names.AttrInterval].(int); ok && v > 0 {
 		apiObject.Interval = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIntervalUnit].(string); ok && v != "" {
 		apiObject.IntervalUnit = awstypes.IntervalUnitValues(v)
 	} else {
 		apiObject.IntervalUnit = awstypes.IntervalUnitValuesHours
@@ -1319,7 +1319,7 @@ func flattenCreateRule(apiObject *awstypes.CreateRule) []any {
 	if apiObject.Interval != nil {
 		tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
 	}
-	tfMap["interval_unit"] = apiObject.IntervalUnit
+	tfMap[attrIntervalUnit] = apiObject.IntervalUnit
 	tfMap[names.AttrLocation] = apiObject.Location
 	if apiObject.Scripts != nil {
 		tfMap["scripts"] = flattenScripts(apiObject.Scripts)
@@ -1343,7 +1343,7 @@ func expandRetainRule(tfList []any) *awstypes.RetainRule {
 	if v, ok := tfMap[names.AttrInterval].(int); ok && v > 0 {
 		apiObject.Interval = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIntervalUnit].(string); ok && v != "" {
 		apiObject.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
 	}
 
@@ -1354,7 +1354,7 @@ func flattenRetainRule(apiObject *awstypes.RetainRule) []any {
 	tfMap := make(map[string]any)
 	tfMap["count"] = aws.ToInt32(apiObject.Count)
 	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
-	tfMap["interval_unit"] = apiObject.IntervalUnit
+	tfMap[attrIntervalUnit] = apiObject.IntervalUnit
 
 	return []any{tfMap}
 }
@@ -1375,7 +1375,7 @@ func expandDeprecateRule(tfList []any) *awstypes.DeprecateRule {
 		apiObject.Interval = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIntervalUnit].(string); ok && v != "" {
 		apiObject.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
 	}
 
@@ -1386,7 +1386,7 @@ func flattenDeprecateRule(apiObject *awstypes.DeprecateRule) []any {
 	tfMap := make(map[string]any)
 	tfMap["count"] = aws.ToInt32(apiObject.Count)
 	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
-	tfMap["interval_unit"] = apiObject.IntervalUnit
+	tfMap[attrIntervalUnit] = apiObject.IntervalUnit
 
 	return []any{tfMap}
 }
@@ -1409,7 +1409,7 @@ func expandFastRestoreRule(tfList []any) *awstypes.FastRestoreRule {
 		apiObject.Interval = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIntervalUnit].(string); ok && v != "" {
 		apiObject.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
 	}
 
@@ -1421,7 +1421,7 @@ func flattenFastRestoreRule(apiObject *awstypes.FastRestoreRule) []any {
 	tfMap[names.AttrAvailabilityZones] = apiObject.AvailabilityZones
 	tfMap["count"] = aws.ToInt32(apiObject.Count)
 	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
-	tfMap["interval_unit"] = apiObject.IntervalUnit
+	tfMap[attrIntervalUnit] = apiObject.IntervalUnit
 
 	return []any{tfMap}
 }
@@ -1639,7 +1639,7 @@ func expandRetentionArchiveTier(tfList []any) *awstypes.RetentionArchiveTier {
 		apiObject.Interval = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIntervalUnit].(string); ok && v != "" {
 		apiObject.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
 	}
 
@@ -1654,7 +1654,7 @@ func flattenRetentionArchiveTier(apiObject *awstypes.RetentionArchiveTier) []any
 	tfMap := make(map[string]any)
 	tfMap["count"] = aws.ToInt32(apiObject.Count)
 	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
-	tfMap["interval_unit"] = apiObject.IntervalUnit
+	tfMap[attrIntervalUnit] = apiObject.IntervalUnit
 
 	return []any{tfMap}
 }
