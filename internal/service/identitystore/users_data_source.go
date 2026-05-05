@@ -36,7 +36,7 @@ type usersDataSource struct {
 func (d *usersDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"identity_store_id": schema.StringAttribute{
+			attrISID: schema.StringAttribute{
 				Required: true,
 			},
 			"users": framework.DataSourceComputedListOfObjectAttribute[userModel](ctx),

@@ -69,11 +69,11 @@ func resourceGroup() *schema.Resource {
 					},
 				},
 			},
-			"group_id": {
+			attrGroupID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"identity_store_id": {
+			attrISID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -87,7 +87,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	displayName := d.Get(names.AttrDisplayName).(string)
-	identityStoreID := d.Get("identity_store_id").(string)
+	identityStoreID := d.Get(attrISID).(string)
 	input := &identitystore.CreateGroupInput{
 		DisplayName:     aws.String(displayName),
 		IdentityStoreId: aws.String(identityStoreID),
@@ -136,8 +136,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("external_ids", flattenExternalIDs(out.ExternalIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
 	}
-	d.Set("group_id", out.GroupId)
-	d.Set("identity_store_id", out.IdentityStoreId)
+	d.Set(attrGroupID, out.GroupId)
+	d.Set(attrISID, out.IdentityStoreId)
 
 	return diags
 }

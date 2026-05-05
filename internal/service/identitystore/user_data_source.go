@@ -46,7 +46,7 @@ func dataSourceUser() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"primary": {
+						attrPrimary: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -65,7 +65,7 @@ func dataSourceUser() *schema.Resource {
 					},
 				},
 			},
-			"alternate_identifier": {
+			attrAlternateIdentifier: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -120,7 +120,7 @@ func dataSourceUser() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"primary": {
+						attrPrimary: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -151,7 +151,7 @@ func dataSourceUser() *schema.Resource {
 					},
 				},
 			},
-			"identity_store_id": {
+			attrISID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -204,7 +204,7 @@ func dataSourceUser() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"primary": {
+						attrPrimary: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -243,8 +243,8 @@ func dataSourceUser() *schema.Resource {
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
 				),
-				AtLeastOneOf:  []string{"alternate_identifier", "user_id"},
-				ConflictsWith: []string{"alternate_identifier"},
+				AtLeastOneOf:  []string{attrAlternateIdentifier, "user_id"},
+				ConflictsWith: []string{attrAlternateIdentifier},
 			},
 			names.AttrUserName: {
 				Type:     schema.TypeString,
@@ -266,11 +266,11 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	identityStoreID := d.Get("identity_store_id").(string)
+	identityStoreID := d.Get(attrISID).(string)
 
 	var userID string
 
-	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk(attrAlternateIdentifier); ok && len(v.([]any)) > 0 {
 		input := identitystore.GetUserIdInput{
 			AlternateIdentifier: expandAlternateIdentifier(v.([]any)[0].(map[string]any)),
 			IdentityStoreId:     aws.String(identityStoreID),
@@ -311,7 +311,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set("external_ids", flattenExternalIDs(user.ExternalIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
 	}
-	d.Set("identity_store_id", user.IdentityStoreId)
+	d.Set(attrISID, user.IdentityStoreId)
 	d.Set("locale", user.Locale)
 	if err := d.Set(names.AttrName, []any{flattenName(user.Name)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting name: %s", err)

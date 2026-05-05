@@ -36,7 +36,7 @@ func (d *groupsDataSource) Schema(ctx context.Context, request datasource.Schema
 					AttrTypes: fwtypes.AttributeTypesMust[groupModel](ctx),
 				},
 			},
-			"identity_store_id": schema.StringAttribute{
+			attrISID: schema.StringAttribute{
 				Required: true,
 			},
 		},

@@ -65,7 +65,7 @@ func resourceUser() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"primary": {
+						attrPrimary: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -99,7 +99,7 @@ func resourceUser() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"primary": {
+						attrPrimary: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -133,7 +133,7 @@ func resourceUser() *schema.Resource {
 					},
 				},
 			},
-			"identity_store_id": {
+			attrISID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -193,7 +193,7 @@ func resourceUser() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"primary": {
+						attrPrimary: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -258,7 +258,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	identityStoreID := d.Get("identity_store_id").(string)
+	identityStoreID := d.Get(attrISID).(string)
 	username := d.Get(names.AttrUserName).(string)
 	input := &identitystore.CreateUserInput{
 		DisplayName:     aws.String(d.Get(names.AttrDisplayName).(string)),
@@ -352,7 +352,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err := d.Set("external_ids", flattenExternalIDs(out.ExternalIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
 	}
-	d.Set("identity_store_id", out.IdentityStoreId)
+	d.Set(attrISID, out.IdentityStoreId)
 	d.Set("locale", out.Locale)
 	if err := d.Set(names.AttrName, []any{flattenName(out.Name)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
@@ -499,7 +499,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 						m["postalCode"] = v
 					}
 
-					m["primary"] = address.Primary
+					m[attrPrimary] = address.Primary
 
 					if v := address.Region; v != nil {
 						m[names.AttrRegion] = v
@@ -532,7 +532,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 				for _, email := range emails {
 					m := map[string]any{}
 
-					m["primary"] = email.Primary
+					m[attrPrimary] = email.Primary
 
 					if v := email.Type; v != nil {
 						m[names.AttrType] = v
@@ -561,7 +561,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 				for _, email := range emails {
 					m := map[string]any{}
 
-					m["primary"] = email.Primary
+					m[attrPrimary] = email.Primary
 
 					if v := email.Type; v != nil {
 						m[names.AttrType] = v

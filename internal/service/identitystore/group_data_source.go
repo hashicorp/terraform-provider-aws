@@ -25,7 +25,7 @@ func dataSourceGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"alternate_identifier": {
+			attrAlternateIdentifier: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -69,7 +69,7 @@ func dataSourceGroup() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"group_id"},
+				ConflictsWith: []string{attrGroupID},
 			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
@@ -95,7 +95,7 @@ func dataSourceGroup() *schema.Resource {
 					},
 				},
 			},
-			"group_id": {
+			attrGroupID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -103,10 +103,10 @@ func dataSourceGroup() *schema.Resource {
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
 				),
-				AtLeastOneOf:  []string{"alternate_identifier", "group_id"},
-				ConflictsWith: []string{"alternate_identifier"},
+				AtLeastOneOf:  []string{attrAlternateIdentifier, attrGroupID},
+				ConflictsWith: []string{attrAlternateIdentifier},
 			},
-			"identity_store_id": {
+			attrISID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -122,11 +122,11 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	identityStoreID := d.Get("identity_store_id").(string)
+	identityStoreID := d.Get(attrISID).(string)
 
 	var groupID string
 
-	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk(attrAlternateIdentifier); ok && len(v.([]any)) > 0 {
 		input := identitystore.GetGroupIdInput{
 			AlternateIdentifier: expandAlternateIdentifier(v.([]any)[0].(map[string]any)),
 			IdentityStoreId:     aws.String(identityStoreID),
@@ -141,7 +141,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		groupID = aws.ToString(output.GroupId)
 	}
 
-	if v, ok := d.GetOk("group_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk(attrGroupID); ok && v.(string) != "" {
 		if groupID != "" && groupID != v.(string) {
 			// We were given a filter, and it found a group different to this one.
 			return sdkdiag.AppendErrorf(diags, "no Identity Store Group found matching criteria; try different search")
@@ -162,7 +162,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set("external_ids", flattenExternalIDs(group.ExternalIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
 	}
-	d.Set("group_id", group.GroupId)
+	d.Set(attrGroupID, group.GroupId)
 
 	return diags
 }

@@ -33,7 +33,7 @@ func flattenAddress(apiObject *types.Address) map[string]any {
 		tfMap["postal_code"] = aws.ToString(v)
 	}
 
-	tfMap["primary"] = apiObject.Primary
+	tfMap[attrPrimary] = apiObject.Primary
 
 	if v := apiObject.Region; v != nil {
 		tfMap[names.AttrRegion] = aws.ToString(v)
@@ -73,7 +73,7 @@ func expandAddress(tfMap map[string]any) *types.Address {
 		apiObject.PostalCode = aws.String(v)
 	}
 
-	apiObject.Primary = tfMap["primary"].(bool)
+	apiObject.Primary = tfMap[attrPrimary].(bool)
 
 	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
@@ -150,7 +150,7 @@ func flattenEmail(apiObject *types.Email) map[string]any {
 
 	tfMap := map[string]any{}
 
-	tfMap["primary"] = apiObject.Primary
+	tfMap[attrPrimary] = apiObject.Primary
 
 	if v := apiObject.Type; v != nil {
 		tfMap[names.AttrType] = aws.ToString(v)
@@ -170,7 +170,7 @@ func expandEmail(tfMap map[string]any) *types.Email {
 
 	apiObject := &types.Email{}
 
-	apiObject.Primary = tfMap["primary"].(bool)
+	apiObject.Primary = tfMap[attrPrimary].(bool)
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
@@ -343,7 +343,7 @@ func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]any {
 
 	tfMap := map[string]any{}
 
-	tfMap["primary"] = apiObject.Primary
+	tfMap[attrPrimary] = apiObject.Primary
 
 	if v := apiObject.Type; v != nil {
 		tfMap[names.AttrType] = aws.ToString(v)
@@ -363,7 +363,7 @@ func expandPhoneNumber(tfMap map[string]any) *types.PhoneNumber {
 
 	apiObject := &types.PhoneNumber{}
 
-	apiObject.Primary = tfMap["primary"].(bool)
+	apiObject.Primary = tfMap[attrPrimary].(bool)
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)

@@ -36,13 +36,13 @@ func resourceGroupMembership() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"group_id": {
+			attrGroupID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 47),
 			},
-			"identity_store_id": {
+			attrISID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,9 +66,9 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	identityStoreID := d.Get("identity_store_id").(string)
+	identityStoreID := d.Get(attrISID).(string)
 	input := &identitystore.CreateGroupMembershipInput{
-		GroupId:         aws.String(d.Get("group_id").(string)),
+		GroupId:         aws.String(d.Get(attrGroupID).(string)),
 		IdentityStoreId: aws.String(identityStoreID),
 		MemberId:        &types.MemberIdMemberUserId{Value: d.Get("member_id").(string)},
 	}
@@ -110,8 +110,8 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("group_id", out.GroupId)
-	d.Set("identity_store_id", out.IdentityStoreId)
+	d.Set(attrGroupID, out.GroupId)
+	d.Set(attrISID, out.IdentityStoreId)
 	d.Set("member_id", memberId)
 	d.Set("membership_id", out.MembershipId)
 

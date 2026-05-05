@@ -37,14 +37,14 @@ type groupMembershipsDataSource struct {
 func (d *groupMembershipsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"group_id": schema.StringAttribute{
+			attrGroupID: schema.StringAttribute{
 				Required: true,
 			},
 			"group_memberships": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[groupMembershipModel](ctx),
 				Computed:   true,
 			},
-			"identity_store_id": schema.StringAttribute{
+			attrISID: schema.StringAttribute{
 				Required: true,
 			},
 		},
