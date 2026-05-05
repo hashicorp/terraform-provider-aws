@@ -1123,7 +1123,7 @@ func walkWebACLJSON(v reflect.Value) {
 		},
 	}
 
-	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface { //nolint:govet // wants us to inline a readable constant
 		v = v.Elem()
 	}
 
@@ -1170,7 +1170,7 @@ func walkRulesGroupJSON(v reflect.Value) {
 		},
 	}
 
-	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface { //nolint:govet // wants us to inline a readable constant
 		v = v.Elem()
 	}
 
