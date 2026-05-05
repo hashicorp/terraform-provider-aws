@@ -280,7 +280,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: vFrom.Type(ctx),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -323,7 +323,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: vFrom.Type(ctx),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -380,7 +380,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: vFrom.Type(ctx),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -477,7 +477,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: vFrom.Type(ctx),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -660,7 +660,7 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: vFrom.Type(ctx),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -694,7 +694,7 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from list[%s]": v.ElementType(ctx),
-		"to":            vTo.Kind(),
+		diagKeyTo:       vTo.Kind(),
 	})
 
 	return diags
@@ -788,7 +788,7 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: vFrom.Type(ctx),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -868,7 +868,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: vFrom.Type(ctx),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -942,7 +942,7 @@ func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWi
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: "Set[Int32]",
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -1014,7 +1014,7 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: fmt.Sprintf("map[string, %s]", v.ElementType(ctx)),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -1069,7 +1069,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		diagKeyFrom: fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
-		"to":        vTo.Kind(),
+		diagKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -1107,7 +1107,7 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from set[%s]": v.ElementType(ctx),
-		"to":           vTo.Kind(),
+		diagKeyTo:      vTo.Kind(),
 	})
 
 	return diags

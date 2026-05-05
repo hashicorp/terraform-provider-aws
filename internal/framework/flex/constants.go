@@ -6,6 +6,7 @@ package flex
 // Diagnostic message keys used in AutoFlex error reporting.
 const (
 	diagKeyFrom         = "from"
+	diagKeyTo           = "to"
 	diagKeySourceType   = "source_type"
 	diagKeyWrapperField = "wrapper_field"
 )
