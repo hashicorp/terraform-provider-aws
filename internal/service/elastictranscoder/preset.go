@@ -70,7 +70,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
+								attrAuto,
 								"0",
 								"1",
 								"2",
@@ -94,7 +94,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
+								attrAuto,
 								"22050",
 								"32000",
 								"44100",
@@ -140,7 +140,7 @@ func ResourcePreset() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
+								attrAuto,
 								"AAC-LC",
 								"HE-AAC",
 								"HE-AACv2",
@@ -208,7 +208,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
+								attrAuto,
 								"1:1",
 								"4:3",
 								"3:2",
@@ -229,12 +229,12 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_height": {
+						attrMaxHeight: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_width": {
+						attrMaxWidth: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -253,7 +253,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"sizing_policy": {
+						attrSizingPolicy: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -293,7 +293,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
+								attrAuto,
 								"1:1",
 								"4:3",
 								"3:2",
@@ -323,7 +323,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
+								attrAuto,
 								"1:1",
 								"4:3",
 								"3:2",
@@ -344,7 +344,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
+								attrAuto,
 								"10",
 								"15",
 								"23.97",
@@ -378,12 +378,12 @@ func ResourcePreset() *schema.Resource {
 								"60",
 							}, false),
 						},
-						"max_height": {
+						attrMaxHeight: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_width": {
+						attrMaxWidth: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -402,7 +402,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"sizing_policy": {
+						attrSizingPolicy: {
 							Type:     schema.TypeString,
 							Default:  "Fit",
 							Optional: true,
@@ -448,12 +448,12 @@ func ResourcePreset() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 40),
 						},
-						"max_height": {
+						attrMaxHeight: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_width": {
+						attrMaxWidth: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -463,7 +463,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"sizing_policy": {
+						attrSizingPolicy: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -572,11 +572,11 @@ func expandETThumbnails(d *schema.ResourceData) *awstypes.Thumbnails {
 		thumbnails.Format = aws.String(v.(string))
 	}
 
-	if v, ok := t["max_height"]; ok && v.(string) != "" {
+	if v, ok := t[attrMaxHeight]; ok && v.(string) != "" {
 		thumbnails.MaxHeight = aws.String(v.(string))
 	}
 
-	if v, ok := t["max_width"]; ok && v.(string) != "" {
+	if v, ok := t[attrMaxWidth]; ok && v.(string) != "" {
 		thumbnails.MaxWidth = aws.String(v.(string))
 	}
 
@@ -588,7 +588,7 @@ func expandETThumbnails(d *schema.ResourceData) *awstypes.Thumbnails {
 		thumbnails.Resolution = aws.String(v.(string))
 	}
 
-	if v, ok := t["sizing_policy"]; ok && v.(string) != "" {
+	if v, ok := t[attrSizingPolicy]; ok && v.(string) != "" {
 		thumbnails.SizingPolicy = aws.String(v.(string))
 	}
 
@@ -700,11 +700,11 @@ func expandETVideoParams(d *schema.ResourceData) *awstypes.VideoParameters {
 		etVideoParams.MaxFrameRate = aws.String(v.(string))
 	}
 
-	if v, ok := p["max_height"]; ok && v.(string) != "" {
+	if v, ok := p[attrMaxHeight]; ok && v.(string) != "" {
 		etVideoParams.MaxHeight = aws.String(v.(string))
 	}
 
-	if v, ok := p["max_width"]; ok && v.(string) != "" {
+	if v, ok := p[attrMaxWidth]; ok && v.(string) != "" {
 		etVideoParams.MaxWidth = aws.String(v.(string))
 	}
 
@@ -716,7 +716,7 @@ func expandETVideoParams(d *schema.ResourceData) *awstypes.VideoParameters {
 		etVideoParams.Resolution = aws.String(v.(string))
 	}
 
-	if v, ok := p["sizing_policy"]; ok && v.(string) != "" {
+	if v, ok := p[attrSizingPolicy]; ok && v.(string) != "" {
 		etVideoParams.SizingPolicy = aws.String(v.(string))
 	}
 
@@ -744,10 +744,10 @@ func expandETVideoWatermarks(d *schema.ResourceData) []awstypes.PresetWatermark 
 			HorizontalAlign:  aws.String(p["horizontal_align"].(string)),
 			HorizontalOffset: aws.String(p["horizontal_offset"].(string)),
 			Id:               aws.String(p[names.AttrID].(string)),
-			MaxHeight:        aws.String(p["max_height"].(string)),
-			MaxWidth:         aws.String(p["max_width"].(string)),
+			MaxHeight:        aws.String(p[attrMaxHeight].(string)),
+			MaxWidth:         aws.String(p[attrMaxWidth].(string)),
 			Opacity:          aws.String(p["opacity"].(string)),
-			SizingPolicy:     aws.String(p["sizing_policy"].(string)),
+			SizingPolicy:     aws.String(p[attrSizingPolicy].(string)),
 			Target:           aws.String(p[names.AttrTarget].(string)),
 			VerticalAlign:    aws.String(p["vertical_align"].(string)),
 			VerticalOffset:   aws.String(p["vertical_offset"].(string)),
@@ -866,11 +866,11 @@ func flattenETThumbnails(thumbs *awstypes.Thumbnails) []map[string]any {
 		"aspect_ratio":     aws.ToString(thumbs.AspectRatio),
 		names.AttrFormat:   aws.ToString(thumbs.Format),
 		names.AttrInterval: aws.ToString(thumbs.Interval),
-		"max_height":       aws.ToString(thumbs.MaxHeight),
-		"max_width":        aws.ToString(thumbs.MaxWidth),
+		attrMaxHeight:      aws.ToString(thumbs.MaxHeight),
+		attrMaxWidth:       aws.ToString(thumbs.MaxWidth),
 		"padding_policy":   aws.ToString(thumbs.PaddingPolicy),
 		"resolution":       aws.ToString(thumbs.Resolution),
-		"sizing_policy":    aws.ToString(thumbs.SizingPolicy),
+		attrSizingPolicy:   aws.ToString(thumbs.SizingPolicy),
 	}
 
 	return []map[string]any{result}
@@ -890,11 +890,11 @@ func flattenETVideoParams(video *awstypes.VideoParameters) []map[string]any {
 		"frame_rate":           aws.ToString(video.FrameRate),
 		"keyframes_max_dist":   aws.ToString(video.KeyframesMaxDist),
 		"max_frame_rate":       aws.ToString(video.MaxFrameRate),
-		"max_height":           aws.ToString(video.MaxHeight),
-		"max_width":            aws.ToString(video.MaxWidth),
+		attrMaxHeight:          aws.ToString(video.MaxHeight),
+		attrMaxWidth:           aws.ToString(video.MaxWidth),
 		"padding_policy":       aws.ToString(video.PaddingPolicy),
 		"resolution":           aws.ToString(video.Resolution),
-		"sizing_policy":        aws.ToString(video.SizingPolicy),
+		attrSizingPolicy:       aws.ToString(video.SizingPolicy),
 	}
 
 	return []map[string]any{result}
@@ -908,10 +908,10 @@ func flattenETWatermarks(watermarks []awstypes.PresetWatermark) []map[string]any
 			"horizontal_align":  aws.ToString(w.HorizontalAlign),
 			"horizontal_offset": aws.ToString(w.HorizontalOffset),
 			names.AttrID:        aws.ToString(w.Id),
-			"max_height":        aws.ToString(w.MaxHeight),
-			"max_width":         aws.ToString(w.MaxWidth),
+			attrMaxHeight:       aws.ToString(w.MaxHeight),
+			attrMaxWidth:        aws.ToString(w.MaxWidth),
 			"opacity":           aws.ToString(w.Opacity),
-			"sizing_policy":     aws.ToString(w.SizingPolicy),
+			attrSizingPolicy:    aws.ToString(w.SizingPolicy),
 			names.AttrTarget:    aws.ToString(w.Target),
 			"vertical_align":    aws.ToString(w.VerticalAlign),
 			"vertical_offset":   aws.ToString(w.VerticalOffset),
