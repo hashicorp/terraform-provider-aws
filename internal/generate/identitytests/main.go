@@ -605,7 +605,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-			case "NoImport":
+			case "NoImport", "ExclusiveResource":
 				d.NoImport = true
 
 			case "Testing":

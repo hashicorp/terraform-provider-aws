@@ -556,7 +556,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					hasIdentifierAttribute = true
 				}
 
-			case "NoImport":
+			case "NoImport", "ExclusiveResource":
 				d.NoImport = true
 
 			case "Testing":

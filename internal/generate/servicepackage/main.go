@@ -103,6 +103,9 @@ func main() {
 
 		for key, value := range v.frameworkListResources {
 			if val, exists := v.frameworkResources[key]; exists {
+				if val.exclusiveResource {
+					g.Fatalf("Framework List Resource %q cannot be created for an @ExclusiveResource. Exclusive resources must not support list. See docs/design-decisions/no-import-support-for-exclusive-resource-types.md", key)
+				}
 				value.Name = val.Name
 				value.ResourceIdentity = val.ResourceIdentity
 				value.TransparentTagging = val.TransparentTagging
@@ -117,6 +120,9 @@ func main() {
 
 		for key, value := range v.sdkListResources {
 			if val, exists := v.sdkResources[key]; exists {
+				if val.exclusiveResource {
+					g.Fatalf("SDK List Resource %q cannot be created for an @ExclusiveResource. Exclusive resources must not support list. See docs/design-decisions/no-import-support-for-exclusive-resource-types.md", key)
+				}
 				value.Name = val.Name
 				value.ResourceIdentity = val.ResourceIdentity
 				value.TransparentTagging = val.TransparentTagging
@@ -235,6 +241,7 @@ type ResourceDatum struct {
 	TagsResourceType                  string
 	isARNFormatGlobal                 arnFormatState
 	wrappedImport                     common.TriBoolean
+	exclusiveResource                 bool
 	CustomImport                      bool
 	goImports                         []common.GoImport
 	HasIdentityFix                    bool
@@ -336,6 +343,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	if slices.Contains(keys, "IdentityAttribute") && slices.Contains(keys, "ArnIdentity") {
 		v.errs = append(v.errs, fmt.Errorf(`only one of "IdentityAttribute" and "ArnIdentity" can be specified: %s`, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 	}
+	if slices.Contains(keys, "ExclusiveResource") && (slices.Contains(keys, "WrappedImport") || slices.Contains(keys, "CustomImport") || slices.Contains(keys, "ImportIDHandler")) {
+		v.errs = append(v.errs, fmt.Errorf("%s.%s: @ExclusiveResource must not have import annotations (@WrappedImport, @CustomImport, @ImportIDHandler). Exclusive resources do not support import. See docs/design-decisions/no-import-support-for-exclusive-resource-types.md", v.packageName, v.functionName))
+	}
 
 	// Look first for per-resource annotations such as tagging and Region.
 	for _, line := range funcDecl.Doc.List {
@@ -432,6 +442,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "NoImport":
 				d.wrappedImport = common.TriBooleanFalse
+
+			case "ExclusiveResource":
+				d.wrappedImport = common.TriBooleanFalse
+				d.exclusiveResource = true
 
 			case "IdentityFix":
 				d.HasIdentityFix = true
@@ -728,7 +742,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkListResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "NoImport", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "NoImport", "ExclusiveResource", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
 				// Handled above.
 			case "ArnFormat", "IdAttrFormat", "Testing":
 				// Ignored.
