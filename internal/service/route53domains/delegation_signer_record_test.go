@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53domains_test
@@ -11,9 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53domains "github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,16 +22,16 @@ func testAccDelegationSignerRecord_basic(t *testing.T) {
 	resourceName := "aws_route53domains_delegation_signer_record.test"
 	publicKey := "M1jizbcdK5IBt7d4lRIiFTx+N06BJzaeScK215EOfa8efd2akkUWmxD5OhodZCIiRMvL5ZnStUP5UReIeUmBeA=="
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegationSignerAssociationConfig_basic(domainName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegationSignerAssociationExists(ctx, resourceName),
+					testAccCheckDelegationSignerAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "dnssec_key_id"),
 				),
 			},
@@ -52,17 +51,17 @@ func testAccDelegationSignerRecord_disappears(t *testing.T) {
 	resourceName := "aws_route53domains_delegation_signer_record.test"
 	publicKey := "M1jizbcdK5IBt7d4lRIiFTx+N06BJzaeScK215EOfa8efd2akkUWmxD5OhodZCIiRMvL5ZnStUP5UReIeUmBeA=="
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegationSignerAssociationConfig_basic(domainName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegationSignerAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53domains.ResourceDelegationSignerRecord, resourceName),
+					testAccCheckDelegationSignerAssociationExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53domains.ResourceDelegationSignerRecord, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,9 +69,9 @@ func testAccDelegationSignerRecord_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDelegationSignerAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDelegationSignerAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53DomainsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53domains_ds_association" {
@@ -81,7 +80,7 @@ func testAccCheckDelegationSignerAssociationDestroy(ctx context.Context) resourc
 
 			_, err := tfroute53domains.FindDNSSECKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -96,14 +95,14 @@ func testAccCheckDelegationSignerAssociationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckDelegationSignerAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDelegationSignerAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53DomainsClient(ctx)
 
 		_, err := tfroute53domains.FindDNSSECKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"])
 

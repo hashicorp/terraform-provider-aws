@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package globalaccelerator
 
@@ -16,14 +18,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -103,16 +105,16 @@ func (r *crossAccountAttachmentResource) Create(ctx context.Context, request res
 
 	conn := r.Meta().GlobalAcceleratorClient(ctx)
 
-	input := &globalaccelerator.CreateCrossAccountAttachmentInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input globalaccelerator.CreateCrossAccountAttachmentInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.IdempotencyToken = aws.String(id.UniqueId())
+	input.IdempotencyToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateCrossAccountAttachment(ctx, input)
+	output, err := conn.CreateCrossAccountAttachment(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Global Accelerator Cross-account Attachment", err.Error())
@@ -121,10 +123,11 @@ func (r *crossAccountAttachmentResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns.
-	data.AttachmentARN = fwflex.StringToFramework(ctx, output.CrossAccountAttachment.AttachmentArn)
-	data.CreatedTime = fwflex.TimeToFramework(ctx, output.CrossAccountAttachment.CreatedTime)
-	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.CrossAccountAttachment.LastModifiedTime)
-	data.setID()
+	attachment := output.CrossAccountAttachment
+	data.AttachmentARN = fwflex.StringToFramework(ctx, attachment.AttachmentArn)
+	data.CreatedTime = fwflex.TimeToFramework(ctx, attachment.CreatedTime)
+	data.ID = data.AttachmentARN
+	data.LastModifiedTime = fwflex.TimeToFramework(ctx, attachment.LastModifiedTime)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -136,17 +139,12 @@ func (r *crossAccountAttachmentResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().GlobalAcceleratorClient(ctx)
 
-	output, err := findCrossAccountAttachmentByARN(ctx, conn, data.ID.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, data.ID)
+	attachment, err := findCrossAccountAttachmentByARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -154,17 +152,17 @@ func (r *crossAccountAttachmentResource) Read(ctx context.Context, request resou
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Global Accelerator Cross-account Attachment (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Global Accelerator Cross-account Attachment (%s)", arn), err.Error())
 
 		return
 	}
 
 	// Normalize return value.
-	if data.Principals.IsNull() && len(output.Principals) == 0 {
-		output.Principals = nil
+	if data.Principals.IsNull() && len(attachment.Principals) == 0 {
+		attachment.Principals = nil
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, attachment, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -188,8 +186,9 @@ func (r *crossAccountAttachmentResource) Update(ctx context.Context, request res
 	if !new.Name.Equal(old.Name) ||
 		!new.Principals.Equal(old.Principals) ||
 		!new.Resources.Equal(old.Resources) {
+		arn := fwflex.StringValueFromFramework(ctx, new.ID)
 		input := &globalaccelerator.UpdateCrossAccountAttachmentInput{
-			AttachmentArn: fwflex.StringFromFramework(ctx, new.ID),
+			AttachmentArn: aws.String(arn),
 		}
 
 		if !new.Name.Equal(old.Name) {
@@ -237,7 +236,7 @@ func (r *crossAccountAttachmentResource) Update(ctx context.Context, request res
 		output, err := conn.UpdateCrossAccountAttachment(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Global Accelerator Cross-account Attachment (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating Global Accelerator Cross-account Attachment (%s)", arn), err.Error())
 
 			return
 		}
@@ -259,32 +258,37 @@ func (r *crossAccountAttachmentResource) Delete(ctx context.Context, request res
 
 	conn := r.Meta().GlobalAcceleratorClient(ctx)
 
-	_, err := conn.DeleteCrossAccountAttachment(ctx, &globalaccelerator.DeleteCrossAccountAttachmentInput{
-		AttachmentArn: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	arn := fwflex.StringValueFromFramework(ctx, data.ID)
+	input := globalaccelerator.DeleteCrossAccountAttachmentInput{
+		AttachmentArn: aws.String(arn),
+	}
+	_, err := conn.DeleteCrossAccountAttachment(ctx, &input)
 
 	if errs.IsA[*awstypes.AttachmentNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Global Accelerator Cross-account Attachment (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Global Accelerator Cross-account Attachment (%s)", arn), err.Error())
 
 		return
 	}
 }
 
 func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.Attachment, error) {
-	input := &globalaccelerator.DescribeCrossAccountAttachmentInput{
+	input := globalaccelerator.DescribeCrossAccountAttachmentInput{
 		AttachmentArn: aws.String(arn),
 	}
 
+	return findCrossAccountAttachment(ctx, conn, &input)
+}
+
+func findCrossAccountAttachment(ctx context.Context, conn *globalaccelerator.Client, input *globalaccelerator.DescribeCrossAccountAttachmentInput) (*awstypes.Attachment, error) {
 	output, err := conn.DescribeCrossAccountAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.AttachmentNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -293,7 +297,7 @@ func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerato
 	}
 
 	if output == nil || output.CrossAccountAttachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CrossAccountAttachment, nil
@@ -309,16 +313,6 @@ type crossAccountAttachmentResourceModel struct {
 	Resources        fwtypes.SetNestedObjectValueOf[resourceModel] `tfsdk:"resource"`
 	Tags             tftags.Map                                    `tfsdk:"tags"`
 	TagsAll          tftags.Map                                    `tfsdk:"tags_all"`
-}
-
-func (m *crossAccountAttachmentResourceModel) InitFromID() error {
-	m.AttachmentARN = m.ID
-
-	return nil
-}
-
-func (m *crossAccountAttachmentResourceModel) setID() {
-	m.ID = m.AttachmentARN
 }
 
 type resourceModel struct {

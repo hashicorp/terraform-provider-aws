@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -274,7 +276,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	endpoint, err := findDevEndpointByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Dev Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -516,8 +518,7 @@ func findDevEndpointByName(ctx context.Context, conn *glue.Client, name string) 
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -526,17 +527,17 @@ func findDevEndpointByName(ctx context.Context, conn *glue.Client, name string) 
 	}
 
 	if output == nil || output.DevEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DevEndpoint, nil
 }
 
-func statusDevEndpoint(ctx context.Context, conn *glue.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDevEndpoint(conn *glue.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDevEndpointByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -552,7 +553,7 @@ func waitDevEndpointCreated(ctx context.Context, conn *glue.Client, name string)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{devEndpointStatusProvisioning},
 		Target:  []string{devEndpointStatusReady},
-		Refresh: statusDevEndpoint(ctx, conn, name),
+		Refresh: statusDevEndpoint(conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
@@ -560,7 +561,7 @@ func waitDevEndpointCreated(ctx context.Context, conn *glue.Client, name string)
 
 	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
 		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err
@@ -573,7 +574,7 @@ func waitDevEndpointDeleted(ctx context.Context, conn *glue.Client, name string)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{devEndpointStatusTerminating},
 		Target:  []string{},
-		Refresh: statusDevEndpoint(ctx, conn, name),
+		Refresh: statusDevEndpoint(conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
@@ -581,7 +582,7 @@ func waitDevEndpointDeleted(ctx context.Context, conn *glue.Client, name string)
 
 	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
 		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err

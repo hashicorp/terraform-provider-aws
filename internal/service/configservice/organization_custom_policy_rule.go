@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,22 +21,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_organization_custom_policy_rule", name="Organization Custom Policy Rule")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.OrganizationConfigRule")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 func resourceOrganizationCustomPolicyRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCustomPolicyRuleCreate,
 		ReadWithoutTimeout:   resourceOrganizationCustomPolicyRuleRead,
 		UpdateWithoutTimeout: resourceOrganizationCustomPolicyRuleUpdate,
 		DeleteWithoutTimeout: resourceOrganizationCustomPolicyRuleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -145,7 +148,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutOrganizationConfigRuleInput{
+	input := configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(name),
 		OrganizationCustomPolicyRuleMetadata: &types.OrganizationCustomPolicyRuleMetadata{
 			OrganizationConfigRuleTriggerTypes: flex.ExpandStringyValueSet[types.OrganizationConfigRuleTriggerTypeNoSN](d.Get("trigger_types").(*schema.Set)),
@@ -191,7 +194,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutOrganizationConfigRule(ctx, input)
+		return conn.PutOrganizationConfigRule(ctx, &input)
 	})
 
 	if err != nil {
@@ -213,7 +216,7 @@ func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.Res
 
 	configRule, err := findOrganizationCustomPolicyRuleByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Organization Custom Policy Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -253,7 +256,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	input := &configservice.PutOrganizationConfigRuleInput{
+	input := configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
 		OrganizationCustomPolicyRuleMetadata: &types.OrganizationCustomPolicyRuleMetadata{
 			OrganizationConfigRuleTriggerTypes: flex.ExpandStringyValueSet[types.OrganizationConfigRuleTriggerTypeNoSN](d.Get("trigger_types").(*schema.Set)),
@@ -298,7 +301,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConfigRule(ctx, input)
+	_, err := conn.PutOrganizationConfigRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating ConfigService Organization Custom Policy Rule (%s): %s", d.Id(), err)
@@ -315,14 +318,15 @@ func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Organization Custom Policy Rule: %s", d.Id())
 	const (
 		timeout = 2 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Organization Custom Policy Rule: %s", d.Id())
+	input := configservice.DeleteOrganizationConfigRuleInput{
+		OrganizationConfigRuleName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
-			OrganizationConfigRuleName: aws.String(d.Id()),
-		})
+		return conn.DeleteOrganizationConfigRule(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
@@ -348,23 +352,26 @@ func findOrganizationCustomPolicyRuleByName(ctx context.Context, conn *configser
 	}
 
 	if output.OrganizationCustomPolicyRuleMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 func findOrganizationCustomRulePolicyByName(ctx context.Context, conn *configservice.Client, name string) (*string, error) {
-	input := &configservice.GetOrganizationCustomRulePolicyInput{
+	input := configservice.GetOrganizationCustomRulePolicyInput{
 		OrganizationConfigRuleName: aws.String(name),
 	}
 
+	return findOrganizationCustomRulePolicy(ctx, conn, &input)
+}
+
+func findOrganizationCustomRulePolicy(ctx context.Context, conn *configservice.Client, input *configservice.GetOrganizationCustomRulePolicyInput) (*string, error) {
 	output, err := conn.GetOrganizationCustomRulePolicy(ctx, input)
 
 	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -373,7 +380,7 @@ func findOrganizationCustomRulePolicyByName(ctx context.Context, conn *configser
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PolicyText, nil

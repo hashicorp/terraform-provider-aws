@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -266,7 +266,7 @@ func TestAccElastiCacheUserGroup_disappears(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, t, resourceName, &userGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceUserGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

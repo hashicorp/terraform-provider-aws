@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecs_service: Add support for `LINEAR` and `CANARY` deployment strategies with `deployment_configuration.linear_configuration` and `deployment_configuration.canary_configuration` blocks
+```
+
+```release-note:enhancement
+data-source/aws_ecs_service: Add `capacity_provider_strategy`, `created_at`, `created_by`, `deployment_configuration`, `deployment_controller`, `deployments`, `enable_ecs_managed_tags`, `enable_execute_command`, `events`, `health_check_grace_period_seconds`, `iam_role`, `network_configuration`, `ordered_placement_strategy`, `pending_count`, `placement_constraints`, `platform_family`, `platform_version`, `propagate_tags`, `running_count`, `service_connect_configuration`, `service_registries`, `status`, and `task_sets` attributes
+```

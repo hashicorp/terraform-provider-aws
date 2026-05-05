@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssoadmin
 
@@ -16,13 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -144,7 +146,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 
 	permissionSet, err := findPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Permission Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -271,8 +273,7 @@ func findPermissionSetByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, p
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -281,7 +282,7 @@ func findPermissionSetByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, p
 	}
 
 	if output == nil || output.PermissionSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PermissionSet, nil
@@ -317,8 +318,7 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Cli
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -327,17 +327,17 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Cli
 	}
 
 	if output == nil || output.PermissionSetProvisioningStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PermissionSetProvisioningStatus, nil
 }
 
-func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPermissionSetProvisioning(conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPermissionSetProvisioningStatus(ctx, conn, instanceARN, requestID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -353,7 +353,7 @@ func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.Client, in
 	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusValuesInProgress),
 		Target:  enum.Slice(awstypes.StatusValuesSucceeded),
-		Refresh: statusPermissionSetProvisioning(ctx, conn, instanceARN, requestID),
+		Refresh: statusPermissionSetProvisioning(conn, instanceARN, requestID),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -361,7 +361,7 @@ func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.Client, in
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.PermissionSetProvisioningStatus); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

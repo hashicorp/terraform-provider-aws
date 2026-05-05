@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_docdb_cluster: Add `network_type` argument
+```
+
+```release-note:enhancement
+resource/aws_docdb_subnet_group: Add `supported_network_types` attribute
+```

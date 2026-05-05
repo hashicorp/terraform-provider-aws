@@ -34,9 +34,11 @@ This data source supports the following arguments:
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Endpoint to retrieve.
 * `service_name` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `service_region` - (Optional) AWS region of the VPC Endpoint Service. Applicable for endpoints of type `Interface`.
 * `state` - (Optional) State of the specific VPC Endpoint to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the specific VPC Endpoint to retrieve.
+* `vpc_endpoint_type` - (Optional) VPC Endpoint type. Valid values are `Interface`, `Gateway`, `GatewayLoadBalancer`, `Resource`, and `ServiceNetwork`.
 * `vpc_id` - (Optional) ID of the VPC in which the specific VPC Endpoint is used.
 
 The arguments of this data source act as filters for querying the available VPC endpoints.
@@ -67,9 +69,7 @@ This data source exports the following attributes in addition to the arguments a
 * `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `route_table_ids` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
 * `security_group_ids` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
-* `service_region` - The AWS region of the VPC Endpoint Service. Applicable for endpoints of type `Interface`.
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
-* `vpc_endpoint_type` - VPC Endpoint type, `Gateway` or `Interface`.
 
 ### `dns_entry` Block
 
@@ -84,6 +84,8 @@ DNS options (for `dns_options`) support the following attributes:
 
 * `dns_record_ip_type` - The DNS records created for the endpoint.
 * `private_dns_only_for_inbound_resolver_endpoint` - Indicates whether to enable private DNS only for inbound endpoints.
+* `private_dns_preference` - Preference for which private domains have a private hosted zone created for and associated with the specified VPC.
+* `private_dns_specified_domains` - List of private domains to create private hosted zones for and associate with the specified VPC.
 
 ## Timeouts
 

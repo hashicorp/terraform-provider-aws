@@ -28,14 +28,13 @@ See the Amazon S3 User Guide on [setting lifecycle configuration on a bucket](ht
 
 ### With neither a filter nor prefix specified
 
-The Lifecycle rule applies to a subset of objects based on the key name prefix (`""`).
+When you don't specify a filter or prefix, the lifecycle rule applies to all objects in the bucket. This has the same effect as setting an empty `filter` element.
 
-This configuration is intended to replicate the default behavior of the `lifecycle_rule`
-parameter in the Terraform AWS Provider `aws_s3_bucket` resource prior to `v4.0`.
+This configuration maintains compatibility with the default behavior of the `lifecycle_rule` parameter from the `aws_s3_bucket` resource in versions prior to v4.0 of the Terraform AWS Provider.
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "rule-1"
@@ -53,7 +52,7 @@ The Lifecycle rule applies to all objects in the bucket.
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "rule-1"
@@ -73,7 +72,7 @@ The Lifecycle rule applies to a subset of objects based on the key name prefix (
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "rule-1"
@@ -93,7 +92,7 @@ If you want to apply a Lifecycle action to a subset of objects based on differen
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "rule-1"
@@ -127,7 +126,7 @@ The Lifecycle rule specifies a filter based on a tag key and value. The rule the
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "rule-1"
@@ -152,7 +151,7 @@ The Lifecycle rule directs Amazon S3 to perform lifecycle actions on objects wit
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "rule-1"
@@ -179,7 +178,7 @@ The Lifecycle rule directs Amazon S3 to perform lifecycle actions on objects wit
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "rule-1"
@@ -207,7 +206,7 @@ Object size values are in bytes. Maximum filter size is 5TB. Amazon S3 applies a
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "Allow small object transitions"
@@ -232,7 +231,7 @@ The `object_size_greater_than` must be less than the `object_size_less_than`. No
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "rule-1"
@@ -260,12 +259,12 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_acl" "bucket_acl" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
   acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "bucket-config" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.bucket
 
   rule {
     id = "log"
@@ -318,12 +317,12 @@ resource "aws_s3_bucket" "versioning_bucket" {
 }
 
 resource "aws_s3_bucket_acl" "versioning_bucket_acl" {
-  bucket = aws_s3_bucket.versioning_bucket.id
+  bucket = aws_s3_bucket.versioning_bucket.bucket
   acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = aws_s3_bucket.versioning_bucket.id
+  bucket = aws_s3_bucket.versioning_bucket.bucket
   versioning_configuration {
     status = "Enabled"
   }
@@ -333,7 +332,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-config" {
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.versioning]
 
-  bucket = aws_s3_bucket.versioning_bucket.id
+  bucket = aws_s3_bucket.versioning_bucket.bucket
 
   rule {
     id = "config"
@@ -367,7 +366,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
-* `expected_bucket_owner` - (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
+* `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
 * `rule` - (Required) List of configuration blocks describing the rules managing the replication. [See below](#rule).
 * `transition_default_minimum_object_size` - (Optional) The default minimum object size behavior applied to the lifecycle configuration. Valid values: `all_storage_classes_128K` (default), `varies_by_storage_class`. To customize the minimum object size for any transition you can add a `filter` that specifies a custom `object_size_greater_than` or `object_size_less_than` value. Custom filters always take precedence over the default transition behavior.
 
@@ -384,16 +383,12 @@ The `rule` configuration block supports the following arguments:
 * `expiration` - (Optional) Configuration block that specifies the expiration for the lifecycle of the object in the form of date, days and, whether the object has a delete marker. [See below](#expiration).
 * `filter` - (Optional) Configuration block used to identify objects that a Lifecycle Rule applies to.
   [See below](#filter).
-  If not specified, the `rule` will default to using `prefix`.
-  One of `filter` or `prefix` should be specified.
 * `id` - (Required) Unique identifier for the rule. The value cannot be longer than 255 characters.
 * `noncurrent_version_expiration` - (Optional) Configuration block that specifies when noncurrent object versions expire. [See below](#noncurrent_version_expiration).
 * `noncurrent_version_transition` - (Optional) Set of configuration blocks that specify the transition rule for the lifecycle rule that describes when noncurrent objects transition to a specific storage class. [See below](#noncurrent_version_transition).
 * `prefix` - (Optional) **DEPRECATED** Use `filter` instead.
   This has been deprecated by Amazon S3.
   Prefix identifying one or more objects to which the rule applies.
-  Defaults to an empty string (`""`) if `filter` is not specified.
-  One of `prefix` or `filter` should be specified.
 * `status` - (Required) Whether the rule is currently being applied. Valid values: `Enabled` or `Disabled`.
 * `transition` - (Optional) Set of configuration blocks that specify when an Amazon S3 object transitions to a specified storage class. [See below](#transition).
 
@@ -473,6 +468,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_lifecycle_configuration.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an S3 bucket lifecycle configuration using the `bucket` or the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 

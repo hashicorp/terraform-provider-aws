@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -12,29 +14,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_delivery_channel", name="Delivery Channel")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.DeliveryChannel")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceDeliveryChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeliveryChannelPut,
 		ReadWithoutTimeout:   resourceDeliveryChannelRead,
 		UpdateWithoutTimeout: resourceDeliveryChannelPut,
 		DeleteWithoutTimeout: resourceDeliveryChannelDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
@@ -85,7 +87,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutDeliveryChannelInput{
+	input := configservice.PutDeliveryChannelInput{
 		DeliveryChannel: &types.DeliveryChannel{
 			Name:         aws.String(name),
 			S3BucketName: aws.String(d.Get(names.AttrS3BucketName).(string)),
@@ -115,7 +117,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.InsufficientDeliveryPolicyException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutDeliveryChannel(ctx, input)
+		return conn.PutDeliveryChannel(ctx, &input)
 	})
 
 	if err != nil {
@@ -135,7 +137,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 
 	channel, err := findDeliveryChannelByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Delivery Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -161,14 +163,15 @@ func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Delivery Channel: %s", d.Id())
 	const (
 		timeout = 30 * time.Second
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Delivery Channel: %s", d.Id())
+	input := configservice.DeleteDeliveryChannelInput{
+		DeliveryChannelName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.LastDeliveryChannelDeleteFailedException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteDeliveryChannel(ctx, &configservice.DeleteDeliveryChannelInput{
-			DeliveryChannelName: aws.String(d.Id()),
-		})
+		return conn.DeleteDeliveryChannel(ctx, &input)
 	}, "there is a running configuration recorder")
 
 	if errs.IsA[*types.NoSuchDeliveryChannelException](err) {
@@ -183,11 +186,11 @@ func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findDeliveryChannelByName(ctx context.Context, conn *configservice.Client, name string) (*types.DeliveryChannel, error) {
-	input := &configservice.DescribeDeliveryChannelsInput{
+	input := configservice.DescribeDeliveryChannelsInput{
 		DeliveryChannelNames: []string{name},
 	}
 
-	return findDeliveryChannel(ctx, conn, input)
+	return findDeliveryChannel(ctx, conn, &input)
 }
 
 func findDeliveryChannel(ctx context.Context, conn *configservice.Client, input *configservice.DescribeDeliveryChannelsInput) (*types.DeliveryChannel, error) {
@@ -205,8 +208,7 @@ func findDeliveryChannels(ctx context.Context, conn *configservice.Client, input
 
 	if errs.IsA[*types.NoSuchDeliveryChannelException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -215,7 +217,7 @@ func findDeliveryChannels(ctx context.Context, conn *configservice.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryChannels, nil

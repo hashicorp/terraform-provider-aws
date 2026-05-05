@@ -1,9 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
 
 import (
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,6 +27,10 @@ func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInp
 
 			if v, ok := group["internal_user_database_enabled"].(bool); ok {
 				config.InternalUserDatabaseEnabled = aws.Bool(v)
+			}
+
+			if v, ok := group["jwt_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+				config.JWTOptions = expandJWTOptionsInput(v[0].(map[string]any))
 			}
 
 			if v, ok := group["master_user_options"].([]any); ok {
@@ -52,6 +57,98 @@ func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInp
 	}
 
 	return &config
+}
+
+func expandJWTOptionsInput(tfMap map[string]any) *awstypes.JWTOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.JWTOptionsInput{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrPublicKey].(string); ok && v != "" {
+		// AWS expects the public key without newlines
+		publicKey := strings.ReplaceAll(v, "\n", "")
+		apiObject.PublicKey = aws.String(publicKey)
+	}
+
+	if v, ok := tfMap["subject_key"].(string); ok && v != "" {
+		apiObject.SubjectKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["roles_key"].(string); ok && v != "" {
+		apiObject.RolesKey = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandAIMLOptionsInput(tfMap map[string]any) *awstypes.AIMLOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AIMLOptionsInput{}
+
+	if v, ok := tfMap["natural_language_query_generation_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NaturalLanguageQueryGenerationOptions = expandNaturalLanguageQueryGenerationOptionsInput(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3_vectors_engine"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3VectorsEngine = expandS3VectorsEngine(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["serverless_vector_acceleration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ServerlessVectorAcceleration = expandServerlessVectorAcceleration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandNaturalLanguageQueryGenerationOptionsInput(tfMap map[string]any) *awstypes.NaturalLanguageQueryGenerationOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NaturalLanguageQueryGenerationOptionsInput{}
+
+	if v, ok := tfMap["desired_state"].(string); ok && v != "" {
+		apiObject.DesiredState = awstypes.NaturalLanguageQueryGenerationDesiredState(v)
+	}
+
+	return apiObject
+}
+
+func expandS3VectorsEngine(tfMap map[string]any) *awstypes.S3VectorsEngine {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.S3VectorsEngine{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandServerlessVectorAcceleration(tfMap map[string]any) *awstypes.ServerlessVectorAcceleration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ServerlessVectorAcceleration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
 }
 
 func expandAutoTuneOptions(tfMap map[string]any) *awstypes.AutoTuneOptions {
@@ -245,7 +342,95 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSe
 		m["internal_user_database_enabled"] = aws.ToBool(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
+	if advancedSecurityOptions.JWTOptions != nil && aws.ToBool(advancedSecurityOptions.JWTOptions.Enabled) {
+		m["jwt_options"] = flattenJWTOptionsOutput(advancedSecurityOptions.JWTOptions)
+	}
+
 	return []map[string]any{m}
+}
+
+func flattenJWTOptionsOutput(apiObject *awstypes.JWTOptionsOutput) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if apiObject.Enabled != nil {
+		m[names.AttrEnabled] = aws.ToBool(apiObject.Enabled)
+	}
+
+	if apiObject.PublicKey != nil {
+		m[names.AttrPublicKey] = aws.ToString(apiObject.PublicKey)
+	}
+
+	if apiObject.SubjectKey != nil {
+		m["subject_key"] = aws.ToString(apiObject.SubjectKey)
+	}
+
+	if apiObject.RolesKey != nil {
+		m["roles_key"] = aws.ToString(apiObject.RolesKey)
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenAIMLOptionsOutput(apiObject *awstypes.AIMLOptionsOutput) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.NaturalLanguageQueryGenerationOptions; v != nil {
+		tfMap["natural_language_query_generation_options"] = []any{flattenNaturalLanguageQueryGenerationOptionsOutput(v)}
+	}
+
+	if v := apiObject.S3VectorsEngine; v != nil {
+		tfMap["s3_vectors_engine"] = []any{flattenS3VectorsEngine(v)}
+	}
+
+	if v := apiObject.ServerlessVectorAcceleration; v != nil {
+		tfMap["serverless_vector_acceleration"] = []any{flattenServerlessVectorAcceleration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenNaturalLanguageQueryGenerationOptionsOutput(apiObject *awstypes.NaturalLanguageQueryGenerationOptionsOutput) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"desired_state": apiObject.DesiredState,
+	}
+
+	return tfMap
+}
+
+func flattenS3VectorsEngine(apiObject *awstypes.S3VectorsEngine) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	return tfMap
+}
+
+func flattenServerlessVectorAcceleration(apiObject *awstypes.ServerlessVectorAcceleration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	return tfMap
 }
 
 func flattenAutoTuneOptions(autoTuneOptions *awstypes.AutoTuneOptions) map[string]any {
@@ -347,6 +532,65 @@ func getMasterUserOptions(d *schema.ResourceData) []any {
 		}
 	}
 	return []any{}
+}
+
+func expandIdentityCenterOptions(tfList []any) *awstypes.IdentityCenterOptionsInput {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	if tfList[0] == nil {
+		return &awstypes.IdentityCenterOptionsInput{}
+	}
+
+	apiObject := &awstypes.IdentityCenterOptionsInput{}
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap["enabled_api_access"].(bool); ok {
+		apiObject.EnabledAPIAccess = aws.Bool(v)
+	}
+
+	if apiObject.EnabledAPIAccess != nil && aws.ToBool(apiObject.EnabledAPIAccess) {
+		if v, ok := tfMap["identity_center_instance_arn"].(string); ok && v != "" {
+			apiObject.IdentityCenterInstanceARN = aws.String(v)
+		}
+
+		if v, ok := tfMap["roles_key"].(string); ok && v != "" {
+			apiObject.RolesKey = awstypes.RolesKeyIdCOption(v)
+		}
+
+		if v, ok := tfMap["subject_key"].(string); ok && v != "" {
+			apiObject.SubjectKey = awstypes.SubjectKeyIdCOption(v)
+		}
+	}
+
+	return apiObject
+}
+
+func flattenIdentityCenterOptions(apiObject *awstypes.IdentityCenterOptions) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnabledAPIAccess; v != nil {
+		tfMap["enabled_api_access"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.IdentityCenterInstanceARN; v != nil {
+		tfMap["identity_center_instance_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.RolesKey; v != "" {
+		tfMap["roles_key"] = v
+	}
+
+	if v := apiObject.SubjectKey; v != "" {
+		tfMap["subject_key"] = v
+	}
+
+	return []any{tfMap}
 }
 
 func expandLogPublishingOptions(tfList []any) map[string]awstypes.LogPublishingOption {

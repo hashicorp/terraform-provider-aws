@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # EKS Getting Started Guide Configuration
 
 This is the full configuration from https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html

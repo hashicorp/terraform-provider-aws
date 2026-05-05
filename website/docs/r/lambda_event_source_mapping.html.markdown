@@ -131,8 +131,9 @@ resource "aws_lambda_event_source_mapping" "example" {
   }
 
   provisioned_poller_config {
-    maximum_pollers = 100
-    minimum_pollers = 10
+    maximum_pollers   = 100
+    minimum_pollers   = 10
+    poller_group_name = "group-123"
   }
 }
 ```
@@ -234,6 +235,7 @@ The following arguments are optional:
 ### amazon_managed_kafka_event_source_config Configuration Block
 
 * `consumer_group_id` - (Optional) Kafka consumer group ID between 1 and 200 characters for use when creating this event source mapping. If one is not specified, this value will be automatically generated. See [AmazonManagedKafkaEventSourceConfig Syntax](https://docs.aws.amazon.com/lambda/latest/dg/API_AmazonManagedKafkaEventSourceConfig.html).
+* `schema_registry_config` - (Optional) Block for a Kafka schema registry setting. [See below](#schema_registry_config-configuration-block).
 
 ### destination_config Configuration Block
 
@@ -241,7 +243,7 @@ The following arguments are optional:
 
 #### destination_config on_failure Configuration Block
 
-* `destination_arn` - (Required) ARN of the destination resource.
+* `destination_arn` - (Required) ARN of the destination resource, or `kafka://your-topic-name` for Amazon MSK and self-managed Apache Kafka destinations.
 
 ### document_db_event_source_config Configuration Block
 
@@ -265,6 +267,7 @@ The following arguments are optional:
 
 * `maximum_pollers` - (Optional) Maximum number of event pollers this event source can scale up to. The range is between 1 and 2000.
 * `minimum_pollers` - (Optional) Minimum number of event pollers this event source can scale down to. The range is between 1 and 200.
+* `poller_group_name` - (Optional) The name of the provisioned poller group used to group multiple ESMs within the event source's VPC to share Event Poller Unit (EPU) capacity. You can use this option to optimize Provisioned mode costs for your ESMs. You can group up to 100 ESMs per poller group and aggregate maximum pollers across all ESMs in a group cannot exceed 2000.
 
 ### scaling_config Configuration Block
 
@@ -277,11 +280,22 @@ The following arguments are optional:
 ### self_managed_kafka_event_source_config Configuration Block
 
 * `consumer_group_id` - (Optional) Kafka consumer group ID between 1 and 200 characters for use when creating this event source mapping. If one is not specified, this value will be automatically generated. See [SelfManagedKafkaEventSourceConfig Syntax](https://docs.aws.amazon.com/lambda/latest/dg/API_SelfManagedKafkaEventSourceConfig.html).
+* `schema_registry_config` - (Optional) Block for a Kafka schema registry setting. [See below](#schema_registry_config-configuration-block).
 
 ### source_access_configuration Configuration Block
 
 * `type` - (Required) Type of authentication protocol, VPC components, or virtual host for your event source. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/api/API_SourceAccessConfiguration.html).
 * `uri` - (Required) URI for this configuration. For type `VPC_SUBNET` the value should be `subnet:subnet_id` where `subnet_id` is the value you would find in an aws_subnet resource's id attribute. For type `VPC_SECURITY_GROUP` the value should be `security_group:security_group_id` where `security_group_id` is the value you would find in an aws_security_group resource's id attribute.
+
+### schema_registry_config Configuration Block
+
+* `access_config` - (Optional) Configuration block for authentication Lambda uses to access the schema registry.
+    * `type` - (Optional) Authentication type Lambda uses to access the schema registry.
+    * `uri` - (Optional) URI of the secret (Secrets Manager secret ARN) used to authenticate with the schema registry.
+* `event_record_format` - (Optional) Record format that Lambda delivers to the function after schema validation. Valid values: `JSON`, `SOURCE`.
+* `schema_registry_uri` - (Optional) URI of the schema registry. For AWS Glue schema registries, use the ARN of the registry. For Confluent schema registries, use the registry URL.
+* `schema_validation_config` - (Optional) Repeatable block that defines schema validation settings. These specify the message attributes that Lambda should validate and filter using the schema registry.
+    * `attribute` - (Optional) Message attribute to validate. Valid values: `KEY`, `VALUE`.
 
 ## Attribute Reference
 

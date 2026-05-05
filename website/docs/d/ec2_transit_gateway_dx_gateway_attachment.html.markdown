@@ -10,6 +10,8 @@ description: |-
 
 Get information on an EC2 Transit Gateway's attachment to a Direct Connect Gateway.
 
+!> **Warning:** Using the `aws_ec2_transit_gateway_dx_gateway_attachment` data source in combination with  `aws_ec2_transit_gateway_route_table_propagation` or `aws_ec2_transit_gateway_route_table_association` may result in lost connectivity due to unnecessary resource re-creation. To avoid this, use the `transit_gateway_attachment_id` attribute directly from the `aws_dx_gateway_association` resource. For example, `transit_gateway_attachment_id  = aws_dx_gateway_association.example.transit_gateway_attachment_id`.
+
 ## Example Usage
 
 ### By Transit Gateway and Direct Connect Gateway Identifiers

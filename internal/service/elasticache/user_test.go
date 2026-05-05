@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -335,7 +335,7 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -379,6 +379,47 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUser_passwordsWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user1, user2 awstypes.User
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_passwordsWriteOnly(rName, "password123456789", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user1),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+					"passwords_wo",
+					"passwords_wo_version",
+				},
+			},
+			// Update password by incrementing version
+			{
+				Config: testAccUserConfig_passwordsWriteOnly(rName, "newpassword1234567", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user2),
 				),
 			},
 		},
@@ -558,4 +599,17 @@ resource "aws_elasticache_user" "test" {
   }
 }
 `, rName, tagKey, tagValue)
+}
+
+func testAccUserConfig_passwordsWriteOnly(rName, password string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id              = %[1]q
+  user_name            = "username1"
+  access_string        = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine               = "redis"
+  passwords_wo         = %[2]q
+  passwords_wo_version = %[3]d
+}
+`, rName, password, version)
 }

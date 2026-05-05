@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -11,27 +13,32 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_product_subscription", name="Product Subscription")
+// @IdentityAttribute("product_arn")
+// @IdentityAttribute("arn")
+// @ImportIDHandler("productSubscriptionImportID")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
+// Custom setup steps.
+// @Testing(identityTest=false)
 func resourceProductSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductSubscriptionCreate,
 		ReadWithoutTimeout:   resourceProductSubscriptionRead,
 		DeleteWithoutTimeout: resourceProductSubscriptionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -48,30 +55,22 @@ func resourceProductSubscription() *schema.Resource {
 	}
 }
 
-const (
-	productSubscriptionResourceIDPartCount = 2
-)
-
 func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	productARN := d.Get("product_arn").(string)
-	input := &securityhub.EnableImportFindingsForProductInput{
+	input := securityhub.EnableImportFindingsForProductInput{
 		ProductArn: aws.String(productARN),
 	}
 
-	output, err := conn.EnableImportFindingsForProduct(ctx, input)
+	output, err := conn.EnableImportFindingsForProduct(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling Security Hub Product Subscription (%s): %s", productARN, err)
 	}
 
-	id, err := flex.FlattenResourceId([]string{productARN, aws.ToString(output.ProductSubscriptionArn)}, productSubscriptionResourceIDPartCount, false)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.SetId(id)
+	d.SetId(productSubscriptionCreateResourceID(productARN, aws.ToString(output.ProductSubscriptionArn)))
 
 	return append(diags, resourceProductSubscriptionRead(ctx, d, meta)...)
 }
@@ -80,16 +79,14 @@ func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	parts, err := flex.ExpandResourceId(d.Id(), productSubscriptionResourceIDPartCount, false)
+	productARN, productSubscriptionARN, err := productSubscriptionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	productARN, productSubscriptionARN := parts[0], parts[1]
-
 	_, err = findProductSubscriptionByARN(ctx, conn, productSubscriptionARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Product Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -109,17 +106,16 @@ func resourceProductSubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	parts, err := flex.ExpandResourceId(d.Id(), productSubscriptionResourceIDPartCount, false)
+	_, productSubscriptionARN, err := productSubscriptionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	productSubscriptionARN := parts[1]
-
 	log.Printf("[DEBUG] Deleting Security Hub Product Subscription: %s", d.Id())
-	_, err = conn.DisableImportFindingsForProduct(ctx, &securityhub.DisableImportFindingsForProductInput{
+	input := securityhub.DisableImportFindingsForProductInput{
 		ProductSubscriptionArn: aws.String(productSubscriptionARN),
-	})
+	}
+	_, err = conn.DisableImportFindingsForProduct(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
@@ -159,8 +155,7 @@ func findProductSubscriptions(ctx context.Context, conn *securityhub.Client, inp
 
 		if tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -176,4 +171,46 @@ func findProductSubscriptions(ctx context.Context, conn *securityhub.Client, inp
 	}
 
 	return output, nil
+}
+
+const (
+	productSubscriptionResourceIDPartCount = 2
+)
+
+func productSubscriptionCreateResourceID(productARN, productSubscriptionARN string) string {
+	id, _ := flex.FlattenResourceId([]string{productARN, productSubscriptionARN}, productSubscriptionResourceIDPartCount, false)
+	return id
+}
+
+func productSubscriptionParseResourceID(id string) (string, string, error) {
+	parts, err := flex.ExpandResourceId(id, productSubscriptionResourceIDPartCount, false)
+	if err != nil {
+		return "", "", err
+	}
+
+	return parts[0], parts[1], nil
+}
+
+var (
+	_ inttypes.SDKv2ImportID = productSubscriptionImportID{}
+)
+
+type productSubscriptionImportID struct{}
+
+func (productSubscriptionImportID) Parse(id string) (string, map[string]any, error) {
+	productARN, productSubscriptionARN, err := productSubscriptionParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrARN: productSubscriptionARN,
+		"product_arn": productARN,
+	}
+
+	return id, result, nil
+}
+
+func (productSubscriptionImportID) Create(d *schema.ResourceData) string {
+	return productSubscriptionCreateResourceID(d.Get("product_arn").(string), d.Get(names.AttrARN).(string))
 }

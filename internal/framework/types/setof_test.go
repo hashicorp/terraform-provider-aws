@@ -1,10 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -18,7 +17,7 @@ import (
 func TestSetOfStringFromTerraform(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	tests := map[string]struct {
 		val      tftypes.Value
 		expected attr.Value
@@ -92,7 +91,7 @@ func TestSetOfValidateAttribute(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx := t.Context()
 			req := xattr.ValidateAttributeRequest{}
 			resp := xattr.ValidateAttributeResponse{}
 
@@ -104,6 +103,41 @@ func TestSetOfValidateAttribute(t *testing.T) {
 			eval.ValidateAttribute(ctx, req, &resp)
 			if resp.Diagnostics.HasError() != test.expectError {
 				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
+			}
+		})
+	}
+}
+
+func TestSetOfIsFullyKnown(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	tests := map[string]struct {
+		val          fwtypes.SetOfString
+		isFullyKnown bool
+	}{
+		"null value": {
+			val:          fwtypes.NewSetValueOfNull[types.String](ctx),
+			isFullyKnown: true,
+		},
+		"unknown value": {
+			val: fwtypes.NewSetValueOfUnknown[types.String](ctx),
+		},
+		"known elements": {
+			val:          fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{types.StringValue("a"), types.StringNull(), types.StringValue("b")}),
+			isFullyKnown: true,
+		},
+		"unknown elements": {
+			val: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{types.StringValue("a"), types.StringUnknown(), types.StringValue("b")}),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := test.val.IsFullyKnown(), test.isFullyKnown; got != want {
+				t.Errorf("IsFullyKnown() = %t, want = %t", got, want)
 			}
 		})
 	}

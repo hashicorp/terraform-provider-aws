@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_directory_bucket: Fix plan-time `AWS resource not found during refresh` warnings causing resource replacement when `ReadOnly` `s3express:SessionMode` is enforced
+```

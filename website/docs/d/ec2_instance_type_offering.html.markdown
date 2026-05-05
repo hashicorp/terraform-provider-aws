@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - EC2 Instance Type.
 * `instance_type` - EC2 Instance Type.
+* `location` - Identifier for the location.
 
 ## Timeouts
 

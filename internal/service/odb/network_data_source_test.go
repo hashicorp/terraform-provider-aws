@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -12,7 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,7 +51,7 @@ func TestAccODBNetworkDataSource_basic(t *testing.T) {
 		CheckDestroy:             oracleDBNetworkDataSourceTestEntity.testAccCheckNetworkDataSourceDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: oracleDBNetworkDataSourceTestEntity.basicNetworkDataSource(rName),
+				Config: oracleDBNetworkDataSourceTestEntity.basicNetworkDataSource(rName, endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(networkResource, names.AttrID, networkDataSource, names.AttrID),
 				),
@@ -67,7 +69,7 @@ func (oracleDBNetworkDataSourceTest) testAccCheckNetworkDataSourceDestroyed(ctx 
 				continue
 			}
 			_, err := oracleDBNetworkDataSourceTestEntity.findNetwork(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -89,7 +91,7 @@ func (oracleDBNetworkDataSourceTest) findNetwork(ctx context.Context, conn *odb.
 	out, err := conn.GetOdbNetwork(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -99,25 +101,28 @@ func (oracleDBNetworkDataSourceTest) findNetwork(ctx context.Context, conn *odb.
 	}
 
 	if out == nil || out.OdbNetwork == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.OdbNetwork, nil
 }
 
-func (oracleDBNetworkDataSourceTest) basicNetworkDataSource(rName string) string {
+func (oracleDBNetworkDataSourceTest) basicNetworkDataSource(rName, rRegion string) string {
 	networkRes := fmt.Sprintf(`
 
 
 
 
 resource "aws_odb_network" "test_resource" {
-  display_name         = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access            = "DISABLED"
-  zero_etl_access      = "DISABLED"
+  display_name                           = %[1]q
+  availability_zone_id                   = "use1-az6"
+  client_subnet_cidr                     = "10.2.0.0/24"
+  backup_subnet_cidr                     = "10.2.1.0/24"
+  s3_access                              = "DISABLED"
+  zero_etl_access                        = "DISABLED"
+  sts_access                             = "DISABLED"
+  kms_access                             = "DISABLED"
+  cross_region_s3_restore_sources_access = [%[2]q]
   tags = {
     "env" = "dev"
   }
@@ -129,7 +134,7 @@ data "aws_odb_network" "test" {
 }
 
 
-`, rName)
+`, rName, rRegion)
 	return networkRes
 }
 func (oracleDBNetworkDataSourceTest) testAccNetworkDataSourcePreCheck(ctx context.Context, t *testing.T) {

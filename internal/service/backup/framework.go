@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package backup
 
@@ -12,14 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,7 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeFrameworkOutput")
-// @Testing(generator="randomFrameworkName()")
+// @Testing(generator="randomFrameworkName(t)")
 func resourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,
@@ -154,7 +156,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta a
 		FrameworkControls: expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 		FrameworkName:     aws.String(name),
 		FrameworkTags:     getTagsIn(ctx),
-		IdempotencyToken:  aws.String(sdkid.UniqueId()),
+		IdempotencyToken:  aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -182,7 +184,7 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	output, err := findFrameworkByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Framework (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -214,7 +216,7 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			FrameworkControls:    expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 			FrameworkDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			FrameworkName:        aws.String(d.Id()),
-			IdempotencyToken:     aws.String(sdkid.UniqueId()),
+			IdempotencyToken:     aws.String(create.UniqueId(ctx)),
 		}
 
 		_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
@@ -272,8 +274,7 @@ func findFramework(ctx context.Context, conn *backup.Client, input *backup.Descr
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -282,17 +283,17 @@ func findFramework(ctx context.Context, conn *backup.Client, input *backup.Descr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusFramework(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFramework(conn *backup.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFrameworkByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -316,7 +317,7 @@ func waitFrameworkCreated(ctx context.Context, conn *backup.Client, name string,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusCreationInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
-		Refresh: statusFramework(ctx, conn, name),
+		Refresh: statusFramework(conn, name),
 		Timeout: timeout,
 	}
 
@@ -333,7 +334,7 @@ func waitFrameworkUpdated(ctx context.Context, conn *backup.Client, name string,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusUpdateInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
-		Refresh: statusFramework(ctx, conn, name),
+		Refresh: statusFramework(conn, name),
 		Timeout: timeout,
 	}
 
@@ -350,7 +351,7 @@ func waitFrameworkDeleted(ctx context.Context, conn *backup.Client, name string,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusDeletionInProgress},
 		Target:  []string{},
-		Refresh: statusFramework(ctx, conn, name),
+		Refresh: statusFramework(conn, name),
 		Timeout: timeout,
 	}
 

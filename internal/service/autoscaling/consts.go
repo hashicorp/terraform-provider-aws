@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	TagResourceTypeGroup = `auto-scaling-group`
+	tagResourceTypeGroup = `auto-scaling-group`
 )
 
 const (
@@ -28,24 +28,24 @@ const (
 )
 
 const (
-	InstanceHealthStatusHealthy   = "Healthy"
-	InstanceHealthStatusUnhealthy = "Unhealthy"
+	instanceHealthStatusHealthy   = "Healthy"
+	instanceHealthStatusUnhealthy = "Unhealthy"
 )
 
 const (
-	LoadBalancerStateAdding    = "Adding"
-	LoadBalancerStateAdded     = "Added"
-	LoadBalancerStateInService = "InService"
-	LoadBalancerStateRemoving  = "Removing"
-	LoadBalancerStateRemoved   = "Removed"
+	loadBalancerStateAdding    = "Adding"
+	loadBalancerStateAdded     = "Added"
+	loadBalancerStateInService = "InService"
+	loadBalancerStateRemoving  = "Removing"
+	loadBalancerStateRemoved   = "Removed"
 )
 
 const (
-	LoadBalancerTargetGroupStateAdding    = "Adding"
-	LoadBalancerTargetGroupStateAdded     = "Added"
-	LoadBalancerTargetGroupStateInService = "InService"
-	LoadBalancerTargetGroupStateRemoving  = "Removing"
-	LoadBalancerTargetGroupStateRemoved   = "Removed"
+	loadBalancerTargetGroupStateAdding    = "Adding"
+	loadBalancerTargetGroupStateAdded     = "Added"
+	loadBalancerTargetGroupStateInService = "InService"
+	loadBalancerTargetGroupStateRemoving  = "Removing"
+	loadBalancerTargetGroupStateRemoved   = "Removed"
 )
 
 type desiredCapacityType string
@@ -83,11 +83,11 @@ func (policyType) Values() []policyType {
 }
 
 const (
-	TrafficSourceStateAdding    = "Adding"
-	TrafficSourceStateAdded     = "Added"
-	TrafficSourceStateInService = "InService"
-	TrafficSourceStateRemoving  = "Removing"
-	TrafficSourceStateRemoved   = "Removed"
+	trafficSourceStateAdding    = "Adding"
+	trafficSourceStateAdded     = "Added"
+	trafficSourceStateInService = "InService"
+	trafficSourceStateRemoving  = "Removing"
+	trafficSourceStateRemoved   = "Removed"
 )
 
 const (

@@ -1,29 +1,32 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -71,6 +74,13 @@ func resourceAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
+			},
+			"calendar_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"compliance_severity": {
 				Type:             schema.TypeString,
@@ -191,6 +201,10 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AutomationTargetParameterName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("calendar_names"); ok && v.(*schema.Set).Len() > 0 {
+		input.CalendarNames = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("compliance_severity"); ok {
 		input.ComplianceSeverity = awstypes.AssociationComplianceSeverity(v.(string))
 	}
@@ -247,11 +261,12 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.SSMClient(ctx)
 
-	association, err := findAssociationByID(ctx, conn, d.Id())
+	out, err := findAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -261,33 +276,8 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading SSM Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "association/" + aws.ToString(association.AssociationId),
-	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrAssociationID, association.AssociationId)
-	d.Set("association_name", association.AssociationName)
-	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
-	d.Set("compliance_severity", association.ComplianceSeverity)
-	d.Set("document_version", association.DocumentVersion)
-	d.Set("max_concurrency", association.MaxConcurrency)
-	d.Set("max_errors", association.MaxErrors)
-	d.Set(names.AttrName, association.Name)
-	if err := d.Set("output_location", flattenAssociationOutputLocation(association.OutputLocation)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting output_location: %s", err)
-	}
-	if err := d.Set(names.AttrParameters, flattenParameters(association.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
-	}
-	d.Set(names.AttrScheduleExpression, association.ScheduleExpression)
-	d.Set("sync_compliance", association.SyncCompliance)
-	if err := d.Set("targets", flattenTargets(association.Targets)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting targets: %s", err)
+	if err := resourceAssociationFlatten(ctx, awsClient, out, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening SSM Association (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -313,6 +303,10 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("automation_target_parameter_name"); ok {
 			input.AutomationTargetParameterName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("calendar_names"); ok && v.(*schema.Set).Len() > 0 {
+			input.CalendarNames = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("compliance_severity"); ok {
@@ -390,8 +384,7 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 
 	if errs.IsA[*awstypes.AssociationDoesNotExist](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -400,17 +393,17 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	}
 
 	if output == nil || output.AssociationDescription == nil || output.AssociationDescription.Overview == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AssociationDescription, nil
 }
 
-func statusAssociation(ctx context.Context, conn *ssm.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAssociation(conn *ssm.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -428,7 +421,7 @@ func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AssociationStatusNamePending),
 		Target:  enum.Slice(awstypes.AssociationStatusNameSuccess),
-		Refresh: statusAssociation(ctx, conn, id),
+		Refresh: statusAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -436,7 +429,7 @@ func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, ti
 
 	if output, ok := outputRaw.(*awstypes.AssociationDescription); ok {
 		if status := awstypes.AssociationStatusName(aws.ToString(output.Overview.Status)); status == awstypes.AssociationStatusNameFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
 		}
 
 		return output, err
@@ -503,4 +496,31 @@ func flattenAssociationOutputLocation(apiObject *awstypes.InstanceAssociationOut
 	tfList = append(tfList, tfMap)
 
 	return tfList
+}
+
+func resourceAssociationFlatten(ctx context.Context, awsClient *conns.AWSClient, out *awstypes.AssociationDescription, d *schema.ResourceData) error {
+	d.Set("apply_only_at_cron_interval", out.ApplyOnlyAtCronInterval)
+	d.Set(names.AttrARN, awsClient.RegionalARN(ctx, "ssm", "association/"+d.Id()))
+	d.Set(names.AttrAssociationID, out.AssociationId)
+	d.Set("association_name", out.AssociationName)
+	d.Set("automation_target_parameter_name", out.AutomationTargetParameterName)
+	d.Set("calendar_names", out.CalendarNames)
+	d.Set("compliance_severity", out.ComplianceSeverity)
+	d.Set("document_version", out.DocumentVersion)
+	d.Set("max_concurrency", out.MaxConcurrency)
+	d.Set("max_errors", out.MaxErrors)
+	d.Set(names.AttrName, out.Name)
+	if err := d.Set("output_location", flattenAssociationOutputLocation(out.OutputLocation)); err != nil {
+		return fmt.Errorf("setting output_location: %w", err)
+	}
+	if err := d.Set(names.AttrParameters, flattenParameters(out.Parameters)); err != nil {
+		return fmt.Errorf("setting parameters: %w", err)
+	}
+	d.Set(names.AttrScheduleExpression, out.ScheduleExpression)
+	d.Set("sync_compliance", out.SyncCompliance)
+	if err := d.Set("targets", flattenTargets(out.Targets)); err != nil {
+		return fmt.Errorf("setting targets: %w", err)
+	}
+
+	return nil
 }

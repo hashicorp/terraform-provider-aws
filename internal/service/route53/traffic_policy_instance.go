@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -112,7 +114,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 
 	trafficPolicyInstance, err := findTrafficPolicyInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Traffic Policy Instance %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -189,8 +191,7 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 
 	if errs.IsA[*awstypes.NoSuchTrafficPolicyInstance](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -199,17 +200,17 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 	}
 
 	if output == nil || output.TrafficPolicyInstance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrafficPolicyInstance, nil
 }
 
-func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTrafficPolicyInstanceState(conn *route53.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTrafficPolicyInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -237,7 +238,7 @@ func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateCreating},
 		Target:  []string{trafficPolicyInstanceStateApplied},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 
@@ -245,7 +246,7 @@ func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err
@@ -258,7 +259,7 @@ func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateUpdating},
 		Target:  []string{trafficPolicyInstanceStateApplied},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 
@@ -266,7 +267,7 @@ func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err
@@ -279,7 +280,7 @@ func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateDeleting},
 		Target:  []string{},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 
@@ -287,7 +288,7 @@ func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err

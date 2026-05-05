@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
@@ -614,7 +616,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
 	d.Set(names.AttrStatus, group.Status)
 	d.Set("suspended_processes", flattenSuspendedProcesses(group.SuspendedProcesses))
-	if err := d.Set("tag", listOfMap(keyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	if err := d.Set("tag", listOfMap(keyValueTags(ctx, group.Tags, d.Id(), tagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 	d.Set("target_group_arns", group.TargetGroupARNs)

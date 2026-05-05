@@ -62,6 +62,7 @@ This data source exports the following attributes in addition to the arguments a
 * `condition` - Set of conditions associated with the rule.
   [Detailed below](#condition).
 * `tags` - Tags assigned to the Listener Rule.
+* `transform` - Block for transform to apply to requests that match this rule. [Detailed below](#transform).
 
 ### `action`
 
@@ -75,6 +76,8 @@ This data source exports the following attributes in addition to the arguments a
   [Detailed below](#fixed_response).
 * `forward` - An action to forward the request.
   [Detailed below](#forward).
+* `jwt_validation` - An action to validate using JWT.
+  [Detailed below](#jwt_validation).
 * `redirect` - An action to redirect the request.
   [Detailed below](#redirect).
 
@@ -132,6 +135,18 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the target group.
 * `weight` - Weight of the target group.
 
+#### `jwt_validation`
+
+* `issuer` - Issuer of the JWT.
+* `jwks_endpoint` - JSON Web Key Set (JWKS) endpoint.
+* `additional_claim` - Additional claims to validate.
+
+#### `additional_claim`
+
+* `format` - Format of the claim value.
+* `name` - Name of the claim to validate.
+* `values` - List of expected values of the claim.
+
 #### `redirect`
 
 * `host` - The hostname.
@@ -143,20 +158,52 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `condition`
 
-* `host_header` - Contains a single attribute `values`, which contains a set of host names.
+* `host_header` - Host header patterns to match.
+  [Detailed below](#host_header).
 * `http_header` - HTTP header and values to match.
   [Detailed below](#http_header).
 * `http_request_method` - Contains a single attribute `values`, which contains a set of HTTP request methods.
-* `path_pattern` - Contains a single attribute `values`, which contains a set of path patterns to compare against the request URL.
+* `path_pattern` - Path patterns to compare against the request URL.
+  [Detailed below](#path_pattern).
 * `query_string` - Query string parameters to match.
   [Detailed below](#query_string).
 * `source_ip` - Contains a single attribute `values`, which contains a set of source IPs in CIDR notation.
 
+#### `host_header`
+
+* `regex_values` - Set of regular expressions to compare against the host header.
+* `values` - Set of host header value patterns to match.
+
 #### `http_header`
 
 * `http_header_name` - Name of the HTTP header to match.
+* `regex_values` - Set of regular expression to compare against the HTTP header.
 * `values` - Set of values to compare against the value of the HTTP header.
+
+#### `path_pattern`
+
+* `regex_values` - Set of regular expressions to compare against the request URL.
+* `values` - Set of path patterns to compare against the request URL.
 
 #### `query_string`
 
 * `values` - Set of `key`-`value` pairs indicating the query string parameters to match.
+
+### `transform`
+
+* `type` - Type of transform.
+* `host_header_rewrite_config` - Block for host header rewrite. [Detailed below](#host_header_rewrite_config).
+* `url_rewrite_config` - Block for URL rewrite. [Detailed below](#url_rewrite_config).
+
+#### `host_header_rewrite_config`
+
+* `rewrite` - Block for host header rewrite configuration. [Detailed below](#rewrite).
+
+#### `url_rewrite_config`
+
+* `rewrite` - Block for URL rewrite configuration. [Detailed below](#rewrite).
+
+#### `rewrite`
+
+* `regex` - Regular expression to match in the input string.
+* `replace` - Replacement string to use when rewriting the matched input.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package events
 
@@ -17,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,8 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -148,7 +151,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := expandPutRuleInput(d, name)
 	input.Tags = getTagsIn(ctx)
 
@@ -207,7 +210,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -217,31 +220,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.ToString(output.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
-	if output.EventPattern != nil {
-		pattern, err := ruleEventPatternJSONDecoder(aws.ToString(output.EventPattern))
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-		d.Set("event_pattern", pattern)
-	}
-	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
-	switch output.State {
-	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
-		d.Set("is_enabled", true)
-	default:
-		d.Set("is_enabled", false)
-	}
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set(names.AttrScheduleExpression, output.ScheduleExpression)
-	d.Set(names.AttrState, output.State)
-
-	return diags
+	return append(diags, resourceRuleFlatten(ctx, eventBusName, d, output)...)
 }
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -338,8 +317,7 @@ func findRuleByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBu
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -348,15 +326,15 @@ func findRuleByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 var (
-	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
-	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
+	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
+	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
 )
 
 const ruleResourceIDSeparator = "/"
@@ -487,4 +465,34 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 		return
 	}
+}
+
+func resourceRuleFlatten(_ context.Context, eventBusName string, d *schema.ResourceData, output *eventbridge.DescribeRuleOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	arn := aws.ToString(output.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
+	if output.EventPattern != nil {
+		pattern, err := ruleEventPatternJSONDecoder(aws.ToString(output.EventPattern))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		d.Set("event_pattern", pattern)
+	}
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
+	switch output.State {
+	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
+		d.Set("is_enabled", true)
+	default:
+		d.Set("is_enabled", false)
+	}
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrScheduleExpression, output.ScheduleExpression)
+	d.Set(names.AttrState, output.State)
+
+	return diags
 }

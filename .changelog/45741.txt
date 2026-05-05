@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_apigateway_domain_name: Add `endpoint_access_mode` argument and configurable timeout for create and update
+```
+
+```release-note:enhancement
+data-source/aws_apigateway_domain_name : Add `endpoint_access_mode` attribute
+```

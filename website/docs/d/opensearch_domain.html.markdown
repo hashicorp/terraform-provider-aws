@@ -75,6 +75,8 @@ This data source exports the following attributes in addition to the arguments a
 * `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 * `dashboard_endpoint_v2` - V2 domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html)
 * `deleted` - Status of the deletion of the domain.
+* `deployment_strategy_options` - Deployment strategy options for the domain.
+    * `deployment_strategy` - Deployment strategy for the domain.
 * `domain_endpoint_v2_hosted_zone_id` -  Dual stack hosted zone ID for the domain.
 * `domain_id` - Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.
@@ -89,6 +91,11 @@ This data source exports the following attributes in addition to the arguments a
     * `kms_key_id` - KMS key id used to encrypt data at rest.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `endpoint_v2` - V2 domain-specific endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
+* `identity_center_options` - Configuration for enabling and managing IAM Identity Center integration within a domain.
+    * `enabled_api_access` - Boolean whether IAM Identity Center is enabled for API access.
+    * `identity_center_instance_arn` - ARN of the IAM Identity Center instance to create an OpenSearch UI application that uses IAM Identity Center for authentication.
+    * `roles_key` - Attribute that contains the backend role identifier (such as group name or group ID) in IAM Identity Center.
+    * `subject_key` - Attribute that contains the subject identifier (such as username, user ID, or email) in IAM Identity Center.
 * `ip_address_type` - Type of IP addresses supported by the endpoint for the domain.
 * `log_publishing_options` - Domain log publishing related options.
     * `log_type` - Type of OpenSearch log being published.

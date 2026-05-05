@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 variable "workflow_labels" {
@@ -101,6 +101,10 @@ variable "workflow_labels" {
       color       = "f4ecff", # color:terraform secondary
       description = "Pertains to changes to or issues with the various linters."
     },
+    "list-resource" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to list resource."
+    },
     "localstack" = {
       color       = "6577e7", # color:localstack blue-mid
       description = "LocalStack-specific issues and PRs."
@@ -124,6 +128,10 @@ variable "workflow_labels" {
     "new-function" = {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new function."
+    },
+    "new-list-resource" = {
+      color       = "8040c9", # color:terraform (link on white)
+      description = "Introduces list resource support."
     },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)

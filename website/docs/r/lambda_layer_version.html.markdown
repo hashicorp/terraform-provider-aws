@@ -105,7 +105,35 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Layers using `arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lambda_layer_version.example
+  identity = {
+    layer_name = "example"
+    version    = "1"
+  }
+}
+
+resource "aws_lambda_layer_version" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `layer_name` (String) Unique name for the Lambda Layer.
+* `version` (String) Lambda Layer version number.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Layer Versions using the `arn`. For example:
 
 ```terraform
 import {
@@ -114,7 +142,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Lambda Layers using `arn`. For example:
+Using `terraform import`, import Lambda Layer Versions using the `arn`. For example:
 
 ```console
 % terraform import aws_lambda_layer_version.example arn:aws:lambda:us-west-2:123456789012:layer:example:1

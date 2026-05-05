@@ -235,7 +235,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` - (Required) The ARN of the IAM role associated with this job.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout` - (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and null (unlimited) for `gluestreaming` jobs.
+* `timeout` - (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and 0 (unlimited) for `gluestreaming` jobs. Leave this attribute argumnet unconfigured for `glueray` jobs.
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
 * `source_control_details` - (Optional) The details for a source control configuration for a job, allowing synchronization of job artifacts to or from a remote repository. Defined below.
 * `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Valid values: `Standard`, `G.1X`, `G.2X`, `G.025X`, `G.4X`, `G.8X`, `G.12X`, `G.16X`, `R.1X`, `R.2X`, `R.4X`, `R.8X`, `Z.2X` (Ray jobs). See the [AWS documentation](https://docs.aws.amazon.com/glue/latest/dg/worker-types.html) for details.
@@ -276,17 +276,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_glue_job.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_glue_job" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the Glue Job.
+
+#### Optional
+
+* `account_id` (String) AWS account ID.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Jobs using `name`. For example:
 
 ```terraform
 import {
-  to = aws_glue_job.MyJob
-  id = "MyJob"
+  to = aws_glue_job.example
+  id = "example"
 }
 ```
 
 Using `terraform import`, import Glue Jobs using `name`. For example:
 
 ```console
-% terraform import aws_glue_job.MyJob MyJob
+% terraform import aws_glue_job.example example
 ```

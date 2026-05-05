@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,10 +16,10 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -47,6 +46,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_status", resourceName, "user_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_type", resourceName, "user_type"),
 				),
 			},
@@ -58,10 +58,10 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -84,10 +84,10 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -110,10 +110,10 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)

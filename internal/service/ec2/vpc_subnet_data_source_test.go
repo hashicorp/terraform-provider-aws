@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,9 +14,9 @@ import (
 
 func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 256)
+	rInt := acctest.RandIntRange(t, 0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -28,11 +27,11 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 	ds5ResourceName := "data.aws_subnet.by_filter"
 	ds6ResourceName := "data.aws_subnet.by_az_id"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetDataSourceConfig_basic(rName, rInt),
@@ -143,10 +142,10 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 
 func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 256)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rInt := acctest.RandIntRange(t, 0, 256)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -167,10 +166,10 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 
 func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 256)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rInt := acctest.RandIntRange(t, 0, 256)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -190,10 +189,10 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 
 func TestAccVPCSubnetDataSource_enableLniAtDeviceIndex(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dsResourceName := "data.aws_subnet.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

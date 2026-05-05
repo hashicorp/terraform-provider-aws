@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -7,21 +9,21 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -64,7 +66,7 @@ func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.Resource
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
+	d.SetId(sdkid.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
 
 	return append(diags, resourceGroupPolicyAttachmentRead(ctx, d, meta)...)
 }
@@ -82,7 +84,7 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 		return findAttachedGroupPolicyByTwoPartKey(ctx, conn, group, policyARN)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Group Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
@@ -159,16 +161,16 @@ func detachPolicyFromGroup(ctx context.Context, conn *iam.Client, group, policyA
 }
 
 func findAttachedGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupName, policyARN string) (*awstypes.AttachedPolicy, error) {
-	input := &iam.ListAttachedGroupPoliciesInput{
+	input := iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
 
-	return findAttachedGroupPolicy(ctx, conn, input, func(v awstypes.AttachedPolicy) bool {
+	return findAttachedGroupPolicy(ctx, conn, &input, func(v *awstypes.AttachedPolicy) bool {
 		return aws.ToString(v.PolicyArn) == policyARN
 	})
 }
 
-func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
+func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
 	output, err := findAttachedGroupPolicies(ctx, conn, input, filter)
 
 	if err != nil {
@@ -178,7 +180,7 @@ func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.L
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
+func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
 	var output []awstypes.AttachedPolicy
 
 	pages := iam.NewListAttachedGroupPoliciesPaginator(conn, input)
@@ -187,8 +189,7 @@ func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -197,7 +198,7 @@ func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam
 		}
 
 		for _, v := range page.AttachedPolicies {
-			if !reflect.ValueOf(v).IsZero() && filter(v) {
+			if p := &v; !inttypes.IsZero(p) && filter(p) {
 				output = append(output, v)
 			}
 		}

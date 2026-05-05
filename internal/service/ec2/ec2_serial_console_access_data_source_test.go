@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,14 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccEC2SerialConsoleAccessDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,16 +28,16 @@ func testAccEC2SerialConsoleAccessDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSerialConsoleAccessDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSerialConsoleAccessDataSource(ctx, "data.aws_ec2_serial_console_access.current"),
+					testAccCheckSerialConsoleAccessDataSource(ctx, t, "data.aws_ec2_serial_console_access.current"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckSerialConsoleAccessDataSource(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSerialConsoleAccessDataSource(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

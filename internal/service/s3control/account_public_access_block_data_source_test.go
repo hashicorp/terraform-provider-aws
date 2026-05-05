@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control_test
@@ -16,7 +16,7 @@ func testAccAccountPublicAccessBlockDataSource_basic(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 	dataSourceName := "data.aws_s3_account_public_access_block.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

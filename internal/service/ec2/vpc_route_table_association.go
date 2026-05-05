@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -18,11 +20,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route_table_association", name="Route Table Association")
+// @IdentityAttribute("id")
+// @MutableIdentity
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.RouteTableAssociation")
+// @Testing(importStateIdFunc=testAccRouteTabAssocImportStateIdFunc)
+// @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(identityTestCases="subnet;gateway")
 func resourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
@@ -105,7 +117,7 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return findRouteTableAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -115,11 +127,15 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Route Table Association (%s): %s", d.Id(), err)
 	}
 
+	resourceRouteTableAssociationFlatten(association, d)
+
+	return diags
+}
+
+func resourceRouteTableAssociationFlatten(association *awstypes.RouteTableAssociation, d *schema.ResourceData) {
 	d.Set("gateway_id", association.GatewayId)
 	d.Set("route_table_id", association.RouteTableId)
 	d.Set(names.AttrSubnetID, association.SubnetId)
-
-	return diags
 }
 
 func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -131,7 +147,6 @@ func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.Resource
 		RouteTableId:  aws.String(d.Get("route_table_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Updating Route Table Association: %v", input)
 	output, err := conn.ReplaceRouteTableAssociation(ctx, input)
 
 	// This whole thing with the resource ID being changed on update seems unsustainable.
@@ -169,9 +184,18 @@ func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.Resource
 }
 
 func resourceRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	// If we're importing by Resource Identity, we can use the standard import logic.
+	if d.Id() == "" {
+		if err := importer.Import(ctx, d, meta); err != nil {
+			return nil, err
+		}
+		return []*schema.ResourceData{d}, nil
+	}
+
+	// Otherwise, we need to parse the import ID and find the association ID based on the route table and target IDs.
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
+		return nil, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
 	}
 
 	targetID := parts[0]
@@ -191,14 +215,12 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 
 	for _, association := range routeTable.Associations {
 		if aws.ToString(association.SubnetId) == targetID {
-			d.Set(names.AttrSubnetID, targetID)
 			associationID = aws.ToString(association.RouteTableAssociationId)
 
 			break
 		}
 
 		if aws.ToString(association.GatewayId) == targetID {
-			d.Set("gateway_id", targetID)
 			associationID = aws.ToString(association.RouteTableAssociationId)
 
 			break
@@ -210,7 +232,6 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(associationID)
-	d.Set("route_table_id", routeTableID)
 
 	return []*schema.ResourceData{d}, nil
 }
