@@ -18,8 +18,8 @@ func DashboardDefinitionSchema() *schema.Schema {
 		Optional: true,
 		Computed: true,
 		ExactlyOneOf: []string{
-			"definition",
-			"source_entity",
+			attrDefinition,
+			attrSourceEntity,
 		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -33,9 +33,9 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
+							attrColumn:              columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFormatConfiguration: formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
+							names.AttrRole:          stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -95,7 +95,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 									},
 								},
 							},
-							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
+							attrTitle: stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -119,7 +119,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusEnabled,
@@ -134,7 +134,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusEnabled,
@@ -148,7 +148,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusEnabled,
@@ -162,7 +162,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusEnabled,
@@ -176,7 +176,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusEnabled,
@@ -190,7 +190,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusDisabled,
@@ -219,7 +219,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusEnabled,
@@ -233,7 +233,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusEnabled,
@@ -247,7 +247,7 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_status": {
+							attrAvailabilityStatus: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.StatusEnabled,
@@ -266,8 +266,8 @@ func DashboardSourceEntitySchema() *schema.Schema {
 		MaxItems: 1,
 		Optional: true,
 		ExactlyOneOf: []string{
-			"definition",
-			"source_entity",
+			attrDefinition,
+			attrSourceEntity,
 		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -413,7 +413,7 @@ func expandAdHocFilteringOption(tfMap map[string]any) *awstypes.AdHocFilteringOp
 
 	apiObject := &awstypes.AdHocFilteringOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -427,7 +427,7 @@ func expandDataPointDrillUpDownOption(tfMap map[string]any) *awstypes.DataPointD
 
 	apiObject := &awstypes.DataPointDrillUpDownOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -441,7 +441,7 @@ func expandDataPointMenuLabelOption(tfMap map[string]any) *awstypes.DataPointMen
 
 	apiObject := &awstypes.DataPointMenuLabelOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -455,7 +455,7 @@ func expandDataPointTooltipOption(tfMap map[string]any) *awstypes.DataPointToolt
 
 	apiObject := &awstypes.DataPointTooltipOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -469,7 +469,7 @@ func expandExportToCSVOption(tfMap map[string]any) *awstypes.ExportToCSVOption {
 
 	apiObject := &awstypes.ExportToCSVOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -483,7 +483,7 @@ func expandExportWithHiddenFieldsOption(tfMap map[string]any) *awstypes.ExportWi
 
 	apiObject := &awstypes.ExportWithHiddenFieldsOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -497,7 +497,7 @@ func expandSheetLayoutElementMaximizationOption(tfMap map[string]any) *awstypes.
 
 	apiObject := &awstypes.SheetLayoutElementMaximizationOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -525,7 +525,7 @@ func expandVisualAxisSortOption(tfMap map[string]any) *awstypes.VisualAxisSortOp
 
 	apiObject := &awstypes.VisualAxisSortOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -539,7 +539,7 @@ func expandVisualMenuOption(tfMap map[string]any) *awstypes.VisualMenuOption {
 
 	apiObject := &awstypes.VisualMenuOption{}
 
-	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAvailabilityStatus].(string); ok && v != "" {
 		apiObject.AvailabilityStatus = awstypes.DashboardBehavior(v)
 	}
 
@@ -625,7 +625,7 @@ func flattenAdHocFilteringOption(apiObject *awstypes.AdHocFilteringOption) []any
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}
@@ -637,7 +637,7 @@ func flattenDataPointDrillUpDownOption(apiObject *awstypes.DataPointDrillUpDownO
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}
@@ -649,7 +649,7 @@ func flattenDataPointMenuLabelOption(apiObject *awstypes.DataPointMenuLabelOptio
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}
@@ -661,7 +661,7 @@ func flattenDataPointTooltipOption(apiObject *awstypes.DataPointTooltipOption) [
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}
@@ -673,7 +673,7 @@ func flattenExportToCSVOption(apiObject *awstypes.ExportToCSVOption) []any {
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}
@@ -685,7 +685,7 @@ func flattenExportWithHiddenFieldsOption(apiObject *awstypes.ExportWithHiddenFie
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}
@@ -709,7 +709,7 @@ func flattenSheetLayoutElementMaximizationOption(apiObject *awstypes.SheetLayout
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}
@@ -721,7 +721,7 @@ func flattenVisualAxisSortOption(apiObject *awstypes.VisualAxisSortOption) []any
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}
@@ -733,7 +733,7 @@ func flattenVisualMenuOption(apiObject *awstypes.VisualMenuOption) []any {
 	}
 
 	tfMap := map[string]any{
-		"availability_status": apiObject.AvailabilityStatus,
+		attrAvailabilityStatus: apiObject.AvailabilityStatus,
 	}
 
 	return []any{tfMap}

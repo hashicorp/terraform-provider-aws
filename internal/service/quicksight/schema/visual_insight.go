@@ -18,8 +18,8 @@ func insightVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
-				"visual_id":           idSchema(),
+				attrDataSetIdentifier: stringLenBetweenSchema(attrRequired, 1, 2048),
+				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"insight_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightConfiguration.html
 					Type:     schema.TypeList,
@@ -42,8 +42,8 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id":           idSchema(),
-													"time":                     dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrComputationID:          idSchema(),
+													attrTime:                   dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"custom_seasonality_value": intBetweenSchema(attrOptional, 1, 180),
 													"lower_boundary": {
 														Type:     schema.TypeFloat,
@@ -72,8 +72,8 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id": idSchema(),
-													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrComputationID: idSchema(),
+													attrTime:          dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -90,9 +90,9 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id": idSchema(),
-													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   stringEnumSchema[awstypes.MaximumMinimumComputationType](attrRequired),
+													attrComputationID: idSchema(),
+													attrTime:          dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrType:    stringEnumSchema[awstypes.MaximumMinimumComputationType](attrRequired),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -108,10 +108,10 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id": idSchema(),
-													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"from_value":     measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-													"target_value":   measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													attrComputationID: idSchema(),
+													attrTime:          dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"from_value":      measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"target_value":    measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -126,8 +126,8 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id": idSchema(),
-													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrComputationID: idSchema(),
+													attrTime:          dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -143,8 +143,8 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id": idSchema(),
-													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrComputationID: idSchema(),
+													attrTime:          dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -161,12 +161,12 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id": idSchema(),
-													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   stringEnumSchema[awstypes.TopBottomComputationType](attrRequired),
-													"mover_size":     intBetweenSchema(attrOptional, 1, 20),
-													"sort_order":     stringEnumSchema[awstypes.TopBottomSortOrder](attrRequired),
+													attrComputationID: idSchema(),
+													attrCategory:      dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrTime:          dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrType:    stringEnumSchema[awstypes.TopBottomComputationType](attrRequired),
+													"mover_size":      intBetweenSchema(attrOptional, 1, 20),
+													"sort_order":      stringEnumSchema[awstypes.TopBottomSortOrder](attrRequired),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -182,8 +182,8 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id": idSchema(),
-													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrComputationID: idSchema(),
+													attrCategory:      dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -201,7 +201,7 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"computation_id": idSchema(),
+													attrComputationID: idSchema(),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -217,8 +217,8 @@ func insightVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"computation_id": idSchema(),
+													attrCategory:      dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrComputationID: idSchema(),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -243,8 +243,8 @@ func insightVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -262,10 +262,10 @@ func expandInsightVisual(tfList []any) *awstypes.InsightVisual {
 
 	apiObject := &awstypes.InsightVisual{}
 
-	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[attrDataSetIdentifier].(string); ok && v != "" {
 		apiObject.DataSetIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -274,10 +274,10 @@ func expandInsightVisual(tfList []any) *awstypes.InsightVisual {
 	if v, ok := tfMap["insight_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.InsightConfiguration = expandInsightConfiguration(v)
 	}
-	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
@@ -383,7 +383,7 @@ func expandForecastComputation(tfList []any) *awstypes.ForecastComputation {
 
 	apiObject := &awstypes.ForecastComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap["custom_seasonality_value"].(int); ok {
@@ -410,7 +410,7 @@ func expandForecastComputation(tfList []any) *awstypes.ForecastComputation {
 	if v, ok := tfMap["upper_boundary"].(float64); ok {
 		apiObject.UpperBoundary = aws.Float64(v)
 	}
-	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTime].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
 	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
@@ -432,7 +432,7 @@ func expandGrowthRateComputation(tfList []any) *awstypes.GrowthRateComputation {
 
 	apiObject := &awstypes.GrowthRateComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -441,7 +441,7 @@ func expandGrowthRateComputation(tfList []any) *awstypes.GrowthRateComputation {
 	if v, ok := tfMap["period_size"].(int); ok {
 		apiObject.PeriodSize = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTime].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
 	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
@@ -463,7 +463,7 @@ func expandMaximumMinimumComputation(tfList []any) *awstypes.MaximumMinimumCompu
 
 	apiObject := &awstypes.MaximumMinimumComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -472,7 +472,7 @@ func expandMaximumMinimumComputation(tfList []any) *awstypes.MaximumMinimumCompu
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = awstypes.MaximumMinimumComputationType(v)
 	}
-	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTime].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
 	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
@@ -494,13 +494,13 @@ func expandMetricComparisonComputation(tfList []any) *awstypes.MetricComparisonC
 
 	apiObject := &awstypes.MetricComparisonComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTime].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
 	if v, ok := tfMap["from_value"].([]any); ok && len(v) > 0 {
@@ -525,13 +525,13 @@ func expandPeriodOverPeriodComputation(tfList []any) *awstypes.PeriodOverPeriodC
 
 	apiObject := &awstypes.PeriodOverPeriodComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTime].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
 	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
@@ -553,7 +553,7 @@ func expandPeriodToDateComputation(tfList []any) *awstypes.PeriodToDateComputati
 
 	apiObject := &awstypes.PeriodToDateComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -562,7 +562,7 @@ func expandPeriodToDateComputation(tfList []any) *awstypes.PeriodToDateComputati
 	if v, ok := tfMap["period_time_granularity"].(string); ok && v != "" {
 		apiObject.PeriodTimeGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTime].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
 	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
@@ -584,7 +584,7 @@ func expandTopBottomMoversComputation(tfList []any) *awstypes.TopBottomMoversCom
 
 	apiObject := &awstypes.TopBottomMoversComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -599,10 +599,10 @@ func expandTopBottomMoversComputation(tfList []any) *awstypes.TopBottomMoversCom
 	if v, ok := tfMap["mover_size"].(int); ok {
 		apiObject.MoverSize = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionField(v)
 	}
-	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTime].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
 	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
@@ -624,7 +624,7 @@ func expandTopBottomRankedComputation(tfList []any) *awstypes.TopBottomRankedCom
 
 	apiObject := &awstypes.TopBottomRankedComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -636,7 +636,7 @@ func expandTopBottomRankedComputation(tfList []any) *awstypes.TopBottomRankedCom
 	if v, ok := tfMap["result_size"].(int); ok {
 		apiObject.ResultSize = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionField(v)
 	}
 	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
@@ -658,7 +658,7 @@ func expandTotalAggregationComputation(tfList []any) *awstypes.TotalAggregationC
 
 	apiObject := &awstypes.TotalAggregationComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -683,13 +683,13 @@ func expandUniqueValuesComputation(tfList []any) *awstypes.UniqueValuesComputati
 
 	apiObject := &awstypes.UniqueValuesComputation{}
 
-	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputationID].(string); ok && v != "" {
 		apiObject.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionField(v)
 	}
 
@@ -721,8 +721,8 @@ func flattenInsightVisual(apiObject *awstypes.InsightVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"visual_id":           aws.ToString(apiObject.VisualId),
-		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
+		attrVisualID:          aws.ToString(apiObject.VisualId),
+		attrDataSetIdentifier: aws.ToString(apiObject.DataSetIdentifier),
 	}
 
 	if apiObject.Actions != nil {
@@ -732,10 +732,10 @@ func flattenInsightVisual(apiObject *awstypes.InsightVisual) []any {
 		tfMap["insight_configuration"] = flattenInsightConfiguration(apiObject.InsightConfiguration)
 	}
 	if apiObject.Subtitle != nil {
-		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}
@@ -813,10 +813,10 @@ func flattenForecastComputation(apiObject *awstypes.ForecastComputation) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
-		tfMap["time"] = flattenDimensionField(apiObject.Time)
+		tfMap[attrTime] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.CustomSeasonalityValue != nil {
 		tfMap["custom_seasonality_value"] = aws.ToInt32(apiObject.CustomSeasonalityValue)
@@ -855,10 +855,10 @@ func flattenGrowthRateComputation(apiObject *awstypes.GrowthRateComputation) []a
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
-		tfMap["time"] = flattenDimensionField(apiObject.Time)
+		tfMap[attrTime] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.Name != nil {
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
@@ -881,10 +881,10 @@ func flattenMaximumMinimumComputation(apiObject *awstypes.MaximumMinimumComputat
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
-		tfMap["time"] = flattenDimensionField(apiObject.Time)
+		tfMap[attrTime] = flattenDimensionField(apiObject.Time)
 	}
 	tfMap[names.AttrType] = apiObject.Type
 	if apiObject.Name != nil {
@@ -905,10 +905,10 @@ func flattenMetricComparisonComputation(apiObject *awstypes.MetricComparisonComp
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
-		tfMap["time"] = flattenDimensionField(apiObject.Time)
+		tfMap[attrTime] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.FromValue != nil {
 		tfMap["from_value"] = flattenMeasureField(apiObject.FromValue)
@@ -931,10 +931,10 @@ func flattenPeriodOverPeriodComputation(apiObject *awstypes.PeriodOverPeriodComp
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
-		tfMap["time"] = flattenDimensionField(apiObject.Time)
+		tfMap[attrTime] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.Name != nil {
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
@@ -954,10 +954,10 @@ func flattenPeriodToDateComputation(apiObject *awstypes.PeriodToDateComputation)
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
-		tfMap["time"] = flattenDimensionField(apiObject.Time)
+		tfMap[attrTime] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.Name != nil {
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
@@ -978,10 +978,10 @@ func flattenTopBottomMoversComputation(apiObject *awstypes.TopBottomMoversComput
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionField(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionField(apiObject.Category)
 	}
 	if apiObject.MoverSize != nil {
 		tfMap["mover_size"] = aws.ToInt32(apiObject.MoverSize)
@@ -991,7 +991,7 @@ func flattenTopBottomMoversComputation(apiObject *awstypes.TopBottomMoversComput
 	}
 	tfMap["sort_order"] = apiObject.SortOrder
 	if apiObject.Time != nil {
-		tfMap["time"] = flattenDimensionField(apiObject.Time)
+		tfMap[attrTime] = flattenDimensionField(apiObject.Time)
 	}
 	tfMap[names.AttrType] = apiObject.Type
 	if apiObject.Value != nil {
@@ -1009,10 +1009,10 @@ func flattenTopBottomRankedComputation(apiObject *awstypes.TopBottomRankedComput
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionField(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionField(apiObject.Category)
 	}
 	if apiObject.Name != nil {
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
@@ -1036,7 +1036,7 @@ func flattenTotalAggregationComputation(apiObject *awstypes.TotalAggregationComp
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Name != nil {
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
@@ -1056,10 +1056,10 @@ func flattenUniqueValuesComputation(apiObject *awstypes.UniqueValuesComputation)
 	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
+		tfMap[attrComputationID] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionField(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionField(apiObject.Category)
 	}
 	if apiObject.Name != nil {
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)

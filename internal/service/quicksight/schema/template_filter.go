@@ -45,7 +45,7 @@ func categoryFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column": columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				attrColumn: columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				names.AttrConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoryFilterConfiguration.html
 					Type:     schema.TypeList,
 					Required: true,
@@ -61,9 +61,9 @@ func categoryFilterSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"match_operator": stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
-										"null_option":    stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+										attrNullOption:   stringEnumSchema[awstypes.FilterNullOption](attrRequired),
 										"category_value": stringLenBetweenSchema(attrOptional, 1, 512),
-										"parameter_name": {
+										attrParameterName: {
 											Type:     schema.TypeString,
 											Optional: true,
 											ValidateFunc: validation.All(
@@ -71,7 +71,7 @@ func categoryFilterSchema() *schema.Schema {
 												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+`), ""),
 											),
 										},
-										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
+										attrSelectAllOptions: stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
 									},
 								},
 							},
@@ -83,7 +83,7 @@ func categoryFilterSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"match_operator": stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
-										"null_option":    stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+										attrNullOption:   stringEnumSchema[awstypes.FilterNullOption](attrRequired),
 										"category_values": {
 											Type:     schema.TypeList,
 											Optional: true,
@@ -94,7 +94,7 @@ func categoryFilterSchema() *schema.Schema {
 												ValidateFunc: validation.StringLenBetween(1, 512),
 											},
 										},
-										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
+										attrSelectAllOptions: stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
 									},
 								},
 							},
@@ -116,14 +116,14 @@ func categoryFilterSchema() *schema.Schema {
 												ValidateFunc: validation.StringLenBetween(1, 512),
 											},
 										},
-										"select_all_options": stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
+										attrSelectAllOptions: stringEnumSchema[awstypes.CategoryFilterSelectAllOptions](attrOptional),
 									},
 								},
 							},
 						},
 					},
 				},
-				"filter_id": idSchema(),
+				attrFilterID: idSchema(),
 			},
 		},
 	}
@@ -137,13 +137,13 @@ func numericEqualityFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":            idSchema(),
-				"match_operator":       stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
-				"null_option":          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
-				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
-				"parameter_name":       parameterNameSchema(false),
-				"select_all_options":   stringEnumSchema[awstypes.NumericFilterSelectAllOptions](attrOptional),
+				attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				attrFilterID:            idSchema(),
+				"match_operator":        stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
+				attrNullOption:          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				attrAggregationFunction: aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+				attrParameterName:       parameterNameSchema(false),
+				attrSelectAllOptions:    stringEnumSchema[awstypes.NumericFilterSelectAllOptions](attrOptional),
 				names.AttrValue: {
 					Type:     schema.TypeFloat,
 					Optional: true,
@@ -161,10 +161,10 @@ func numericRangeFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":            idSchema(),
-				"null_option":          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
-				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+				attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				attrFilterID:            idSchema(),
+				attrNullOption:          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				attrAggregationFunction: aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 				"include_maximum": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -175,7 +175,7 @@ func numericRangeFilterSchema() *schema.Schema {
 				},
 				"range_maximum":      numericRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
 				"range_minimum":      numericRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
-				"select_all_options": stringEnumSchema[awstypes.NumericFilterSelectAllOptions](attrOptional),
+				attrSelectAllOptions: stringEnumSchema[awstypes.NumericFilterSelectAllOptions](attrOptional),
 			},
 		},
 	}
@@ -196,19 +196,19 @@ func relativeDatesFilterSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"anchor_option":  stringEnumSchema[awstypes.AnchorOption](attrOptional),
-							"parameter_name": parameterNameSchema(false),
+							"anchor_option":   stringEnumSchema[awstypes.AnchorOption](attrOptional),
+							attrParameterName: parameterNameSchema(false),
 						},
 					},
 				},
-				"column":                       columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":                    idSchema(),
-				"null_option":                  stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				attrColumn:                     columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				attrFilterID:                   idSchema(),
+				attrNullOption:                 stringEnumSchema[awstypes.FilterNullOption](attrRequired),
 				"relative_date_type":           stringEnumSchema[awstypes.RelativeDateType](attrRequired),
-				"time_granularity":             stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+				attrTimeGranularity:            stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 				"exclude_period_configuration": excludePeriodConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
 				"minimum_granularity":          stringEnumSchema[awstypes.TimeGranularity](attrRequired),
-				"parameter_name":               parameterNameSchema(false),
+				attrParameterName:              parameterNameSchema(false),
 				"relative_date_value": {
 					Type:     schema.TypeInt,
 					Optional: true,
@@ -226,10 +226,10 @@ func timeEqualityFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column":           columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":        idSchema(),
-				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
-				"parameter_name":   parameterNameSchema(false),
+				attrColumn:          columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				attrFilterID:        idSchema(),
+				attrTimeGranularity: stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+				attrParameterName:   parameterNameSchema(false),
 				names.AttrValue: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -248,9 +248,9 @@ func timeRangeFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column":                       columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":                    idSchema(),
-				"null_option":                  stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				attrColumn:                     columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				attrFilterID:                   idSchema(),
+				attrNullOption:                 stringEnumSchema[awstypes.FilterNullOption](attrRequired),
 				"exclude_period_configuration": excludePeriodConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
 				"include_maximum": {
 					Type:     schema.TypeBool,
@@ -262,7 +262,7 @@ func timeRangeFilterSchema() *schema.Schema {
 				},
 				"range_maximum_value": timeRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
 				"range_minimum_value": timeRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
-				"time_granularity":    stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+				attrTimeGranularity:   stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 			},
 		},
 	}
@@ -283,20 +283,20 @@ func topBottomFilterSchema() *schema.Schema {
 					MaxItems: 100,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"aggregation_function": aggregationFunctionSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
-							"column":               columnSchema(true),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"sort_direction":       stringEnumSchema[awstypes.SortDirection](attrRequired),
+							attrAggregationFunction: aggregationFunctionSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+							attrColumn:              columnSchema(true),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"sort_direction":        stringEnumSchema[awstypes.SortDirection](attrRequired),
 						},
 					},
 				},
-				"column":    columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id": idSchema(),
+				attrColumn:   columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				attrFilterID: idSchema(),
 				"limit": {
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
-				"parameter_name":   parameterNameSchema(false),
-				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+				attrParameterName:   parameterNameSchema(false),
+				attrTimeGranularity: stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 			},
 		},
 	}
@@ -394,7 +394,7 @@ var drillDownFilterSchema = sync.OnceValue(func() *schema.Schema {
 									ValidateFunc: validation.StringLenBetween(1, 512),
 								},
 							},
-							"column": columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrColumn: columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 						},
 					},
 				},
@@ -405,7 +405,7 @@ var drillDownFilterSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column": columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrColumn: columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							names.AttrValue: {
 								Type:     schema.TypeFloat,
 								Required: true,
@@ -420,10 +420,10 @@ var drillDownFilterSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":           columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"range_maximum":    utcTimestampStringSchema(attrRequired),
-							"range_minimum":    utcTimestampStringSchema(attrRequired),
-							"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+							attrColumn:          columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"range_maximum":     utcTimestampStringSchema(attrRequired),
+							"range_minimum":     utcTimestampStringSchema(attrRequired),
+							attrTimeGranularity: stringEnumSchema[awstypes.TimeGranularity](attrRequired),
 						},
 					},
 				},
@@ -564,10 +564,10 @@ func expandCategoryFilter(tfList []any) *awstypes.CategoryFilter {
 
 	apiObject := &awstypes.CategoryFilter{}
 
-	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFilterID].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap[names.AttrConfiguration].([]any); ok && len(v) > 0 {
@@ -620,13 +620,13 @@ func expandCustomFilterConfiguration(tfList []any) *awstypes.CustomFilterConfigu
 	if v, ok := tfMap["match_operator"].(string); ok && v != "" {
 		apiObject.MatchOperator = awstypes.CategoryFilterMatchOperator(v)
 	}
-	if v, ok := tfMap["null_option"].(string); ok && v != "" {
+	if v, ok := tfMap[attrNullOption].(string); ok && v != "" {
 		apiObject.NullOption = awstypes.FilterNullOption(v)
 	}
-	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+	if v, ok := tfMap[attrParameterName].(string); ok && v != "" {
 		apiObject.ParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["select_all_options"].(string); ok && v != "" {
+	if v, ok := tfMap[attrSelectAllOptions].(string); ok && v != "" {
 		apiObject.SelectAllOptions = awstypes.CategoryFilterSelectAllOptions(v)
 	}
 
@@ -651,10 +651,10 @@ func expandCustomFilterListConfiguration(tfList []any) *awstypes.CustomFilterLis
 	if v, ok := tfMap["match_operator"].(string); ok && v != "" {
 		apiObject.MatchOperator = awstypes.CategoryFilterMatchOperator(v)
 	}
-	if v, ok := tfMap["null_option"].(string); ok && v != "" {
+	if v, ok := tfMap[attrNullOption].(string); ok && v != "" {
 		apiObject.NullOption = awstypes.FilterNullOption(v)
 	}
-	if v, ok := tfMap["select_all_options"].(string); ok && v != "" {
+	if v, ok := tfMap[attrSelectAllOptions].(string); ok && v != "" {
 		apiObject.SelectAllOptions = awstypes.CategoryFilterSelectAllOptions(v)
 	}
 
@@ -679,7 +679,7 @@ func expandFilterListConfiguration(tfList []any) *awstypes.FilterListConfigurati
 	if v, ok := tfMap["match_operator"].(string); ok && v != "" {
 		apiObject.MatchOperator = awstypes.CategoryFilterMatchOperator(v)
 	}
-	if v, ok := tfMap["select_all_options"].(string); ok && v != "" {
+	if v, ok := tfMap[attrSelectAllOptions].(string); ok && v != "" {
 		apiObject.SelectAllOptions = awstypes.CategoryFilterSelectAllOptions(v)
 	}
 
@@ -698,28 +698,28 @@ func expandNumericEqualityFilter(tfList []any) *awstypes.NumericEqualityFilter {
 
 	apiObject := &awstypes.NumericEqualityFilter{}
 
-	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFilterID].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["match_operator"].(string); ok && v != "" {
 		apiObject.MatchOperator = awstypes.NumericEqualityMatchOperator(v)
 	}
-	if v, ok := tfMap["null_option"].(string); ok && v != "" {
+	if v, ok := tfMap[attrNullOption].(string); ok && v != "" {
 		apiObject.NullOption = awstypes.FilterNullOption(v)
 	}
-	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+	if v, ok := tfMap[attrParameterName].(string); ok && v != "" {
 		apiObject.ParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["select_all_options"].(string); ok && v != "" {
+	if v, ok := tfMap[attrSelectAllOptions].(string); ok && v != "" {
 		apiObject.SelectAllOptions = awstypes.NumericFilterSelectAllOptions(v)
 	}
 	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		apiObject.Value = aws.Float64(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrAggregationFunction].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
 
@@ -820,19 +820,19 @@ func expandNumericRangeFilter(tfList []any) *awstypes.NumericRangeFilter {
 
 	apiObject := &awstypes.NumericRangeFilter{}
 
-	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFilterID].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["null_option"].(string); ok && v != "" {
+	if v, ok := tfMap[attrNullOption].(string); ok && v != "" {
 		apiObject.NullOption = awstypes.FilterNullOption(v)
 	}
-	if v, ok := tfMap["select_all_options"].(string); ok && v != "" {
+	if v, ok := tfMap[attrSelectAllOptions].(string); ok && v != "" {
 		apiObject.SelectAllOptions = awstypes.NumericFilterSelectAllOptions(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrAggregationFunction].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
 	if v, ok := tfMap["include_maximum"].(bool); ok {
@@ -885,25 +885,25 @@ func expandRelativeDatesFilter(tfList []any) *awstypes.RelativeDatesFilter {
 
 	apiObject := &awstypes.RelativeDatesFilter{}
 
-	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFilterID].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["null_option"].(string); ok && v != "" {
+	if v, ok := tfMap[attrNullOption].(string); ok && v != "" {
 		apiObject.NullOption = awstypes.FilterNullOption(v)
 	}
 	if v, ok := tfMap["relative_date_type"].(string); ok && v != "" {
 		apiObject.RelativeDateType = awstypes.RelativeDateType(v)
 	}
-	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTimeGranularity].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
 	if v, ok := tfMap["minimum_granularity"].(string); ok && v != "" {
 		apiObject.MinimumGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+	if v, ok := tfMap[attrParameterName].(string); ok && v != "" {
 		apiObject.ParameterName = aws.String(v)
 	}
 	if v, ok := tfMap["relative_date_value"].(int); ok {
@@ -934,7 +934,7 @@ func expandAnchorDateConfiguration(tfList []any) *awstypes.AnchorDateConfigurati
 	if v, ok := tfMap["anchor_option"].(string); ok && v != "" {
 		apiObject.AnchorOption = awstypes.AnchorOption(v)
 	}
-	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+	if v, ok := tfMap[attrParameterName].(string); ok && v != "" {
 		apiObject.ParameterName = aws.String(v)
 	}
 
@@ -978,16 +978,16 @@ func expandTimeEqualityFilter(tfList []any) *awstypes.TimeEqualityFilter {
 
 	apiObject := &awstypes.TimeEqualityFilter{}
 
-	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFilterID].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTimeGranularity].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+	if v, ok := tfMap[attrParameterName].(string); ok && v != "" {
 		apiObject.ParameterName = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
@@ -1010,16 +1010,16 @@ func expandTimeRangeFilter(tfList []any) *awstypes.TimeRangeFilter {
 
 	apiObject := &awstypes.TimeRangeFilter{}
 
-	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFilterID].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["null_option"].(string); ok && v != "" {
+	if v, ok := tfMap[attrNullOption].(string); ok && v != "" {
 		apiObject.NullOption = awstypes.FilterNullOption(v)
 	}
-	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTimeGranularity].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
 	if v, ok := tfMap["exclude_period_configuration"].([]any); ok && len(v) > 0 {
@@ -1079,19 +1079,19 @@ func expandTopBottomFilter(tfList []any) *awstypes.TopBottomFilter {
 
 	apiObject := &awstypes.TopBottomFilter{}
 
-	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFilterID].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["limit"].(int); ok {
 		apiObject.Limit = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+	if v, ok := tfMap[attrParameterName].(string); ok && v != "" {
 		apiObject.ParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTimeGranularity].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
 	if v, ok := tfMap["aggregation_sort_configuration"].([]any); ok && len(v) > 0 {
@@ -1135,10 +1135,10 @@ func expandAggregationSortConfiguration(tfMap map[string]any) *awstypes.Aggregat
 	if v, ok := tfMap["sort_direction"].(string); ok && v != "" {
 		apiObject.SortDirection = awstypes.SortDirection(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrAggregationFunction].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
@@ -1201,7 +1201,7 @@ func expandCategoryDrillDownFilter(tfList []any) *awstypes.CategoryDrillDownFilt
 
 	apiObject := &awstypes.CategoryDrillDownFilter{}
 
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["category_values"].([]any); ok && len(v) > 0 {
@@ -1223,7 +1223,7 @@ func expandNumericEqualityDrillDownFilter(tfList []any) *awstypes.NumericEqualit
 
 	apiObject := &awstypes.NumericEqualityDrillDownFilter{}
 
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap[names.AttrValue].(float64); ok {
@@ -1253,10 +1253,10 @@ func expandTimeRangeDrillDownFilter(tfList []any) *awstypes.TimeRangeDrillDownFi
 		t, _ := time.Parse(time.RFC3339, v) // Format validated with validateFunc
 		apiObject.RangeMinimum = aws.Time(t)
 	}
-	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTimeGranularity].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
@@ -1308,13 +1308,13 @@ func flattenCategoryFilter(apiObject *awstypes.CategoryFilter) []any {
 
 	tfMap := map[string]any{}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.Configuration != nil {
 		tfMap[names.AttrConfiguration] = flattenCategoryFilterConfiguration(apiObject.Configuration)
 	}
 	if apiObject.FilterId != nil {
-		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
+		tfMap[attrFilterID] = aws.ToString(apiObject.FilterId)
 	}
 
 	return []any{tfMap}
@@ -1351,11 +1351,11 @@ func flattenCustomFilterConfiguration(apiObject *awstypes.CustomFilterConfigurat
 		tfMap["category_value"] = aws.ToString(apiObject.CategoryValue)
 	}
 	tfMap["match_operator"] = apiObject.MatchOperator
-	tfMap["null_option"] = apiObject.NullOption
+	tfMap[attrNullOption] = apiObject.NullOption
 	if apiObject.ParameterName != nil {
-		tfMap["parameter_name"] = aws.ToString(apiObject.ParameterName)
+		tfMap[attrParameterName] = aws.ToString(apiObject.ParameterName)
 	}
-	tfMap["select_all_options"] = apiObject.SelectAllOptions
+	tfMap[attrSelectAllOptions] = apiObject.SelectAllOptions
 
 	return []any{tfMap}
 }
@@ -1371,8 +1371,8 @@ func flattenCustomFilterListConfiguration(apiObject *awstypes.CustomFilterListCo
 		tfMap["category_values"] = apiObject.CategoryValues
 	}
 	tfMap["match_operator"] = apiObject.MatchOperator
-	tfMap["null_option"] = apiObject.NullOption
-	tfMap["select_all_options"] = apiObject.SelectAllOptions
+	tfMap[attrNullOption] = apiObject.NullOption
+	tfMap[attrSelectAllOptions] = apiObject.SelectAllOptions
 
 	return []any{tfMap}
 }
@@ -1388,7 +1388,7 @@ func flattenFilterListConfiguration(apiObject *awstypes.FilterListConfiguration)
 		tfMap["category_values"] = apiObject.CategoryValues
 	}
 	tfMap["match_operator"] = apiObject.MatchOperator
-	tfMap["select_all_options"] = apiObject.SelectAllOptions
+	tfMap[attrSelectAllOptions] = apiObject.SelectAllOptions
 
 	return []any{tfMap}
 }
@@ -1401,20 +1401,20 @@ func flattenNumericEqualityFilter(apiObject *awstypes.NumericEqualityFilter) []a
 	tfMap := map[string]any{}
 
 	if apiObject.AggregationFunction != nil {
-		tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
+		tfMap[attrAggregationFunction] = flattenAggregationFunction(apiObject.AggregationFunction)
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FilterId != nil {
-		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
+		tfMap[attrFilterID] = aws.ToString(apiObject.FilterId)
 	}
 	tfMap["match_operator"] = apiObject.MatchOperator
-	tfMap["null_option"] = apiObject.NullOption
+	tfMap[attrNullOption] = apiObject.NullOption
 	if apiObject.ParameterName != nil {
-		tfMap["parameter_name"] = aws.ToString(apiObject.ParameterName)
+		tfMap[attrParameterName] = aws.ToString(apiObject.ParameterName)
 	}
-	tfMap["select_all_options"] = apiObject.SelectAllOptions
+	tfMap[attrSelectAllOptions] = apiObject.SelectAllOptions
 	if apiObject.Value != nil {
 		tfMap[names.AttrValue] = aws.ToFloat64(apiObject.Value)
 	}
@@ -1430,13 +1430,13 @@ func flattenNumericRangeFilter(apiObject *awstypes.NumericRangeFilter) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.AggregationFunction != nil {
-		tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
+		tfMap[attrAggregationFunction] = flattenAggregationFunction(apiObject.AggregationFunction)
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FilterId != nil {
-		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
+		tfMap[attrFilterID] = aws.ToString(apiObject.FilterId)
 	}
 	if apiObject.IncludeMaximum != nil {
 		tfMap["include_maximum"] = aws.ToBool(apiObject.IncludeMaximum)
@@ -1444,14 +1444,14 @@ func flattenNumericRangeFilter(apiObject *awstypes.NumericRangeFilter) []any {
 	if apiObject.IncludeMinimum != nil {
 		tfMap["include_minimum"] = aws.ToBool(apiObject.IncludeMinimum)
 	}
-	tfMap["null_option"] = apiObject.NullOption
+	tfMap[attrNullOption] = apiObject.NullOption
 	if apiObject.RangeMaximum != nil {
 		tfMap["range_maximum"] = flattenNumericRangeFilterValue(apiObject.RangeMaximum)
 	}
 	if apiObject.RangeMinimum != nil {
 		tfMap["range_minimum"] = flattenNumericRangeFilterValue(apiObject.RangeMinimum)
 	}
-	tfMap["select_all_options"] = apiObject.SelectAllOptions
+	tfMap[attrSelectAllOptions] = apiObject.SelectAllOptions
 
 	return []any{tfMap}
 }
@@ -1484,24 +1484,24 @@ func flattenRelativeDatesFilter(apiObject *awstypes.RelativeDatesFilter) []any {
 		tfMap["anchor_date_configuration"] = flattenAnchorDateConfiguration(apiObject.AnchorDateConfiguration)
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.ExcludePeriodConfiguration != nil {
 		tfMap["exclude_period_configuration"] = flattenExcludePeriodConfiguration(apiObject.ExcludePeriodConfiguration)
 	}
 	if apiObject.FilterId != nil {
-		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
+		tfMap[attrFilterID] = aws.ToString(apiObject.FilterId)
 	}
 	tfMap["minimum_granularity"] = apiObject.MinimumGranularity
-	tfMap["null_option"] = apiObject.NullOption
+	tfMap[attrNullOption] = apiObject.NullOption
 	if apiObject.ParameterName != nil {
-		tfMap["parameter_name"] = aws.ToString(apiObject.ParameterName)
+		tfMap[attrParameterName] = aws.ToString(apiObject.ParameterName)
 	}
 	tfMap["relative_date_type"] = apiObject.RelativeDateType
 	if apiObject.RelativeDateValue != nil {
 		tfMap["relative_date_value"] = aws.ToInt32(apiObject.RelativeDateValue)
 	}
-	tfMap["time_granularity"] = apiObject.TimeGranularity
+	tfMap[attrTimeGranularity] = apiObject.TimeGranularity
 
 	return []any{tfMap}
 }
@@ -1515,7 +1515,7 @@ func flattenAnchorDateConfiguration(apiObject *awstypes.AnchorDateConfiguration)
 
 	tfMap["anchor_option"] = apiObject.AnchorOption
 	if apiObject.ParameterName != nil {
-		tfMap["parameter_name"] = aws.ToString(apiObject.ParameterName)
+		tfMap[attrParameterName] = aws.ToString(apiObject.ParameterName)
 	}
 
 	return []any{tfMap}
@@ -1545,15 +1545,15 @@ func flattenTimeEqualityFilter(apiObject *awstypes.TimeEqualityFilter) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FilterId != nil {
-		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
+		tfMap[attrFilterID] = aws.ToString(apiObject.FilterId)
 	}
 	if apiObject.ParameterName != nil {
-		tfMap["parameter_name"] = aws.ToString(apiObject.ParameterName)
+		tfMap[attrParameterName] = aws.ToString(apiObject.ParameterName)
 	}
-	tfMap["time_granularity"] = apiObject.TimeGranularity
+	tfMap[attrTimeGranularity] = apiObject.TimeGranularity
 	if apiObject.Value != nil {
 		tfMap[names.AttrValue] = apiObject.Value.Format(time.RFC3339)
 	}
@@ -1569,13 +1569,13 @@ func flattenTimeRangeFilter(apiObject *awstypes.TimeRangeFilter) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.ExcludePeriodConfiguration != nil {
 		tfMap["exclude_period_configuration"] = flattenExcludePeriodConfiguration(apiObject.ExcludePeriodConfiguration)
 	}
 	if apiObject.FilterId != nil {
-		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
+		tfMap[attrFilterID] = aws.ToString(apiObject.FilterId)
 	}
 	if apiObject.IncludeMaximum != nil {
 		tfMap["include_maximum"] = aws.ToBool(apiObject.IncludeMaximum)
@@ -1583,14 +1583,14 @@ func flattenTimeRangeFilter(apiObject *awstypes.TimeRangeFilter) []any {
 	if apiObject.IncludeMinimum != nil {
 		tfMap["include_minimum"] = aws.ToBool(apiObject.IncludeMinimum)
 	}
-	tfMap["null_option"] = apiObject.NullOption
+	tfMap[attrNullOption] = apiObject.NullOption
 	if apiObject.RangeMaximumValue != nil {
 		tfMap["range_maximum_value"] = flattenTimeRangeFilterValue(apiObject.RangeMaximumValue)
 	}
 	if apiObject.RangeMinimumValue != nil {
 		tfMap["range_minimum_value"] = flattenTimeRangeFilterValue(apiObject.RangeMinimumValue)
 	}
-	tfMap["time_granularity"] = apiObject.TimeGranularity
+	tfMap[attrTimeGranularity] = apiObject.TimeGranularity
 
 	return []any{tfMap}
 }
@@ -1626,18 +1626,18 @@ func flattenTopBottomFilter(apiObject *awstypes.TopBottomFilter) []any {
 		tfMap["aggregation_sort_configuration"] = flattenAggregationSortConfigurations(apiObject.AggregationSortConfigurations)
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FilterId != nil {
-		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
+		tfMap[attrFilterID] = aws.ToString(apiObject.FilterId)
 	}
 	if apiObject.Limit != nil {
 		tfMap["limit"] = aws.ToInt32(apiObject.Limit)
 	}
 	if apiObject.ParameterName != nil {
-		tfMap["parameter_name"] = aws.ToString(apiObject.ParameterName)
+		tfMap[attrParameterName] = aws.ToString(apiObject.ParameterName)
 	}
-	tfMap["time_granularity"] = apiObject.TimeGranularity
+	tfMap[attrTimeGranularity] = apiObject.TimeGranularity
 
 	return []any{tfMap}
 }
@@ -1653,10 +1653,10 @@ func flattenAggregationSortConfigurations(apiObjects []awstypes.AggregationSortC
 		tfMap := map[string]any{}
 
 		if apiObject.AggregationFunction != nil {
-			tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
+			tfMap[attrAggregationFunction] = flattenAggregationFunction(apiObject.AggregationFunction)
 		}
 		if apiObject.Column != nil {
-			tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+			tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 		}
 		tfMap["sort_direction"] = apiObject.SortDirection
 

@@ -55,7 +55,7 @@ var dateTimeParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 						},
 					},
 				},
-				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrOptional),
+				attrTimeGranularity: stringEnumSchema[awstypes.TimeGranularity](attrOptional),
 				"values_when_unset": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeValueWhenUnsetConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -279,10 +279,10 @@ var parameterControlsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"parameter_control_id":  idSchema(),
-							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
-							"display_options":       dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
+							attrParameterControlID:  idSchema(),
+							attrSourceParameterName: parameterNameSchema(true),
+							attrTitle:               stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrDisplayOptions:      dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
 						},
 					},
 				},
@@ -293,11 +293,11 @@ var parameterControlsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"parameter_control_id":            idSchema(),
-							"source_parameter_name":           parameterNameSchema(true),
-							"title":                           stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrParameterControlID:            idSchema(),
+							attrSourceParameterName:           parameterNameSchema(true),
+							attrTitle:                         stringLenBetweenSchema(attrRequired, 1, 2048),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
-							"display_options":                 dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
+							attrDisplayOptions:                dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               parameterSelectableValuesSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
 							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
 						},
@@ -310,11 +310,11 @@ var parameterControlsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"parameter_control_id":            idSchema(),
-							"source_parameter_name":           parameterNameSchema(true),
-							"title":                           stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrParameterControlID:            idSchema(),
+							attrSourceParameterName:           parameterNameSchema(true),
+							attrTitle:                         stringLenBetweenSchema(attrRequired, 1, 2048),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
-							"display_options":                 listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
+							attrDisplayOptions:                listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               parameterSelectableValuesSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
 							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
 						},
@@ -327,10 +327,10 @@ var parameterControlsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"parameter_control_id":  idSchema(),
-							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
-							"display_options":       sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
+							attrParameterControlID:  idSchema(),
+							attrSourceParameterName: parameterNameSchema(true),
+							attrTitle:               stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrDisplayOptions:      sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
 							"maximum_value": {
 								Type:     schema.TypeFloat,
 								Required: true,
@@ -353,10 +353,10 @@ var parameterControlsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"parameter_control_id":  idSchema(),
-							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
-							"display_options":       textAreaControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
+							attrParameterControlID:  idSchema(),
+							attrSourceParameterName: parameterNameSchema(true),
+							attrTitle:               stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrDisplayOptions:      textAreaControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
 							"delimiter":             stringLenBetweenSchema(attrOptional, 1, 2048),
 						},
 					},
@@ -368,10 +368,10 @@ var parameterControlsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"parameter_control_id":  idSchema(),
-							"source_parameter_name": parameterNameSchema(true),
-							"title":                 stringLenBetweenSchema(attrRequired, 1, 2048),
-							"display_options":       textFieldControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
+							attrParameterControlID:  idSchema(),
+							attrSourceParameterName: parameterNameSchema(true),
+							attrTitle:               stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrDisplayOptions:      textFieldControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 						},
 					},
 				},
@@ -433,7 +433,7 @@ func expandDateTimeParameterDeclaration(tfList []any) *awstypes.DateTimeParamete
 	if v, ok := tfMap["default_values"].([]any); ok && len(v) > 0 {
 		apiObject.DefaultValues = expandDateTimeDefaultValues(v)
 	}
-	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTimeGranularity].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
 	if v, ok := tfMap["values_when_unset"].([]any); ok && len(v) > 0 {
@@ -767,7 +767,7 @@ func flattenDateTimeParameterDeclaration(apiObject *awstypes.DateTimeParameterDe
 	if apiObject.Name != nil {
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
-	tfMap["time_granularity"] = apiObject.TimeGranularity
+	tfMap[attrTimeGranularity] = apiObject.TimeGranularity
 	if apiObject.ValueWhenUnset != nil {
 		tfMap["values_when_unset"] = flattenDateTimeValueWhenUnsetConfiguration(apiObject.ValueWhenUnset)
 	}
@@ -1031,13 +1031,13 @@ func flattenParameterDateTimePickerControl(apiObject *awstypes.ParameterDateTime
 	}
 
 	tfMap := map[string]any{
-		"parameter_control_id":  aws.ToString(apiObject.ParameterControlId),
-		"source_parameter_name": aws.ToString(apiObject.SourceParameterName),
-		"title":                 aws.ToString(apiObject.Title),
+		attrParameterControlID:  aws.ToString(apiObject.ParameterControlId),
+		attrSourceParameterName: aws.ToString(apiObject.SourceParameterName),
+		attrTitle:               aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.DisplayOptions != nil {
-		tfMap["display_options"] = flattenDateTimePickerControlDisplayOptions(apiObject.DisplayOptions)
+		tfMap[attrDisplayOptions] = flattenDateTimePickerControlDisplayOptions(apiObject.DisplayOptions)
 	}
 
 	return []any{tfMap}
@@ -1049,16 +1049,16 @@ func flattenParameterDropDownControl(apiObject *awstypes.ParameterDropDownContro
 	}
 
 	tfMap := map[string]any{
-		"parameter_control_id":  aws.ToString(apiObject.ParameterControlId),
-		"source_parameter_name": aws.ToString(apiObject.SourceParameterName),
-		"title":                 aws.ToString(apiObject.Title),
+		attrParameterControlID:  aws.ToString(apiObject.ParameterControlId),
+		attrSourceParameterName: aws.ToString(apiObject.SourceParameterName),
+		attrTitle:               aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.CascadingControlConfiguration != nil {
 		tfMap["cascading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
 	}
 	if apiObject.DisplayOptions != nil {
-		tfMap["display_options"] = flattenDropDownControlDisplayOptions(apiObject.DisplayOptions)
+		tfMap[attrDisplayOptions] = flattenDropDownControlDisplayOptions(apiObject.DisplayOptions)
 	}
 	if apiObject.SelectableValues != nil {
 		tfMap["selectable_values"] = flattenParameterSelectableValues(apiObject.SelectableValues)
@@ -1091,16 +1091,16 @@ func flattenParameterListControl(apiObject *awstypes.ParameterListControl) []any
 	}
 
 	tfMap := map[string]any{
-		"parameter_control_id":  aws.ToString(apiObject.ParameterControlId),
-		"source_parameter_name": aws.ToString(apiObject.SourceParameterName),
-		"title":                 aws.ToString(apiObject.Title),
+		attrParameterControlID:  aws.ToString(apiObject.ParameterControlId),
+		attrSourceParameterName: aws.ToString(apiObject.SourceParameterName),
+		attrTitle:               aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.CascadingControlConfiguration != nil {
 		tfMap["cascading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
 	}
 	if apiObject.DisplayOptions != nil {
-		tfMap["display_options"] = flattenListControlDisplayOptions(apiObject.DisplayOptions)
+		tfMap[attrDisplayOptions] = flattenListControlDisplayOptions(apiObject.DisplayOptions)
 	}
 	if apiObject.SelectableValues != nil {
 		tfMap["selectable_values"] = flattenParameterSelectableValues(apiObject.SelectableValues)
@@ -1116,16 +1116,16 @@ func flattenParameterSliderControl(apiObject *awstypes.ParameterSliderControl) [
 	}
 
 	tfMap := map[string]any{
-		"parameter_control_id":  aws.ToString(apiObject.ParameterControlId),
-		"source_parameter_name": aws.ToString(apiObject.SourceParameterName),
-		"title":                 aws.ToString(apiObject.Title),
+		attrParameterControlID:  aws.ToString(apiObject.ParameterControlId),
+		attrSourceParameterName: aws.ToString(apiObject.SourceParameterName),
+		attrTitle:               aws.ToString(apiObject.Title),
 		"maximum_value":         apiObject.MaximumValue,
 		"minimum_value":         apiObject.MinimumValue,
 		"step_size":             apiObject.StepSize,
 	}
 
 	if apiObject.DisplayOptions != nil {
-		tfMap["display_options"] = flattenSliderControlDisplayOptions(apiObject.DisplayOptions)
+		tfMap[attrDisplayOptions] = flattenSliderControlDisplayOptions(apiObject.DisplayOptions)
 	}
 
 	return []any{tfMap}
@@ -1137,16 +1137,16 @@ func flattenParameterTextAreaControl(apiObject *awstypes.ParameterTextAreaContro
 	}
 
 	tfMap := map[string]any{
-		"parameter_control_id":  aws.ToString(apiObject.ParameterControlId),
-		"source_parameter_name": aws.ToString(apiObject.SourceParameterName),
-		"title":                 aws.ToString(apiObject.Title),
+		attrParameterControlID:  aws.ToString(apiObject.ParameterControlId),
+		attrSourceParameterName: aws.ToString(apiObject.SourceParameterName),
+		attrTitle:               aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.Delimiter != nil {
 		tfMap["delimiter"] = aws.ToString(apiObject.Delimiter)
 	}
 	if apiObject.DisplayOptions != nil {
-		tfMap["display_options"] = flattenTextAreaControlDisplayOptions(apiObject.DisplayOptions)
+		tfMap[attrDisplayOptions] = flattenTextAreaControlDisplayOptions(apiObject.DisplayOptions)
 	}
 
 	return []any{tfMap}
@@ -1158,13 +1158,13 @@ func flattenParameterTextFieldControl(apiObject *awstypes.ParameterTextFieldCont
 	}
 
 	tfMap := map[string]any{
-		"parameter_control_id":  aws.ToString(apiObject.ParameterControlId),
-		"source_parameter_name": aws.ToString(apiObject.SourceParameterName),
-		"title":                 aws.ToString(apiObject.Title),
+		attrParameterControlID:  aws.ToString(apiObject.ParameterControlId),
+		attrSourceParameterName: aws.ToString(apiObject.SourceParameterName),
+		attrTitle:               aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.DisplayOptions != nil {
-		tfMap["display_options"] = flattenTextFieldControlDisplayOptions(apiObject.DisplayOptions)
+		tfMap[attrDisplayOptions] = flattenTextFieldControlDisplayOptions(apiObject.DisplayOptions)
 	}
 
 	return []any{tfMap}

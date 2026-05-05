@@ -136,7 +136,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -161,7 +161,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -196,7 +196,7 @@ func DataSourceParametersSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -241,7 +241,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -266,7 +266,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -291,7 +291,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -316,7 +316,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -341,7 +341,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -391,7 +391,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -463,7 +463,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -483,7 +483,7 @@ func DataSourceParametersSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -508,7 +508,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -533,7 +533,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"host": {
+							attrHost: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -695,7 +695,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -713,7 +713,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -740,7 +740,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberDatabricksParameters{}
 
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -773,7 +773,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -791,7 +791,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -809,7 +809,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -827,7 +827,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -845,7 +845,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap["catalog"].(string); ok && v != "" {
 				ps.Value.Catalog = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -881,7 +881,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -938,7 +938,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap["warehouse"].(string); ok && v != "" {
@@ -953,7 +953,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberSparkParameters{}
 
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -971,7 +971,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -989,7 +989,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := tfMap["host"].(string); ok && v != "" {
+			if v, ok := tfMap[attrHost].(string); ok && v != "" {
 				ps.Value.Host = aws.String(v)
 			}
 			if v, ok := tfMap[names.AttrPort].(int); ok {
@@ -1042,7 +1042,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["aurora"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
@@ -1050,7 +1050,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["aurora_postgresql"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
@@ -1063,7 +1063,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 	case *awstypes.DataSourceParametersMemberDatabricksParameters:
 		tfMap["databricks"] = []any{
 			map[string]any{
-				"host":              aws.ToString(v.Value.Host),
+				attrHost:            aws.ToString(v.Value.Host),
 				names.AttrPort:      aws.ToInt32(v.Value.Port),
 				"sql_endpoint_path": aws.ToString(v.Value.SqlEndpointPath),
 			},
@@ -1078,7 +1078,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["maria_db"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
@@ -1086,7 +1086,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["mysql"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
@@ -1094,7 +1094,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["oracle"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
@@ -1102,7 +1102,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["postgresql"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
@@ -1110,7 +1110,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["postgresql"] = []any{
 			map[string]any{
 				"catalog":      aws.ToString(v.Value.Catalog),
-				"host":         aws.ToString(v.Value.Host),
+				attrHost:       aws.ToString(v.Value.Host),
 				names.AttrPort: aws.ToInt32(v.Value.Port),
 			},
 		}
@@ -1126,7 +1126,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 			map[string]any{
 				"cluster_id":       aws.ToString(v.Value.ClusterId),
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     v.Value.Port,
 			},
 		}
@@ -1152,14 +1152,14 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["snowflake"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				"warehouse":        aws.ToString(v.Value.Warehouse),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberSparkParameters:
 		tfMap["snowflake"] = []any{
 			map[string]any{
-				"host":         aws.ToString(v.Value.Host),
+				attrHost:       aws.ToString(v.Value.Host),
 				names.AttrPort: aws.ToInt32(v.Value.Port),
 			},
 		}
@@ -1167,7 +1167,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["sql_server"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     v.Value.Port,
 			},
 		}
@@ -1175,7 +1175,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 		tfMap["teradata"] = []any{
 			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
+				attrHost:           aws.ToString(v.Value.Host),
 				names.AttrPort:     v.Value.Port,
 			},
 		}

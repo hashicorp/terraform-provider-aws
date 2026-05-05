@@ -24,7 +24,7 @@ func ThemeConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"colors": {
+							attrColors: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 8, // Colors size needs to be in the range between 8 and 20
@@ -204,7 +204,7 @@ func expandDataColorPalette(tfList []any) *awstypes.DataColorPalette {
 
 	apiObject := &awstypes.DataColorPalette{}
 
-	if v, ok := tfMap["colors"].([]any); ok {
+	if v, ok := tfMap[attrColors].([]any); ok {
 		apiObject.Colors = flex.ExpandStringValueList(v)
 	}
 	if v, ok := tfMap["empty_fill_color"].(string); ok && v != "" {
@@ -489,7 +489,7 @@ func flattenDataColorPalette(apiObject *awstypes.DataColorPalette) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Colors != nil {
-		tfMap["colors"] = apiObject.Colors
+		tfMap[attrColors] = apiObject.Colors
 	}
 	if apiObject.EmptyFillColor != nil {
 		tfMap["empty_fill_color"] = aws.ToString(apiObject.EmptyFillColor)

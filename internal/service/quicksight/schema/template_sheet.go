@@ -54,7 +54,7 @@ func interactiveLayoutConfigurationSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"canvas_size_options": {
+							attrCanvasSizeOptions: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -88,7 +88,7 @@ func interactiveLayoutConfigurationSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"canvas_size_options": {
+							attrCanvasSizeOptions: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -136,7 +136,7 @@ func paginatedLayoutConfigurationSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"canvas_size_options": {
+							attrCanvasSizeOptions: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -219,7 +219,7 @@ var layoutSchema = sync.OnceValue(func() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"elements": freeFormLayoutElementsSchema(),
-										"canvas_size_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FreeFormLayoutCanvasSizeOptions.html
+										attrCanvasSizeOptions: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FreeFormLayoutCanvasSizeOptions.html
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 1,
@@ -298,7 +298,7 @@ var layoutSchema = sync.OnceValue(func() *schema.Schema {
 												},
 											},
 										},
-										"canvas_size_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SectionBasedLayoutCanvasSizeOptions.html
+										attrCanvasSizeOptions: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SectionBasedLayoutCanvasSizeOptions.html
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 1,
@@ -356,7 +356,7 @@ var gridLayoutConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 						},
 					},
 				},
-				"canvas_size_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GridLayoutCanvasSizeOptions.html
+				attrCanvasSizeOptions: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GridLayoutCanvasSizeOptions.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -453,8 +453,8 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrColor:      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -465,8 +465,8 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrColor:      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -477,7 +477,7 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -495,7 +495,7 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -510,12 +510,12 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrColor:      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
-				"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
@@ -655,7 +655,7 @@ func expandDefaultFreeFormLayoutConfiguration(tfList []any) *awstypes.DefaultFre
 
 	apiObject := &awstypes.DefaultFreeFormLayoutConfiguration{}
 
-	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCanvasSizeOptions].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandFreeFormLayoutCanvasSizeOptions(v)
 	}
 
@@ -712,7 +712,7 @@ func expandDefaultGridLayoutConfiguration(tfList []any) *awstypes.DefaultGridLay
 
 	apiObject := &awstypes.DefaultGridLayoutConfiguration{}
 
-	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCanvasSizeOptions].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandGridLayoutCanvasSizeOptions(v)
 	}
 
@@ -791,7 +791,7 @@ func expandDefaultSectionBasedLayoutConfiguration(tfList []any) *awstypes.Defaul
 
 	apiObject := &awstypes.DefaultSectionBasedLayoutConfiguration{}
 
-	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCanvasSizeOptions].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandSectionBasedLayoutCanvasSizeOptions(v)
 	}
 
@@ -892,7 +892,7 @@ func expandSheetDefinition(tfMap map[string]any) *awstypes.SheetDefinition {
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap["filter_controls"].([]any); ok && len(v) > 0 {
@@ -1019,7 +1019,7 @@ func expandFreeFormLayoutConfiguration(tfList []any) *awstypes.FreeFormLayoutCon
 	if v, ok := tfMap["elements"].([]any); ok && len(v) > 0 {
 		apiObject.Elements = expandFreeFormLayoutElements(v)
 	}
-	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCanvasSizeOptions].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandFreeFormLayoutCanvasSizeOptions(v)
 	}
 
@@ -1075,7 +1075,7 @@ func expandFreeFormLayoutElement(tfMap map[string]any) *awstypes.FreeFormLayoutE
 	if v, ok := tfMap["y_axis_location"].(string); ok && v != "" {
 		apiObject.YAxisLocation = aws.String(v)
 	}
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 	if v, ok := tfMap["background_style"].([]any); ok && len(v) > 0 {
@@ -1109,10 +1109,10 @@ func expandFreeFormLayoutElementBackgroundStyle(tfList []any) *awstypes.FreeForm
 
 	apiObject := &awstypes.FreeFormLayoutElementBackgroundStyle{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -1131,10 +1131,10 @@ func expandFreeFormLayoutElementBorderStyle(tfList []any) *awstypes.FreeFormLayo
 
 	apiObject := &awstypes.FreeFormLayoutElementBorderStyle{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -1153,7 +1153,7 @@ func expandLoadingAnimation(tfList []any) *awstypes.LoadingAnimation {
 
 	apiObject := &awstypes.LoadingAnimation{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -1213,7 +1213,7 @@ func expandSheetElementConfigurationOverrides(tfList []any) *awstypes.SheetEleme
 
 	apiObject := &awstypes.SheetElementConfigurationOverrides{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -1235,7 +1235,7 @@ func expandGridLayoutConfiguration(tfList []any) *awstypes.GridLayoutConfigurati
 	if v, ok := tfMap["elements"].([]any); ok && len(v) > 0 {
 		apiObject.Elements = expandGridLayoutElements(v)
 	}
-	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCanvasSizeOptions].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandGridLayoutCanvasSizeOptions(v)
 	}
 
@@ -1314,7 +1314,7 @@ func expandSectionBasedLayoutConfiguration(tfList []any) *awstypes.SectionBasedL
 	if v, ok := tfMap["body_sections"].([]any); ok && len(v) > 0 {
 		apiObject.BodySections = expandBodySectionConfigurations(v)
 	}
-	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCanvasSizeOptions].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandSectionBasedLayoutCanvasSizeOptions(v)
 	}
 	if v, ok := tfMap["footer_sections"].([]any); ok && len(v) > 0 {
@@ -1738,7 +1738,7 @@ func flattenDefaultFreeFormLayoutConfiguration(apiObject *awstypes.DefaultFreeFo
 	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenFreeFormLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+		tfMap[attrCanvasSizeOptions] = flattenFreeFormLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 
 	return []any{tfMap}
@@ -1780,7 +1780,7 @@ func flattenDefaultGridLayoutConfiguration(apiObject *awstypes.DefaultGridLayout
 	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenGridLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+		tfMap[attrCanvasSizeOptions] = flattenGridLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 
 	return []any{tfMap}
@@ -1837,7 +1837,7 @@ func flattenDefaultSectionBasedLayoutConfiguration(apiObject *awstypes.DefaultSe
 	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenSectionBasedLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+		tfMap[attrCanvasSizeOptions] = flattenSectionBasedLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 
 	return []any{tfMap}
@@ -1942,7 +1942,7 @@ func flattenFreeFormLayoutConfiguration(apiObject *awstypes.FreeFormLayoutConfig
 	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenFreeFormLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+		tfMap[attrCanvasSizeOptions] = flattenFreeFormLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 	if apiObject.Elements != nil {
 		tfMap["elements"] = flattenFreeFormLayoutElement(apiObject.Elements)
@@ -1983,7 +1983,7 @@ func flattenFreeFormLayoutElement(apiObjects []awstypes.FreeFormLayoutElement) [
 		if apiObject.SelectedBorderStyle != nil {
 			tfMap["selected_border_style"] = flattenFreeFormLayoutElementBorderStyle(apiObject.SelectedBorderStyle)
 		}
-		tfMap["visibility"] = apiObject.Visibility
+		tfMap[attrVisibility] = apiObject.Visibility
 
 		tfList = append(tfList, tfMap)
 	}
@@ -1999,9 +1999,9 @@ func flattenFreeFormLayoutElementBackgroundStyle(apiObject *awstypes.FreeFormLay
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }
@@ -2014,9 +2014,9 @@ func flattenFreeFormLayoutElementBorderStyle(apiObject *awstypes.FreeFormLayoutE
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }
@@ -2028,7 +2028,7 @@ func flattenLoadingAnimation(apiObject *awstypes.LoadingAnimation) []any {
 
 	tfMap := map[string]any{}
 
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }
@@ -2063,7 +2063,7 @@ func flattenSheetElementConfigurationOverrides(apiObject *awstypes.SheetElementC
 
 	tfMap := map[string]any{}
 
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }
@@ -2076,7 +2076,7 @@ func flattenGridLayoutConfiguration(apiObject *awstypes.GridLayoutConfiguration)
 	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenGridLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+		tfMap[attrCanvasSizeOptions] = flattenGridLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 	if apiObject.Elements != nil {
 		tfMap["elements"] = flattenGridLayoutElement(apiObject.Elements)
@@ -2124,7 +2124,7 @@ func flattenSectionBasedLayoutConfiguration(apiObject *awstypes.SectionBasedLayo
 		tfMap["body_sections"] = flattenBodySectionConfiguration(apiObject.BodySections)
 	}
 	if apiObject.CanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenSectionBasedLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+		tfMap[attrCanvasSizeOptions] = flattenSectionBasedLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 	if apiObject.FooterSections != nil {
 		tfMap["footer_sections"] = flattenHeaderFooterSectionConfiguration(apiObject.FooterSections)

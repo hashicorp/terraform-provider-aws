@@ -24,8 +24,8 @@ func TemplateDefinitionSchema() *schema.Schema {
 		Optional: true,
 		Computed: true,
 		ExactlyOneOf: []string{
-			"definition",
-			"source_entity",
+			attrDefinition,
+			attrSourceEntity,
 		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -39,9 +39,9 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
+							attrColumn:              columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFormatConfiguration: formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
+							names.AttrRole:          stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -101,7 +101,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 									},
 								},
 							},
-							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
+							attrTitle: stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -432,7 +432,7 @@ var calculatedFieldsSchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				attrDataSetIdentifier: stringLenBetweenSchema(attrRequired, 1, 2048),
 				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 32000),
 				names.AttrName:        stringLenBetweenSchema(attrRequired, 1, 128),
 			},
@@ -510,8 +510,8 @@ func columnSchema(required bool) *schema.Schema {
 			Optional: !required,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-					"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+					attrColumnName:        stringLenBetweenSchema(attrRequired, 1, 128),
+					attrDataSetIdentifier: stringLenBetweenSchema(attrRequired, 1, 2048),
 				},
 			},
 		},
@@ -603,7 +603,7 @@ var rollingDateConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrOptional, 1, 2048),
+				attrDataSetIdentifier: stringLenBetweenSchema(attrOptional, 1, 2048),
 				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 4096),
 			},
 		},
@@ -616,8 +616,8 @@ func TemplateSourceEntitySchema() *schema.Schema {
 		MaxItems: 1,
 		Optional: true,
 		ExactlyOneOf: []string{
-			"definition",
-			"source_entity",
+			attrDefinition,
+			attrSourceEntity,
 		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -810,7 +810,7 @@ func expandCalculatedField(tfMap map[string]any) *awstypes.CalculatedField {
 
 	apiObject := &awstypes.CalculatedField{}
 
-	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[attrDataSetIdentifier].(string); ok && v != "" {
 		apiObject.DataSetIdentifier = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
@@ -854,11 +854,11 @@ func expandColumnConfiguration(tfMap map[string]any) *awstypes.ColumnConfigurati
 
 	apiObject := &awstypes.ColumnConfiguration{}
 
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandFormatConfiguration(v)
 	}
 
@@ -885,10 +885,10 @@ func expandColumnIdentifier(tfList []any) *awstypes.ColumnIdentifier {
 func expandColumnIdentifierInternal(tfMap map[string]any) *awstypes.ColumnIdentifier {
 	apiObject := &awstypes.ColumnIdentifier{}
 
-	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[attrDataSetIdentifier].(string); ok && v != "" {
 		apiObject.DataSetIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["column_name"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColumnName].(string); ok && v != "" {
 		apiObject.ColumnName = aws.String(v)
 	}
 
@@ -1233,7 +1233,7 @@ func expandRollingDateConfiguration(tfList []any) *awstypes.RollingDateConfigura
 
 	apiObject := &awstypes.RollingDateConfiguration{}
 
-	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[attrDataSetIdentifier].(string); ok && v != "" {
 		apiObject.DataSetIdentifier = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrExpression].(string); ok {
@@ -1357,7 +1357,7 @@ func flattenCalculatedFields(apiObjects []awstypes.CalculatedField) []any {
 		tfMap := map[string]any{}
 
 		if apiObject.DataSetIdentifier != nil {
-			tfMap["data_set_identifier"] = aws.ToString(apiObject.DataSetIdentifier)
+			tfMap[attrDataSetIdentifier] = aws.ToString(apiObject.DataSetIdentifier)
 		}
 		if apiObject.Expression != nil {
 			tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
@@ -1383,10 +1383,10 @@ func flattenColumnConfigurations(apiObjects []awstypes.ColumnConfiguration) []an
 		tfMap := map[string]any{}
 
 		if apiObject.Column != nil {
-			tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+			tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 		}
 		if apiObject.FormatConfiguration != nil {
-			tfMap["format_configuration"] = flattenFormatConfiguration(apiObject.FormatConfiguration)
+			tfMap[attrFormatConfiguration] = flattenFormatConfiguration(apiObject.FormatConfiguration)
 		}
 		tfMap[names.AttrRole] = apiObject.Role
 
@@ -1403,10 +1403,10 @@ func flattenColumnIdentifier(apiObject *awstypes.ColumnIdentifier) []any {
 
 	tfMap := map[string]any{}
 	if apiObject.ColumnName != nil {
-		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
+		tfMap[attrColumnName] = aws.ToString(apiObject.ColumnName)
 	}
 	if apiObject.DataSetIdentifier != nil {
-		tfMap["data_set_identifier"] = aws.ToString(apiObject.DataSetIdentifier)
+		tfMap[attrDataSetIdentifier] = aws.ToString(apiObject.DataSetIdentifier)
 	}
 
 	return []any{tfMap}
@@ -1602,7 +1602,7 @@ func flattenRollingDateConfiguration(apiObject *awstypes.RollingDateConfiguratio
 	tfMap := map[string]any{}
 
 	if apiObject.DataSetIdentifier != nil {
-		tfMap["data_set_identifier"] = aws.ToString(apiObject.DataSetIdentifier)
+		tfMap[attrDataSetIdentifier] = aws.ToString(apiObject.DataSetIdentifier)
 	}
 	if apiObject.Expression != nil {
 		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
@@ -1674,7 +1674,7 @@ func flattenSheetDefinitions(apiObjects []awstypes.SheetDefinition) []any {
 			tfMap["text_boxes"] = flattenTextBoxes(apiObject.TextBoxes)
 		}
 		if apiObject.Title != nil {
-			tfMap["title"] = aws.ToString(apiObject.Title)
+			tfMap[attrTitle] = aws.ToString(apiObject.Title)
 		}
 		if apiObject.Visuals != nil {
 			tfMap["visuals"] = flattenVisuals(apiObject.Visuals)

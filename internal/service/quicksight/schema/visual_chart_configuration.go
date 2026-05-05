@@ -143,7 +143,7 @@ var axisDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 							"visible_range": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisibleRangeOptions.html
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -211,21 +211,21 @@ var chartAxisLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column":   columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
+										attrColumn:  columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+										attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 									},
 								},
 							},
-							"custom_label": {
+							attrCustomLabel: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
+							attrFontConfiguration: fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 						},
 					},
 				},
 				"sort_icon_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
-				"visibility":           stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility:         stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
@@ -264,8 +264,8 @@ var contributionAnalysisDefaultsSchema = sync.OnceValue(func() *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-							"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrColumnName:        stringLenBetweenSchema(attrRequired, 1, 128),
+							attrDataSetIdentifier: stringLenBetweenSchema(attrRequired, 1, 2048),
 						},
 					},
 				},
@@ -290,7 +290,7 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrOptional),
+							attrAxisBinding: stringEnumSchema[awstypes.AxisBinding](attrOptional),
 							"dynamic_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineDynamicDataConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -299,7 +299,7 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"calculation":                  numericalAggregationFunctionSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-										"column":                       columnSchema(true),                       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+										attrColumn:                     columnSchema(true),                       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 										"measure_aggregation_function": aggregationFunctionSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 									},
 								},
@@ -335,12 +335,12 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label": stringMatchSchema(attrRequired, `.*\S.*`, ""),
+										attrCustomLabel: stringMatchSchema(attrRequired, `.*\S.*`, ""),
 									},
 								},
 							},
 							"font_color":          hexColorSchema(attrOptional),
-							"font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
+							attrFontConfiguration: fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 							"horizontal_position": stringEnumSchema[awstypes.ReferenceLineLabelHorizontalPosition](attrOptional),
 							"value_label_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineValueLabelConfiguration.html
 								Type:     schema.TypeList,
@@ -349,8 +349,8 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"format_configuration": numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
-										"relative_position":    stringEnumSchema[awstypes.ReferenceLineValueLabelRelativePosition](attrOptional),
+										attrFormatConfiguration: numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
+										"relative_position":     stringEnumSchema[awstypes.ReferenceLineValueLabelRelativePosition](attrOptional),
 									},
 								},
 							},
@@ -366,7 +366,7 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":   hexColorSchema(attrOptional),
+							attrColor: hexColorSchema(attrOptional),
 							"pattern": stringEnumSchema[awstypes.ReferenceLinePatternType](attrOptional),
 						},
 					},
@@ -407,16 +407,16 @@ var smallMultiplesOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 							},
 							"gutter_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
-							"title": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelTitleOptions.html
+							attrTitle: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelTitleOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"font_configuration":        fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
+										attrFontConfiguration:       fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 										"horizontal_text_alignment": stringEnumSchema[awstypes.HorizontalTextAlignment](attrOptional),
-										"visibility":                stringEnumSchema[awstypes.Visibility](attrOptional),
+										attrVisibility:              stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -659,7 +659,7 @@ func expandScrollBarOptions(tfList []any) *awstypes.ScrollBarOptions {
 
 	apiObject := &awstypes.ScrollBarOptions{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 	if v, ok := tfMap["visible_range"].([]any); ok && len(v) > 0 {
@@ -744,7 +744,7 @@ func expandChartAxisLabelOptions(tfList []any) *awstypes.ChartAxisLabelOptions {
 
 	apiObject := &awstypes.ChartAxisLabelOptions{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 	if v, ok := tfMap["sort_icon_visibility"].(string); ok && v != "" {
@@ -788,13 +788,13 @@ func expandAxisLabelOptions(tfMap map[string]any) *awstypes.AxisLabelOptions {
 
 	apiObject := &awstypes.AxisLabelOptions{}
 
-	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCustomLabel].(string); ok && v != "" {
 		apiObject.CustomLabel = aws.String(v)
 	}
 	if v, ok := tfMap["apply_to"].([]any); ok && len(v) > 0 {
 		apiObject.ApplyTo = expandAxisLabelReferenceOptions(v)
 	}
-	if v, ok := tfMap["font_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFontConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FontConfiguration = expandFontConfiguration(v)
 	}
 
@@ -813,10 +813,10 @@ func expandAxisLabelReferenceOptions(tfList []any) *awstypes.AxisLabelReferenceO
 
 	apiObject := &awstypes.AxisLabelReferenceOptions{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
@@ -923,7 +923,7 @@ func expandReferenceLineDataConfiguration(tfList []any) *awstypes.ReferenceLineD
 
 	apiObject := &awstypes.ReferenceLineDataConfiguration{}
 
-	if v, ok := tfMap["axis_binding"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAxisBinding].(string); ok && v != "" {
 		apiObject.AxisBinding = awstypes.AxisBinding(v)
 	}
 	if v, ok := tfMap["dynamic_configuration"].([]any); ok && len(v) > 0 {
@@ -951,7 +951,7 @@ func expandReferenceLineDynamicDataConfiguration(tfList []any) *awstypes.Referen
 	if v, ok := tfMap["calculation"].([]any); ok && len(v) > 0 {
 		apiObject.Calculation = expandNumericalAggregationFunction(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["measure_aggregation_function"].([]any); ok && len(v) > 0 {
@@ -1004,7 +1004,7 @@ func expandReferenceLineLabelConfiguration(tfList []any) *awstypes.ReferenceLine
 	if v, ok := tfMap["custom_label_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.CustomLabelConfiguration = expandReferenceLineCustomLabelConfiguration(v)
 	}
-	if v, ok := tfMap["font_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFontConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FontConfiguration = expandFontConfiguration(v)
 	}
 	if v, ok := tfMap["value_label_configuration"].([]any); ok && len(v) > 0 {
@@ -1026,7 +1026,7 @@ func expandReferenceLineCustomLabelConfiguration(tfList []any) *awstypes.Referen
 
 	apiObject := &awstypes.ReferenceLineCustomLabelConfiguration{}
 
-	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCustomLabel].(string); ok && v != "" {
 		apiObject.CustomLabel = aws.String(v)
 	}
 
@@ -1048,7 +1048,7 @@ func expandReferenceLineValueLabelConfiguration(tfList []any) *awstypes.Referenc
 	if v, ok := tfMap["relative_position"].(string); ok && v != "" {
 		apiObject.RelativePosition = awstypes.ReferenceLineValueLabelRelativePosition(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandNumericFormatConfiguration(v)
 	}
 
@@ -1067,7 +1067,7 @@ func expandReferenceLineStyleConfiguration(tfList []any) *awstypes.ReferenceLine
 
 	apiObject := &awstypes.ReferenceLineStyleConfiguration{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["pattern"].(string); ok && v != "" {
@@ -1138,7 +1138,7 @@ func expandPanelConfiguration(tfList []any) *awstypes.PanelConfiguration {
 	if v, ok := tfMap["gutter_visibility"].(string); ok && v != "" {
 		apiObject.GutterVisibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandPanelTitleOptions(v)
 	}
 
@@ -1160,10 +1160,10 @@ func expandPanelTitleOptions(tfList []any) *awstypes.PanelTitleOptions {
 	if v, ok := tfMap["horizontal_text_alignment"].(string); ok && v != "" {
 		apiObject.HorizontalTextAlignment = awstypes.HorizontalTextAlignment(v)
 	}
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["font_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFontConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FontConfiguration = expandFontConfiguration(v)
 	}
 
@@ -1363,7 +1363,7 @@ func flattenScrollBarOptions(apiObject *awstypes.ScrollBarOptions) []any {
 
 	tfMap := map[string]any{}
 
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 	if apiObject.VisibleRange != nil {
 		tfMap["visible_range"] = flattenVisibleRangeOptions(apiObject.VisibleRange)
 	}
@@ -1430,7 +1430,7 @@ func flattenChartAxisLabelOptions(apiObject *awstypes.ChartAxisLabelOptions) []a
 		tfMap["axis_label_options"] = flattenAxisLabelOptions(apiObject.AxisLabelOptions)
 	}
 	tfMap["sort_icon_visibility"] = apiObject.SortIconVisibility
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }
@@ -1449,10 +1449,10 @@ func flattenAxisLabelOptions(apiObjects []awstypes.AxisLabelOptions) []any {
 			tfMap["apply_to"] = flattenAxisLabelReferenceOptions(apiObject.ApplyTo)
 		}
 		if apiObject.CustomLabel != nil {
-			tfMap["custom_label"] = aws.ToString(apiObject.CustomLabel)
+			tfMap[attrCustomLabel] = aws.ToString(apiObject.CustomLabel)
 		}
 		if apiObject.FontConfiguration != nil {
-			tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
+			tfMap[attrFontConfiguration] = flattenFontConfiguration(apiObject.FontConfiguration)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1469,10 +1469,10 @@ func flattenAxisLabelReferenceOptions(apiObject *awstypes.AxisLabelReferenceOpti
 	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 
 	return []any{tfMap}
@@ -1509,8 +1509,8 @@ func flattenColumnIdentifiers(apiObjects []awstypes.ColumnIdentifier) []any {
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"column_name":         aws.ToString(apiObject.ColumnName),
-			"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
+			attrColumnName:        aws.ToString(apiObject.ColumnName),
+			attrDataSetIdentifier: aws.ToString(apiObject.DataSetIdentifier),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1553,7 +1553,7 @@ func flattenReferenceLineDataConfiguration(apiObject *awstypes.ReferenceLineData
 
 	tfMap := map[string]any{}
 
-	tfMap["axis_binding"] = apiObject.AxisBinding
+	tfMap[attrAxisBinding] = apiObject.AxisBinding
 	if apiObject.DynamicConfiguration != nil {
 		tfMap["dynamic_configuration"] = flattenReferenceLineDynamicDataConfiguration(apiObject.DynamicConfiguration)
 	}
@@ -1575,7 +1575,7 @@ func flattenReferenceLineDynamicDataConfiguration(apiObject *awstypes.ReferenceL
 		tfMap["calculation"] = flattenNumericalAggregationFunction(apiObject.Calculation)
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.MeasureAggregationFunction != nil {
 		tfMap["measure_aggregation_function"] = flattenAggregationFunction(apiObject.MeasureAggregationFunction)
@@ -1610,7 +1610,7 @@ func flattenReferenceLineLabelConfiguration(apiObject *awstypes.ReferenceLineLab
 		tfMap["font_color"] = aws.ToString(apiObject.FontColor)
 	}
 	if apiObject.FontConfiguration != nil {
-		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
+		tfMap[attrFontConfiguration] = flattenFontConfiguration(apiObject.FontConfiguration)
 	}
 	tfMap["horizontal_position"] = apiObject.HorizontalPosition
 	if apiObject.ValueLabelConfiguration != nil {
@@ -1626,7 +1626,7 @@ func flattenReferenceLineCustomLabelConfiguration(apiObject *awstypes.ReferenceL
 	}
 
 	tfMap := map[string]any{
-		"custom_label": aws.ToString(apiObject.CustomLabel),
+		attrCustomLabel: aws.ToString(apiObject.CustomLabel),
 	}
 
 	return []any{tfMap}
@@ -1640,7 +1640,7 @@ func flattenReferenceLineValueLabelConfiguration(apiObject *awstypes.ReferenceLi
 	tfMap := map[string]any{}
 
 	if apiObject.FormatConfiguration != nil {
-		tfMap["format_configuration"] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
+		tfMap[attrFormatConfiguration] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	tfMap["relative_position"] = apiObject.RelativePosition
 
@@ -1655,7 +1655,7 @@ func flattenReferenceLineStyleConfiguration(apiObject *awstypes.ReferenceLineSty
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	tfMap["pattern"] = apiObject.Pattern
 
@@ -1705,7 +1705,7 @@ func flattenPanelConfiguration(apiObject *awstypes.PanelConfiguration) []any {
 		tfMap["gutter_spacing"] = aws.ToString(apiObject.GutterSpacing)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenPanelTitleOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenPanelTitleOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}
@@ -1719,10 +1719,10 @@ func flattenPanelTitleOptions(apiObject *awstypes.PanelTitleOptions) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.FontConfiguration != nil {
-		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
+		tfMap[attrFontConfiguration] = flattenFontConfiguration(apiObject.FontConfiguration)
 	}
 	tfMap["horizontal_text_alignment"] = apiObject.HorizontalTextAlignment
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }

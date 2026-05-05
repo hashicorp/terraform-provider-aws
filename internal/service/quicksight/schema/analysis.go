@@ -18,8 +18,8 @@ func AnalysisDefinitionSchema() *schema.Schema {
 		Optional: true,
 		Computed: true,
 		ExactlyOneOf: []string{
-			"definition",
-			"source_entity",
+			attrDefinition,
+			attrSourceEntity,
 		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -33,9 +33,9 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
+							"column":                columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFormatConfiguration: formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
+							names.AttrRole:          stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -95,7 +95,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 									},
 								},
 							},
-							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
+							attrTitle: stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -115,8 +115,8 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 		MaxItems: 1,
 		Optional: true,
 		ExactlyOneOf: []string{
-			"definition",
-			"source_entity",
+			attrDefinition,
+			attrSourceEntity,
 		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{

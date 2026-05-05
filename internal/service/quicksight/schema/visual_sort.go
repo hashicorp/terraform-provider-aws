@@ -36,9 +36,9 @@ var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringEnumSchema[awstypes.SortDirection](attrRequired),
-				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+				"direction":             stringEnumSchema[awstypes.SortDirection](attrRequired),
+				"sort_by":               columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				attrAggregationFunction: aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
 		},
 	}
@@ -53,7 +53,7 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"direction": stringEnumSchema[awstypes.SortDirection](attrRequired),
-				"field_id":  stringLenBetweenSchema(attrRequired, 1, 512),
+				attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 			},
 		},
 	}
@@ -118,7 +118,7 @@ func expandColumnSort(tfList []any) *awstypes.ColumnSort {
 	if v, ok := tfMap["sort_by"].([]any); ok && len(v) > 0 {
 		apiObject.SortBy = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrAggregationFunction].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
 
@@ -140,7 +140,7 @@ func expandFieldSort(tfList []any) *awstypes.FieldSort {
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
 		apiObject.Direction = awstypes.SortDirection(v)
 	}
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 
