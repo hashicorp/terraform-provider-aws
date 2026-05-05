@@ -1741,7 +1741,7 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, sourcePat
 		// Rule 2 detection: check if source AWS struct has more than 2 fields
 		// (Items, Quantity, plus additional fields like Enabled)
 		sourceStructType := vFrom.Type()
-		if sourceStructType.Kind() == reflect.Ptr { //nolint:govet
+		if sourceStructType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
 			sourceStructType = sourceStructType.Elem()
 		}
 

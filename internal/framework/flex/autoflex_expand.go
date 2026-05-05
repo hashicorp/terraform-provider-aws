@@ -188,7 +188,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	// No need to set the target value if there's no source value.
 	if vFrom.IsNull() {
 		// Special case: if target is XML wrapper struct and no omitempty, create zero-value
-		if vTo.Kind() == reflect.Ptr && !fieldOpts.omitempty { //nolint:govet
+		if vTo.Kind() == reflect.Ptr && !fieldOpts.omitempty { //nolint:govet // wants us to inline constant which would be less readable
 			targetType := vTo.Type().Elem()
 			if targetType.Kind() == reflect.Struct && potentialXMLWrapperStruct(targetType) {
 				tflog.SubsystemDebug(ctx, subsystemName, "Source is null but target is XML wrapper without omitempty - creating zero-value struct")
@@ -200,7 +200,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 					itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 				}
 				quantityField := zeroStruct.Elem().FieldByName(xmlWrapperFieldQuantity)
-				if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr { //nolint:govet
+				if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
 					zero := int32(0)
 					quantityField.Set(reflect.ValueOf(&zero))
 				}
@@ -211,7 +211,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 					if fieldType.Name == wrapperFieldName || fieldType.Name == xmlWrapperFieldQuantity {
 						continue
 					}
-					if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() { //nolint:govet
+					if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() { //nolint:govet // wants us to inline constant which would be less readable
 						switch fieldType.Type.Elem().Kind() {
 						case reflect.Bool:
 							falseVal := false
@@ -1993,7 +1993,7 @@ func (expander *autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Con
 		})
 
 		// Handle pointer to struct (which is what NestedObjectCollection contains)
-		if nestedObj.Kind() == reflect.Ptr && !nestedObj.IsNil() { //nolint:govet
+		if nestedObj.Kind() == reflect.Ptr && !nestedObj.IsNil() { //nolint:govet // wants us to inline constant which would be less readable
 			structObj := nestedObj.Elem()
 			if structObj.Kind() == reflect.Struct {
 				// Check if the struct has a wrapper field - indicates Rule 2
@@ -2548,7 +2548,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 					if itemsField.IsValid() && itemsField.Kind() == reflect.Slice {
 						itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 					}
-					if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 { //nolint:govet
+					if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 { //nolint:govet // wants us to inline constant which would be less readable
 						zero := int32(0)
 						quantityField.Set(reflect.ValueOf(&zero))
 					}
@@ -2562,7 +2562,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 							continue
 						}
 						// Set zero value for pointer fields
-						if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() { //nolint:govet
+						if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() { //nolint:govet // wants us to inline constant which would be less readable
 							switch fieldType.Type.Elem().Kind() {
 							case reflect.Bool:
 								falseVal := false
@@ -2617,7 +2617,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 						if itemsField.Kind() == reflect.Slice {
 							itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 						}
-						if quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 { //nolint:govet
+						if quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 { //nolint:govet // wants us to inline constant which would be less readable
 							zero := int32(0)
 							quantityField.Set(reflect.ValueOf(&zero))
 						}
