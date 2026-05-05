@@ -111,7 +111,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -153,7 +153,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})
 }
@@ -236,7 +236,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
 				CustomImport: true,
 			},
@@ -327,7 +327,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 	})
 }

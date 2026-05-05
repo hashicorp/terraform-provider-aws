@@ -2119,7 +2119,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[3]q
   role          = aws_iam_role.test_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_iam_role" "test_extraction_hook" {
@@ -3448,7 +3448,7 @@ resource "aws_lambda_function" "test2" {
   function_name = %[1]q
   role          = aws_iam_role.test_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_kendra_data_source" "test" {

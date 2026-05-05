@@ -160,6 +160,7 @@ func TestAccECSService_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", "aws_ecs_task_definition.test", names.AttrARN),
@@ -1555,6 +1556,7 @@ func TestAccECSService_clusterName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1564,10 +1566,11 @@ func TestAccECSService_clusterName(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_clusterName(rName),
+				Config: testAccServiceConfig_clusterName(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "cluster", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "cluster", clusterName),
 				),
 			},
 		},
@@ -3415,7 +3418,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
+  cluster         = aws_ecs_cluster.test.arn
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
@@ -4012,7 +4015,7 @@ resource "aws_lambda_function" "hook_success" {
   function_name    = "%[1]s-hook-success"
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/success_lambda_func.zip")
 }
 
@@ -4021,7 +4024,7 @@ resource "aws_lambda_function" "hook_failure" {
   function_name    = "%[1]s-hook-failure"
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/failure_lambda_func.zip")
 }
 `, rName))
@@ -6277,14 +6280,14 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceConfig_clusterName(rName string) string {
+func testAccServiceConfig_clusterName(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -6305,7 +6308,7 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
-`, rName)
+`, rName, clusterName)
 }
 
 func testAccServiceConfig_alb(rName string) string {

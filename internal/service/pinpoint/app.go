@@ -96,7 +96,7 @@ func resourceApp() *schema.Resource {
 						"messages_per_second": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(50, 20000),
+							ValidateFunc: validation.IntBetween(1, 20000),
 						},
 						"total": {
 							Type:         schema.TypeInt,

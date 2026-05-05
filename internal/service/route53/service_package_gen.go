@@ -167,7 +167,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "hostedzone",
 			}),
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity("zone_id"),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute("zone_id", true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -206,7 +206,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: "zone_id",
 				ResourceType:        "hostedzone",
 			}),
-			Identity: inttypes.GlobalSingleParameterIdentity("zone_id"),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute("zone_id", true)),
 		},
 	})
 }

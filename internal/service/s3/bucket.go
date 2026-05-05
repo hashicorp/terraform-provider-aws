@@ -812,10 +812,21 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}, errCodeOperationAborted)
 
 	if errs.Contains(err, "is not authorized to perform: s3:TagResource") ||
-		tfawserr.ErrCodeEquals(err, errCodeUnsupportedArgument) {
-		// Remove tags and try again
+		tfawserr.ErrCodeEquals(err, errCodeUnsupportedArgument, errCodeMalformedXML) {
+		// Remove tags and try again.
 		input.CreateBucketConfiguration.Tags = nil
 		tagOnCreate = false
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			return conn.CreateBucket(ctx, input)
+		}, errCodeOperationAborted)
+	}
+
+	// If still MalformedXML after removing tags, the S3-compatible API does not
+	// support the CreateBucketConfiguration body at all. Remove it entirely and retry.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/47061.
+	if tfawserr.ErrCodeEquals(err, errCodeMalformedXML) {
+		input.CreateBucketConfiguration = nil
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 			return conn.CreateBucket(ctx, input)

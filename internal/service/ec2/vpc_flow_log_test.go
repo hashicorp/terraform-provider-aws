@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -604,7 +606,7 @@ func TestAccVPCFlowLog_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCFlowLog_upgradeFromV5(t *testing.T) {
+func TestAccVPCFlowLog_UpgradeFromV5_logDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
 	resourceName := "aws_flow_log.test"
@@ -632,7 +634,8 @@ func TestAccVPCFlowLog_upgradeFromV5(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrLogGroupName), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrLogGroupName), knownvalue.StringExact(rName)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("log_destination"), "aws_cloudwatch_log_group.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 			{
@@ -651,13 +654,14 @@ func TestAccVPCFlowLog_upgradeFromV5(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrLogGroupName)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("log_destination"), "aws_cloudwatch_log_group.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 		},
 	})
 }
 
-func TestAccVPCFlowLog_upgradeFromV5PlanRefreshFalse(t *testing.T) {
+func TestAccVPCFlowLog_UpgradeFromV5_planRefreshFalse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
 	resourceName := "aws_flow_log.test"
@@ -711,6 +715,64 @@ func TestAccVPCFlowLog_upgradeFromV5PlanRefreshFalse(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrLogGroupName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_UpgradeFromV5_logGroupName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccVPCFlowLogConfig_upgradeFromV5LogGroupName_v5(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrLogGroupName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_destination"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_destination_type"), tfknownvalue.StringExact(awstypes.LogDestinationTypeCloudWatchLogs)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCFlowLogConfig_upgradeFromV5LogGroupName_current(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrLogGroupName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_destination"), tfknownvalue.RegionalARNExact("logs", "log-group:"+rName)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("log_destination"), "aws_cloudwatch_log_group.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_destination_type"), tfknownvalue.StringExact(awstypes.LogDestinationTypeCloudWatchLogs)),
 				},
 			},
 		},
@@ -1499,5 +1561,88 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_upgradeFromV5LogGroupName_v5(rName string) string {
+	return acctest.ConfigCompose(testAccFlowLogConfig_base(rName), fmt.Sprintf(`
+resource "aws_flow_log" "test" {
+  iam_role_arn = aws_iam_role.test.arn
+  traffic_type = "ALL"
+  vpc_id       = aws_vpc.test.id
+
+  log_group_name = aws_cloudwatch_log_group.test.name
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.${data.aws_partition.current.dns_suffix}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+data "aws_partition" "current" {}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_upgradeFromV5LogGroupName_current(rName string) string {
+	return acctest.ConfigCompose(testAccFlowLogConfig_base(rName), fmt.Sprintf(`
+resource "aws_flow_log" "test" {
+  iam_role_arn = aws_iam_role.test.arn
+  traffic_type = "ALL"
+  vpc_id       = aws_vpc.test.id
+
+  log_destination      = aws_cloudwatch_log_group.test.arn
+  log_destination_type = "cloud-watch-logs"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.${data.aws_partition.current.dns_suffix}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+data "aws_partition" "current" {}
 `, rName))
 }

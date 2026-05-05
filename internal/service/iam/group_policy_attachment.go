@@ -28,15 +28,19 @@ import (
 )
 
 // @SDKResource("aws_iam_group_policy_attachment", name="Group Policy Attachment")
+// @IdentityAttribute("group")
+// @IdentityAttribute("policy_arn")
+// @ImportIDHandler("groupPolicyAttachmentImportID")
+// @Testing(preIdentityVersion="v6.42.0", importIgnore="id", plannableImportAction="NoOp")
+// @Testing(importStateIdAttribute="policy_arn")
+// @Testing(importStateIdFunc=testAccGroupPolicyAttachmentImportStateIdFunc)
+// @Testing(importIgnore="id")
+// @Testing(plannableImportAction="NoOp")
 func resourceGroupPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceGroupPolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceGroupPolicyAttachmentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceGroupPolicyAttachmentImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"group": {
@@ -106,22 +110,6 @@ func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.Resource
 	}
 
 	return diags
-}
-
-func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <group-name>/<policy_arn>", d.Id())
-	}
-
-	groupName := idParts[0]
-	policyARN := idParts[1]
-
-	d.Set("group", groupName)
-	d.Set("policy_arn", policyARN)
-	d.SetId(fmt.Sprintf("%s-%s", groupName, policyARN))
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func attachPolicyToGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
@@ -205,4 +193,24 @@ func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam
 	}
 
 	return output, nil
+}
+
+type groupPolicyAttachmentImportID struct{}
+
+func (groupPolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return fmt.Sprintf("%s-%s", d.Get("group").(string), d.Get("policy_arn").(string))
+}
+
+func (groupPolicyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <group-name>/<policy_arn>", id)
+	}
+
+	result := map[string]any{
+		"group":      parts[0],
+		"policy_arn": parts[1],
+	}
+
+	return fmt.Sprintf("%s-%s", parts[0], parts[1]), result, nil
 }

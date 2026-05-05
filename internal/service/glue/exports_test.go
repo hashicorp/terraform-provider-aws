@@ -5,6 +5,7 @@ package glue
 
 // Exports for use in tests only.
 var (
+	ResourceCatalog                       = newCatalogResource
 	ResourceCatalogDatabase               = resourceCatalogDatabase
 	ResourceCatalogTable                  = resourceCatalogTable
 	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
@@ -26,6 +27,7 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
+	FindCatalogByName               = findCatalogByName
 	FindCatalogTableOptimizer       = findCatalogTableOptimizer
 	FindClassifierByName            = findClassifierByName
 	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey

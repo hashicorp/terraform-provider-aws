@@ -164,7 +164,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
 				{{ if not .Optional -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
 				{{ end -}}
 			{{ end -}}
 		{{ end -}}
@@ -208,7 +208,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
 				{{ if not .Optional -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
 				{{ end -}}
 			{{ end -}}
 		{{ end -}}
@@ -344,7 +344,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 						}),
 						{{ range .IdentityAttributes -}}
 							{{ if or (not .Optional) .TestNotNull -}}
+								{{ if .ResourceAttributeName -}}
+								statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+								{{ else -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end -}}
 						{{ end }}
 					{{ end -}}
@@ -487,7 +491,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 						}),
 						{{ range .IdentityAttributes -}}
 							{{ if or (not .Optional) .TestNotNull -}}
+								{{ if .ResourceAttributeName -}}
+								statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+								{{ else -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end -}}
 						{{ end }}
 					{{ end -}}
@@ -709,7 +717,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 							}),
 							{{ range .IdentityAttributes -}}
 								{{ if or (not .Optional) .TestNotNull -}}
+									{{ if .ResourceAttributeName -}}
+									statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+									{{ else -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end -}}
 							{{ end }}
 						{{ end -}}
@@ -774,7 +786,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 							}),
 							{{ range .IdentityAttributes -}}
 								{{ if or (not .Optional) .TestNotNull -}}
+									{{ if .ResourceAttributeName -}}
+									statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+									{{ else -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end -}}
 							{{ end }}
 						{{ end -}}
@@ -838,7 +854,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 							}),
 							{{ range .IdentityAttributes -}}
 								{{ if or (not .Optional) .TestNotNull -}}
+									{{ if .ResourceAttributeName -}}
+									statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+									{{ else -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end -}}
 							{{ end }}
 						{{ end -}}
@@ -987,7 +1007,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 							}),
 							{{ range .IdentityAttributes -}}
 								{{ if or (not .Optional) .TestNotNull -}}
+									{{ if .ResourceAttributeName -}}
+									statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+									{{ else -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end -}}
 							{{ end }}
 						{{ end -}}
@@ -1147,7 +1171,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 								}),
 								{{ range .IdentityAttributes -}}
 									{{ if or (not .Optional) .TestNotNull -}}
+										{{ if .ResourceAttributeName -}}
+										statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+										{{ else -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+										{{ end -}}
 									{{ end -}}
 								{{ end }}
 							{{ end -}}
@@ -1322,7 +1350,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 								}),
 								{{ range .IdentityAttributes -}}
 									{{ if or (not .Optional) .TestNotNull -}}
+										{{ if .ResourceAttributeName -}}
+										statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+										{{ else -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+										{{ end -}}
 									{{ end -}}
 								{{ end }}
 							{{ end -}}
@@ -1385,7 +1417,11 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 								}),
 								{{ range .IdentityAttributes -}}
 									{{ if or (not .Optional) .TestNotNull -}}
+										{{ if .ResourceAttributeName -}}
+										statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+										{{ else -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+										{{ end -}}
 									{{ end -}}
 								{{ end }}
 							{{ end -}}
@@ -1549,7 +1585,11 @@ func {{ template "testname" . }}_Identity_upgrade(t *testing.T) {
 						}),
 						{{ range .IdentityAttributes -}}
 							{{ if or (not .Optional) .TestNotNull -}}
+								{{ if .ResourceAttributeName -}}
+								statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+								{{ else -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end -}}
 						{{ end }}
 					{{ end -}}
@@ -1654,7 +1694,11 @@ func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 						}),
 						{{ range .IdentityAttributes -}}
 							{{ if or (not .Optional) .TestNotNull -}}
+								{{ if .ResourceAttributeName -}}
+								statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+								{{ else -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end -}}
 						{{ end }}
 					{{ end -}}
