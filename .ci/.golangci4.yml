@@ -184,6 +184,10 @@ linters:
         text: 'SA1019: \w+.Filters is deprecated: Using filters with List\w+ API is deprecated'
       - linters:
           - staticcheck
+        path: internal/service/lexmodels/
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: Amazon Lex V1 is deprecated. Use Amazon Lex V2 instead.'
+      - linters:
+          - staticcheck
         path: internal/service/neptune/
         text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:

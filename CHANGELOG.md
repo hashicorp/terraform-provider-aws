@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * data-source/aws_glue_connection: Add `authentication_configuration` attribute ([#43583](https://github.com/hashicorp/terraform-provider-aws/issues/43583))
 * resource/aws_appautoscaling_policy: Add resource identity support ([#47718](https://github.com/hashicorp/terraform-provider-aws/issues/47718))
 * resource/aws_ec2_client_vpn_endpoint: Add `transit_gateway_configuration` block ([#47635](https://github.com/hashicorp/terraform-provider-aws/issues/47635))
+* resource/aws_fsx_windows_file_system: Add `self_managed_active_directory.password_wo` and `self_managed_active_directory.password_wo_version` arguments ([#47752](https://github.com/hashicorp/terraform-provider-aws/issues/47752))
 * resource/aws_glue_connection: Add `authentication_configuration` argument ([#43583](https://github.com/hashicorp/terraform-provider-aws/issues/43583))
 * resource/aws_timestreaminfluxdb_db_cluster: Add `maintenance_schedule` configuration block ([#47354](https://github.com/hashicorp/terraform-provider-aws/issues/47354))
 * resource/aws_vpc_endpoint_route_table_association: Add resource identity support ([#47751](https://github.com/hashicorp/terraform-provider-aws/issues/47751))
