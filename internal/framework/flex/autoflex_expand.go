@@ -694,7 +694,7 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from list[%s]": v.ElementType(ctx),
-		logAttrKeyTo:       vTo.Kind(),
+		logAttrKeyTo:    vTo.Kind(),
 	})
 
 	return diags
@@ -1107,7 +1107,7 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from set[%s]": v.ElementType(ctx),
-		logAttrKeyTo:      vTo.Kind(),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
