@@ -19,6 +19,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+const (
+	acctestImportPath = "github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
+
 type CommonArgs struct {
 	Name           string // Resource Type Name
 	TypeName       string // Terraform Type Name
@@ -212,7 +216,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			stuff.CheckDestroyNoop = b
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -403,7 +407,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
 				},
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -419,7 +423,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			})
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -435,7 +439,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			})
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -463,7 +467,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
@@ -484,7 +488,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
@@ -510,7 +514,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
@@ -534,7 +538,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		varName := "rBgpAsn"
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
@@ -590,7 +594,7 @@ if err != nil {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
@@ -614,7 +618,7 @@ if err != nil {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
@@ -686,7 +690,7 @@ func Configure(d *CommonArgs) error {
 		d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 		d.GoImports = append(d.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 	}
