@@ -72,7 +72,7 @@ func ResourceMap() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"update_time": {
+			attrUpdateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -149,7 +149,7 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("map_arn", output.MapArn)
 	d.Set("map_name", output.MapName)
-	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
+	d.Set(attrUpdateTime, aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
 	setTagsOut(ctx, output.Tags)
 

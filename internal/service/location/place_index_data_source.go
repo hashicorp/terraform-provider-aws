@@ -59,7 +59,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"update_time": {
+			attrUpdateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,7 +101,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
 	d.Set(names.AttrTags, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)).Map())
-	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
+	d.Set(attrUpdateTime, aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
 	return diags
 }

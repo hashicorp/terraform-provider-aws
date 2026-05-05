@@ -46,7 +46,7 @@ func DataSourceRouteCalculator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"update_time": {
+			attrUpdateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrCreateTime, aws.ToTime(out.CreateTime).Format(time.RFC3339))
 	d.Set("data_source", out.DataSource)
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("update_time", aws.ToTime(out.UpdateTime).Format(time.RFC3339))
+	d.Set(attrUpdateTime, aws.ToTime(out.UpdateTime).Format(time.RFC3339))
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 

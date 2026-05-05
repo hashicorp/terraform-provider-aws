@@ -68,7 +68,7 @@ func ResourceTracker() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"update_time": {
+			attrUpdateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -148,7 +148,7 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set("tracker_arn", output.TrackerArn)
 	d.Set("tracker_name", output.TrackerName)
-	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
+	d.Set(attrUpdateTime, aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
 	return diags
 }

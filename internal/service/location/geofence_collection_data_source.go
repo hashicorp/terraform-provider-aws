@@ -47,7 +47,7 @@ func DataSourceGeofenceCollection() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"update_time": {
+			attrUpdateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +77,7 @@ func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrCreateTime, aws.ToTime(out.CreateTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
-	d.Set("update_time", aws.ToTime(out.UpdateTime).Format(time.RFC3339))
+	d.Set(attrUpdateTime, aws.ToTime(out.UpdateTime).Format(time.RFC3339))
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 

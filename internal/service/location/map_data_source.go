@@ -55,7 +55,7 @@ func DataSourceMap() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"update_time": {
+			attrUpdateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("map_arn", output.MapArn)
 	d.Set("map_name", output.MapName)
-	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
+	d.Set(attrUpdateTime, aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 	d.Set(names.AttrTags, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)).Map())
 
 	return diags
