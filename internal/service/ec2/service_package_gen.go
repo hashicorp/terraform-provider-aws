@@ -159,6 +159,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newNetworkInsightsAccessScopeResource,
+			TypeName: "aws_ec2_network_insights_access_scope",
+			Name:     "Network Insights Access Scope",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newSecondaryNetworkResource,
 			TypeName: "aws_ec2_secondary_network",
 			Name:     "SecondaryNetwork",
@@ -372,6 +385,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newNetworkInsightsAccessScopeResourceAsListResource,
+			TypeName: "aws_ec2_network_insights_access_scope",
+			Name:     "Network Insights Access Scope",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
 		{
 			Factory:  newSecondaryNetworkResourceAsListResource,
 			TypeName: "aws_ec2_secondary_network",

@@ -98,6 +98,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T, semaphore tfsync.Sem
 					resource.TestCheckResourceAttrPair(datasource3Name, "split_tunnel", resourceName, "split_tunnel"),
 					resource.TestCheckResourceAttrPair(datasource3Name, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasource3Name, "traffic_ip_address_type", resourceName, "traffic_ip_address_type"),
+					resource.TestCheckResourceAttrPair(datasource3Name, "transit_gateway_configuration", resourceName, "transit_gateway_configuration"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "transport_protocol", resourceName, "transport_protocol"),
 					resource.TestCheckResourceAttrPair(datasource3Name, names.AttrVPCID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(datasource3Name, "vpn_port", resourceName, "vpn_port"),

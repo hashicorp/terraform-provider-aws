@@ -257,6 +257,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_group_policy_attachment",
 			Name:     "Group Policy Attachment",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("group", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      groupPolicyAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceInstanceProfile,
@@ -483,6 +491,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newGroupPolicyAttachmentResourceAsListResource,
+			TypeName: "aws_iam_group_policy_attachment",
+			Name:     "Group Policy Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("group", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+		},
 		{
 			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_iam_policy",

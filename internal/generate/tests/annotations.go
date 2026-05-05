@@ -583,6 +583,49 @@ if err != nil {
 		}
 	}
 
+	if attr, ok := args.Keyword["acmRootDomainTfVar"]; ok {
+		varName := "rootDomain"
+		if len(attr) > 0 {
+			varName = attr
+		}
+		stuff.GoImports = append(stuff.GoImports,
+			common.GoImport{
+				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+			},
+		)
+		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+			Code: fmt.Sprintf(`%s := acctest.ACMCertificateDomainFromEnv(t)`, varName),
+		})
+		stuff.AdditionalTfVars_[varName] = TFVar{
+			GoVarName: varName,
+			Type:      TFVarTypeString,
+		}
+	}
+
+	if attr, ok := args.Keyword["acmSubdomainTfVar"]; ok {
+		parentName := "rootDomain"
+		varName := "domainName"
+		parts := strings.Split(attr, ";")
+		if len(parts) > 0 && len(parts[0]) > 0 {
+			parentName = parts[0]
+		}
+		if len(parts) > 1 && len(parts[1]) > 0 {
+			varName = parts[1]
+		}
+		stuff.GoImports = append(stuff.GoImports,
+			common.GoImport{
+				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+			},
+		)
+		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+			Code: fmt.Sprintf(`%s := acctest.ACMCertificateRandomSubDomain(%s)`, varName, parentName),
+		})
+		stuff.AdditionalTfVars_[varName] = TFVar{
+			GoVarName: varName,
+			Type:      TFVarTypeString,
+		}
+	}
+
 	// Resource Identity Versions
 	if attr, ok := args.Keyword["preIdentityVersion"]; ok {
 		version, err := version.NewVersion(attr)

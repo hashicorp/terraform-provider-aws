@@ -171,7 +171,7 @@ The `scaling_target` configuration block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `current_deployment` - ARN of the current deployment.
+* `current_deployment` - (**Deprecated**) ARN of the current deployment.
 * `ingress_paths` - List of ingress paths with access type and endpoint information.
 * `service_arn` - ARN of the Express Gateway Service.
 * `service_revision_arn` - ARN of the service revision.

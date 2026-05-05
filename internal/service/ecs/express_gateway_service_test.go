@@ -470,6 +470,52 @@ func TestAccECSExpressGatewayService_environmentVariableOrdering(t *testing.T) {
 	})
 }
 
+func TestAccECSExpressGatewayService_recreateAfterDeleting(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service1, service2 awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Initial creation
+			{
+				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service1),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
+				),
+			},
+			// Step 2: Remove Service
+			{
+				Config: testAccExpressGatewayServiceConfig_base(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceNotInState(ctx, t, resourceName),
+				),
+			},
+			// Step 3: Re-Create Service with same name
+			{
+				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service2),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -516,6 +562,17 @@ func testAccCheckExpressGatewayServiceExists(ctx context.Context, t *testing.T, 
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckExpressGatewayServiceNotInState(_ context.Context, _ *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if ok {
+			return fmt.Errorf("ECS Express Gateway Service %q found", rs.Primary.Attributes["service_arn"])
+		}
 
 		return nil
 	}

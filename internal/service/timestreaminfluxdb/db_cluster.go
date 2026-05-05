@@ -360,6 +360,40 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
+			"maintenance_schedule": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dbClusterMaintenanceScheduleData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				Description: `Specifies the maintenance schedule for the DB cluster, including the preferred
+					maintenance window and timezone. This field is only supported for InfluxDB V3 clusters
+					(when using an InfluxDB V3 db parameter group).`,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(19),
+								stringvalidator.RegexMatches(
+									regexache.MustCompile(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`),
+									"must be in the format ddd:HH:MM-ddd:HH:MM or an empty string",
+								),
+							},
+							Description: `The preferred maintenance window in the format ddd:HH:MM-ddd:HH:MM.
+								Day must be one of Mon, Tue, Wed, Thu, Fri, Sat, or Sun. Provide an empty
+								string to let the system choose a window.`,
+						},
+						"timezone": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+							},
+							Description: `The IANA timezone identifier for the maintenance window. For
+								example, America/New_York or UTC.`,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -695,6 +729,14 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				)
 			}
 		}
+
+		if !isNullOrUnknown(data.MaintenanceSchedule) {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("maintenance_schedule"),
+				"Invalid Configuration for InfluxDB V2",
+				"maintenance_schedule is only supported for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group)",
+			)
+		}
 	}
 }
 
@@ -858,6 +900,7 @@ type dbClusterResourceModel struct {
 	ID                            types.String                                                           `tfsdk:"id"`
 	InfluxAuthParametersSecretARN types.String                                                           `tfsdk:"influx_auth_parameters_secret_arn"`
 	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[dbClusterLogDeliveryConfigurationData] `tfsdk:"log_delivery_configuration"`
+	MaintenanceSchedule           fwtypes.ListNestedObjectValueOf[dbClusterMaintenanceScheduleData]      `tfsdk:"maintenance_schedule"`
 	Name                          types.String                                                           `tfsdk:"name"`
 	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                               `tfsdk:"network_type"`
 	Organization                  types.String                                                           `tfsdk:"organization"`
@@ -875,6 +918,11 @@ type dbClusterResourceModel struct {
 
 type dbClusterLogDeliveryConfigurationData struct {
 	S3Configuration fwtypes.ListNestedObjectValueOf[dbClusterS3ConfigurationData] `tfsdk:"s3_configuration"`
+}
+
+type dbClusterMaintenanceScheduleData struct {
+	PreferredMaintenanceWindow types.String `tfsdk:"preferred_maintenance_window"`
+	Timezone                   types.String `tfsdk:"timezone"`
 }
 
 type dbClusterS3ConfigurationData struct {

@@ -1614,7 +1614,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "lambdatest.handler"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
 }
 

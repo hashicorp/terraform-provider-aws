@@ -61,6 +61,7 @@ var (
 	ResourceNetworkACL                                    = resourceNetworkACL
 	ResourceNetworkACLAssociation                         = resourceNetworkACLAssociation
 	ResourceNetworkACLRule                                = resourceNetworkACLRule
+	ResourceNetworkInsightsAccessScope                    = newNetworkInsightsAccessScopeResource
 	ResourceNetworkInsightsAnalysis                       = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                           = resourceNetworkInsightsPath
 	ResourceNetworkInterface                              = resourceNetworkInterface
@@ -197,6 +198,7 @@ var (
 	FindNetworkACLAssociationByID                               = findNetworkACLAssociationByID
 	FindNetworkACLByID                                          = findNetworkACLByID
 	FindNetworkACLEntryByThreePartKey                           = findNetworkACLEntryByThreePartKey
+	FindNetworkInsightsAccessScopeByID                          = findNetworkInsightsAccessScopeByID
 	FindNetworkInsightsAnalysisByID                             = findNetworkInsightsAnalysisByID
 	FindNetworkInsightsPathByID                                 = findNetworkInsightsPathByID
 	FindNetworkInterfaceByID                                    = findNetworkInterfaceByID

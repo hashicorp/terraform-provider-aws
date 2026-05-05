@@ -68,6 +68,7 @@ const (
 	errCodeInvalidLocalGatewayRouteTableVPCAssociationIDNotFound   = "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound"
 	errCodeInvalidNetworkACLEntryNotFound                          = "InvalidNetworkAclEntry.NotFound"
 	errCodeInvalidNetworkACLIDNotFound                             = "InvalidNetworkAclID.NotFound"
+	errCodeInvalidNetworkInsightsAccessScopeIdNotFound             = "InvalidNetworkInsightsAccessScopeId.NotFound"
 	errCodeInvalidNetworkInsightsAnalysisIdNotFound                = "InvalidNetworkInsightsAnalysisId.NotFound"
 	errCodeInvalidNetworkInsightsPathIdNotFound                    = "InvalidNetworkInsightsPathId.NotFound"
 	errCodeInvalidNetworkInterfaceIDNotFound                       = "InvalidNetworkInterfaceID.NotFound"
