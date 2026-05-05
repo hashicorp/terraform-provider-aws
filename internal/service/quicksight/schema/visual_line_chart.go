@@ -262,11 +262,11 @@ func lineChartVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"attrCategoryItemsLimit_configuration": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										attrCategorySort:                       fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
-										"color_items_limit_configuration":      itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"small_multiples_limit_configuration":  itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"small_multiples_sort":                 fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"category_items_limit_configuration":  itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										attrCategorySort:                      fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"color_items_limit_configuration":     itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"small_multiples_limit_configuration": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"small_multiples_sort":                fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
@@ -1329,7 +1329,7 @@ func flattenLineChartSortConfiguration(apiObject *awstypes.LineChartSortConfigur
 	tfMap := map[string]any{}
 
 	if apiObject.CategoryItemsLimitConfiguration != nil {
-		tfMap["attrCategoryItemsLimit_configuration"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimitConfiguration)
+		tfMap["category_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimitConfiguration)
 	}
 	if apiObject.CategorySort != nil {
 		tfMap[attrCategorySort] = flattenFieldSortOptions(apiObject.CategorySort)
