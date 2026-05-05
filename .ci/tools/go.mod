@@ -13,7 +13,7 @@ require (
 	github.com/rhysd/actionlint v1.7.12
 	github.com/terraform-linters/tflint v0.62.0
 	golang.org/x/tools v0.44.0
-	mvdan.cc/gofumpt v0.9.2
+	mvdan.cc/gofumpt v0.10.0
 )
 
 require (
