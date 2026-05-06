@@ -190,7 +190,7 @@ func resourceConnectorProfile() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"access_token": {
+															attrAccessToken: {
 																Type:      schema.TypeString,
 																Optional:  true,
 																Sensitive: true,
@@ -216,13 +216,13 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"oauth_request": {
+															attrOauthRequest: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"auth_code": {
+																		attrAuthCode: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			ValidateFunc: validation.All(
@@ -230,7 +230,7 @@ func resourceConnectorProfile() *schema.Resource {
 																				validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																			),
 																		},
-																		"redirect_uri": {
+																		attrRedirectURI: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			ValidateFunc: validation.All(
@@ -303,7 +303,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"access_token": {
+												attrAccessToken: {
 													Type:      schema.TypeString,
 													Optional:  true,
 													Sensitive: true,
@@ -329,13 +329,13 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"oauth_request": {
+												attrOauthRequest: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"auth_code": {
+															attrAuthCode: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -343,7 +343,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"redirect_uri": {
+															attrRedirectURI: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -371,7 +371,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"access_token": {
+												attrAccessToken: {
 													Type:      schema.TypeString,
 													Optional:  true,
 													Sensitive: true,
@@ -380,13 +380,13 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"oauth_request": {
+												attrOauthRequest: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"auth_code": {
+															attrAuthCode: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -394,7 +394,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"redirect_uri": {
+															attrRedirectURI: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -464,7 +464,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"access_token": {
+												attrAccessToken: {
 													Type:      schema.TypeString,
 													Optional:  true,
 													Sensitive: true,
@@ -490,13 +490,13 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"oauth_request": {
+												attrOauthRequest: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"auth_code": {
+															attrAuthCode: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -504,7 +504,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"redirect_uri": {
+															attrRedirectURI: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -547,7 +547,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"access_token": {
+												attrAccessToken: {
 													Type:      schema.TypeString,
 													Optional:  true,
 													Sensitive: true,
@@ -571,13 +571,13 @@ func resourceConnectorProfile() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[types.OAuth2GrantType](),
 												},
-												"oauth_request": {
+												attrOauthRequest: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"auth_code": {
+															attrAuthCode: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -585,7 +585,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"redirect_uri": {
+															attrRedirectURI: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -642,7 +642,7 @@ func resourceConnectorProfile() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"access_token": {
+															attrAccessToken: {
 																Type:      schema.TypeString,
 																Optional:  true,
 																Sensitive: true,
@@ -667,13 +667,13 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"oauth_request": {
+															attrOauthRequest: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"auth_code": {
+																		attrAuthCode: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			ValidateFunc: validation.All(
@@ -681,7 +681,7 @@ func resourceConnectorProfile() *schema.Resource {
 																				validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																			),
 																		},
-																		"redirect_uri": {
+																		attrRedirectURI: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			ValidateFunc: validation.All(
@@ -752,7 +752,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"access_token": {
+												attrAccessToken: {
 													Type:      schema.TypeString,
 													Optional:  true,
 													Sensitive: true,
@@ -778,13 +778,13 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"oauth_request": {
+												attrOauthRequest: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"auth_code": {
+															attrAuthCode: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -792,7 +792,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"redirect_uri": {
+															attrRedirectURI: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -876,7 +876,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"access_token": {
+												attrAccessToken: {
 													Type:      schema.TypeString,
 													Optional:  true,
 													Sensitive: true,
@@ -902,13 +902,13 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"oauth_request": {
+												attrOauthRequest: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"auth_code": {
+															attrAuthCode: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -916,7 +916,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"redirect_uri": {
+															attrRedirectURI: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -1014,7 +1014,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1031,7 +1031,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1064,7 +1064,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1081,7 +1081,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1143,7 +1143,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
@@ -1258,7 +1258,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1283,7 +1283,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1373,7 +1373,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1390,7 +1390,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_url": {
+												attrInstanceURL: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1684,10 +1684,10 @@ func expandGoogleAnalyticsConnectorProfileCredentials(m map[string]any) *types.G
 		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
-	if v, ok := m["access_token"].(string); ok && v != "" {
+	if v, ok := m[attrAccessToken].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
 	}
-	if v, ok := m["oauth_request"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[attrOauthRequest].([]any); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]any))
 	}
 	if v, ok := m["refresh_token"].(string); ok && v != "" {
@@ -1700,10 +1700,10 @@ func expandGoogleAnalyticsConnectorProfileCredentials(m map[string]any) *types.G
 func expandHoneycodeConnectorProfileCredentials(m map[string]any) *types.HoneycodeConnectorProfileCredentials {
 	credentials := &types.HoneycodeConnectorProfileCredentials{}
 
-	if v, ok := m["access_token"].(string); ok && v != "" {
+	if v, ok := m[attrAccessToken].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
 	}
-	if v, ok := m["oauth_request"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[attrOauthRequest].([]any); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]any))
 	}
 	if v, ok := m["refresh_token"].(string); ok && v != "" {
@@ -1730,10 +1730,10 @@ func expandMarketoConnectorProfileCredentials(m map[string]any) *types.MarketoCo
 		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
-	if v, ok := m["access_token"].(string); ok && v != "" {
+	if v, ok := m[attrAccessToken].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
 	}
-	if v, ok := m["oauth_request"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[attrOauthRequest].([]any); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]any))
 	}
 
@@ -1752,7 +1752,7 @@ func expandRedshiftConnectorProfileCredentials(m map[string]any) *types.Redshift
 func expandSalesforceConnectorProfileCredentials(m map[string]any) *types.SalesforceConnectorProfileCredentials {
 	credentials := &types.SalesforceConnectorProfileCredentials{}
 
-	if v, ok := m["access_token"].(string); ok && v != "" {
+	if v, ok := m[attrAccessToken].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
 	}
 	if v, ok := m["client_credentials_arn"].(string); ok && v != "" {
@@ -1764,7 +1764,7 @@ func expandSalesforceConnectorProfileCredentials(m map[string]any) *types.Salesf
 	if v, ok := m["oauth2_grant_type"].(string); ok && v != "" {
 		credentials.OAuth2GrantType = types.OAuth2GrantType(v)
 	}
-	if v, ok := m["oauth_request"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[attrOauthRequest].([]any); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]any))
 	}
 	if v, ok := m["refresh_token"].(string); ok && v != "" {
@@ -1806,12 +1806,12 @@ func expandSingularConnectorProfileCredentials(m map[string]any) *types.Singular
 
 func expandSlackConnectorProfileCredentials(m map[string]any) *types.SlackConnectorProfileCredentials {
 	credentials := &types.SlackConnectorProfileCredentials{
-		AccessToken:  aws.String(m["access_token"].(string)),
+		AccessToken:  aws.String(m[attrAccessToken].(string)),
 		ClientId:     aws.String(m[names.AttrClientID].(string)),
 		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
-	if v, ok := m["oauth_request"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[attrOauthRequest].([]any); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]any))
 	}
 
@@ -1846,12 +1846,12 @@ func expandVeevaConnectorProfileCredentials(m map[string]any) *types.VeevaConnec
 
 func expandZendeskConnectorProfileCredentials(m map[string]any) *types.ZendeskConnectorProfileCredentials {
 	credentials := &types.ZendeskConnectorProfileCredentials{
-		AccessToken:  aws.String(m["access_token"].(string)),
+		AccessToken:  aws.String(m[attrAccessToken].(string)),
 		ClientId:     aws.String(m[names.AttrClientID].(string)),
 		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
-	if v, ok := m["oauth_request"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[attrOauthRequest].([]any); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]any))
 	}
 
@@ -1861,11 +1861,11 @@ func expandZendeskConnectorProfileCredentials(m map[string]any) *types.ZendeskCo
 func expandOAuthRequest(m map[string]any) *types.ConnectorOAuthRequest {
 	r := &types.ConnectorOAuthRequest{}
 
-	if v, ok := m["auth_code"].(string); ok && v != "" {
+	if v, ok := m[attrAuthCode].(string); ok && v != "" {
 		r.AuthCode = aws.String(v)
 	}
 
-	if v, ok := m["redirect_uri"].(string); ok && v != "" {
+	if v, ok := m[attrRedirectURI].(string); ok && v != "" {
 		r.RedirectUri = aws.String(v)
 	}
 
@@ -1920,10 +1920,10 @@ func expandOAuthCredentials(m map[string]any) *types.OAuthCredentials {
 		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
-	if v, ok := m["access_token"].(string); ok && v != "" {
+	if v, ok := m[attrAccessToken].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
 	}
-	if v, ok := m["oauth_request"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[attrOauthRequest].([]any); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]any))
 	}
 	if v, ok := m["refresh_token"].(string); ok && v != "" {
@@ -1936,7 +1936,7 @@ func expandOAuthCredentials(m map[string]any) *types.OAuthCredentials {
 func expandOAuth2Credentials(m map[string]any) *types.OAuth2Credentials {
 	credentials := &types.OAuth2Credentials{}
 
-	if v, ok := m["access_token"].(string); ok && v != "" {
+	if v, ok := m[attrAccessToken].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
 	}
 	if v, ok := m[names.AttrClientID].(string); ok && v != "" {
@@ -1945,7 +1945,7 @@ func expandOAuth2Credentials(m map[string]any) *types.OAuth2Credentials {
 	if v, ok := m[names.AttrClientSecret].(string); ok && v != "" {
 		credentials.ClientSecret = aws.String(v)
 	}
-	if v, ok := m["oauth_request"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[attrOauthRequest].([]any); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]any))
 	}
 	if v, ok := m["refresh_token"].(string); ok && v != "" {
@@ -2018,7 +2018,7 @@ func expandConnectorProfileProperties(m map[string]any) *types.ConnectorProfileP
 
 func expandDatadogConnectorProfileProperties(m map[string]any) *types.DatadogConnectorProfileProperties {
 	properties := &types.DatadogConnectorProfileProperties{
-		InstanceUrl: aws.String(m["instance_url"].(string)),
+		InstanceUrl: aws.String(m[attrInstanceURL].(string)),
 	}
 
 	return properties
@@ -2026,7 +2026,7 @@ func expandDatadogConnectorProfileProperties(m map[string]any) *types.DatadogCon
 
 func expandDynatraceConnectorProfileProperties(m map[string]any) *types.DynatraceConnectorProfileProperties {
 	properties := &types.DynatraceConnectorProfileProperties{
-		InstanceUrl: aws.String(m["instance_url"].(string)),
+		InstanceUrl: aws.String(m[attrInstanceURL].(string)),
 	}
 
 	return properties
@@ -2034,7 +2034,7 @@ func expandDynatraceConnectorProfileProperties(m map[string]any) *types.Dynatrac
 
 func expandInforNexusConnectorProfileProperties(m map[string]any) *types.InforNexusConnectorProfileProperties {
 	properties := &types.InforNexusConnectorProfileProperties{
-		InstanceUrl: aws.String(m["instance_url"].(string)),
+		InstanceUrl: aws.String(m[attrInstanceURL].(string)),
 	}
 
 	return properties
@@ -2042,7 +2042,7 @@ func expandInforNexusConnectorProfileProperties(m map[string]any) *types.InforNe
 
 func expandMarketoConnectorProfileProperties(m map[string]any) *types.MarketoConnectorProfileProperties {
 	properties := &types.MarketoConnectorProfileProperties{
-		InstanceUrl: aws.String(m["instance_url"].(string)),
+		InstanceUrl: aws.String(m[attrInstanceURL].(string)),
 	}
 
 	return properties
@@ -2070,7 +2070,7 @@ func expandRedshiftConnectorProfileProperties(m map[string]any) *types.RedshiftC
 
 func expandServiceNowConnectorProfileProperties(m map[string]any) *types.ServiceNowConnectorProfileProperties {
 	properties := &types.ServiceNowConnectorProfileProperties{
-		InstanceUrl: aws.String(m["instance_url"].(string)),
+		InstanceUrl: aws.String(m[attrInstanceURL].(string)),
 	}
 
 	return properties
@@ -2079,7 +2079,7 @@ func expandServiceNowConnectorProfileProperties(m map[string]any) *types.Service
 func expandSalesforceConnectorProfileProperties(m map[string]any) *types.SalesforceConnectorProfileProperties {
 	properties := &types.SalesforceConnectorProfileProperties{}
 
-	if v, ok := m["instance_url"].(string); ok && v != "" {
+	if v, ok := m[attrInstanceURL].(string); ok && v != "" {
 		properties.InstanceUrl = aws.String(v)
 	}
 
@@ -2130,7 +2130,7 @@ func expandSAPODataConnectorProfileProperties(m map[string]any) *types.SAPODataC
 
 func expandSlackConnectorProfileProperties(m map[string]any) *types.SlackConnectorProfileProperties {
 	properties := &types.SlackConnectorProfileProperties{
-		InstanceUrl: aws.String(m["instance_url"].(string)),
+		InstanceUrl: aws.String(m[attrInstanceURL].(string)),
 	}
 
 	return properties
@@ -2164,7 +2164,7 @@ func expandSnowflakeConnectorProfileProperties(m map[string]any) *types.Snowflak
 
 func expandVeevaConnectorProfileProperties(m map[string]any) *types.VeevaConnectorProfileProperties {
 	properties := &types.VeevaConnectorProfileProperties{
-		InstanceUrl: aws.String(m["instance_url"].(string)),
+		InstanceUrl: aws.String(m[attrInstanceURL].(string)),
 	}
 
 	return properties
@@ -2172,7 +2172,7 @@ func expandVeevaConnectorProfileProperties(m map[string]any) *types.VeevaConnect
 
 func expandZendeskConnectorProfileProperties(m map[string]any) *types.ZendeskConnectorProfileProperties {
 	properties := &types.ZendeskConnectorProfileProperties{
-		InstanceUrl: aws.String(m["instance_url"].(string)),
+		InstanceUrl: aws.String(m[attrInstanceURL].(string)),
 	}
 
 	return properties
@@ -2221,11 +2221,11 @@ func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []
 		result["custom_connector"] = flattenCustomConnectorProfileProperties(cpp.CustomConnector)
 	}
 	if cpp.Datadog != nil {
-		m["instance_url"] = aws.ToString(cpp.Datadog.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(cpp.Datadog.InstanceUrl)
 		result["datadog"] = []any{m}
 	}
 	if cpp.Dynatrace != nil {
-		m["instance_url"] = aws.ToString(cpp.Dynatrace.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(cpp.Dynatrace.InstanceUrl)
 		result["dynatrace"] = []any{m}
 	}
 	if cpp.GoogleAnalytics != nil {
@@ -2235,11 +2235,11 @@ func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []
 		result["honeycode"] = []any{m}
 	}
 	if cpp.InforNexus != nil {
-		m["instance_url"] = aws.ToString(cpp.InforNexus.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(cpp.InforNexus.InstanceUrl)
 		result["infor_nexus"] = []any{m}
 	}
 	if cpp.Marketo != nil {
-		m["instance_url"] = aws.ToString(cpp.Marketo.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(cpp.Marketo.InstanceUrl)
 		result["marketo"] = []any{m}
 	}
 	if cpp.Redshift != nil {
@@ -2252,14 +2252,14 @@ func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []
 		result["salesforce"] = flattenSalesforceConnectorProfileProperties(cpp.Salesforce)
 	}
 	if cpp.ServiceNow != nil {
-		m["instance_url"] = aws.ToString(cpp.ServiceNow.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(cpp.ServiceNow.InstanceUrl)
 		result["service_now"] = []any{m}
 	}
 	if cpp.Singular != nil {
 		result["singular"] = []any{m}
 	}
 	if cpp.Slack != nil {
-		m["instance_url"] = aws.ToString(cpp.Slack.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(cpp.Slack.InstanceUrl)
 		result["slack"] = []any{m}
 	}
 	if cpp.Snowflake != nil {
@@ -2269,11 +2269,11 @@ func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []
 		result["trendmicro"] = []any{m}
 	}
 	if cpp.Veeva != nil {
-		m["instance_url"] = aws.ToString(cpp.Veeva.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(cpp.Veeva.InstanceUrl)
 		result["veeva"] = []any{m}
 	}
 	if cpp.Zendesk != nil {
-		m["instance_url"] = aws.ToString(cpp.Zendesk.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(cpp.Zendesk.InstanceUrl)
 		result["zendesk"] = []any{m}
 	}
 
@@ -2319,7 +2319,7 @@ func flattenSalesforceConnectorProfileProperties(properties *types.SalesforceCon
 	m := make(map[string]any)
 
 	if properties.InstanceUrl != nil {
-		m["instance_url"] = aws.ToString(properties.InstanceUrl)
+		m[attrInstanceURL] = aws.ToString(properties.InstanceUrl)
 	}
 	m["is_sandbox_environment"] = properties.IsSandboxEnvironment
 	m["use_privatelink_for_metadata_and_authorization"] = properties.UsePrivateLinkForMetadataAndAuthorization

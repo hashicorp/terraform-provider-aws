@@ -104,7 +104,7 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
 												},
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -120,7 +120,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -168,7 +168,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -184,14 +184,14 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
 														},
 													},
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -205,7 +205,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -221,14 +221,14 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
 														},
 													},
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -250,7 +250,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -266,14 +266,14 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
 														},
 													},
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -292,7 +292,7 @@ func resourceFlow() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -308,7 +308,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -320,7 +320,7 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -430,7 +430,7 @@ func resourceFlow() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
 												},
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -446,7 +446,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -461,7 +461,7 @@ func resourceFlow() *schema.Resource {
 														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -480,7 +480,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -496,7 +496,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -554,7 +554,7 @@ func resourceFlow() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -570,7 +570,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -582,7 +582,7 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -671,7 +671,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"error_handling_config": {
+												attrErrorHandlingConfig: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -687,7 +687,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"fail_on_first_destination_error": {
+															attrFailOnFirstDestinationError: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -702,7 +702,7 @@ func resourceFlow() *schema.Resource {
 														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -785,7 +785,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -825,7 +825,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -839,7 +839,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -853,7 +853,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -867,7 +867,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -881,7 +881,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -944,7 +944,7 @@ func resourceFlow() *schema.Resource {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1000,7 +1000,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1014,7 +1014,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1028,7 +1028,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1042,7 +1042,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1073,7 +1073,7 @@ func resourceFlow() *schema.Resource {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1087,7 +1087,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												attrObject: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1546,7 +1546,7 @@ func expandErrorHandlingConfig(tfMap map[string]any) *types.ErrorHandlingConfig 
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["fail_on_first_destination_error"].(bool); ok {
+	if v, ok := tfMap[attrFailOnFirstDestinationError].(bool); ok {
 		a.FailOnFirstDestinationError = v
 	}
 
@@ -1727,7 +1727,7 @@ func expandCustomConnectorDestinationProperties(tfMap map[string]any) *types.Cus
 		a.EntityName = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
@@ -1767,11 +1767,11 @@ func expandEventBridgeDestinationProperties(tfMap map[string]any) *types.EventBr
 
 	a := &types.EventBridgeDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -1785,11 +1785,11 @@ func expandHoneycodeDestinationProperties(tfMap map[string]any) *types.Honeycode
 
 	a := &types.HoneycodeDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -1803,11 +1803,11 @@ func expandMarketoDestinationProperties(tfMap map[string]any) *types.MarketoDest
 
 	a := &types.MarketoDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -1825,7 +1825,7 @@ func expandRedshiftDestinationProperties(tfMap map[string]any) *types.RedshiftDe
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
@@ -1833,7 +1833,7 @@ func expandRedshiftDestinationProperties(tfMap map[string]any) *types.RedshiftDe
 		a.IntermediateBucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -1899,7 +1899,7 @@ func expandSalesforceDestinationProperties(tfMap map[string]any) *types.Salesfor
 		a.DataTransferApi = types.SalesforceDataTransferApi(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
@@ -1907,7 +1907,7 @@ func expandSalesforceDestinationProperties(tfMap map[string]any) *types.Salesfor
 		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -1925,7 +1925,7 @@ func expandSAPODataDestinationProperties(tfMap map[string]any) *types.SAPODataDe
 
 	a := &types.SAPODataDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
@@ -1977,7 +1977,7 @@ func expandSnowflakeDestinationProperties(tfMap map[string]any) *types.Snowflake
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
@@ -1985,7 +1985,7 @@ func expandSnowflakeDestinationProperties(tfMap map[string]any) *types.Snowflake
 		a.IntermediateBucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2043,7 +2043,7 @@ func expandZendeskDestinationProperties(tfMap map[string]any) *types.ZendeskDest
 
 	a := &types.ZendeskDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrErrorHandlingConfig].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
@@ -2051,7 +2051,7 @@ func expandZendeskDestinationProperties(tfMap map[string]any) *types.ZendeskDest
 		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2187,7 +2187,7 @@ func expandAmplitudeSourceProperties(tfMap map[string]any) *types.AmplitudeSourc
 
 	a := &types.AmplitudeSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2219,7 +2219,7 @@ func expandDatadogSourceProperties(tfMap map[string]any) *types.DatadogSourcePro
 
 	a := &types.DatadogSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2233,7 +2233,7 @@ func expandDynatraceSourceProperties(tfMap map[string]any) *types.DynatraceSourc
 
 	a := &types.DynatraceSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2247,7 +2247,7 @@ func expandGoogleAnalyticsSourceProperties(tfMap map[string]any) *types.GoogleAn
 
 	a := &types.GoogleAnalyticsSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2261,7 +2261,7 @@ func expandInforNexusSourceProperties(tfMap map[string]any) *types.InforNexusSou
 
 	a := &types.InforNexusSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2275,7 +2275,7 @@ func expandMarketoSourceProperties(tfMap map[string]any) *types.MarketoSourcePro
 
 	a := &types.MarketoSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2337,7 +2337,7 @@ func expandSalesforceSourceProperties(tfMap map[string]any) *types.SalesforceSou
 		a.IncludeDeletedRecords = v
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2401,7 +2401,7 @@ func expandServiceNowSourceProperties(tfMap map[string]any) *types.ServiceNowSou
 
 	a := &types.ServiceNowSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2415,7 +2415,7 @@ func expandSingularSourceProperties(tfMap map[string]any) *types.SingularSourceP
 
 	a := &types.SingularSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2429,7 +2429,7 @@ func expandSlackSourceProperties(tfMap map[string]any) *types.SlackSourcePropert
 
 	a := &types.SlackSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2443,7 +2443,7 @@ func expandTrendmicroSourceProperties(tfMap map[string]any) *types.TrendmicroSou
 
 	a := &types.TrendmicroSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2473,7 +2473,7 @@ func expandVeevaSourceProperties(tfMap map[string]any) *types.VeevaSourcePropert
 		a.IncludeSourceFiles = v
 	}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2487,7 +2487,7 @@ func expandZendeskSourceProperties(tfMap map[string]any) *types.ZendeskSourcePro
 
 	a := &types.ZendeskSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
+	if v, ok := tfMap[attrObject].(string); ok && v != "" {
 		a.Object = aws.String(v)
 	}
 
@@ -2786,7 +2786,7 @@ func flattenErrorHandlingConfig(errorHandlingConfig *types.ErrorHandlingConfig) 
 		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
-	m["fail_on_first_destination_error"] = errorHandlingConfig.FailOnFirstDestinationError
+	m[attrFailOnFirstDestinationError] = errorHandlingConfig.FailOnFirstDestinationError
 
 	return m
 }
@@ -2932,7 +2932,7 @@ func flattenCustomConnectorDestinationProperties(customConnectorDestinationPrope
 	}
 
 	if v := customConnectorDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := customConnectorDestinationProperties.IdFieldNames; v != nil {
@@ -2970,11 +2970,11 @@ func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *t
 	m := map[string]any{}
 
 	if v := eventBridgeDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := eventBridgeDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -2988,11 +2988,11 @@ func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *types
 	m := map[string]any{}
 
 	if v := honeycodeDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := honeycodeDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3006,11 +3006,11 @@ func flattenMarketoDestinationProperties(marketoDestinationProperties *types.Mar
 	m := map[string]any{}
 
 	if v := marketoDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := marketoDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3028,7 +3028,7 @@ func flattenRedshiftDestinationProperties(redshiftDestinationProperties *types.R
 	}
 
 	if v := redshiftDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := redshiftDestinationProperties.IntermediateBucketName; v != nil {
@@ -3036,7 +3036,7 @@ func flattenRedshiftDestinationProperties(redshiftDestinationProperties *types.R
 	}
 
 	if v := redshiftDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3096,7 +3096,7 @@ func flattenSalesforceDestinationProperties(salesforceDestinationProperties *typ
 	m["data_transfer_api"] = salesforceDestinationProperties.DataTransferApi
 
 	if v := salesforceDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := salesforceDestinationProperties.IdFieldNames; v != nil {
@@ -3104,7 +3104,7 @@ func flattenSalesforceDestinationProperties(salesforceDestinationProperties *typ
 	}
 
 	if v := salesforceDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	m["write_operation_type"] = salesforceDestinationProperties.WriteOperationType
@@ -3120,7 +3120,7 @@ func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *types.S
 	m := map[string]any{}
 
 	if v := SAPODataDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := SAPODataDestinationProperties.IdFieldNames; v != nil {
@@ -3170,7 +3170,7 @@ func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *types
 	}
 
 	if v := snowflakeDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := snowflakeDestinationProperties.IntermediateBucketName; v != nil {
@@ -3178,7 +3178,7 @@ func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *types
 	}
 
 	if v := snowflakeDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3234,7 +3234,7 @@ func flattenZendeskDestinationProperties(zendeskDestinationProperties *types.Zen
 	m := map[string]any{}
 
 	if v := zendeskDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
+		m[attrErrorHandlingConfig] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := zendeskDestinationProperties.IdFieldNames; v != nil {
@@ -3242,7 +3242,7 @@ func flattenZendeskDestinationProperties(zendeskDestinationProperties *types.Zen
 	}
 
 	if v := zendeskDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	m["write_operation_type"] = zendeskDestinationProperties.WriteOperationType
@@ -3374,7 +3374,7 @@ func flattenAmplitudeSourceProperties(amplitudeSourceProperties *types.Amplitude
 	m := map[string]any{}
 
 	if v := amplitudeSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3406,7 +3406,7 @@ func flattenDatadogSourceProperties(datadogSourceProperties *types.DatadogSource
 	m := map[string]any{}
 
 	if v := datadogSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3420,7 +3420,7 @@ func flattenDynatraceSourceProperties(dynatraceSourceProperties *types.Dynatrace
 	m := map[string]any{}
 
 	if v := dynatraceSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3434,7 +3434,7 @@ func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *typ
 	m := map[string]any{}
 
 	if v := googleAnalyticsSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3448,7 +3448,7 @@ func flattenInforNexusSourceProperties(inforNexusSourceProperties *types.InforNe
 	m := map[string]any{}
 
 	if v := inforNexusSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3462,7 +3462,7 @@ func flattenMarketoSourceProperties(marketoSourceProperties *types.MarketoSource
 	m := map[string]any{}
 
 	if v := marketoSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3514,7 +3514,7 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *types.Salesfo
 	m["include_deleted_records"] = salesforceSourceProperties.IncludeDeletedRecords
 
 	if v := salesforceSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3578,7 +3578,7 @@ func flattenServiceNowSourceProperties(serviceNowSourceProperties *types.Service
 	m := map[string]any{}
 
 	if v := serviceNowSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3592,7 +3592,7 @@ func flattenSingularSourceProperties(singularSourceProperties *types.SingularSou
 	m := map[string]any{}
 
 	if v := singularSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3606,7 +3606,7 @@ func flattenSlackSourceProperties(slackSourceProperties *types.SlackSourceProper
 	m := map[string]any{}
 
 	if v := slackSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3620,7 +3620,7 @@ func flattenTrendmicroSourceProperties(trendmicroSourceProperties *types.Trendmi
 	m := map[string]any{}
 
 	if v := trendmicroSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3642,7 +3642,7 @@ func flattenVeevaSourceProperties(veevaSourceProperties *types.VeevaSourceProper
 	m["include_source_files"] = veevaSourceProperties.IncludeSourceFiles
 
 	if v := veevaSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
@@ -3656,7 +3656,7 @@ func flattenZendeskSourceProperties(zendeskSourceProperties *types.ZendeskSource
 	m := map[string]any{}
 
 	if v := zendeskSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m[attrObject] = aws.ToString(v)
 	}
 
 	return m
