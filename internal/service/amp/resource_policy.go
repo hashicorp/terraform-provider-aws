@@ -60,7 +60,7 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.Sc
 				Computed: true,
 				Optional: true,
 			},
-			"workspace_id": schema.StringAttribute{
+			attrWorkspaceID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -227,7 +227,7 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 }
 
 func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("workspace_id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(attrWorkspaceID), request, response)
 }
 
 type resourcePolicyResourceModel struct {

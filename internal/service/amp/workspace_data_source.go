@@ -51,7 +51,7 @@ func dataSourceWorkspace() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"workspace_id": {
+			attrWorkspaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,7 +63,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	workspaceID := d.Get("workspace_id").(string)
+	workspaceID := d.Get(attrWorkspaceID).(string)
 	workspace, err := findWorkspaceByID(ctx, conn, workspaceID)
 
 	if err != nil {

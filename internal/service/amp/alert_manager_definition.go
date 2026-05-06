@@ -41,7 +41,7 @@ func resourceAlertManagerDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"workspace_id": {
+			attrWorkspaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,7 +54,7 @@ func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	workspaceID := d.Get("workspace_id").(string)
+	workspaceID := d.Get(attrWorkspaceID).(string)
 	input := amp.CreateAlertManagerDefinitionInput{
 		Data:        []byte(d.Get("definition").(string)),
 		WorkspaceId: aws.String(workspaceID),
@@ -92,7 +92,7 @@ func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set("definition", string(amd.Data))
-	d.Set("workspace_id", d.Id())
+	d.Set(attrWorkspaceID, d.Id())
 
 	return diags
 }
@@ -103,7 +103,7 @@ func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.Resourc
 
 	input := amp.PutAlertManagerDefinitionInput{
 		Data:        []byte(d.Get("definition").(string)),
-		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
+		WorkspaceId: aws.String(d.Get(attrWorkspaceID).(string)),
 	}
 
 	_, err := conn.PutAlertManagerDefinition(ctx, &input)

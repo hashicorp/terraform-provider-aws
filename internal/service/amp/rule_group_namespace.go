@@ -56,7 +56,7 @@ func resourceRuleGroupNamespace() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"workspace_id": {
+			attrWorkspaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -70,7 +70,7 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	workspaceID := d.Get("workspace_id").(string)
+	workspaceID := d.Get(attrWorkspaceID).(string)
 	input := amp.CreateRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
 		Name:        aws.String(name),
@@ -116,7 +116,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("workspace_id", workspaceID)
+	d.Set(attrWorkspaceID, workspaceID)
 
 	setTagsOut(ctx, rgn.Tags)
 
@@ -131,7 +131,7 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 		input := amp.PutRuleGroupsNamespaceInput{
 			Data:        []byte(d.Get("data").(string)),
 			Name:        aws.String(d.Get(names.AttrName).(string)),
-			WorkspaceId: aws.String(d.Get("workspace_id").(string)),
+			WorkspaceId: aws.String(d.Get(attrWorkspaceID).(string)),
 		}
 
 		_, err := conn.PutRuleGroupsNamespace(ctx, &input)
@@ -155,7 +155,7 @@ func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[DEBUG] Deleting Prometheus Rule Group Namespace: (%s)", d.Id())
 	input := amp.DeleteRuleGroupsNamespaceInput{
 		Name:        aws.String(d.Get(names.AttrName).(string)),
-		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
+		WorkspaceId: aws.String(d.Get(attrWorkspaceID).(string)),
 	}
 	_, err := conn.DeleteRuleGroupsNamespace(ctx, &input)
 

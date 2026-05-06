@@ -68,7 +68,7 @@ func (r *workspaceConfigurationResource) Schema(ctx context.Context, request res
 					int32planmodifier.UseStateForUnknown(),
 				},
 			},
-			"workspace_id": schema.StringAttribute{
+			attrWorkspaceID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -229,7 +229,7 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, request res
 }
 
 func (r *workspaceConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("workspace_id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(attrWorkspaceID), request, response)
 }
 
 func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.WorkspaceConfigurationDescription, error) {

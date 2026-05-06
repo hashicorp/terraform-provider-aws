@@ -58,7 +58,7 @@ type queryLoggingConfigurationResource struct {
 func (r *queryLoggingConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"workspace_id": schema.StringAttribute{
+			attrWorkspaceID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -262,7 +262,7 @@ func (r *queryLoggingConfigurationResource) Delete(ctx context.Context, request 
 }
 
 func (r *queryLoggingConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("workspace_id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(attrWorkspaceID), request, response)
 }
 
 func findQueryLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.QueryLoggingConfigurationMetadata, error) {
