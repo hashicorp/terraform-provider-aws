@@ -73,21 +73,21 @@ func planResourceV0() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"lifecycle": {
+									attrLifecycle: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"cold_storage_after": {
+												attrColdStorageAfter: {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"delete_after": {
+												attrDeleteAfter: {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"opt_in_to_archive_for_supported_resources": {
+												attrOptInToArchiveForSupportedResources: {
 													Type:     schema.TypeBool,
 													Optional: true,
 													Computed: true,
@@ -103,21 +103,21 @@ func planResourceV0() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"lifecycle": {
+						attrLifecycle: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cold_storage_after": {
+									attrColdStorageAfter: {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"delete_after": {
+									attrDeleteAfter: {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"opt_in_to_archive_for_supported_resources": {
+									attrOptInToArchiveForSupportedResources: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,

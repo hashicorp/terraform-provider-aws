@@ -106,21 +106,21 @@ func resourcePlan() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"lifecycle": {
+									attrLifecycle: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"cold_storage_after": {
+												attrColdStorageAfter: {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"delete_after": {
+												attrDeleteAfter: {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"opt_in_to_archive_for_supported_resources": {
+												attrOptInToArchiveForSupportedResources: {
 													Type:     schema.TypeBool,
 													Optional: true,
 													Computed: true,
@@ -136,21 +136,21 @@ func resourcePlan() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"lifecycle": {
+						attrLifecycle: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cold_storage_after": {
+									attrColdStorageAfter: {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"delete_after": {
+									attrDeleteAfter: {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"opt_in_to_archive_for_supported_resources": {
+									attrOptInToArchiveForSupportedResources: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,
@@ -409,7 +409,7 @@ func expandBackupRuleInputs(ctx context.Context, tfList []any) []awstypes.Backup
 		if v, ok := tfMap["enable_continuous_backup"].(bool); ok {
 			apiObject.EnableContinuousBackup = aws.Bool(v)
 		}
-		if v, ok := tfMap["lifecycle"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[attrLifecycle].([]any); ok && len(v) > 0 && v[0] != nil {
 			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]any))
 		}
 		if v, ok := tfMap["recovery_point_tags"].(map[string]any); ok && len(v) > 0 {
@@ -484,7 +484,7 @@ func expandCopyActions(tfList []any) []awstypes.CopyAction {
 
 		apiObject.DestinationBackupVaultArn = aws.String(tfMap["destination_vault_arn"].(string))
 
-		if v, ok := tfMap["lifecycle"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[attrLifecycle].([]any); ok && len(v) > 0 && v[0] != nil {
 			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]any))
 		}
 
@@ -501,15 +501,15 @@ func expandLifecycle(tfMap map[string]any) *awstypes.Lifecycle {
 
 	apiObject := &awstypes.Lifecycle{}
 
-	if v, ok := tfMap["delete_after"].(int); ok && v != 0 {
+	if v, ok := tfMap[attrDeleteAfter].(int); ok && v != 0 {
 		apiObject.DeleteAfterDays = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["cold_storage_after"].(int); ok && v != 0 {
+	if v, ok := tfMap[attrColdStorageAfter].(int); ok && v != 0 {
 		apiObject.MoveToColdStorageAfterDays = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["opt_in_to_archive_for_supported_resources"].(bool); ok && v {
+	if v, ok := tfMap[attrOptInToArchiveForSupportedResources].(bool); ok && v {
 		apiObject.OptInToArchiveForSupportedResources = aws.Bool(v)
 	}
 
@@ -590,7 +590,7 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 		}
 
 		if v := apiObject.Lifecycle; v != nil {
-			tfMap["lifecycle"] = flattenLifecycle(v)
+			tfMap[attrLifecycle] = flattenLifecycle(v)
 		}
 
 		if v := keyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
@@ -635,7 +635,7 @@ func flattenCopyActions(apiObjects []awstypes.CopyAction) []any {
 		}
 
 		if copyAction.Lifecycle != nil {
-			tfMap["lifecycle"] = flattenLifecycle(copyAction.Lifecycle)
+			tfMap[attrLifecycle] = flattenLifecycle(copyAction.Lifecycle)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -650,9 +650,9 @@ func flattenLifecycle(apiObject *awstypes.Lifecycle) []any {
 	}
 
 	tfMap := map[string]any{
-		"delete_after":       aws.ToInt64(apiObject.DeleteAfterDays),
-		"cold_storage_after": aws.ToInt64(apiObject.MoveToColdStorageAfterDays),
-		"opt_in_to_archive_for_supported_resources": aws.ToBool(apiObject.OptInToArchiveForSupportedResources),
+		attrDeleteAfter:                         aws.ToInt64(apiObject.DeleteAfterDays),
+		attrColdStorageAfter:                    aws.ToInt64(apiObject.MoveToColdStorageAfterDays),
+		attrOptInToArchiveForSupportedResources: aws.ToBool(apiObject.OptInToArchiveForSupportedResources),
 	}
 
 	return []any{tfMap}

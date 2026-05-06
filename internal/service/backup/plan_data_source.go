@@ -54,20 +54,20 @@ func dataSourcePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"lifecycle": {
+									attrLifecycle: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"cold_storage_after": {
+												attrColdStorageAfter: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"delete_after": {
+												attrDeleteAfter: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"opt_in_to_archive_for_supported_resources": {
+												attrOptInToArchiveForSupportedResources: {
 													Type:     schema.TypeBool,
 													Computed: true,
 												},
@@ -81,20 +81,20 @@ func dataSourcePlan() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"lifecycle": {
+						attrLifecycle: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cold_storage_after": {
+									attrColdStorageAfter: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"delete_after": {
+									attrDeleteAfter: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"opt_in_to_archive_for_supported_resources": {
+									attrOptInToArchiveForSupportedResources: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
