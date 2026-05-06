@@ -261,7 +261,7 @@ func resourceProject() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
 						},
-						"compute_type": {
+						attrComputeType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ComputeType](),
@@ -272,7 +272,7 @@ func resourceProject() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"compute_type": {
+									attrComputeType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.ComputeType](),
@@ -1436,7 +1436,7 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 		apiObject.Certificate = aws.String(v)
 	}
 
-	if v, ok := tfMap["compute_type"].(string); ok && v != "" {
+	if v, ok := tfMap[attrComputeType].(string); ok && v != "" {
 		apiObject.ComputeType = types.ComputeType(v)
 	}
 
@@ -1445,7 +1445,7 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 
 		dockerServer := &types.DockerServer{}
 
-		if v, ok := tfMap["compute_type"]; ok && v.(string) != "" {
+		if v, ok := tfMap[attrComputeType]; ok && v.(string) != "" {
 			dockerServer.ComputeType = types.ComputeType(v.(string))
 		}
 		if v, ok := tfMap[names.AttrSecurityGroupIDs].([]any); ok && len(v) > 0 {
@@ -1948,7 +1948,7 @@ func flattenProjectCache(apiObject *types.ProjectCache) []any {
 
 func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 	tfMap := map[string]any{
-		"compute_type":                apiObject.ComputeType,
+		attrComputeType:               apiObject.ComputeType,
 		"image_pull_credentials_type": apiObject.ImagePullCredentialsType,
 		names.AttrType:                apiObject.Type,
 	}
@@ -1973,7 +1973,7 @@ func flattenDockerServer(apiObject *types.DockerServer) []any {
 	}
 
 	tfMap := map[string]any{
-		"compute_type": apiObject.ComputeType,
+		attrComputeType: apiObject.ComputeType,
 	}
 
 	if apiObject.SecurityGroupIds != nil {

@@ -64,7 +64,7 @@ func resourceRiskConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"event_action": {
+												attrEventAction: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
@@ -82,7 +82,7 @@ func resourceRiskConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"event_action": {
+												attrEventAction: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
@@ -100,7 +100,7 @@ func resourceRiskConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"event_action": {
+												attrEventAction: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
@@ -229,7 +229,7 @@ func resourceRiskConfiguration() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"event_action": {
+									attrEventAction: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.CompromisedCredentialsEventActionType](),
@@ -531,7 +531,7 @@ func expandCompromisedCredentialsActionsType(tfList []any) *awstypes.Compromised
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.CompromisedCredentialsActionsType{}
 
-	if v, ok := tfMap["event_action"].(string); ok && v != "" {
+	if v, ok := tfMap[attrEventAction].(string); ok && v != "" {
 		apiObject.EventAction = awstypes.CompromisedCredentialsEventActionType(v)
 	}
 
@@ -544,7 +544,7 @@ func flattenCompromisedCredentialsActions(apiObject *awstypes.CompromisedCredent
 	}
 
 	tfMap := map[string]any{
-		"event_action": apiObject.EventAction,
+		attrEventAction: apiObject.EventAction,
 	}
 
 	return []any{tfMap}
@@ -640,7 +640,7 @@ func expandAccountTakeoverActionType(tfList []any) *awstypes.AccountTakeoverActi
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.AccountTakeoverActionType{}
 
-	if v, ok := tfMap["event_action"].(string); ok && v != "" {
+	if v, ok := tfMap[attrEventAction].(string); ok && v != "" {
 		apiObject.EventAction = awstypes.AccountTakeoverEventActionType(v)
 	}
 
@@ -657,8 +657,8 @@ func flattenAccountTakeoverActionType(apiObject *awstypes.AccountTakeoverActionT
 	}
 
 	tfMap := map[string]any{
-		"event_action": apiObject.EventAction,
-		"notify":       apiObject.Notify,
+		attrEventAction: apiObject.EventAction,
+		"notify":        apiObject.Notify,
 	}
 
 	return []any{tfMap}

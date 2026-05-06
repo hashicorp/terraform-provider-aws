@@ -84,7 +84,7 @@ func resourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"compute_type": {
+			attrComputeType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.ComputeType](),
@@ -239,7 +239,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	input := &codebuild.CreateFleetInput{
 		BaseCapacity:    aws.Int32(int32(d.Get("base_capacity").(int))),
-		ComputeType:     types.ComputeType(d.Get("compute_type").(string)),
+		ComputeType:     types.ComputeType(d.Get(attrComputeType).(string)),
 		EnvironmentType: types.EnvironmentType(d.Get("environment_type").(string)),
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 		Tags:            getTagsIn(ctx),
@@ -318,7 +318,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set("compute_configuration", nil)
 	}
 
-	d.Set("compute_type", fleet.ComputeType)
+	d.Set(attrComputeType, fleet.ComputeType)
 	d.Set("created", aws.ToTime(fleet.Created).Format(time.RFC3339))
 	d.Set("environment_type", fleet.EnvironmentType)
 	d.Set("fleet_service_role", fleet.FleetServiceRole)
@@ -362,15 +362,15 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if d.HasChange("compute_configuration") {
-		input.ComputeType = types.ComputeType(d.Get("compute_type").(string))
+		input.ComputeType = types.ComputeType(d.Get(attrComputeType).(string))
 
 		if v, ok := d.GetOk("compute_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.ComputeConfiguration = expandComputeConfiguration(v.([]any)[0].(map[string]any))
 		}
 	}
 
-	if d.HasChange("compute_type") {
-		input.ComputeType = types.ComputeType(d.Get("compute_type").(string))
+	if d.HasChange(attrComputeType) {
+		input.ComputeType = types.ComputeType(d.Get(attrComputeType).(string))
 	}
 
 	if d.HasChange("environment_type") {

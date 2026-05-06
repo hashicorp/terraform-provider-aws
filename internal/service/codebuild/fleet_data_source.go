@@ -61,7 +61,7 @@ func dataSourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"compute_type": {
+			attrComputeType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -207,7 +207,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	d.Set("compute_type", fleet.ComputeType)
+	d.Set(attrComputeType, fleet.ComputeType)
 	d.Set("created", aws.ToTime(fleet.Created).Format(time.RFC3339))
 	d.Set("environment_type", fleet.EnvironmentType)
 	d.Set("fleet_service_role", fleet.FleetServiceRole)

@@ -72,7 +72,7 @@ func resourceConfigRule() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsJSON,
 			},
-			"maximum_execution_frequency": {
+			attrMaximumExecutionFrequency: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
@@ -170,7 +170,7 @@ func resourceConfigRule() *schema.Resource {
 										Default:          types.EventSourceAwsConfig,
 										ValidateDiagFunc: enum.Validate[types.EventSource](),
 									},
-									"maximum_execution_frequency": {
+									attrMaximumExecutionFrequency: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
@@ -219,7 +219,7 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta any
 			configRule.InputParameters = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("maximum_execution_frequency"); ok {
+		if v, ok := d.GetOk(attrMaximumExecutionFrequency); ok {
 			configRule.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
 		}
 
@@ -312,7 +312,7 @@ func resourceConfigRuleFlatten(_ context.Context, rule *types.ConfigRule, d *sch
 		return fmt.Errorf("setting evaluation_mode: %w", err)
 	}
 	d.Set("input_parameters", rule.InputParameters)
-	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
+	d.Set(attrMaximumExecutionFrequency, rule.MaximumExecutionFrequency)
 	d.Set(names.AttrName, rule.ConfigRuleName)
 	d.Set("rule_id", rule.ConfigRuleId)
 	if rule.Scope != nil {
@@ -523,7 +523,7 @@ func expandSourceDetails(tfList []any) []types.SourceDetail {
 			apiObject.EventSource = types.EventSource(v)
 		}
 
-		if v, ok := tfMap["maximum_execution_frequency"].(string); ok && v != "" {
+		if v, ok := tfMap[attrMaximumExecutionFrequency].(string); ok && v != "" {
 			apiObject.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v)
 		}
 
@@ -626,7 +626,7 @@ func flattenSourceDetails(apiObjects []types.SourceDetail) []any {
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
 			"event_source":                apiObject.EventSource,
-			"maximum_execution_frequency": apiObject.MaximumExecutionFrequency,
+			attrMaximumExecutionFrequency: apiObject.MaximumExecutionFrequency,
 			"message_type":                apiObject.MessageType,
 		}
 

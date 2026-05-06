@@ -80,7 +80,7 @@ func resourceOrganizationCustomRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"maximum_execution_frequency": {
+			attrMaximumExecutionFrequency: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
@@ -154,7 +154,7 @@ func resourceOrganizationCustomRuleCreate(ctx context.Context, d *schema.Resourc
 		input.OrganizationCustomRuleMetadata.InputParameters = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
+	if v, ok := d.GetOk(attrMaximumExecutionFrequency); ok {
 		input.OrganizationCustomRuleMetadata.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
 	}
 
@@ -213,7 +213,7 @@ func resourceOrganizationCustomRuleRead(ctx context.Context, d *schema.ResourceD
 	d.Set("excluded_accounts", configRule.ExcludedAccounts)
 	d.Set("input_parameters", customRule.InputParameters)
 	d.Set("lambda_function_arn", customRule.LambdaFunctionArn)
-	d.Set("maximum_execution_frequency", customRule.MaximumExecutionFrequency)
+	d.Set(attrMaximumExecutionFrequency, customRule.MaximumExecutionFrequency)
 	d.Set(names.AttrName, configRule.OrganizationConfigRuleName)
 	d.Set("resource_id_scope", customRule.ResourceIdScope)
 	d.Set("resource_types_scope", customRule.ResourceTypesScope)
@@ -248,7 +248,7 @@ func resourceOrganizationCustomRuleUpdate(ctx context.Context, d *schema.Resourc
 		input.OrganizationCustomRuleMetadata.InputParameters = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
+	if v, ok := d.GetOk(attrMaximumExecutionFrequency); ok {
 		input.OrganizationCustomRuleMetadata.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
 	}
 

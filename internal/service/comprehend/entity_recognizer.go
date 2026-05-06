@@ -83,7 +83,7 @@ func resourceEntityRecognizer() *schema.Resource {
 							ExactlyOneOf: []string{"input_data_config.0.annotations", "input_data_config.0.entity_list"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_uri": {
+									attrS3URI: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -115,7 +115,7 @@ func resourceEntityRecognizer() *schema.Resource {
 										ValidateDiagFunc: enum.Validate[types.AugmentedManifestsDocumentTypeFormat](),
 										Default:          types.AugmentedManifestsDocumentTypeFormatPlainTextDocument,
 									},
-									"s3_uri": {
+									attrS3URI: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -151,7 +151,7 @@ func resourceEntityRecognizer() *schema.Resource {
 										ValidateDiagFunc: enum.Validate[types.InputFormat](),
 										Default:          types.InputFormatOneDocPerLine,
 									},
-									"s3_uri": {
+									attrS3URI: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -169,7 +169,7 @@ func resourceEntityRecognizer() *schema.Resource {
 							ExactlyOneOf: []string{"input_data_config.0.entity_list", "input_data_config.0.annotations"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_uri": {
+									attrS3URI: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -798,7 +798,7 @@ func flattenAnnotations(apiObject *types.EntityRecognizerAnnotations) []any {
 	}
 
 	m := map[string]any{
-		"s3_uri": aws.ToString(apiObject.S3Uri),
+		attrS3URI: aws.ToString(apiObject.S3Uri),
 	}
 
 	if v := apiObject.TestS3Uri; v != nil {
@@ -814,7 +814,7 @@ func flattenDocuments(apiObject *types.EntityRecognizerDocuments) []any {
 	}
 
 	m := map[string]any{
-		"s3_uri":       aws.ToString(apiObject.S3Uri),
+		attrS3URI:      aws.ToString(apiObject.S3Uri),
 		"input_format": apiObject.InputFormat,
 	}
 
@@ -831,7 +831,7 @@ func flattenEntityList(apiObject *types.EntityRecognizerEntityList) []any {
 	}
 
 	m := map[string]any{
-		"s3_uri": aws.ToString(apiObject.S3Uri),
+		attrS3URI: aws.ToString(apiObject.S3Uri),
 	}
 
 	return []any{m}
@@ -909,7 +909,7 @@ func expandAnnotations(tfList []any) *types.EntityRecognizerAnnotations {
 	tfMap := tfList[0].(map[string]any)
 
 	a := &types.EntityRecognizerAnnotations{
-		S3Uri: aws.String(tfMap["s3_uri"].(string)),
+		S3Uri: aws.String(tfMap[attrS3URI].(string)),
 	}
 
 	if v, ok := tfMap["test_s3_uri"].(string); ok && v != "" {
@@ -927,7 +927,7 @@ func expandDocuments(tfList []any) *types.EntityRecognizerDocuments {
 	tfMap := tfList[0].(map[string]any)
 
 	a := &types.EntityRecognizerDocuments{
-		S3Uri:       aws.String(tfMap["s3_uri"].(string)),
+		S3Uri:       aws.String(tfMap[attrS3URI].(string)),
 		InputFormat: types.InputFormat(tfMap["input_format"].(string)),
 	}
 
@@ -946,7 +946,7 @@ func expandEntityList(tfList []any) *types.EntityRecognizerEntityList {
 	tfMap := tfList[0].(map[string]any)
 
 	a := &types.EntityRecognizerEntityList{
-		S3Uri: aws.String(tfMap["s3_uri"].(string)),
+		S3Uri: aws.String(tfMap[attrS3URI].(string)),
 	}
 
 	return a

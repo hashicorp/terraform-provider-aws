@@ -155,7 +155,7 @@ func flattenAugmentedManifestsListItem(apiObject *types.AugmentedManifestsListIt
 
 	m := map[string]any{
 		"attribute_names": flex.FlattenStringValueList(apiObject.AttributeNames),
-		"s3_uri":          aws.ToString(apiObject.S3Uri),
+		attrS3URI:         aws.ToString(apiObject.S3Uri),
 		"document_type":   apiObject.DocumentType,
 		"split":           apiObject.Split,
 	}
@@ -204,7 +204,7 @@ func expandAugmentedManifestsListItem(tfMap map[string]any) *types.AugmentedMani
 
 	a := &types.AugmentedManifestsListItem{
 		AttributeNames: flex.ExpandStringValueList(tfMap["attribute_names"].([]any)),
-		S3Uri:          aws.String(tfMap["s3_uri"].(string)),
+		S3Uri:          aws.String(tfMap[attrS3URI].(string)),
 		DocumentType:   types.AugmentedManifestsDocumentTypeFormat(tfMap["document_type"].(string)),
 		Split:          types.Split(tfMap["split"].(string)),
 	}

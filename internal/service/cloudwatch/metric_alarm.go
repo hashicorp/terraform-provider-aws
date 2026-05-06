@@ -102,7 +102,7 @@ func resourceMetricAlarm() *schema.Resource {
 					Type:          schema.TypeMap,
 					Optional:      true,
 					Elem:          &schema.Schema{Type: schema.TypeString},
-					ConflictsWith: []string{"metric_query"},
+					ConflictsWith: []string{attrMetricQuery},
 				},
 				"evaluate_low_sample_count_percentiles": {
 					Type:         schema.TypeString,
@@ -114,8 +114,8 @@ func resourceMetricAlarm() *schema.Resource {
 					Type:          schema.TypeList,
 					Optional:      true,
 					MaxItems:      1,
-					ExactlyOneOf:  []string{"evaluation_criteria", names.AttrMetricName, "metric_query"},
-					ConflictsWith: []string{names.AttrNamespace, names.AttrMetricName, "dimensions", "period", names.AttrUnit, "statistic", "extended_statistic", "metric_query", "threshold", "comparison_operator", "threshold_metric_id", "evaluation_periods", "datapoints_to_alarm"},
+					ExactlyOneOf:  []string{"evaluation_criteria", names.AttrMetricName, attrMetricQuery},
+					ConflictsWith: []string{names.AttrNamespace, names.AttrMetricName, "dimensions", "period", names.AttrUnit, "statistic", "extended_statistic", attrMetricQuery, "threshold", "comparison_operator", "threshold_metric_id", "evaluation_periods", "datapoints_to_alarm"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"promql_criteria": {
@@ -148,7 +148,7 @@ func resourceMetricAlarm() *schema.Resource {
 				"evaluation_interval": {
 					Type:          schema.TypeInt,
 					Optional:      true,
-					ConflictsWith: []string{names.AttrMetricName, "metric_query"},
+					ConflictsWith: []string{names.AttrMetricName, attrMetricQuery},
 					RequiredWith:  []string{"evaluation_criteria"},
 					ValidateFunc: validation.Any(
 						validation.IntInSlice([]int{10, 20, 30}),
@@ -163,7 +163,7 @@ func resourceMetricAlarm() *schema.Resource {
 				"extended_statistic": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"statistic", "metric_query"},
+					ConflictsWith: []string{"statistic", attrMetricQuery},
 					ValidateFunc: validation.StringMatch(
 						// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
 						regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
@@ -185,10 +185,10 @@ func resourceMetricAlarm() *schema.Resource {
 				names.AttrMetricName: {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"metric_query"},
+					ConflictsWith: []string{attrMetricQuery},
 					ValidateFunc:  validation.StringLenBetween(1, 255),
 				},
-				"metric_query": {
+				attrMetricQuery: {
 					Type:          schema.TypeSet,
 					Optional:      true,
 					ConflictsWith: []string{names.AttrMetricName},
@@ -286,7 +286,7 @@ func resourceMetricAlarm() *schema.Resource {
 				names.AttrNamespace: {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"metric_query"},
+					ConflictsWith: []string{attrMetricQuery},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
 						validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
@@ -307,7 +307,7 @@ func resourceMetricAlarm() *schema.Resource {
 				"period": {
 					Type:          schema.TypeInt,
 					Optional:      true,
-					ConflictsWith: []string{"metric_query"},
+					ConflictsWith: []string{attrMetricQuery},
 					ValidateFunc: validation.Any(
 						validation.IntInSlice([]int{10, 20, 30}),
 						validation.IntDivisibleBy(60),
@@ -316,7 +316,7 @@ func resourceMetricAlarm() *schema.Resource {
 				"statistic": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					ConflictsWith:    []string{"extended_statistic", "metric_query"},
+					ConflictsWith:    []string{"extended_statistic", attrMetricQuery},
 					ValidateDiagFunc: enum.Validate[awstypes.Statistic](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
@@ -588,7 +588,7 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.MetricName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("metric_query"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(attrMetricQuery); ok && v.(*schema.Set).Len() > 0 {
 		apiObject.Metrics = expandMetricAlarmMetrics(v.(*schema.Set).List())
 	}
 
@@ -858,7 +858,7 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 		d.Set("evaluate_low_sample_count_percentiles", nil)
 		d.Set("extended_statistic", nil)
 		d.Set(names.AttrMetricName, nil)
-		d.Set("metric_query", nil)
+		d.Set(attrMetricQuery, nil)
 		d.Set(names.AttrNamespace, nil)
 		d.Set("period", nil)
 		d.Set("statistic", nil)
@@ -877,7 +877,7 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 		d.Set("extended_statistic", alarm.ExtendedStatistic)
 		d.Set(names.AttrMetricName, alarm.MetricName)
 		if len(alarm.Metrics) > 0 {
-			if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
+			if err := d.Set(attrMetricQuery, flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
 				return smarterr.NewError(fmt.Errorf("setting metric_query: %w", err))
 			}
 		}

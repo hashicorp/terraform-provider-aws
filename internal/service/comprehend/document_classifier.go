@@ -100,7 +100,7 @@ func resourceDocumentClassifier() *schema.Resource {
 										ValidateDiagFunc: enum.Validate[types.AugmentedManifestsDocumentTypeFormat](),
 										Default:          types.AugmentedManifestsDocumentTypeFormatPlainTextDocument,
 									},
-									"s3_uri": {
+									attrS3URI: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -129,7 +129,7 @@ func resourceDocumentClassifier() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(documentClassifierLabelSeparators(), false),
 						},
-						"s3_uri": {
+						attrS3URI: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -176,7 +176,7 @@ func resourceDocumentClassifier() *schema.Resource {
 							DiffSuppressFunc: tfkms.DiffSuppressKeyOrAlias,
 							ValidateFunc:     tfkms.ValidateKeyOrAlias,
 						},
-						"s3_uri": {
+						attrS3URI: {
 							Type:     schema.TypeString,
 							Required: true,
 							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
@@ -243,7 +243,7 @@ func resourceDocumentClassifier() *schema.Resource {
 				}
 
 				if format := types.DocumentClassifierDataFormat(tfMap["data_format"].(string)); format == types.DocumentClassifierDataFormatComprehendCsv {
-					if tfMap["s3_uri"] == nil {
+					if tfMap[attrS3URI] == nil {
 						return fmt.Errorf("s3_uri must be set when data_format is %s", format)
 					}
 				} else {
@@ -730,7 +730,7 @@ func flattenDocumentClassifierInputDataConfig(apiObject *types.DocumentClassifie
 	m := map[string]any{
 		"augmented_manifests": flattenAugmentedManifests(apiObject.AugmentedManifests),
 		"data_format":         apiObject.DataFormat,
-		"s3_uri":              aws.ToString(apiObject.S3Uri),
+		attrS3URI:             aws.ToString(apiObject.S3Uri),
 	}
 
 	if apiObject.LabelDelimiter != nil {
@@ -758,7 +758,7 @@ func flattenDocumentClassifierOutputDataConfig(apiObject *types.DocumentClassifi
 	re := regexache.MustCompile(`^(s3://[0-9a-z.-]{3,63}(/.+)?/)[0-9A-Za-z-]+/output/output\.tar\.gz`)
 	match := re.FindStringSubmatch(s3Uri)
 	if match != nil && match[1] != "" {
-		m["s3_uri"] = match[1]
+		m[attrS3URI] = match[1]
 	}
 
 	if apiObject.KmsKeyId != nil {
@@ -786,7 +786,7 @@ func expandDocumentClassifierInputDataConfig(d *schema.ResourceData) *types.Docu
 	a := &types.DocumentClassifierInputDataConfig{
 		AugmentedManifests: expandAugmentedManifests(tfMap["augmented_manifests"].(*schema.Set)),
 		DataFormat:         types.DocumentClassifierDataFormat(tfMap["data_format"].(string)),
-		S3Uri:              aws.String(tfMap["s3_uri"].(string)),
+		S3Uri:              aws.String(tfMap[attrS3URI].(string)),
 	}
 
 	if v, ok := tfMap["label_delimiter"].(string); ok && v != "" {
@@ -808,7 +808,7 @@ func expandDocumentClassifierOutputDataConfig(tfList []any) *types.DocumentClass
 	tfMap := tfList[0].(map[string]any)
 
 	a := &types.DocumentClassifierOutputDataConfig{
-		S3Uri: aws.String(tfMap["s3_uri"].(string)),
+		S3Uri: aws.String(tfMap[attrS3URI].(string)),
 	}
 
 	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {

@@ -84,7 +84,7 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 					validation.StringIsJSON,
 				),
 			},
-			"maximum_execution_frequency": {
+			attrMaximumExecutionFrequency: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
@@ -173,7 +173,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.InputParameters = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
+	if v, ok := d.GetOk(attrMaximumExecutionFrequency); ok {
 		input.OrganizationCustomPolicyRuleMetadata.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
 	}
 
@@ -240,7 +240,7 @@ func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.Res
 	d.Set("input_parameters", customPolicyRule.InputParameters)
 	d.Set("policy_runtime", customPolicyRule.PolicyRuntime)
 	d.Set("policy_text", policy)
-	d.Set("maximum_execution_frequency", customPolicyRule.MaximumExecutionFrequency)
+	d.Set(attrMaximumExecutionFrequency, customPolicyRule.MaximumExecutionFrequency)
 	d.Set(names.AttrName, configRule.OrganizationConfigRuleName)
 	d.Set("resource_id_scope", customPolicyRule.ResourceIdScope)
 	d.Set("resource_types_scope", customPolicyRule.ResourceTypesScope)
@@ -281,7 +281,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.InputParameters = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
+	if v, ok := d.GetOk(attrMaximumExecutionFrequency); ok {
 		input.OrganizationCustomPolicyRuleMetadata.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
 	}
 
