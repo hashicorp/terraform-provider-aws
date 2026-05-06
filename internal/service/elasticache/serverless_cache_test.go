@@ -6,6 +6,7 @@ package elasticache_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -623,6 +624,26 @@ func TestAccElastiCacheServerlessCache_engine(t *testing.T) {
 		},
 	})
 }
+func TestAccElastiCacheServerlessCache_emptySecurityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServerlessCacheConfig_emptySecurityGroupIDs(rName),
+				ExpectError: regexp.MustCompile(`(?s)security_group_ids.*at least 1`),
+				PlanOnly:    true,
+			},
+		},
+	})
+}
 
 func TestAccElastiCacheServerlessCache_valkeyMajorEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -856,6 +877,18 @@ resource "aws_elasticache_serverless_cache" "test" {
   engine = %[2]q
 }
 `, rName, engine)
+}
+
+func testAccServerlessCacheConfig_emptySecurityGroupIDs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  name                 = %[1]q
+  engine               = "valkey"
+  major_engine_version = "8"
+  subnet_ids           = ["subnet-12345678"]
+  security_group_ids   = []
+}
+`, rName)
 }
 
 func testAccServerlessCacheConfig_majorEngineVersion(rName, engine, majorEngineVersion string) string {
