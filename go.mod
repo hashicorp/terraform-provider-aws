@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.22
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.15
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.11
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.62.0
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.26
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.25
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.14
@@ -127,7 +127,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.16
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.22
 	github.com/aws/aws-sdk-go-v2/service/fms v1.44.24
-	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.9
+	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.10
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.8
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.18
@@ -190,7 +190,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.17
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.10.2
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.67.1
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.16
@@ -220,7 +220,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.31.12
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.22.9
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.7
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.34.21
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.9.25
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.32.16
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.26.23
@@ -232,7 +232,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.14
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.8
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.244.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.245.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.24
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.14
