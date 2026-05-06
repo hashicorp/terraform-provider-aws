@@ -69,7 +69,7 @@ func resourceBotAlias() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validBotVersion,
 			},
-			"checksum": {
+			attrChecksum: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -199,7 +199,7 @@ func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta any)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "lex",
+		Service:   arnService,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
@@ -207,7 +207,7 @@ func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.Set("bot_name", resp.BotName)
 	d.Set("bot_version", resp.BotVersion)
-	d.Set("checksum", resp.Checksum)
+	d.Set(attrChecksum, resp.Checksum)
 	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
@@ -227,7 +227,7 @@ func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	input := &lexmodelbuildingservice.PutBotAliasInput{
 		BotName:    aws.String(d.Get("bot_name").(string)),
 		BotVersion: aws.String(d.Get("bot_version").(string)),
-		Checksum:   aws.String(d.Get("checksum").(string)),
+		Checksum:   aws.String(d.Get(attrChecksum).(string)),
 		Name:       aws.String(d.Get(names.AttrName).(string)),
 	}
 

@@ -32,7 +32,7 @@ func dataSourceIntent() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"checksum": {
+			attrChecksum: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,13 +89,13 @@ func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta any)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "lex",
+		Service:   arnService,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("intent:%s", d.Get(names.AttrName).(string)),
 	}
 	d.Set(names.AttrARN, arn.String())
 
-	d.Set("checksum", resp.Checksum)
+	d.Set(attrChecksum, resp.Checksum)
 	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))

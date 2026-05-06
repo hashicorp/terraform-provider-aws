@@ -53,7 +53,7 @@ func resourceSlotType() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"checksum": {
+			attrChecksum: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -193,7 +193,7 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading Lex Slot Type (%s): %s", d.Id(), err)
 	}
 
-	d.Set("checksum", output.Checksum)
+	d.Set(attrChecksum, output.Checksum)
 	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
@@ -220,7 +220,7 @@ func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
-		Checksum:               aws.String(d.Get("checksum").(string)),
+		Checksum:               aws.String(d.Get(attrChecksum).(string)),
 		CreateVersion:          aws.Bool(d.Get("create_version").(bool)),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Name:                   aws.String(d.Id()),

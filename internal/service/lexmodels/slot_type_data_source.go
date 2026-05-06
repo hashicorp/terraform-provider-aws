@@ -24,7 +24,7 @@ func dataSourceSlotType() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSlotTypeRead,
 
 		Schema: map[string]*schema.Schema{
-			"checksum": {
+			attrChecksum: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func dataSourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	d.SetId(name)
-	d.Set("checksum", output.Checksum)
+	d.Set(attrChecksum, output.Checksum)
 	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("enumeration_value", flattenEnumerationValues(output.EnumerationValues))

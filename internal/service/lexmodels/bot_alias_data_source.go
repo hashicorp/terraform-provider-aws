@@ -39,7 +39,7 @@ func dataSourceBotAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"checksum": {
+			attrChecksum: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta an
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "lex",
+		Service:   arnService,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
@@ -91,7 +91,7 @@ func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.Set("bot_name", resp.BotName)
 	d.Set("bot_version", resp.BotVersion)
-	d.Set("checksum", resp.Checksum)
+	d.Set(attrChecksum, resp.Checksum)
 	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))

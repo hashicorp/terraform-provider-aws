@@ -28,7 +28,7 @@ func dataSourceBot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"checksum": {
+			attrChecksum: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,12 +110,12 @@ func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "lex",
+		Service:   arnService,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", name),
 	}
 	d.Set(names.AttrARN, arn.String())
-	d.Set("checksum", output.Checksum)
+	d.Set(attrChecksum, output.Checksum)
 	d.Set("child_directed", output.ChildDirected)
 	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)

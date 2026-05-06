@@ -30,6 +30,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	arnService = "lex"
+)
+
 // @SDKResource("aws_lex_bot", name="Bot")
 func resourceBot() *schema.Resource {
 	return &schema.Resource{
@@ -66,7 +70,7 @@ func resourceBot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"checksum": {
+			attrChecksum: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -300,7 +304,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "lex",
+		Service:   arnService,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
@@ -313,7 +317,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		processBehavior = awstypes.ProcessBehavior(v.(string))
 	}
 
-	d.Set("checksum", output.Checksum)
+	d.Set(attrChecksum, output.Checksum)
 	d.Set("child_directed", output.ChildDirected)
 	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
@@ -354,7 +358,7 @@ func resourceBotUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	input := &lexmodelbuildingservice.PutBotInput{
-		Checksum:                     aws.String(d.Get("checksum").(string)),
+		Checksum:                     aws.String(d.Get(attrChecksum).(string)),
 		ChildDirected:                aws.Bool(d.Get("child_directed").(bool)),
 		CreateVersion:                aws.Bool(d.Get("create_version").(bool)),
 		Description:                  aws.String(d.Get(names.AttrDescription).(string)),
