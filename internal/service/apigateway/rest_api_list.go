@@ -66,7 +66,7 @@ func (l *restAPIListResource) List(ctx context.Context, request list.ListRequest
 			if request.IncludeResource {
 				if err := listResourceRestAPIFlatten(ctx, awsClient, rd, &item); err != nil {
 					tflog.Error(ctx, "Reading API Gateway REST API", map[string]any{
-						"error": err.Error(),
+						attrError: err.Error(),
 					})
 					continue
 				}

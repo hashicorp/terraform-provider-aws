@@ -47,7 +47,7 @@ func resourceDeployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +74,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := apigateway.CreateDeploymentInput{
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
-		RestApiId:   aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:   aws.String(d.Get(attrRestAPIID).(string)),
 		Variables:   flex.ExpandStringValueMap(d.Get("variables").(map[string]any)),
 	}
 
@@ -93,7 +93,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
+	restAPIID := d.Get(attrRestAPIID).(string)
 	deployment, err := findDeploymentByTwoPartKey(ctx, conn, restAPIID, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -130,7 +130,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input := apigateway.UpdateDeploymentInput{
 			DeploymentId:    aws.String(d.Id()),
 			PatchOperations: operations,
-			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+			RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 		}
 		_, err := conn.UpdateDeployment(ctx, &input)
 
@@ -146,7 +146,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
+	restAPIID := d.Get(attrRestAPIID).(string)
 
 	log.Printf("[DEBUG] Deleting API Gateway Deployment: %s", d.Id())
 	input := apigateway.DeleteDeploymentInput{
@@ -184,7 +184,7 @@ func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta an
 	deploymentID := idParts[1]
 
 	d.SetId(deploymentID)
-	d.Set("rest_api_id", restApiID)
+	d.Set(attrRestAPIID, restApiID)
 
 	return []*schema.ResourceData{d}, nil
 }

@@ -62,31 +62,31 @@ func resourceDomainName() *schema.Resource {
 			names.AttrCertificateARN: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, "certificate_name", "certificate_private_key", "regional_certificate_arn", "regional_certificate_name"},
+				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, "certificate_name", "certificate_private_key", attrRegionalCertificateARN, "regional_certificate_name"},
 			},
 			"certificate_body": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn"},
+				ConflictsWith: []string{names.AttrCertificateARN, attrRegionalCertificateARN},
 			},
 			names.AttrCertificateChain: {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn"},
+				ConflictsWith: []string{names.AttrCertificateARN, attrRegionalCertificateARN},
 			},
 			"certificate_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn", "regional_certificate_name"},
+				ConflictsWith: []string{names.AttrCertificateARN, attrRegionalCertificateARN, "regional_certificate_name"},
 			},
 			"certificate_private_key": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn"},
+				ConflictsWith: []string{names.AttrCertificateARN, attrRegionalCertificateARN},
 			},
 			"certificate_upload_date": {
 				Type:     schema.TypeString,
@@ -166,7 +166,7 @@ func resourceDomainName() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptional(),
-			"regional_certificate_arn": {
+			attrRegionalCertificateARN: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{names.AttrCertificateARN, "certificate_body", names.AttrCertificateChain, "certificate_name", "certificate_private_key", "regional_certificate_name"},
@@ -174,7 +174,7 @@ func resourceDomainName() *schema.Resource {
 			"regional_certificate_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrCertificateARN, "certificate_name", "regional_certificate_arn"},
+				ConflictsWith: []string{names.AttrCertificateARN, "certificate_name", attrRegionalCertificateARN},
 			},
 			"regional_domain_name": {
 				Type:     schema.TypeString,
@@ -251,7 +251,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Policy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("regional_certificate_arn"); ok {
+	if v, ok := d.GetOk(attrRegionalCertificateARN); ok {
 		input.RegionalCertificateArn = aws.String(v.(string))
 	}
 
@@ -331,7 +331,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 	d.Set("ownership_verification_certificate_arn", output.OwnershipVerificationCertificateArn)
 	d.Set(names.AttrPolicy, output.Policy)
-	d.Set("regional_certificate_arn", output.RegionalCertificateArn)
+	d.Set(attrRegionalCertificateARN, output.RegionalCertificateArn)
 	d.Set("regional_certificate_name", output.RegionalCertificateName)
 	d.Set("regional_domain_name", output.RegionalDomainName)
 	d.Set("regional_zone_id", output.RegionalHostedZoneId)
@@ -450,11 +450,11 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			})
 		}
 
-		if d.HasChange("regional_certificate_arn") {
+		if d.HasChange(attrRegionalCertificateARN) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/regionalCertificateArn"),
-				Value: aws.String(d.Get("regional_certificate_arn").(string)),
+				Value: aws.String(d.Get(attrRegionalCertificateARN).(string)),
 			})
 		}
 

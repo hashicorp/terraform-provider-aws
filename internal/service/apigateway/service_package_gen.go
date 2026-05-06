@@ -197,9 +197,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Integration",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
-				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(attrHTTPMethod, true),
 			}),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -212,9 +212,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Integration Response",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
-				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(attrHTTPMethod, true),
 				inttypes.StringIdentityAttribute(names.AttrStatusCode, true),
 			}),
 			Import: inttypes.SDKv2Import{
@@ -228,9 +228,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Method",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
-				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(attrHTTPMethod, true),
 			}),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -243,9 +243,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Method Response",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
-				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(attrHTTPMethod, true),
 				inttypes.StringIdentityAttribute(names.AttrStatusCode, true),
 			}),
 			Import: inttypes.SDKv2Import{
@@ -277,7 +277,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Resource",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrID, true),
 			}),
 			Import: inttypes.SDKv2Import{
@@ -348,9 +348,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Name:     "Integration",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
-				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(attrHTTPMethod, true),
 			}),
 		},
 		{
@@ -359,9 +359,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Name:     "Integration Response",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
-				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(attrHTTPMethod, true),
 				inttypes.StringIdentityAttribute(names.AttrStatusCode, true),
 			}),
 		},
@@ -371,9 +371,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Name:     "Method",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
-				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(attrHTTPMethod, true),
 			}),
 		},
 		{
@@ -382,9 +382,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Name:     "Method Response",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
-				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(attrHTTPMethod, true),
 				inttypes.StringIdentityAttribute(names.AttrStatusCode, true),
 			}),
 		},
@@ -394,7 +394,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Name:     "Resource",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(attrRestAPIID, true),
 				inttypes.StringIdentityAttribute(names.AttrID, true),
 			}),
 		},

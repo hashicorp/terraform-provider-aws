@@ -86,7 +86,7 @@ func dataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"regional_certificate_arn": {
+			attrRegionalCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
 	d.Set(names.AttrPolicy, output.Policy)
-	d.Set("regional_certificate_arn", output.RegionalCertificateArn)
+	d.Set(attrRegionalCertificateARN, output.RegionalCertificateArn)
 	d.Set("regional_certificate_name", output.RegionalCertificateName)
 	d.Set("regional_domain_name", output.RegionalDomainName)
 	d.Set("regional_zone_id", output.RegionalHostedZoneId)

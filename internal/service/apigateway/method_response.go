@@ -46,7 +46,7 @@ func resourceMethodResponse() *schema.Resource {
 		DeleteWithoutTimeout: resourceMethodResponseDelete,
 
 		Schema: map[string]*schema.Schema{
-			"http_method": {
+			attrHTTPMethod: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -67,7 +67,7 @@ func resourceMethodResponse() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 				Optional: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,9 +85,9 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := apigateway.PutMethodResponseInput{
-		HttpMethod: aws.String(d.Get("http_method").(string)),
+		HttpMethod: aws.String(d.Get(attrHTTPMethod).(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 
@@ -114,7 +114,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Method Response: %s", err)
 	}
 
-	d.SetId(resourceMethodResponseIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string)))
+	d.SetId(resourceMethodResponseIDAttr(d.Get(attrRestAPIID).(string), d.Get(names.AttrResourceID).(string), d.Get(attrHTTPMethod).(string), d.Get(names.AttrStatusCode).(string)))
 
 	return diags
 }
@@ -123,7 +123,7 @@ func resourceMethodResponseRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	methodResponse, err := findMethodResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string), d.Get(names.AttrStatusCode).(string))
+	methodResponse, err := findMethodResponseByFourPartKey(ctx, conn, d.Get(attrHTTPMethod).(string), d.Get(names.AttrResourceID).(string), d.Get(attrRestAPIID).(string), d.Get(names.AttrStatusCode).(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method Response (%s) not found, removing from state", d.Id())
@@ -160,10 +160,10 @@ func resourceMethodResponseUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	input := apigateway.UpdateMethodResponseInput{
-		HttpMethod:      aws.String(d.Get("http_method").(string)),
+		HttpMethod:      aws.String(d.Get(attrHTTPMethod).(string)),
 		PatchOperations: operations,
 		ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 		StatusCode:      aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 
@@ -182,9 +182,9 @@ func resourceMethodResponseDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Deleting API Gateway Method Response: %s", d.Id())
 	input := apigateway.DeleteMethodResponseInput{
-		HttpMethod: aws.String(d.Get("http_method").(string)),
+		HttpMethod: aws.String(d.Get(attrHTTPMethod).(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 	_, err := conn.DeleteMethodResponse(ctx, &input)
@@ -240,7 +240,7 @@ func resourceMethodResponseIDAttr(restApiID, resourceID, httpMethod, statusCode 
 }
 
 func (methodResponseImportID) Create(d *schema.ResourceData) string {
-	return methodResponseCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string))
+	return methodResponseCreateImportID(d.Get(attrRestAPIID).(string), d.Get(names.AttrResourceID).(string), d.Get(attrHTTPMethod).(string), d.Get(names.AttrStatusCode).(string))
 }
 
 func (methodResponseImportID) Parse(id string) (string, map[string]any, error) {
@@ -250,9 +250,9 @@ func (methodResponseImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"rest_api_id":        parts[0],
+		attrRestAPIID:        parts[0],
 		names.AttrResourceID: parts[1],
-		"http_method":        parts[2],
+		attrHTTPMethod:       parts[2],
 		names.AttrStatusCode: parts[3],
 	}
 

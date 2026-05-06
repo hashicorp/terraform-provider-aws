@@ -79,7 +79,7 @@ func resourceIntegration() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"http_method": {
+			attrHTTPMethod: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -128,7 +128,7 @@ func resourceIntegration() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ResponseTransferMode](),
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -200,9 +200,9 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := apigateway.PutIntegrationInput{
-		HttpMethod: aws.String(d.Get("http_method").(string)),
+		HttpMethod: aws.String(d.Get(attrHTTPMethod).(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 		Type:       types.IntegrationType(d.Get(names.AttrType).(string)),
 	}
 
@@ -273,7 +273,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
 
-	d.SetId(resourceIntegrationIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
+	d.SetId(resourceIntegrationIDAttr(d.Get(attrRestAPIID).(string), d.Get(names.AttrResourceID).(string), d.Get(attrHTTPMethod).(string)))
 
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
@@ -282,7 +282,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string))
+	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get(attrHTTPMethod).(string), d.Get(names.AttrResourceID).(string), d.Get(attrRestAPIID).(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Integration (%s) not found, removing from state", d.Id())
@@ -550,10 +550,10 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if len(operations) > 0 {
 		input := apigateway.UpdateIntegrationInput{
-			HttpMethod:      aws.String(d.Get("http_method").(string)),
+			HttpMethod:      aws.String(d.Get(attrHTTPMethod).(string)),
 			PatchOperations: operations,
 			ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
-			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+			RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 		}
 
 		_, err := conn.UpdateIntegration(ctx, &input)
@@ -575,7 +575,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// No reasonable way to determine the first stage has fully propagated, so we wait a bit.
 	time.Sleep(pauseBetweenUpdateStages)
 
-	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string))
+	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get(attrHTTPMethod).(string), d.Get(names.AttrResourceID).(string), d.Get(attrRestAPIID).(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration (%s): %s", d.Id(), err)
 	}
@@ -641,10 +641,10 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if len(lackingOperations) > 0 {
 			input := apigateway.UpdateIntegrationInput{
-				HttpMethod:      aws.String(d.Get("http_method").(string)),
+				HttpMethod:      aws.String(d.Get(attrHTTPMethod).(string)),
 				PatchOperations: lackingOperations,
 				ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
-				RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+				RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 			}
 			_, err = conn.UpdateIntegration(ctx, &input)
 			if err != nil {
@@ -662,9 +662,9 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 	input := apigateway.DeleteIntegrationInput{
-		HttpMethod: aws.String(d.Get("http_method").(string)),
+		HttpMethod: aws.String(d.Get(attrHTTPMethod).(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 	}
 	_, err := conn.DeleteIntegration(ctx, &input)
 
@@ -762,7 +762,7 @@ func resourceIntegrationIDAttr(restApiID, resourceID, httpMethod string) string 
 }
 
 func (integrationImportID) Create(d *schema.ResourceData) string {
-	return integrationCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string))
+	return integrationCreateImportID(d.Get(attrRestAPIID).(string), d.Get(names.AttrResourceID).(string), d.Get(attrHTTPMethod).(string))
 }
 
 func (integrationImportID) Parse(id string) (string, map[string]any, error) {
@@ -772,9 +772,9 @@ func (integrationImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"rest_api_id":        parts[0],
+		attrRestAPIID:        parts[0],
 		names.AttrResourceID: parts[1],
-		"http_method":        parts[2],
+		attrHTTPMethod:       parts[2],
 	}
 
 	return resourceIntegrationIDAttr(parts[0], parts[1], parts[2]), result, nil
