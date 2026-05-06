@@ -39,7 +39,7 @@ type routeListResource struct {
 func (l *routeListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"api_id": listschema.StringAttribute{
+			attrAPIID: listschema.StringAttribute{
 				Required:    true,
 				Description: "API identifier.",
 			},
@@ -61,7 +61,7 @@ func (l *routeListResource) List(ctx context.Context, request list.ListRequest, 
 	apiID := query.ApiId.ValueString()
 
 	tflog.Info(ctx, "Listing Resources", map[string]any{
-		logging.ResourceAttributeKey("api_id"): apiID,
+		logging.ResourceAttributeKey(attrAPIID): apiID,
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -82,7 +82,7 @@ func (l *routeListResource) List(ctx context.Context, request list.ListRequest, 
 
 			rd := l.ResourceData()
 			rd.SetId(routeID)
-			rd.Set("api_id", apiID)
+			rd.Set(attrAPIID, apiID)
 
 			if request.IncludeResource {
 				if err := flattenRoutePage(rd, item); err != nil {

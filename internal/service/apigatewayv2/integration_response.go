@@ -38,7 +38,7 @@ func resourceIntegrationResponse() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -75,7 +75,7 @@ func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.CreateIntegrationResponseInput{
-		ApiId:                  aws.String(d.Get("api_id").(string)),
+		ApiId:                  aws.String(d.Get(attrAPIID).(string)),
 		IntegrationId:          aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseKey: aws.String(d.Get("integration_response_key").(string)),
 	}
@@ -107,7 +107,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findIntegrationResponseByThreePartKey(ctx, conn, d.Get("api_id").(string), d.Get("integration_id").(string), d.Id())
+	output, err := findIntegrationResponseByThreePartKey(ctx, conn, d.Get(attrAPIID).(string), d.Get("integration_id").(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Integration Response (%s) not found, removing from state", d.Id())
@@ -135,7 +135,7 @@ func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.UpdateIntegrationResponseInput{
-		ApiId:                 aws.String(d.Get("api_id").(string)),
+		ApiId:                 aws.String(d.Get(attrAPIID).(string)),
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
 	}
@@ -171,7 +171,7 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration Response: %s", d.Id())
 	input := apigatewayv2.DeleteIntegrationResponseInput{
-		ApiId:                 aws.String(d.Get("api_id").(string)),
+		ApiId:                 aws.String(d.Get(attrAPIID).(string)),
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
 	}
@@ -195,7 +195,7 @@ func resourceIntegrationResponseImport(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(parts[2])
-	d.Set("api_id", parts[0])
+	d.Set(attrAPIID, parts[0])
 	d.Set("integration_id", parts[1])
 
 	return []*schema.ResourceData{d}, nil

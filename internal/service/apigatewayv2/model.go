@@ -41,7 +41,7 @@ func resourceModel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -88,7 +88,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	name := d.Get(names.AttrName).(string)
 	input := &apigatewayv2.CreateModelInput{
-		ApiId:       aws.String(d.Get("api_id").(string)),
+		ApiId:       aws.String(d.Get(attrAPIID).(string)),
 		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
 		Name:        aws.String(name),
 		Schema:      aws.String(d.Get(names.AttrSchema).(string)),
@@ -113,7 +113,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findModelByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
+	output, err := findModelByTwoPartKey(ctx, conn, d.Get(attrAPIID).(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Model (%s) not found, removing from state", d.Id())
@@ -138,7 +138,7 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.UpdateModelInput{
-		ApiId:   aws.String(d.Get("api_id").(string)),
+		ApiId:   aws.String(d.Get(attrAPIID).(string)),
 		ModelId: aws.String(d.Id()),
 	}
 
@@ -173,7 +173,7 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Model: %s", d.Id())
 	input := apigatewayv2.DeleteModelInput{
-		ApiId:   aws.String(d.Get("api_id").(string)),
+		ApiId:   aws.String(d.Get(attrAPIID).(string)),
 		ModelId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteModel(ctx, &input)
@@ -196,7 +196,7 @@ func resourceModelImport(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.SetId(parts[1])
-	d.Set("api_id", parts[0])
+	d.Set(attrAPIID, parts[0])
 
 	return []*schema.ResourceData{d}, nil
 }

@@ -81,7 +81,7 @@ func (r *routingRuleResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"api_id": schema.StringAttribute{
+									attrAPIID: schema.StringAttribute{
 										Required: true,
 									},
 									names.AttrStage: schema.StringAttribute{

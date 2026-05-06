@@ -49,7 +49,7 @@ func resourceRoute() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -127,7 +127,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.CreateRouteInput{
-		ApiId:             aws.String(d.Get("api_id").(string)),
+		ApiId:             aws.String(d.Get(attrAPIID).(string)),
 		ApiKeyRequired:    aws.Bool(d.Get("api_key_required").(bool)),
 		AuthorizationType: awstypes.AuthorizationType(d.Get("authorization_type").(string)),
 		RouteKey:          aws.String(d.Get("route_key").(string)),
@@ -180,7 +180,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findRouteByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
+	output, err := findRouteByTwoPartKey(ctx, conn, d.Get(attrAPIID).(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Route (%s) not found, removing from state", d.Id())
@@ -219,7 +219,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 			if v, ok := tfMap["request_parameter_key"].(string); ok && v != "" {
 				input := &apigatewayv2.DeleteRouteRequestParameterInput{
-					ApiId:               aws.String(d.Get("api_id").(string)),
+					ApiId:               aws.String(d.Get(attrAPIID).(string)),
 					RequestParameterKey: aws.String(v),
 					RouteId:             aws.String(d.Id()),
 				}
@@ -241,7 +241,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChangesExcept("request_parameter") || len(requestParameters) > 0 {
 		input := &apigatewayv2.UpdateRouteInput{
-			ApiId:   aws.String(d.Get("api_id").(string)),
+			ApiId:   aws.String(d.Get(attrAPIID).(string)),
 			RouteId: aws.String(d.Id()),
 		}
 
@@ -306,7 +306,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Route: %s", d.Id())
 	input := apigatewayv2.DeleteRouteInput{
-		ApiId:   aws.String(d.Get("api_id").(string)),
+		ApiId:   aws.String(d.Get(attrAPIID).(string)),
 		RouteId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteRoute(ctx, &input)
@@ -327,7 +327,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) 
 		return nil, err
 	}
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	routeID := d.Id()
 
 	// Region may be overridden in the import block.
@@ -365,7 +365,7 @@ func (routeImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"api_id": parts[0],
+		attrAPIID: parts[0],
 	}
 
 	return parts[1], result, nil

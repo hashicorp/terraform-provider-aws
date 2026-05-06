@@ -42,7 +42,7 @@ func resourceIntegration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -190,7 +190,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.CreateIntegrationInput{
-		ApiId:           aws.String(d.Get("api_id").(string)),
+		ApiId:           aws.String(d.Get(attrAPIID).(string)),
 		IntegrationType: awstypes.IntegrationType(d.Get("integration_type").(string)),
 	}
 
@@ -273,7 +273,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findIntegrationByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
+	output, err := findIntegrationByTwoPartKey(ctx, conn, d.Get(attrAPIID).(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 integration (%s) not found, removing from state", d.Id())
@@ -316,7 +316,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.UpdateIntegrationInput{
-		ApiId:         aws.String(d.Get("api_id").(string)),
+		ApiId:         aws.String(d.Get(attrAPIID).(string)),
 		IntegrationId: aws.String(d.Id()),
 		// Always specify the integration type.
 		IntegrationType: awstypes.IntegrationType(d.Get("integration_type").(string)),
@@ -436,7 +436,7 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration: %s", d.Id())
 	input := apigatewayv2.DeleteIntegrationInput{
-		ApiId:         aws.String(d.Get("api_id").(string)),
+		ApiId:         aws.String(d.Get(attrAPIID).(string)),
 		IntegrationId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteIntegration(ctx, &input)
@@ -474,7 +474,7 @@ func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(integrationID)
-	d.Set("api_id", apiID)
+	d.Set(attrAPIID, apiID)
 
 	return []*schema.ResourceData{d}, nil
 }

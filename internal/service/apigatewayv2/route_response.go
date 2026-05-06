@@ -37,7 +37,7 @@ func resourceRouteResponse() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -69,7 +69,7 @@ func resourceRouteResponseCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.CreateRouteResponseInput{
-		ApiId:            aws.String(d.Get("api_id").(string)),
+		ApiId:            aws.String(d.Get(attrAPIID).(string)),
 		RouteId:          aws.String(d.Get("route_id").(string)),
 		RouteResponseKey: aws.String(d.Get("route_response_key").(string)),
 	}
@@ -97,7 +97,7 @@ func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findRouteResponseByThreePartKey(ctx, conn, d.Get("api_id").(string), d.Get("route_id").(string), d.Id())
+	output, err := findRouteResponseByThreePartKey(ctx, conn, d.Get(attrAPIID).(string), d.Get("route_id").(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Route Response (%s) not found, removing from state", d.Id())
@@ -121,7 +121,7 @@ func resourceRouteResponseUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.UpdateRouteResponseInput{
-		ApiId:           aws.String(d.Get("api_id").(string)),
+		ApiId:           aws.String(d.Get(attrAPIID).(string)),
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	}
@@ -153,7 +153,7 @@ func resourceRouteResponseDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Route Response: %s", d.Id())
 	input := apigatewayv2.DeleteRouteResponseInput{
-		ApiId:           aws.String(d.Get("api_id").(string)),
+		ApiId:           aws.String(d.Get(attrAPIID).(string)),
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	}
@@ -177,7 +177,7 @@ func resourceRouteResponseImport(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(parts[2])
-	d.Set("api_id", parts[0])
+	d.Set(attrAPIID, parts[0])
 	d.Set("route_id", parts[1])
 
 	return []*schema.ResourceData{d}, nil

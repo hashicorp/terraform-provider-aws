@@ -65,7 +65,7 @@ func resourceStage() *schema.Resource {
 					},
 				},
 			},
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -194,7 +194,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	outputGA, err := findAPIByID(ctx, conn, apiID)
 
 	if err != nil {
@@ -253,7 +253,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	outputGS, err := findStageByTwoPartKey(ctx, conn, apiID, d.Id())
 
 	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
@@ -305,7 +305,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
 		"default_route_settings", "deployment_id", names.AttrDescription,
 		"route_settings", "stage_variables") {
-		apiID := d.Get("api_id").(string)
+		apiID := d.Get(attrAPIID).(string)
 		outputGA, err := findAPIByID(ctx, conn, apiID)
 
 		if err != nil {
@@ -350,7 +350,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			for _, vRouteSetting := range os.Difference(ns).List() {
 				routeKey := vRouteSetting.(map[string]any)["route_key"].(string)
 				input := &apigatewayv2.DeleteRouteSettingsInput{
-					ApiId:     aws.String(d.Get("api_id").(string)),
+					ApiId:     aws.String(d.Get(attrAPIID).(string)),
 					RouteKey:  aws.String(routeKey),
 					StageName: aws.String(d.Id()),
 				}
@@ -397,7 +397,7 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Stage: %s", d.Id())
 	input := apigatewayv2.DeleteStageInput{
-		ApiId:     aws.String(d.Get("api_id").(string)),
+		ApiId:     aws.String(d.Get(attrAPIID).(string)),
 		StageName: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteStage(ctx, &input)
@@ -435,7 +435,7 @@ func resourceStageImport(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.SetId(stageName)
-	d.Set("api_id", apiID)
+	d.Set(attrAPIID, apiID)
 
 	return []*schema.ResourceData{d}, nil
 }

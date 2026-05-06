@@ -46,7 +46,7 @@ func resourceAuthorizer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -118,7 +118,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	outputGA, err := findAPIByID(ctx, conn, apiID)
 
 	if err != nil {
@@ -179,7 +179,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findAuthorizerByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
+	output, err := findAuthorizerByTwoPartKey(ctx, conn, d.Get(attrAPIID).(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Authorizer (%s) not found, removing from state", d.Id())
@@ -211,7 +211,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	input := &apigatewayv2.UpdateAuthorizerInput{
-		ApiId:        aws.String(d.Get("api_id").(string)),
+		ApiId:        aws.String(d.Get(attrAPIID).(string)),
 		AuthorizerId: aws.String(d.Id()),
 	}
 
@@ -267,7 +267,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Authorizer: %s", d.Id())
 	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
-			ApiId:        aws.String(d.Get("api_id").(string)),
+			ApiId:        aws.String(d.Get(attrAPIID).(string)),
 			AuthorizerId: aws.String(d.Id()),
 		})
 	})
@@ -290,7 +290,7 @@ func resourceAuthorizerImport(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(parts[1])
-	d.Set("api_id", parts[0])
+	d.Set(attrAPIID, parts[0])
 
 	return []*schema.ResourceData{d}, nil
 }

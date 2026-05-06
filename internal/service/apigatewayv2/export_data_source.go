@@ -23,7 +23,7 @@ func dataSourceExport() *schema.Resource {
 		ReadWithoutTimeout: dataSourceExportRead,
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,7 +63,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	input := &apigatewayv2.ExportApiInput{
 		ApiId:             aws.String(apiID),
 		IncludeExtensions: aws.Bool(d.Get("include_extensions").(bool)),

@@ -41,7 +41,7 @@ func resourceDeployment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -69,7 +69,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	input := &apigatewayv2.CreateDeploymentInput{
 		ApiId: aws.String(apiID),
 	}
@@ -97,7 +97,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findDeploymentByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
+	output, err := findDeploymentByTwoPartKey(ctx, conn, d.Get(attrAPIID).(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Deployment (%s) not found, removing from state", d.Id())
@@ -119,7 +119,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	input := &apigatewayv2.UpdateDeploymentInput{
 		ApiId:        aws.String(apiID),
 		DeploymentId: aws.String(d.Id()),
@@ -148,7 +148,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Deployment (%s)", d.Id())
 	input := apigatewayv2.DeleteDeploymentInput{
-		ApiId:        aws.String(d.Get("api_id").(string)),
+		ApiId:        aws.String(d.Get(attrAPIID).(string)),
 		DeploymentId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteDeployment(ctx, &input)
@@ -171,7 +171,7 @@ func resourceDeploymentImport(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(parts[1])
-	d.Set("api_id", parts[0])
+	d.Set(attrAPIID, parts[0])
 
 	return []*schema.ResourceData{d}, nil
 }

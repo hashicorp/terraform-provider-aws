@@ -29,7 +29,7 @@ func dataSourceAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -118,7 +118,7 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	api, err := findAPIByID(ctx, conn, apiID)
 
 	if retry.NotFound(err) {
