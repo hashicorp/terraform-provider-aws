@@ -23,13 +23,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const propagationTimeout = 2 * time.Minute
+const (
+	propagationTimeout  = 2 * time.Minute
+	jobQueueResourceKey = "aws_batch_job_queue"
+)
 
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_batch_compute_environment", &resource.Sweeper{
 		Name: "aws_batch_compute_environment",
 		Dependencies: []string{
-			"aws_batch_job_queue",
+			jobQueueResourceKey,
 		},
 		F: sweepComputeEnvironments,
 	})
@@ -38,12 +41,12 @@ func RegisterSweepers() {
 		Name: "aws_batch_job_definition",
 		F:    sweepJobDefinitions,
 		Dependencies: []string{
-			"aws_batch_job_queue",
+			jobQueueResourceKey,
 		},
 	})
 
-	resource.AddTestSweepers("aws_batch_job_queue", &resource.Sweeper{
-		Name: "aws_batch_job_queue",
+	resource.AddTestSweepers(jobQueueResourceKey, &resource.Sweeper{
+		Name: jobQueueResourceKey,
 		F:    sweepJobQueues,
 	})
 
@@ -51,7 +54,7 @@ func RegisterSweepers() {
 		Name: "aws_batch_scheduling_policy",
 		F:    sweepSchedulingPolicies,
 		Dependencies: []string{
-			"aws_batch_job_queue",
+			jobQueueResourceKey,
 		},
 	})
 }
