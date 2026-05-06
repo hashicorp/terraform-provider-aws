@@ -29,20 +29,20 @@ func BenchmarkSDKProviderInitialization(b *testing.B) {
 	}
 }
 
-func TestProvider(t *testing.T) {
+func TestProviderInit(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
 	p, err := NewProvider(ctx)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Initializing SDKv2 provider: %s", err)
 	}
 
 	p.TerraformVersion = "1.0.0"
 
 	err = p.InternalValidate()
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("Validating resource schemas: %s", err)
 	}
 }
 

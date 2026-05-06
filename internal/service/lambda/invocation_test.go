@@ -744,7 +744,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[2]q
   role          = aws_iam_role.test.arn
   handler       = "%[1]s.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs22.x"
 
   environment {
     variables = {
@@ -766,7 +766,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[2]q
   role          = aws_iam_role.test.arn
   handler       = "%[1]s.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs22.x"
   tenancy_config {
     tenant_isolation_mode = "PER_TENANT"
   }

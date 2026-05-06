@@ -241,6 +241,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 		},
+		{
+			Factory:  newStandardsControlResourceAsListResource,
+			TypeName: "aws_securityhub_standards_control",
+			Name:     "Standards Control",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("standards_control_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+		},
 	})
 }
 

@@ -589,6 +589,42 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 	})
 }
 
+func TestAccFSxWindowsFileSystem_SelfManagedActiveDirectory_passwordWO(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWindowsFileSystemConfig_SelfManagedActiveDirectory_passwordWO(rName, domainName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWindowsFileSystemExists(ctx, t, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.0.password_wo_version", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					"self_managed_active_directory",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
 func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 awstypes.FileSystem
@@ -1276,6 +1312,29 @@ resource "aws_fsx_windows_file_system" "test" {
   }
 }
 `, rName))
+}
+
+func testAccWindowsFileSystemConfig_SelfManagedActiveDirectory_passwordWO(rName, domain string, passwordWOVersion int) string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
+resource "aws_fsx_windows_file_system" "test" {
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test[0].id]
+  throughput_capacity = 8
+
+  self_managed_active_directory {
+    dns_ips             = aws_directory_service_directory.test.dns_ip_addresses
+    domain_name         = aws_directory_service_directory.test.name
+    password_wo         = aws_directory_service_directory.test.password
+    password_wo_version = %[2]d
+    username            = "Admin"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, passwordWOVersion))
 }
 
 func testAccWindowsFileSystemConfig_storageCapacity(rName, domain string, storageCapacity, throughputCapacity int) string {

@@ -58,7 +58,7 @@ resource "aws_lambda_function" "test" {
   function_name = var.rName
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_lambda_permission" "test" {

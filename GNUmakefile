@@ -603,6 +603,13 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		exit 1; \
 	fi
 
+schema-validate: ## Validate schemas
+	@echo "make: Validating schemas"
+	@$(GO_VER) test -vet=off -buildvcs=false \
+		./internal/provider/sdkv2 -run=TestProviderInit
+	@$(GO_VER) test -vet=off -buildvcs=false \
+		./internal/provider/framework -run=TestProviderInit
+
 semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
 
 semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
@@ -912,7 +919,7 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 test-naming: ## Check test naming conventions
 	@.ci/scripts/check-test-naming.sh
 
-testacc: prereq-go fmt-check ## Run acceptance tests
+testacc: prereq-go fmt-check schema-validate ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -925,7 +932,7 @@ testacc: prereq-go fmt-check ## Run acceptance tests
 		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
 		exit 1; \
 	fi
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false
 
 testacc-lint: ## [CI] Acceptance Test Linting / terrafmt
 	@echo "make: Acceptance Test Linting / terrafmt..."
