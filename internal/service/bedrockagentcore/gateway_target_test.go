@@ -521,7 +521,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.
 	})
 }
 
-func TestAccBedrockAgentCoreGatewayTarget_callerIamCredentials(t *testing.T) {
+func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -537,13 +537,13 @@ func TestAccBedrockAgentCoreGatewayTarget_callerIamCredentials(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_callerIamCredentials()),
+				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_callerIAMCredentials()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.0.region", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.0.region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.0.service", "bedrock"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -768,6 +768,7 @@ func testAccCheckGatewayTargetExists(ctx context.Context, t *testing.T, n string
 func testAccGatewayTargetConfig_infra(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "test" {
   statement {
@@ -1233,9 +1234,9 @@ func testAccSchema_invalidUnsupportedType() string {
 		 `
 }
 
-func testAccCredentialProvider_callerIamCredentials() string {
+func testAccCredentialProvider_callerIAMCredentials() string {
 	return `    caller_iam_credentials {
-      region  = "us-east-1"
+      region  = data.aws_region.current.name
       service = "bedrock"
     }`
 }

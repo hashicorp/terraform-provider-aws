@@ -419,7 +419,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"region": schema.StringAttribute{
+									names.AttrRegion: schema.StringAttribute{
 										Optional: true,
 									},
 									"service": schema.StringAttribute{
