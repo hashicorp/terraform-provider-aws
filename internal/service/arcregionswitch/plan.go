@@ -65,13 +65,13 @@ func arcRoutingControlConfigBlock(ctx context.Context) fwschema.Block {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[arcRoutingControlConfigModel](ctx),
 		NestedObject: fwschema.NestedBlockObject{
 			Attributes: map[string]fwschema.Attribute{
-				"cross_account_role": fwschema.StringAttribute{
+				attrCrossAccountRole: fwschema.StringAttribute{
 					Optional: true,
 				},
 				names.AttrExternalID: fwschema.StringAttribute{
 					Optional: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
@@ -120,7 +120,7 @@ func customActionLambdaConfigBlock(ctx context.Context) fwschema.Block {
 				"retry_interval_minutes": fwschema.Float32Attribute{
 					Required: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
@@ -132,7 +132,7 @@ func customActionLambdaConfigBlock(ctx context.Context) fwschema.Block {
 							names.AttrARN: fwschema.StringAttribute{
 								Required: true,
 							},
-							"cross_account_role": fwschema.StringAttribute{
+							attrCrossAccountRole: fwschema.StringAttribute{
 								Optional: true,
 							},
 							names.AttrExternalID: fwschema.StringAttribute{
@@ -141,7 +141,7 @@ func customActionLambdaConfigBlock(ctx context.Context) fwschema.Block {
 						},
 					},
 				},
-				"ungraceful": fwschema.ListNestedBlock{
+				attrUngraceful: fwschema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[ungracefulModel](ctx),
 					NestedObject: fwschema.NestedBlockObject{
 						Attributes: map[string]fwschema.Attribute{
@@ -173,22 +173,22 @@ func documentDBConfigBlock(ctx context.Context) fwschema.Block {
 				"global_cluster_identifier": fwschema.StringAttribute{
 					Required: true,
 				},
-				"cross_account_role": fwschema.StringAttribute{
+				attrCrossAccountRole: fwschema.StringAttribute{
 					Optional: true,
 				},
 				names.AttrExternalID: fwschema.StringAttribute{
 					Optional: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
 			Blocks: map[string]fwschema.Block{
-				"ungraceful": fwschema.ListNestedBlock{
+				attrUngraceful: fwschema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbUngracefulModel](ctx),
 					NestedObject: fwschema.NestedBlockObject{
 						Attributes: map[string]fwschema.Attribute{
-							"ungraceful": fwschema.StringAttribute{
+							attrUngraceful: fwschema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.DocumentDbUngracefulBehavior](),
 								Required:   true,
 							},
@@ -212,7 +212,7 @@ func ec2ASGCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 				"target_percent": fwschema.Int64Attribute{
 					Optional: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
@@ -224,7 +224,7 @@ func ec2ASGCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 							names.AttrARN: fwschema.StringAttribute{
 								Required: true,
 							},
-							"cross_account_role": fwschema.StringAttribute{
+							attrCrossAccountRole: fwschema.StringAttribute{
 								Optional: true,
 							},
 							names.AttrExternalID: fwschema.StringAttribute{
@@ -233,7 +233,7 @@ func ec2ASGCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 						},
 					},
 				},
-				"ungraceful": fwschema.ListNestedBlock{
+				attrUngraceful: fwschema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[ec2UngracefulModel](ctx),
 					NestedObject: fwschema.NestedBlockObject{
 						Attributes: map[string]fwschema.Attribute{
@@ -263,7 +263,7 @@ func ecsCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 				"target_percent": fwschema.Int64Attribute{
 					Optional: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
@@ -278,7 +278,7 @@ func ecsCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 							"service_arn": fwschema.StringAttribute{
 								Required: true,
 							},
-							"cross_account_role": fwschema.StringAttribute{
+							attrCrossAccountRole: fwschema.StringAttribute{
 								Optional: true,
 							},
 							names.AttrExternalID: fwschema.StringAttribute{
@@ -287,7 +287,7 @@ func ecsCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 						},
 					},
 				},
-				"ungraceful": fwschema.ListNestedBlock{
+				attrUngraceful: fwschema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[ecsUngracefulModel](ctx),
 					NestedObject: fwschema.NestedBlockObject{
 						Attributes: map[string]fwschema.Attribute{
@@ -317,7 +317,7 @@ func eksResourceScalingConfigBlock(ctx context.Context) fwschema.Block {
 				"target_percent": fwschema.Int64Attribute{
 					Required: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
@@ -342,7 +342,7 @@ func eksResourceScalingConfigBlock(ctx context.Context) fwschema.Block {
 							"cluster_arn": fwschema.StringAttribute{
 								Required: true,
 							},
-							"cross_account_role": fwschema.StringAttribute{
+							attrCrossAccountRole: fwschema.StringAttribute{
 								Optional: true,
 							},
 							names.AttrExternalID: fwschema.StringAttribute{
@@ -382,7 +382,7 @@ func eksResourceScalingConfigBlock(ctx context.Context) fwschema.Block {
 						},
 					},
 				},
-				"ungraceful": fwschema.ListNestedBlock{
+				attrUngraceful: fwschema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[eksUngracefulModel](ctx),
 					NestedObject: fwschema.NestedBlockObject{
 						Attributes: map[string]fwschema.Attribute{
@@ -405,7 +405,7 @@ func executionApprovalConfigBlock(ctx context.Context) fwschema.Block {
 				"approval_role": fwschema.StringAttribute{
 					Required: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
@@ -429,22 +429,22 @@ func globalAuroraConfigBlock(ctx context.Context) fwschema.Block {
 					CustomType: fwtypes.ListOfARNType,
 					Required:   true,
 				},
-				"cross_account_role": fwschema.StringAttribute{
+				attrCrossAccountRole: fwschema.StringAttribute{
 					Optional: true,
 				},
 				names.AttrExternalID: fwschema.StringAttribute{
 					Optional: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
 			Blocks: map[string]fwschema.Block{
-				"ungraceful": fwschema.ListNestedBlock{
+				attrUngraceful: fwschema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraUngracefulModel](ctx),
 					NestedObject: fwschema.NestedBlockObject{
 						Attributes: map[string]fwschema.Attribute{
-							"ungraceful": fwschema.StringAttribute{
+							attrUngraceful: fwschema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraUngracefulBehavior](),
 								Required:   true,
 							},
@@ -467,13 +467,13 @@ func route53HealthCheckConfigBlock(ctx context.Context) fwschema.Block {
 				"record_name": fwschema.StringAttribute{
 					Required: true,
 				},
-				"cross_account_role": fwschema.StringAttribute{
+				attrCrossAccountRole: fwschema.StringAttribute{
 					Optional: true,
 				},
 				names.AttrExternalID: fwschema.StringAttribute{
 					Optional: true,
 				},
-				"timeout_minutes": fwschema.Int32Attribute{
+				attrTimeoutMinutes: fwschema.Int32Attribute{
 					Optional: true,
 				},
 			},
@@ -505,7 +505,7 @@ func regionSwitchPlanConfigBlock(ctx context.Context) fwschema.Block {
 					CustomType: fwtypes.ARNType,
 					Required:   true,
 				},
-				"cross_account_role": fwschema.StringAttribute{
+				attrCrossAccountRole: fwschema.StringAttribute{
 					Optional: true,
 				},
 				names.AttrExternalID: fwschema.StringAttribute{
@@ -573,7 +573,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"resource_identifier": fwschema.StringAttribute{
 							Required: true,
 						},
-						"cross_account_role": fwschema.StringAttribute{
+						attrCrossAccountRole: fwschema.StringAttribute{
 							Optional: true,
 						},
 						names.AttrExternalID: fwschema.StringAttribute{
