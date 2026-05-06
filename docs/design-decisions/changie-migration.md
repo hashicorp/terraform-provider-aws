@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Migration from `go-changelog` to Changie
 
 **Summary:** Migrate CHANGELOG generation from `go-changelog` to Changie for improved automation, better user experience, and alignment with modern development workflows.
