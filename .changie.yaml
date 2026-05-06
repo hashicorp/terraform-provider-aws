@@ -1,5 +1,5 @@
 # Copyright IBM Corp. 2014, 2026
-# SPDX-License-Identifier: MPL-2.0
+# "SPDX-License-Identifier: MPL-2.0"
 
 # NOTE: Changelog entries are automatically sorted alphabetically by .ci/scripts/sort-changelog-entries.sh
 #       during GitHub Actions workflow execution (see .github/workflows/update-changelog.yml)
