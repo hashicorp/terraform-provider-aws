@@ -333,8 +333,10 @@ The following arguments are optional:
 
 The `credential_provider_configuration` block supports exactly one of the following:
 
-* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. This is an empty configuration block.
 * `api_key` - (Optional) API key-based authentication configuration. See [`api_key`](#api_key) below.
+* `caller_iam_credentials` - (Optional) Caller IAM credentials-based authentication configuration. See [`caller_iam_credentials`](#caller_iam_credentials) below.
+* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. This is an empty configuration block.
+* `jwt_passthrough` - (Optional) JWT passthrough-based authentication configuration. This is an empty configuration block.
 * `oauth` - (Optional) OAuth-based authentication configuration. See [`oauth`](#oauth) below.
 
 ### `api_key`
@@ -345,6 +347,13 @@ The `api_key` block supports the following:
 * `credential_location` - (Optional) Location where the API key credential is provided. Valid values: `HEADER`, `QUERY_PARAMETER`.
 * `credential_parameter_name` - (Optional) Name of the parameter containing the API key credential.
 * `credential_prefix` - (Optional) Prefix to add to the API key credential value.
+
+### `caller_iam_credentials`
+
+The `caller_iam_credentials` block supports the following:
+
+* `service` - (Required) The service name for the credentials.
+* `region` - (Optional) The AWS region for the credentials.
 
 ### `oauth`
 

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `caller_iam_credentials` and `jwt_passthrough` to `credential_provider_configuration`
+```

@@ -521,6 +521,88 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_callerIamCredentials(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_callerIamCredentials()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.0.region", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.0.service", "bedrock"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_jwtPassthrough(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_jwtPassthrough()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.jwt_passthrough.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
@@ -1151,8 +1233,19 @@ func testAccSchema_invalidUnsupportedType() string {
 		 `
 }
 
+func testAccCredentialProvider_callerIamCredentials() string {
+	return `    caller_iam_credentials {
+      region  = "us-east-1"
+      service = "bedrock"
+    }`
+}
+
 func testAccCredentialProvider_gatewayIAMRole() string {
 	return `    gateway_iam_role {}`
+}
+
+func testAccCredentialProvider_jwtPassthrough() string {
+	return `    jwt_passthrough {}`
 }
 
 func testAccCredentialProvider_apiKey() string {

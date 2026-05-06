@@ -381,8 +381,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.ConflictsWith(
-									path.MatchRelative().AtParent().AtName("oauth"),
+									path.MatchRelative().AtParent().AtName("caller_iam_credentials"),
 									path.MatchRelative().AtParent().AtName("gateway_iam_role"),
+									path.MatchRelative().AtParent().AtName("jwt_passthrough"),
+									path.MatchRelative().AtParent().AtName("oauth"),
 								),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -404,13 +406,67 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 								},
 							},
 						},
+						"caller_iam_credentials": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[callerIAMRoleProviderModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ConflictsWith(
+									path.MatchRelative().AtParent().AtName("api_key"),
+									path.MatchRelative().AtParent().AtName("gateway_iam_role"),
+									path.MatchRelative().AtParent().AtName("jwt_passthrough"),
+									path.MatchRelative().AtParent().AtName("oauth"),
+								),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"region": schema.StringAttribute{
+										Optional: true,
+									},
+									"service": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+						"gateway_iam_role": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayIAMRoleProviderModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ConflictsWith(
+									path.MatchRelative().AtParent().AtName("api_key"),
+									path.MatchRelative().AtParent().AtName("caller_iam_credentials"),
+									path.MatchRelative().AtParent().AtName("jwt_passthrough"),
+									path.MatchRelative().AtParent().AtName("oauth"),
+								),
+							},
+							NestedObject: schema.NestedBlockObject{
+								// Empty block - no attributes needed for Gateway IAM Role
+							},
+						},
+						"jwt_passthrough": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[jwtPassthroughProviderModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ConflictsWith(
+									path.MatchRelative().AtParent().AtName("api_key"),
+									path.MatchRelative().AtParent().AtName("caller_iam_credentials"),
+									path.MatchRelative().AtParent().AtName("gateway_iam_role"),
+									path.MatchRelative().AtParent().AtName("oauth"),
+								),
+							},
+							NestedObject: schema.NestedBlockObject{
+								// Empty block - no attributes needed for JWT Passthrough
+							},
+						},
 						"oauth": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[oauthCredentialProviderModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.ConflictsWith(
 									path.MatchRelative().AtParent().AtName("api_key"),
+									path.MatchRelative().AtParent().AtName("caller_iam_credentials"),
 									path.MatchRelative().AtParent().AtName("gateway_iam_role"),
+									path.MatchRelative().AtParent().AtName("jwt_passthrough"),
 								),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -436,19 +492,6 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										Required:   true,
 									},
 								},
-							},
-						},
-						"gateway_iam_role": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayIAMRoleProviderModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.ConflictsWith(
-									path.MatchRelative().AtParent().AtName("api_key"),
-									path.MatchRelative().AtParent().AtName("oauth"),
-								),
-							},
-							NestedObject: schema.NestedBlockObject{
-								// Empty block - no attributes needed for Gateway IAM Role
 							},
 						},
 					},
@@ -1059,9 +1102,11 @@ type metadataConfigurationModel struct {
 }
 
 type credentialProviderConfigurationModel struct {
-	ApiKey         fwtypes.ListNestedObjectValueOf[apiKeyCredentialProviderModel] `tfsdk:"api_key"`
-	OAuth          fwtypes.ListNestedObjectValueOf[oauthCredentialProviderModel]  `tfsdk:"oauth"`
-	GatewayIAMRole fwtypes.ListNestedObjectValueOf[gatewayIAMRoleProviderModel]   `tfsdk:"gateway_iam_role"`
+	ApiKey               fwtypes.ListNestedObjectValueOf[apiKeyCredentialProviderModel] `tfsdk:"api_key"`
+	CallerIAMCredentials fwtypes.ListNestedObjectValueOf[callerIAMRoleProviderModel]    `tfsdk:"caller_iam_credentials"`
+	GatewayIAMRole       fwtypes.ListNestedObjectValueOf[gatewayIAMRoleProviderModel]   `tfsdk:"gateway_iam_role"`
+	JWTPassthrough       fwtypes.ListNestedObjectValueOf[jwtPassthroughProviderModel]   `tfsdk:"jwt_passthrough"`
+	OAuth                fwtypes.ListNestedObjectValueOf[oauthCredentialProviderModel]  `tfsdk:"oauth"`
 }
 
 var (
@@ -1094,8 +1139,21 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 				m.OAuth = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 			}
 
+		case awstypes.CredentialProviderTypeCallerIamCredentials:
+			if callerIamProvider, ok := t.CredentialProvider.(*awstypes.CredentialProviderMemberIamCredentialProvider); ok {
+				var model callerIAMRoleProviderModel
+				smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, callerIamProvider.Value, &model))
+				if diags.HasError() {
+					return diags
+				}
+				m.CallerIAMCredentials = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+			}
+
 		case awstypes.CredentialProviderTypeGatewayIamRole:
 			m.GatewayIAMRole = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &gatewayIAMRoleProviderModel{})
+
+		case awstypes.CredentialProviderTypeJwtPassthrough:
+			m.JWTPassthrough = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &jwtPassthroughProviderModel{})
 
 		default:
 			diags.AddError(
@@ -1149,15 +1207,36 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, 
 		c.CredentialProvider = &r
 		return &c, diags
 
+	case !m.CallerIAMCredentials.IsNull():
+		callerIAMCredentialsData, d := m.CallerIAMCredentials.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.CredentialProviderMemberIamCredentialProvider
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, callerIAMCredentialsData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		c.CredentialProviderType = awstypes.CredentialProviderTypeCallerIamCredentials
+		c.CredentialProvider = &r
+		return &c, diags
+
 	case !m.GatewayIAMRole.IsNull():
 		c.CredentialProviderType = awstypes.CredentialProviderTypeGatewayIamRole
+		c.CredentialProvider = nil
+		return &c, diags
+
+	case !m.JWTPassthrough.IsNull():
+		c.CredentialProviderType = awstypes.CredentialProviderTypeJwtPassthrough
 		c.CredentialProvider = nil
 		return &c, diags
 
 	default:
 		diags.AddError(
 			"Invalid Credential Provider Configuration",
-			"At least one credential provider must be configured: api_key, oauth, or gateway_iam_role",
+			"At least one credential provider must be configured: api_key, caller_iam_credentials, gateway_iam_role, jwt_passthrough, or oauth",
 		)
 		return nil, diags
 	}
@@ -1384,8 +1463,17 @@ type oauthCredentialProviderModel struct {
 	Scopes           fwtypes.SetOfString                         `tfsdk:"scopes"`
 }
 
+type callerIAMRoleProviderModel struct {
+	Region  types.String `tfsdk:"region"`
+	Service types.String `tfsdk:"service"`
+}
+
 type gatewayIAMRoleProviderModel struct {
 	// Empty struct - Gateway IAM Role provider requires no configuration
+}
+
+type jwtPassthroughProviderModel struct {
+	// Empty struct - JWT Passthrough provider requires no configuration
 }
 
 type mcpApiGatewayConfigurationModel struct {
