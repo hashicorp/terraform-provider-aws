@@ -113,7 +113,7 @@ func sweepDistributionsByProductionOrStaging(region string, staging bool) error 
 			r := resourceDistribution()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -197,7 +197,7 @@ func sweepCachePolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 			r := resourceCachePolicy()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -237,7 +237,7 @@ func sweepFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweep
 			r := resourceFunction()
 			d := r.Data(nil)
 			d.SetId(name)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -277,7 +277,7 @@ func sweepKeyGroup(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 			r := resourceKeyGroup()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -369,7 +369,7 @@ func sweepFieldLevelEncryptionConfigs(ctx context.Context, client *conns.AWSClie
 			r := resourceFieldLevelEncryptionConfig()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -409,7 +409,7 @@ func sweepFieldLevelEncryptionProfiles(ctx context.Context, client *conns.AWSCli
 			r := resourceFieldLevelEncryptionProfile()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -451,7 +451,7 @@ func sweepOriginRequestPolicies(ctx context.Context, client *conns.AWSClient) ([
 			r := resourceOriginRequestPolicy()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -493,7 +493,7 @@ func sweepResponseHeadersPolicies(ctx context.Context, client *conns.AWSClient) 
 			r := resourceResponseHeadersPolicy()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -533,7 +533,7 @@ func sweepOriginAccessControls(ctx context.Context, client *conns.AWSClient) ([]
 			r := resourceOriginAccessControl()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("etag", output.ETag)
+			d.Set(attrEtag, output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

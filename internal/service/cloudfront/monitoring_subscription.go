@@ -35,7 +35,7 @@ func resourceMonitoringSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"distribution_id": {
+			attrDistributionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -73,7 +73,7 @@ func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	id := d.Get("distribution_id").(string)
+	id := d.Get(attrDistributionID).(string)
 	input := &cloudfront.CreateMonitoringSubscriptionInput{
 		DistributionId: aws.String(id),
 	}
@@ -144,7 +144,7 @@ func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.Resourc
 }
 
 func resourceMonitoringSubscriptionImport(ctx context.Context, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
-	d.Set("distribution_id", d.Id())
+	d.Set(attrDistributionID, d.Id())
 	return []*schema.ResourceData{d}, nil
 }
 

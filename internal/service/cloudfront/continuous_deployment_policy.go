@@ -46,11 +46,11 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 			names.AttrEnabled: schema.BoolAttribute{
 				Required: true,
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"last_modified_time": schema.StringAttribute{
+			attrLastModifiedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
@@ -65,7 +65,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"items": schema.SetAttribute{
+						attrItems: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,

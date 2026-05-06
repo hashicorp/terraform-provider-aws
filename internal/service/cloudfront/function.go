@@ -50,7 +50,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -149,7 +149,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.Set(names.AttrARN, outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set(names.AttrComment, outputDF.FunctionSummary.FunctionConfig.Comment)
-	d.Set("etag", outputDF.ETag)
+	d.Set(attrEtag, outputDF.ETag)
 	if err := d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(outputDF.FunctionSummary.FunctionConfig.KeyValueStoreAssociations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting key_value_store_associations: %s", err)
 	}
@@ -185,7 +185,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
-	etag := d.Get("etag").(string)
+	etag := d.Get(attrEtag).(string)
 
 	if d.HasChanges("code", names.AttrComment, "key_value_store_associations", "runtime") {
 		input := &cloudfront.UpdateFunctionInput{
@@ -233,7 +233,7 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	log.Printf("[INFO] Deleting CloudFront Function: %s", d.Id())
 	input := cloudfront.DeleteFunctionInput{
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 		Name:    aws.String(d.Id()),
 	}
 	_, err := conn.DeleteFunction(ctx, &input)

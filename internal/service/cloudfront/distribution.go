@@ -89,7 +89,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"caller_reference": {
+			attrCallerReference: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -181,7 +181,7 @@ func resourceDistribution() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cookies": {
+									attrCookies: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
@@ -201,7 +201,7 @@ func resourceDistribution() *schema.Resource {
 											},
 										},
 									},
-									"headers": {
+									attrHeaders: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Computed: true,
@@ -226,7 +226,7 @@ func resourceDistribution() *schema.Resource {
 							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"event_type": {
+									attrEventType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
@@ -260,7 +260,7 @@ func resourceDistribution() *schema.Resource {
 							MaxItems: 4,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"event_type": {
+									attrEventType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
@@ -341,7 +341,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -364,7 +364,7 @@ func resourceDistribution() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"last_modified_time": {
+			attrLastModifiedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -434,7 +434,7 @@ func resourceDistribution() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cookies": {
+									attrCookies: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
@@ -453,7 +453,7 @@ func resourceDistribution() *schema.Resource {
 											},
 										},
 									},
-									"headers": {
+									attrHeaders: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Computed: true,
@@ -478,7 +478,7 @@ func resourceDistribution() *schema.Resource {
 							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"event_type": {
+									attrEventType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
@@ -512,7 +512,7 @@ func resourceDistribution() *schema.Resource {
 							MaxItems: 4,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"event_type": {
+									attrEventType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
@@ -676,13 +676,13 @@ func resourceDistribution() *schema.Resource {
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 									},
-									"origin_keepalive_timeout": {
+									attrOriginKeepaliveTimeout: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      5,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"origin_read_timeout": {
+									attrOriginReadTimeout: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      30,
@@ -766,13 +766,13 @@ func resourceDistribution() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"origin_keepalive_timeout": {
+									attrOriginKeepaliveTimeout: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      5,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"origin_read_timeout": {
+									attrOriginReadTimeout: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      30,
@@ -856,7 +856,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -888,7 +888,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -1062,7 +1062,7 @@ func resourceDistributionFlatten(ctx context.Context, awsClient *conns.AWSClient
 	}
 	d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
 	d.Set(names.AttrARN, output.Distribution.ARN)
-	d.Set("caller_reference", distributionConfig.CallerReference)
+	d.Set(attrCallerReference, distributionConfig.CallerReference)
 	if aws.ToString(distributionConfig.Comment) != "" {
 		d.Set(names.AttrComment, distributionConfig.Comment)
 	}
@@ -1086,12 +1086,12 @@ func resourceDistributionFlatten(ctx context.Context, awsClient *conns.AWSClient
 	d.Set("default_root_object", distributionConfig.DefaultRootObject)
 	d.Set(names.AttrDomainName, output.Distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
 	d.Set(names.AttrHostedZoneID, awsClient.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
-	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
+	d.Set(attrLastModifiedTime, aws.String(output.Distribution.LastModifiedTime.String()))
 	if distributionConfig.Logging != nil {
 		d.Set("logging_v1_enabled", distributionConfig.Logging.Enabled)
 		if aws.ToBool(distributionConfig.Logging.Enabled) || aws.ToBool(distributionConfig.Logging.IncludeCookies) {
@@ -1157,7 +1157,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		input := cloudfront.UpdateDistributionInput{
 			DistributionConfig: expandDistributionConfig(d),
 			Id:                 aws.String(d.Id()),
-			IfMatch:            aws.String(d.Get("etag").(string)),
+			IfMatch:            aws.String(d.Get(attrEtag).(string)),
 		}
 
 		// ACM and IAM certificate eventual consistency.
@@ -1480,7 +1480,7 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		apiObject.AnycastIpListId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("caller_reference"); ok {
+	if v, ok := d.GetOk(attrCallerReference); ok {
 		apiObject.CallerReference = aws.String(v.(string))
 	}
 
@@ -1872,7 +1872,7 @@ func expandLambdaFunctionAssociation(tfMap map[string]any) *awstypes.LambdaFunct
 
 	apiObject := &awstypes.LambdaFunctionAssociation{}
 
-	if v, ok := tfMap["event_type"]; ok {
+	if v, ok := tfMap[attrEventType]; ok {
 		apiObject.EventType = awstypes.EventType(v.(string))
 	}
 
@@ -1926,7 +1926,7 @@ func expandFunctionAssociation(tfMap map[string]any) *awstypes.FunctionAssociati
 
 	apiObject := &awstypes.FunctionAssociation{}
 
-	if v, ok := tfMap["event_type"]; ok {
+	if v, ok := tfMap[attrEventType]; ok {
 		apiObject.EventType = awstypes.EventType(v.(string))
 	}
 
@@ -1973,7 +1973,7 @@ func flattenLambdaFunctionAssociation(apiObject *awstypes.LambdaFunctionAssociat
 	tfMap := map[string]any{}
 
 	if apiObject != nil {
-		tfMap["event_type"] = apiObject.EventType
+		tfMap[attrEventType] = apiObject.EventType
 		tfMap["include_body"] = aws.ToBool(apiObject.IncludeBody)
 		tfMap["lambda_arn"] = aws.ToString(apiObject.LambdaFunctionARN)
 	}
@@ -1999,7 +1999,7 @@ func flattenFunctionAssociation(apiObject *awstypes.FunctionAssociation) map[str
 	tfMap := map[string]any{}
 
 	if apiObject != nil {
-		tfMap["event_type"] = apiObject.EventType
+		tfMap[attrEventType] = apiObject.EventType
 		tfMap[names.AttrFunctionARN] = aws.ToString(apiObject.FunctionARN)
 	}
 
@@ -2029,11 +2029,11 @@ func expandForwardedValues(tfMap map[string]any) *awstypes.ForwardedValues {
 		QueryString: aws.Bool(tfMap["query_string"].(bool)),
 	}
 
-	if v, ok := tfMap["cookies"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := tfMap[attrCookies]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.Cookies = expandCookiePreference(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["headers"]; ok {
+	if v, ok := tfMap[attrHeaders]; ok {
 		apiObject.Headers = expandForwardedValuesHeaders(v.(*schema.Set).List())
 	}
 
@@ -2054,11 +2054,11 @@ func flattenForwardedValues(apiObject *awstypes.ForwardedValues) map[string]any 
 	tfMap["query_string"] = aws.ToBool(apiObject.QueryString)
 
 	if apiObject.Cookies != nil {
-		tfMap["cookies"] = []any{flattenCookiePreference(apiObject.Cookies)}
+		tfMap[attrCookies] = []any{flattenCookiePreference(apiObject.Cookies)}
 	}
 
 	if apiObject.Headers != nil {
-		tfMap["headers"] = flattenForwardedValuesHeaders(apiObject.Headers)
+		tfMap[attrHeaders] = flattenForwardedValuesHeaders(apiObject.Headers)
 	}
 
 	if apiObject.QueryStringCacheKeys != nil {
@@ -2562,9 +2562,9 @@ func expandCustomOriginConfig(tfMap map[string]any) *awstypes.CustomOriginConfig
 	apiObject := &awstypes.CustomOriginConfig{
 		HTTPPort:               aws.Int32(int32(tfMap["http_port"].(int))),
 		HTTPSPort:              aws.Int32(int32(tfMap["https_port"].(int))),
-		OriginKeepaliveTimeout: aws.Int32(int32(tfMap["origin_keepalive_timeout"].(int))),
+		OriginKeepaliveTimeout: aws.Int32(int32(tfMap[attrOriginKeepaliveTimeout].(int))),
 		OriginProtocolPolicy:   awstypes.OriginProtocolPolicy(tfMap["origin_protocol_policy"].(string)),
-		OriginReadTimeout:      aws.Int32(int32(tfMap["origin_read_timeout"].(int))),
+		OriginReadTimeout:      aws.Int32(int32(tfMap[attrOriginReadTimeout].(int))),
 		OriginSslProtocols:     expandCustomOriginConfigSSL(tfMap["origin_ssl_protocols"].(*schema.Set).List()),
 	}
 
@@ -2583,9 +2583,9 @@ func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 	tfMap := map[string]any{
 		"http_port":                aws.ToInt32(apiObject.HTTPPort),
 		"https_port":               aws.ToInt32(apiObject.HTTPSPort),
-		"origin_keepalive_timeout": aws.ToInt32(apiObject.OriginKeepaliveTimeout),
+		attrOriginKeepaliveTimeout: aws.ToInt32(apiObject.OriginKeepaliveTimeout),
 		"origin_protocol_policy":   apiObject.OriginProtocolPolicy,
-		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
+		attrOriginReadTimeout:      aws.ToInt32(apiObject.OriginReadTimeout),
 		"origin_ssl_protocols":     flattenCustomOriginConfigSSL(apiObject.OriginSslProtocols),
 	}
 
@@ -2638,8 +2638,8 @@ func expandVPCOriginConfig(tfMap map[string]any) *awstypes.VpcOriginConfig {
 	}
 
 	apiObject := &awstypes.VpcOriginConfig{
-		OriginKeepaliveTimeout: aws.Int32(int32(tfMap["origin_keepalive_timeout"].(int))),
-		OriginReadTimeout:      aws.Int32(int32(tfMap["origin_read_timeout"].(int))),
+		OriginKeepaliveTimeout: aws.Int32(int32(tfMap[attrOriginKeepaliveTimeout].(int))),
+		OriginReadTimeout:      aws.Int32(int32(tfMap[attrOriginReadTimeout].(int))),
 		VpcOriginId:            aws.String(tfMap["vpc_origin_id"].(string)),
 	}
 
@@ -2677,8 +2677,8 @@ func flattenVPCOriginConfig(apiObject *awstypes.VpcOriginConfig) map[string]any 
 	}
 
 	tfMap := map[string]any{
-		"origin_keepalive_timeout": aws.ToInt32(apiObject.OriginKeepaliveTimeout),
-		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
+		attrOriginKeepaliveTimeout: aws.ToInt32(apiObject.OriginKeepaliveTimeout),
+		attrOriginReadTimeout:      aws.ToInt32(apiObject.OriginReadTimeout),
 		"vpc_origin_id":            aws.ToString(apiObject.VpcOriginId),
 	}
 
@@ -2950,7 +2950,7 @@ func flattenActiveTrustedKeyGroups(apiObject *awstypes.ActiveTrustedKeyGroups) [
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenKGKeyPairIDs(apiObject.Items),
+		attrItems:         flattenKGKeyPairIDs(apiObject.Items),
 	}
 
 	return []any{tfMap}
@@ -2978,7 +2978,7 @@ func flattenActiveTrustedSigners(apiObject *awstypes.ActiveTrustedSigners) []any
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenSigners(apiObject.Items),
+		attrItems:         flattenSigners(apiObject.Items),
 	}
 
 	return []any{tfMap}

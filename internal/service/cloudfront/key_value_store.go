@@ -60,11 +60,11 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"last_modified_time": schema.StringAttribute{
+			attrLastModifiedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},

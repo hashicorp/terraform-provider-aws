@@ -39,7 +39,7 @@ func resourcePublicKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"caller_reference": {
+			attrCallerReference: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func resourcePublicKey() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 		},
 	}
 
-	if v, ok := d.GetOk("caller_reference"); ok {
+	if v, ok := d.GetOk(attrCallerReference); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
 		input.PublicKeyConfig.CallerReference = aws.String(create.UniqueId(ctx))
@@ -130,10 +130,10 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig
-	d.Set("caller_reference", publicKeyConfig.CallerReference)
+	d.Set(attrCallerReference, publicKeyConfig.CallerReference)
 	d.Set(names.AttrComment, publicKeyConfig.Comment)
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set(names.AttrName, publicKeyConfig.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(publicKeyConfig.Name)))
 
@@ -146,14 +146,14 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	input := &cloudfront.UpdatePublicKeyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 		PublicKeyConfig: &awstypes.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
 			Name:       aws.String(d.Get(names.AttrName).(string)),
 		},
 	}
 
-	if v, ok := d.GetOk("caller_reference"); ok {
+	if v, ok := d.GetOk(attrCallerReference); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
 		input.PublicKeyConfig.CallerReference = aws.String(create.UniqueId(ctx))
@@ -179,7 +179,7 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta a
 	log.Printf("[DEBUG] Deleting CloudFront Public Key: %s", d.Id())
 	input := cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 	}
 	_, err := conn.DeletePublicKey(ctx, &input)
 

@@ -31,7 +31,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cors_config": {
+			attrCorsConfig: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -45,7 +45,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -58,7 +58,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -71,7 +71,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -84,7 +84,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -103,12 +103,12 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
-			"custom_headers_config": {
+			attrCustomHeadersConfig: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"items": {
+						attrItems: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -117,7 +117,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"override": {
+									attrOverride: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -131,7 +131,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,12 +147,12 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
-			"remove_headers_config": {
+			attrRemoveHeadersConfig: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"items": {
+						attrItems: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -167,7 +167,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
-			"security_headers_config": {
+			attrSecurityHeadersConfig: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -181,7 +181,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"override": {
+									attrOverride: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -193,7 +193,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"override": {
+									attrOverride: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -209,7 +209,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"override": {
+									attrOverride: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -225,7 +225,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"override": {
+									attrOverride: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -245,7 +245,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"override": {
+									attrOverride: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -265,7 +265,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"override": {
+									attrOverride: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -283,7 +283,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
-			"server_timing_headers_config": {
+			attrServerTimingHeadersConfig: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -350,41 +350,41 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CorsConfig != nil {
-		if err := d.Set("cors_config", []any{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
+		if err := d.Set(attrCorsConfig, []any{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors_config: %s", err)
 		}
 	} else {
-		d.Set("cors_config", nil)
+		d.Set(attrCorsConfig, nil)
 	}
 	if apiObject.CustomHeadersConfig != nil {
-		if err := d.Set("custom_headers_config", []any{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
+		if err := d.Set(attrCustomHeadersConfig, []any{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting custom_headers_config: %s", err)
 		}
 	} else {
-		d.Set("custom_headers_config", nil)
+		d.Set(attrCustomHeadersConfig, nil)
 	}
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.RemoveHeadersConfig != nil {
-		if err := d.Set("remove_headers_config", []any{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
+		if err := d.Set(attrRemoveHeadersConfig, []any{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)
 		}
 	} else {
-		d.Set("remove_headers_config", nil)
+		d.Set(attrRemoveHeadersConfig, nil)
 	}
 	if apiObject.SecurityHeadersConfig != nil {
-		if err := d.Set("security_headers_config", []any{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
+		if err := d.Set(attrSecurityHeadersConfig, []any{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting security_headers_config: %s", err)
 		}
 	} else {
-		d.Set("security_headers_config", nil)
+		d.Set(attrSecurityHeadersConfig, nil)
 	}
 	if apiObject.ServerTimingHeadersConfig != nil {
-		if err := d.Set("server_timing_headers_config", []any{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
+		if err := d.Set(attrServerTimingHeadersConfig, []any{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_timing_headers_config: %s", err)
 		}
 	} else {
-		d.Set("server_timing_headers_config", nil)
+		d.Set(attrServerTimingHeadersConfig, nil)
 	}
 
 	return diags

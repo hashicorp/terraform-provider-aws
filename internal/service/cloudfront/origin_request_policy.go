@@ -50,18 +50,18 @@ func resourceOriginRequestPolicy() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cookie_behavior": {
+						attrCookieBehavior: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyCookieBehavior](),
 						},
-						"cookies": {
+						attrCookies: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -72,7 +72,7 @@ func resourceOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,18 +82,18 @@ func resourceOriginRequestPolicy() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"header_behavior": {
+						attrHeaderBehavior: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyHeaderBehavior](),
 						},
-						"headers": {
+						attrHeaders: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -114,7 +114,7 @@ func resourceOriginRequestPolicy() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"query_string_behavior": {
+						attrQueryStringBehavior: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyQueryStringBehavior](),
@@ -125,7 +125,7 @@ func resourceOriginRequestPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -206,7 +206,7 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("cookies_config", nil)
 	}
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	if apiObject.HeadersConfig != nil {
 		if err := d.Set("headers_config", []any{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)
@@ -256,7 +256,7 @@ func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 
 	input := &cloudfront.UpdateOriginRequestPolicyInput{
 		Id:                        aws.String(d.Id()),
-		IfMatch:                   aws.String(d.Get("etag").(string)),
+		IfMatch:                   aws.String(d.Get(attrEtag).(string)),
 		OriginRequestPolicyConfig: apiObject,
 	}
 
@@ -276,7 +276,7 @@ func resourceOriginRequestPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	log.Printf("[DEBUG] Deleting CloudFront Origin Request Policy: %s", d.Id())
 	input := cloudfront.DeleteOriginRequestPolicyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 	}
 	_, err := conn.DeleteOriginRequestPolicy(ctx, &input)
 
@@ -322,11 +322,11 @@ func expandOriginRequestPolicyCookiesConfig(tfMap map[string]any) *awstypes.Orig
 
 	apiObject := &awstypes.OriginRequestPolicyCookiesConfig{}
 
-	if v, ok := tfMap["cookie_behavior"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCookieBehavior].(string); ok && v != "" {
 		apiObject.CookieBehavior = awstypes.OriginRequestPolicyCookieBehavior(v)
 	}
 
-	if v, ok := tfMap["cookies"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrCookies].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Cookies = expandCookieNames(v[0].(map[string]any))
 	}
 
@@ -340,11 +340,11 @@ func expandOriginRequestPolicyHeadersConfig(tfMap map[string]any) *awstypes.Orig
 
 	apiObject := &awstypes.OriginRequestPolicyHeadersConfig{}
 
-	if v, ok := tfMap["header_behavior"].(string); ok && v != "" {
+	if v, ok := tfMap[attrHeaderBehavior].(string); ok && v != "" {
 		apiObject.HeaderBehavior = awstypes.OriginRequestPolicyHeaderBehavior(v)
 	}
 
-	if v, ok := tfMap["headers"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrHeaders].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Headers = expandHeaders(v[0].(map[string]any))
 	}
 
@@ -358,7 +358,7 @@ func expandOriginRequestPolicyQueryStringsConfig(tfMap map[string]any) *awstypes
 
 	apiObject := &awstypes.OriginRequestPolicyQueryStringsConfig{}
 
-	if v, ok := tfMap["query_string_behavior"].(string); ok && v != "" {
+	if v, ok := tfMap[attrQueryStringBehavior].(string); ok && v != "" {
 		apiObject.QueryStringBehavior = awstypes.OriginRequestPolicyQueryStringBehavior(v)
 	}
 
@@ -375,11 +375,11 @@ func flattenOriginRequestPolicyCookiesConfig(apiObject *awstypes.OriginRequestPo
 	}
 
 	tfMap := map[string]any{
-		"cookie_behavior": apiObject.CookieBehavior,
+		attrCookieBehavior: apiObject.CookieBehavior,
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
-		tfMap["cookies"] = []any{v}
+		tfMap[attrCookies] = []any{v}
 	}
 
 	return tfMap
@@ -391,11 +391,11 @@ func flattenOriginRequestPolicyHeadersConfig(apiObject *awstypes.OriginRequestPo
 	}
 
 	tfMap := map[string]any{
-		"header_behavior": apiObject.HeaderBehavior,
+		attrHeaderBehavior: apiObject.HeaderBehavior,
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
-		tfMap["headers"] = []any{v}
+		tfMap[attrHeaders] = []any{v}
 	}
 
 	return tfMap
@@ -407,7 +407,7 @@ func flattenOriginRequestPolicyQueryStringsConfig(apiObject *awstypes.OriginRequ
 	}
 
 	tfMap := map[string]any{
-		"query_string_behavior": apiObject.QueryStringBehavior,
+		attrQueryStringBehavior: apiObject.QueryStringBehavior,
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {

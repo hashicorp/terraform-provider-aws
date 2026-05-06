@@ -40,7 +40,7 @@ func resourceOriginAccessIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"caller_reference": {
+			attrCallerReference: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func resourceOriginAccessIdentity() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,10 +106,10 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set(names.AttrARN, originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig
-	d.Set("caller_reference", apiObject.CallerReference)
+	d.Set(attrCallerReference, apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
 	d.Set(names.AttrComment, apiObject.Comment)
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set("iam_arn", originAccessIdentityIAMUserARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 
@@ -123,7 +123,7 @@ func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceD
 	input := &cloudfront.UpdateCloudFrontOriginAccessIdentityInput{
 		CloudFrontOriginAccessIdentityConfig: expandCloudFrontOriginAccessIdentityConfig(d),
 		Id:                                   aws.String(d.Id()),
-		IfMatch:                              aws.String(d.Get("etag").(string)),
+		IfMatch:                              aws.String(d.Get(attrEtag).(string)),
 	}
 
 	_, err := conn.UpdateCloudFrontOriginAccessIdentity(ctx, input)
@@ -141,7 +141,7 @@ func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceD
 
 	input := cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 	}
 	_, err := conn.DeleteCloudFrontOriginAccessIdentity(ctx, &input)
 
@@ -186,7 +186,7 @@ func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstype
 	}
 
 	// This sets CallerReference if it's still pending computation (ie: new resource)
-	if v, ok := d.GetOk("caller_reference"); !ok {
+	if v, ok := d.GetOk(attrCallerReference); !ok {
 		apiObject.CallerReference = aws.String(sdkid.UniqueId())
 	} else {
 		apiObject.CallerReference = aws.String(v.(string))

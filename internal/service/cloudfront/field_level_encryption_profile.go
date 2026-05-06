@@ -41,7 +41,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"caller_reference": {
+			attrCallerReference: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"items": {
+						attrItems: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -66,7 +66,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -88,7 +88,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 					},
 				},
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +151,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 
 	d.Set(names.AttrARN, fieldLevelEncryptionProfileARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig
-	d.Set("caller_reference", apiObject.CallerReference)
+	d.Set(attrCallerReference, apiObject.CallerReference)
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.EncryptionEntities != nil {
 		if err := d.Set("encryption_entities", []any{flattenEncryptionEntities(apiObject.EncryptionEntities)}); err != nil {
@@ -160,7 +160,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 	} else {
 		d.Set("encryption_entities", nil)
 	}
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set(names.AttrName, apiObject.Name)
 
 	return diags
@@ -171,7 +171,7 @@ func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
-		CallerReference: aws.String(d.Get("caller_reference").(string)),
+		CallerReference: aws.String(d.Get(attrCallerReference).(string)),
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 	}
 
@@ -186,7 +186,7 @@ func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.Re
 	input := &cloudfront.UpdateFieldLevelEncryptionProfileInput{
 		FieldLevelEncryptionProfileConfig: apiObject,
 		Id:                                aws.String(d.Id()),
-		IfMatch:                           aws.String(d.Get("etag").(string)),
+		IfMatch:                           aws.String(d.Get(attrEtag).(string)),
 	}
 
 	_, err := conn.UpdateFieldLevelEncryptionProfile(ctx, input)
@@ -205,7 +205,7 @@ func resourceFieldLevelEncryptionProfileDelete(ctx context.Context, d *schema.Re
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Profile: (%s)", d.Id())
 	input := cloudfront.DeleteFieldLevelEncryptionProfileInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 	}
 	_, err := conn.DeleteFieldLevelEncryptionProfile(ctx, &input)
 
@@ -251,7 +251,7 @@ func expandEncryptionEntities(tfMap map[string]any) *awstypes.EncryptionEntities
 
 	apiObject := &awstypes.EncryptionEntities{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandEncryptionEntityItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -315,7 +315,7 @@ func expandFieldPatterns(tfMap map[string]any) *awstypes.FieldPatterns {
 
 	apiObject := &awstypes.FieldPatterns{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -332,7 +332,7 @@ func flattenEncryptionEntities(apiObject *awstypes.EncryptionEntities) map[strin
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenEncryptionEntityItems(v)
+		tfMap[attrItems] = flattenEncryptionEntityItems(v)
 	}
 
 	return tfMap
@@ -384,7 +384,7 @@ func flattenFieldPatterns(apiObject *awstypes.FieldPatterns) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap

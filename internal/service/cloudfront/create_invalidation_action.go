@@ -56,7 +56,7 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 	resp.Schema = schema.Schema{
 		Description: "Invalidates CloudFront distribution cache for specified paths. This action creates an invalidation request and waits for it to complete.",
 		Attributes: map[string]schema.Attribute{
-			"distribution_id": schema.StringAttribute{
+			attrDistributionID: schema.StringAttribute{
 				Description: "The ID of the CloudFront distribution to invalidate cache for",
 				Required:    true,
 				Validators: []validator.String{
@@ -80,7 +80,7 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 					),
 				},
 			},
-			"caller_reference": schema.StringAttribute{
+			attrCallerReference: schema.StringAttribute{
 				Description: "Unique identifier for the invalidation request. If not provided, one will be generated automatically",
 				Optional:    true,
 				Validators: []validator.String{
@@ -124,10 +124,10 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 	timeout := fwactions.TimeoutOr(config.Timeout, 900*time.Second)
 
 	tflog.Info(ctx, "Starting CloudFront cache invalidation action", map[string]any{
-		"distribution_id":  distributionID,
-		"paths":            paths,
-		"caller_reference": callerReference,
-		names.AttrTimeout:  timeout.String(),
+		attrDistributionID:  distributionID,
+		"paths":             paths,
+		attrCallerReference: callerReference,
+		names.AttrTimeout:   timeout.String(),
 	})
 
 	// Send initial progress update
@@ -243,8 +243,8 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 	cb(ctx, "CloudFront cache invalidation %s completed successfully for distribution %s", invalidationID, distributionID)
 
 	tflog.Info(ctx, "CloudFront invalidate cache action completed successfully", map[string]any{
-		"distribution_id": distributionID,
-		"invalidation_id": invalidationID,
-		"paths":           paths,
+		attrDistributionID: distributionID,
+		"invalidation_id":  invalidationID,
+		"paths":            paths,
 	})
 }

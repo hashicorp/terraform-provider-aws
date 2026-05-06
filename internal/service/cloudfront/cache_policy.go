@@ -50,7 +50,7 @@ func resourceCachePolicy() *schema.Resource {
 				Optional: true,
 				Default:  86400,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,18 +79,18 @@ func resourceCachePolicy() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cookie_behavior": {
+									attrCookieBehavior: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyCookieBehavior](),
 									},
-									"cookies": {
+									attrCookies: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -115,18 +115,18 @@ func resourceCachePolicy() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"header_behavior": {
+									attrHeaderBehavior: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyHeaderBehavior](),
 									},
-									"headers": {
+									attrHeaders: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -143,7 +143,7 @@ func resourceCachePolicy() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"query_string_behavior": {
+									attrQueryStringBehavior: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyQueryStringBehavior](),
@@ -154,7 +154,7 @@ func resourceCachePolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -227,7 +227,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 	apiObject := output.CachePolicy.CachePolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set("max_ttl", apiObject.MaxTTL)
 	d.Set("min_ttl", apiObject.MinTTL)
 	d.Set(names.AttrName, apiObject.Name)
@@ -268,7 +268,7 @@ func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta
 	input := &cloudfront.UpdateCachePolicyInput{
 		CachePolicyConfig: apiObject,
 		Id:                aws.String(d.Id()),
-		IfMatch:           aws.String(d.Get("etag").(string)),
+		IfMatch:           aws.String(d.Get(attrEtag).(string)),
 	}
 
 	_, err := conn.UpdateCachePolicy(ctx, input)
@@ -287,7 +287,7 @@ func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
 	input := cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 	}
 	_, err := conn.DeleteCachePolicy(ctx, &input)
 
@@ -363,11 +363,11 @@ func expandCachePolicyCookiesConfig(tfMap map[string]any) *awstypes.CachePolicyC
 
 	apiObject := &awstypes.CachePolicyCookiesConfig{}
 
-	if v, ok := tfMap["cookie_behavior"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCookieBehavior].(string); ok && v != "" {
 		apiObject.CookieBehavior = awstypes.CachePolicyCookieBehavior(v)
 	}
 
-	if v, ok := tfMap["cookies"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrCookies].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Cookies = expandCookieNames(v[0].(map[string]any))
 	}
 
@@ -381,7 +381,7 @@ func expandCookieNames(tfMap map[string]any) *awstypes.CookieNames {
 
 	apiObject := &awstypes.CookieNames{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -397,11 +397,11 @@ func expandCachePolicyHeadersConfig(tfMap map[string]any) *awstypes.CachePolicyH
 
 	apiObject := &awstypes.CachePolicyHeadersConfig{}
 
-	if v, ok := tfMap["header_behavior"].(string); ok && v != "" {
+	if v, ok := tfMap[attrHeaderBehavior].(string); ok && v != "" {
 		apiObject.HeaderBehavior = awstypes.CachePolicyHeaderBehavior(v)
 	}
 
-	if v, ok := tfMap["headers"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[attrHeaders].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Headers = expandHeaders(v[0].(map[string]any))
 	}
 
@@ -415,7 +415,7 @@ func expandHeaders(tfMap map[string]any) *awstypes.Headers {
 
 	apiObject := &awstypes.Headers{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -431,7 +431,7 @@ func expandCachePolicyQueryStringsConfig(tfMap map[string]any) *awstypes.CachePo
 
 	apiObject := &awstypes.CachePolicyQueryStringsConfig{}
 
-	if v, ok := tfMap["query_string_behavior"].(string); ok && v != "" {
+	if v, ok := tfMap[attrQueryStringBehavior].(string); ok && v != "" {
 		apiObject.QueryStringBehavior = awstypes.CachePolicyQueryStringBehavior(v)
 	}
 
@@ -449,7 +449,7 @@ func expandQueryStringNames(tfMap map[string]any) *awstypes.QueryStringNames {
 
 	apiObject := &awstypes.QueryStringNames{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -494,11 +494,11 @@ func flattenCachePolicyCookiesConfig(apiObject *awstypes.CachePolicyCookiesConfi
 	}
 
 	tfMap := map[string]any{
-		"cookie_behavior": apiObject.CookieBehavior,
+		attrCookieBehavior: apiObject.CookieBehavior,
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
-		tfMap["cookies"] = []any{v}
+		tfMap[attrCookies] = []any{v}
 	}
 
 	return tfMap
@@ -512,7 +512,7 @@ func flattenCookieNames(apiObject *awstypes.CookieNames) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -524,11 +524,11 @@ func flattenCachePolicyHeadersConfig(apiObject *awstypes.CachePolicyHeadersConfi
 	}
 
 	tfMap := map[string]any{
-		"header_behavior": apiObject.HeaderBehavior,
+		attrHeaderBehavior: apiObject.HeaderBehavior,
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
-		tfMap["headers"] = []any{v}
+		tfMap[attrHeaders] = []any{v}
 	}
 
 	return tfMap
@@ -542,7 +542,7 @@ func flattenHeaders(apiObject *awstypes.Headers) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -554,7 +554,7 @@ func flattenCachePolicyQueryStringsConfig(apiObject *awstypes.CachePolicyQuerySt
 	}
 
 	tfMap := map[string]any{
-		"query_string_behavior": apiObject.QueryStringBehavior,
+		attrQueryStringBehavior: apiObject.QueryStringBehavior,
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {
@@ -572,7 +572,7 @@ func flattenQueryStringNames(apiObject *awstypes.QueryStringNames) map[string]an
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap

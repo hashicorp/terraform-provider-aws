@@ -48,7 +48,7 @@ func (d *connectionGroupDataSource) Schema(_ context.Context, _ datasource.Schem
 			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
@@ -61,7 +61,7 @@ func (d *connectionGroupDataSource) Schema(_ context.Context, _ datasource.Schem
 			"is_default": schema.BoolAttribute{
 				Computed: true,
 			},
-			"last_modified_time": schema.StringAttribute{
+			attrLastModifiedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},

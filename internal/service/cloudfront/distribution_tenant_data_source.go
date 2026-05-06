@@ -49,7 +49,7 @@ func (d *distributionTenantDataSource) Schema(ctx context.Context, _ datasource.
 				Computed: true,
 			},
 			"customizations": framework.DataSourceComputedListOfObjectAttribute[customizationsModel](ctx),
-			"distribution_id": schema.StringAttribute{
+			attrDistributionID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrDomain: schema.StringAttribute{
@@ -59,7 +59,7 @@ func (d *distributionTenantDataSource) Schema(ctx context.Context, _ datasource.
 			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{

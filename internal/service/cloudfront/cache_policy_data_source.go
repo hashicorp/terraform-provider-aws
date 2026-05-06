@@ -35,7 +35,7 @@ func dataSourceCachePolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,16 +67,16 @@ func dataSourceCachePolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cookie_behavior": {
+									attrCookieBehavior: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"cookies": {
+									attrCookies: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Computed: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -100,16 +100,16 @@ func dataSourceCachePolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"header_behavior": {
+									attrHeaderBehavior: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"headers": {
+									attrHeaders: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Computed: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -125,7 +125,7 @@ func dataSourceCachePolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"query_string_behavior": {
+									attrQueryStringBehavior: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -134,7 +134,7 @@ func dataSourceCachePolicy() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Computed: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -199,7 +199,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	apiObject := output.CachePolicy.CachePolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set("max_ttl", apiObject.MaxTTL)
 	d.Set("min_ttl", apiObject.MinTTL)
 	d.Set(names.AttrName, apiObject.Name)

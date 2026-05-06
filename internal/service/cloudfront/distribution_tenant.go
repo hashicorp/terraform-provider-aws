@@ -62,7 +62,7 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 			},
-			"distribution_id": schema.StringAttribute{
+			attrDistributionID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -73,7 +73,7 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),

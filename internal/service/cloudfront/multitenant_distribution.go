@@ -93,15 +93,15 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:                      framework.ARNAttributeComputedOnly(),
 			names.AttrDomainName:               schema.StringAttribute{Computed: true},
-			"etag":                             schema.StringAttribute{Computed: true},
+			attrEtag:                           schema.StringAttribute{Computed: true},
 			names.AttrID:                       framework.IDAttribute(),
 			"in_progress_invalidation_batches": schema.Int32Attribute{Computed: true},
-			"last_modified_time": schema.StringAttribute{
+			attrLastModifiedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 			names.AttrStatus: schema.StringAttribute{Computed: true},
-			"caller_reference": schema.StringAttribute{
+			attrCallerReference: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -140,7 +140,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						names.AttrEnabled: schema.BoolAttribute{Computed: true},
 					},
 					Blocks: map[string]schema.Block{
-						"items": schema.ListNestedBlock{
+						attrItems: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[kgKeyPairIDsModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -223,7 +223,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Required:   true,
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 									},
@@ -238,7 +238,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[functionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"event_type": schema.StringAttribute{
+									attrEventType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
@@ -253,7 +253,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"event_type": schema.StringAttribute{
+									attrEventType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
@@ -275,7 +275,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
+									attrItems: schema.ListAttribute{
 										Optional:   true,
 										CustomType: fwtypes.ListOfStringType,
 									},
@@ -339,7 +339,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Required:   true,
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 									},
@@ -354,7 +354,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[functionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"event_type": schema.StringAttribute{
+									attrEventType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
@@ -369,7 +369,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"event_type": schema.StringAttribute{
+									attrEventType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
@@ -391,7 +391,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
+									attrItems: schema.ListAttribute{
 										Optional:   true,
 										CustomType: fwtypes.ListOfStringType,
 									},
@@ -465,12 +465,12 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Optional:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
 									},
-									"origin_keepalive_timeout": schema.Int32Attribute{
+									attrOriginKeepaliveTimeout: schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
 										Default:  int32default.StaticInt32(defaultOriginKeepaliveTimeout),
 									},
-									"origin_read_timeout": schema.Int32Attribute{
+									attrOriginReadTimeout: schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
 										Default:  int32default.StaticInt32(defaultOriginReadTimeout),
@@ -504,12 +504,12 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcOriginConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"origin_keepalive_timeout": schema.Int32Attribute{
+									attrOriginKeepaliveTimeout: schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
 										Default:  int32default.StaticInt32(defaultOriginKeepaliveTimeout),
 									},
-									"origin_read_timeout": schema.Int32Attribute{
+									attrOriginReadTimeout: schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
 										Default:  int32default.StaticInt32(defaultOriginReadTimeout),
@@ -580,7 +580,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Optional:   true,
 										CustomType: fwtypes.SetOfStringType,
 									},

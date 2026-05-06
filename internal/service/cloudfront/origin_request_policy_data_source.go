@@ -36,16 +36,16 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cookie_behavior": {
+						attrCookieBehavior: {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						"cookies": {
+						attrCookies: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -56,7 +56,7 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,16 +65,16 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"header_behavior": {
+						attrHeaderBehavior: {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						"headers": {
+						attrHeaders: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -100,7 +100,7 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"query_string_behavior": {
+						attrQueryStringBehavior: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -109,7 +109,7 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -178,7 +178,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	} else {
 		d.Set("cookies_config", nil)
 	}
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	if apiObject.HeadersConfig != nil {
 		if err := d.Set("headers_config", []any{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)

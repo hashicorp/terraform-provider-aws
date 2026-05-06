@@ -38,7 +38,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func dataSourceFunction() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"last_modified_time": {
+			attrLastModifiedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,11 +89,11 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(aws.ToString(outputDF.FunctionSummary.Name))
 	d.Set(names.AttrARN, outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set(names.AttrComment, outputDF.FunctionSummary.FunctionConfig.Comment)
-	d.Set("etag", outputDF.ETag)
+	d.Set(attrEtag, outputDF.ETag)
 	if err := d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(outputDF.FunctionSummary.FunctionConfig.KeyValueStoreAssociations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting key_value_store_associations: %s", err)
 	}
-	d.Set("last_modified_time", outputDF.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
+	d.Set(attrLastModifiedTime, outputDF.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, outputDF.FunctionSummary.Name)
 	d.Set("runtime", outputDF.FunctionSummary.FunctionConfig.Runtime)
 	d.Set(names.AttrStatus, outputDF.FunctionSummary.Status)

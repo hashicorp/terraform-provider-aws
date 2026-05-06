@@ -66,7 +66,7 @@ func (r *connectionGroupResource) Schema(ctx context.Context, req resource.Schem
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -78,7 +78,7 @@ func (r *connectionGroupResource) Schema(ctx context.Context, req resource.Schem
 			"is_default": schema.BoolAttribute{
 				Computed: true,
 			},
-			"last_modified_time": schema.StringAttribute{
+			attrLastModifiedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
