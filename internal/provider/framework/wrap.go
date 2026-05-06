@@ -34,6 +34,11 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
 
+const (
+	logAttrKeyBootstrapContextError = "bootstrapContext error"
+	logAttrKeyResource              = "resource"
+)
+
 // Implemented by (Config|Plan|State).GetAttribute().
 type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
 
@@ -181,8 +186,8 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"data source":            w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"data source":                   w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -352,8 +357,8 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"ephemeral resource":     w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"ephemeral resource":            w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -504,8 +509,8 @@ func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigVal
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"action":                 w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"action":                        w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -769,8 +774,8 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -799,8 +804,8 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping UpgradeState", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -817,8 +822,8 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping MoveState", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -1119,8 +1124,8 @@ func (w *wrappedListResourceSDK) RawV5Schemas(ctx context.Context, request list.
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping Schemas", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 		}
 
