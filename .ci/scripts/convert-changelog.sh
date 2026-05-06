@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Copyright IBM Corp. 2014, 2026
-# SPDX-License-Identifier: MPL-2.0
 
 set -euo pipefail
 
@@ -79,6 +77,10 @@ while IFS= read -r line; do
             new-list-resource)
                 KIND="feature"
                 FEATURE_TYPE="New List Resource"
+                ;;
+            new-action)
+                KIND="feature"
+                FEATURE_TYPE="New Action"
                 ;;
             enhancement)
                 KIND="enhancement"

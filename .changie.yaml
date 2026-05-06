@@ -1,6 +1,3 @@
-# Copyright IBM Corp. 2014, 2026
-# "SPDX-License-Identifier: MPL-2.0"
-
 # NOTE: Changelog entries are automatically sorted alphabetically by .ci/scripts/sort-changelog-entries.sh
 #       during GitHub Actions workflow execution (see .github/workflows/update-changelog.yml)
 changesDir: .changes/6.x
@@ -66,7 +63,7 @@ kinds:
 
   - key: feature
     format: "FEATURES:"
-    label: "Resource, Data Source, Ephemeral Resource, Function, List Resource"
+    label: "Resource, Data Source, Ephemeral Resource, Function, List Resource, Action"
     skipBody: true
     changeFormat: |-
       {{- printf "* **%s**: `%s`" .Custom.NewType .Custom.Name }}
@@ -84,6 +81,7 @@ kinds:
           - New Ephemeral Resource
           - New Function
           - New List Resource
+          - New Action
 
       - key: Name
         label: Name of the Resource, Data Source, etc.

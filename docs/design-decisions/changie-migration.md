@@ -1,6 +1,3 @@
-<!-- Copyright IBM Corp. 2014, 2026 -->
-<!-- SPDX-License-Identifier: MPL-2.0 -->
-
 # Migration from `go-changelog` to Changie
 
 **Summary:** Migrate CHANGELOG generation from `go-changelog` to Changie for improved automation, better user experience, and alignment with modern development workflows.
@@ -74,7 +71,7 @@ Five entry types are configured:
 
 - **Breaking Change**: Backward-incompatible changes
 - **Note**: Important notices (deprecations, removals)
-- **Feature**: New resources, data sources, ephemeral resources, functions, or list resources
+- **Feature**: New resources, data sources, ephemeral resources, functions, list resources, or actions
 - **Enhancement**: New attributes or arguments
 - **Bug**: Incorrect behavior
 
@@ -100,9 +97,9 @@ The provider uses `main` for next minor release development and `release/N.x` br
 
 - Default: Next prerelease increment (e.g., `6.0.0-beta1` → `6.0.0-beta2`)
 - When starting a new release cycle (no per-version CHANGELOGs exist yet):
-    - First beta of version number pulled from `version/VERSION` (e.g., `6.0.0-beta1`)
+      - First beta of version number pulled from `version/VERSION` (e.g., `6.0.0-beta1`)
 - When transitioning from GA back to prerelease:
-    - First beta of the next minor version (e.g., after `6.0.0` GA → `6.1.0-beta1`)
+      - First beta of the next minor version (e.g., after `6.0.0` GA → `6.1.0-beta1`)
 
 When a new major version begins, three preparatory steps are taken before development starts:
 
