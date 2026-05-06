@@ -67,7 +67,7 @@ func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"chat_configuration_arn": framework.ARNAttributeComputedOnly(),
+			attrChatConfigurationARN: framework.ARNAttributeComputedOnly(),
 			"configuration_name": schema.StringAttribute{
 				Required: true,
 			},
@@ -275,7 +275,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 
 	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]any{
 		"team_id":                data.TeamID.ValueString(),
-		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
+		attrChatConfigurationARN: data.ChatConfigurationARN.ValueString(),
 	})
 
 	input := &chatbot.DeleteMicrosoftTeamsChannelConfigurationInput{

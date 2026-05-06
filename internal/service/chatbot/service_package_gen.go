@@ -38,7 +38,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_chatbot_slack_channel_configuration",
 			Name:     "Slack Channel Configuration",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "chat_configuration_arn",
+				IdentifierAttribute: attrChatConfigurationARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},
@@ -47,7 +47,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_chatbot_teams_channel_configuration",
 			Name:     "Teams Channel Configuration",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "chat_configuration_arn",
+				IdentifierAttribute: attrChatConfigurationARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},

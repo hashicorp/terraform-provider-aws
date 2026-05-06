@@ -58,7 +58,7 @@ type slackChannelConfigurationResource struct {
 func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"chat_configuration_arn": framework.ARNAttributeComputedOnly(),
+			attrChatConfigurationARN: framework.ARNAttributeComputedOnly(),
 			"configuration_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -274,7 +274,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 	conn := r.Meta().ChatbotClient(ctx)
 
 	tflog.Debug(ctx, "deleting Chatbot Slack Channel Configuration", map[string]any{
-		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
+		attrChatConfigurationARN: data.ChatConfigurationARN.ValueString(),
 	})
 
 	input := &chatbot.DeleteSlackChannelConfigurationInput{
@@ -301,7 +301,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 }
 
 func (r *slackChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("chat_configuration_arn"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(attrChatConfigurationARN), request, response)
 }
 
 func findSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, input *chatbot.DescribeSlackChannelConfigurationsInput) (*awstypes.SlackChannelConfiguration, error) {
