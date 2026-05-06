@@ -54,7 +54,7 @@ type channelNamespaceResource struct {
 func (r *channelNamespaceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"api_id": schema.StringAttribute{
+			attrAPIID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -97,7 +97,7 @@ func (r *channelNamespaceResource) Schema(ctx context.Context, request resource.
 				CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"auth_type": schema.StringAttribute{
+						attrAuthType: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
 						},
@@ -108,7 +108,7 @@ func (r *channelNamespaceResource) Schema(ctx context.Context, request resource.
 				CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"auth_type": schema.StringAttribute{
+						attrAuthType: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
 						},
@@ -147,7 +147,7 @@ func handlerConfigBlock(ctx context.Context) schema.Block {
 							},
 						},
 						Blocks: map[string]schema.Block{
-							"lambda_config": schema.ListNestedBlock{
+							attrLambdaConfig: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaConfigModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
@@ -313,7 +313,7 @@ func (r *channelNamespaceResource) ImportState(ctx context.Context, request reso
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("api_id"), parts[0]))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(attrAPIID), parts[0]))
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1]))
 }
 

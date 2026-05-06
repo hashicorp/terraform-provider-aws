@@ -47,7 +47,7 @@ func resourceFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -160,7 +160,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	name := d.Get(names.AttrName).(string)
 	input := &appsync.CreateFunctionInput{
 		ApiId:           aws.String(apiID),
@@ -230,7 +230,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	d.Set("api_id", apiID)
+	d.Set(attrAPIID, apiID)
 	d.Set(names.AttrARN, function.FunctionArn)
 	d.Set("code", function.Code)
 	d.Set("data_source", function.DataSourceName)

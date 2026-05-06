@@ -44,7 +44,7 @@ func resourceDataSource() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -56,7 +56,7 @@ func resourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"dynamodb_config": {
+			attrDynamoDBConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -102,9 +102,9 @@ func resourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config", "relational_database_config", "opensearchservice_config"},
+				ConflictsWith: []string{attrElasticsearchConfig, attrHTTPConfig, attrLambdaConfig, "relational_database_config", attrOpensearchserviceConfig},
 			},
-			"elasticsearch_config": {
+			attrElasticsearchConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -121,7 +121,7 @@ func resourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "opensearchservice_config"},
+				ConflictsWith: []string{attrDynamoDBConfig, attrHTTPConfig, attrLambdaConfig, attrOpensearchserviceConfig},
 			},
 			"event_bridge_config": {
 				Type:     schema.TypeList,
@@ -136,9 +136,9 @@ func resourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
+				ConflictsWith: []string{attrDynamoDBConfig, attrElasticsearchConfig, attrHTTPConfig, attrLambdaConfig, "relational_database_config"},
 			},
-			"http_config": {
+			attrHTTPConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -182,9 +182,9 @@ func resourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "lambda_config", "relational_database_config"},
+				ConflictsWith: []string{attrDynamoDBConfig, attrElasticsearchConfig, attrOpensearchserviceConfig, attrLambdaConfig, "relational_database_config"},
 			},
-			"lambda_config": {
+			attrLambdaConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -197,9 +197,9 @@ func resourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "relational_database_config"},
+				ConflictsWith: []string{attrDynamoDBConfig, attrElasticsearchConfig, attrOpensearchserviceConfig, attrHTTPConfig, "relational_database_config"},
 			},
-			"opensearchservice_config": {
+			attrOpensearchserviceConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -216,7 +216,7 @@ func resourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config"},
+				ConflictsWith: []string{attrDynamoDBConfig, attrHTTPConfig, attrLambdaConfig, attrElasticsearchConfig},
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -268,7 +268,7 @@ func resourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
+				ConflictsWith: []string{attrDynamoDBConfig, attrElasticsearchConfig, attrOpensearchserviceConfig, attrHTTPConfig, attrLambdaConfig},
 			},
 			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
@@ -290,7 +290,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 	region := meta.(*conns.AWSClient).Region(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	name := d.Get(names.AttrName).(string)
 	id := dataSourceCreateResourceID(apiID, name)
 	input := &appsync.CreateDataSourceInput{
@@ -303,11 +303,11 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("dynamodb_config"); ok {
+	if v, ok := d.GetOk(attrDynamoDBConfig); ok {
 		input.DynamodbConfig = expandDynamoDBDataSourceConfig(v.([]any), region)
 	}
 
-	if v, ok := d.GetOk("elasticsearch_config"); ok {
+	if v, ok := d.GetOk(attrElasticsearchConfig); ok {
 		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]any), region)
 	}
 
@@ -315,15 +315,15 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.EventBridgeConfig = expandEventBridgeDataSourceConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("http_config"); ok {
+	if v, ok := d.GetOk(attrHTTPConfig); ok {
 		input.HttpConfig = expandHTTPDataSourceConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("lambda_config"); ok {
+	if v, ok := d.GetOk(attrLambdaConfig); ok {
 		input.LambdaConfig = expandLambdaDataSourceConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("opensearchservice_config"); ok {
+	if v, ok := d.GetOk(attrOpensearchserviceConfig); ok {
 		input.OpenSearchServiceConfig = expandOpenSearchServiceDataSourceConfig(v.([]any), region)
 	}
 
@@ -367,26 +367,26 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta an
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	d.Set("api_id", apiID)
+	d.Set(attrAPIID, apiID)
 	d.Set(names.AttrARN, dataSource.DataSourceArn)
 	d.Set(names.AttrDescription, dataSource.Description)
-	if err := d.Set("dynamodb_config", flattenDynamoDBDataSourceConfig(dataSource.DynamodbConfig)); err != nil {
+	if err := d.Set(attrDynamoDBConfig, flattenDynamoDBDataSourceConfig(dataSource.DynamodbConfig)); err != nil {
 		return smerr.Append(ctx, diags, err)
 	}
-	if err := d.Set("elasticsearch_config", flattenElasticsearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
+	if err := d.Set(attrElasticsearchConfig, flattenElasticsearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
 		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("event_bridge_config", flattenEventBridgeDataSourceConfig(dataSource.EventBridgeConfig)); err != nil {
 		return smerr.Append(ctx, diags, err)
 	}
-	if err := d.Set("http_config", flattenHTTPDataSourceConfig(dataSource.HttpConfig)); err != nil {
+	if err := d.Set(attrHTTPConfig, flattenHTTPDataSourceConfig(dataSource.HttpConfig)); err != nil {
 		return smerr.Append(ctx, diags, err)
 	}
-	if err := d.Set("lambda_config", flattenLambdaDataSourceConfig(dataSource.LambdaConfig)); err != nil {
+	if err := d.Set(attrLambdaConfig, flattenLambdaDataSourceConfig(dataSource.LambdaConfig)); err != nil {
 		return smerr.Append(ctx, diags, err)
 	}
 	d.Set(names.AttrName, dataSource.Name)
-	if err := d.Set("opensearchservice_config", flattenOpenSearchServiceDataSourceConfig(dataSource.OpenSearchServiceConfig)); err != nil {
+	if err := d.Set(attrOpensearchserviceConfig, flattenOpenSearchServiceDataSourceConfig(dataSource.OpenSearchServiceConfig)); err != nil {
 		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("relational_database_config", flattenRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
@@ -418,23 +418,23 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("dynamodb_config"); ok {
+	if v, ok := d.GetOk(attrDynamoDBConfig); ok {
 		input.DynamodbConfig = expandDynamoDBDataSourceConfig(v.([]any), region)
 	}
 
-	if v, ok := d.GetOk("elasticsearch_config"); ok {
+	if v, ok := d.GetOk(attrElasticsearchConfig); ok {
 		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]any), region)
 	}
 
-	if v, ok := d.GetOk("http_config"); ok {
+	if v, ok := d.GetOk(attrHTTPConfig); ok {
 		input.HttpConfig = expandHTTPDataSourceConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("lambda_config"); ok {
+	if v, ok := d.GetOk(attrLambdaConfig); ok {
 		input.LambdaConfig = expandLambdaDataSourceConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("opensearchservice_config"); ok {
+	if v, ok := d.GetOk(attrOpensearchserviceConfig); ok {
 		input.OpenSearchServiceConfig = expandOpenSearchServiceDataSourceConfig(v.([]any), region)
 	}
 

@@ -34,7 +34,7 @@ func sweepAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable,
 
 		for _, v := range page.Apis {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newAPIResource, client,
-				framework.NewAttribute("api_id", aws.ToString(v.ApiId))))
+				framework.NewAttribute(attrAPIID, aws.ToString(v.ApiId))))
 		}
 
 		return !lastPage

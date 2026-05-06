@@ -42,7 +42,7 @@ func resourceAPIKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -80,7 +80,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	input := &appsync.CreateApiKeyInput{
 		ApiId:       aws.String(apiID),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
@@ -123,7 +123,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	d.Set("api_id", apiID)
+	d.Set(attrAPIID, apiID)
 	d.Set("api_key_id", keyID)
 	d.Set(names.AttrDescription, key.Description)
 	d.Set("expires", time.Unix(key.Expires, 0).UTC().Format(time.RFC3339))

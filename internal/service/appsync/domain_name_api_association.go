@@ -40,7 +40,7 @@ func resourceDomainNameAPIAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -59,7 +59,7 @@ func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.Resou
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	input := &appsync.AssociateApiInput{
-		ApiId:      aws.String(d.Get("api_id").(string)),
+		ApiId:      aws.String(d.Get(attrAPIID).(string)),
 		DomainName: aws.String(domainName),
 	}
 
@@ -94,7 +94,7 @@ func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.Resourc
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	d.Set("api_id", association.ApiId)
+	d.Set(attrAPIID, association.ApiId)
 	d.Set(names.AttrDomainName, association.DomainName)
 
 	return diags
@@ -105,7 +105,7 @@ func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	input := &appsync.AssociateApiInput{
-		ApiId:      aws.String(d.Get("api_id").(string)),
+		ApiId:      aws.String(d.Get(attrAPIID).(string)),
 		DomainName: aws.String(d.Id()),
 	}
 

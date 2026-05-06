@@ -56,7 +56,7 @@ func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"api_arn": framework.ARNAttributeComputedOnly(),
-			"api_id":  framework.IDAttribute(),
+			attrAPIID: framework.IDAttribute(),
 			"dns": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Computed:   true,
@@ -107,7 +107,7 @@ func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"auth_type": schema.StringAttribute{
+									attrAuthType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
 									},
@@ -199,7 +199,7 @@ func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"auth_type": schema.StringAttribute{
+									attrAuthType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
 									},
@@ -214,7 +214,7 @@ func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"auth_type": schema.StringAttribute{
+									attrAuthType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
 									},
@@ -229,7 +229,7 @@ func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"auth_type": schema.StringAttribute{
+									attrAuthType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
 									},
@@ -394,7 +394,7 @@ func (r *apiResource) Delete(ctx context.Context, request resource.DeleteRequest
 }
 
 func (r *apiResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("api_id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(attrAPIID), request, response)
 }
 
 func findAPIByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.Api, error) {

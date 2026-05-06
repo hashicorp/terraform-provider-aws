@@ -44,7 +44,7 @@ func resourceAPICache() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.ApiCachingBehavior](),
 			},
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -77,7 +77,7 @@ func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	apiID := d.Get("api_id").(string)
+	apiID := d.Get(attrAPIID).(string)
 	input := &appsync.CreateApiCacheInput{
 		ApiCachingBehavior: awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string)),
 		ApiId:              aws.String(apiID),
@@ -125,7 +125,7 @@ func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.Set("api_caching_behavior", cache.ApiCachingBehavior)
-	d.Set("api_id", d.Id())
+	d.Set(attrAPIID, d.Id())
 	d.Set("at_rest_encryption_enabled", cache.AtRestEncryptionEnabled)
 	d.Set("transit_encryption_enabled", cache.TransitEncryptionEnabled)
 	d.Set("ttl", cache.Ttl)

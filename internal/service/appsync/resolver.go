@@ -44,7 +44,7 @@ func resourceResolver() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			attrAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -191,7 +191,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
-	apiID, typeName, fieldName := d.Get("api_id").(string), d.Get(names.AttrType).(string), d.Get(names.AttrField).(string)
+	apiID, typeName, fieldName := d.Get(attrAPIID).(string), d.Get(names.AttrType).(string), d.Get(names.AttrField).(string)
 	id := resolverCreateResourceID(apiID, typeName, fieldName)
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(apiID),
@@ -270,7 +270,7 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	d.Set("api_id", apiID)
+	d.Set(attrAPIID, apiID)
 	d.Set(names.AttrARN, resolver.ResolverArn)
 	if err := d.Set("caching_config", flattenCachingConfig(resolver.CachingConfig)); err != nil {
 		return smerr.Append(ctx, diags, err)
