@@ -137,7 +137,7 @@ func resourcePolicy() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"autoscaling_group_name": {
+				attrGroupName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -540,7 +540,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	p, err := findScalingPolicyByTwoPartKey(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
+	p, err := findScalingPolicyByTwoPartKey(ctx, conn, d.Get(attrGroupName).(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Policy %s not found, removing from state", d.Id())
@@ -554,7 +554,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.Set("adjustment_type", p.AdjustmentType)
 	d.Set(names.AttrARN, p.PolicyARN)
-	d.Set("autoscaling_group_name", p.AutoScalingGroupName)
+	d.Set(attrGroupName, p.AutoScalingGroupName)
 	d.Set("cooldown", p.Cooldown)
 	d.Set(names.AttrEnabled, p.Enabled)
 	d.Set("estimated_instance_warmup", p.EstimatedInstanceWarmup)
@@ -600,7 +600,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 	log.Printf("[INFO] Deleting Auto Scaling Policy: %s", d.Id())
 	input := autoscaling.DeletePolicyInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		AutoScalingGroupName: aws.String(d.Get(attrGroupName).(string)),
 		PolicyName:           aws.String(d.Id()),
 	}
 	_, err := conn.DeletePolicy(ctx, &input)
@@ -663,7 +663,7 @@ func findScalingPolicyByTwoPartKey(ctx context.Context, conn *autoscaling.Client
 // if certain mutually exclusive values are set.
 func expandPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPolicyInput, error) {
 	input := &autoscaling.PutScalingPolicyInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		AutoScalingGroupName: aws.String(d.Get(attrGroupName).(string)),
 		Enabled:              aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		PolicyName:           aws.String(d.Get(names.AttrName).(string)),
 	}
@@ -1400,8 +1400,8 @@ func (policyImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"autoscaling_group_name": asgName,
-		names.AttrName:           policyName,
+		attrGroupName:  asgName,
+		names.AttrName: policyName,
 	}
 
 	return policyName, result, nil

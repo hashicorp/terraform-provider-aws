@@ -44,12 +44,12 @@ func resourceTrafficSourceAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
+			attrGroupName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"traffic_source": {
+			attrTrafficSource: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -79,8 +79,8 @@ func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	asgName := d.Get("autoscaling_group_name").(string)
-	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]any)[0].(map[string]any))
+	asgName := d.Get(attrGroupName).(string)
+	trafficSource := expandTrafficSourceIdentifier(d.Get(attrTrafficSource).([]any)[0].(map[string]any))
 	trafficSourceID := aws.ToString(trafficSource.Identifier)
 	trafficSourceType := aws.ToString(trafficSource.Type)
 	id := trafficSourceAttachmentCreateResourceID(asgName, trafficSourceType, trafficSourceID)
@@ -125,8 +125,8 @@ func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Traffic Source Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("autoscaling_group_name", asgName)
-	d.Set("traffic_source", []any{map[string]any{
+	d.Set(attrGroupName, asgName)
+	d.Set(attrTrafficSource, []any{map[string]any{
 		names.AttrIdentifier: output.Identifier,
 		names.AttrType:       output.Type,
 	}})
@@ -143,7 +143,7 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]any)[0].(map[string]any))
+	trafficSource := expandTrafficSourceIdentifier(d.Get(attrTrafficSource).([]any)[0].(map[string]any))
 
 	log.Printf("[INFO] Deleting Auto Scaling Traffic Source Attachment: %s", d.Id())
 	input := autoscaling.DetachTrafficSourcesInput{

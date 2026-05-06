@@ -49,7 +49,7 @@ func resourceSchedule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"autoscaling_group_name": {
+			attrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -70,7 +70,7 @@ func resourceSchedule() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"min_size": {
+			attrMinSize: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -106,7 +106,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	name := d.Get("scheduled_action_name").(string)
 	input := autoscaling.PutScheduledUpdateGroupActionInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		AutoScalingGroupName: aws.String(d.Get(attrGroupName).(string)),
 		ScheduledActionName:  aws.String(name),
 	}
 
@@ -136,7 +136,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta any) 
 	// autoscaling rules. Since Terraform doesn't have a great pattern for
 	// differentiating between 0 and unset fields, we accept "-1" to mean "don't
 	// include this parameter in the action".
-	minSize := int32(d.Get("min_size").(int))
+	minSize := int32(d.Get(attrMinSize).(int))
 	maxSize := int32(d.Get("max_size").(int))
 	desiredCapacity := int32(d.Get("desired_capacity").(int))
 	if minSize != -1 {
@@ -166,7 +166,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	sa, err := findScheduleByTwoPartKey(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
+	sa, err := findScheduleByTwoPartKey(ctx, conn, d.Get(attrGroupName).(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Scheduled Action %s not found, removing from state", d.Id())
@@ -179,7 +179,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.Set(names.AttrARN, sa.ScheduledActionARN)
-	d.Set("autoscaling_group_name", sa.AutoScalingGroupName)
+	d.Set(attrGroupName, sa.AutoScalingGroupName)
 	if sa.DesiredCapacity == nil {
 		d.Set("desired_capacity", -1)
 	} else {
@@ -194,9 +194,9 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("max_size", sa.MaxSize)
 	}
 	if sa.MinSize == nil {
-		d.Set("min_size", -1)
+		d.Set(attrMinSize, -1)
 	} else {
-		d.Set("min_size", sa.MinSize)
+		d.Set(attrMinSize, sa.MinSize)
 	}
 	d.Set("recurrence", sa.Recurrence)
 	if sa.StartTime != nil {
@@ -213,7 +213,7 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	log.Printf("[INFO] Deleting Auto Scaling Scheduled Action: %s", d.Id())
 	input := autoscaling.DeleteScheduledActionInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		AutoScalingGroupName: aws.String(d.Get(attrGroupName).(string)),
 		ScheduledActionName:  aws.String(d.Id()),
 	}
 	_, err := conn.DeleteScheduledAction(ctx, &input)
@@ -307,8 +307,8 @@ func (scheduleImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"autoscaling_group_name": asgName,
-		"scheduled_action_name":  actionName,
+		attrGroupName:           asgName,
+		"scheduled_action_name": actionName,
 	}
 
 	return actionName, result, nil

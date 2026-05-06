@@ -31,7 +31,7 @@ func resourceGroupTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
+			attrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +51,7 @@ func resourceGroupTag() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"propagate_at_launch": {
+						attrPropagateAtLaunch: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -66,7 +66,7 @@ func resourceGroupTagCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	identifier := d.Get("autoscaling_group_name").(string)
+	identifier := d.Get(attrGroupName).(string)
 	tags := d.Get("tag").([]any)
 	key := tags[0].(map[string]any)[names.AttrKey].(string)
 
@@ -100,12 +100,12 @@ func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 
-	d.Set("autoscaling_group_name", identifier)
+	d.Set(attrGroupName, identifier)
 
 	if err := d.Set("tag", []map[string]any{{
 		names.AttrKey:         key,
 		names.AttrValue:       value.Value,
-		"propagate_at_launch": value.AdditionalBoolFields["PropagateAtLaunch"],
+		attrPropagateAtLaunch: value.AdditionalBoolFields["PropagateAtLaunch"],
 	}}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}

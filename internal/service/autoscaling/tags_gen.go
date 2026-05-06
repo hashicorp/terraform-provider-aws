@@ -114,7 +114,7 @@ func listOfMap(tags tftags.KeyValueTags) []any {
 		return map[string]any{
 			names.AttrKey:         key,
 			names.AttrValue:       aws.ToString(tags.KeyValue(key)),
-			"propagate_at_launch": aws.ToBool(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch")),
+			attrPropagateAtLaunch: aws.ToBool(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch")),
 		}
 	})
 }
@@ -207,7 +207,7 @@ func keyValueTags(ctx context.Context, tags any, identifier, resourceType string
 			}
 
 			tagData.AdditionalBoolFields = make(map[string]*bool)
-			if v, ok := tfMap["propagate_at_launch"].(bool); ok {
+			if v, ok := tfMap[attrPropagateAtLaunch].(bool); ok {
 				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &v
 			}
 

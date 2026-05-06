@@ -173,7 +173,7 @@ func resourceGroupV0() *schema.Resource {
 					},
 				},
 			},
-			"launch_configuration": {
+			attrLaunchConfiguration: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -223,11 +223,11 @@ func resourceGroupV0() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"min_size": {
+			attrMinSize: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"mixed_instances_policy": {
+			attrMixedInstancesPolicy: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -286,19 +286,19 @@ func resourceGroupV0() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"launch_template_specification": {
+									attrLaunchTemplateSpecification: {
 										Type:     schema.TypeList,
 										Required: true,
 										MinItems: 1,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"launch_template_id": {
+												attrLaunchTemplateID: {
 													Type:     schema.TypeString,
 													Optional: true,
 													Computed: true,
 												},
-												"launch_template_name": {
+												attrLaunchTemplateName: {
 													Type:     schema.TypeString,
 													Optional: true,
 													Computed: true,
@@ -560,19 +560,19 @@ func resourceGroupV0() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"launch_template_specification": {
+												attrLaunchTemplateSpecification: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MinItems: 0,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"launch_template_id": {
+															attrLaunchTemplateID: {
 																Type:     schema.TypeString,
 																Optional: true,
 																Computed: true,
 															},
-															"launch_template_name": {
+															attrLaunchTemplateName: {
 																Type:     schema.TypeString,
 																Optional: true,
 																Computed: true,
@@ -642,7 +642,7 @@ func resourceGroupV0() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"propagate_at_launch": {
+						attrPropagateAtLaunch: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -664,7 +664,7 @@ func resourceGroupV0() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"traffic_source": {
+			attrTrafficSource: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -721,7 +721,7 @@ func resourceGroupV0() *schema.Resource {
 							Optional: true,
 							Default:  defaultWarmPoolMaxGroupPreparedCapacity,
 						},
-						"min_size": {
+						attrMinSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  0,

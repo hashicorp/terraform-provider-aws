@@ -44,7 +44,7 @@ func resourceLifecycleHook() *schema.Resource {
 		DeleteWithoutTimeout: resourceLifecycleHookDelete,
 
 		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
+			attrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -98,7 +98,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get(names.AttrName).(string)
 	input := autoscaling.PutLifecycleHookInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		AutoScalingGroupName: aws.String(d.Get(attrGroupName).(string)),
 		LifecycleHookName:    aws.String(name),
 	}
 
@@ -147,7 +147,7 @@ func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	p, err := findLifecycleHookByTwoPartKey(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
+	p, err := findLifecycleHookByTwoPartKey(ctx, conn, d.Get(attrGroupName).(string), d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Lifecycle Hook %s not found, removing from state", d.Id())
@@ -176,7 +176,7 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Deleting Auto Scaling Lifecycle Hook: %s", d.Id())
 	input := autoscaling.DeleteLifecycleHookInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		AutoScalingGroupName: aws.String(d.Get(attrGroupName).(string)),
 		LifecycleHookName:    aws.String(d.Id()),
 	}
 	_, err := conn.DeleteLifecycleHook(ctx, &input)
@@ -256,8 +256,8 @@ func (lifecycleHookImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"autoscaling_group_name": asgName,
-		names.AttrName:           hookName,
+		attrGroupName:  asgName,
+		names.AttrName: hookName,
 	}
 
 	return hookName, result, nil

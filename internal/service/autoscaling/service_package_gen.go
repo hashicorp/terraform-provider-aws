@@ -80,7 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Lifecycle Hook",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("autoscaling_group_name", true),
+				inttypes.StringIdentityAttribute(attrGroupName, true),
 				inttypes.StringIdentityAttribute(names.AttrName, true),
 			}),
 			Import: inttypes.SDKv2Import{
@@ -100,7 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Policy",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("autoscaling_group_name", true),
+				inttypes.StringIdentityAttribute(attrGroupName, true),
 				inttypes.StringIdentityAttribute(names.AttrName, true),
 			}),
 			Import: inttypes.SDKv2Import{
@@ -114,7 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Scheduled Action",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("autoscaling_group_name", true),
+				inttypes.StringIdentityAttribute(attrGroupName, true),
 				inttypes.StringIdentityAttribute("scheduled_action_name", true),
 			}),
 			Import: inttypes.SDKv2Import{

@@ -31,7 +31,7 @@ func resourceAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
+			attrGroupName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -55,7 +55,7 @@ func resourceAttachment() *schema.Resource {
 func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	asgName := d.Get("autoscaling_group_name").(string)
+	asgName := d.Get(attrGroupName).(string)
 
 	if v, ok := d.GetOk("elb"); ok {
 		lbName := v.(string)
@@ -101,7 +101,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	asgName := d.Get("autoscaling_group_name").(string)
+	asgName := d.Get(attrGroupName).(string)
 
 	var err error
 
@@ -127,7 +127,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta an
 func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	asgName := d.Get("autoscaling_group_name").(string)
+	asgName := d.Get(attrGroupName).(string)
 
 	if v, ok := d.GetOk("elb"); ok {
 		lbName := v.(string)

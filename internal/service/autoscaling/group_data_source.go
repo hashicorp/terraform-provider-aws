@@ -76,7 +76,7 @@ func dataSourceGroup() *schema.Resource {
 					},
 				},
 			},
-			"launch_configuration": {
+			attrLaunchConfiguration: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,11 +115,11 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"min_size": {
+			attrMinSize: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"mixed_instances_policy": {
+			attrMixedInstancesPolicy: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -161,16 +161,16 @@ func dataSourceGroup() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"launch_template_specification": {
+									attrLaunchTemplateSpecification: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"launch_template_id": {
+												attrLaunchTemplateID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"launch_template_name": {
+												attrLaunchTemplateName: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -410,16 +410,16 @@ func dataSourceGroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"launch_template_specification": {
+												attrLaunchTemplateSpecification: {
 													Type:     schema.TypeList,
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"launch_template_id": {
+															attrLaunchTemplateID: {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
-															"launch_template_name": {
+															attrLaunchTemplateName: {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
@@ -481,7 +481,7 @@ func dataSourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"propagate_at_launch": {
+						attrPropagateAtLaunch: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -506,7 +506,7 @@ func dataSourceGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"traffic_source": {
+			attrTrafficSource: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -547,7 +547,7 @@ func dataSourceGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"min_size": {
+						attrMinSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -590,7 +590,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(group.InstanceMaintenancePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
 	}
-	d.Set("launch_configuration", group.LaunchConfigurationName)
+	d.Set(attrLaunchConfiguration, group.LaunchConfigurationName)
 	if group.LaunchTemplate != nil {
 		if err := d.Set(names.AttrLaunchTemplate, []any{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
@@ -601,13 +601,13 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("load_balancers", group.LoadBalancerNames)
 	d.Set("max_instance_lifetime", group.MaxInstanceLifetime)
 	d.Set("max_size", group.MaxSize)
-	d.Set("min_size", group.MinSize)
+	d.Set(attrMinSize, group.MinSize)
 	if group.MixedInstancesPolicy != nil {
-		if err := d.Set("mixed_instances_policy", []any{flattenMixedInstancesPolicy(group.MixedInstancesPolicy)}); err != nil {
+		if err := d.Set(attrMixedInstancesPolicy, []any{flattenMixedInstancesPolicy(group.MixedInstancesPolicy)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting mixed_instances_policy: %s", err)
 		}
 	} else {
-		d.Set("mixed_instances_policy", nil)
+		d.Set(attrMixedInstancesPolicy, nil)
 	}
 	d.Set(names.AttrName, group.AutoScalingGroupName)
 	d.Set("new_instances_protected_from_scale_in", group.NewInstancesProtectedFromScaleIn)
@@ -621,7 +621,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set("target_group_arns", group.TargetGroupARNs)
 	d.Set("termination_policies", group.TerminationPolicies)
-	if err := d.Set("traffic_source", flattenTrafficSourceIdentifiers(group.TrafficSources)); err != nil {
+	if err := d.Set(attrTrafficSource, flattenTrafficSourceIdentifiers(group.TrafficSources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting traffic_source: %s", err)
 	}
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
