@@ -53,7 +53,7 @@ type agentKnowledgeBaseAssociationResource struct {
 func (r *agentKnowledgeBaseAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"agent_id": schema.StringAttribute{
+			attrAgentID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

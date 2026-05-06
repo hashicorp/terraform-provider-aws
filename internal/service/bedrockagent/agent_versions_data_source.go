@@ -32,7 +32,7 @@ type agentVersionsDataSource struct {
 func (d *agentVersionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"agent_id": schema.StringAttribute{
+			attrAgentID: schema.StringAttribute{
 				Required: true,
 			},
 		},

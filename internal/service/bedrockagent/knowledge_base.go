@@ -690,7 +690,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"credentials_secret_arn": schema.StringAttribute{
+									attrCredentialsSecretARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
@@ -729,7 +729,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
+									attrFieldMapping: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[mongoDBAtlasFieldMappingModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -741,13 +741,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
+												attrMetadataField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"text_field": schema.StringAttribute{
+												attrTextField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -784,7 +784,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
+									attrFieldMapping: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[neptuneAnalyticsFieldMappingModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -796,13 +796,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
+												attrMetadataField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"text_field": schema.StringAttribute{
+												attrTextField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -851,7 +851,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
+									attrFieldMapping: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchManagedClusterFieldMappingModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -863,13 +863,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
+												attrMetadataField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"text_field": schema.StringAttribute{
+												attrTextField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -912,7 +912,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
+									attrFieldMapping: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchServerlessFieldMappingModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -924,13 +924,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
+												attrMetadataField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"text_field": schema.StringAttribute{
+												attrTextField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -964,7 +964,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"credentials_secret_arn": schema.StringAttribute{
+									attrCredentialsSecretARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
@@ -979,7 +979,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
+									attrFieldMapping: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[pineconeFieldMappingModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -991,13 +991,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
+												attrMetadataField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"text_field": schema.StringAttribute{
+												attrTextField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -1019,7 +1019,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"credentials_secret_arn": schema.StringAttribute{
+									attrCredentialsSecretARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
@@ -1047,7 +1047,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
+									attrFieldMapping: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[rdsFieldMappingModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -1065,7 +1065,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"metadata_field": schema.StringAttribute{
+												attrMetadataField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -1077,7 +1077,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"text_field": schema.StringAttribute{
+												attrTextField: schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -1105,7 +1105,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"credentials_secret_arn": schema.StringAttribute{
+									attrCredentialsSecretARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
@@ -1126,7 +1126,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
+									attrFieldMapping: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[redisEnterpriseCloudFieldMappingModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -1138,13 +1138,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
+												attrMetadataField: schema.StringAttribute{
 													Optional: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"text_field": schema.StringAttribute{
+												attrTextField: schema.StringAttribute{
 													Optional: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),

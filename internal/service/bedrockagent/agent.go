@@ -67,7 +67,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"agent_arn": framework.ARNAttributeComputedOnly(),
-			"agent_id":  framework.IDAttribute(),
+			attrAgentID: framework.IDAttribute(),
 			"agent_collaboration": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AgentCollaboration](),
 				Optional:   true,

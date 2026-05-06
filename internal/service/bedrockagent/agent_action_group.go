@@ -69,7 +69,7 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 				Optional:   true,
 				Computed:   true,
 			},
-			"agent_id": schema.StringAttribute{
+			attrAgentID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

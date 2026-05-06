@@ -366,12 +366,12 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																},
 																NestedObject: schema.NestedBlockObject{
 																	Blocks: map[string]schema.Block{
-																		"text": schema.ListNestedBlock{
+																		attrText: schema.ListNestedBlock{
 																			CustomType: fwtypes.NewListNestedObjectTypeOf[promptModelInferenceConfigurationModel](ctx),
 																			Validators: []validator.List{
 																				listvalidator.SizeAtMost(1),
 																				listvalidator.ExactlyOneOf(
-																					path.MatchRelative().AtParent().AtName("text"),
+																					path.MatchRelative().AtParent().AtName(attrText),
 																				),
 																			},
 																			NestedObject: schema.NestedBlockObject{
@@ -499,12 +499,12 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																						},
 																						NestedObject: schema.NestedBlockObject{
 																							Blocks: map[string]schema.Block{
-																								"text": schema.ListNestedBlock{
+																								attrText: schema.ListNestedBlock{
 																									CustomType: fwtypes.NewListNestedObjectTypeOf[promptModelInferenceConfigurationModel](ctx),
 																									Validators: []validator.List{
 																										listvalidator.SizeAtMost(1),
 																										listvalidator.ExactlyOneOf(
-																											path.MatchRelative().AtParent().AtName("text"),
+																											path.MatchRelative().AtParent().AtName(attrText),
 																										),
 																									},
 																									NestedObject: schema.NestedBlockObject{
@@ -542,7 +542,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																										listvalidator.SizeAtMost(1),
 																										listvalidator.ExactlyOneOf(
 																											path.MatchRelative().AtParent().AtName("chat"),
-																											path.MatchRelative().AtParent().AtName("text"),
+																											path.MatchRelative().AtParent().AtName(attrText),
 																										),
 																									},
 																									NestedObject: schema.NestedBlockObject{
@@ -581,18 +581,18 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																															},
 																															NestedObject: schema.NestedBlockObject{
 																																Attributes: map[string]schema.Attribute{
-																																	"text": schema.StringAttribute{
+																																	attrText: schema.StringAttribute{
 																																		Optional: true,
 																																	},
 																																},
 																																Blocks: map[string]schema.Block{
-																																	"cache_point": schema.ListNestedBlock{
+																																	attrCachePoint: schema.ListNestedBlock{
 																																		CustomType: fwtypes.NewListNestedObjectTypeOf[cachePointBlockModel](ctx),
 																																		Validators: []validator.List{
 																																			listvalidator.SizeAtMost(1),
 																																			listvalidator.ExactlyOneOf(
-																																				path.MatchRelative().AtParent().AtName("cache_point"),
-																																				path.MatchRelative().AtParent().AtName("text"),
+																																				path.MatchRelative().AtParent().AtName(attrCachePoint),
+																																				path.MatchRelative().AtParent().AtName(attrText),
 																																			),
 																																		},
 																																		NestedObject: schema.NestedBlockObject{
@@ -614,17 +614,17 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																												CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockModel](ctx),
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
-																														"text": schema.StringAttribute{
+																														attrText: schema.StringAttribute{
 																															Optional: true,
 																														},
 																													},
 																													Blocks: map[string]schema.Block{
-																														"cache_point": schema.ListNestedBlock{
+																														attrCachePoint: schema.ListNestedBlock{
 																															CustomType: fwtypes.NewListNestedObjectTypeOf[cachePointBlockModel](ctx),
 																															Validators: []validator.List{
 																																listvalidator.ExactlyOneOf(
-																																	path.MatchRelative().AtParent().AtName("cache_point"),
-																																	path.MatchRelative().AtParent().AtName("text"),
+																																	path.MatchRelative().AtParent().AtName(attrCachePoint),
+																																	path.MatchRelative().AtParent().AtName(attrText),
 																																),
 																																listvalidator.SizeAtMost(1),
 																															},
@@ -691,12 +691,12 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																															CustomType: fwtypes.NewListNestedObjectTypeOf[toolModel](ctx),
 																															NestedObject: schema.NestedBlockObject{
 																																Blocks: map[string]schema.Block{
-																																	"cache_point": schema.ListNestedBlock{
+																																	attrCachePoint: schema.ListNestedBlock{
 																																		CustomType: fwtypes.NewListNestedObjectTypeOf[cachePointBlockModel](ctx),
 																																		Validators: []validator.List{
 																																			listvalidator.SizeAtMost(1),
 																																			listvalidator.ExactlyOneOf(
-																																				path.MatchRelative().AtParent().AtName("cache_point"),
+																																				path.MatchRelative().AtParent().AtName(attrCachePoint),
 																																				path.MatchRelative().AtParent().AtName("tool_spec"),
 																																			),
 																																		},
@@ -755,19 +755,19 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																										},
 																									},
 																								},
-																								"text": schema.ListNestedBlock{
+																								attrText: schema.ListNestedBlock{
 																									CustomType: fwtypes.NewListNestedObjectTypeOf[textPromptTemplateConfigurationModel](ctx),
 																									Validators: []validator.List{
 																										listvalidator.SizeAtMost(1),
 																									},
 																									NestedObject: schema.NestedBlockObject{
 																										Attributes: map[string]schema.Attribute{
-																											"text": schema.StringAttribute{
+																											attrText: schema.StringAttribute{
 																												Required: true,
 																											},
 																										},
 																										Blocks: map[string]schema.Block{
-																											"cache_point": schema.ListNestedBlock{
+																											attrCachePoint: schema.ListNestedBlock{
 																												CustomType: fwtypes.NewListNestedObjectTypeOf[cachePointModel](ctx),
 																												Validators: []validator.List{
 																													listvalidator.SizeAtMost(1),

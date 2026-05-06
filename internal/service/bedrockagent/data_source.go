@@ -205,7 +205,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Required:   true,
 													CustomType: fwtypes.StringEnumType[awstypes.ConfluenceAuthType](),
 												},
-												"credentials_secret_arn": schema.StringAttribute{
+												attrCredentialsSecretARN: schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Required:   true,
 												},
@@ -279,7 +279,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Required:   true,
 													CustomType: fwtypes.StringEnumType[awstypes.SalesforceAuthType](),
 												},
-												"credentials_secret_arn": schema.StringAttribute{
+												attrCredentialsSecretARN: schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Required:   true,
 												},
@@ -321,7 +321,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Required:   true,
 													CustomType: fwtypes.StringEnumType[awstypes.SharePointAuthType](),
 												},
-												"credentials_secret_arn": schema.StringAttribute{
+												attrCredentialsSecretARN: schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Required:   true,
 												},

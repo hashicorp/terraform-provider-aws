@@ -70,7 +70,7 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
 				},
 			},
-			"agent_id": schema.StringAttribute{
+			attrAgentID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
