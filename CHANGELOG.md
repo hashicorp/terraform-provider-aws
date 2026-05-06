@@ -1,4 +1,4 @@
-## 6.44.0 (Unreleased)
+## 6.44.0 (May 6, 2025)
 
 NOTES:
 
@@ -35,7 +35,7 @@ BUG FIXES:
 
 * resource/aws_odb_cloud_vm_cluster: Attempt to read GI Version from resource tags to avoid failures due to new API response values ([#46589](https://github.com/hashicorp/terraform-provider-aws/issues/46589))
 
-## 6.43.0 (29 April, 2026)
+## 6.43.0 (April 29, 2026)
 
 FEATURES:
 
