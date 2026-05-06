@@ -44,7 +44,7 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"voice_connector_id": {
+			attrVoiceConnectorID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -58,7 +58,7 @@ func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.Resource
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	vcId := d.Get("voice_connector_id").(string)
+	vcId := d.Get(attrVoiceConnectorID).(string)
 	input := &chimesdkvoice.PutVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(vcId),
 		LoggingConfiguration: &awstypes.LoggingConfiguration{
@@ -96,7 +96,7 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("enable_media_metric_logs", resp.EnableMediaMetricLogs)
 	d.Set("enable_sip_logs", resp.EnableSIPLogs)
-	d.Set("voice_connector_id", d.Id())
+	d.Set(attrVoiceConnectorID, d.Id())
 
 	return diags
 }

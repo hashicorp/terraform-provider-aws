@@ -77,7 +77,7 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 					},
 				},
 			},
-			"voice_connector_id": {
+			attrVoiceConnectorID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.Reso
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	vcId := d.Get("voice_connector_id").(string)
+	vcId := d.Get(attrVoiceConnectorID).(string)
 
 	input := &chimesdkvoice.PutVoiceConnectorOriginationInput{
 		VoiceConnectorId: aws.String(vcId),
@@ -133,7 +133,7 @@ func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("disabled", resp.Disabled)
-	d.Set("voice_connector_id", d.Id())
+	d.Set(attrVoiceConnectorID, d.Id())
 
 	if err := d.Set("route", flattenOriginationRoutes(resp.Routes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Chime Voice Connector (%s) origination routes: %s", d.Id(), err)

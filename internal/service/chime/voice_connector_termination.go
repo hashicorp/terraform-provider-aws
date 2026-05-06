@@ -70,7 +70,7 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"voice_connector_id": {
+			attrVoiceConnectorID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -84,7 +84,7 @@ func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.Reso
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	vcId := d.Get("voice_connector_id").(string)
+	vcId := d.Get(attrVoiceConnectorID).(string)
 
 	input := &chimesdkvoice.PutVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(vcId),
@@ -148,7 +148,7 @@ func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "setting termination cidr allow list (%s): %s", d.Id(), err)
 	}
 
-	d.Set("voice_connector_id", d.Id())
+	d.Set(attrVoiceConnectorID, d.Id())
 
 	return diags
 }

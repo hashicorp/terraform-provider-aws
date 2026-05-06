@@ -57,7 +57,7 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 					},
 				},
 			},
-			"voice_connector_id": {
+			attrVoiceConnectorID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -71,7 +71,7 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	vcId := d.Get("voice_connector_id").(string)
+	vcId := d.Get(attrVoiceConnectorID).(string)
 
 	input := &chimesdkvoice.PutVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(vcId),
@@ -106,7 +106,7 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 		return sdkdiag.AppendErrorf(diags, "getting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 	}
 
-	d.Set("voice_connector_id", d.Id())
+	d.Set(attrVoiceConnectorID, d.Id())
 
 	return diags
 }

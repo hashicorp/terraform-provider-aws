@@ -74,7 +74,7 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.NotificationTarget](),
 				},
 			},
-			"voice_connector_id": {
+			attrVoiceConnectorID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -88,7 +88,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	vcId := d.Get("voice_connector_id").(string)
+	vcId := d.Get(attrVoiceConnectorID).(string)
 	input := &chimesdkvoice.PutVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(vcId),
 	}
@@ -143,7 +143,7 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 
 	d.Set("disabled", resp.StreamingConfiguration.Disabled)
 	d.Set("data_retention", resp.StreamingConfiguration.DataRetentionInHours)
-	d.Set("voice_connector_id", d.Id())
+	d.Set(attrVoiceConnectorID, d.Id())
 
 	if err := d.Set("streaming_notification_targets", flattenStreamingNotificationTargets(resp.StreamingConfiguration.StreamingNotificationTargets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Chime Voice Connector streaming configuration targets (%s): %s", d.Id(), err)
@@ -161,7 +161,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	vcId := d.Get("voice_connector_id").(string)
+	vcId := d.Get(attrVoiceConnectorID).(string)
 
 	if d.HasChanges("data_retention", "disabled", "streaming_notification_targets", "media_insights_configuration") {
 		input := &chimesdkvoice.PutVoiceConnectorStreamingConfigurationInput{
