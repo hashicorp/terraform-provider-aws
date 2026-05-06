@@ -53,7 +53,7 @@ func dataSourceRoutingProfile() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"channel": {
+						attrChannel: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -80,14 +80,14 @@ func dataSourceRoutingProfile() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "routing_profile_id"},
+				ExactlyOneOf: []string{names.AttrName, attrRoutingProfileID},
 			},
 			"queue_configs": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"channel": {
+						attrChannel: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -103,7 +103,7 @@ func dataSourceRoutingProfile() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"queue_id": {
+						attrQueueID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -114,11 +114,11 @@ func dataSourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			"routing_profile_id": {
+			attrRoutingProfileID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"routing_profile_id", names.AttrName},
+				ExactlyOneOf: []string{attrRoutingProfileID, names.AttrName},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
@@ -134,7 +134,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 		InstanceId: aws.String(instanceID),
 	}
 
-	if v, ok := d.GetOk("routing_profile_id"); ok {
+	if v, ok := d.GetOk(attrRoutingProfileID); ok {
 		input.RoutingProfileId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
@@ -164,7 +164,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting media_concurrencies: %s", err)
 	}
 	d.Set(names.AttrName, routingProfile.Name)
-	d.Set("routing_profile_id", routingProfileID)
+	d.Set(attrRoutingProfileID, routingProfileID)
 
 	queueConfigs, err := findRoutingConfigQueueConfigSummariesByTwoPartKey(ctx, conn, instanceID, routingProfileID)
 

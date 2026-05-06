@@ -39,7 +39,7 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hierarchy_group_id": {
+			attrHierarchyGroupID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +76,7 @@ func dataSourceUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "user_id"},
+				ExactlyOneOf: []string{names.AttrName, attrUserID},
 			},
 			"phone_config": {
 				Type:     schema.TypeList,
@@ -102,7 +102,7 @@ func dataSourceUser() *schema.Resource {
 					},
 				},
 			},
-			"routing_profile_id": {
+			attrRoutingProfileID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -114,11 +114,11 @@ func dataSourceUser() *schema.Resource {
 				},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"user_id": {
+			attrUserID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"user_id", names.AttrName},
+				ExactlyOneOf: []string{attrUserID, names.AttrName},
 			},
 		},
 	}
@@ -133,7 +133,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		InstanceId: aws.String(instanceID),
 	}
 
-	if v, ok := d.GetOk("user_id"); ok {
+	if v, ok := d.GetOk(attrUserID); ok {
 		input.UserId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
@@ -157,7 +157,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.SetId(id)
 	d.Set(names.AttrARN, user.Arn)
 	d.Set("directory_user_id", user.DirectoryUserId)
-	d.Set("hierarchy_group_id", user.HierarchyGroupId)
+	d.Set(attrHierarchyGroupID, user.HierarchyGroupId)
 	if err := d.Set("identity_info", flattenUserIdentityInfo(user.IdentityInfo)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity_info: %s", err)
 	}
@@ -166,9 +166,9 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set("phone_config", flattenUserPhoneConfig(user.PhoneConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting phone_config: %s", err)
 	}
-	d.Set("routing_profile_id", user.RoutingProfileId)
+	d.Set(attrRoutingProfileID, user.RoutingProfileId)
 	d.Set("security_profile_ids", user.SecurityProfileIds)
-	d.Set("user_id", userID)
+	d.Set(attrUserID, userID)
 
 	setTagsOut(ctx, user.Tags)
 

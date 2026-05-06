@@ -44,7 +44,7 @@ type phoneNumberContactFlowAssociationResource struct {
 func (r *phoneNumberContactFlowAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"contact_flow_id": schema.StringAttribute{
+			attrContactFlowID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -162,7 +162,7 @@ func (r *phoneNumberContactFlowAssociationResource) ImportState(ctx context.Cont
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("phone_number_id"), parts[0])...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrInstanceID), parts[1])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("contact_flow_id"), parts[2])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attrContactFlowID), parts[2])...)
 }
 
 func findPhoneNumberContactFlowAssociationByThreePartKey(ctx context.Context, conn *connect.Client, phoneNumberID, instanceID, contactFlowID string) (*awstypes.FlowAssociationSummary, error) {

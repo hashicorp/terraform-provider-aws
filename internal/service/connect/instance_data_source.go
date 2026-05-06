@@ -63,17 +63,17 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"instance_alias": {
+			attrInstanceAlias: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_alias", names.AttrInstanceID},
+				ExactlyOneOf: []string{attrInstanceAlias, names.AttrInstanceID},
 			},
 			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrInstanceID, "instance_alias"},
+				ExactlyOneOf: []string{names.AttrInstanceID, attrInstanceAlias},
 			},
 			"multi_party_conference_enabled": {
 				Type:     schema.TypeBool,
@@ -115,7 +115,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		matchedInstance = instance
-	} else if v, ok := d.GetOk("instance_alias"); ok {
+	} else if v, ok := d.GetOk(attrInstanceAlias); ok {
 		instanceAlias := v.(string)
 		instanceSummary, err := findInstanceSummaryByAlias(ctx, conn, instanceAlias)
 
@@ -143,7 +143,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 	d.Set("identity_management_type", matchedInstance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)
-	d.Set("instance_alias", matchedInstance.InstanceAlias)
+	d.Set(attrInstanceAlias, matchedInstance.InstanceAlias)
 	d.Set("outbound_calls_enabled", matchedInstance.OutboundCallsEnabled)
 	d.Set(names.AttrServiceRole, matchedInstance.ServiceRole)
 	d.Set(names.AttrStatus, matchedInstance.InstanceStatus)

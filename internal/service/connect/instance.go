@@ -92,7 +92,7 @@ func resourceInstance() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(12, 12),
-				AtLeastOneOf: []string{"directory_id", "instance_alias"},
+				AtLeastOneOf: []string{"directory_id", attrInstanceAlias},
 			},
 			"early_media_enabled": {
 				Type:     schema.TypeBool,
@@ -109,11 +109,11 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"instance_alias": {
+			attrInstanceAlias: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{"directory_id", "instance_alias"},
+				AtLeastOneOf: []string{"directory_id", attrInstanceAlias},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
@@ -165,7 +165,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.DirectoryId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_alias"); ok {
+	if v, ok := d.GetOk(attrInstanceAlias); ok {
 		input.InstanceAlias = aws.String(v.(string))
 	}
 
@@ -210,7 +210,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	d.Set("identity_management_type", instance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", instance.InboundCallsEnabled)
-	d.Set("instance_alias", instance.InstanceAlias)
+	d.Set(attrInstanceAlias, instance.InstanceAlias)
 	d.Set("outbound_calls_enabled", instance.OutboundCallsEnabled)
 	d.Set(names.AttrServiceRole, instance.ServiceRole)
 	d.Set(names.AttrStatus, instance.InstanceStatus)

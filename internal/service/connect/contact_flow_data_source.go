@@ -34,11 +34,11 @@ func dataSourceContactFlow() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"contact_flow_id": {
+			attrContactFlowID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"contact_flow_id", names.AttrName},
+				ExactlyOneOf: []string{attrContactFlowID, names.AttrName},
 			},
 			names.AttrContent: {
 				Type:     schema.TypeString,
@@ -56,7 +56,7 @@ func dataSourceContactFlow() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "contact_flow_id"},
+				ExactlyOneOf: []string{names.AttrName, attrContactFlowID},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			names.AttrType: {
@@ -76,7 +76,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 		InstanceId: aws.String(instanceID),
 	}
 
-	if v, ok := d.GetOk("contact_flow_id"); ok {
+	if v, ok := d.GetOk(attrContactFlowID); ok {
 		input.ContactFlowId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
@@ -99,7 +99,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	id := contactFlowCreateResourceID(instanceID, contactFlowID)
 	d.SetId(id)
 	d.Set(names.AttrARN, contactFlow.Arn)
-	d.Set("contact_flow_id", contactFlowID)
+	d.Set(attrContactFlowID, contactFlowID)
 	d.Set(names.AttrContent, contactFlow.Content)
 	d.Set(names.AttrDescription, contactFlow.Description)
 	d.Set(names.AttrInstanceID, instanceID)

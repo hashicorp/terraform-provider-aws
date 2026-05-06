@@ -36,11 +36,11 @@ func dataSourceUserHierarchyGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"hierarchy_group_id": {
+				attrHierarchyGroupID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
-					ExactlyOneOf: []string{"hierarchy_group_id", names.AttrName},
+					ExactlyOneOf: []string{attrHierarchyGroupID, names.AttrName},
 				},
 				"hierarchy_path": {
 					Type:     schema.TypeList,
@@ -68,7 +68,7 @@ func dataSourceUserHierarchyGroup() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
-					ExactlyOneOf: []string{names.AttrName, "hierarchy_group_id"},
+					ExactlyOneOf: []string{names.AttrName, attrHierarchyGroupID},
 				},
 				// parent_group_id is not returned by DescribeUserHierarchyGroup
 				// "parent_group_id": {
@@ -91,7 +91,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 		InstanceId: aws.String(instanceID),
 	}
 
-	if v, ok := d.GetOk("hierarchy_group_id"); ok {
+	if v, ok := d.GetOk(attrHierarchyGroupID); ok {
 		input.HierarchyGroupId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
@@ -114,7 +114,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 	id := userHierarchyGroupCreateResourceID(instanceID, userHierarchyGroupID)
 	d.SetId(id)
 	d.Set(names.AttrARN, hierarchyGroup.Arn)
-	d.Set("hierarchy_group_id", userHierarchyGroupID)
+	d.Set(attrHierarchyGroupID, userHierarchyGroupID)
 	if err := d.Set("hierarchy_path", flattenHierarchyPath(hierarchyGroup.HierarchyPath)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting hierarchy_path: %s", err)
 	}

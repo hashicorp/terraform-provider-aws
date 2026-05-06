@@ -70,7 +70,7 @@ func resourceRoutingProfile() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"channel": {
+						attrChannel: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.Channel](),
@@ -108,7 +108,7 @@ func resourceRoutingProfile() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"channel": {
+						attrChannel: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.Channel](),
@@ -127,7 +127,7 @@ func resourceRoutingProfile() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"queue_id": {
+						attrQueueID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -138,7 +138,7 @@ func resourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			"routing_profile_id": {
+			attrRoutingProfileID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -221,7 +221,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting media_concurrencies: %s", err)
 	}
 	d.Set(names.AttrName, output.Name)
-	d.Set("routing_profile_id", output.RoutingProfileId)
+	d.Set(attrRoutingProfileID, output.RoutingProfileId)
 
 	queueConfigs, err := findRoutingConfigQueueConfigSummariesByTwoPartKey(ctx, conn, instanceID, routingProfileID)
 
@@ -488,7 +488,7 @@ func expandMediaConcurrencies(tfList []any) []awstypes.MediaConcurrency {
 	for _, tfMapRaw := range tfList {
 		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.MediaConcurrency{
-			Channel:     awstypes.Channel(tfMap["channel"].(string)),
+			Channel:     awstypes.Channel(tfMap[attrChannel].(string)),
 			Concurrency: aws.Int32(int32(tfMap["concurrency"].(int))),
 		}
 
@@ -507,7 +507,7 @@ func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, mediaConc
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"channel":     apiObject.Channel,
+			attrChannel:   apiObject.Channel,
 			"concurrency": aws.ToInt32(apiObject.Concurrency),
 		}
 
@@ -561,8 +561,8 @@ func expandRoutingProfileQueueConfigs(tfList []any) []awstypes.RoutingProfileQue
 			Delay:    aws.Int32(int32(tfMap["delay"].(int))),
 			Priority: aws.Int32(int32(tfMap[names.AttrPriority].(int))),
 			QueueReference: &awstypes.RoutingProfileQueueReference{
-				Channel: awstypes.Channel(tfMap["channel"].(string)),
-				QueueId: aws.String(tfMap["queue_id"].(string)),
+				Channel: awstypes.Channel(tfMap[attrChannel].(string)),
+				QueueId: aws.String(tfMap[attrQueueID].(string)),
 			},
 		}
 
@@ -577,11 +577,11 @@ func flattenRoutingConfigQueueConfigSummaries(apiObjects []awstypes.RoutingProfi
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"channel":          apiObject.Channel,
+			attrChannel:        apiObject.Channel,
 			"delay":            apiObject.Delay,
 			names.AttrPriority: aws.ToInt32(apiObject.Priority),
 			"queue_arn":        aws.ToString(apiObject.QueueArn),
-			"queue_id":         aws.ToString(apiObject.QueueId),
+			attrQueueID:        aws.ToString(apiObject.QueueId),
 			"queue_name":       aws.ToString(apiObject.QueueName),
 		}
 
@@ -606,7 +606,7 @@ func channelsWithCrossChannelBehavior(cfgList []any) []string {
 		}
 
 		if v, ok := m["cross_channel_behavior"].([]any); ok && len(v) > 0 {
-			c = append(c, m["channel"].(string))
+			c = append(c, m[attrChannel].(string))
 		}
 	}
 

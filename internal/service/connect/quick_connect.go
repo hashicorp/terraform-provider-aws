@@ -88,11 +88,11 @@ func resourceQuickConnect() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"contact_flow_id": {
+									attrContactFlowID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"queue_id": {
+									attrQueueID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -115,11 +115,11 @@ func resourceQuickConnect() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"contact_flow_id": {
+									attrContactFlowID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"user_id": {
+									attrUserID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -370,8 +370,8 @@ func expandQuickConnectConfig(tfList []any) *awstypes.QuickConnectConfig {
 
 		tfMap := v[0].(map[string]any)
 		apiObject.QueueConfig = &awstypes.QueueQuickConnectConfig{
-			ContactFlowId: aws.String(tfMap["contact_flow_id"].(string)),
-			QueueId:       aws.String(tfMap["queue_id"].(string)),
+			ContactFlowId: aws.String(tfMap[attrContactFlowID].(string)),
+			QueueId:       aws.String(tfMap[attrQueueID].(string)),
 		}
 
 	case awstypes.QuickConnectTypeUser:
@@ -383,8 +383,8 @@ func expandQuickConnectConfig(tfList []any) *awstypes.QuickConnectConfig {
 
 		tfMap := v[0].(map[string]any)
 		apiObject.UserConfig = &awstypes.UserQuickConnectConfig{
-			ContactFlowId: aws.String(tfMap["contact_flow_id"].(string)),
-			UserId:        aws.String(tfMap["user_id"].(string)),
+			ContactFlowId: aws.String(tfMap[attrContactFlowID].(string)),
+			UserId:        aws.String(tfMap[attrUserID].(string)),
 		}
 
 	default:
@@ -413,14 +413,14 @@ func flattenQuickConnectConfig(apiObject *awstypes.QuickConnectConfig) []any {
 
 	case awstypes.QuickConnectTypeQueue:
 		tfMap["queue_config"] = []any{map[string]any{
-			"contact_flow_id": aws.ToString(apiObject.QueueConfig.ContactFlowId),
-			"queue_id":        aws.ToString(apiObject.QueueConfig.QueueId),
+			attrContactFlowID: aws.ToString(apiObject.QueueConfig.ContactFlowId),
+			attrQueueID:       aws.ToString(apiObject.QueueConfig.QueueId),
 		}}
 
 	case awstypes.QuickConnectTypeUser:
 		tfMap["user_config"] = []any{map[string]any{
-			"contact_flow_id": aws.ToString(apiObject.UserConfig.ContactFlowId),
-			"user_id":         aws.ToString(apiObject.UserConfig.UserId),
+			attrContactFlowID: aws.ToString(apiObject.UserConfig.ContactFlowId),
+			attrUserID:        aws.ToString(apiObject.UserConfig.UserId),
 		}}
 
 	default:

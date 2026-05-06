@@ -62,11 +62,11 @@ func resourceHoursOfOperation() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"hours": {
+									attrHours: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
-									"minutes": {
+									attrMinutes: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -79,11 +79,11 @@ func resourceHoursOfOperation() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"hours": {
+									attrHours: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
-									"minutes": {
+									attrMinutes: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -98,7 +98,7 @@ func resourceHoursOfOperation() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"hours_of_operation_id": {
+			attrHoursOfOperationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -177,7 +177,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.Set(names.AttrDescription, hoursOfOperation.Description)
-	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
+	d.Set(attrHoursOfOperationID, hoursOfOperation.HoursOfOperationId)
 	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrName, hoursOfOperation.Name)
 	d.Set("time_zone", hoursOfOperation.TimeZone)
@@ -308,8 +308,8 @@ func expandHoursOfOperationConfigs(tfList []any) []awstypes.HoursOfOperationConf
 			tfMap := v[0].(map[string]any)
 
 			apiObject.EndTime = &awstypes.HoursOfOperationTimeSlice{
-				Hours:   aws.Int32(int32(tfMap["hours"].(int))),
-				Minutes: aws.Int32(int32(tfMap["minutes"].(int))),
+				Hours:   aws.Int32(int32(tfMap[attrHours].(int))),
+				Minutes: aws.Int32(int32(tfMap[attrMinutes].(int))),
 			}
 		}
 
@@ -317,8 +317,8 @@ func expandHoursOfOperationConfigs(tfList []any) []awstypes.HoursOfOperationConf
 			tfMap := v[0].(map[string]any)
 
 			apiObject.StartTime = &awstypes.HoursOfOperationTimeSlice{
-				Hours:   aws.Int32(int32(tfMap["hours"].(int))),
-				Minutes: aws.Int32(int32(tfMap["minutes"].(int))),
+				Hours:   aws.Int32(int32(tfMap[attrHours].(int))),
+				Minutes: aws.Int32(int32(tfMap[attrMinutes].(int))),
 			}
 		}
 
@@ -338,15 +338,15 @@ func flattenHoursOfOperationConfigs(apiObjects []awstypes.HoursOfOperationConfig
 
 		if v := apiObject.EndTime; v != nil {
 			tfMap["end_time"] = []any{map[string]any{
-				"hours":   aws.ToInt32(v.Hours),
-				"minutes": aws.ToInt32(v.Minutes),
+				attrHours:   aws.ToInt32(v.Hours),
+				attrMinutes: aws.ToInt32(v.Minutes),
 			}}
 		}
 
 		if v := apiObject.StartTime; v != nil {
 			tfMap[names.AttrStartTime] = []any{map[string]any{
-				"hours":   aws.ToInt32(v.Hours),
-				"minutes": aws.ToInt32(v.Minutes),
+				attrHours:   aws.ToInt32(v.Hours),
+				attrMinutes: aws.ToInt32(v.Minutes),
 			}}
 		}
 

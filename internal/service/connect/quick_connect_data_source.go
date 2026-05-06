@@ -72,11 +72,11 @@ func dataSourceQuickConnect() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"contact_flow_id": {
+									attrContactFlowID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"queue_id": {
+									attrQueueID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -92,11 +92,11 @@ func dataSourceQuickConnect() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"contact_flow_id": {
+									attrContactFlowID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"user_id": {
+									attrUserID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

@@ -51,7 +51,7 @@ func resourceUser() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"hierarchy_group_id": {
+			attrHierarchyGroupID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -134,7 +134,7 @@ func resourceUser() *schema.Resource {
 					},
 				},
 			},
-			"routing_profile_id": {
+			attrRoutingProfileID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -149,7 +149,7 @@ func resourceUser() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_id": {
+			attrUserID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -166,7 +166,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	input := &connect.CreateUserInput{
 		InstanceId:         aws.String(instanceID),
 		PhoneConfig:        expandUserPhoneConfig(d.Get("phone_config").([]any)),
-		RoutingProfileId:   aws.String(d.Get("routing_profile_id").(string)),
+		RoutingProfileId:   aws.String(d.Get(attrRoutingProfileID).(string)),
 		SecurityProfileIds: flex.ExpandStringValueSet(d.Get("security_profile_ids").(*schema.Set)),
 		Tags:               getTagsIn(ctx),
 		Username:           aws.String(name),
@@ -176,7 +176,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.DirectoryUserId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("hierarchy_group_id"); ok {
+	if v, ok := d.GetOk(attrHierarchyGroupID); ok {
 		input.HierarchyGroupId = aws.String(v.(string))
 	}
 
@@ -223,7 +223,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	d.Set(names.AttrARN, user.Arn)
 	d.Set("directory_user_id", user.DirectoryUserId)
-	d.Set("hierarchy_group_id", user.HierarchyGroupId)
+	d.Set(attrHierarchyGroupID, user.HierarchyGroupId)
 	if err := d.Set("identity_info", flattenUserIdentityInfo(user.IdentityInfo)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity_info: %s", err)
 	}
@@ -232,9 +232,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err := d.Set("phone_config", flattenUserPhoneConfig(user.PhoneConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting phone_config: %s", err)
 	}
-	d.Set("routing_profile_id", user.RoutingProfileId)
+	d.Set(attrRoutingProfileID, user.RoutingProfileId)
 	d.Set("security_profile_ids", user.SecurityProfileIds)
-	d.Set("user_id", user.Id)
+	d.Set(attrUserID, user.Id)
 
 	setTagsOut(ctx, user.Tags)
 
@@ -258,13 +258,13 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	// UpdateUserSecurityProfilesWithContext: Assigns the specified security profiles to the specified user.
 
 	// updates to hierarchy_group_id
-	if d.HasChange("hierarchy_group_id") {
+	if d.HasChange(attrHierarchyGroupID) {
 		input := &connect.UpdateUserHierarchyInput{
 			InstanceId: aws.String(instanceID),
 			UserId:     aws.String(userID),
 		}
 
-		if v, ok := d.GetOk("hierarchy_group_id"); ok {
+		if v, ok := d.GetOk(attrHierarchyGroupID); ok {
 			input.HierarchyGroupId = aws.String(v.(string))
 		}
 
@@ -306,10 +306,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	// updates to routing_profile_id
-	if d.HasChange("routing_profile_id") {
+	if d.HasChange(attrRoutingProfileID) {
 		input := &connect.UpdateUserRoutingProfileInput{
 			InstanceId:       aws.String(instanceID),
-			RoutingProfileId: aws.String(d.Get("routing_profile_id").(string)),
+			RoutingProfileId: aws.String(d.Get(attrRoutingProfileID).(string)),
 			UserId:           aws.String(userID),
 		}
 

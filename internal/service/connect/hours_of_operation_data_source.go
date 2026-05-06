@@ -48,11 +48,11 @@ func dataSourceHoursOfOperation() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"hours": {
+									attrHours: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"minutes": {
+									attrMinutes: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -64,11 +64,11 @@ func dataSourceHoursOfOperation() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"hours": {
+									attrHours: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"minutes": {
+									attrMinutes: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -82,11 +82,11 @@ func dataSourceHoursOfOperation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hours_of_operation_id": {
+			attrHoursOfOperationID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"hours_of_operation_id", names.AttrName},
+				ExactlyOneOf: []string{attrHoursOfOperationID, names.AttrName},
 			},
 			names.AttrInstanceID: {
 				Type:     schema.TypeString,
@@ -96,7 +96,7 @@ func dataSourceHoursOfOperation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "hours_of_operation_id"},
+				ExactlyOneOf: []string{names.AttrName, attrHoursOfOperationID},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"time_zone": {
@@ -116,7 +116,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		InstanceId: aws.String(instanceID),
 	}
 
-	if v, ok := d.GetOk("hours_of_operation_id"); ok {
+	if v, ok := d.GetOk(attrHoursOfOperationID); ok {
 		input.HoursOfOperationId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
@@ -143,7 +143,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "setting config: %s", err)
 	}
 	d.Set(names.AttrDescription, hoursOfOperation.Description)
-	d.Set("hours_of_operation_id", hoursOfOperationID)
+	d.Set(attrHoursOfOperationID, hoursOfOperationID)
 	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrName, hoursOfOperation.Name)
 	d.Set("time_zone", hoursOfOperation.TimeZone)

@@ -45,7 +45,7 @@ func resourceUserHierarchyGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"hierarchy_group_id": {
+				attrHierarchyGroupID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -162,7 +162,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set(names.AttrARN, hierarchyGroup.Arn)
-	d.Set("hierarchy_group_id", hierarchyGroup.Id)
+	d.Set(attrHierarchyGroupID, hierarchyGroup.Id)
 	if err := d.Set("hierarchy_path", flattenHierarchyPath(hierarchyGroup.HierarchyPath)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting hierarchy_path: %s", err)
 	}

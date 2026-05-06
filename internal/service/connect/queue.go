@@ -54,7 +54,7 @@ func resourceQueue() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"hours_of_operation_id": {
+			attrHoursOfOperationID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -96,7 +96,7 @@ func resourceQueue() *schema.Resource {
 					},
 				},
 			},
-			"queue_id": {
+			attrQueueID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +135,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("hours_of_operation_id"); ok {
+	if v, ok := d.GetOk(attrHoursOfOperationID); ok {
 		input.HoursOfOperationId = aws.String(v.(string))
 	}
 
@@ -186,14 +186,14 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.Set(names.AttrARN, queue.QueueArn)
 	d.Set(names.AttrDescription, queue.Description)
-	d.Set("hours_of_operation_id", queue.HoursOfOperationId)
+	d.Set(attrHoursOfOperationID, queue.HoursOfOperationId)
 	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("max_contacts", queue.MaxContacts)
 	d.Set(names.AttrName, queue.Name)
 	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(queue.OutboundCallerConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting outbound_caller_config: %s", err)
 	}
-	d.Set("queue_id", queue.QueueId)
+	d.Set(attrQueueID, queue.QueueId)
 	d.Set(names.AttrStatus, queue.Status)
 
 	quickConnects, err := findQueueQuickConnectSummariesByTwoPartKey(ctx, conn, instanceID, queueID)
@@ -229,9 +229,9 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// AssociateQueueQuickConnectsWithContext: Associates a set of quick connects with a queue. There is also DisassociateQueueQuickConnectsWithContext
 
 	// updates to hours_of_operation_id
-	if d.HasChange("hours_of_operation_id") {
+	if d.HasChange(attrHoursOfOperationID) {
 		input := &connect.UpdateQueueHoursOfOperationInput{
-			HoursOfOperationId: aws.String(d.Get("hours_of_operation_id").(string)),
+			HoursOfOperationId: aws.String(d.Get(attrHoursOfOperationID).(string)),
 			InstanceId:         aws.String(instanceID),
 			QueueId:            aws.String(queueID),
 		}

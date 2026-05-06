@@ -39,7 +39,7 @@ func dataSourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hours_of_operation_id": {
+			attrHoursOfOperationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +56,7 @@ func dataSourceQueue() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "queue_id"},
+				ExactlyOneOf: []string{names.AttrName, attrQueueID},
 			},
 			"outbound_caller_config": {
 				Type:     schema.TypeList,
@@ -78,11 +78,11 @@ func dataSourceQueue() *schema.Resource {
 					},
 				},
 			},
-			"queue_id": {
+			attrQueueID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"queue_id", names.AttrName},
+				ExactlyOneOf: []string{attrQueueID, names.AttrName},
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -102,7 +102,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		InstanceId: aws.String(instanceID),
 	}
 
-	if v, ok := d.GetOk("queue_id"); ok {
+	if v, ok := d.GetOk(attrQueueID); ok {
 		input.QueueId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
@@ -126,13 +126,13 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.SetId(id)
 	d.Set(names.AttrARN, queue.QueueArn)
 	d.Set(names.AttrDescription, queue.Description)
-	d.Set("hours_of_operation_id", queue.HoursOfOperationId)
+	d.Set(attrHoursOfOperationID, queue.HoursOfOperationId)
 	d.Set("max_contacts", queue.MaxContacts)
 	d.Set(names.AttrName, queue.Name)
 	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(queue.OutboundCallerConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting outbound_caller_config: %s", err)
 	}
-	d.Set("queue_id", queueID)
+	d.Set(attrQueueID, queueID)
 	d.Set(names.AttrStatus, queue.Status)
 
 	setTagsOut(ctx, queue.Tags)

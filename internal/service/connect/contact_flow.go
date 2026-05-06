@@ -50,7 +50,7 @@ func resourceContactFlow() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"contact_flow_id": {
+			attrContactFlowID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -169,7 +169,7 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	d.Set(names.AttrARN, contactFlow.Arn)
-	d.Set("contact_flow_id", contactFlow.Id)
+	d.Set(attrContactFlowID, contactFlow.Id)
 	d.Set(names.AttrContent, contactFlow.Content)
 	d.Set(names.AttrDescription, contactFlow.Description)
 	d.Set(names.AttrInstanceID, instanceID)
