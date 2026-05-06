@@ -28,7 +28,7 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 		if vCertificate, ok := mTls[names.AttrCertificate].([]any); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 			mCertificate := vCertificate[0].(map[string]any)
 
-			if vFile, ok := mCertificate["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+			if vFile, ok := mCertificate[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 				certificate := &awstypes.ClientTlsCertificateMemberFile{}
 
 				file := awstypes.ListenerTlsFileCertificate{}
@@ -46,14 +46,14 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 				tls.Certificate = certificate
 			}
 
-			if vSds, ok := mCertificate["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
+			if vSds, ok := mCertificate[attrSds].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 				certificate := &awstypes.ClientTlsCertificateMemberSds{}
 
 				sds := awstypes.ListenerTlsSdsCertificate{}
 
 				mSds := vSds[0].(map[string]any)
 
-				if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+				if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 					sds.SecretName = aws.String(vSecretName)
 				}
 
@@ -80,12 +80,12 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 
 				mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]any)
 
-				if vMatch, ok := mSubjectAlternativeNames["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				if vMatch, ok := mSubjectAlternativeNames[attrMatch].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 					match := &awstypes.SubjectAlternativeNameMatchers{}
 
 					mMatch := vMatch[0].(map[string]any)
 
-					if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+					if vExact, ok := mMatch[attrExact].(*schema.Set); ok && vExact.Len() > 0 {
 						match.Exact = flex.ExpandStringValueSet(vExact)
 					}
 
@@ -113,7 +113,7 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 					validation.Trust = trust
 				}
 
-				if vFile, ok := mTrust["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+				if vFile, ok := mTrust[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 					trust := &awstypes.TlsValidationContextTrustMemberFile{}
 
 					file := awstypes.TlsValidationContextFileTrust{}
@@ -128,14 +128,14 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 					validation.Trust = trust
 				}
 
-				if vSds, ok := mTrust["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
+				if vSds, ok := mTrust[attrSds].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 					trust := &awstypes.TlsValidationContextTrustMemberSds{}
 
 					sds := awstypes.TlsValidationContextSdsTrust{}
 
 					mSds := vSds[0].(map[string]any)
 
-					if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+					if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 						sds.SecretName = aws.String(vSecretName)
 					}
 
@@ -184,7 +184,7 @@ func expandGRPCRoute(vGrpcRoute []any) *awstypes.GrpcRoute {
 	if vGrpcRouteAction, ok := mGrpcRoute[names.AttrAction].([]any); ok && len(vGrpcRouteAction) > 0 && vGrpcRouteAction[0] != nil {
 		mGrpcRouteAction := vGrpcRouteAction[0].(map[string]any)
 
-		if vWeightedTargets, ok := mGrpcRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+		if vWeightedTargets, ok := mGrpcRouteAction[attrWeightedTarget].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
 			weightedTargets := []awstypes.WeightedTarget{}
 
 			for _, vWeightedTarget := range vWeightedTargets.List() {
@@ -195,7 +195,7 @@ func expandGRPCRoute(vGrpcRoute []any) *awstypes.GrpcRoute {
 				if vPort, ok := mWeightedTarget[names.AttrPort].(int); ok && vPort > 0 {
 					weightedTarget.Port = aws.Int32(int32(vPort))
 				}
-				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+				if vVirtualNode, ok := mWeightedTarget[attrVirtualNode].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
 				if vWeight, ok := mWeightedTarget[names.AttrWeight].(int); ok {
@@ -211,7 +211,7 @@ func expandGRPCRoute(vGrpcRoute []any) *awstypes.GrpcRoute {
 		}
 	}
 
-	if vGrpcRouteMatch, ok := mGrpcRoute["match"].([]any); ok {
+	if vGrpcRouteMatch, ok := mGrpcRoute[attrMatch].([]any); ok {
 		grpcRouteMatch := &awstypes.GrpcRouteMatch{}
 
 		// Empty match is allowed.
@@ -238,23 +238,23 @@ func expandGRPCRoute(vGrpcRoute []any) *awstypes.GrpcRoute {
 
 					mGrpcRouteMetadata := vGrpcRouteMetadata.(map[string]any)
 
-					if vInvert, ok := mGrpcRouteMetadata["invert"].(bool); ok {
+					if vInvert, ok := mGrpcRouteMetadata[attrInvert].(bool); ok {
 						grpcRouteMetadata.Invert = aws.Bool(vInvert)
 					}
 					if vName, ok := mGrpcRouteMetadata[names.AttrName].(string); ok && vName != "" {
 						grpcRouteMetadata.Name = aws.String(vName)
 					}
 
-					if vMatch, ok := mGrpcRouteMetadata["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
+					if vMatch, ok := mGrpcRouteMetadata[attrMatch].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 						mMatch := vMatch[0].(map[string]any)
 
-						if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+						if vExact, ok := mMatch[attrExact].(string); ok && vExact != "" {
 							grpcRouteMetadata.Match = &awstypes.GrpcRouteMetadataMatchMethodMemberExact{Value: vExact}
 						}
 						if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 							grpcRouteMetadata.Match = &awstypes.GrpcRouteMetadataMatchMethodMemberPrefix{Value: vPrefix}
 						}
-						if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+						if vRegex, ok := mMatch[attrRegex].(string); ok && vRegex != "" {
 							grpcRouteMetadata.Match = &awstypes.GrpcRouteMetadataMatchMethodMemberRegex{Value: vRegex}
 						}
 						if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
@@ -266,10 +266,10 @@ func expandGRPCRoute(vGrpcRoute []any) *awstypes.GrpcRoute {
 
 							mRange := vRange[0].(map[string]any)
 
-							if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+							if vEnd, ok := mRange[attrEnd].(int); ok && vEnd > 0 {
 								memberRange.Value.End = aws.Int64(int64(vEnd))
 							}
-							if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+							if vStart, ok := mRange[attrStart].(int); ok && vStart > 0 {
 								memberRange.Value.Start = aws.Int64(int64(vStart))
 							}
 
@@ -331,11 +331,11 @@ func expandGRPCTimeout(vGrpcTimeout []any) *awstypes.GrpcTimeout {
 
 	mGrpcTimeout := vGrpcTimeout[0].(map[string]any)
 
-	if vIdleTimeout, ok := mGrpcTimeout["idle"].([]any); ok {
+	if vIdleTimeout, ok := mGrpcTimeout[attrIdle].([]any); ok {
 		grpcTimeout.Idle = expandDuration(vIdleTimeout)
 	}
 
-	if vPerRequestTimeout, ok := mGrpcTimeout["per_request"].([]any); ok {
+	if vPerRequestTimeout, ok := mGrpcTimeout[attrPerRequest].([]any); ok {
 		grpcTimeout.PerRequest = expandDuration(vPerRequestTimeout)
 	}
 
@@ -354,7 +354,7 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 	if vHttpRouteAction, ok := mHttpRoute[names.AttrAction].([]any); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
 		mHttpRouteAction := vHttpRouteAction[0].(map[string]any)
 
-		if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+		if vWeightedTargets, ok := mHttpRouteAction[attrWeightedTarget].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
 			weightedTargets := []awstypes.WeightedTarget{}
 
 			for _, vWeightedTarget := range vWeightedTargets.List() {
@@ -365,7 +365,7 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 				if vPort, ok := mWeightedTarget[names.AttrPort].(int); ok && vPort > 0 {
 					weightedTarget.Port = aws.Int32(int32(vPort))
 				}
-				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+				if vVirtualNode, ok := mWeightedTarget[attrVirtualNode].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
 				if vWeight, ok := mWeightedTarget[names.AttrWeight].(int); ok {
@@ -381,7 +381,7 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 		}
 	}
 
-	if vHttpRouteMatch, ok := mHttpRoute["match"].([]any); ok && len(vHttpRouteMatch) > 0 && vHttpRouteMatch[0] != nil {
+	if vHttpRouteMatch, ok := mHttpRoute[attrMatch].([]any); ok && len(vHttpRouteMatch) > 0 && vHttpRouteMatch[0] != nil {
 		httpRouteMatch := &awstypes.HttpRouteMatch{}
 
 		mHttpRouteMatch := vHttpRouteMatch[0].(map[string]any)
@@ -407,23 +407,23 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 
 				mHttpRouteHeader := vHttpRouteHeader.(map[string]any)
 
-				if vInvert, ok := mHttpRouteHeader["invert"].(bool); ok {
+				if vInvert, ok := mHttpRouteHeader[attrInvert].(bool); ok {
 					httpRouteHeader.Invert = aws.Bool(vInvert)
 				}
 				if vName, ok := mHttpRouteHeader[names.AttrName].(string); ok && vName != "" {
 					httpRouteHeader.Name = aws.String(vName)
 				}
 
-				if vMatch, ok := mHttpRouteHeader["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				if vMatch, ok := mHttpRouteHeader[attrMatch].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 					mMatch := vMatch[0].(map[string]any)
 
-					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+					if vExact, ok := mMatch[attrExact].(string); ok && vExact != "" {
 						httpRouteHeader.Match = &awstypes.HeaderMatchMethodMemberExact{Value: vExact}
 					}
 					if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 						httpRouteHeader.Match = &awstypes.HeaderMatchMethodMemberPrefix{Value: vPrefix}
 					}
-					if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+					if vRegex, ok := mMatch[attrRegex].(string); ok && vRegex != "" {
 						httpRouteHeader.Match = &awstypes.HeaderMatchMethodMemberRegex{Value: vRegex}
 					}
 					if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
@@ -435,10 +435,10 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 
 						mRange := vRange[0].(map[string]any)
 
-						if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+						if vEnd, ok := mRange[attrEnd].(int); ok && vEnd > 0 {
 							memberRange.Value.End = aws.Int64(int64(vEnd))
 						}
-						if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+						if vStart, ok := mRange[attrStart].(int); ok && vStart > 0 {
 							memberRange.Value.Start = aws.Int64(int64(vStart))
 						}
 
@@ -457,10 +457,10 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 
 			mHttpRoutePath := vHttpRoutePath[0].(map[string]any)
 
-			if vExact, ok := mHttpRoutePath["exact"].(string); ok && vExact != "" {
+			if vExact, ok := mHttpRoutePath[attrExact].(string); ok && vExact != "" {
 				httpRoutePath.Exact = aws.String(vExact)
 			}
-			if vRegex, ok := mHttpRoutePath["regex"].(string); ok && vRegex != "" {
+			if vRegex, ok := mHttpRoutePath[attrRegex].(string); ok && vRegex != "" {
 				httpRoutePath.Regex = aws.String(vRegex)
 			}
 
@@ -479,12 +479,12 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 					httpRouteQueryParameter.Name = aws.String(vName)
 				}
 
-				if vMatch, ok := mHttpRouteQueryParameter["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				if vMatch, ok := mHttpRouteQueryParameter[attrMatch].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 					httpRouteQueryParameter.Match = &awstypes.QueryParameterMatch{}
 
 					mMatch := vMatch[0].(map[string]any)
 
-					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+					if vExact, ok := mMatch[attrExact].(string); ok && vExact != "" {
 						httpRouteQueryParameter.Match.Exact = aws.String(vExact)
 					}
 				}
@@ -538,11 +538,11 @@ func expandHTTPTimeout(vHttpTimeout []any) *awstypes.HttpTimeout {
 
 	mHttpTimeout := vHttpTimeout[0].(map[string]any)
 
-	if vIdleTimeout, ok := mHttpTimeout["idle"].([]any); ok {
+	if vIdleTimeout, ok := mHttpTimeout[attrIdle].([]any); ok {
 		httpTimeout.Idle = expandDuration(vIdleTimeout)
 	}
 
-	if vPerRequestTimeout, ok := mHttpTimeout["per_request"].([]any); ok {
+	if vPerRequestTimeout, ok := mHttpTimeout[attrPerRequest].([]any); ok {
 		httpTimeout.PerRequest = expandDuration(vPerRequestTimeout)
 	}
 
@@ -625,7 +625,7 @@ func expandTCPRoute(vTcpRoute []any) *awstypes.TcpRoute {
 	if vTcpRouteAction, ok := mTcpRoute[names.AttrAction].([]any); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
 		mTcpRouteAction := vTcpRouteAction[0].(map[string]any)
 
-		if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+		if vWeightedTargets, ok := mTcpRouteAction[attrWeightedTarget].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
 			weightedTargets := []awstypes.WeightedTarget{}
 
 			for _, vWeightedTarget := range vWeightedTargets.List() {
@@ -636,7 +636,7 @@ func expandTCPRoute(vTcpRoute []any) *awstypes.TcpRoute {
 				if vPort, ok := mWeightedTarget[names.AttrPort].(int); ok && vPort > 0 {
 					weightedTarget.Port = aws.Int32(int32(vPort))
 				}
-				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+				if vVirtualNode, ok := mWeightedTarget[attrVirtualNode].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
 				if vWeight, ok := mWeightedTarget[names.AttrWeight].(int); ok {
@@ -652,7 +652,7 @@ func expandTCPRoute(vTcpRoute []any) *awstypes.TcpRoute {
 		}
 	}
 
-	if vTcpRouteMatch, ok := mTcpRoute["match"].([]any); ok && len(vTcpRouteMatch) > 0 && vTcpRouteMatch[0] != nil {
+	if vTcpRouteMatch, ok := mTcpRoute[attrMatch].([]any); ok && len(vTcpRouteMatch) > 0 && vTcpRouteMatch[0] != nil {
 		tcpRouteMatch := &awstypes.TcpRouteMatch{}
 
 		mTcpRouteMatch := vTcpRouteMatch[0].(map[string]any)
@@ -680,7 +680,7 @@ func expandTCPTimeout(vTcpTimeout []any) *awstypes.TcpTimeout {
 
 	mTcpTimeout := vTcpTimeout[0].(map[string]any)
 
-	if vIdleTimeout, ok := mTcpTimeout["idle"].([]any); ok {
+	if vIdleTimeout, ok := mTcpTimeout[attrIdle].([]any); ok {
 		tcpTimeout.Idle = expandDuration(vIdleTimeout)
 	}
 
@@ -712,7 +712,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 					virtualService.VirtualServiceName = aws.String(vVirtualServiceName)
 				}
 
-				if vClientPolicy, ok := mVirtualService["client_policy"].([]any); ok {
+				if vClientPolicy, ok := mVirtualService[attrClientPolicy].([]any); ok {
 					virtualService.ClientPolicy = expandClientPolicy(vClientPolicy)
 				}
 
@@ -729,7 +729,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 		mBackendDefaults := vBackendDefaults[0].(map[string]any)
 
-		if vClientPolicy, ok := mBackendDefaults["client_policy"].([]any); ok {
+		if vClientPolicy, ok := mBackendDefaults[attrClientPolicy].([]any); ok {
 			backendDefaults.ClientPolicy = expandClientPolicy(vClientPolicy)
 		}
 
@@ -754,7 +754,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 					grpcConnectionPool := awstypes.VirtualNodeGrpcConnectionPool{}
 
-					if vMaxRequests, ok := mGrpcConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+					if vMaxRequests, ok := mGrpcConnectionPool[attrMaxRequests].(int); ok && vMaxRequests > 0 {
 						grpcConnectionPool.MaxRequests = aws.Int32(int32(vMaxRequests))
 					}
 
@@ -769,7 +769,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 					httpConnectionPool := awstypes.VirtualNodeHttpConnectionPool{}
 
-					if vMaxConnections, ok := mHttpConnectionPool["max_connections"].(int); ok && vMaxConnections > 0 {
+					if vMaxConnections, ok := mHttpConnectionPool[attrMaxConnections].(int); ok && vMaxConnections > 0 {
 						httpConnectionPool.MaxConnections = aws.Int32(int32(vMaxConnections))
 					}
 					if vMaxPendingRequests, ok := mHttpConnectionPool["max_pending_requests"].(int); ok && vMaxPendingRequests > 0 {
@@ -787,7 +787,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 					http2ConnectionPool := awstypes.VirtualNodeHttp2ConnectionPool{}
 
-					if vMaxRequests, ok := mHttp2ConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+					if vMaxRequests, ok := mHttp2ConnectionPool[attrMaxRequests].(int); ok && vMaxRequests > 0 {
 						http2ConnectionPool.MaxRequests = aws.Int32(int32(vMaxRequests))
 					}
 
@@ -802,7 +802,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 					tcpConnectionPool := awstypes.VirtualNodeTcpConnectionPool{}
 
-					if vMaxConnections, ok := mTcpConnectionPool["max_connections"].(int); ok && vMaxConnections > 0 {
+					if vMaxConnections, ok := mTcpConnectionPool[attrMaxConnections].(int); ok && vMaxConnections > 0 {
 						tcpConnectionPool.MaxConnections = aws.Int32(int32(vMaxConnections))
 					}
 
@@ -925,7 +925,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 						tls.Certificate = certificate
 					}
 
-					if vFile, ok := mCertificate["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+					if vFile, ok := mCertificate[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 						certificate := &awstypes.ListenerTlsCertificateMemberFile{}
 
 						file := awstypes.ListenerTlsFileCertificate{}
@@ -943,14 +943,14 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 						tls.Certificate = certificate
 					}
 
-					if vSds, ok := mCertificate["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
+					if vSds, ok := mCertificate[attrSds].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 						certificate := &awstypes.ListenerTlsCertificateMemberSds{}
 
 						sds := awstypes.ListenerTlsSdsCertificate{}
 
 						mSds := vSds[0].(map[string]any)
 
-						if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+						if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 							sds.SecretName = aws.String(vSecretName)
 						}
 
@@ -969,12 +969,12 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 						mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]any)
 
-						if vMatch, ok := mSubjectAlternativeNames["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
+						if vMatch, ok := mSubjectAlternativeNames[attrMatch].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 							match := &awstypes.SubjectAlternativeNameMatchers{}
 
 							mMatch := vMatch[0].(map[string]any)
 
-							if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+							if vExact, ok := mMatch[attrExact].(*schema.Set); ok && vExact.Len() > 0 {
 								match.Exact = flex.ExpandStringValueSet(vExact)
 							}
 
@@ -987,7 +987,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 					if vTrust, ok := mValidation["trust"].([]any); ok && len(vTrust) > 0 && vTrust[0] != nil {
 						mTrust := vTrust[0].(map[string]any)
 
-						if vFile, ok := mTrust["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+						if vFile, ok := mTrust[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 							trust := &awstypes.ListenerTlsValidationContextTrustMemberFile{}
 
 							file := awstypes.TlsValidationContextFileTrust{}
@@ -1002,14 +1002,14 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 							validation.Trust = trust
 						}
 
-						if vSds, ok := mTrust["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
+						if vSds, ok := mTrust[attrSds].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 							trust := &awstypes.ListenerTlsValidationContextTrustMemberSds{}
 
 							sds := awstypes.TlsValidationContextSdsTrust{}
 
 							mSds := vSds[0].(map[string]any)
 
-							if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+							if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 								sds.SecretName = aws.String(vSecretName)
 							}
 
@@ -1038,7 +1038,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 		if vAccessLog, ok := mLogging["access_log"].([]any); ok && len(vAccessLog) > 0 && vAccessLog[0] != nil {
 			mAccessLog := vAccessLog[0].(map[string]any)
 
-			if vFile, ok := mAccessLog["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+			if vFile, ok := mAccessLog[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 				accessLog := &awstypes.AccessLogMemberFile{}
 
 				file := awstypes.FileAccessLog{}
@@ -1192,7 +1192,7 @@ func expandVirtualServiceSpec(vSpec []any) *awstypes.VirtualServiceSpec {
 	if vProvider, ok := mSpec["provider"].([]any); ok && len(vProvider) > 0 && vProvider[0] != nil {
 		mProvider := vProvider[0].(map[string]any)
 
-		if vVirtualNode, ok := mProvider["virtual_node"].([]any); ok && len(vVirtualNode) > 0 && vVirtualNode[0] != nil {
+		if vVirtualNode, ok := mProvider[attrVirtualNode].([]any); ok && len(vVirtualNode) > 0 && vVirtualNode[0] != nil {
 			provider := &awstypes.VirtualServiceProviderMemberVirtualNode{}
 			mVirtualNode := vVirtualNode[0].(map[string]any)
 
@@ -1245,13 +1245,13 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []any {
 					names.AttrPrivateKey:       aws.ToString(v.Value.PrivateKey),
 				}
 
-				mCertificate["file"] = []any{mFile}
+				mCertificate[attrFile] = []any{mFile}
 			case *awstypes.ClientTlsCertificateMemberSds:
 				mSds := map[string]any{
-					"secret_name": aws.ToString(v.Value.SecretName),
+					attrSecretName: aws.ToString(v.Value.SecretName),
 				}
 
-				mCertificate["sds"] = []any{mSds}
+				mCertificate[attrSds] = []any{mSds}
 			}
 
 			mTls[names.AttrCertificate] = []any{mCertificate}
@@ -1265,10 +1265,10 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []any {
 
 				if match := subjectAlternativeNames.Match; match != nil {
 					mMatch := map[string]any{
-						"exact": match.Exact,
+						attrExact: match.Exact,
 					}
 
-					mSubjectAlternativeNames["match"] = []any{mMatch}
+					mSubjectAlternativeNames[attrMatch] = []any{mMatch}
 				}
 
 				mValidation["subject_alternative_names"] = []any{mSubjectAlternativeNames}
@@ -1289,13 +1289,13 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []any {
 						names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 					}
 
-					mTrust["file"] = []any{mFile}
+					mTrust[attrFile] = []any{mFile}
 				case *awstypes.TlsValidationContextTrustMemberSds:
 					mSds := map[string]any{
-						"secret_name": aws.ToString(v.Value.SecretName),
+						attrSecretName: aws.ToString(v.Value.SecretName),
 					}
 
-					mTrust["sds"] = []any{mSds}
+					mTrust[attrSds] = []any{mSds}
 				}
 
 				mValidation["trust"] = []any{mTrust}
@@ -1336,7 +1336,7 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []any {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]any{
-					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
+					attrVirtualNode:  aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
 				}
 
@@ -1349,7 +1349,7 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []any {
 
 			mGrpcRoute[names.AttrAction] = []any{
 				map[string]any{
-					"weighted_target": vWeightedTargets,
+					attrWeightedTarget: vWeightedTargets,
 				},
 			}
 		}
@@ -1360,7 +1360,7 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []any {
 
 		for _, grpcRouteMetadata := range grpcRouteMatch.Metadata {
 			mGrpcRouteMetadata := map[string]any{
-				"invert":       aws.ToBool(grpcRouteMetadata.Invert),
+				attrInvert:     aws.ToBool(grpcRouteMetadata.Invert),
 				names.AttrName: aws.ToString(grpcRouteMetadata.Name),
 			}
 
@@ -1369,29 +1369,29 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []any {
 
 				switch v := match.(type) {
 				case *awstypes.GrpcRouteMetadataMatchMethodMemberExact:
-					mMatch["exact"] = v.Value
+					mMatch[attrExact] = v.Value
 				case *awstypes.GrpcRouteMetadataMatchMethodMemberPrefix:
 					mMatch[names.AttrPrefix] = v.Value
 				case *awstypes.GrpcRouteMetadataMatchMethodMemberRegex:
-					mMatch["regex"] = v.Value
+					mMatch[attrRegex] = v.Value
 				case *awstypes.GrpcRouteMetadataMatchMethodMemberSuffix:
 					mMatch["suffix"] = v.Value
 				case *awstypes.GrpcRouteMetadataMatchMethodMemberRange:
 					mRange := map[string]any{
-						"end":   aws.ToInt64(v.Value.End),
-						"start": aws.ToInt64(v.Value.Start),
+						attrEnd:   aws.ToInt64(v.Value.End),
+						attrStart: aws.ToInt64(v.Value.Start),
 					}
 
 					mMatch["range"] = []any{mRange}
 				}
 
-				mGrpcRouteMetadata["match"] = []any{mMatch}
+				mGrpcRouteMetadata[attrMatch] = []any{mMatch}
 			}
 
 			vGrpcRouteMetadatas = append(vGrpcRouteMetadatas, mGrpcRouteMetadata)
 		}
 
-		mGrpcRoute["match"] = []any{
+		mGrpcRoute[attrMatch] = []any{
 			map[string]any{
 				"metadata":            vGrpcRouteMetadatas,
 				"method_name":         aws.ToString(grpcRouteMatch.MethodName),
@@ -1424,8 +1424,8 @@ func flattenGRPCTimeout(grpcTimeout *awstypes.GrpcTimeout) []any {
 	}
 
 	mGrpcTimeout := map[string]any{
-		"idle":        flattenDuration(grpcTimeout.Idle),
-		"per_request": flattenDuration(grpcTimeout.PerRequest),
+		attrIdle:       flattenDuration(grpcTimeout.Idle),
+		attrPerRequest: flattenDuration(grpcTimeout.PerRequest),
 	}
 
 	return []any{mGrpcTimeout}
@@ -1444,7 +1444,7 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]any{
-					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
+					attrVirtualNode:  aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
 				}
 
@@ -1457,7 +1457,7 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 			mHttpRoute[names.AttrAction] = []any{
 				map[string]any{
-					"weighted_target": vWeightedTargets,
+					attrWeightedTarget: vWeightedTargets,
 				},
 			}
 		}
@@ -1468,7 +1468,7 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 		for _, httpRouteHeader := range httpRouteMatch.Headers {
 			mHttpRouteHeader := map[string]any{
-				"invert":       aws.ToBool(httpRouteHeader.Invert),
+				attrInvert:     aws.ToBool(httpRouteHeader.Invert),
 				names.AttrName: aws.ToString(httpRouteHeader.Name),
 			}
 
@@ -1477,23 +1477,23 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 				switch v := match.(type) {
 				case *awstypes.HeaderMatchMethodMemberExact:
-					mMatch["exact"] = v.Value
+					mMatch[attrExact] = v.Value
 				case *awstypes.HeaderMatchMethodMemberPrefix:
 					mMatch[names.AttrPrefix] = v.Value
 				case *awstypes.HeaderMatchMethodMemberRegex:
-					mMatch["regex"] = v.Value
+					mMatch[attrRegex] = v.Value
 				case *awstypes.HeaderMatchMethodMemberSuffix:
 					mMatch["suffix"] = v.Value
 				case *awstypes.HeaderMatchMethodMemberRange:
 					mRange := map[string]any{
-						"end":   aws.ToInt64(v.Value.End),
-						"start": aws.ToInt64(v.Value.Start),
+						attrEnd:   aws.ToInt64(v.Value.End),
+						attrStart: aws.ToInt64(v.Value.Start),
 					}
 
 					mMatch["range"] = []any{mRange}
 				}
 
-				mHttpRouteHeader["match"] = []any{mMatch}
+				mHttpRouteHeader[attrMatch] = []any{mMatch}
 			}
 
 			vHttpRouteHeaders = append(vHttpRouteHeaders, mHttpRouteHeader)
@@ -1503,8 +1503,8 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 		if httpRoutePath := httpRouteMatch.Path; httpRoutePath != nil {
 			mHttpRoutePath := map[string]any{
-				"exact": aws.ToString(httpRoutePath.Exact),
-				"regex": aws.ToString(httpRoutePath.Regex),
+				attrExact: aws.ToString(httpRoutePath.Exact),
+				attrRegex: aws.ToString(httpRoutePath.Regex),
 			}
 
 			vHttpRoutePath = []any{mHttpRoutePath}
@@ -1519,16 +1519,16 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 			if match := httpRouteQueryParameter.Match; match != nil {
 				mMatch := map[string]any{
-					"exact": aws.ToString(match.Exact),
+					attrExact: aws.ToString(match.Exact),
 				}
 
-				mHttpRouteQueryParameter["match"] = []any{mMatch}
+				mHttpRouteQueryParameter[attrMatch] = []any{mMatch}
 			}
 
 			vHttpRouteQueryParameters = append(vHttpRouteQueryParameters, mHttpRouteQueryParameter)
 		}
 
-		mHttpRoute["match"] = []any{
+		mHttpRoute[attrMatch] = []any{
 			map[string]any{
 				names.AttrHeader:  vHttpRouteHeaders,
 				"method":          httpRouteMatch.Method,
@@ -1563,8 +1563,8 @@ func flattenHTTPTimeout(httpTimeout *awstypes.HttpTimeout) []any {
 	}
 
 	mHttpTimeout := map[string]any{
-		"idle":        flattenDuration(httpTimeout.Idle),
-		"per_request": flattenDuration(httpTimeout.PerRequest),
+		attrIdle:       flattenDuration(httpTimeout.Idle),
+		attrPerRequest: flattenDuration(httpTimeout.PerRequest),
 	}
 
 	return []any{mHttpTimeout}
@@ -1625,7 +1625,7 @@ func flattenTCPRoute(tcpRoute *awstypes.TcpRoute) []any {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]any{
-					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
+					attrVirtualNode:  aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
 				}
 
@@ -1638,14 +1638,14 @@ func flattenTCPRoute(tcpRoute *awstypes.TcpRoute) []any {
 
 			mTcpRoute[names.AttrAction] = []any{
 				map[string]any{
-					"weighted_target": vWeightedTargets,
+					attrWeightedTarget: vWeightedTargets,
 				},
 			}
 		}
 	}
 
 	if tcpRouteMatch := tcpRoute.Match; tcpRouteMatch != nil {
-		mTcpRoute["match"] = []any{
+		mTcpRoute[attrMatch] = []any{
 			map[string]any{
 				names.AttrPort: aws.ToInt32(tcpRouteMatch.Port),
 			},
@@ -1663,7 +1663,7 @@ func flattenTCPTimeout(tcpTimeout *awstypes.TcpTimeout) []any {
 	}
 
 	mTcpTimeout := map[string]any{
-		"idle": flattenDuration(tcpTimeout.Idle),
+		attrIdle: flattenDuration(tcpTimeout.Idle),
 	}
 
 	return []any{mTcpTimeout}
@@ -1685,7 +1685,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 			switch v := backend.(type) {
 			case *awstypes.BackendMemberVirtualService:
 				mVirtualService := map[string]any{
-					"client_policy":        flattenClientPolicy(v.Value.ClientPolicy),
+					attrClientPolicy:       flattenClientPolicy(v.Value.ClientPolicy),
 					"virtual_service_name": aws.ToString(v.Value.VirtualServiceName),
 				}
 
@@ -1700,7 +1700,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 
 	if backendDefaults := spec.BackendDefaults; backendDefaults != nil {
 		mBackendDefaults := map[string]any{
-			"client_policy": flattenClientPolicy(backendDefaults.ClientPolicy),
+			attrClientPolicy: flattenClientPolicy(backendDefaults.ClientPolicy),
 		}
 
 		mSpec["backend_defaults"] = []any{mBackendDefaults}
@@ -1718,23 +1718,23 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 				switch v := connectionPool.(type) {
 				case *awstypes.VirtualNodeConnectionPoolMemberGrpc:
 					mGrpcConnectionPool := map[string]any{
-						"max_requests": aws.ToInt32(v.Value.MaxRequests),
+						attrMaxRequests: aws.ToInt32(v.Value.MaxRequests),
 					}
 					mConnectionPool["grpc"] = []any{mGrpcConnectionPool}
 				case *awstypes.VirtualNodeConnectionPoolMemberHttp:
 					mHttpConnectionPool := map[string]any{
-						"max_connections":      aws.ToInt32(v.Value.MaxConnections),
+						attrMaxConnections:     aws.ToInt32(v.Value.MaxConnections),
 						"max_pending_requests": aws.ToInt32(v.Value.MaxPendingRequests),
 					}
 					mConnectionPool["http"] = []any{mHttpConnectionPool}
 				case *awstypes.VirtualNodeConnectionPoolMemberHttp2:
 					mHttp2ConnectionPool := map[string]any{
-						"max_requests": aws.ToInt32(v.Value.MaxRequests),
+						attrMaxRequests: aws.ToInt32(v.Value.MaxRequests),
 					}
 					mConnectionPool["http2"] = []any{mHttp2ConnectionPool}
 				case *awstypes.VirtualNodeConnectionPoolMemberTcp:
 					mTcpConnectionPool := map[string]any{
-						"max_connections": aws.ToInt32(v.Value.MaxConnections),
+						attrMaxConnections: aws.ToInt32(v.Value.MaxConnections),
 					}
 					mConnectionPool["tcp"] = []any{mTcpConnectionPool}
 				}
@@ -1811,13 +1811,13 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 							names.AttrPrivateKey:       aws.ToString(v.Value.PrivateKey),
 						}
 
-						mCertificate["file"] = []any{mFile}
+						mCertificate[attrFile] = []any{mFile}
 					case *awstypes.ListenerTlsCertificateMemberSds:
 						mSds := map[string]any{
-							"secret_name": aws.ToString(v.Value.SecretName),
+							attrSecretName: aws.ToString(v.Value.SecretName),
 						}
 
-						mCertificate["sds"] = []any{mSds}
+						mCertificate[attrSds] = []any{mSds}
 					}
 
 					mTls[names.AttrCertificate] = []any{mCertificate}
@@ -1831,10 +1831,10 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 
 						if match := subjectAlternativeNames.Match; match != nil {
 							mMatch := map[string]any{
-								"exact": match.Exact,
+								attrExact: match.Exact,
 							}
 
-							mSubjectAlternativeNames["match"] = []any{mMatch}
+							mSubjectAlternativeNames[attrMatch] = []any{mMatch}
 						}
 
 						mValidation["subject_alternative_names"] = []any{mSubjectAlternativeNames}
@@ -1849,13 +1849,13 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 								names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 							}
 
-							mTrust["file"] = []any{mFile}
+							mTrust[attrFile] = []any{mFile}
 						case *awstypes.ListenerTlsValidationContextTrustMemberSds:
 							mSds := map[string]any{
-								"secret_name": aws.ToString(v.Value.SecretName),
+								attrSecretName: aws.ToString(v.Value.SecretName),
 							}
 
-							mTrust["sds"] = []any{mSds}
+							mTrust[attrSds] = []any{mSds}
 						}
 
 						mValidation["trust"] = []any{mTrust}
@@ -1907,7 +1907,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 
 				mFile[names.AttrPath] = aws.ToString(v.Value.Path)
 
-				mAccessLog["file"] = []any{mFile}
+				mAccessLog[attrFile] = []any{mFile}
 			}
 
 			mLogging["access_log"] = []any{mAccessLog}
@@ -1986,7 +1986,7 @@ func flattenVirtualServiceSpec(spec *awstypes.VirtualServiceSpec) []any {
 
 		switch v := provider.(type) {
 		case *awstypes.VirtualServiceProviderMemberVirtualNode:
-			mProvider["virtual_node"] = []any{
+			mProvider[attrVirtualNode] = []any{
 				map[string]any{
 					"virtual_node_name": aws.ToString(v.Value.VirtualNodeName),
 				},

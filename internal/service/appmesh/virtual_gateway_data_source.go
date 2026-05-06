@@ -41,11 +41,11 @@ func dataSourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -57,7 +57,7 @@ func dataSourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualGatewaySpecSchema()),
+				attrSpec:       sdkv2.ComputedOnlyFromSchema(resourceVirtualGatewaySpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
@@ -69,7 +69,7 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	virtualGatewayName := d.Get(names.AttrName).(string)
-	virtualGateway, err := findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualGatewayName)
+	virtualGateway, err := findVirtualGatewayByThreePartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), virtualGatewayName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Gateway (%s): %s", virtualGatewayName, err)
@@ -80,12 +80,12 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", virtualGateway.MeshName)
+	d.Set(attrMeshName, virtualGateway.MeshName)
 	meshOwner := aws.ToString(virtualGateway.Metadata.MeshOwner)
-	d.Set("mesh_owner", meshOwner)
+	d.Set(attrMeshOwner, meshOwner)
 	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
 	d.Set(names.AttrResourceOwner, virtualGateway.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 

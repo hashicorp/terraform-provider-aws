@@ -60,13 +60,13 @@ func resourceRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -83,7 +83,7 @@ func resourceRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":            resourceRouteSpecSchema(),
+				attrSpec:          resourceRouteSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"virtual_router_name": {
@@ -114,7 +114,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"weighted_target": {
+								attrWeightedTarget: {
 									Type:     schema.TypeSet,
 									Required: true,
 									MinItems: 1,
@@ -127,7 +127,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 												Computed:     true,
 												ValidateFunc: validation.IsPortNumber,
 											},
-											"virtual_node": {
+											attrVirtualNode: {
 												Type:         schema.TypeString,
 												Required:     true,
 												ValidateFunc: validation.StringLenBetween(1, 255),
@@ -143,7 +143,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 							},
 						},
 					},
-					"match": {
+					attrMatch: {
 						Type:     schema.TypeList,
 						Required: true,
 						MinItems: 1,
@@ -157,19 +157,19 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 10,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"invert": {
+											attrInvert: {
 												Type:     schema.TypeBool,
 												Optional: true,
 												Default:  false,
 											},
-											"match": {
+											attrMatch: {
 												Type:     schema.TypeList,
 												Optional: true,
 												MinItems: 0,
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"exact": {
+														attrExact: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -186,18 +186,18 @@ func resourceRouteSpecSchema() *schema.Schema {
 															MaxItems: 1,
 															Elem: &schema.Resource{
 																Schema: map[string]*schema.Schema{
-																	"end": {
+																	attrEnd: {
 																		Type:     schema.TypeInt,
 																		Required: true,
 																	},
-																	"start": {
+																	attrStart: {
 																		Type:     schema.TypeInt,
 																		Required: true,
 																	},
 																},
 															},
 														},
-														"regex": {
+														attrRegex: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -230,12 +230,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"exact": {
+											attrExact: {
 												Type:         schema.TypeString,
 												Optional:     true,
 												ValidateFunc: validation.StringLenBetween(1, 255),
 											},
-											"regex": {
+											attrRegex: {
 												Type:         schema.TypeString,
 												Optional:     true,
 												ValidateFunc: validation.StringLenBetween(1, 255),
@@ -260,14 +260,14 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 10,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"match": {
+											attrMatch: {
 												Type:     schema.TypeList,
 												Optional: true,
 												MinItems: 0,
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"exact": {
+														attrExact: {
 															Type:     schema.TypeString,
 															Optional: true,
 														},
@@ -341,7 +341,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"idle": {
+								attrIdle: {
 									Type:     schema.TypeList,
 									Optional: true,
 									MinItems: 0,
@@ -360,7 +360,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 										},
 									},
 								},
-								"per_request": {
+								attrPerRequest: {
 									Type:     schema.TypeList,
 									Optional: true,
 									MinItems: 0,
@@ -409,7 +409,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"weighted_target": {
+										attrWeightedTarget: {
 											Type:     schema.TypeSet,
 											Required: true,
 											MinItems: 1,
@@ -422,7 +422,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														Computed:     true,
 														ValidateFunc: validation.IsPortNumber,
 													},
-													"virtual_node": {
+													attrVirtualNode: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
@@ -438,7 +438,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"match": {
+							attrMatch: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -452,19 +452,19 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 10,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"invert": {
+													attrInvert: {
 														Type:     schema.TypeBool,
 														Optional: true,
 														Default:  false,
 													},
-													"match": {
+													attrMatch: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"exact": {
+																attrExact: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
@@ -481,18 +481,18 @@ func resourceRouteSpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"end": {
+																			attrEnd: {
 																				Type:     schema.TypeInt,
 																				Required: true,
 																			},
-																			"start": {
+																			attrStart: {
 																				Type:     schema.TypeInt,
 																				Required: true,
 																			},
 																		},
 																	},
 																},
-																"regex": {
+																attrRegex: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
@@ -593,7 +593,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"idle": {
+										attrIdle: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 0,
@@ -612,7 +612,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 												},
 											},
 										},
-										"per_request": {
+										attrPerRequest: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 0,
@@ -667,7 +667,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"weighted_target": {
+										attrWeightedTarget: {
 											Type:     schema.TypeSet,
 											Required: true,
 											MinItems: 1,
@@ -680,7 +680,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														Computed:     true,
 														ValidateFunc: validation.IsPortNumber,
 													},
-													"virtual_node": {
+													attrVirtualNode: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
@@ -696,7 +696,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"match": {
+							attrMatch: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -718,7 +718,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"idle": {
+										attrIdle: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 0,
@@ -754,14 +754,14 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateRouteInput{
-		MeshName:          aws.String(d.Get("mesh_name").(string)),
+		MeshName:          aws.String(d.Get(attrMeshName).(string)),
 		RouteName:         aws.String(name),
-		Spec:              expandRouteSpec(d.Get("spec").([]any)),
+		Spec:              expandRouteSpec(d.Get(attrSpec).([]any)),
 		Tags:              getTagsIn(ctx),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
+	if v, ok := d.GetOk(attrMeshOwner); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
@@ -781,7 +781,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	route, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.RouteData, error) {
-		return findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), d.Get(names.AttrName).(string))
+		return findRouteByFourPartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), d.Get("virtual_router_name").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -797,11 +797,11 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrARN, route.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, route.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", route.MeshName)
-	d.Set("mesh_owner", route.Metadata.MeshOwner)
+	d.Set(attrMeshName, route.MeshName)
+	d.Set(attrMeshOwner, route.Metadata.MeshOwner)
 	d.Set(names.AttrName, route.RouteName)
 	d.Set(names.AttrResourceOwner, route.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenRouteSpec(route.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 	d.Set("virtual_router_name", route.VirtualRouterName)
@@ -813,15 +813,15 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	if d.HasChange("spec") {
+	if d.HasChange(attrSpec) {
 		input := &appmesh.UpdateRouteInput{
-			MeshName:          aws.String(d.Get("mesh_name").(string)),
+			MeshName:          aws.String(d.Get(attrMeshName).(string)),
 			RouteName:         aws.String(d.Get(names.AttrName).(string)),
-			Spec:              expandRouteSpec(d.Get("spec").([]any)),
+			Spec:              expandRouteSpec(d.Get(attrSpec).([]any)),
 			VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		}
 
-		if v, ok := d.GetOk("mesh_owner"); ok {
+		if v, ok := d.GetOk(attrMeshOwner); ok {
 			input.MeshOwner = aws.String(v.(string))
 		}
 
@@ -841,12 +841,12 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
 	input := &appmesh.DeleteRouteInput{
-		MeshName:          aws.String(d.Get("mesh_name").(string)),
+		MeshName:          aws.String(d.Get(attrMeshName).(string)),
 		RouteName:         aws.String(d.Get(names.AttrName).(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
+	if v, ok := d.GetOk(attrMeshOwner); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
@@ -882,7 +882,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.SetId(aws.ToString(route.Metadata.Uid))
-	d.Set("mesh_name", route.MeshName)
+	d.Set(attrMeshName, route.MeshName)
 	d.Set(names.AttrName, route.RouteName)
 	d.Set("virtual_router_name", route.VirtualRouterName)
 

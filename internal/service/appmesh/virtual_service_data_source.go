@@ -41,11 +41,11 @@ func dataSourceVirtualService() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -58,7 +58,7 @@ func dataSourceVirtualService() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualServiceSpecSchema()),
+				attrSpec:       sdkv2.ComputedOnlyFromSchema(resourceVirtualServiceSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
@@ -70,7 +70,7 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	virtualServiceName := d.Get(names.AttrName).(string)
-	vs, err := findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualServiceName)
+	vs, err := findVirtualServiceByThreePartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), virtualServiceName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", virtualServiceName, err)
@@ -81,12 +81,12 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, vs.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", vs.MeshName)
+	d.Set(attrMeshName, vs.MeshName)
 	meshOwner := aws.ToString(vs.Metadata.MeshOwner)
-	d.Set("mesh_owner", meshOwner)
+	d.Set(attrMeshOwner, meshOwner)
 	d.Set(names.AttrName, vs.VirtualServiceName)
 	d.Set(names.AttrResourceOwner, vs.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenVirtualServiceSpec(vs.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 

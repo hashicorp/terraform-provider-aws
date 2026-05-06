@@ -41,11 +41,11 @@ func dataSourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -58,7 +58,7 @@ func dataSourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualRouterSpecSchema()),
+				attrSpec:       sdkv2.ComputedOnlyFromSchema(resourceVirtualRouterSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
@@ -70,7 +70,7 @@ func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	virtualRouterName := d.Get(names.AttrName).(string)
-	vr, err := findVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualRouterName)
+	vr, err := findVirtualRouterByThreePartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), virtualRouterName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Router (%s): %s", virtualRouterName, err)
@@ -81,12 +81,12 @@ func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", vr.MeshName)
+	d.Set(attrMeshName, vr.MeshName)
 	meshOwner := aws.ToString(vr.Metadata.MeshOwner)
-	d.Set("mesh_owner", meshOwner)
+	d.Set(attrMeshOwner, meshOwner)
 	d.Set(names.AttrName, vr.VirtualRouterName)
 	d.Set(names.AttrResourceOwner, vr.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenVirtualRouterSpec(vr.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 

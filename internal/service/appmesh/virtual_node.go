@@ -63,13 +63,13 @@ func resourceVirtualNode() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -86,7 +86,7 @@ func resourceVirtualNode() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":            resourceVirtualNodeSpecSchema(),
+				attrSpec:          resourceVirtualNodeSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
@@ -117,7 +117,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"file": {
+											attrFile: {
 												Type:     schema.TypeList,
 												Optional: true,
 												MinItems: 0,
@@ -137,14 +137,14 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 													},
 												},
 											},
-											"sds": {
+											attrSds: {
 												Type:     schema.TypeList,
 												Optional: true,
 												MinItems: 0,
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"secret_name": {
+														attrSecretName: {
 															Type:     schema.TypeString,
 															Required: true,
 														},
@@ -178,14 +178,14 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"match": {
+														attrMatch: {
 															Type:     schema.TypeList,
 															Required: true,
 															MinItems: 1,
 															MaxItems: 1,
 															Elem: &schema.Resource{
 																Schema: map[string]*schema.Schema{
-																	"exact": {
+																	attrExact: {
 																		Type:     schema.TypeSet,
 																		Required: true,
 																		Elem:     &schema.Schema{Type: schema.TypeString},
@@ -218,7 +218,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																},
 															},
 														},
-														"file": {
+														attrFile: {
 															Type:     schema.TypeList,
 															Optional: true,
 															MinItems: 0,
@@ -233,14 +233,14 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																},
 															},
 														},
-														"sds": {
+														attrSds: {
 															Type:     schema.TypeList,
 															Optional: true,
 															MinItems: 0,
 															MaxItems: 1,
 															Elem: &schema.Resource{
 																Schema: map[string]*schema.Schema{
-																	"secret_name": {
+																	attrSecretName: {
 																		Type:         schema.TypeString,
 																		Required:     true,
 																		ValidateFunc: validation.StringLenBetween(1, 255),
@@ -281,7 +281,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"client_policy": clientPolicySchema(),
+										attrClientPolicy: clientPolicySchema(),
 										"virtual_service_name": {
 											Type:         schema.TypeString,
 											Required:     true,
@@ -300,7 +300,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"client_policy": clientPolicySchema(),
+							attrClientPolicy: clientPolicySchema(),
 						},
 					},
 				},
@@ -324,7 +324,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"max_requests": {
+													attrMaxRequests: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
@@ -338,7 +338,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MinItems: 0,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"max_connections": {
+													attrMaxConnections: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
@@ -357,7 +357,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MinItems: 0,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"max_requests": {
+													attrMaxRequests: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
@@ -371,7 +371,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MinItems: 0,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"max_connections": {
+													attrMaxConnections: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
@@ -519,7 +519,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"idle": {
+													attrIdle: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -538,7 +538,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"per_request": {
+													attrPerRequest: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -567,7 +567,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"idle": {
+													attrIdle: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -586,7 +586,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"per_request": {
+													attrPerRequest: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -615,7 +615,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"idle": {
+													attrIdle: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -634,7 +634,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"per_request": {
+													attrPerRequest: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -663,7 +663,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"idle": {
+													attrIdle: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -717,7 +717,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"file": {
+													attrFile: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -737,14 +737,14 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"sds": {
+													attrSds: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"secret_name": {
+																attrSecretName: {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
@@ -773,14 +773,14 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"match": {
+																attrMatch: {
 																	Type:     schema.TypeList,
 																	Required: true,
 																	MinItems: 1,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"exact": {
+																			attrExact: {
 																				Type:     schema.TypeSet,
 																				Required: true,
 																				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -798,7 +798,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"file": {
+																attrFile: {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	MinItems: 0,
@@ -813,14 +813,14 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																		},
 																	},
 																},
-																"sds": {
+																attrSds: {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	MinItems: 0,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"secret_name": {
+																			attrSecretName: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -854,7 +854,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"file": {
+										attrFile: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 0,
@@ -981,13 +981,13 @@ func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualNodeInput{
-		MeshName:        aws.String(d.Get("mesh_name").(string)),
-		Spec:            expandVirtualNodeSpec(d.Get("spec").([]any)),
+		MeshName:        aws.String(d.Get(attrMeshName).(string)),
+		Spec:            expandVirtualNodeSpec(d.Get(attrSpec).([]any)),
 		Tags:            getTagsIn(ctx),
 		VirtualNodeName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
+	if v, ok := d.GetOk(attrMeshOwner); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
@@ -1007,7 +1007,7 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	vn, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.VirtualNodeData, error) {
-		return findVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
+		return findVirtualNodeByThreePartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -1023,11 +1023,11 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrARN, vn.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, vn.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", vn.MeshName)
-	d.Set("mesh_owner", vn.Metadata.MeshOwner)
+	d.Set(attrMeshName, vn.MeshName)
+	d.Set(attrMeshOwner, vn.Metadata.MeshOwner)
 	d.Set(names.AttrName, vn.VirtualNodeName)
 	d.Set(names.AttrResourceOwner, vn.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenVirtualNodeSpec(vn.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenVirtualNodeSpec(vn.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
@@ -1038,14 +1038,14 @@ func resourceVirtualNodeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	if d.HasChange("spec") {
+	if d.HasChange(attrSpec) {
 		input := &appmesh.UpdateVirtualNodeInput{
-			MeshName:        aws.String(d.Get("mesh_name").(string)),
-			Spec:            expandVirtualNodeSpec(d.Get("spec").([]any)),
+			MeshName:        aws.String(d.Get(attrMeshName).(string)),
+			Spec:            expandVirtualNodeSpec(d.Get(attrSpec).([]any)),
 			VirtualNodeName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk("mesh_owner"); ok {
+		if v, ok := d.GetOk(attrMeshOwner); ok {
 			input.MeshOwner = aws.String(v.(string))
 		}
 
@@ -1065,11 +1065,11 @@ func resourceVirtualNodeDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Node: %s", d.Id())
 	input := &appmesh.DeleteVirtualNodeInput{
-		MeshName:        aws.String(d.Get("mesh_name").(string)),
+		MeshName:        aws.String(d.Get(attrMeshName).(string)),
 		VirtualNodeName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
+	if v, ok := d.GetOk(attrMeshOwner); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
@@ -1103,7 +1103,7 @@ func resourceVirtualNodeImport(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(aws.ToString(vn.Metadata.Uid))
-	d.Set("mesh_name", vn.MeshName)
+	d.Set(attrMeshName, vn.MeshName)
 	d.Set(names.AttrName, vn.VirtualNodeName)
 
 	return []*schema.ResourceData{d}, nil

@@ -60,13 +60,13 @@ func resourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -83,7 +83,7 @@ func resourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":            resourceVirtualGatewaySpecSchema(),
+				attrSpec:          resourceVirtualGatewaySpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
@@ -106,7 +106,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"client_policy": {
+							attrClientPolicy: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -127,7 +127,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"file": {
+																attrFile: {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	MinItems: 0,
@@ -151,14 +151,14 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																		"spec.0.backend_defaults.0.client_policy.0.tls.0.certificate.0.sds",
 																	},
 																},
-																"sds": {
+																attrSds: {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	MinItems: 0,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"secret_name": {
+																			attrSecretName: {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
@@ -199,14 +199,14 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"match": {
+																			attrMatch: {
 																				Type:     schema.TypeList,
 																				Required: true,
 																				MinItems: 1,
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"exact": {
+																						attrExact: {
 																							Type:     schema.TypeSet,
 																							Required: true,
 																							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -247,7 +247,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																					"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds",
 																				},
 																			},
-																			"file": {
+																			attrFile: {
 																				Type:     schema.TypeList,
 																				Optional: true,
 																				MinItems: 0,
@@ -267,14 +267,14 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																					"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.sds",
 																				},
 																			},
-																			"sds": {
+																			attrSds: {
 																				Type:     schema.TypeList,
 																				Optional: true,
 																				MinItems: 0,
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"secret_name": {
+																						attrSecretName: {
 																							Type:         schema.TypeString,
 																							Required:     true,
 																							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -322,7 +322,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"max_requests": {
+													attrMaxRequests: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
@@ -337,7 +337,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"max_connections": {
+													attrMaxConnections: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
@@ -357,7 +357,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"max_requests": {
+													attrMaxRequests: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
@@ -462,7 +462,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"file": {
+													attrFile: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -482,14 +482,14 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"sds": {
+													attrSds: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"secret_name": {
+																attrSecretName: {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
@@ -518,14 +518,14 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"match": {
+																attrMatch: {
 																	Type:     schema.TypeList,
 																	Required: true,
 																	MinItems: 1,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"exact": {
+																			attrExact: {
 																				Type:     schema.TypeSet,
 																				Required: true,
 																				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -543,7 +543,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"file": {
+																attrFile: {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	MinItems: 0,
@@ -558,14 +558,14 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																		},
 																	},
 																},
-																"sds": {
+																attrSds: {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	MinItems: 0,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"secret_name": {
+																			attrSecretName: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -599,7 +599,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"file": {
+										attrFile: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 0,
@@ -664,13 +664,13 @@ func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualGatewayInput{
-		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]any)),
+		MeshName:           aws.String(d.Get(attrMeshName).(string)),
+		Spec:               expandVirtualGatewaySpec(d.Get(attrSpec).([]any)),
 		Tags:               getTagsIn(ctx),
 		VirtualGatewayName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
+	if v, ok := d.GetOk(attrMeshOwner); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
@@ -690,7 +690,7 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	virtualGateway, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.VirtualGatewayData, error) {
-		return findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
+		return findVirtualGatewayByThreePartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -706,11 +706,11 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, virtualGateway.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", virtualGateway.MeshName)
-	d.Set("mesh_owner", virtualGateway.Metadata.MeshOwner)
+	d.Set(attrMeshName, virtualGateway.MeshName)
+	d.Set(attrMeshOwner, virtualGateway.Metadata.MeshOwner)
 	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
 	d.Set(names.AttrResourceOwner, virtualGateway.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
@@ -721,14 +721,14 @@ func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	if d.HasChange("spec") {
+	if d.HasChange(attrSpec) {
 		input := &appmesh.UpdateVirtualGatewayInput{
-			MeshName:           aws.String(d.Get("mesh_name").(string)),
-			Spec:               expandVirtualGatewaySpec(d.Get("spec").([]any)),
+			MeshName:           aws.String(d.Get(attrMeshName).(string)),
+			Spec:               expandVirtualGatewaySpec(d.Get(attrSpec).([]any)),
 			VirtualGatewayName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk("mesh_owner"); ok {
+		if v, ok := d.GetOk(attrMeshOwner); ok {
 			input.MeshOwner = aws.String(v.(string))
 		}
 
@@ -748,11 +748,11 @@ func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Gateway: %s", d.Id())
 	input := &appmesh.DeleteVirtualGatewayInput{
-		MeshName:           aws.String(d.Get("mesh_name").(string)),
+		MeshName:           aws.String(d.Get(attrMeshName).(string)),
 		VirtualGatewayName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
+	if v, ok := d.GetOk(attrMeshOwner); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
@@ -787,7 +787,7 @@ func resourceVirtualGatewayImport(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(virtualGateway.Metadata.Uid))
-	d.Set("mesh_name", virtualGateway.MeshName)
+	d.Set(attrMeshName, virtualGateway.MeshName)
 	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
 
 	return []*schema.ResourceData{d}, nil
@@ -851,7 +851,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 
 		mBackendDefaults := vBackendDefaults[0].(map[string]any)
 
-		if vClientPolicy, ok := mBackendDefaults["client_policy"].([]any); ok {
+		if vClientPolicy, ok := mBackendDefaults[attrClientPolicy].([]any); ok {
 			backendDefaults.ClientPolicy = expandVirtualGatewayClientPolicy(vClientPolicy)
 		}
 
@@ -905,7 +905,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 
 					grpcConnectionPool := awstypes.VirtualGatewayGrpcConnectionPool{}
 
-					if vMaxRequests, ok := mGrpcConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+					if vMaxRequests, ok := mGrpcConnectionPool[attrMaxRequests].(int); ok && vMaxRequests > 0 {
 						grpcConnectionPool.MaxRequests = aws.Int32(int32(vMaxRequests))
 					}
 
@@ -919,7 +919,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 
 					httpConnectionPool := awstypes.VirtualGatewayHttpConnectionPool{}
 
-					if vMaxConnections, ok := mHttpConnectionPool["max_connections"].(int); ok && vMaxConnections > 0 {
+					if vMaxConnections, ok := mHttpConnectionPool[attrMaxConnections].(int); ok && vMaxConnections > 0 {
 						httpConnectionPool.MaxConnections = aws.Int32(int32(vMaxConnections))
 					}
 					if vMaxPendingRequests, ok := mHttpConnectionPool["max_pending_requests"].(int); ok && vMaxPendingRequests > 0 {
@@ -936,7 +936,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 
 					http2ConnectionPool := awstypes.VirtualGatewayHttp2ConnectionPool{}
 
-					if vMaxRequests, ok := mHttp2ConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+					if vMaxRequests, ok := mHttp2ConnectionPool[attrMaxRequests].(int); ok && vMaxRequests > 0 {
 						http2ConnectionPool.MaxRequests = aws.Int32(int32(vMaxRequests))
 					}
 
@@ -986,7 +986,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 						tls.Certificate = certificate
 					}
 
-					if vFile, ok := mCertificate["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+					if vFile, ok := mCertificate[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 						certificate := &awstypes.VirtualGatewayListenerTlsCertificateMemberFile{}
 						file := awstypes.VirtualGatewayListenerTlsFileCertificate{}
 
@@ -1003,13 +1003,13 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 						tls.Certificate = certificate
 					}
 
-					if vSds, ok := mCertificate["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
+					if vSds, ok := mCertificate[attrSds].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 						certificate := &awstypes.VirtualGatewayListenerTlsCertificateMemberSds{}
 						sds := awstypes.VirtualGatewayListenerTlsSdsCertificate{}
 
 						mSds := vSds[0].(map[string]any)
 
-						if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+						if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 							sds.SecretName = aws.String(vSecretName)
 						}
 
@@ -1028,12 +1028,12 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 
 						mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]any)
 
-						if vMatch, ok := mSubjectAlternativeNames["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
+						if vMatch, ok := mSubjectAlternativeNames[attrMatch].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 							match := &awstypes.SubjectAlternativeNameMatchers{}
 
 							mMatch := vMatch[0].(map[string]any)
 
-							if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+							if vExact, ok := mMatch[attrExact].(*schema.Set); ok && vExact.Len() > 0 {
 								match.Exact = flex.ExpandStringValueSet(vExact)
 							}
 
@@ -1046,7 +1046,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 					if vTrust, ok := mValidation["trust"].([]any); ok && len(vTrust) > 0 && vTrust[0] != nil {
 						mTrust := vTrust[0].(map[string]any)
 
-						if vFile, ok := mTrust["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+						if vFile, ok := mTrust[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 							trust := &awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberFile{}
 							file := awstypes.VirtualGatewayTlsValidationContextFileTrust{}
 
@@ -1060,13 +1060,13 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 							validation.Trust = trust
 						}
 
-						if vSds, ok := mTrust["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
+						if vSds, ok := mTrust[attrSds].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 							trust := &awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberSds{}
 							sds := awstypes.VirtualGatewayTlsValidationContextSdsTrust{}
 
 							mSds := vSds[0].(map[string]any)
 
-							if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+							if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 								sds.SecretName = aws.String(vSecretName)
 							}
 
@@ -1095,7 +1095,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 		if vAccessLog, ok := mLogging["access_log"].([]any); ok && len(vAccessLog) > 0 && vAccessLog[0] != nil {
 			mAccessLog := vAccessLog[0].(map[string]any)
 
-			if vFile, ok := mAccessLog["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+			if vFile, ok := mAccessLog[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 				accessLog := &awstypes.VirtualGatewayAccessLogMemberFile{}
 				file := awstypes.VirtualGatewayFileAccessLog{}
 
@@ -1157,7 +1157,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 		if vCertificate, ok := mTls[names.AttrCertificate].([]any); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 			mCertificate := vCertificate[0].(map[string]any)
 
-			if vFile, ok := mCertificate["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+			if vFile, ok := mCertificate[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 				certificate := &awstypes.VirtualGatewayClientTlsCertificateMemberFile{}
 				file := awstypes.VirtualGatewayListenerTlsFileCertificate{}
 
@@ -1174,13 +1174,13 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 				tls.Certificate = certificate
 			}
 
-			if vSds, ok := mCertificate["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
+			if vSds, ok := mCertificate[attrSds].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 				certificate := &awstypes.VirtualGatewayClientTlsCertificateMemberSds{}
 				sds := awstypes.VirtualGatewayListenerTlsSdsCertificate{}
 
 				mSds := vSds[0].(map[string]any)
 
-				if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+				if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 					sds.SecretName = aws.String(vSecretName)
 				}
 
@@ -1207,12 +1207,12 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 
 				mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]any)
 
-				if vMatch, ok := mSubjectAlternativeNames["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				if vMatch, ok := mSubjectAlternativeNames[attrMatch].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 					match := &awstypes.SubjectAlternativeNameMatchers{}
 
 					mMatch := vMatch[0].(map[string]any)
 
-					if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+					if vExact, ok := mMatch[attrExact].(*schema.Set); ok && vExact.Len() > 0 {
 						match.Exact = flex.ExpandStringValueSet(vExact)
 					}
 
@@ -1239,7 +1239,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 					validation.Trust = trust
 				}
 
-				if vFile, ok := mTrust["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
+				if vFile, ok := mTrust[attrFile].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 					trust := &awstypes.VirtualGatewayTlsValidationContextTrustMemberFile{}
 					file := awstypes.VirtualGatewayTlsValidationContextFileTrust{}
 
@@ -1253,13 +1253,13 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 					validation.Trust = trust
 				}
 
-				if vSds, ok := mTrust["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
+				if vSds, ok := mTrust[attrSds].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 					trust := &awstypes.VirtualGatewayTlsValidationContextTrustMemberSds{}
 					sds := awstypes.VirtualGatewayTlsValidationContextSdsTrust{}
 
 					mSds := vSds[0].(map[string]any)
 
-					if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+					if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 						sds.SecretName = aws.String(vSecretName)
 					}
 
@@ -1286,7 +1286,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 
 	if backendDefaults := spec.BackendDefaults; backendDefaults != nil {
 		mBackendDefaults := map[string]any{
-			"client_policy": flattenVirtualGatewayClientPolicy(backendDefaults.ClientPolicy),
+			attrClientPolicy: flattenVirtualGatewayClientPolicy(backendDefaults.ClientPolicy),
 		}
 
 		mSpec["backend_defaults"] = []any{mBackendDefaults}
@@ -1303,18 +1303,18 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 				switch v := connectionPool.(type) {
 				case *awstypes.VirtualGatewayConnectionPoolMemberGrpc:
 					mGrpcConnectionPool := map[string]any{
-						"max_requests": aws.ToInt32(v.Value.MaxRequests),
+						attrMaxRequests: aws.ToInt32(v.Value.MaxRequests),
 					}
 					mConnectionPool["grpc"] = []any{mGrpcConnectionPool}
 				case *awstypes.VirtualGatewayConnectionPoolMemberHttp:
 					mHttpConnectionPool := map[string]any{
-						"max_connections":      aws.ToInt32(v.Value.MaxConnections),
+						attrMaxConnections:     aws.ToInt32(v.Value.MaxConnections),
 						"max_pending_requests": aws.ToInt32(v.Value.MaxPendingRequests),
 					}
 					mConnectionPool["http"] = []any{mHttpConnectionPool}
 				case *awstypes.VirtualGatewayConnectionPoolMemberHttp2:
 					mHttp2ConnectionPool := map[string]any{
-						"max_requests": aws.ToInt32(v.Value.MaxRequests),
+						attrMaxRequests: aws.ToInt32(v.Value.MaxRequests),
 					}
 					mConnectionPool["http2"] = []any{mHttp2ConnectionPool}
 				}
@@ -1364,13 +1364,13 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 							names.AttrPrivateKey:       aws.ToString(v.Value.PrivateKey),
 						}
 
-						mCertificate["file"] = []any{mFile}
+						mCertificate[attrFile] = []any{mFile}
 					case *awstypes.VirtualGatewayListenerTlsCertificateMemberSds:
 						mSds := map[string]any{
-							"secret_name": aws.ToString(v.Value.SecretName),
+							attrSecretName: aws.ToString(v.Value.SecretName),
 						}
 
-						mCertificate["sds"] = []any{mSds}
+						mCertificate[attrSds] = []any{mSds}
 					}
 
 					mTls[names.AttrCertificate] = []any{mCertificate}
@@ -1384,10 +1384,10 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 
 						if match := subjectAlternativeNames.Match; match != nil {
 							mMatch := map[string]any{
-								"exact": match.Exact,
+								attrExact: match.Exact,
 							}
 
-							mSubjectAlternativeNames["match"] = []any{mMatch}
+							mSubjectAlternativeNames[attrMatch] = []any{mMatch}
 						}
 
 						mValidation["subject_alternative_names"] = []any{mSubjectAlternativeNames}
@@ -1402,13 +1402,13 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 								names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 							}
 
-							mTrust["file"] = []any{mFile}
+							mTrust[attrFile] = []any{mFile}
 						case *awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberSds:
 							mSds := map[string]any{
-								"secret_name": aws.ToString(v.Value.SecretName),
+								attrSecretName: aws.ToString(v.Value.SecretName),
 							}
 
-							mTrust["sds"] = []any{mSds}
+							mTrust[attrSds] = []any{mSds}
 						}
 
 						mValidation["trust"] = []any{mTrust}
@@ -1460,7 +1460,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 
 				mFile[names.AttrPath] = aws.ToString(v.Value.Path)
 
-				mAccessLog["file"] = []any{mFile}
+				mAccessLog[attrFile] = []any{mFile}
 			}
 
 			mLogging["access_log"] = []any{mAccessLog}
@@ -1495,13 +1495,13 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 					names.AttrPrivateKey:       aws.ToString(v.Value.PrivateKey),
 				}
 
-				mCertificate["file"] = []any{mFile}
+				mCertificate[attrFile] = []any{mFile}
 			case *awstypes.VirtualGatewayClientTlsCertificateMemberSds:
 				mSds := map[string]any{
-					"secret_name": aws.ToString(v.Value.SecretName),
+					attrSecretName: aws.ToString(v.Value.SecretName),
 				}
 
-				mCertificate["sds"] = []any{mSds}
+				mCertificate[attrSds] = []any{mSds}
 			}
 
 			mTls[names.AttrCertificate] = []any{mCertificate}
@@ -1515,10 +1515,10 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 
 				if match := subjectAlternativeNames.Match; match != nil {
 					mMatch := map[string]any{
-						"exact": match.Exact,
+						attrExact: match.Exact,
 					}
 
-					mSubjectAlternativeNames["match"] = []any{mMatch}
+					mSubjectAlternativeNames[attrMatch] = []any{mMatch}
 				}
 
 				mValidation["subject_alternative_names"] = []any{mSubjectAlternativeNames}
@@ -1539,13 +1539,13 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 						names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 					}
 
-					mTrust["file"] = []any{mFile}
+					mTrust[attrFile] = []any{mFile}
 				case *awstypes.VirtualGatewayTlsValidationContextTrustMemberSds:
 					mSds := map[string]any{
-						"secret_name": aws.ToString(v.Value.SecretName),
+						attrSecretName: aws.ToString(v.Value.SecretName),
 					}
 
-					mTrust["sds"] = []any{mSds}
+					mTrust[attrSds] = []any{mSds}
 				}
 
 				mValidation["trust"] = []any{mTrust}

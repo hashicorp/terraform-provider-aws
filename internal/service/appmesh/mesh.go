@@ -56,7 +56,7 @@ func resourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -70,7 +70,7 @@ func resourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":            resourceMeshSpecSchema(),
+				attrSpec:          resourceMeshSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
@@ -130,7 +130,7 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateMeshInput{
 		MeshName: aws.String(name),
-		Spec:     expandMeshSpec(d.Get("spec").([]any)),
+		Spec:     expandMeshSpec(d.Get(attrSpec).([]any)),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -150,7 +150,7 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	mesh, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.MeshData, error) {
-		return findMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
+		return findMeshByTwoPartKey(ctx, conn, d.Id(), d.Get(attrMeshOwner).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -166,10 +166,10 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set(names.AttrARN, mesh.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
+	d.Set(attrMeshOwner, mesh.Metadata.MeshOwner)
 	d.Set(names.AttrName, mesh.MeshName)
 	d.Set(names.AttrResourceOwner, mesh.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
@@ -180,10 +180,10 @@ func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	if d.HasChange("spec") {
+	if d.HasChange(attrSpec) {
 		input := &appmesh.UpdateMeshInput{
 			MeshName: aws.String(d.Id()),
-			Spec:     expandMeshSpec(d.Get("spec").([]any)),
+			Spec:     expandMeshSpec(d.Get(attrSpec).([]any)),
 		}
 
 		_, err := conn.UpdateMesh(ctx, input)

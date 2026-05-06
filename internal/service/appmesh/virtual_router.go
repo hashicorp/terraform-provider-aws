@@ -63,13 +63,13 @@ func resourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -86,7 +86,7 @@ func resourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":            resourceVirtualRouterSpecSchema(),
+				attrSpec:          resourceVirtualRouterSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
@@ -142,13 +142,13 @@ func resourceVirtualRouterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualRouterInput{
-		MeshName:          aws.String(d.Get("mesh_name").(string)),
-		Spec:              expandVirtualRouterSpec(d.Get("spec").([]any)),
+		MeshName:          aws.String(d.Get(attrMeshName).(string)),
+		Spec:              expandVirtualRouterSpec(d.Get(attrSpec).([]any)),
 		Tags:              getTagsIn(ctx),
 		VirtualRouterName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
+	if v, ok := d.GetOk(attrMeshOwner); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
@@ -168,7 +168,7 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	vr, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.VirtualRouterData, error) {
-		return findVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
+		return findVirtualRouterByThreePartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -184,11 +184,11 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, vr.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", vr.MeshName)
-	d.Set("mesh_owner", vr.Metadata.MeshOwner)
+	d.Set(attrMeshName, vr.MeshName)
+	d.Set(attrMeshOwner, vr.Metadata.MeshOwner)
 	d.Set(names.AttrName, vr.VirtualRouterName)
 	d.Set(names.AttrResourceOwner, vr.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenVirtualRouterSpec(vr.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
@@ -199,14 +199,14 @@ func resourceVirtualRouterUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	if d.HasChange("spec") {
+	if d.HasChange(attrSpec) {
 		input := &appmesh.UpdateVirtualRouterInput{
-			MeshName:          aws.String(d.Get("mesh_name").(string)),
-			Spec:              expandVirtualRouterSpec(d.Get("spec").([]any)),
+			MeshName:          aws.String(d.Get(attrMeshName).(string)),
+			Spec:              expandVirtualRouterSpec(d.Get(attrSpec).([]any)),
 			VirtualRouterName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk("mesh_owner"); ok {
+		if v, ok := d.GetOk(attrMeshOwner); ok {
 			input.MeshOwner = aws.String(v.(string))
 		}
 
@@ -226,11 +226,11 @@ func resourceVirtualRouterDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Router: %s", d.Id())
 	input := &appmesh.DeleteVirtualRouterInput{
-		MeshName:          aws.String(d.Get("mesh_name").(string)),
+		MeshName:          aws.String(d.Get(attrMeshName).(string)),
 		VirtualRouterName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
+	if v, ok := d.GetOk(attrMeshOwner); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
@@ -264,7 +264,7 @@ func resourceVirtualRouterImport(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.ToString(vr.Metadata.Uid))
-	d.Set("mesh_name", vr.MeshName)
+	d.Set(attrMeshName, vr.MeshName)
 	d.Set(names.AttrName, vr.VirtualRouterName)
 
 	return []*schema.ResourceData{d}, nil

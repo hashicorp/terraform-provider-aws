@@ -41,7 +41,7 @@ func dataSourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -54,7 +54,7 @@ func dataSourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.ComputedOnlyFromSchema(resourceMeshSpecSchema()),
+				attrSpec:       sdkv2.ComputedOnlyFromSchema(resourceMeshSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
@@ -66,7 +66,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	meshName := d.Get(names.AttrName).(string)
-	mesh, err := findMeshByTwoPartKey(ctx, conn, meshName, d.Get("mesh_owner").(string))
+	mesh, err := findMeshByTwoPartKey(ctx, conn, meshName, d.Get(attrMeshOwner).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh (%s): %s", meshName, err)
@@ -78,9 +78,9 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	meshOwner := aws.ToString(mesh.Metadata.MeshOwner)
-	d.Set("mesh_owner", meshOwner)
+	d.Set(attrMeshOwner, meshOwner)
 	d.Set(names.AttrResourceOwner, mesh.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 

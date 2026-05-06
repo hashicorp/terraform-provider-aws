@@ -41,11 +41,11 @@ func dataSourceRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -58,7 +58,7 @@ func dataSourceRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.ComputedOnlyFromSchema(resourceRouteSpecSchema()),
+				attrSpec:       sdkv2.ComputedOnlyFromSchema(resourceRouteSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 				"virtual_router_name": {
 					Type:     schema.TypeString,
@@ -74,7 +74,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	routeName := d.Get(names.AttrName).(string)
-	route, err := findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
+	route, err := findRouteByFourPartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), d.Get("virtual_router_name").(string), routeName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", routeName, err)
@@ -85,12 +85,12 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, route.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", route.MeshName)
+	d.Set(attrMeshName, route.MeshName)
 	meshOwner := aws.ToString(route.Metadata.MeshOwner)
-	d.Set("mesh_owner", meshOwner)
+	d.Set(attrMeshOwner, meshOwner)
 	d.Set(names.AttrName, route.RouteName)
 	d.Set(names.AttrResourceOwner, route.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenRouteSpec(route.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 	d.Set("virtual_router_name", route.VirtualRouterName)

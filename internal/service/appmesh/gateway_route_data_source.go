@@ -41,11 +41,11 @@ func dataSourceGatewayRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"mesh_name": {
+				attrMeshName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"mesh_owner": {
+				attrMeshOwner: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -58,7 +58,7 @@ func dataSourceGatewayRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.ComputedOnlyFromSchema(resourceGatewayRouteSpecSchema()),
+				attrSpec:       sdkv2.ComputedOnlyFromSchema(resourceGatewayRouteSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 				"virtual_gateway_name": {
 					Type:     schema.TypeString,
@@ -74,7 +74,7 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	gatewayRouteName := d.Get(names.AttrName).(string)
-	gatewayRoute, err := findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), gatewayRouteName)
+	gatewayRoute, err := findGatewayRouteByFourPartKey(ctx, conn, d.Get(attrMeshName).(string), d.Get(attrMeshOwner).(string), d.Get("virtual_gateway_name").(string), gatewayRouteName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route (%s): %s", gatewayRouteName, err)
@@ -85,12 +85,12 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", gatewayRoute.MeshName)
+	d.Set(attrMeshName, gatewayRoute.MeshName)
 	meshOwner := aws.ToString(gatewayRoute.Metadata.MeshOwner)
-	d.Set("mesh_owner", meshOwner)
+	d.Set(attrMeshOwner, meshOwner)
 	d.Set(names.AttrName, gatewayRoute.GatewayRouteName)
 	d.Set(names.AttrResourceOwner, gatewayRoute.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
+	if err := d.Set(attrSpec, flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
