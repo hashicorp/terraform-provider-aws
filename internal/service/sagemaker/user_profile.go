@@ -297,7 +297,7 @@ func resourceUserProfile() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -308,21 +308,21 @@ func resourceUserProfile() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -499,7 +499,7 @@ func resourceUserProfile() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -510,21 +510,21 @@ func resourceUserProfile() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -588,7 +588,7 @@ func resourceUserProfile() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -599,21 +599,21 @@ func resourceUserProfile() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -638,7 +638,7 @@ func resourceUserProfile() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -649,21 +649,21 @@ func resourceUserProfile() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -735,7 +735,7 @@ func resourceUserProfile() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -746,21 +746,21 @@ func resourceUserProfile() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -887,7 +887,7 @@ func resourceUserProfile() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -898,21 +898,21 @@ func resourceUserProfile() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,

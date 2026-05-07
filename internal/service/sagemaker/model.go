@@ -157,7 +157,7 @@ func resourceModel() *schema.Resource {
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
 												},
-												"s3_uri": {
+												attrS3URI: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
@@ -212,7 +212,7 @@ func resourceModel() *schema.Resource {
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
 												},
-												"s3_uri": {
+												attrS3URI: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
@@ -396,7 +396,7 @@ func resourceModel() *schema.Resource {
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
 												},
-												"s3_uri": {
+												attrS3URI: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
@@ -451,7 +451,7 @@ func resourceModel() *schema.Resource {
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
 												},
-												"s3_uri": {
+												attrS3URI: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
@@ -782,7 +782,7 @@ func expandS3ModelDataSource(tfList []any) *awstypes.S3ModelDataSource {
 	m := tfList[0].(map[string]any)
 
 	apiObject := awstypes.S3ModelDataSource{}
-	if v, ok := m["s3_uri"]; ok && v.(string) != "" {
+	if v, ok := m[attrS3URI]; ok && v.(string) != "" {
 		apiObject.S3Uri = aws.String(v.(string))
 	}
 	if v, ok := m["s3_data_type"]; ok && v.(string) != "" {
@@ -987,7 +987,7 @@ func flattenS3ModelDataSource(apiObject *awstypes.S3ModelDataSource) []any {
 		tfMap["model_access_config"] = flattenModelAccessConfig(apiObject.ModelAccessConfig)
 	}
 	if apiObject.S3Uri != nil {
-		tfMap["s3_uri"] = aws.ToString(apiObject.S3Uri)
+		tfMap[attrS3URI] = aws.ToString(apiObject.S3Uri)
 	}
 
 	return []any{tfMap}

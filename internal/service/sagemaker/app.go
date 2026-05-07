@@ -81,22 +81,22 @@ func resourceApp() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 						},
-						"lifecycle_config_arn": {
+						attrLifecycleConfigARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"sagemaker_image_arn": {
+						attrImageARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"sagemaker_image_version_alias": {
+						attrImageVersionAlias: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"sagemaker_image_version_arn": {
+						attrImageVersionARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,

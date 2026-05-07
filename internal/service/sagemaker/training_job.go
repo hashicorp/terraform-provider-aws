@@ -376,7 +376,7 @@ func checkpointConfigBlock(ctx context.Context) schema.Block {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_uri": schema.StringAttribute{
+				attrS3URI: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
@@ -776,7 +776,7 @@ func trainingJobInputDataConfigBlock(ctx context.Context) schema.Block {
 												stringplanmodifier.RequiresReplace(),
 											},
 										},
-										"s3_uri": schema.StringAttribute{
+										attrS3URI: schema.StringAttribute{
 											Required: true,
 											Validators: []validator.String{
 												stringvalidator.LengthBetween(0, 1024),

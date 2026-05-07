@@ -432,7 +432,7 @@ func additionalS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_uri": schema.StringAttribute{
+				attrS3URI: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),
@@ -549,7 +549,7 @@ func modelDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 									stringplanmodifier.RequiresReplace(),
 								},
 							},
-							"s3_uri": schema.StringAttribute{
+							attrS3URI: schema.StringAttribute{
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthAtMost(1024),
@@ -1233,7 +1233,7 @@ func trainingS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_uri": schema.StringAttribute{
+				attrS3URI: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),
@@ -1692,7 +1692,7 @@ func transformS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_uri": schema.StringAttribute{
+				attrS3URI: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),

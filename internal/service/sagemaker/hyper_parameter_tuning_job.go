@@ -772,7 +772,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"s3_uri": schema.StringAttribute{
+						attrS3URI: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(1024),
@@ -1049,7 +1049,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
-												"s3_uri": schema.StringAttribute{
+												attrS3URI: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthAtMost(1024),

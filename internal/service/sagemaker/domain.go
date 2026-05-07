@@ -95,7 +95,7 @@ func resourceDomain() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -106,21 +106,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -145,7 +145,7 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -156,21 +156,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -300,7 +300,7 @@ func resourceDomain() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -311,21 +311,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -657,7 +657,7 @@ func resourceDomain() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -668,21 +668,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -860,7 +860,7 @@ func resourceDomain() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -871,21 +871,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -949,7 +949,7 @@ func resourceDomain() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -960,21 +960,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -999,7 +999,7 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -1010,21 +1010,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -1096,7 +1096,7 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -1107,21 +1107,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -1215,7 +1215,7 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -1226,21 +1226,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -1336,7 +1336,7 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -1347,21 +1347,21 @@ func resourceDomain() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -1774,7 +1774,7 @@ func expandRStudioServerProDomainSettings(l []any) *awstypes.RStudioServerProDom
 		config.RStudioPackageManagerUrl = aws.String(v)
 	}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -1864,7 +1864,7 @@ func expandRStudioServerProDomainSettingsUpdate(l []any) *awstypes.RStudioServer
 
 	config := &awstypes.RStudioServerProDomainSettingsForUpdate{}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -2050,7 +2050,7 @@ func expandDomainCodeEditorAppSettings(l []any) *awstypes.CodeEditorAppSettings 
 		config.CustomImages = expandDomainCustomImages(v)
 	}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -2086,7 +2086,7 @@ func expandDomainJupyterLabAppSettings(l []any) *awstypes.JupyterLabAppSettings 
 		config.CustomImages = expandDomainCustomImages(v)
 	}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -2158,7 +2158,7 @@ func expandDomainJupyterServerAppSettings(l []any) *awstypes.JupyterServerAppSet
 		config.CodeRepositories = expandCodeRepositories(v.List())
 	}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -2178,7 +2178,7 @@ func expandDomainKernelGatewayAppSettings(l []any) *awstypes.KernelGatewayAppSet
 
 	config := &awstypes.KernelGatewayAppSettings{}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -2202,7 +2202,7 @@ func expandRSessionAppSettings(l []any) *awstypes.RSessionAppSettings {
 
 	config := &awstypes.RSessionAppSettings{}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -2258,7 +2258,7 @@ func expandDomainTensorBoardAppSettings(l []any) *awstypes.TensorBoardAppSetting
 
 	config := &awstypes.TensorBoardAppSettings{}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -2278,19 +2278,19 @@ func expandResourceSpec(l []any) *awstypes.ResourceSpec {
 		config.InstanceType = awstypes.AppInstanceType(v)
 	}
 
-	if v, ok := m["lifecycle_config_arn"].(string); ok && v != "" {
+	if v, ok := m[attrLifecycleConfigARN].(string); ok && v != "" {
 		config.LifecycleConfigArn = aws.String(v)
 	}
 
-	if v, ok := m["sagemaker_image_arn"].(string); ok && v != "" {
+	if v, ok := m[attrImageARN].(string); ok && v != "" {
 		config.SageMakerImageArn = aws.String(v)
 	}
 
-	if v, ok := m["sagemaker_image_version_alias"].(string); ok && v != "" {
+	if v, ok := m[attrImageVersionAlias].(string); ok && v != "" {
 		config.SageMakerImageVersionAlias = aws.String(v)
 	}
 
-	if v, ok := m["sagemaker_image_version_arn"].(string); ok && v != "" {
+	if v, ok := m[attrImageVersionARN].(string); ok && v != "" {
 		config.SageMakerImageVersionArn = aws.String(v)
 	}
 
@@ -2678,19 +2678,19 @@ func flattenResourceSpec(config *awstypes.ResourceSpec) []map[string]any {
 	}
 
 	if config.LifecycleConfigArn != nil {
-		m["lifecycle_config_arn"] = aws.ToString(config.LifecycleConfigArn)
+		m[attrLifecycleConfigARN] = aws.ToString(config.LifecycleConfigArn)
 	}
 
 	if config.SageMakerImageArn != nil {
-		m["sagemaker_image_arn"] = aws.ToString(config.SageMakerImageArn)
+		m[attrImageARN] = aws.ToString(config.SageMakerImageArn)
 	}
 
 	if config.SageMakerImageVersionAlias != nil {
-		m["sagemaker_image_version_alias"] = aws.ToString(config.SageMakerImageVersionAlias)
+		m[attrImageVersionAlias] = aws.ToString(config.SageMakerImageVersionAlias)
 	}
 
 	if config.SageMakerImageVersionArn != nil {
-		m["sagemaker_image_version_arn"] = aws.ToString(config.SageMakerImageVersionArn)
+		m[attrImageVersionARN] = aws.ToString(config.SageMakerImageVersionArn)
 	}
 
 	return []map[string]any{m}
@@ -2792,7 +2792,7 @@ func flattenDomainTensorBoardAppSettings(config *awstypes.TensorBoardAppSettings
 	m := map[string]any{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+		m[attrDefaultResourceSpec] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	return []map[string]any{m}
@@ -2836,7 +2836,7 @@ func flattenDomainCodeEditorAppSettings(config *awstypes.CodeEditorAppSettings) 
 	}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+		m[attrDefaultResourceSpec] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.LifecycleConfigArns != nil {
@@ -2870,7 +2870,7 @@ func flattenDomainJupyterLabAppSettings(config *awstypes.JupyterLabAppSettings) 
 	}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+		m[attrDefaultResourceSpec] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.LifecycleConfigArns != nil {
@@ -2896,7 +2896,7 @@ func flattenDomainJupyterServerAppSettings(config *awstypes.JupyterServerAppSett
 	}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+		m[attrDefaultResourceSpec] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.LifecycleConfigArns != nil {
@@ -2914,7 +2914,7 @@ func flattenDomainKernelGatewayAppSettings(config *awstypes.KernelGatewayAppSett
 	m := map[string]any{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+		m[attrDefaultResourceSpec] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.LifecycleConfigArns != nil {
@@ -2936,7 +2936,7 @@ func flattenRSessionAppSettings(config *awstypes.RSessionAppSettings) []map[stri
 	m := map[string]any{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+		m[attrDefaultResourceSpec] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.CustomImages != nil {
@@ -3148,7 +3148,7 @@ func flattenRStudioServerProDomainSettings(config *awstypes.RStudioServerProDoma
 		"r_studio_connect_url":         aws.ToString(config.RStudioConnectUrl),
 		"domain_execution_role_arn":    aws.ToString(config.DomainExecutionRoleArn),
 		"r_studio_package_manager_url": aws.ToString(config.RStudioPackageManagerUrl),
-		"default_resource_spec":        flattenResourceSpec(config.DefaultResourceSpec),
+		attrDefaultResourceSpec:        flattenResourceSpec(config.DefaultResourceSpec),
 	}
 
 	return []map[string]any{m}

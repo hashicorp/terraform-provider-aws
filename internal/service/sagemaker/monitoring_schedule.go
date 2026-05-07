@@ -76,7 +76,7 @@ func resourceMonitoringSchedule() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"s3_uri": {
+															attrS3URI: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validHTTPSOrS3URI,
@@ -90,7 +90,7 @@ func resourceMonitoringSchedule() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"s3_uri": {
+															attrS3URI: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validHTTPSOrS3URI,
@@ -338,7 +338,7 @@ func resourceMonitoringSchedule() *schema.Resource {
 																			Computed:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3UploadMode](),
 																		},
-																		"s3_uri": {
+																		attrS3URI: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: validHTTPSOrS3URI,

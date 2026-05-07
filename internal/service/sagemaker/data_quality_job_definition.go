@@ -102,7 +102,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_uri": {
+									attrS3URI: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -121,7 +121,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_uri": {
+									attrS3URI: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -313,7 +313,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 													Computed:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3UploadMode](),
 												},
-												"s3_uri": {
+												attrS3URI: {
 													Type:     schema.TypeString,
 													Required: true,
 													ForceNew: true,
@@ -659,7 +659,7 @@ func flattenMonitoringConstraintsResource(apiObject *awstypes.MonitoringConstrai
 	tfMap := map[string]any{}
 
 	if apiObject.S3Uri != nil {
-		tfMap["s3_uri"] = aws.ToString(apiObject.S3Uri)
+		tfMap[attrS3URI] = aws.ToString(apiObject.S3Uri)
 	}
 
 	return []any{tfMap}
@@ -673,7 +673,7 @@ func flattenMonitoringStatisticsResource(apiObject *awstypes.MonitoringStatistic
 	tfMap := map[string]any{}
 
 	if apiObject.S3Uri != nil {
-		tfMap["s3_uri"] = aws.ToString(apiObject.S3Uri)
+		tfMap[attrS3URI] = aws.ToString(apiObject.S3Uri)
 	}
 
 	return []any{tfMap}
@@ -833,7 +833,7 @@ func flattenMonitoringS3Output(apiObject *awstypes.MonitoringS3Output) []any {
 	tfMap["s3_upload_mode"] = apiObject.S3UploadMode
 
 	if apiObject.S3Uri != nil {
-		tfMap["s3_uri"] = aws.ToString(apiObject.S3Uri)
+		tfMap[attrS3URI] = aws.ToString(apiObject.S3Uri)
 	}
 
 	return []any{tfMap}
@@ -980,7 +980,7 @@ func expandMonitoringConstraintsResource(tfList []any) *awstypes.MonitoringConst
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.MonitoringConstraintsResource{}
 
-	if v, ok := tfMap["s3_uri"].(string); ok && v != "" {
+	if v, ok := tfMap[attrS3URI].(string); ok && v != "" {
 		apiObject.S3Uri = aws.String(v)
 	}
 
@@ -995,7 +995,7 @@ func expandMonitoringStatisticsResource(tfList []any) *awstypes.MonitoringStatis
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.MonitoringStatisticsResource{}
 
-	if v, ok := tfMap["s3_uri"].(string); ok && v != "" {
+	if v, ok := tfMap[attrS3URI].(string); ok && v != "" {
 		apiObject.S3Uri = aws.String(v)
 	}
 
@@ -1187,7 +1187,7 @@ func expandMonitoringS3Output(tfList []any) *awstypes.MonitoringS3Output {
 		apiObject.S3UploadMode = awstypes.ProcessingS3UploadMode(v)
 	}
 
-	if v, ok := tfMap["s3_uri"].(string); ok && v != "" {
+	if v, ok := tfMap[attrS3URI].(string); ok && v != "" {
 		apiObject.S3Uri = aws.String(v)
 	}
 

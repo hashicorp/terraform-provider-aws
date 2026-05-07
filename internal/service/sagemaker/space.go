@@ -125,7 +125,7 @@ func resourceSpace() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
@@ -136,21 +136,21 @@ func resourceSpace() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -225,7 +225,7 @@ func resourceSpace() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
@@ -236,21 +236,21 @@ func resourceSpace() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -281,7 +281,7 @@ func resourceSpace() *schema.Resource {
 											},
 										},
 									},
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
@@ -292,21 +292,21 @@ func resourceSpace() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -331,7 +331,7 @@ func resourceSpace() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									attrDefaultResourceSpec: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
@@ -342,21 +342,21 @@ func resourceSpace() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 												},
-												"lifecycle_config_arn": {
+												attrLifecycleConfigARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												attrImageARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_version_alias": {
+												attrImageVersionAlias: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"sagemaker_image_version_arn": {
+												attrImageVersionARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -735,7 +735,7 @@ func expandSpaceCodeEditorAppSettings(l []any) *awstypes.SpaceCodeEditorAppSetti
 		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
 	}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -754,7 +754,7 @@ func flattenSpaceCodeEditorAppSettings(config *awstypes.SpaceCodeEditorAppSettin
 	}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+		m[attrDefaultResourceSpec] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	return []map[string]any{m}
@@ -777,7 +777,7 @@ func expandSpaceJupyterLabAppSettings(l []any) *awstypes.SpaceJupyterLabAppSetti
 		config.CodeRepositories = expandCodeRepositories(v.List())
 	}
 
-	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrDefaultResourceSpec].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -800,7 +800,7 @@ func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettin
 	}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+		m[attrDefaultResourceSpec] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	return []map[string]any{m}

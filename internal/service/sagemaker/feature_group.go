@@ -192,7 +192,7 @@ func resourceFeatureGroup() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"s3_uri": {
+									attrS3URI: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -752,7 +752,7 @@ func expandFeatureGroupOfflineStoreConfigS3StorageConfig(l []any) *awstypes.S3St
 	m := l[0].(map[string]any)
 
 	config := &awstypes.S3StorageConfig{
-		S3Uri: aws.String(m["s3_uri"].(string)),
+		S3Uri: aws.String(m[attrS3URI].(string)),
 	}
 
 	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
@@ -772,7 +772,7 @@ func flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config *awstypes.S3Sto
 	}
 
 	m := map[string]any{
-		"s3_uri": aws.ToString(config.S3Uri),
+		attrS3URI: aws.ToString(config.S3Uri),
 	}
 
 	if config.KmsKeyId != nil {
