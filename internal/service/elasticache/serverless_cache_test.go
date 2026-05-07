@@ -806,10 +806,10 @@ func TestAccElastiCacheServerlessCache_networkType(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_networkType(rName, "ipv6"),
+				Config: testAccServerlessCacheConfig_networkType(rName, "dual_stack"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv6)),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDualStack)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -818,10 +818,10 @@ func TestAccElastiCacheServerlessCache_networkType(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_networkType(rName, "dual_stack"),
+				Config: testAccServerlessCacheConfig_networkType(rName, "ipv6"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDualStack)),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv6)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1252,11 +1252,46 @@ resource "aws_elasticache_serverless_cache" "test" {
 }
 
 func testAccServerlessCacheConfig_networkType(rName, networkType string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_serverless_cache" "test" {
-  name        = %[1]q
-  engine = "valkey"
-  network_type = %[2]q
+	if networkType == "ipv6" {
+		return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+			ConfigSubnetsIPv6Native(rName, 2),
+			fmt.Sprintf(`
+		resource "aws_elasticache_serverless_cache" "test" {
+		name        = %[1]q
+		engine       = "valkey"
+		network_type = %[2]q
+		subnet_ids   = aws_subnet.test_ipv6_native[*].id
+		}
+		`, rName, networkType))
+	}
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+	resource "aws_elasticache_serverless_cache" "test" {
+	name        = %[1]q
+	engine       = "valkey"
+	network_type = %[2]q
+	subnet_ids   = aws_subnet.test[*].id
+	}
+	`, rName, networkType))
 }
-`, rName, networkType)
+
+func ConfigSubnetsIPv6Native(rName string, subnetCount int) string {
+	// Avoid colliding with the other subnets
+	return fmt.Sprintf(`
+resource "aws_subnet" "test_ipv6_native" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  ipv6_native = true
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index + 3)
+  enable_resource_name_dns_aaaa_record_on_launch = true
+
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, subnetCount)
 }
