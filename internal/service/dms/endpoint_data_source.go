@@ -52,7 +52,7 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -196,7 +196,7 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -288,7 +288,7 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -376,7 +376,7 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -444,7 +444,7 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -596,7 +596,7 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -928,7 +928,7 @@ func flattenS3Settings(apiObject *awstypes.S3Settings) []map[string]any {
 		tfMap["server_side_encryption_kms_key_id"] = aws.ToString(v)
 	}
 	if v := apiObject.ServiceAccessRoleArn; v != nil {
-		tfMap["service_access_role_arn"] = aws.ToString(v)
+		tfMap[attrServiceAccessRoleARN] = aws.ToString(v)
 	}
 	if v := apiObject.TimestampColumnName; v != nil {
 		tfMap["timestamp_column_name"] = aws.ToString(v)

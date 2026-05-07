@@ -91,7 +91,7 @@ func resourceEndpoint() *schema.Resource {
 							Default:      10,
 							ValidateFunc: validation.IntBetween(0, 100),
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -280,7 +280,7 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -401,7 +401,7 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -711,7 +711,7 @@ func resourceEndpoint() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.PluginNameValue](),
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -794,7 +794,7 @@ func resourceEndpoint() *schema.Resource {
 							DiffSuppressFunc: tfkms.DiffSuppressKey,
 							ValidateFunc:     tfkms.ValidateKey,
 						},
-						"service_access_role_arn": {
+						attrServiceAccessRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -1043,7 +1043,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 				settings.ServerSideEncryptionKmsKeyId = aws.String(v)
 			}
 
-			if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+			if v, ok := tfMap[attrServiceAccessRoleARN].(string); ok && v != "" {
 				settings.ServiceAccessRoleArn = aws.String(v)
 			}
 		}
@@ -1399,7 +1399,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 							settings.ServerSideEncryptionKmsKeyId = aws.String(v)
 						}
 
-						if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+						if v, ok := tfMap[attrServiceAccessRoleARN].(string); ok && v != "" {
 							settings.ServiceAccessRoleArn = aws.String(v)
 						}
 
@@ -1889,7 +1889,7 @@ func flattenElasticsearchSettings(apiObject *awstypes.ElasticsearchSettings) []m
 		"endpoint_uri":               aws.ToString(apiObject.EndpointUri),
 		"error_retry_duration":       aws.ToInt32(apiObject.ErrorRetryDuration),
 		"full_load_error_percentage": aws.ToInt32(apiObject.FullLoadErrorPercentage),
-		"service_access_role_arn":    aws.ToString(apiObject.ServiceAccessRoleArn),
+		attrServiceAccessRoleARN:     aws.ToString(apiObject.ServiceAccessRoleArn),
 		"use_new_mapping_type":       aws.ToBool(apiObject.UseNewMappingType),
 	}
 
@@ -2054,7 +2054,7 @@ func expandKinesisSettings(tfMap map[string]any) *awstypes.KinesisSettings {
 	if v, ok := tfMap["partition_include_schema_table"].(bool); ok {
 		apiObject.PartitionIncludeSchemaTable = aws.Bool(v)
 	}
-	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[attrServiceAccessRoleARN].(string); ok && v != "" {
 		apiObject.ServiceAccessRoleArn = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
@@ -2094,7 +2094,7 @@ func flattenKinesisSettings(apiObject *awstypes.KinesisSettings) map[string]any 
 		tfMap["partition_include_schema_table"] = aws.ToBool(v)
 	}
 	if v := apiObject.ServiceAccessRoleArn; v != nil {
-		tfMap["service_access_role_arn"] = aws.ToString(v)
+		tfMap[attrServiceAccessRoleARN] = aws.ToString(v)
 	}
 	if v := apiObject.StreamArn; v != nil {
 		tfMap[names.AttrStreamARN] = aws.ToString(v)
@@ -2224,7 +2224,7 @@ func flattenRedshiftSettings(apiObject *awstypes.RedshiftSettings) []any {
 		names.AttrBucketName:                aws.ToString(apiObject.BucketName),
 		"encryption_mode":                   apiObject.EncryptionMode,
 		"server_side_encryption_kms_key_id": aws.ToString(apiObject.ServerSideEncryptionKmsKeyId),
-		"service_access_role_arn":           aws.ToString(apiObject.ServiceAccessRoleArn),
+		attrServiceAccessRoleARN:            aws.ToString(apiObject.ServiceAccessRoleArn),
 	}
 
 	return []any{tfMap}
@@ -2261,7 +2261,7 @@ func expandMySQLSettings(tfMap map[string]any) *awstypes.MySQLSettings {
 	if v, ok := tfMap["server_timezone"].(string); ok && v != "" {
 		apiObject.ServerTimezone = aws.String(v)
 	}
-	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[attrServiceAccessRoleARN].(string); ok && v != "" {
 		apiObject.ServiceAccessRoleArn = aws.String(v)
 	}
 	if v, ok := tfMap["target_db_type"].(string); ok && v != "" {
@@ -2326,7 +2326,7 @@ func expandPostgreSQLSettings(tfMap map[string]any) *awstypes.PostgreSQLSettings
 	if v, ok := tfMap["plugin_name"].(string); ok && v != "" {
 		apiObject.PluginName = awstypes.PluginNameValue(v)
 	}
-	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[attrServiceAccessRoleARN].(string); ok && v != "" {
 		apiObject.ServiceAccessRoleArn = aws.String(v)
 	}
 	if v, ok := tfMap["slot_name"].(string); ok && v != "" {
@@ -2368,7 +2368,7 @@ func flattenMySQLSettings(apiObject *awstypes.MySQLSettings) []any {
 		tfMap["server_timezone"] = aws.ToString(v)
 	}
 	if v := apiObject.ServiceAccessRoleArn; v != nil {
-		tfMap["service_access_role_arn"] = aws.ToString(v)
+		tfMap[attrServiceAccessRoleARN] = aws.ToString(v)
 	}
 	if v := apiObject.TargetDbType; v != "" {
 		tfMap["target_db_type"] = string(v)
@@ -2425,7 +2425,7 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []any {
 	}
 	tfMap["plugin_name"] = apiObject.PluginName
 	if v := apiObject.ServiceAccessRoleArn; v != nil {
-		tfMap["service_access_role_arn"] = aws.ToString(v)
+		tfMap[attrServiceAccessRoleARN] = aws.ToString(v)
 	}
 	if v := apiObject.SlotName; v != nil {
 		tfMap["slot_name"] = aws.ToString(v)

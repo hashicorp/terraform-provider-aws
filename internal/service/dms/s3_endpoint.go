@@ -299,7 +299,7 @@ func resourceS3Endpoint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"service_access_role_arn": {
+			attrServiceAccessRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -342,7 +342,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("service_access_role_arn"); ok {
+	if v, ok := d.GetOk(attrServiceAccessRoleARN); ok {
 		input.ServiceAccessRoleArn = aws.String(v.(string))
 	}
 
@@ -430,7 +430,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("max_file_size", s3settings.MaxFileSize)
 	d.Set("rfc_4180", s3settings.Rfc4180)
 	d.Set("row_group_length", s3settings.RowGroupLength)
-	d.Set("service_access_role_arn", s3settings.ServiceAccessRoleArn)
+	d.Set(attrServiceAccessRoleARN, s3settings.ServiceAccessRoleArn)
 	d.Set("timestamp_column_name", s3settings.TimestampColumnName)
 	d.Set("use_task_start_time_for_full_load_timestamp", s3settings.UseTaskStartTimeForFullLoadTimestamp)
 
@@ -491,7 +491,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			"ssl_mode",
 		) {
 			input.S3Settings = s3Settings(d, d.Get(names.AttrEndpointType).(string) == string(awstypes.ReplicationEndpointTypeValueTarget))
-			input.ServiceAccessRoleArn = aws.String(d.Get("service_access_role_arn").(string))
+			input.ServiceAccessRoleArn = aws.String(d.Get(attrServiceAccessRoleARN).(string))
 
 			input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 		}
@@ -684,7 +684,7 @@ func s3Settings(d *schema.ResourceData, target bool) *awstypes.S3Settings {
 		s3s.ServerSideEncryptionKmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("service_access_role_arn"); ok {
+	if v, ok := d.GetOk(attrServiceAccessRoleARN); ok {
 		s3s.ServiceAccessRoleArn = aws.String(v.(string))
 	}
 

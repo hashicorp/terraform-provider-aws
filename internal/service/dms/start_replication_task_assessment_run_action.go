@@ -122,7 +122,7 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 				Description: "Folder within the S3 bucket where DMS stores the assessment results.",
 				Optional:    true,
 			},
-			"service_access_role_arn": schema.StringAttribute{
+			attrServiceAccessRoleARN: schema.StringAttribute{
 				Description: "ARN of the IAM role used by DMS to write assessment results and start the run.",
 				Required:    true,
 				CustomType:  fwtypes.ARNType,
