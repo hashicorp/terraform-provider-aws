@@ -127,7 +127,7 @@ const (
 
 //go:fix inline
 func arnStringSchema(handling attrHandling) *schema.Schema {
-	return sdkschema.ArnStringSchema(handling)
+	return sdkschema.ARNStringSchema(handling)
 }
 
 //go:fix inline

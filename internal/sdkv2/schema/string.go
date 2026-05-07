@@ -39,7 +39,7 @@ func (x AttrHandling) IsComputed() bool {
 
 var arnStringSchemaCache tfsync.Map[AttrHandling, *schema.Schema]
 
-func ArnStringSchema(handling AttrHandling) *schema.Schema {
+func ARNStringSchema(handling AttrHandling) *schema.Schema {
 	if handling == AttrComputed {
 		return StringComputedOnly()
 	}
@@ -65,7 +65,7 @@ func ArnStringSchema(handling AttrHandling) *schema.Schema {
 }
 
 func ArnStringDataSourceSchema() *schema.Schema {
-	return ArnStringSchema(AttrComputed)
+	return ARNStringSchema(AttrComputed)
 }
 
 type stringEnumIdentity struct {

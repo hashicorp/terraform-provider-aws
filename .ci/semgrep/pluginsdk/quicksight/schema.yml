@@ -2,6 +2,40 @@
 # "SPDX-License-Identifier: MPL-2.0"
 
 rules:
+  - id: schema-string-arn-requried
+    languages: [go]
+    message: ARN String attributes should use sdkschema.ArnStringSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeString,
+            Required:     true,
+            ValidateFunc: verify.ValidARN,
+          }
+    fix: sdkschema.ARNStringSchema(sdkschema.AttrRequired)
+    severity: WARNING
+
+  - id: schema-string-arn-optional
+    languages: [go]
+    message: ARN String attributes should use sdkschema.ArnStringSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeString,
+            Optional:     true,
+            ValidateFunc: verify.ValidARN,
+          }
+    fix: sdkschema.ARNStringSchema(sdkschema.AttrOptional)
+    severity: WARNING
+
   - id: schema-string-len-between-required
     languages: [go]
     message: String attributes with length validation should use sdkschema.StringLenBetweenSchema
