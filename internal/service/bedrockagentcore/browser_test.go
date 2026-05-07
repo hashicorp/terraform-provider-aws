@@ -230,7 +230,13 @@ func TestAccBedrockAgentCoreBrowser_certificates(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificates"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificates"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrLocation: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secrets_manager": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+							})}),
+						})}),
+					})})),
 				},
 			},
 			{
@@ -610,7 +616,7 @@ resource "aws_bedrockagentcore_browser" "test" {
 `, rName))
 }
 
-func testAccBrowserConfig_enterprisePolicies(rName, bucketName string) string {
+func testAccBrowserConfig_assumeRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -627,20 +633,22 @@ data "aws_iam_policy_document" "test_assume" {
     }
   }
 }
+`, rName)
+}
 
+func testAccBrowserConfig_enterprisePolicies(rName, bucketName string) string {
+	return acctest.ConfigCompose(testAccBrowserConfig_assumeRole(rName), fmt.Sprintf(`
 resource "aws_iam_role_policy" "test" {
   role = aws_iam_role.test.name
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": ["s3:GetObject", "s3:GetObjectVersion"],
-    "Resource": "*"
-  }
-}
-EOF
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
 }
 
 resource "aws_s3_bucket" "test" {
@@ -649,8 +657,8 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  bucket  = aws_s3_bucket.test.bucket
-  key     = "managed.json"
+  bucket = aws_s3_bucket.test.bucket
+  key    = "managed.json"
   content = jsonencode({
     AutofillAddressEnabled    = false
     AutofillCreditCardEnabled = false
@@ -676,40 +684,22 @@ resource "aws_bedrockagentcore_browser" "test" {
     }
   }
 }
-`, rName, bucketName)
+`, rName, bucketName))
 }
 
 func testAccBrowserConfig_certificates(rName, certificate string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test_assume.json
-}
-
-data "aws_iam_policy_document" "test_assume" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["bedrock-agentcore.amazonaws.com"]
-    }
-  }
-}
-
+	return acctest.ConfigCompose(testAccBrowserConfig_assumeRole(rName), fmt.Sprintf(`
 resource "aws_iam_role_policy" "test" {
   role = aws_iam_role.test.name
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": ["secretsmanager:GetSecretValue"],
-    "Resource": "*"
-  }
-}
-EOF
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = aws_secretsmanager_secret.test.arn
+    }]
+  })
 }
 
 resource "aws_secretsmanager_secret" "test" {
@@ -738,27 +728,11 @@ resource "aws_bedrockagentcore_browser" "test" {
     }
   }
 }
-`, rName, certificate)
+`, rName, certificate))
 }
 
 func testAccBrowserConfig_browserSigning(rName string, enabled bool) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["bedrock-agentcore.amazonaws.com"]
-    }
-  }
-}
-
+	return acctest.ConfigCompose(testAccBrowserConfig_assumeRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_browser" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -771,5 +745,5 @@ resource "aws_bedrockagentcore_browser" "test" {
     enabled = %[2]t
   }
 }
-`, rName, enabled)
+`, rName, enabled))
 }

@@ -243,7 +243,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"s3": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[s3LocationFullModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[enterprisePolicyS3LocationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 											listvalidator.ExactlyOneOf(
@@ -294,6 +294,9 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"certificates": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[certificateModel](ctx),
+				// SizeAtLeast(1) enforces the SDK's @length(min: 1) only when the
+				// user provides the block; the validator skips null/unknown, so
+				// omitting `certificates` entirely is still valid (block is optional).
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(200),
@@ -590,10 +593,10 @@ type browserEnterprisePolicyModel struct {
 }
 
 type resourceLocationModel struct {
-	S3 fwtypes.ListNestedObjectValueOf[s3LocationFullModel] `tfsdk:"s3"`
+	S3 fwtypes.ListNestedObjectValueOf[enterprisePolicyS3LocationModel] `tfsdk:"s3"`
 }
 
-type s3LocationFullModel struct {
+type enterprisePolicyS3LocationModel struct {
 	Bucket    types.String `tfsdk:"bucket"`
 	Prefix    types.String `tfsdk:"prefix"`
 	VersionID types.String `tfsdk:"version_id"`
@@ -608,7 +611,7 @@ func (m *resourceLocationModel) Flatten(ctx context.Context, v any) diag.Diagnos
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.ResourceLocationMemberS3:
-		var data s3LocationFullModel
+		var data enterprisePolicyS3LocationModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
 		if diags.HasError() {
 			return diags
