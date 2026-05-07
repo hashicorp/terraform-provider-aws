@@ -278,7 +278,7 @@ func resourceDeliveryStream() *schema.Resource {
 							Default:      5,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
-						attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+						attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 						"compression_format": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -391,7 +391,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:      5,
 								ValidateFunc: validation.IntBetween(1, 100),
 							},
-							attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 							"cluster_endpoint": {
 								Type:          schema.TypeString,
 								Optional:      true,
@@ -494,7 +494,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Optional: true,
 								Default:  5,
 							},
-							attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 							"compression_format": {
 								Type:             schema.TypeString,
 								Optional:         true,
@@ -814,7 +814,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:      5,
 								ValidateFunc: validation.IntBetween(1, 100),
 							},
-							attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 							names.AttrName: {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -882,7 +882,7 @@ func resourceDeliveryStream() *schema.Resource {
 								ForceNew:     true,
 								ValidateFunc: verify.ValidARN,
 							},
-							attrCloudwatchLoggingOptions:      cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions:      cloudWatchLoggingOptionsSchema(),
 							"destination_table_configuration": destinationTableConfigurationSchema(),
 							attrProcessingConfiguration:       processingConfigurationSchema(),
 							"retry_duration": {
@@ -1003,7 +1003,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:      5,
 								ValidateFunc: validation.IntBetween(1, 100),
 							},
-							attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 							"cluster_endpoint": {
 								Type:          schema.TypeString,
 								Optional:      true,
@@ -1117,7 +1117,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:      5,
 								ValidateFunc: validation.IntBetween(1, 100),
 							},
-							attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 							"collection_endpoint": {
 								Type:     schema.TypeString,
 								Required: true,
@@ -1187,7 +1187,7 @@ func resourceDeliveryStream() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 							"cluster_jdbcurl": {
 								Type:     schema.TypeString,
 								Required: true,
@@ -1288,7 +1288,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:      1,
 								ValidateFunc: validation.IntBetween(1, 128),
 							},
-							attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 							"content_column_name": {
 								Type:         schema.TypeString,
 								Optional:     true,
@@ -1410,7 +1410,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:      5,
 								ValidateFunc: validation.IntBetween(1, 5),
 							},
-							attrCloudwatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
+							attrCloudWatchLoggingOptions: cloudWatchLoggingOptionsSchema(),
 							"hec_acknowledgment_timeout": {
 								Type:         schema.TypeInt,
 								Optional:     true,
@@ -2017,7 +2017,7 @@ func expandS3DestinationConfiguration(tfList []any) *types.S3DestinationConfigur
 		configuration.ErrorOutputPrefix = aws.String(v)
 	}
 
-	if _, ok := s3[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := s3[attrCloudWatchLoggingOptions]; ok {
 		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
 	}
 
@@ -2044,7 +2044,7 @@ func expandS3DestinationConfigurationBackup(d map[string]any) *types.S3Destinati
 		EncryptionConfiguration: expandEncryptionConfiguration(s3),
 	}
 
-	if _, ok := s3[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := s3[attrCloudWatchLoggingOptions]; ok {
 		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
 	}
 
@@ -2080,7 +2080,7 @@ func expandExtendedS3DestinationConfiguration(s3 map[string]any) *types.Extended
 		configuration.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(s3)
 	}
 
-	if _, ok := s3[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := s3[attrCloudWatchLoggingOptions]; ok {
 		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
 	}
 
@@ -2112,7 +2112,7 @@ func expandS3DestinationUpdate(tfList []any) *types.S3DestinationUpdate {
 		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(s3),
 	}
 
-	if _, ok := s3[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := s3[attrCloudWatchLoggingOptions]; ok {
 		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
 	}
 
@@ -2141,7 +2141,7 @@ func expandS3DestinationUpdateBackup(d map[string]any) *types.S3DestinationUpdat
 		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(s3),
 	}
 
-	if _, ok := s3[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := s3[attrCloudWatchLoggingOptions]; ok {
 		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
 	}
 
@@ -2168,7 +2168,7 @@ func expandExtendedS3DestinationUpdate(s3 map[string]any) *types.ExtendedS3Desti
 		ProcessingConfiguration:           expandProcessingConfiguration(s3, destinationTypeExtendedS3, roleARN),
 	}
 
-	if _, ok := s3[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := s3[attrCloudWatchLoggingOptions]; ok {
 		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
 	}
 
@@ -2492,7 +2492,7 @@ func expandEncryptionConfiguration(s3 map[string]any) *types.EncryptionConfigura
 }
 
 func expandCloudWatchLoggingOptions(s3 map[string]any) *types.CloudWatchLoggingOptions {
-	config := s3[attrCloudwatchLoggingOptions].([]any)
+	config := s3[attrCloudWatchLoggingOptions].([]any)
 	if len(config) == 0 {
 		return nil
 	}
@@ -2554,7 +2554,7 @@ func expandIcebergDestinationConfiguration(tfMap map[string]any) *types.IcebergD
 		apiObject.AppendOnly = aws.Bool(v)
 	}
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -2597,7 +2597,7 @@ func expandIcebergDestinationUpdate(tfMap map[string]any) *types.IcebergDestinat
 		}
 	}
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -2634,7 +2634,7 @@ func expandRedshiftDestinationConfiguration(tfMap map[string]any) *types.Redshif
 		S3Configuration: expandS3DestinationConfiguration(tfMap[attrS3Configuration].([]any)),
 	}
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -2678,7 +2678,7 @@ func expandRedshiftDestinationUpdate(tfMap map[string]any) *types.RedshiftDestin
 	s3Config.ErrorOutputPrefix = nil
 	apiObject.S3Update = s3Config
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -2731,7 +2731,7 @@ func expandElasticsearchDestinationConfiguration(es map[string]any) *types.Elast
 		config.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := es[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := es[attrCloudWatchLoggingOptions]; ok {
 		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(es)
 	}
 
@@ -2772,7 +2772,7 @@ func expandElasticsearchDestinationUpdate(es map[string]any) *types.Elasticsearc
 		update.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := es[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := es[attrCloudWatchLoggingOptions]; ok {
 		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(es)
 	}
 
@@ -2806,7 +2806,7 @@ func expandAmazonopensearchserviceDestinationConfiguration(os map[string]any) *t
 		config.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := os[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := os[attrCloudWatchLoggingOptions]; ok {
 		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(os)
 	}
 
@@ -2851,7 +2851,7 @@ func expandAmazonopensearchserviceDestinationUpdate(os map[string]any) *types.Am
 		update.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := os[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := os[attrCloudWatchLoggingOptions]; ok {
 		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(os)
 	}
 
@@ -2884,7 +2884,7 @@ func expandAmazonOpenSearchServerlessDestinationConfiguration(oss map[string]any
 		config.CollectionEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := oss[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := oss[attrCloudWatchLoggingOptions]; ok {
 		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(oss)
 	}
 
@@ -2916,7 +2916,7 @@ func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]any) *type
 		update.CollectionEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := oss[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := oss[attrCloudWatchLoggingOptions]; ok {
 		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(oss)
 	}
 
@@ -2944,7 +2944,7 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]any) *types.Snowfl
 		Table:                     aws.String(tfMap["table"].(string)),
 	}
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -3011,7 +3011,7 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]any) *types.SnowflakeDest
 		Table:        aws.String(tfMap["table"].(string)),
 	}
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -3076,7 +3076,7 @@ func expandSplunkDestinationConfiguration(tfMap map[string]any) *types.SplunkDes
 	}
 	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -3117,7 +3117,7 @@ func expandSplunkDestinationUpdate(tfMap map[string]any) *types.SplunkDestinatio
 	}
 	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -3158,7 +3158,7 @@ func expandHTTPEndpointDestinationConfiguration(tfMap map[string]any) *types.Htt
 	}
 	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -3199,7 +3199,7 @@ func expandHTTPEndpointDestinationUpdate(tfMap map[string]any) *types.HttpEndpoi
 	}
 	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := tfMap[attrCloudwatchLoggingOptions]; ok {
+	if _, ok := tfMap[attrCloudWatchLoggingOptions]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
@@ -3607,7 +3607,7 @@ func flattenElasticsearchDestinationDescription(description *types.Elasticsearch
 	}
 
 	m := map[string]any{
-		attrCloudwatchLoggingOptions: flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions: flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"type_name":                  aws.ToString(description.TypeName),
 		"index_name":                 aws.ToString(description.IndexName),
@@ -3644,7 +3644,7 @@ func flattenAmazonopensearchserviceDestinationDescription(description *types.Ama
 	}
 
 	m := map[string]any{
-		attrCloudwatchLoggingOptions: flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions: flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"type_name":                  aws.ToString(description.TypeName),
 		"index_name":                 aws.ToString(description.IndexName),
@@ -3685,7 +3685,7 @@ func flattenAmazonOpenSearchServerlessDestinationDescription(description *types.
 	}
 
 	m := map[string]any{
-		attrCloudwatchLoggingOptions: flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions: flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"index_name":                 aws.ToString(description.IndexName),
 		attrS3BackupMode:             description.S3BackupMode,
@@ -3732,7 +3732,7 @@ func flattenExtendedS3DestinationDescription(description *types.ExtendedS3Destin
 
 	m := map[string]any{
 		"bucket_arn":                           aws.ToString(description.BucketARN),
-		attrCloudwatchLoggingOptions:           flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions:           flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   description.CompressionFormat,
 		"custom_time_zone":                     aws.ToString(description.CustomTimeZone),
 		"data_format_conversion_configuration": flattenDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
@@ -3764,7 +3764,7 @@ func flattenRedshiftDestinationDescription(apiObject *types.RedshiftDestinationD
 	}
 
 	tfMap := map[string]any{
-		attrCloudwatchLoggingOptions:    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions:    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
 		"cluster_jdbcurl":               aws.ToString(apiObject.ClusterJDBCURL),
 		names.AttrPassword:              configuredPassword,
 		attrProcessingConfiguration:     flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeRedshift, aws.ToString(apiObject.RoleARN)),
@@ -3797,7 +3797,7 @@ func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinatio
 	roleARN := aws.ToString(apiObject.RoleARN)
 	tfMap := map[string]any{
 		"account_url":                   aws.ToString(apiObject.AccountUrl),
-		attrCloudwatchLoggingOptions:    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions:    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
 		"content_column_name":           aws.ToString(apiObject.ContentColumnName),
 		"data_loading_option":           apiObject.DataLoadingOption,
 		names.AttrDatabase:              aws.ToString(apiObject.Database),
@@ -3838,7 +3838,7 @@ func flattenSplunkDestinationDescription(apiObject *types.SplunkDestinationDescr
 	}
 
 	tfMap := map[string]any{
-		attrCloudwatchLoggingOptions:    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions:    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
 		"hec_acknowledgment_timeout":    int(aws.ToInt32(apiObject.HECAcknowledgmentTimeoutInSeconds)),
 		"hec_endpoint":                  aws.ToString(apiObject.HECEndpoint),
 		"hec_endpoint_type":             apiObject.HECEndpointType,
@@ -3868,7 +3868,7 @@ func flattenS3DestinationDescription(description *types.S3DestinationDescription
 
 	m := map[string]any{
 		"bucket_arn":                 aws.ToString(description.BucketARN),
-		attrCloudwatchLoggingOptions: flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions: flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":         description.CompressionFormat,
 		"error_output_prefix":        aws.ToString(description.ErrorOutputPrefix),
 		names.AttrPrefix:             aws.ToString(description.Prefix),
@@ -4229,7 +4229,7 @@ func flattenHTTPEndpointDestinationDescription(apiObject *types.HttpEndpointDest
 
 	tfMap := map[string]any{
 		names.AttrAccessKey:             configuredAccessKey,
-		attrCloudwatchLoggingOptions:    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		attrCloudWatchLoggingOptions:    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
 		names.AttrName:                  aws.ToString(apiObject.EndpointConfiguration.Name),
 		attrProcessingConfiguration:     flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeHTTPEndpoint, aws.ToString(apiObject.RoleARN)),
 		"request_configuration":         flattenHTTPEndpointRequestConfiguration(apiObject.RequestConfiguration),
@@ -4270,7 +4270,7 @@ func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDes
 	}
 
 	if apiObject.CloudWatchLoggingOptions != nil {
-		tfMap[attrCloudwatchLoggingOptions] = flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions)
+		tfMap[attrCloudWatchLoggingOptions] = flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions)
 	}
 
 	if apiObject.DestinationTableConfigurationList != nil {

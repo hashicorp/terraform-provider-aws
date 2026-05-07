@@ -5,7 +5,7 @@ package firehose
 
 // Schema attribute name constants used across package
 const (
-	attrCloudwatchLoggingOptions = "cloudwatch_logging_options"
+	attrCloudWatchLoggingOptions = "cloudwatch_logging_options"
 	attrProcessingConfiguration  = "processing_configuration"
 	attrS3BackupMode             = "s3_backup_mode"
 	attrS3Configuration          = "s3_configuration"
