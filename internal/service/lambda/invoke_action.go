@@ -52,7 +52,7 @@ func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, res
 	resp.Schema = schema.Schema{
 		Description: "Invokes an AWS Lambda function with the specified payload. This action allows for imperative invocation of Lambda functions with full control over invocation parameters.",
 		Attributes: map[string]schema.Attribute{
-			"function_name": schema.StringAttribute{
+			attrFunctionName: schema.StringAttribute{
 				Description: "The name, ARN, or partial ARN of the Lambda function to invoke. You can specify a function name (e.g., my-function), a qualified function name (e.g., my-function:PROD), or a partial ARN (e.g., 123456789012:function:my-function).",
 				Required:    true,
 			},
@@ -109,7 +109,7 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	logType := fwflex.StringEnumValueOr(ctx, config.LogType, awstypes.LogTypeNone)
 
 	tflog.Info(ctx, "Starting Lambda function invocation action", map[string]any{
-		"function_name":      functionName,
+		attrFunctionName:     functionName,
 		"invocation_type":    invocationType,
 		"log_type":           logType,
 		"payload_length":     len(payload),
@@ -190,7 +190,7 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	}
 
 	tflog.Info(ctx, "Lambda function invocation action completed successfully", map[string]any{
-		"function_name":      functionName,
+		attrFunctionName:     functionName,
 		"invocation_type":    string(invocationType),
 		names.AttrStatusCode: output.StatusCode,
 		"executed_version":   aws.ToString(output.ExecutedVersion),

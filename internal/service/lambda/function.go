@@ -68,7 +68,7 @@ func resourceFunction() *schema.Resource {
 				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
-				d.Set("function_name", d.Id())
+				d.Set(attrFunctionName, d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -239,7 +239,7 @@ func resourceFunction() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
 			},
-			"function_name": {
+			attrFunctionName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -592,7 +592,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	packageType := awstypes.PackageType(d.Get("package_type").(string))
 	input := lambda.CreateFunctionInput{
 		Code:         &awstypes.FunctionCode{},

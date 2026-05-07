@@ -93,7 +93,7 @@ func resourceFunctionURL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"function_name": {
+			attrFunctionName: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -126,7 +126,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	name := d.Get("function_name").(string)
+	name := d.Get(attrFunctionName).(string)
 	qualifier := d.Get("qualifier").(string)
 	id := functionURLCreateResourceID(name, qualifier)
 	authorizationType := awstypes.FunctionUrlAuthType(d.Get("authorization_type").(string))
@@ -232,7 +232,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("cors", nil)
 	}
 	d.Set(names.AttrFunctionARN, output.FunctionArn)
-	d.Set("function_name", name)
+	d.Set(attrFunctionName, name)
 	d.Set("function_url", functionURL)
 	d.Set("invoke_mode", output.InvokeMode)
 	d.Set("qualifier", qualifier)

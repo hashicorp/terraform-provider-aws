@@ -26,7 +26,7 @@ func dataSourceInvocation() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInvocationRead,
 
 		Schema: map[string]*schema.Schema{
-			"function_name": {
+			attrFunctionName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -56,7 +56,7 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	qualifier := d.Get("qualifier").(string)
 	payload := []byte(d.Get("input").(string))
 

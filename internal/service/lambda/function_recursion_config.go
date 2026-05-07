@@ -45,7 +45,7 @@ type functionRecursionConfigResource struct {
 func (r *functionRecursionConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"function_name": schema.StringAttribute{
+			attrFunctionName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -203,7 +203,7 @@ func (r *functionRecursionConfigResource) Delete(ctx context.Context, req resour
 }
 
 func (r *functionRecursionConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("function_name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(attrFunctionName), req, resp)
 }
 
 func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client, functionName string) (*lambda.GetFunctionRecursionConfigOutput, error) {

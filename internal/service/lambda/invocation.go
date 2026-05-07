@@ -56,7 +56,7 @@ func resourceInvocation() *schema.Resource {
 					return nil, err
 				}
 
-				d.Set("function_name", functionName)
+				d.Set(attrFunctionName, functionName)
 				d.Set("qualifier", qualifier)
 
 				return []*schema.ResourceData{d}, nil
@@ -64,7 +64,7 @@ func resourceInvocation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"function_name": {
+			attrFunctionName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -209,7 +209,7 @@ func isCreateOnlyScope(d *schema.ResourceData) bool {
 func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, action invocationAction) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	qualifier := d.Get("qualifier").(string)
 	payload, err := buildInput(d, action)
 	if err != nil {

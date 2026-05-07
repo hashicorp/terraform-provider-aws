@@ -61,7 +61,7 @@ func (l *listResourceFunction) List(ctx context.Context, request list.ListReques
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(functionName)
-			rd.Set("function_name", functionName)
+			rd.Set(attrFunctionName, functionName)
 
 			tflog.Info(ctx, "Reading Lambda Function")
 			getFunctionInput := lambda.GetFunctionInput{FunctionName: aws.String(functionName)}

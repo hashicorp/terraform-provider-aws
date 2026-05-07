@@ -42,7 +42,7 @@ type permissionListResourceModel struct {
 func (l *permissionListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"function_name": listschema.StringAttribute{
+			attrFunctionName: listschema.StringAttribute{
 				Required: true,
 			},
 			"qualifier": listschema.StringAttribute{
@@ -67,7 +67,7 @@ func (l *permissionListResource) List(ctx context.Context, request list.ListRequ
 	qualifier := query.Qualifier.ValueString()
 
 	tflog.Info(ctx, "Listing Lambda permissions", map[string]any{
-		"function_name": functionName,
+		attrFunctionName: functionName,
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -100,7 +100,7 @@ func (l *permissionListResource) List(ctx context.Context, request list.ListRequ
 
 			rd := l.ResourceData()
 			rd.SetId(id)
-			rd.Set("function_name", functionName)
+			rd.Set(attrFunctionName, functionName)
 			rd.Set("statement_id", id)
 			if qualifier != "" {
 				rd.Set("qualifier", qualifier)

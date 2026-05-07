@@ -49,7 +49,7 @@ func (r *runtimeManagementConfigResource) Schema(ctx context.Context, req resour
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrFunctionARN: framework.ARNAttributeComputedOnly(),
-			"function_name": schema.StringAttribute{
+			attrFunctionName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -208,7 +208,7 @@ func (r *runtimeManagementConfigResource) ImportState(ctx context.Context, req r
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(attrFunctionName), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("qualifier"), parts[1])...)
 }
 

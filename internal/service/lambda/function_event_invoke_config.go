@@ -77,7 +77,7 @@ func resourceFunctionEventInvokeConfig() *schema.Resource {
 					},
 				},
 			},
-			"function_name": {
+			attrFunctionName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -108,7 +108,7 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	qualifier := d.Get("qualifier").(string)
 	id := functionName
 	if qualifier != "" {
@@ -181,7 +181,7 @@ func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.Resour
 	if err := d.Set("destination_config", flattenFunctionEventInvokeConfigDestinationConfig(output.DestinationConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting destination_config: %s", err)
 	}
-	d.Set("function_name", functionName)
+	d.Set(attrFunctionName, functionName)
 	d.Set("maximum_event_age_in_seconds", output.MaximumEventAgeInSeconds)
 	d.Set("maximum_retry_attempts", output.MaximumRetryAttempts)
 	d.Set("qualifier", qualifier)

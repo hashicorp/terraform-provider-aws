@@ -62,7 +62,7 @@ func sweepFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweep
 			r := resourceFunction()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.FunctionName))
-			d.Set("function_name", v.FunctionName)
+			d.Set(attrFunctionName, v.FunctionName)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

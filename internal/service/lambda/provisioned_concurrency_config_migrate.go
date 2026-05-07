@@ -16,7 +16,7 @@ func resourceProvisionedConcurrencyConfigV0() *schema.Resource {
 	// Resource with v0 schema (provider v5.3.0 and below)
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"function_name": {
+			attrFunctionName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -49,7 +49,7 @@ func provisionedConcurrencyConfigStateUpgradeV0(ctx context.Context, rawState ma
 
 	// Convert id separator from ":" to ","
 	parts := []string{
-		rawState["function_name"].(string),
+		rawState[attrFunctionName].(string),
 		rawState["qualifier"].(string),
 	}
 

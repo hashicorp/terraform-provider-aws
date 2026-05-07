@@ -16,7 +16,7 @@ func resourceInvocationConfigV0() *schema.Resource {
 	// Resource with v0 schema (provider v5.83.0 and below)
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"function_name": {
+			attrFunctionName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

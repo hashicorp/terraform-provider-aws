@@ -30,7 +30,7 @@ func dataSourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"function_name": {
+			attrFunctionName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -54,7 +54,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string))
+	output, err := findAliasByTwoPartKey(ctx, conn, d.Get(attrFunctionName).(string), d.Get(names.AttrName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Alias: %s", err)

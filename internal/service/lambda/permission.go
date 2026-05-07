@@ -59,7 +59,7 @@ func resourcePermission() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validPermissionEventSourceToken(),
 			},
-			"function_name": {
+			attrFunctionName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -128,7 +128,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	statementID := create.Name(ctx, d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 
 	// There is a bug in the API (reported and acknowledged by AWS)
@@ -191,7 +191,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	statement, err := tfresource.RetryWhenNewResourceNotFound(ctx, lambdaPropagationTimeout, func(ctx context.Context) (*policyStatement, error) {
 		return findPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 	}, d.IsNewResource())
@@ -218,14 +218,14 @@ func resourcePermissionFlatten(ctx context.Context, d *schema.ResourceData, awsC
 	if strings.HasPrefix(functionName, "arn:"+awsClient.Partition(ctx)+":lambda:") {
 		// Strip qualifier off
 		trimmed := strings.TrimSuffix(statement.Resource, ":"+qualifier)
-		d.Set("function_name", trimmed)
+		d.Set(attrFunctionName, trimmed)
 	} else {
 		functionName, err := getFunctionNameFromARN(statement.Resource)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		d.Set("function_name", functionName)
+		d.Set(attrFunctionName, functionName)
 	}
 
 	d.Set(names.AttrAction, statement.Action)
@@ -265,7 +265,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 
 	// There is a bug in the API (reported and acknowledged by AWS)
 	// which causes some permissions to be ignored when API calls are sent in parallel
@@ -406,8 +406,8 @@ func (permissionImportID) Parse(id string) (string, map[string]any, error) {
 	functionName := parts[0]
 	statementID := parts[1]
 	results := map[string]any{
-		"function_name": functionName,
-		"statement_id":  statementID,
+		attrFunctionName: functionName,
+		"statement_id":   statementID,
 	}
 
 	if fnParts := strings.Split(functionName, ":"); len(fnParts) == 2 {

@@ -54,7 +54,7 @@ func resourceProvisionedConcurrencyConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"function_name": {
+			attrFunctionName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -88,7 +88,7 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	qualifier := d.Get("qualifier").(string)
 	id, err := flex.FlattenResourceId([]string{functionName, qualifier}, provisionedConcurrencyConfigResourceIDPartCount, true)
 	if err != nil {
@@ -136,7 +136,7 @@ func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("function_name", functionName)
+	d.Set(attrFunctionName, functionName)
 	d.Set("provisioned_concurrent_executions", output.AllocatedProvisionedConcurrentExecutions)
 	d.Set("qualifier", qualifier)
 

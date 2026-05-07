@@ -46,7 +46,7 @@ func resourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"function_name": {
+			attrFunctionName: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -90,7 +90,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	name := d.Get(names.AttrName).(string)
 	input := &lambda.CreateAliasInput{
 		Description:     aws.String(d.Get(names.AttrDescription).(string)),
-		FunctionName:    aws.String(d.Get("function_name").(string)),
+		FunctionName:    aws.String(d.Get(attrFunctionName).(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(name),
 		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]any)),
@@ -111,7 +111,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string))
+	output, err := findAliasByTwoPartKey(ctx, conn, d.Get(attrFunctionName).(string), d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lambda Alias %s not found, removing from state", d.Id())
@@ -143,7 +143,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	input := &lambda.UpdateAliasInput{
 		Description:     aws.String(d.Get(names.AttrDescription).(string)),
-		FunctionName:    aws.String(d.Get("function_name").(string)),
+		FunctionName:    aws.String(d.Get(attrFunctionName).(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]any)),
@@ -164,7 +164,7 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[INFO] Deleting Lambda Alias: %s", d.Id())
 	_, err := conn.DeleteAlias(ctx, &lambda.DeleteAliasInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
+		FunctionName: aws.String(d.Get(attrFunctionName).(string)),
 		Name:         aws.String(d.Get(names.AttrName).(string)),
 	})
 
@@ -188,7 +188,7 @@ func resourceAliasImport(ctx context.Context, d *schema.ResourceData, meta any) 
 	functionName := idParts[0]
 	alias := idParts[1]
 
-	d.Set("function_name", functionName)
+	d.Set(attrFunctionName, functionName)
 	d.Set(names.AttrName, alias)
 	return []*schema.ResourceData{d}, nil
 }

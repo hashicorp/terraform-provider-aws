@@ -72,7 +72,7 @@ func dataSourceFunctionURL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"function_name": {
+			attrFunctionName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -104,7 +104,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	name := d.Get("function_name").(string)
+	name := d.Get(attrFunctionName).(string)
 	qualifier := d.Get("qualifier").(string)
 	id := functionURLCreateResourceID(name, qualifier)
 	output, err := findFunctionURLByTwoPartKey(ctx, conn, name, qualifier)
@@ -125,7 +125,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set(names.AttrCreationTime, output.CreationTime)
 	d.Set(names.AttrFunctionARN, output.FunctionArn)
-	d.Set("function_name", name)
+	d.Set(attrFunctionName, name)
 	d.Set("function_url", functionURL)
 	d.Set("invoke_mode", output.InvokeMode)
 	d.Set("last_modified_time", output.LastModifiedTime)

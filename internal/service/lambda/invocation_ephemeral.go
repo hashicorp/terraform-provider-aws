@@ -47,7 +47,7 @@ func (e *invocationEphemeralResource) Schema(ctx context.Context, _ ephemeral.Sc
 			"function_error": schema.StringAttribute{
 				Computed: true,
 			},
-			"function_name": schema.StringAttribute{
+			attrFunctionName: schema.StringAttribute{
 				Required: true,
 			},
 			"log_result": schema.StringAttribute{

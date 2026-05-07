@@ -219,7 +219,7 @@ func resourceEventSourceMapping() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"function_name": {
+				attrFunctionName: {
 					Type:             schema.TypeString,
 					Required:         true,
 					DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
@@ -520,7 +520,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	input := lambda.CreateEventSourceMappingInput{
 		Enabled:      aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		FunctionName: aws.String(functionName),
@@ -719,7 +719,7 @@ func resourceEventSourceMappingFlatten(d *schema.ResourceData, output *lambda.Ge
 		d.Set("filter_criteria", nil)
 	}
 	d.Set(names.AttrFunctionARN, output.FunctionArn)
-	d.Set("function_name", output.FunctionArn)
+	d.Set(attrFunctionName, output.FunctionArn)
 	d.Set("function_response_types", output.FunctionResponseTypes)
 	d.Set(names.AttrKMSKeyARN, output.KMSKeyArn)
 	if output.LastModified != nil {
@@ -838,8 +838,8 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 
-		if d.HasChange("function_name") {
-			input.FunctionName = aws.String(d.Get("function_name").(string))
+		if d.HasChange(attrFunctionName) {
+			input.FunctionName = aws.String(d.Get(attrFunctionName).(string))
 		}
 
 		if d.HasChange("function_response_types") {

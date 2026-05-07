@@ -148,7 +148,7 @@ func dataSourceFunction() *schema.Resource {
 					},
 				},
 			},
-			"function_name": {
+			attrFunctionName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -321,7 +321,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
+	functionName := d.Get(attrFunctionName).(string)
 	input := &lambda.GetFunctionInput{
 		FunctionName: aws.String(functionName),
 	}
