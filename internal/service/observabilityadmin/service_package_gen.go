@@ -93,6 +93,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newTelemetryRuleForOrganizationResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
+			Name:     "Telemetry Rule For Organization",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "rule_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
