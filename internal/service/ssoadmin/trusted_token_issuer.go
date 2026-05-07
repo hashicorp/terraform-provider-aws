@@ -62,7 +62,7 @@ func (r *trustedTokenIssuerResource) Schema(ctx context.Context, request resourc
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"instance_arn": schema.StringAttribute{
+			attrInstanceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{

@@ -64,7 +64,7 @@ func resourceInstanceAccessControlAttributes() *schema.Resource {
 					},
 				},
 			},
-			"instance_arn": {
+			attrInstanceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -86,7 +86,7 @@ func resourceInstanceAccessControlAttributesCreate(ctx context.Context, d *schem
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	instanceARN := d.Get("instance_arn").(string)
+	instanceARN := d.Get(attrInstanceARN).(string)
 	input := &ssoadmin.CreateInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(instanceARN),
 		InstanceAccessControlAttributeConfiguration: &awstypes.InstanceAccessControlAttributeConfiguration{
@@ -121,7 +121,7 @@ func resourceInstanceAccessControlAttributesRead(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "reading SSO Instance Access Control Attributes (%s): %s", d.Id(), err)
 	}
 
-	d.Set("instance_arn", d.Id())
+	d.Set(attrInstanceARN, d.Id())
 	if err := d.Set("attribute", flattenAccessControlAttributes(output.InstanceAccessControlAttributeConfiguration.AccessControlAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attribute: %s", err)
 	}

@@ -65,7 +65,7 @@ func resourcePermissionSet() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "must match [\\p{L}\\p{M}\\p{Z}\\p{S}\\p{N}\\p{P}]"),
 				),
 			},
-			"instance_arn": {
+			attrInstanceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -104,7 +104,7 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	instanceARN := d.Get("instance_arn").(string)
+	instanceARN := d.Get(attrInstanceARN).(string)
 	name := d.Get(names.AttrName).(string)
 	input := &ssoadmin.CreatePermissionSetInput{
 		InstanceArn: aws.String(instanceARN),
@@ -159,7 +159,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, permissionSet.PermissionSetArn)
 	d.Set(names.AttrCreatedDate, permissionSet.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, permissionSet.Description)
-	d.Set("instance_arn", instanceARN)
+	d.Set(attrInstanceARN, instanceARN)
 	d.Set(names.AttrName, permissionSet.Name)
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("session_duration", permissionSet.SessionDuration)

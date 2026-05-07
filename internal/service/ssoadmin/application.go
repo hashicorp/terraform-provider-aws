@@ -71,7 +71,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 			},
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
-			"instance_arn": schema.StringAttribute{
+			attrInstanceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},

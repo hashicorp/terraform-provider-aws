@@ -68,7 +68,7 @@ func resourceCustomerManagedPolicyAttachment() *schema.Resource {
 					},
 				},
 			},
-			"instance_arn": {
+			attrInstanceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -91,7 +91,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schem
 	tfMap := d.Get("customer_managed_policy_reference").([]any)[0].(map[string]any)
 	policyName := tfMap[names.AttrName].(string)
 	policyPath := tfMap[names.AttrPath].(string)
-	instanceARN := d.Get("instance_arn").(string)
+	instanceARN := d.Get(attrInstanceARN).(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 	id := CustomerManagedPolicyAttachmentCreateResourceID(policyName, policyPath, permissionSetARN, instanceARN)
 	input := &ssoadmin.AttachCustomerManagedPolicyReferenceToPermissionSetInput{
@@ -140,7 +140,7 @@ func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.
 	if err := d.Set("customer_managed_policy_reference", []any{flattenCustomerManagedPolicyReference(policy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting customer_managed_policy_reference: %s", err)
 	}
-	d.Set("instance_arn", instanceARN)
+	d.Set(attrInstanceARN, instanceARN)
 	d.Set("permission_set_arn", permissionSetARN)
 
 	return diags

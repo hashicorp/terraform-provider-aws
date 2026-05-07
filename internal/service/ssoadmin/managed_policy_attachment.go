@@ -43,7 +43,7 @@ func resourceManagedPolicyAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"instance_arn": {
+			attrInstanceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -73,7 +73,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	instanceARN := d.Get("instance_arn").(string)
+	instanceARN := d.Get(attrInstanceARN).(string)
 	managedPolicyARN := d.Get("managed_policy_arn").(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 
@@ -129,7 +129,7 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading SSO Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("instance_arn", instanceARN)
+	d.Set(attrInstanceARN, instanceARN)
 	d.Set("managed_policy_arn", policy.Arn)
 	d.Set("managed_policy_name", policy.Name)
 	d.Set("permission_set_arn", permissionSetARN)

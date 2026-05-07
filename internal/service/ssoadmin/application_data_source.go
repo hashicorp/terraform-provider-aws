@@ -45,7 +45,7 @@ func (d *applicationDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"instance_arn": schema.StringAttribute{
+			attrInstanceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
 			},

@@ -54,7 +54,7 @@ func resourcePermissionSetInlinePolicy() *schema.Resource {
 					return json
 				},
 			},
-			"instance_arn": {
+			attrInstanceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -79,7 +79,7 @@ func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	instanceARN := d.Get("instance_arn").(string)
+	instanceARN := d.Get(attrInstanceARN).(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 	input := &ssoadmin.PutInlinePolicyToPermissionSetInput{
 		InlinePolicy:     aws.String(policy),
@@ -130,7 +130,7 @@ func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("inline_policy", policyToSet)
-	d.Set("instance_arn", instanceARN)
+	d.Set(attrInstanceARN, instanceARN)
 	d.Set("permission_set_arn", permissionSetARN)
 
 	return diags

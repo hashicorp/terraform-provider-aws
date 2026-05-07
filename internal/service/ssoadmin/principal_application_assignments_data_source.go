@@ -37,7 +37,7 @@ func (d *principalApplicationAssignmentsDataSource) Schema(ctx context.Context, 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"instance_arn": schema.StringAttribute{
+			attrInstanceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},

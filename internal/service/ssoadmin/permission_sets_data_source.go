@@ -36,7 +36,7 @@ func (d *permissionSetsDataSource) Schema(ctx context.Context, request datasourc
 				Computed:    true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"instance_arn": schema.StringAttribute{
+			attrInstanceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},

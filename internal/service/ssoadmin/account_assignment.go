@@ -53,7 +53,7 @@ func resourceAccountAssignment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"instance_arn": {
+			attrInstanceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -100,7 +100,7 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	instanceARN := d.Get("instance_arn").(string)
+	instanceARN := d.Get(attrInstanceARN).(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 	principalID := d.Get("principal_id").(string)
 	principalType := d.Get("principal_type").(string)
@@ -237,7 +237,7 @@ func accountAssignmentCreateResourceID(principalID, principalType, targetID, tar
 }
 
 func resourceAccountAssignmentFlatten(d *schema.ResourceData, accountAssignment *awstypes.AccountAssignment, instanceARN, targetType string) error {
-	if err := d.Set("instance_arn", instanceARN); err != nil {
+	if err := d.Set(attrInstanceARN, instanceARN); err != nil {
 		return fmt.Errorf("setting instance_arn: %w", err)
 	}
 
@@ -465,7 +465,7 @@ func (accountAssignmentImportID) Create(d *schema.ResourceData) string {
 		d.Get("target_id").(string),
 		d.Get("target_type").(string),
 		d.Get("permission_set_arn").(string),
-		d.Get("instance_arn").(string),
+		d.Get(attrInstanceARN).(string),
 	)
 }
 
@@ -488,7 +488,7 @@ func (accountAssignmentImportID) Parse(id string) (string, map[string]any, error
 		"target_id":          targetID,
 		"target_type":        targetType,
 		"permission_set_arn": permissionSetARN,
-		"instance_arn":       instanceARN,
+		attrInstanceARN:      instanceARN,
 	}
 
 	return id, result, nil

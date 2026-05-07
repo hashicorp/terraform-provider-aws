@@ -44,7 +44,7 @@ func dataSourcePermissionSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_arn": {
+			attrInstanceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -77,7 +77,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	instanceArn := d.Get("instance_arn").(string)
+	instanceArn := d.Get(attrInstanceARN).(string)
 
 	var permissionSet *awstypes.PermissionSet
 
@@ -148,7 +148,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, permissionSet.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, permissionSet.Description)
-	d.Set("instance_arn", instanceArn)
+	d.Set(attrInstanceARN, instanceArn)
 	d.Set(names.AttrName, permissionSet.Name)
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)

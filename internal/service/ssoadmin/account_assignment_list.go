@@ -50,7 +50,7 @@ func (l *accountAssignmentListResource) ListResourceConfigSchema(ctx context.Con
 				Required:    true,
 				Description: "AWS account ID to list account assignments for.",
 			},
-			"instance_arn": listschema.StringAttribute{
+			attrInstanceARN: listschema.StringAttribute{
 				Required:    true,
 				Description: "ARN of the IAM Identity Center instance.",
 			},
@@ -79,7 +79,7 @@ func (l *accountAssignmentListResource) List(ctx context.Context, request list.L
 
 	tflog.Info(ctx, "Listing SSO Account Assignments", map[string]any{
 		logging.ResourceAttributeKey(names.AttrAccountID):  accountID,
-		logging.ResourceAttributeKey("instance_arn"):       instanceARN,
+		logging.ResourceAttributeKey(attrInstanceARN):      instanceARN,
 		logging.ResourceAttributeKey("permission_set_arn"): permissionSetARN,
 	})
 

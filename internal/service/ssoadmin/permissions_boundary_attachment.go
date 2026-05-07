@@ -44,7 +44,7 @@ func resourcePermissionsBoundaryAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"instance_arn": {
+			attrInstanceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -105,7 +105,7 @@ func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	tfMap := d.Get("permissions_boundary").([]any)[0].(map[string]any)
-	instanceARN := d.Get("instance_arn").(string)
+	instanceARN := d.Get(attrInstanceARN).(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 	id := PermissionsBoundaryAttachmentCreateResourceID(permissionSetARN, instanceARN)
 	input := &ssoadmin.PutPermissionsBoundaryToPermissionSetInput{
@@ -151,7 +151,7 @@ func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading SSO Permissions Boundary Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("instance_arn", instanceARN)
+	d.Set(attrInstanceARN, instanceARN)
 	d.Set("permission_set_arn", permissionSetARN)
 	if err := d.Set("permissions_boundary", []any{flattenPermissionsBoundary(policy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permissions_boundary: %s", err)

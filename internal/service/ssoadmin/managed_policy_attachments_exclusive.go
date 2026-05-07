@@ -60,7 +60,7 @@ type managedPolicyAttachmentsExclusiveResource struct {
 func (r *managedPolicyAttachmentsExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"instance_arn": schema.StringAttribute{
+			attrInstanceARN: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -171,7 +171,7 @@ func (managedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[s
 	}
 
 	result := map[string]any{
-		"instance_arn":       instanceARN,
+		attrInstanceARN:      instanceARN,
 		"permission_set_arn": permissionSetARN,
 	}
 
