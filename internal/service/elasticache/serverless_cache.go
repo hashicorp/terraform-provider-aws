@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -181,6 +182,16 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				Computed:    true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"network_type": schema.StringAttribute{
+				Optional:         true,
+				Computed:         true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.OneOf(string(awstypes.NetworkTypeIpv4), string(awstypes.NetworkTypeIpv6), string(awstypes.NetworkTypeDualStack)),
 				},
 			},
 			"snapshot_arns_to_restore": schema.ListAttribute{

@@ -77,6 +77,10 @@ func (d *serverlessCacheDataSource) Schema(ctx context.Context, request datasour
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
 			},
+			"network_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.NetworkType](),
+				Computed: true,
+			},
 			"snapshot_retention_limit": schema.Int64Attribute{
 				Computed: true,
 			},
@@ -136,6 +140,7 @@ type serverlessCacheDataSourceModel struct {
 	Name                   types.String                              `tfsdk:"name"`
 	ReaderEndpoint         fwtypes.ObjectValueOf[dsEndpoint]         `tfsdk:"reader_endpoint"`
 	SecurityGroupIDs       fwtypes.ListValueOf[types.String]         `tfsdk:"security_group_ids"`
+	NetworkType            types.String                              `tfsdk:"network_type"`
 	SnapshotRetentionLimit types.Int64                               `tfsdk:"snapshot_retention_limit"`
 	Status                 types.String                              `tfsdk:"status"`
 	SubnetIDs              fwtypes.ListValueOf[types.String]         `tfsdk:"subnet_ids"`
