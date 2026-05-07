@@ -7,6 +7,8 @@ package neptunegraph
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -39,9 +41,33 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourcePrivateGraphEndpoint,
 			TypeName: "aws_neptunegraph_private_graph_endpoint",
 			Name:     "Private Graph Endpoint",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("graph_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      privateGraphEndpointImportID{},
+				SetIDAttr:     true,
+			},
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newPrivateGraphEndpointResourceAsListResource,
+			TypeName: "aws_neptunegraph_private_graph_endpoint",
+			Name:     "Private Graph Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("graph_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

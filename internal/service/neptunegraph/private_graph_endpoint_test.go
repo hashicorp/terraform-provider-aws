@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfneptunegraph "github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,19 +24,19 @@ func TestAccNeptuneGraphPrivateGraphEndpoint_basic(t *testing.T) {
 	}
 
 	var privategraphendpoint neptunegraph.GetPrivateGraphEndpointOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptunegraph_private_graph_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneGraphServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPrivateGraphEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckPrivateGraphEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrivateGraphEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPrivateGraphEndpointExists(ctx, resourceName, &privategraphendpoint),
+					testAccCheckPrivateGraphEndpointExists(ctx, t, resourceName, &privategraphendpoint),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCEndpointID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_graph_endpoint_identifier"),
@@ -61,19 +59,19 @@ func TestAccNeptuneGraphPrivateGraphEndpoint_disappears(t *testing.T) {
 	}
 
 	var endpoint neptunegraph.GetPrivateGraphEndpointOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptunegraph_private_graph_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneGraphServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPrivateGraphEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckPrivateGraphEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrivateGraphEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPrivateGraphEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckPrivateGraphEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfneptunegraph.ResourcePrivateGraphEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,9 +80,9 @@ func TestAccNeptuneGraphPrivateGraphEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPrivateGraphEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPrivateGraphEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneGraphClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NeptuneGraphClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptunegraph_private_graph_endpoint" {
@@ -105,14 +103,14 @@ func testAccCheckPrivateGraphEndpointDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckPrivateGraphEndpointExists(ctx context.Context, n string, v *neptunegraph.GetPrivateGraphEndpointOutput) resource.TestCheckFunc {
+func testAccCheckPrivateGraphEndpointExists(ctx context.Context, t *testing.T, n string, v *neptunegraph.GetPrivateGraphEndpointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneGraphClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NeptuneGraphClient(ctx)
 
 		output, err := tfneptunegraph.FindPrivateGraphEndpointByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

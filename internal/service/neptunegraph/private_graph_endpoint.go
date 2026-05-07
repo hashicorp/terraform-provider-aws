@@ -6,6 +6,7 @@ package neptunegraph
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -14,11 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptunegraph/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -30,10 +33,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_neptunegraph_private_graph_endpoint", name="Private Graph Endpoint")
+// @IdentityAttribute("graph_identifier")
+// @IdentityAttribute("vpc_id")
+// @ImportIDHandler("privateGraphEndpointImportID", setIDAttribute=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/neptunegraph;neptunegraph.GetPrivateGraphEndpointOutput")
+// @Testing(hasNoPreExistingResource=true)
 func newResourcePrivateGraphEndpoint(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePrivateGraphEndpoint{}
 
@@ -50,7 +59,7 @@ const (
 type resourcePrivateGraphEndpoint struct {
 	framework.ResourceWithModel[resourcePrivateGraphEndpointModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *resourcePrivateGraphEndpoint) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -283,6 +292,35 @@ func waitPrivateGraphEndpointDeleted(ctx context.Context, conn *neptunegraph.Cli
 		return output, err
 	}
 	return nil, err
+}
+
+var (
+	_ inttypes.ImportIDParser           = privateGraphEndpointImportID{}
+	_ inttypes.FrameworkImportIDCreator = privateGraphEndpointImportID{}
+)
+
+type privateGraphEndpointImportID struct{}
+
+func (privateGraphEndpointImportID) Parse(id string) (string, map[string]any, error) {
+	graphID, vpcID, found := strings.Cut(id, "_")
+	if !found || graphID == "" || vpcID == "" {
+		return "", nil, fmt.Errorf("id %q should be in the format <graph_identifier>_<vpc_id>", id)
+	}
+
+	result := map[string]any{
+		"graph_identifier": graphID,
+		names.AttrVPCID:    vpcID,
+	}
+
+	return id, result, nil
+}
+
+func (privateGraphEndpointImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var graphID, vpcID types.String
+	state.GetAttribute(ctx, path.Root("graph_identifier"), &graphID)
+	state.GetAttribute(ctx, path.Root(names.AttrVPCID), &vpcID)
+
+	return graphID.ValueString() + "_" + vpcID.ValueString()
 }
 
 type resourcePrivateGraphEndpointModel struct {
