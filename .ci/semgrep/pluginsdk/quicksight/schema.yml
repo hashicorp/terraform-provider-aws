@@ -4,7 +4,7 @@
 rules:
   - id: schema-string-len-between-required
     languages: [go]
-    message: String attributes with length validation should use stringLenBetweenSchema
+    message: String attributes with length validation should use sdkschema.StringLenBetweenSchema
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -16,12 +16,12 @@ rules:
             Required:     true,
             ValidateFunc: validation.StringLenBetween($MIN, $MAX),
           }
-    fix: stringLenBetweenSchema(attrRequired, $MIN, $MAX)
+    fix: sdkschema.StringLenBetweenSchema(attrRequired, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-string-len-between-optional
     languages: [go]
-    message: String attributes with length validation should use stringLenBetweenSchema
+    message: String attributes with length validation should use sdkschema.StringLenBetweenSchema
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -33,12 +33,12 @@ rules:
             Optional:     true,
             ValidateFunc: validation.StringLenBetween($MIN, $MAX),
           }
-    fix: stringLenBetweenSchema(attrOptional, $MIN, $MAX)
+    fix: sdkschema.StringLenBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-string-len-between-optionalcomputed
     languages: [go]
-    message: String attributes with length validation should use stringLenBetweenSchema
+    message: String attributes with length validation should use sdkschema.StringLenBetweenSchema
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -59,7 +59,7 @@ rules:
                 Optional:     true,
                 ValidateFunc: validation.StringLenBetween($MIN, $MAX),
               }
-    fix: stringLenBetweenSchema(attrOptionalComputed, $MIN, $MAX)
+    fix: sdkschema.StringLenBetweenSchema(attrOptionalComputed, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-string-enum
@@ -102,7 +102,7 @@ rules:
 
   - id: schema-int-between-required
     languages: [go]
-    message: Int attributes with between validation should use intBetweenSchema
+    message: Int attributes with between validation should use sdkschema.IntBetweenSchema
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -114,12 +114,12 @@ rules:
             Required:     true,
             ValidateFunc: validation.IntBetween($MIN, $MAX),
           }
-    fix: intBetweenSchema(attrRequired, $MIN, $MAX)
+    fix: sdkschema.IntBetweenSchema(attrRequired, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-int-between-optional
     languages: [go]
-    message: Int attributes with between validation should use intBetweenSchema
+    message: Int attributes with between validation should use sdkschema.IntBetweenSchema
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -131,12 +131,12 @@ rules:
             Optional:     true,
             ValidateFunc: validation.IntBetween($MIN, $MAX),
           }
-    fix: intBetweenSchema(attrOptional, $MIN, $MAX)
+    fix: sdkschema.IntBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-float-between-required
     languages: [go]
-    message: Float attributes with between validation should use floatBetweenSchema
+    message: Float attributes with between validation should use sdkschema.FloatBetweenSchema
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -148,12 +148,12 @@ rules:
             Required:     true,
             ValidateFunc: validation.FloatBetween($MIN, $MAX),
           }
-    fix: floatBetweenSchema(attrRequired, $MIN, $MAX)
+    fix: sdkschema.FloatBetweenSchema(attrRequired, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-float-between-optional
     languages: [go]
-    message: Float attributes with between validation should use floatBetweenSchema
+    message: Float attributes with between validation should use sdkschema.FloatBetweenSchema
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -165,7 +165,7 @@ rules:
             Optional:     true,
             ValidateFunc: validation.FloatBetween($MIN, $MAX),
           }
-    fix: floatBetweenSchema(attrOptional, $MIN, $MAX)
+    fix: sdkschema.FloatBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-string-computed-only
@@ -186,7 +186,7 @@ rules:
 
   - id: schema-bool-computed-only
     languages: [go]
-    message: Computed-Only Bool attributes should use boolComputedOnly
+    message: Computed-Only Bool attributes should use sdkschema.BoolComputedOnly
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -197,12 +197,12 @@ rules:
             Type:     schema.TypeBool,
             Computed: true,
           }
-    fix: boolComputedOnly()
+    fix: sdkschema.BoolComputedOnly()
     severity: WARNING
 
   - id: schema-int-computed-only
     languages: [go]
-    message: Computed-Only Int attributes should use intComputedOnly
+    message: Computed-Only Int attributes should use sdkschema.IntComputedOnly
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -218,7 +218,7 @@ rules:
 
   - id: schema-float-computed-only
     languages: [go]
-    message: Computed-Only Float attributes should use floatComputedOnly
+    message: Computed-Only Float attributes should use sdkschema.FloatComputedOnly
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -229,5 +229,5 @@ rules:
             Type:     schema.TypeFloat,
             Computed: true,
           }
-    fix: floatComputedOnly()
+    fix: sdkschema.FloatComputedOnly()
     severity: WARNING

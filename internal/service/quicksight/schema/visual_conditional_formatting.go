@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -150,7 +151,7 @@ var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon":         stringEnumSchema[awstypes.Icon](attrOptional),
+										"icon":         sdkschema.StringEnumSchema[awstypes.Icon](attrOptional),
 										"unicode_icon": stringMatchSchema(attrOptional, `^[^\\u0000-\\u00FF]$`, ""),
 									},
 								},
@@ -162,7 +163,7 @@ var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon_display_option": stringEnumSchema[awstypes.ConditionalFormattingIconDisplayOption](attrOptional)},
+										"icon_display_option": sdkschema.StringEnumSchema[awstypes.ConditionalFormattingIconDisplayOption](attrOptional)},
 								},
 							},
 						},
@@ -176,7 +177,7 @@ var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
-							"icon_set_type":      stringEnumSchema[awstypes.ConditionalFormattingIconSetType](attrOptional),
+							"icon_set_type":      sdkschema.StringEnumSchema[awstypes.ConditionalFormattingIconSetType](attrOptional),
 						},
 					},
 				},
@@ -203,7 +204,7 @@ var conditionalFormattingIconDataSourceSchema = sync.OnceValue(func() *schema.Sc
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon":         stringEnumDataSourceSchema[awstypes.Icon](),
+										"icon":         sdkschema.StringEnumDataSourceSchema[awstypes.Icon](),
 										"unicode_icon": stringComputedOnly(),
 									},
 								},
@@ -213,7 +214,7 @@ var conditionalFormattingIconDataSourceSchema = sync.OnceValue(func() *schema.Sc
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon_display_option": stringEnumDataSourceSchema[awstypes.ConditionalFormattingIconDisplayOption](),
+										"icon_display_option": sdkschema.StringEnumDataSourceSchema[awstypes.ConditionalFormattingIconDisplayOption](),
 									},
 								},
 							},
@@ -226,7 +227,7 @@ var conditionalFormattingIconDataSourceSchema = sync.OnceValue(func() *schema.Sc
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrExpression: stringComputedOnly(),
-							"icon_set_type":      stringEnumDataSourceSchema[awstypes.ConditionalFormattingIconSetType](),
+							"icon_set_type":      sdkschema.StringEnumDataSourceSchema[awstypes.ConditionalFormattingIconSetType](),
 						},
 					},
 				},

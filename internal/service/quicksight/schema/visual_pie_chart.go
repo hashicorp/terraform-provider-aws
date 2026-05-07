@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,7 +46,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_thickness": stringEnumSchema[awstypes.ArcThickness](attrOptional),
+													"arc_thickness": sdkschema.StringEnumSchema[awstypes.ArcThickness](attrOptional),
 												},
 											},
 										},
@@ -56,7 +57,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"label_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+													"label_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -123,7 +124,7 @@ func pieChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:       idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartConfiguration.html
 					Type:     schema.TypeList,
@@ -143,7 +144,7 @@ func pieChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_thickness": stringEnumDataSourceSchema[awstypes.ArcThickness](),
+													"arc_thickness": sdkschema.StringEnumDataSourceSchema[awstypes.ArcThickness](),
 												},
 											},
 										},
@@ -152,7 +153,7 @@ func pieChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"label_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+													"label_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},

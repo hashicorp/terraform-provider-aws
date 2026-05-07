@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 )
 
 const fieldSortOptionsMaxItems100 = 100
@@ -49,7 +50,7 @@ var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringEnumSchema[awstypes.SortDirection](attrRequired),
+				"direction":            sdkschema.StringEnumSchema[awstypes.SortDirection](attrRequired),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
@@ -63,7 +64,7 @@ var columnSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringEnumDataSourceSchema[awstypes.SortDirection](),
+				"direction":            sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
 				"sort_by":              columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
@@ -79,8 +80,8 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringEnumSchema[awstypes.SortDirection](attrRequired),
-				attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
+				"direction": sdkschema.StringEnumSchema[awstypes.SortDirection](attrRequired),
+				attrFieldID:  stringLenBetweenSchema(attrRequired, 1, 512),
 			},
 		},
 	}
@@ -92,8 +93,8 @@ var fieldSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringEnumDataSourceSchema[awstypes.SortDirection](),
-				attrFieldID: stringComputedOnly(),
+				"direction": sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
+				attrFieldID:  stringComputedOnly(),
 			},
 		},
 	}

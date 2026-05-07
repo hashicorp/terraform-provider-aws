@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,7 +31,7 @@ var numericFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 							"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 							"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 							"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-							"number_scale":                    stringEnumSchema[awstypes.NumberScale](attrOptional),
+							"number_scale":                    sdkschema.StringEnumSchema[awstypes.NumberScale](attrOptional),
 							names.AttrPrefix:                  stringLenBetweenSchema(attrOptional, 1, 128),
 							"separator_configuration":         separatorConfigurationSchema(),
 							"suffix":                          stringLenBetweenSchema(attrOptional, 1, 128),
@@ -59,7 +60,7 @@ var numericFormatConfigurationDataSourceSchema = sync.OnceValue(func() *schema.S
 							"decimal_places_configuration":    decimalPlacesConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 							"negative_value_configuration":    negativeValueConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 							"null_value_format_configuration": nullValueConfigurationDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-							"number_scale":                    stringEnumDataSourceSchema[awstypes.NumberScale](),
+							"number_scale":                    sdkschema.StringEnumDataSourceSchema[awstypes.NumberScale](),
 							names.AttrPrefix:                  stringComputedOnly(),
 							"separator_configuration":         separatorConfigurationDataSourceSchema(),
 							"suffix":                          stringComputedOnly(),
@@ -115,7 +116,7 @@ var numberDisplayFormatConfigurationSchema = sync.OnceValue(func() *schema.Schem
 				"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				"number_scale":                    stringEnumSchema[awstypes.NumberScale](attrOptional),
+				"number_scale":                    sdkschema.StringEnumSchema[awstypes.NumberScale](attrOptional),
 				names.AttrPrefix:                  stringLenBetweenSchema(attrOptional, 1, 128),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
 				"suffix":                          stringLenBetweenSchema(attrOptional, 1, 128),
@@ -133,7 +134,7 @@ var numberDisplayFormatConfigurationDataSourceSchema = sync.OnceValue(func() *sc
 				"decimal_places_configuration":    decimalPlacesConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				"number_scale":                    stringEnumDataSourceSchema[awstypes.NumberScale](),
+				"number_scale":                    sdkschema.StringEnumDataSourceSchema[awstypes.NumberScale](),
 				names.AttrPrefix:                  stringComputedOnly(),
 				"separator_configuration":         separatorConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
 				"suffix":                          stringComputedOnly(),
@@ -266,7 +267,7 @@ var negativeValueConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"display_mode": stringEnumSchema[awstypes.NegativeValueDisplayMode](attrRequired),
+				"display_mode": sdkschema.StringEnumSchema[awstypes.NegativeValueDisplayMode](attrRequired),
 			},
 		},
 	}
@@ -278,7 +279,7 @@ var negativeValueConfigurationDataSourceSchema = sync.OnceValue(func() *schema.S
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"display_mode": stringEnumDataSourceSchema[awstypes.NegativeValueDisplayMode](),
+				"display_mode": sdkschema.StringEnumDataSourceSchema[awstypes.NegativeValueDisplayMode](),
 			},
 		},
 	}
@@ -318,7 +319,7 @@ var separatorConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"decimal_separator": stringEnumSchema[awstypes.NumericSeparatorSymbol](attrOptional),
+				"decimal_separator": sdkschema.StringEnumSchema[awstypes.NumericSeparatorSymbol](attrOptional),
 				"thousands_separator": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThousandSeparatorOptions.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -326,8 +327,8 @@ var separatorConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"symbol":       stringEnumSchema[awstypes.NumericSeparatorSymbol](attrOptional),
-							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+							"symbol":       sdkschema.StringEnumSchema[awstypes.NumericSeparatorSymbol](attrOptional),
+							attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -342,14 +343,14 @@ var separatorConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schem
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"decimal_separator": stringEnumDataSourceSchema[awstypes.NumericSeparatorSymbol](),
+				"decimal_separator": sdkschema.StringEnumDataSourceSchema[awstypes.NumericSeparatorSymbol](),
 				"thousands_separator": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThousandSeparatorOptions.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"symbol":       stringEnumDataSourceSchema[awstypes.NumericSeparatorSymbol](),
-							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+							"symbol":       sdkschema.StringEnumDataSourceSchema[awstypes.NumericSeparatorSymbol](),
+							attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -371,7 +372,7 @@ var labelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					Optional: true,
 				},
 				"font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				attrVisibility:       stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility:       sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
@@ -385,7 +386,7 @@ var labelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"custom_label":       stringComputedOnly(),
 				"font_configuration": fontConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				attrVisibility:       stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility:       sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -400,25 +401,25 @@ var fontConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"font_color":      hexColorSchema(attrOptional),
-				"font_decoration": stringEnumSchema[awstypes.FontDecoration](attrOptional),
+				"font_decoration": sdkschema.StringEnumSchema[awstypes.FontDecoration](attrOptional),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"relative": stringEnumSchema[awstypes.RelativeFontSize](attrOptional),
+							"relative": sdkschema.StringEnumSchema[awstypes.RelativeFontSize](attrOptional),
 						},
 					},
 				},
-				"font_style": stringEnumSchema[awstypes.FontStyle](attrOptional),
+				"font_style": sdkschema.StringEnumSchema[awstypes.FontStyle](attrOptional),
 				"font_weight": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontWeight.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringEnumSchema[awstypes.FontWeightName](attrOptional),
+							names.AttrName: sdkschema.StringEnumSchema[awstypes.FontWeightName](attrOptional),
 						},
 					},
 				},
@@ -434,23 +435,23 @@ var fontConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"font_color":      stringComputedOnly(),
-				"font_decoration": stringEnumDataSourceSchema[awstypes.FontDecoration](),
+				"font_decoration": sdkschema.StringEnumDataSourceSchema[awstypes.FontDecoration](),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"relative": stringEnumDataSourceSchema[awstypes.RelativeFontSize](),
+							"relative": sdkschema.StringEnumDataSourceSchema[awstypes.RelativeFontSize](),
 						},
 					},
 				},
-				"font_style": stringEnumDataSourceSchema[awstypes.FontStyle](),
+				"font_style": sdkschema.StringEnumDataSourceSchema[awstypes.FontStyle](),
 				"font_weight": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontWeight.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringEnumDataSourceSchema[awstypes.FontWeightName](),
+							names.AttrName: sdkschema.StringEnumDataSourceSchema[awstypes.FontWeightName](),
 						},
 					},
 				},

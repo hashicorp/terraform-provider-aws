@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +45,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 											Required: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"selected_field_option": stringEnumSchema[awstypes.SelectedFieldOptions](attrOptional),
+													"selected_field_option": sdkschema.StringEnumSchema[awstypes.SelectedFieldOptions](attrOptional),
 													"selected_fields": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -72,7 +73,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"target_visual_option": stringEnumSchema[awstypes.TargetVisualOptions](attrOptional),
+																"target_visual_option": sdkschema.StringEnumSchema[awstypes.TargetVisualOptions](attrOptional),
 																"target_visuals": {
 																	Type:     schema.TypeSet,
 																	Optional: true,
@@ -193,7 +194,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 																		},
 																	},
 																},
-																"select_all_value_options": stringEnumSchema[awstypes.SelectAllValueOptions](attrOptional),
+																"select_all_value_options": sdkschema.StringEnumSchema[awstypes.SelectAllValueOptions](attrOptional),
 																"source_field":             stringLenBetweenSchema(attrOptional, 1, 2048),
 																"source_parameter_name": {
 																	Type:     schema.TypeString,
@@ -215,7 +216,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"url_target":   stringEnumSchema[awstypes.URLTargetConfiguration](attrRequired),
+										"url_target":   sdkschema.StringEnumSchema[awstypes.URLTargetConfiguration](attrRequired),
 										"url_template": stringLenBetweenSchema(attrRequired, 1, 2048),
 									},
 								},
@@ -225,8 +226,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 				},
 				"custom_action_id": idSchema(),
 				names.AttrName:     stringLenBetweenSchema(attrRequired, 1, 256),
-				"trigger":          stringEnumSchema[awstypes.VisualCustomActionTrigger](attrRequired),
-				names.AttrStatus:   stringEnumSchema[awstypes.Status](attrRequired),
+				"trigger":          sdkschema.StringEnumSchema[awstypes.VisualCustomActionTrigger](attrRequired),
+				names.AttrStatus:   sdkschema.StringEnumSchema[awstypes.Status](attrRequired),
 			},
 		},
 	}
@@ -253,7 +254,7 @@ func visualCustomActionsDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"selected_field_option": stringEnumDataSourceSchema[awstypes.SelectedFieldOptions](),
+													"selected_field_option": sdkschema.StringEnumDataSourceSchema[awstypes.SelectedFieldOptions](),
 													"selected_fields": {
 														Type:     schema.TypeList,
 														Computed: true,
@@ -272,7 +273,7 @@ func visualCustomActionsDataSourceSchema() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"target_visual_option": stringEnumDataSourceSchema[awstypes.TargetVisualOptions](),
+																"target_visual_option": sdkschema.StringEnumDataSourceSchema[awstypes.TargetVisualOptions](),
 																"target_visuals": {
 																	Type:     schema.TypeSet,
 																	Computed: true,
@@ -357,7 +358,7 @@ func visualCustomActionsDataSourceSchema() *schema.Schema {
 																		},
 																	},
 																},
-																"select_all_value_options": stringEnumDataSourceSchema[awstypes.SelectAllValueOptions](),
+																"select_all_value_options": sdkschema.StringEnumDataSourceSchema[awstypes.SelectAllValueOptions](),
 																"source_field":             stringComputedOnly(),
 																"source_parameter_name":    stringComputedOnly(),
 															},
@@ -374,7 +375,7 @@ func visualCustomActionsDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"url_target":   stringEnumDataSourceSchema[awstypes.URLTargetConfiguration](),
+										"url_target":   sdkschema.StringEnumDataSourceSchema[awstypes.URLTargetConfiguration](),
 										"url_template": stringComputedOnly(),
 									},
 								},
@@ -384,8 +385,8 @@ func visualCustomActionsDataSourceSchema() *schema.Schema {
 				},
 				"custom_action_id": idDataSourceSchema(),
 				names.AttrName:     stringComputedOnly(),
-				"trigger":          stringEnumDataSourceSchema[awstypes.VisualCustomActionTrigger](),
-				names.AttrStatus:   stringEnumDataSourceSchema[awstypes.Status](),
+				"trigger":          sdkschema.StringEnumDataSourceSchema[awstypes.VisualCustomActionTrigger](),
+				names.AttrStatus:   sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
 			},
 		},
 	}

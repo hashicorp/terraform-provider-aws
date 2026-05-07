@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,13 +37,13 @@ func funnelChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_label_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										"category_label_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 										"label_color":               hexColorSchema(attrOptional),
 										"label_font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"measure_data_label_style":  stringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](attrOptional),
-										"measure_label_visibility":  stringEnumSchema[awstypes.Visibility](attrOptional),
-										"position":                  stringEnumSchema[awstypes.DataLabelPosition](attrOptional),
-										attrVisibility:              stringEnumSchema[awstypes.Visibility](attrOptional),
+										"measure_data_label_style":  sdkschema.StringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](attrOptional),
+										"measure_label_visibility":  sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
+										"position":                  sdkschema.StringEnumSchema[awstypes.DataLabelPosition](attrOptional),
+										attrVisibility:              sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -101,7 +102,7 @@ func funnelChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:       idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartConfiguration.html
 					Type:     schema.TypeList,
@@ -114,13 +115,13 @@ func funnelChartVisualDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_label_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+										"category_label_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 										"label_color":               stringComputedOnly(),
 										"label_font_configuration":  fontConfigurationDataSourceSchema(),
-										"measure_data_label_style":  stringEnumDataSourceSchema[awstypes.FunnelChartMeasureDataLabelStyle](),
-										"measure_label_visibility":  stringEnumDataSourceSchema[awstypes.Visibility](),
-										"position":                  stringEnumDataSourceSchema[awstypes.DataLabelPosition](),
-										attrVisibility:              stringEnumDataSourceSchema[awstypes.Visibility](),
+										"measure_data_label_style":  sdkschema.StringEnumDataSourceSchema[awstypes.FunnelChartMeasureDataLabelStyle](),
+										"measure_label_visibility":  sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+										"position":                  sdkschema.StringEnumDataSourceSchema[awstypes.DataLabelPosition](),
+										attrVisibility:              sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},

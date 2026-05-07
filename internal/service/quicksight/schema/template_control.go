@@ -10,6 +10,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,7 +33,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 							"source_filter_id":  idSchema(),
 							attrTitle:           stringLenBetweenSchema(attrRequired, 1, 2048),
 							"display_options":   dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
-							names.AttrType:      stringEnumSchema[awstypes.SheetControlDateTimePickerType](attrOptional),
+							names.AttrType:      sdkschema.StringEnumSchema[awstypes.SheetControlDateTimePickerType](attrOptional),
 						},
 					},
 				},
@@ -49,7 +50,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
+							names.AttrType:                    sdkschema.StringEnumSchema[awstypes.SheetControlListType](attrOptional),
 						},
 					},
 				},
@@ -66,7 +67,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
+							names.AttrType:                    sdkschema.StringEnumSchema[awstypes.SheetControlListType](attrOptional),
 						},
 					},
 				},
@@ -118,7 +119,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 								Required: true,
 							},
 							"display_options": sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
-							names.AttrType:    stringEnumSchema[awstypes.SheetControlSliderType](attrOptional),
+							names.AttrType:    sdkschema.StringEnumSchema[awstypes.SheetControlSliderType](attrOptional),
 						},
 					},
 				},
@@ -171,7 +172,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 							"source_filter_id":  idDataSourceSchema(),
 							attrTitle:           stringComputedOnly(),
 							"display_options":   dateTimePickerControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
-							names.AttrType:      stringEnumDataSourceSchema[awstypes.SheetControlDateTimePickerType](),
+							names.AttrType:      sdkschema.StringEnumDataSourceSchema[awstypes.SheetControlDateTimePickerType](),
 						},
 					},
 				},
@@ -186,7 +187,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							names.AttrType:                    stringEnumDataSourceSchema[awstypes.SheetControlListType](),
+							names.AttrType:                    sdkschema.StringEnumDataSourceSchema[awstypes.SheetControlListType](),
 						},
 					},
 				},
@@ -201,7 +202,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							names.AttrType:                    stringEnumDataSourceSchema[awstypes.SheetControlListType](),
+							names.AttrType:                    sdkschema.StringEnumDataSourceSchema[awstypes.SheetControlListType](),
 						},
 					},
 				},
@@ -238,7 +239,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 							"minimum_value":     floatComputedOnly(),
 							"step_size":         floatComputedOnly(),
 							"display_options":   sliderControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
-							names.AttrType:      stringEnumDataSourceSchema[awstypes.SheetControlSliderType](),
+							names.AttrType:      sdkschema.StringEnumDataSourceSchema[awstypes.SheetControlSliderType](),
 						},
 					},
 				},
@@ -397,7 +398,7 @@ var listControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -419,7 +420,7 @@ var listControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Sc
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -487,7 +488,7 @@ var selectAllOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
@@ -499,7 +500,7 @@ var selectAllOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -541,7 +542,7 @@ var placeholderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
@@ -553,7 +554,7 @@ var placeholderOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}

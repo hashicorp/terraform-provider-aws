@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 )
 
 var geospatialMapStyleOptionsSchema = sync.OnceValue(func() *schema.Schema {
@@ -19,7 +20,7 @@ var geospatialMapStyleOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"base_map_style": stringEnumSchema[awstypes.BaseMapStyleType](attrOptional),
+				"base_map_style": sdkschema.StringEnumSchema[awstypes.BaseMapStyleType](attrOptional),
 			},
 		},
 	}
@@ -31,7 +32,7 @@ var geospatialMapStyleOptionsDataSourceSchema = sync.OnceValue(func() *schema.Sc
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"base_map_style": stringEnumDataSourceSchema[awstypes.BaseMapStyleType](),
+				"base_map_style": sdkschema.StringEnumDataSourceSchema[awstypes.BaseMapStyleType](),
 			},
 		},
 	}
@@ -59,7 +60,7 @@ var geospatialWindowOptionsSchema = sync.OnceValue(func() *schema.Schema {
 						},
 					},
 				},
-				"map_zoom_mode": stringEnumSchema[awstypes.MapZoomMode](attrOptional),
+				"map_zoom_mode": sdkschema.StringEnumSchema[awstypes.MapZoomMode](attrOptional),
 			},
 		},
 	}
@@ -83,7 +84,7 @@ var geospatialWindowOptionsDataSourceSchema = sync.OnceValue(func() *schema.Sche
 						},
 					},
 				},
-				"map_zoom_mode": stringEnumDataSourceSchema[awstypes.MapZoomMode](),
+				"map_zoom_mode": sdkschema.StringEnumDataSourceSchema[awstypes.MapZoomMode](),
 			},
 		},
 	}

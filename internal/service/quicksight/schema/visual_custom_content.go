@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,9 +31,9 @@ func customContentVisualSchema() *schema.Schema {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrContentType: stringEnumSchema[awstypes.CustomContentType](attrOptional),
+							names.AttrContentType: sdkschema.StringEnumSchema[awstypes.CustomContentType](attrOptional),
 							"content_url":         stringLenBetweenSchema(attrOptional, 1, 2048),
-							"image_scaling":       stringEnumSchema[awstypes.CustomContentImageScalingConfiguration](attrOptional),
+							"image_scaling":       sdkschema.StringEnumSchema[awstypes.CustomContentImageScalingConfiguration](attrOptional),
 						},
 					},
 				},
@@ -50,16 +51,16 @@ func customContentVisualDataSourceSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringComputedOnly(),
-				"visual_id":           idDataSourceSchema(),
+				attrVisualID:           idDataSourceSchema(),
 				names.AttrActions:     visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrContentType: stringEnumDataSourceSchema[awstypes.CustomContentType](),
+							names.AttrContentType: sdkschema.StringEnumDataSourceSchema[awstypes.CustomContentType](),
 							"content_url":         stringComputedOnly(),
-							"image_scaling":       stringEnumDataSourceSchema[awstypes.CustomContentImageScalingConfiguration](),
+							"image_scaling":       sdkschema.StringEnumDataSourceSchema[awstypes.CustomContentImageScalingConfiguration](),
 						},
 					},
 				},

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +35,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							attrColumn:             columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
+							names.AttrRole:         sdkschema.StringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -45,11 +46,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
+							"cross_dataset":       sdkschema.StringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringEnumSchema[awstypes.Status](attrOptional),
+							names.AttrStatus:      sdkschema.StringEnumSchema[awstypes.Status](attrOptional),
 						},
 					},
 				},
@@ -75,7 +76,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id":              idSchema(),
-							names.AttrContentType:   stringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
+							names.AttrContentType:   sdkschema.StringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
 							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
@@ -120,7 +121,7 @@ func AnalysisDefinitionDataSourceSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							attrColumn:             columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringEnumDataSourceSchema[awstypes.ColumnRole](),
+							names.AttrRole:         sdkschema.StringEnumDataSourceSchema[awstypes.ColumnRole](),
 						},
 					},
 				},
@@ -129,11 +130,11 @@ func AnalysisDefinitionDataSourceSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringEnumDataSourceSchema[awstypes.CrossDatasetTypes](),
+							"cross_dataset":       sdkschema.StringEnumDataSourceSchema[awstypes.CrossDatasetTypes](),
 							"filter_group_id":     idDataSourceSchema(),
 							"filters":             filtersDataSourceSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringEnumDataSourceSchema[awstypes.Status](),
+							names.AttrStatus:      sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
 						},
 					},
 				},
@@ -155,7 +156,7 @@ func AnalysisDefinitionDataSourceSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id":              idDataSourceSchema(),
-							names.AttrContentType:   stringEnumDataSourceSchema[awstypes.SheetContentType](),
+							names.AttrContentType:   sdkschema.StringEnumDataSourceSchema[awstypes.SheetContentType](),
 							names.AttrDescription:   stringComputedOnly(),
 							"filter_controls":       filterControlsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
