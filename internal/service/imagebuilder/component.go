@@ -59,7 +59,7 @@ func resourceComponent() *schema.Resource {
 				ExactlyOneOf: []string{"data", names.AttrURI},
 				ValidateFunc: validation.StringLenBetween(1, 16000),
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -208,7 +208,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrARN, component.Arn)
 	d.Set("change_description", component.ChangeDescription)
 	d.Set("data", component.Data)
-	d.Set("date_created", component.DateCreated)
+	d.Set(attrDateCreated, component.DateCreated)
 	d.Set(names.AttrDescription, component.Description)
 	d.Set(names.AttrEncrypted, component.Encrypted)
 	d.Set(names.AttrKMSKeyID, component.KmsKeyId)

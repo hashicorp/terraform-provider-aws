@@ -34,7 +34,7 @@ func dataSourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,7 +164,7 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(aws.ToString(imagePipeline.Arn))
 	d.Set(names.AttrARN, imagePipeline.Arn)
 	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
-	d.Set("date_created", imagePipeline.DateCreated)
+	d.Set(attrDateCreated, imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)
 	d.Set("date_next_run", imagePipeline.DateNextRun)
 	d.Set("date_updated", imagePipeline.DateUpdated)

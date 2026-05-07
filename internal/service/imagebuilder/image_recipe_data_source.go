@@ -125,7 +125,7 @@ func dataSourceImageRecipe() *schema.Resource {
 					},
 				},
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -191,7 +191,7 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("component", flattenComponentConfigurations(imageRecipe.Components)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
 	}
-	d.Set("date_created", imageRecipe.DateCreated)
+	d.Set(attrDateCreated, imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
 	d.Set(names.AttrOwner, imageRecipe.Owner)

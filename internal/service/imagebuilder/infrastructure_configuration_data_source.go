@@ -30,7 +30,7 @@ func dataSourceInfrastructureConfiguration() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,7 +159,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 
 	d.SetId(aws.ToString(infrastructureConfiguration.Arn))
 	d.Set(names.AttrARN, infrastructureConfiguration.Arn)
-	d.Set("date_created", infrastructureConfiguration.DateCreated)
+	d.Set(attrDateCreated, infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
 	if infrastructureConfiguration.InstanceMetadataOptions != nil {

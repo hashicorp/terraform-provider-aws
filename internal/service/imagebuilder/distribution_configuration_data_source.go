@@ -30,7 +30,7 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -299,7 +299,7 @@ func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.Reso
 	arn = aws.ToString(distributionConfiguration.Arn)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("date_created", distributionConfiguration.DateCreated)
+	d.Set(attrDateCreated, distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, distributionConfiguration.Description)
 	if err := d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions)); err != nil {

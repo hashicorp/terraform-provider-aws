@@ -45,7 +45,7 @@ func resourceDistributionConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -396,7 +396,7 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set(names.AttrARN, distributionConfiguration.Arn)
-	d.Set("date_created", distributionConfiguration.DateCreated)
+	d.Set(attrDateCreated, distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, distributionConfiguration.Description)
 	if err := d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions)); err != nil {

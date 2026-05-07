@@ -87,7 +87,7 @@ func resourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DOCKER"}, false),
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -386,7 +386,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
 	}
 	d.Set("container_type", containerRecipe.ContainerType)
-	d.Set("date_created", containerRecipe.DateCreated)
+	d.Set(attrDateCreated, containerRecipe.DateCreated)
 	d.Set(names.AttrDescription, containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
 	d.Set(names.AttrEncrypted, containerRecipe.Encrypted)

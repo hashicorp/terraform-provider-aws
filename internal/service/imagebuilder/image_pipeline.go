@@ -51,7 +51,7 @@ func resourceImagePipeline() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -354,7 +354,7 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrARN, imagePipeline.Arn)
 	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
-	d.Set("date_created", imagePipeline.DateCreated)
+	d.Set(attrDateCreated, imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)
 	d.Set("date_next_run", imagePipeline.DateNextRun)
 	d.Set("date_updated", imagePipeline.DateUpdated)

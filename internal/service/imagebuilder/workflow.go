@@ -57,7 +57,7 @@ func resourceWorkflow() *schema.Resource {
 				ExactlyOneOf: []string{"data", names.AttrURI},
 				ValidateFunc: validation.StringLenBetween(1, 16000),
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -170,7 +170,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrARN, workflow.Arn)
 	d.Set("change_description", workflow.ChangeDescription)
 	d.Set("data", workflow.Data)
-	d.Set("date_created", workflow.DateCreated)
+	d.Set(attrDateCreated, workflow.DateCreated)
 	d.Set(names.AttrDescription, workflow.Description)
 	d.Set(names.AttrName, workflow.Name)
 	d.Set(names.AttrKMSKeyID, workflow.KmsKeyId)

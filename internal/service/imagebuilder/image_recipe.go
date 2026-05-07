@@ -177,7 +177,7 @@ func resourceImageRecipe() *schema.Resource {
 					},
 				},
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -343,7 +343,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
 	}
 
-	d.Set("date_created", imageRecipe.DateCreated)
+	d.Set(attrDateCreated, imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
 	d.Set(names.AttrOwner, imageRecipe.Owner)

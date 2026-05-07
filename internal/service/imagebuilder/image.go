@@ -57,7 +57,7 @@ func resourceImage() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
-			"date_created": {
+			attrDateCreated: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -370,7 +370,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if image.ContainerRecipe != nil {
 		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
 	}
-	d.Set("date_created", image.DateCreated)
+	d.Set(attrDateCreated, image.DateCreated)
 	if image.DistributionConfiguration != nil {
 		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)
 	}
