@@ -185,8 +185,8 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				},
 			},
 			"network_type": schema.StringAttribute{
-				Optional:         true,
-				Computed:         true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -633,6 +633,7 @@ type serverlessCacheResourceModel struct {
 	ID                     types.String                                           `tfsdk:"id"`
 	KmsKeyID               types.String                                           `tfsdk:"kms_key_id"`
 	MajorEngineVersion     types.String                                           `tfsdk:"major_engine_version"`
+	NetworkType            types.String                                           `tfsdk:"network_type"`
 	ReaderEndpoint         fwtypes.ListNestedObjectValueOf[endpointModel]         `tfsdk:"reader_endpoint"`
 	SecurityGroupIDs       fwtypes.SetValueOf[types.String]                       `tfsdk:"security_group_ids"`
 	ServerlessCacheName    types.String                                           `tfsdk:"name"`

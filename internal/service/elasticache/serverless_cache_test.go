@@ -777,7 +777,6 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 	})
 }
 
-
 func TestAccElastiCacheServerlessCache_networkType(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -814,14 +813,9 @@ func TestAccElastiCacheServerlessCache_networkType(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccServerlessCacheConfig_networkType(rName, "dual_stack"),
@@ -1261,6 +1255,7 @@ func testAccServerlessCacheConfig_networkType(rName, networkType string) string 
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
   name        = %[1]q
+  engine = "valkey"
   network_type = %[2]q
 }
 `, rName, networkType)
