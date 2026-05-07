@@ -24,7 +24,7 @@ func dataSourceSites() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSitesRead,
 
 		Schema: map[string]*schema.Schema{
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -46,7 +46,7 @@ func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	output, err := findSites(ctx, conn, &networkmanager.GetSitesInput{
-		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
+		GlobalNetworkId: aws.String(d.Get(attrGlobalNetworkID).(string)),
 	})
 
 	if err != nil {

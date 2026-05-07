@@ -46,7 +46,7 @@ func dataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -65,7 +65,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	connectionID := d.Get(names.AttrConnectionID).(string)
 	connection, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
@@ -80,7 +80,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrConnectionID, connection.ConnectionId)
 	d.Set(names.AttrDescription, connection.Description)
 	d.Set("device_id", connection.DeviceId)
-	d.Set("global_network_id", connection.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
 
 	if err := d.Set(names.AttrTags, keyValueTags(ctx, connection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

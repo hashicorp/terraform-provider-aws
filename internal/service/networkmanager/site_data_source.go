@@ -30,7 +30,7 @@ func dataSourceSite() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -69,7 +69,7 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	siteID := d.Get("site_id").(string)
 	site, err := findSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
 
@@ -80,7 +80,7 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.SetId(siteID)
 	d.Set(names.AttrARN, site.SiteArn)
 	d.Set(names.AttrDescription, site.Description)
-	d.Set("global_network_id", site.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, site.GlobalNetworkId)
 	if site.Location != nil {
 		if err := d.Set(names.AttrLocation, []any{flattenLocation(site.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)

@@ -44,7 +44,7 @@ func resourceTransitGatewayRegistration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +63,7 @@ func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
 	id := transitGatewayRegistrationCreateResourceID(globalNetworkID, transitGatewayARN)
 	input := networkmanager.RegisterTransitGatewayInput{
@@ -106,7 +106,7 @@ func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Registration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("global_network_id", transitGatewayRegistration.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, transitGatewayRegistration.GlobalNetworkId)
 	d.Set("transit_gateway_arn", transitGatewayRegistration.TransitGatewayArn)
 
 	return diags

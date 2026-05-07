@@ -44,7 +44,7 @@ func (d *coreNetworkDataSource) Schema(ctx context.Context, req datasource.Schem
 				Computed: true,
 			},
 			"edges": framework.DataSourceComputedListOfObjectAttribute[edgeModel](ctx),
-			"global_network_id": schema.StringAttribute{
+			attrGlobalNetworkID: schema.StringAttribute{
 				Computed: true,
 			},
 			"network_function_groups": framework.DataSourceComputedListOfObjectAttribute[networkFunctionGroupModel](ctx),

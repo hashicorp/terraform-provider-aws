@@ -58,7 +58,7 @@ func resourceDevice() *schema.Resource {
 				}
 
 				d.SetId(resourceParts[2])
-				d.Set("global_network_id", resourceParts[1])
+				d.Set(attrGlobalNetworkID, resourceParts[1])
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -100,7 +100,7 @@ func resourceDevice() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -163,7 +163,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.CreateDeviceInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		Tags:            getTagsIn(ctx),
@@ -220,7 +220,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	device, err := findDeviceByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -242,7 +242,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set("aws_location", nil)
 	}
 	d.Set(names.AttrDescription, device.Description)
-	d.Set("global_network_id", device.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, device.GlobalNetworkId)
 	if device.Location != nil {
 		if err := d.Set(names.AttrLocation, []any{flattenLocation(device.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
@@ -266,7 +266,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		globalNetworkID := d.Get("global_network_id").(string)
+		globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 		input := networkmanager.UpdateDeviceInput{
 			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			DeviceId:        aws.String(d.Id()),
@@ -305,7 +305,7 @@ func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Device: %s", d.Id())
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.DeleteDeviceInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		DeviceId:        aws.String(d.Id()),

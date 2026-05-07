@@ -47,7 +47,7 @@ func resourceLinkAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,7 +65,7 @@ func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	linkID := d.Get("link_id").(string)
 	deviceID := d.Get("device_id").(string)
 	id := linkAssociationCreateResourceID(globalNetworkID, linkID, deviceID)
@@ -112,7 +112,7 @@ func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("device_id", output.DeviceId)
-	d.Set("global_network_id", output.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, output.GlobalNetworkId)
 	d.Set("link_id", output.LinkId)
 
 	return diags

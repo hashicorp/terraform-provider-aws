@@ -54,7 +54,7 @@ func resourceCustomerGatewayAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -72,7 +72,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	customerGatewayARN := d.Get("customer_gateway_arn").(string)
 	id := customerGatewayAssociationCreateResourceID(globalNetworkID, customerGatewayARN)
 	input := networkmanager.AssociateCustomerGatewayInput{
@@ -146,7 +146,7 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 
 	d.Set("customer_gateway_arn", output.CustomerGatewayArn)
 	d.Set("device_id", output.DeviceId)
-	d.Set("global_network_id", output.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, output.GlobalNetworkId)
 	d.Set("link_id", output.LinkId)
 
 	return diags

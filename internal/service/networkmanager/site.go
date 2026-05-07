@@ -57,7 +57,7 @@ func resourceSite() *schema.Resource {
 				}
 
 				d.SetId(resourceParts[2])
-				d.Set("global_network_id", resourceParts[1])
+				d.Set(attrGlobalNetworkID, resourceParts[1])
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -79,7 +79,7 @@ func resourceSite() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -118,7 +118,7 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.CreateSiteInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		Tags:            getTagsIn(ctx),
@@ -151,7 +151,7 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	site, err := findSiteByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -166,7 +166,7 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	d.Set(names.AttrARN, site.SiteArn)
 	d.Set(names.AttrDescription, site.Description)
-	d.Set("global_network_id", site.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, site.GlobalNetworkId)
 	if site.Location != nil {
 		if err := d.Set(names.AttrLocation, []any{flattenLocation(site.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
@@ -185,7 +185,7 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		globalNetworkID := d.Get("global_network_id").(string)
+		globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 		input := networkmanager.UpdateSiteInput{
 			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
@@ -215,7 +215,7 @@ func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Site: %s", d.Id())
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.DeleteSiteInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		SiteId:          aws.String(d.Id()),

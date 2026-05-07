@@ -48,7 +48,7 @@ func resourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -72,7 +72,7 @@ func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	connectPeerARN := d.Get("transit_gateway_connect_peer_arn").(string)
 	id := transitGatewayConnectPeerAssociationCreateResourceID(globalNetworkID, connectPeerARN)
 	input := networkmanager.AssociateTransitGatewayConnectPeerInput{
@@ -122,7 +122,7 @@ func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *sc
 	}
 
 	d.Set("device_id", output.DeviceId)
-	d.Set("global_network_id", output.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, output.GlobalNetworkId)
 	d.Set("link_id", output.LinkId)
 	d.Set("transit_gateway_connect_peer_arn", output.TransitGatewayConnectPeerArn)
 

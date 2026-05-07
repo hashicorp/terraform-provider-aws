@@ -50,7 +50,7 @@ func dataSourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -105,7 +105,7 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	deviceID := d.Get("device_id").(string)
 	device, err := findDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 

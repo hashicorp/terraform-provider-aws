@@ -128,7 +128,7 @@ func resourceCoreNetwork() *schema.Resource {
 					},
 				},
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -171,7 +171,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.CreateCoreNetworkInput{
 		ClientToken:     aws.String(create.UniqueId(ctx)),
 		GlobalNetworkId: aws.String(globalNetworkID),
@@ -247,7 +247,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("edges", flattenCoreNetworkEdges(coreNetwork.Edges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting edges: %s", err)
 	}
-	d.Set("global_network_id", coreNetwork.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, coreNetwork.GlobalNetworkId)
 	if err := d.Set("segments", flattenCoreNetworkSegments(coreNetwork.Segments)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting segments: %s", err)
 	}

@@ -46,7 +46,7 @@ func dataSourceLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -77,7 +77,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	linkID := d.Get("link_id").(string)
 	link, err := findLinkByTwoPartKey(ctx, conn, globalNetworkID, linkID)
 
@@ -95,7 +95,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set("bandwidth", nil)
 	}
 	d.Set(names.AttrDescription, link.Description)
-	d.Set("global_network_id", link.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, link.GlobalNetworkId)
 	d.Set("link_id", link.LinkId)
 	d.Set(names.AttrProviderName, link.Provider)
 	d.Set("site_id", link.SiteId)

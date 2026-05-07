@@ -28,7 +28,7 @@ func dataSourceConnections() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -50,7 +50,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetConnectionsInput{
-		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
+		GlobalNetworkId: aws.String(d.Get(attrGlobalNetworkID).(string)),
 	}
 
 	if v, ok := d.GetOk("device_id"); ok {

@@ -57,7 +57,7 @@ func resourceLink() *schema.Resource {
 				}
 
 				d.SetId(resourceParts[2])
-				d.Set("global_network_id", resourceParts[1])
+				d.Set(attrGlobalNetworkID, resourceParts[1])
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -96,7 +96,7 @@ func resourceLink() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -126,7 +126,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.CreateLinkInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		SiteId:          aws.String(d.Get("site_id").(string)),
@@ -168,7 +168,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	link, err := findLinkByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -190,7 +190,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		d.Set("bandwidth", nil)
 	}
 	d.Set(names.AttrDescription, link.Description)
-	d.Set("global_network_id", link.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, link.GlobalNetworkId)
 	d.Set(names.AttrProviderName, link.Provider)
 	d.Set("site_id", link.SiteId)
 	d.Set(names.AttrType, link.Type)
@@ -205,7 +205,7 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		globalNetworkID := d.Get("global_network_id").(string)
+		globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 		input := networkmanager.UpdateLinkInput{
 			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
@@ -237,7 +237,7 @@ func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Link: %s", d.Id())
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.DeleteLinkInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		LinkId:          aws.String(d.Id()),

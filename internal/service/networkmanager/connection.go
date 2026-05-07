@@ -58,7 +58,7 @@ func resourceConnection() *schema.Resource {
 				}
 
 				d.SetId(resourceParts[2])
-				d.Set("global_network_id", resourceParts[1])
+				d.Set(attrGlobalNetworkID, resourceParts[1])
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -94,7 +94,7 @@ func resourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -113,7 +113,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.CreateConnectionInput{
 		ConnectedDeviceId: aws.String(d.Get("connected_device_id").(string)),
 		DeviceId:          aws.String(d.Get("device_id").(string)),
@@ -152,7 +152,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	connection, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -170,7 +170,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("connected_link_id", connection.ConnectedLinkId)
 	d.Set(names.AttrDescription, connection.Description)
 	d.Set("device_id", connection.DeviceId)
-	d.Set("global_network_id", connection.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
 
 	setTagsOut(ctx, connection.Tags)
@@ -183,7 +183,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		globalNetworkID := d.Get("global_network_id").(string)
+		globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 		input := networkmanager.UpdateConnectionInput{
 			ConnectedLinkId: aws.String(d.Get("connected_link_id").(string)),
 			ConnectionId:    aws.String(d.Id()),
@@ -211,7 +211,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Connection: %s", d.Id())
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	input := networkmanager.DeleteConnectionInput{
 		ConnectionId:    aws.String(d.Id()),
 		GlobalNetworkId: aws.String(globalNetworkID),

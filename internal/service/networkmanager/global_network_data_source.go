@@ -30,7 +30,7 @@ func dataSourceGlobalNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"global_network_id": {
+			attrGlobalNetworkID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -45,7 +45,7 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
+	globalNetworkID := d.Get(attrGlobalNetworkID).(string)
 	globalNetwork, err := findGlobalNetworkByID(ctx, conn, globalNetworkID)
 
 	if err != nil {
@@ -55,7 +55,7 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(globalNetworkID)
 	d.Set(names.AttrARN, globalNetwork.GlobalNetworkArn)
 	d.Set(names.AttrDescription, globalNetwork.Description)
-	d.Set("global_network_id", globalNetwork.GlobalNetworkId)
+	d.Set(attrGlobalNetworkID, globalNetwork.GlobalNetworkId)
 
 	if err := d.Set(names.AttrTags, keyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

@@ -507,7 +507,7 @@ func sweepSites(region string) error {
 					r := resourceSite()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(v.SiteId))
-					d.Set("global_network_id", v.GlobalNetworkId)
+					d.Set(attrGlobalNetworkID, v.GlobalNetworkId)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -569,7 +569,7 @@ func sweepDevices(region string) error {
 					r := resourceDevice()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(v.DeviceId))
-					d.Set("global_network_id", v.GlobalNetworkId)
+					d.Set(attrGlobalNetworkID, v.GlobalNetworkId)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -631,7 +631,7 @@ func sweepLinks(region string) error {
 					r := resourceLink()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(v.LinkId))
-					d.Set("global_network_id", v.GlobalNetworkId)
+					d.Set(attrGlobalNetworkID, v.GlobalNetworkId)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -754,7 +754,7 @@ func sweepConnections(region string) error {
 					r := resourceConnection()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(v.ConnectionId))
-					d.Set("global_network_id", v.GlobalNetworkId)
+					d.Set(attrGlobalNetworkID, v.GlobalNetworkId)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
