@@ -174,7 +174,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 
 	members, err := findTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"is-group-member": "true",
+			"is-group-member": filterValueTrue,
 			"is-group-source": "false",
 		}),
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
@@ -191,7 +191,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	sources, err := findTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"is-group-member": "false",
-			"is-group-source": "true",
+			"is-group-source": filterValueTrue,
 		}),
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})

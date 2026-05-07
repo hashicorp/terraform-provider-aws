@@ -43,13 +43,6 @@ const (
 	subnetCIDRMinIPv6Netmask  = 44
 	subnetCIDRMaxIPv6Netmask  = 64
 	subnetCIDRIPv6NetmaskStep = 4
-
-	filterKeyVPCID        = "vpc-id"
-	filterKeyGroupName    = "group-name"
-	filterKeyServiceName  = "service-name"
-	filterKeyResourceID   = "resource-id"
-	filterKeyResourceType = "resource-type"
-	filterKeyDefault      = "default"
 )
 
 var (

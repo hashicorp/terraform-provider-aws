@@ -158,7 +158,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ec2.DescribeVpcsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"isDefault": "true",
+				"isDefault": filterValueTrue,
 			},
 		),
 	}

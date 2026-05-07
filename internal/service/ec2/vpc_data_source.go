@@ -134,7 +134,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	// "false" and "not set".
 	isDefaultStr := ""
 	if d.Get("default").(bool) {
-		isDefaultStr = "true"
+		isDefaultStr = filterValueTrue
 	}
 	input := &ec2.DescribeVpcsInput{
 		Filters: newAttributeFilterList(

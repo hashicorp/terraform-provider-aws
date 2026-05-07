@@ -156,7 +156,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any)
 	// "false" and "not set".
 	defaultForAzStr := ""
 	if d.Get("default_for_az").(bool) {
-		defaultForAzStr = "true"
+		defaultForAzStr = filterValueTrue
 	}
 
 	filters := map[string]string{

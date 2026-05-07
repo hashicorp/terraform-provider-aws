@@ -23,6 +23,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	filterKeyVPCID        = "vpc-id"
+	filterKeyGroupName    = "group-name"
+	filterKeyServiceName  = "service-name"
+	filterKeyResourceID   = "resource-id"
+	filterKeyResourceType = "resource-type"
+	filterKeyDefault      = "default"
+	filterValueTrue       = "true"
+)
+
 func findAllowedImagesSettings(ctx context.Context, conn *ec2.Client) (*ec2.GetAllowedImagesSettingsOutput, error) {
 	var input ec2.GetAllowedImagesSettingsInput
 	output, err := conn.GetAllowedImagesSettings(ctx, &input)
@@ -878,7 +888,7 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplat
 		switch v {
 		case launchTemplateVersionDefault:
 			input.Filters = newAttributeFilterList(map[string]string{
-				"is-default-version": "true",
+				"is-default-version": filterValueTrue,
 			})
 		case launchTemplateVersionLatest:
 			latestVersion = true
@@ -1775,7 +1785,7 @@ func findVPCIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, 
 func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
 	input := ec2.DescribeNetworkAclsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			filterKeyDefault: "true",
+			filterKeyDefault: filterValueTrue,
 			filterKeyVPCID:   id,
 		}),
 	}
@@ -1786,7 +1796,7 @@ func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) 
 func batchFindVPCDefaultNetworkACLs(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.NetworkAcl, error) {
 	input := ec2.DescribeNetworkAclsInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
-			filterKeyDefault: {"true"},
+			filterKeyDefault: {filterValueTrue},
 			filterKeyVPCID:   ids,
 		}),
 	}
@@ -2063,7 +2073,7 @@ func findVPCDHCPOptionsAssociation(ctx context.Context, conn *ec2.Client, vpcID 
 func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteTable, error) {
 	input := ec2.DescribeRouteTablesInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"association.main": "true",
+			"association.main": filterValueTrue,
 			filterKeyVPCID:     id,
 		}),
 	}
@@ -2074,7 +2084,7 @@ func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*a
 func batchFindVPCMainRouteTables(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.RouteTable, error) {
 	input := ec2.DescribeRouteTablesInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
-			"association.main": {"true"},
+			"association.main": {filterValueTrue},
 			filterKeyVPCID:     ids,
 		}),
 	}
@@ -3154,7 +3164,7 @@ func findRouteTableAssociationByID(ctx context.Context, conn *ec2.Client, associ
 func findMainRouteTableByVPCID(ctx context.Context, conn *ec2.Client, vpcID string) (*awstypes.RouteTable, error) {
 	input := ec2.DescribeRouteTablesInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"association.main": "true",
+			"association.main": filterValueTrue,
 			filterKeyVPCID:     vpcID,
 		}),
 	}
@@ -5115,7 +5125,7 @@ func findTransitGatewayMulticastGroupMemberByThreePartKey(ctx context.Context, c
 	input := ec2.SearchTransitGatewayMulticastGroupsInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"group-ip-address": groupIPAddress,
-			"is-group-member":  "true",
+			"is-group-member":  filterValueTrue,
 			"is-group-source":  "false",
 		}),
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
@@ -5150,7 +5160,7 @@ func findTransitGatewayMulticastGroupSourceByThreePartKey(ctx context.Context, c
 		Filters: newAttributeFilterList(map[string]string{
 			"group-ip-address": groupIPAddress,
 			"is-group-member":  "false",
-			"is-group-source":  "true",
+			"is-group-source":  filterValueTrue,
 		}),
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
 	}

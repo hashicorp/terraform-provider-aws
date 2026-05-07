@@ -178,7 +178,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 		Filters: newAttributeFilterList(
 			map[string]string{
 				"availabilityZone": availabilityZone,
-				"defaultForAz":     "true",
+				"defaultForAz":     filterValueTrue,
 			},
 		),
 	}
