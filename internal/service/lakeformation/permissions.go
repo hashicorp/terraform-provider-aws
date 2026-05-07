@@ -57,8 +57,8 @@ func ResourcePermissions() *schema.Resource {
 					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 					"data_cells_filter",
 				},
 			},
@@ -100,8 +100,8 @@ func ResourcePermissions() *schema.Resource {
 					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
@@ -133,8 +133,8 @@ func ResourcePermissions() *schema.Resource {
 					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
@@ -165,8 +165,8 @@ func ResourcePermissions() *schema.Resource {
 					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
@@ -208,8 +208,8 @@ func ResourcePermissions() *schema.Resource {
 					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
@@ -279,7 +279,7 @@ func ResourcePermissions() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validPrincipal,
 			},
-			"table": {
+			attrTable: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
@@ -291,8 +291,8 @@ func ResourcePermissions() *schema.Resource {
 					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
@@ -331,7 +331,7 @@ func ResourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"table_with_columns": {
+			attrTableWithColumns: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
@@ -343,8 +343,8 @@ func ResourcePermissions() *schema.Resource {
 					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
@@ -575,7 +575,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	tableSet := false
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk(attrTable); ok && len(v.([]any)) > 0 {
 		// since perm list could include TableWithColumns, get the right one
 		for _, perm := range permissions {
 			if perm.Resource == nil {
@@ -583,7 +583,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 			}
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
-				if err := d.Set("table", []any{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set(attrTable, []any{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
@@ -591,7 +591,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 			}
 
 			if perm.Resource.Table != nil {
-				if err := d.Set("table", []any{flattenTableResource(perm.Resource.Table)}); err != nil {
+				if err := d.Set(attrTable, []any{flattenTableResource(perm.Resource.Table)}); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
@@ -601,16 +601,16 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if !tableSet {
-		d.Set("table", nil)
+		d.Set(attrTable, nil)
 	}
 
 	twcSet := false
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk(attrTableWithColumns); ok && len(v.([]any)) > 0 {
 		// since perm list could include Table, get the right one
 		for _, perm := range permissions {
 			if perm.Resource.TableWithColumns != nil {
-				if err := d.Set("table_with_columns", []any{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set(attrTableWithColumns, []any{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting table_with_columns: %s", err)
 				}
 				twcSet = true
@@ -620,7 +620,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if !twcSet {
-		d.Set("table_with_columns", nil)
+		d.Set(attrTableWithColumns, nil)
 	}
 
 	return diags
@@ -738,10 +738,10 @@ func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
 	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return filterLFTagPolicyPermissions(principalIdentifier)
 	}
-	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrTable); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return filterTablePermissions(principalIdentifier, ExpandTableResource(v.([]any)[0].(map[string]any)))
 	}
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrTableWithColumns); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		var columnNames []string
 		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
 			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
@@ -767,7 +767,7 @@ func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
 }
 
 func populateResourceForCreate(input *lakeformation.GrantPermissionsInput, d *schema.ResourceData) {
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrTableWithColumns); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Resource = &awstypes.Resource{
 			TableWithColumns: expandTableColumnsResource(v.([]any)[0].(map[string]any)),
 		}
@@ -777,7 +777,7 @@ func populateResourceForCreate(input *lakeformation.GrantPermissionsInput, d *sc
 }
 
 func populateResourceForRead(input *lakeformation.ListPermissionsInput, d *schema.ResourceData) {
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrTableWithColumns); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
 		input.Resource = &awstypes.Resource{
 			Table: ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any)),
@@ -788,7 +788,7 @@ func populateResourceForRead(input *lakeformation.ListPermissionsInput, d *schem
 }
 
 func populateResourceForDelete(input *lakeformation.RevokePermissionsInput, d *schema.ResourceData) {
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrTableWithColumns); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Resource = &awstypes.Resource{
 			TableWithColumns: expandTableColumnsResource(v.([]any)[0].(map[string]any)),
 		}
@@ -824,7 +824,7 @@ func expandResource(d *schema.ResourceData) *awstypes.Resource {
 		resource = &awstypes.Resource{
 			LFTagPolicy: ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any)),
 		}
-	} else if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	} else if v, ok := d.GetOk(attrTable); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		resource = &awstypes.Resource{
 			Table: ExpandTableResource(v.([]any)[0].(map[string]any)),
 		}

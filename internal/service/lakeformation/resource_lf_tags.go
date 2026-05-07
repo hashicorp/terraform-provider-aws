@@ -57,8 +57,8 @@ func ResourceResourceLFTags() *schema.Resource {
 				Optional: true,
 				ExactlyOneOf: []string{
 					names.AttrDatabase,
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -104,7 +104,7 @@ func ResourceResourceLFTags() *schema.Resource {
 				},
 				Set: lfTagsHash,
 			},
-			"table": {
+			attrTable: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
@@ -112,8 +112,8 @@ func ResourceResourceLFTags() *schema.Resource {
 				Optional: true,
 				ExactlyOneOf: []string{
 					names.AttrDatabase,
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -151,7 +151,7 @@ func ResourceResourceLFTags() *schema.Resource {
 					},
 				},
 			},
-			"table_with_columns": {
+			attrTableWithColumns: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
@@ -159,8 +159,8 @@ func ResourceResourceLFTags() *schema.Resource {
 				Optional: true,
 				ExactlyOneOf: []string{
 					names.AttrDatabase,
-					"table",
-					"table_with_columns",
+					attrTable,
+					attrTableWithColumns,
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -375,9 +375,9 @@ func lfTagsTagger(d *schema.ResourceData) (tagger, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &databaseTagger{}, diags
-	} else if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	} else if v, ok := d.GetOk(attrTable); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &tableTagger{}, diags
-	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	} else if v, ok := d.GetOk(attrTableWithColumns); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &columnTagger{}, diags
 	} else {
 		diags = append(diags, errs.NewErrorDiagnostic(
@@ -412,7 +412,7 @@ func (t *databaseTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutp
 type tableTagger struct{}
 
 func (t *tableTagger) ExpandResource(d *schema.ResourceData) *awstypes.Resource {
-	v := d.Get("table").([]any)[0].(map[string]any)
+	v := d.Get(attrTable).([]any)[0].(map[string]any)
 	return &awstypes.Resource{
 		Table: ExpandTableResource(v),
 	}
@@ -425,7 +425,7 @@ func (t *tableTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput)
 type columnTagger struct{}
 
 func (t *columnTagger) ExpandResource(d *schema.ResourceData) *awstypes.Resource {
-	v := d.Get("table_with_columns").([]any)[0].(map[string]any)
+	v := d.Get(attrTableWithColumns).([]any)[0].(map[string]any)
 	return &awstypes.Resource{
 		TableWithColumns: expandTableColumnsResource(v),
 	}

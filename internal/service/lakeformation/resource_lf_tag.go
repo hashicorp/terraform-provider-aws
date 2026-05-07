@@ -125,7 +125,7 @@ func (r *resourceLFTagResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"table": schema.ListNestedBlock{
+			attrTable: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[table](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -169,7 +169,7 @@ func (r *resourceLFTagResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"table_with_columns": schema.ListNestedBlock{
+			attrTableWithColumns: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[tableWithColumns](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -493,8 +493,8 @@ func (r *resourceLFTagResource) ConfigValidators(_ context.Context) []resource.C
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot(names.AttrDatabase),
-			path.MatchRoot("table"),
-			path.MatchRoot("table_with_columns"),
+			path.MatchRoot(attrTable),
+			path.MatchRoot(attrTableWithColumns),
 		),
 	}
 }

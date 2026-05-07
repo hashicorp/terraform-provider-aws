@@ -90,11 +90,11 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 			}
 
 			if v.Resource.Table != nil {
-				d.Set("table", []any{flattenTableResource(v.Resource.Table)})
+				d.Set(attrTable, []any{flattenTableResource(v.Resource.Table)})
 			}
 
 			if v.Resource.TableWithColumns != nil {
-				d.Set("table_with_columns", []any{flattenTableColumnsResource(v.Resource.TableWithColumns)})
+				d.Set(attrTableWithColumns, []any{flattenTableColumnsResource(v.Resource.TableWithColumns)})
 			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

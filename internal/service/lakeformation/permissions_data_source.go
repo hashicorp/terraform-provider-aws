@@ -194,7 +194,7 @@ func DataSourcePermissions() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validPrincipal,
 			},
-			"table": {
+			attrTable: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -223,7 +223,7 @@ func DataSourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"table_with_columns": {
+			attrTableWithColumns: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -352,7 +352,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 
 	tableSet := false
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk(attrTable); ok && len(v.([]any)) > 0 {
 		// since perm list could include TableWithColumns, get the right one
 		for _, perm := range permissions {
 			if perm.Resource == nil {
@@ -360,7 +360,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
-				if err := d.Set("table", []any{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
+				if err := d.Set(attrTable, []any{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
 					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
@@ -368,7 +368,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			if perm.Resource.Table != nil {
-				if err := d.Set("table", []any{flattenTableResource(perm.Resource.Table)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
+				if err := d.Set(attrTable, []any{flattenTableResource(perm.Resource.Table)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
 					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
@@ -378,16 +378,16 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if !tableSet {
-		d.Set("table", nil)
+		d.Set(attrTable, nil)
 	}
 
 	twcSet := false
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk(attrTableWithColumns); ok && len(v.([]any)) > 0 {
 		// since perm list could include Table, get the right one
 		for _, perm := range permissions {
 			if perm.Resource.TableWithColumns != nil {
-				if err := d.Set("table_with_columns", []any{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
+				if err := d.Set(attrTableWithColumns, []any{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
 					return sdkdiag.AppendErrorf(diags, "setting table_with_columns: %s", err)
 				}
 				twcSet = true
@@ -397,7 +397,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if !twcSet {
-		d.Set("table_with_columns", nil)
+		d.Set(attrTableWithColumns, nil)
 	}
 
 	return diags
