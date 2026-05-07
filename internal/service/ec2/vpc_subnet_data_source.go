@@ -164,7 +164,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any)
 		"availabilityZoneId": d.Get("availability_zone_id").(string),
 		"defaultForAz":       defaultForAzStr,
 		names.AttrState:      d.Get(names.AttrState).(string),
-		"vpc-id":             d.Get(names.AttrVPCID).(string),
+		filterKeyVPCID:       d.Get(names.AttrVPCID).(string),
 	}
 
 	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {

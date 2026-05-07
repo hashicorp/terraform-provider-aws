@@ -73,7 +73,7 @@ func findAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name
 	input := ec2.DescribeAvailabilityZonesInput{
 		AllAvailabilityZones: aws.Bool(true),
 		Filters: newAttributeFilterList(map[string]string{
-			"group-name": name,
+			filterKeyGroupName: name,
 		}),
 	}
 
@@ -475,8 +475,8 @@ func findInstanceCreditSpecifications(ctx context.Context, conn *ec2.Client, inp
 func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tagKey string) (string, error) {
 	input := ec2.DescribeTagsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"resource-id": instanceID,
-			names.AttrKey: tagKey,
+			filterKeyResourceID: instanceID,
+			names.AttrKey:       tagKey,
 		}),
 	}
 
@@ -1775,8 +1775,8 @@ func findVPCIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, 
 func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
 	input := ec2.DescribeNetworkAclsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"default": "true",
-			"vpc-id":  id,
+			filterKeyDefault: "true",
+			filterKeyVPCID:   id,
 		}),
 	}
 
@@ -1786,8 +1786,8 @@ func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) 
 func batchFindVPCDefaultNetworkACLs(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.NetworkAcl, error) {
 	input := ec2.DescribeNetworkAclsInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
-			"default": {"true"},
-			"vpc-id":  ids,
+			filterKeyDefault: {"true"},
+			filterKeyVPCID:   ids,
 		}),
 	}
 
@@ -2014,8 +2014,8 @@ func findNetworkACLEntryByThreePartKey(ctx context.Context, conn *ec2.Client, na
 func findVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
 	input := ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"group-name": defaultSecurityGroupName,
-			"vpc-id":     id,
+			filterKeyGroupName: defaultSecurityGroupName,
+			filterKeyVPCID:     id,
 		}),
 	}
 
@@ -2025,8 +2025,8 @@ func findVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.Client, id strin
 func batchFindVPCDefaultSecurityGroups(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.SecurityGroup, error) {
 	input := ec2.DescribeSecurityGroupsInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
-			"group-name": {defaultSecurityGroupName},
-			"vpc-id":     ids,
+			filterKeyGroupName: {defaultSecurityGroupName},
+			filterKeyVPCID:     ids,
 		}),
 	}
 
@@ -2064,7 +2064,7 @@ func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*a
 	input := ec2.DescribeRouteTablesInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"association.main": "true",
-			"vpc-id":           id,
+			filterKeyVPCID:     id,
 		}),
 	}
 
@@ -2075,7 +2075,7 @@ func batchFindVPCMainRouteTables(ctx context.Context, conn *ec2.Client, ids []st
 	input := ec2.DescribeRouteTablesInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
 			"association.main": {"true"},
-			"vpc-id":           ids,
+			filterKeyVPCID:     ids,
 		}),
 	}
 
@@ -2164,8 +2164,8 @@ func findSecurityGroupByNameAndVPCID(ctx context.Context, conn *ec2.Client, name
 	input := ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": name,
-				"vpc-id":     vpcID,
+				filterKeyGroupName: name,
+				filterKeyVPCID:     vpcID,
 			},
 		),
 	}
@@ -2196,8 +2196,8 @@ func findSecurityGroupByDescriptionAndVPCID(ctx context.Context, conn *ec2.Clien
 	input := ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"description": description, // nosemgrep:ci.literal-description-string-constant
-				"vpc-id":      vpcID,
+				"description":  description, // nosemgrep:ci.literal-description-string-constant
+				filterKeyVPCID: vpcID,
 			},
 		),
 	}
@@ -2209,9 +2209,9 @@ func findSecurityGroupByNameAndVPCIDAndOwnerID(ctx context.Context, conn *ec2.Cl
 	input := ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": name,
-				"vpc-id":     vpcID,
-				"owner-id":   ownerID,
+				filterKeyGroupName: name,
+				filterKeyVPCID:     vpcID,
+				"owner-id":         ownerID,
 			},
 		),
 	}
@@ -2312,8 +2312,8 @@ func findSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.Clie
 func findSecurityGroupVPCAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, groupID, vpcID string) (*awstypes.SecurityGroupVpcAssociation, error) {
 	input := ec2.DescribeSecurityGroupVpcAssociationsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"group-id": groupID,
-			"vpc-id":   vpcID,
+			"group-id":     groupID,
+			filterKeyVPCID: vpcID,
 		}),
 	}
 
@@ -2862,7 +2862,7 @@ func findSpotFleetRequestHistoryRecords(ctx context.Context, conn *ec2.Client, i
 func findVPCEndpointServiceConfigurationByServiceName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.ServiceConfiguration, error) {
 	input := ec2.DescribeVpcEndpointServiceConfigurationsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"service-name": name,
+			filterKeyServiceName: name,
 		}),
 	}
 
@@ -3155,7 +3155,7 @@ func findMainRouteTableByVPCID(ctx context.Context, conn *ec2.Client, vpcID stri
 	input := ec2.DescribeRouteTablesInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"association.main": "true",
-			"vpc-id":           vpcID,
+			filterKeyVPCID:     vpcID,
 		}),
 	}
 
@@ -4482,7 +4482,7 @@ func findIPAMResourceCIDRByThreePartKey(ctx context.Context, conn *ec2.Client, s
 	input := ec2.GetIpamResourceCidrsInput{
 		Filters: []awstypes.Filter{
 			{
-				Name:   aws.String("resource-id"),
+				Name:   aws.String(filterKeyResourceID),
 				Values: []string{resourceID},
 			},
 		},
@@ -4830,11 +4830,11 @@ func findTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID(ctx
 	input := ec2.DescribeTransitGatewayAttachmentsInput{
 		Filters: []awstypes.Filter{
 			{
-				Name:   aws.String("resource-type"),
+				Name:   aws.String(filterKeyResourceType),
 				Values: enum.Slice(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
 			},
 			{
-				Name:   aws.String("resource-id"),
+				Name:   aws.String(filterKeyResourceID),
 				Values: []string{dxGatewayID},
 			},
 			{

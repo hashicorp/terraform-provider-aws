@@ -69,8 +69,8 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": d.Get(names.AttrName).(string),
-				"vpc-id":     d.Get(names.AttrVPCID).(string),
+				filterKeyGroupName: d.Get(names.AttrName).(string),
+				filterKeyVPCID:     d.Get(names.AttrVPCID).(string),
 			},
 		),
 	}

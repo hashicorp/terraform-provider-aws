@@ -53,7 +53,7 @@ func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
-				"vpc-id": v.(string),
+				filterKeyVPCID: v.(string),
 			},
 		)...)
 	}

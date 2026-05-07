@@ -53,7 +53,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"resource-type": string(awstypes.TransitGatewayAttachmentResourceTypeVpn),
+			filterKeyResourceType: string(awstypes.TransitGatewayAttachmentResourceTypeVpn),
 		}),
 	}
 
@@ -69,7 +69,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 
 	if v, ok := d.GetOk("vpn_connection_id"); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
-			"resource-id": v.(string),
+			filterKeyResourceID: v.(string),
 		})...)
 	}
 

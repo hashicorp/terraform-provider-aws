@@ -58,7 +58,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"resource-type": string(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
+			filterKeyResourceType: string(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
 		}),
 	}
 
@@ -75,7 +75,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 	// to preserve original functionality
 	if v, ok := d.GetOk("dx_gateway_id"); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
-			"resource-id": v.(string),
+			filterKeyResourceID: v.(string),
 		})...)
 	}
 

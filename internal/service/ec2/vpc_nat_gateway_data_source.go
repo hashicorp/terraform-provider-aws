@@ -181,7 +181,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 			map[string]string{
 				names.AttrState: d.Get(names.AttrState).(string),
 				"subnet-id":     d.Get(names.AttrSubnetID).(string),
-				"vpc-id":        d.Get(names.AttrVPCID).(string),
+				filterKeyVPCID:  d.Get(names.AttrVPCID).(string),
 			},
 		),
 	}

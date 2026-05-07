@@ -54,7 +54,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		input.Filter = append(input.Filter, newAttributeFilterList(
 			map[string]string{
-				"vpc-id": v.(string),
+				filterKeyVPCID: v.(string),
 			},
 		)...)
 	}

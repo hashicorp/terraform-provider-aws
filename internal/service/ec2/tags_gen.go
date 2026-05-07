@@ -29,7 +29,7 @@ func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optF
 	input := ec2.DescribeTagsInput{
 		Filters: []awstypes.Filter{
 			{
-				Name:   aws.String("resource-id"),
+				Name:   aws.String(filterKeyResourceID),
 				Values: []string{identifier},
 			},
 			{
@@ -61,7 +61,7 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 	input := ec2.DescribeTagsInput{
 		Filters: []awstypes.Filter{
 			{
-				Name:   aws.String("resource-id"),
+				Name:   aws.String(filterKeyResourceID),
 				Values: []string{identifier},
 			},
 		},

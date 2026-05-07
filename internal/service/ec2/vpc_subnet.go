@@ -824,8 +824,8 @@ const (
 func findGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) ([]awstypes.VpcEndpoint, error) {
 	return findVPCEndpoints(ctx, conn, &ec2.DescribeVpcEndpointsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"vpc-id":                        vpcID,
-			"service-name":                  guardDutyServiceNamePattern,
+			filterKeyVPCID:                  vpcID,
+			filterKeyServiceName:            guardDutyServiceNamePattern,
 			"tag:" + guardDutyManagedTagKey: guardDutyManagedTagValue,
 		}),
 	})

@@ -2640,7 +2640,7 @@ func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([
 
 	input := ec2.DescribeTagsInput{
 		Filters: attributeFiltersFromMultimap(map[string][]string{
-			"resource-id": volIDs,
+			filterKeyResourceID: volIDs,
 		}),
 	}
 	resp, err := conn.DescribeTags(ctx, &input)
