@@ -178,7 +178,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(attrFunctionName, true)),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("function_name", true)),
 			Import: inttypes.SDKv2Import{
 				CustomImport: true,
 			},
@@ -227,7 +227,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Permission",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(attrFunctionName, true),
+				inttypes.StringIdentityAttribute("function_name", true),
 				inttypes.StringIdentityAttribute("statement_id", true),
 				inttypes.StringIdentityAttribute("qualifier", false),
 			}),
@@ -265,7 +265,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(attrFunctionName, true)),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("function_name", true)),
 		},
 		{
 			Factory:  newLayerVersionResourceAsListResource,
@@ -283,7 +283,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Name:     "Permission",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(attrFunctionName, true),
+				inttypes.StringIdentityAttribute("function_name", true),
 				inttypes.StringIdentityAttribute("statement_id", true),
 				inttypes.StringIdentityAttribute("qualifier", false),
 			}),
