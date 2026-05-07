@@ -169,6 +169,28 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 				},
 			},
+			"policy_engine_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayPolicyEngineConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrARN: schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 170),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:policy-engine\/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9_]{10}$`), ""),
+							},
+						},
+						names.AttrMode: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.GatewayPolicyEngineMode](),
+							Required:   true,
+						},
+					},
+				},
+			},
 			"protocol_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayProtocolConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -478,23 +500,29 @@ func findGateway(ctx context.Context, conn *bedrockagentcorecontrol.Client, inpu
 
 type gatewayResourceModel struct {
 	framework.WithRegionModel
-	AuthorizerConfiguration   fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]         `tfsdk:"authorizer_configuration"`
-	AuthorizerType            fwtypes.StringEnum[awstypes.AuthorizerType]                           `tfsdk:"authorizer_type"`
-	Description               types.String                                                          `tfsdk:"description"`
-	ExceptionLevel            fwtypes.StringEnum[awstypes.ExceptionLevel]                           `tfsdk:"exception_level"`
-	GatewayARN                types.String                                                          `tfsdk:"gateway_arn"`
-	GatewayID                 types.String                                                          `tfsdk:"gateway_id"`
-	GatewayURL                types.String                                                          `tfsdk:"gateway_url"`
-	InterceptorConfigurations fwtypes.ListNestedObjectValueOf[gatewayInterceptorConfigurationModel] `tfsdk:"interceptor_configuration"`
-	KMSKeyARN                 fwtypes.ARN                                                           `tfsdk:"kms_key_arn"`
-	Name                      types.String                                                          `tfsdk:"name"`
-	ProtocolConfiguration     fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel]    `tfsdk:"protocol_configuration"`
-	ProtocolType              fwtypes.StringEnum[awstypes.GatewayProtocolType]                      `tfsdk:"protocol_type"`
-	RoleARN                   fwtypes.ARN                                                           `tfsdk:"role_arn"`
-	Tags                      tftags.Map                                                            `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                                            `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                                        `tfsdk:"timeouts"`
-	WorkloadIdentityDetails   fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]         `tfsdk:"workload_identity_details"`
+	AuthorizerConfiguration   fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]          `tfsdk:"authorizer_configuration"`
+	AuthorizerType            fwtypes.StringEnum[awstypes.AuthorizerType]                            `tfsdk:"authorizer_type"`
+	Description               types.String                                                           `tfsdk:"description"`
+	ExceptionLevel            fwtypes.StringEnum[awstypes.ExceptionLevel]                            `tfsdk:"exception_level"`
+	GatewayARN                types.String                                                           `tfsdk:"gateway_arn"`
+	GatewayID                 types.String                                                           `tfsdk:"gateway_id"`
+	GatewayURL                types.String                                                           `tfsdk:"gateway_url"`
+	InterceptorConfigurations fwtypes.ListNestedObjectValueOf[gatewayInterceptorConfigurationModel]  `tfsdk:"interceptor_configuration"`
+	KMSKeyARN                 fwtypes.ARN                                                            `tfsdk:"kms_key_arn"`
+	Name                      types.String                                                           `tfsdk:"name"`
+	PolicyEngineConfiguration fwtypes.ListNestedObjectValueOf[gatewayPolicyEngineConfigurationModel] `tfsdk:"policy_engine_configuration"`
+	ProtocolConfiguration     fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel]     `tfsdk:"protocol_configuration"`
+	ProtocolType              fwtypes.StringEnum[awstypes.GatewayProtocolType]                       `tfsdk:"protocol_type"`
+	RoleARN                   fwtypes.ARN                                                            `tfsdk:"role_arn"`
+	Tags                      tftags.Map                                                             `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                             `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                                         `tfsdk:"timeouts"`
+	WorkloadIdentityDetails   fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]          `tfsdk:"workload_identity_details"`
+}
+
+type gatewayPolicyEngineConfigurationModel struct {
+	ARN  fwtypes.ARN                                          `tfsdk:"arn"`
+	Mode fwtypes.StringEnum[awstypes.GatewayPolicyEngineMode] `tfsdk:"mode"`
 }
 
 type gatewayProtocolConfigurationModel struct {

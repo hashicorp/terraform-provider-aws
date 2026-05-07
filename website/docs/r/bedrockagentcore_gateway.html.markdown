@@ -127,6 +127,7 @@ The following arguments are optional:
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `DEBUG`.
 * `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
+* `policy_engine_configuration` - (Optional) Configuration for a policy engine associated with the gateway. A policy engine is a collection of policies that evaluates and authorizes agent tool calls. When associated with a gateway, the policy engine intercepts all agent requests and determines whether to allow or deny each action based on the defined policies. See [`policy_engine_configuration`](#policy_engine_configuration) below.
 * `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -193,6 +194,13 @@ The `lambda` block supports the following:
 The `input_configuration` block supports the following:
 
 * `pass_request_headers` - (Required) Whether to pass request headers to the interceptor.
+
+### `policy_engine_configuration`
+
+The `policy_engine_configuration` block supports the following:
+
+* `arn` - (Required) ARN of the policy engine. The policy engine contains Cedar policies that define fine-grained authorization rules specifying who can perform what actions on which resources as agents interact through the gateway.
+* `mode` - (Required) Enforcement mode for the policy engine. Valid values: `LOG_ONLY`, `ENFORCE`. In `LOG_ONLY` mode, the policy engine evaluates actions and records traces but does not enforce decisions. In `ENFORCE` mode, the policy engine evaluates actions and enforces allow/deny decisions.
 
 ### `protocol_configuration`
 
