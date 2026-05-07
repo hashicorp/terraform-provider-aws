@@ -282,5 +282,5 @@ func waitGatewayDeleted(ctx context.Context, conn *directconnect.Client, id stri
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsdirectconnect.html#awsdirectconnect-resources-for-iam-policies.
 func gatewayARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "directconnect", "dx-gateway/"+id)
+	return c.GlobalARN(ctx, arnService, "dx-gateway/"+id)
 }

@@ -84,7 +84,7 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "directconnect",
+		Service:   arnService,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
@@ -156,7 +156,7 @@ func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "directconnect",
+		Service:   arnService,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()

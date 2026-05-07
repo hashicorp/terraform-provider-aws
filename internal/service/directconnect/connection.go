@@ -30,6 +30,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	arnService = "directconnect"
+)
+
 // @SDKResource("aws_dx_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
 func resourceConnection() *schema.Resource {
@@ -282,7 +286,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    aws.ToString(connection.Region),
-		Service:   "directconnect",
+		Service:   arnService,
 		AccountID: aws.ToString(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()

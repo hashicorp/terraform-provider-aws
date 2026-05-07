@@ -157,7 +157,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    aws.ToString(lag.Region),
-		Service:   "directconnect",
+		Service:   arnService,
 		AccountID: aws.ToString(lag.OwnerAccount),
 		Resource:  fmt.Sprintf("dxlag/%s", d.Id()),
 	}.String()
