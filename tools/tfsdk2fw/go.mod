@@ -107,6 +107,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.38.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.3.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.40.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.18 // indirect

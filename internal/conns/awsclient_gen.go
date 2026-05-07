@@ -87,6 +87,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -600,6 +601,10 @@ func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy.Client {
 
 func (c *AWSClient) DetectiveClient(ctx context.Context) *detective.Client {
 	return errs.Must(client[*detective.Client](ctx, c, names.Detective, make(map[string]any)))
+}
+
+func (c *AWSClient) DevOpsAgentClient(ctx context.Context) *devopsagent.Client {
+	return errs.Must(client[*devopsagent.Client](ctx, c, names.DevOpsAgent, make(map[string]any)))
 }
 
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru.Client {

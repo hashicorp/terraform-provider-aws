@@ -88,6 +88,7 @@ Data Pipeline
 DataSync
 DataZone
 Detective
+DevOps Agent
 DevOps Guru
 Device Farm
 Direct Connect
