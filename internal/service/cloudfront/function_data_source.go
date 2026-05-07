@@ -38,7 +38,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(aws.ToString(outputDF.FunctionSummary.Name))
 	d.Set(names.AttrARN, outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set(names.AttrComment, outputDF.FunctionSummary.FunctionConfig.Comment)
-	d.Set(attrEtag, outputDF.ETag)
+	d.Set(attrETag, outputDF.ETag)
 	if err := d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(outputDF.FunctionSummary.FunctionConfig.KeyValueStoreAssociations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting key_value_store_associations: %s", err)
 	}

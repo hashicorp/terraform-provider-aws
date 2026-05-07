@@ -58,7 +58,7 @@ func (r *trustStoreResource) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			attrEtag: schema.StringAttribute{
+			attrETag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),

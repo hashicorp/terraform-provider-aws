@@ -52,7 +52,7 @@ func resourcePublicKey() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -133,7 +133,7 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("caller_reference", publicKeyConfig.CallerReference)
 	d.Set(names.AttrComment, publicKeyConfig.Comment)
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
-	d.Set(attrEtag, output.ETag)
+	d.Set(attrETag, output.ETag)
 	d.Set(names.AttrName, publicKeyConfig.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(publicKeyConfig.Name)))
 
@@ -146,7 +146,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	input := &cloudfront.UpdatePublicKeyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get(attrEtag).(string)),
+		IfMatch: aws.String(d.Get(attrETag).(string)),
 		PublicKeyConfig: &awstypes.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
 			Name:       aws.String(d.Get(names.AttrName).(string)),
@@ -179,7 +179,7 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta a
 	log.Printf("[DEBUG] Deleting CloudFront Public Key: %s", d.Id())
 	input := cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get(attrEtag).(string)),
+		IfMatch: aws.String(d.Get(attrETag).(string)),
 	}
 	_, err := conn.DeletePublicKey(ctx, &input)
 

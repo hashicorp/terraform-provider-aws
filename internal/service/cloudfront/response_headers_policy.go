@@ -154,7 +154,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 				},
 				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "remove_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -414,7 +414,7 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 	} else {
 		d.Set("custom_headers_config", nil)
 	}
-	d.Set(attrEtag, output.ETag)
+	d.Set(attrETag, output.ETag)
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.RemoveHeadersConfig != nil {
 		if err := d.Set("remove_headers_config", []any{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
@@ -479,7 +479,7 @@ func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.Resource
 
 	input := &cloudfront.UpdateResponseHeadersPolicyInput{
 		Id:                          aws.String(d.Id()),
-		IfMatch:                     aws.String(d.Get(attrEtag).(string)),
+		IfMatch:                     aws.String(d.Get(attrETag).(string)),
 		ResponseHeadersPolicyConfig: apiObject,
 	}
 
@@ -499,7 +499,7 @@ func resourceResponseHeadersPolicyDelete(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] Deleting CloudFront Response Headers Policy: %s", d.Id())
 	input := cloudfront.DeleteResponseHeadersPolicyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get(attrEtag).(string)),
+		IfMatch: aws.String(d.Get(attrETag).(string)),
 	}
 	_, err := conn.DeleteResponseHeadersPolicy(ctx, &input)
 

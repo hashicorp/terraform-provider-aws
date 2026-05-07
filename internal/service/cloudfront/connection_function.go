@@ -54,7 +54,7 @@ func (r *connectionFunctionResource) Schema(ctx context.Context, req resource.Sc
 			"connection_function_code": schema.StringAttribute{
 				Required: true,
 			},
-			attrEtag: schema.StringAttribute{
+			attrETag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),

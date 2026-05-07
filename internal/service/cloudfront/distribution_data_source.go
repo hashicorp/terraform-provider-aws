@@ -45,7 +45,7 @@ func dataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +100,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, distribution.ARN)
 	d.Set(names.AttrDomainName, distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
-	d.Set(attrEtag, output.ETag)
+	d.Set(attrETag, output.ETag)
 	d.Set(names.AttrHostedZoneID, c.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
 	d.Set("last_modified_time", distribution.LastModifiedTime.String())

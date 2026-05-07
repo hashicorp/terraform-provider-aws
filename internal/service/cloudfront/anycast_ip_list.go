@@ -65,7 +65,7 @@ func (r *anycastIPListResource) Schema(ctx context.Context, request resource.Sch
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			attrEtag: schema.StringAttribute{
+			attrETag: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

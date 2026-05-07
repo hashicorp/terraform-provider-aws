@@ -40,7 +40,7 @@ func resourceKeyGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	keyGroupConfig := output.KeyGroup.KeyGroupConfig
 	d.Set(names.AttrComment, keyGroupConfig.Comment)
-	d.Set(attrEtag, output.ETag)
+	d.Set(attrETag, output.ETag)
 	d.Set(attrItems, keyGroupConfig.Items)
 	d.Set(names.AttrName, keyGroupConfig.Name)
 
@@ -126,7 +126,7 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	input := &cloudfront.UpdateKeyGroupInput{
 		Id:             aws.String(d.Id()),
-		IfMatch:        aws.String(d.Get(attrEtag).(string)),
+		IfMatch:        aws.String(d.Get(attrETag).(string)),
 		KeyGroupConfig: apiObject,
 	}
 
@@ -145,7 +145,7 @@ func resourceKeyGroupDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	input := &cloudfront.DeleteKeyGroupInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get(attrEtag).(string)),
+		IfMatch: aws.String(d.Get(attrETag).(string)),
 	}
 
 	_, err := conn.DeleteKeyGroup(ctx, input)

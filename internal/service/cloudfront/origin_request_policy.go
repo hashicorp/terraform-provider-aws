@@ -72,7 +72,7 @@ func resourceOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -206,7 +206,7 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("cookies_config", nil)
 	}
-	d.Set(attrEtag, output.ETag)
+	d.Set(attrETag, output.ETag)
 	if apiObject.HeadersConfig != nil {
 		if err := d.Set("headers_config", []any{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)
@@ -256,7 +256,7 @@ func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 
 	input := &cloudfront.UpdateOriginRequestPolicyInput{
 		Id:                        aws.String(d.Id()),
-		IfMatch:                   aws.String(d.Get(attrEtag).(string)),
+		IfMatch:                   aws.String(d.Get(attrETag).(string)),
 		OriginRequestPolicyConfig: apiObject,
 	}
 
@@ -276,7 +276,7 @@ func resourceOriginRequestPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	log.Printf("[DEBUG] Deleting CloudFront Origin Request Policy: %s", d.Id())
 	input := cloudfront.DeleteOriginRequestPolicyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get(attrEtag).(string)),
+		IfMatch: aws.String(d.Get(attrETag).(string)),
 	}
 	_, err := conn.DeleteOriginRequestPolicy(ctx, &input)
 

@@ -131,7 +131,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -363,7 +363,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	} else {
 		d.Set("custom_headers_config", nil)
 	}
-	d.Set(attrEtag, output.ETag)
+	d.Set(attrETag, output.ETag)
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.RemoveHeadersConfig != nil {
 		if err := d.Set("remove_headers_config", []any{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {

@@ -54,7 +54,7 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			attrEtag: schema.StringAttribute{
+			attrETag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

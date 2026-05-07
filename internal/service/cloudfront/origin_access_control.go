@@ -47,7 +47,7 @@ func resourceOriginAccessControl() *schema.Resource {
 				Default:      "Managed by Terraform",
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -120,7 +120,7 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrARN, originAccessControlARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	config := output.OriginAccessControl.OriginAccessControlConfig
 	d.Set(names.AttrDescription, config.Description)
-	d.Set(attrEtag, output.ETag)
+	d.Set(attrETag, output.ETag)
 	d.Set(names.AttrName, config.Name)
 	d.Set("origin_access_control_origin_type", config.OriginAccessControlOriginType)
 	d.Set("signing_behavior", config.SigningBehavior)
@@ -135,7 +135,7 @@ func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceDa
 
 	input := &cloudfront.UpdateOriginAccessControlInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get(attrEtag).(string)),
+		IfMatch: aws.String(d.Get(attrETag).(string)),
 		OriginAccessControlConfig: &awstypes.OriginAccessControlConfig{
 			Description:                   aws.String(d.Get(names.AttrDescription).(string)),
 			Name:                          aws.String(d.Get(names.AttrName).(string)),
@@ -161,7 +161,7 @@ func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceDa
 	log.Printf("[INFO] Deleting CloudFront Origin Access Control: %s", d.Id())
 	input := cloudfront.DeleteOriginAccessControlInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get(attrEtag).(string)),
+		IfMatch: aws.String(d.Get(attrETag).(string)),
 	}
 	_, err := conn.DeleteOriginAccessControl(ctx, &input)
 

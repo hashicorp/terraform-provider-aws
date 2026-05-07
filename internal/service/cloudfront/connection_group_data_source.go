@@ -48,7 +48,7 @@ func (d *connectionGroupDataSource) Schema(_ context.Context, _ datasource.Schem
 			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
-			attrEtag: schema.StringAttribute{
+			attrETag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{

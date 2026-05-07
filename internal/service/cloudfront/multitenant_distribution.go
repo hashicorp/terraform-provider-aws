@@ -93,7 +93,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:                      framework.ARNAttributeComputedOnly(),
 			names.AttrDomainName:               schema.StringAttribute{Computed: true},
-			attrEtag:                           schema.StringAttribute{Computed: true},
+			attrETag:                           schema.StringAttribute{Computed: true},
 			names.AttrID:                       framework.IDAttribute(),
 			"in_progress_invalidation_batches": schema.Int32Attribute{Computed: true},
 			"last_modified_time": schema.StringAttribute{

@@ -41,7 +41,7 @@ func (d *originAccessControlDataSource) Schema(_ context.Context, _ datasource.S
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			attrEtag: schema.StringAttribute{
+			attrETag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{

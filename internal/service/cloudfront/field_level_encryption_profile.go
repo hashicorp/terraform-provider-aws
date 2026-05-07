@@ -88,7 +88,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 					},
 				},
 			},
-			attrEtag: {
+			attrETag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -160,7 +160,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 	} else {
 		d.Set("encryption_entities", nil)
 	}
-	d.Set(attrEtag, output.ETag)
+	d.Set(attrETag, output.ETag)
 	d.Set(names.AttrName, apiObject.Name)
 
 	return diags
@@ -186,7 +186,7 @@ func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.Re
 	input := &cloudfront.UpdateFieldLevelEncryptionProfileInput{
 		FieldLevelEncryptionProfileConfig: apiObject,
 		Id:                                aws.String(d.Id()),
-		IfMatch:                           aws.String(d.Get(attrEtag).(string)),
+		IfMatch:                           aws.String(d.Get(attrETag).(string)),
 	}
 
 	_, err := conn.UpdateFieldLevelEncryptionProfile(ctx, input)
@@ -205,7 +205,7 @@ func resourceFieldLevelEncryptionProfileDelete(ctx context.Context, d *schema.Re
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Profile: (%s)", d.Id())
 	input := cloudfront.DeleteFieldLevelEncryptionProfileInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get(attrEtag).(string)),
+		IfMatch: aws.String(d.Get(attrETag).(string)),
 	}
 	_, err := conn.DeleteFieldLevelEncryptionProfile(ctx, &input)
 
