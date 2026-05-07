@@ -635,7 +635,7 @@ func ipProtocolValue(value string) ipProtocol {
 func legacySecurityGroupRuleResourceSchemaV2(ctx context.Context) *schema.Schema {
 	return &schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"cidr_blocks": schema.ListAttribute{
+			attrCIDRBlocks: schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -685,7 +685,7 @@ func legacySecurityGroupRuleResourceSchemaV2(ctx context.Context) *schema.Schema
 			"security_group_rule_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"self": schema.BoolAttribute{
+			attrSelf: schema.BoolAttribute{
 				Optional: true,
 				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{

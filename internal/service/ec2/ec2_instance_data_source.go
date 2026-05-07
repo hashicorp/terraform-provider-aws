@@ -204,7 +204,7 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ipv6_addresses": {
+			attrIPv6Addresses: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -529,7 +529,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 				for _, ip := range ni.Ipv6Addresses {
 					ipV6Addresses = append(ipV6Addresses, aws.ToString(ip.Ipv6Address))
 				}
-				if err := d.Set("ipv6_addresses", ipV6Addresses); err != nil {
+				if err := d.Set(attrIPv6Addresses, ipV6Addresses); err != nil {
 					return fmt.Errorf("setting ipv6_addresses: %w", err)
 				}
 			}

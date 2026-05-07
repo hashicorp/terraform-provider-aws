@@ -46,7 +46,7 @@ func resourceIPAMPoolCIDR() *schema.Resource {
 		CustomizeDiff: resourceIPAMPoolCIDRCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
-			"cidr": {
+			attrCIDR: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -93,7 +93,7 @@ func resourceIPAMPoolCIDR() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.IntBetween(0, 128),
-				ConflictsWith: []string{"cidr"},
+				ConflictsWith: []string{attrCIDR},
 			},
 		},
 	}
@@ -108,7 +108,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 		IpamPoolId: aws.String(poolID),
 	}
 
-	if v, ok := d.GetOk("cidr"); ok {
+	if v, ok := d.GetOk(attrCIDR); ok {
 		input.Cidr = aws.String(v.(string))
 	}
 
@@ -164,7 +164,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDR (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cidr", output.Cidr)
+	d.Set(attrCIDR, output.Cidr)
 	d.Set("ipam_pool_cidr_id", output.IpamPoolCidrId)
 	d.Set("ipam_pool_id", poolID)
 	d.Set("netmask_length", output.NetmaskLength)
@@ -264,12 +264,12 @@ func expandIPAMCIDRAuthorizationContext(tfMap map[string]any) *awstypes.IpamCidr
 
 func resourceIPAMPoolCIDRCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	// cidr can be set by a value returned from IPAM or explicitly in config.
-	if diff.Id() != "" && diff.HasChange("cidr") {
+	if diff.Id() != "" && diff.HasChange(attrCIDR) {
 		// If netmask is set then cidr is derived from IPAM, ignore changes.
 		if diff.Get("netmask_length") != 0 {
-			return diff.Clear("cidr")
+			return diff.Clear(attrCIDR)
 		}
-		return diff.ForceNew("cidr")
+		return diff.ForceNew(attrCIDR)
 	}
 
 	return nil

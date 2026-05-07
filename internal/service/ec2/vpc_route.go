@@ -43,7 +43,7 @@ var routeValidTargets = []string{
 	"carrier_gateway_id",
 	"core_network_arn",
 	"egress_only_gateway_id",
-	"gateway_id",
+	attrGatewayID,
 	"local_gateway_id",
 	"nat_gateway_id",
 	names.AttrNetworkInterfaceID,
@@ -76,7 +76,7 @@ func resourceRoute() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"route_table_id": {
+			attrRouteTableID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -127,7 +127,7 @@ func resourceRoute() *schema.Resource {
 				ExactlyOneOf:  routeValidTargets,
 				ConflictsWith: []string{routeDestinationCIDRBlock}, // IPv6 destinations only.
 			},
-			"gateway_id": {
+			attrGatewayID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
@@ -204,7 +204,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	input := &ec2.CreateRouteInput{
 		RouteTableId: aws.String(routeTableID),
 	}
@@ -232,7 +232,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.CoreNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
-	case "gateway_id":
+	case attrGatewayID:
 		input.GatewayId = target
 	case "local_gateway_id":
 		input.LocalGatewayId = target
@@ -310,7 +310,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	route, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Route, error) {
 		return routeFinder(ctx, conn, routeTableID, destination)
 	}, d.IsNewResource())
@@ -332,10 +332,10 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(routeDestinationPrefixListID, route.DestinationPrefixListId)
 	// VPC Endpoint ID is returned in Gateway ID field
 	if strings.HasPrefix(aws.ToString(route.GatewayId), "vpce-") {
-		d.Set("gateway_id", "")
+		d.Set(attrGatewayID, "")
 		d.Set(names.AttrVPCEndpointID, route.GatewayId)
 	} else {
-		d.Set("gateway_id", route.GatewayId)
+		d.Set(attrGatewayID, route.GatewayId)
 		d.Set(names.AttrVPCEndpointID, "")
 	}
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
@@ -368,7 +368,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	input := &ec2.ReplaceRouteInput{
 		RouteTableId: aws.String(routeTableID),
 	}
@@ -397,7 +397,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.CoreNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
-	case "gateway_id":
+	case attrGatewayID:
 		if localTarget {
 			input.LocalTarget = aws.Bool(true)
 		} else {
@@ -443,7 +443,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	input := &ec2.DeleteRouteInput{
 		RouteTableId: aws.String(routeTableID),
 	}
@@ -521,7 +521,7 @@ type routeImportID struct{}
 
 func (routeImportID) Create(d *schema.ResourceData) string {
 	_, destination, _ := routeDestinationAttribute(d)
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	return routeCreateID(routeTableID, destination)
 }
 
@@ -534,7 +534,7 @@ func (routeImportID) Parse(id string) (string, map[string]any, error) {
 	routeTableID := parts[0]
 	destination := parts[1]
 	result := map[string]any{
-		"route_table_id": routeTableID,
+		attrRouteTableID: routeTableID,
 	}
 	if strings.Contains(destination, ":") {
 		result[routeDestinationIPv6CIDRBlock] = destination

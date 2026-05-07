@@ -67,7 +67,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr": {
+						attrCIDR: {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
@@ -572,7 +572,7 @@ func flattenVerifiedAccessEndpointCIDROptions(apiObject *awstypes.VerifiedAccess
 	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
-		tfMap["cidr"] = aws.ToString(v)
+		tfMap[attrCIDR] = aws.ToString(v)
 	}
 
 	if v := apiObject.PortRanges; v != nil {
@@ -709,7 +709,7 @@ func expandCreateVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *awstyp
 
 	apiObject := &awstypes.CreateVerifiedAccessEndpointCidrOptions{}
 
-	if v, ok := tfMap["cidr"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCIDR].(string); ok && v != "" {
 		apiObject.Cidr = aws.String(v)
 	}
 

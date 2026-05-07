@@ -37,7 +37,7 @@ func dataSourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_blocks": {
+			attrCIDRBlocks: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -239,12 +239,12 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
 		if retry.NotFound(err) {
-			d.Set("cidr_blocks", nil)
+			d.Set(attrCIDRBlocks, nil)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
 		}
 	} else {
-		d.Set("cidr_blocks", pl.Cidrs)
+		d.Set(attrCIDRBlocks, pl.Cidrs)
 		d.Set("prefix_list_id", pl.PrefixListId)
 	}
 

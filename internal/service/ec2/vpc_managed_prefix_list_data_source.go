@@ -43,7 +43,7 @@ func dataSourceManagedPrefixList() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr": {
+						attrCIDR: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

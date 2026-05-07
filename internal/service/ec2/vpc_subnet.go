@@ -883,7 +883,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 	}
 
 	tflog.Debug(ctx, "Found GuardDuty VPC endpoints", map[string]any{
-		"count": len(endpoints),
+		attrCount: len(endpoints),
 	})
 
 	for _, endpoint := range endpoints {

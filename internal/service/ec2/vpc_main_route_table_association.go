@@ -43,7 +43,7 @@ func resourceMainRouteTableAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"route_table_id": {
+			attrRouteTableID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -66,7 +66,7 @@ func resourceMainRouteTableAssociationCreate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Main Route Table Association (%s): %s", vpcID, err)
 	}
 
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	input := &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: association.RouteTableAssociationId,
 		RouteTableId:  aws.String(routeTableID),
@@ -112,7 +112,7 @@ func resourceMainRouteTableAssociationUpdate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	input := &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),
 		RouteTableId:  aws.String(routeTableID),
@@ -148,7 +148,7 @@ func resourceMainRouteTableAssociationDelete(ctx context.Context, d *schema.Reso
 	output, err := conn.ReplaceRouteTableAssociation(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Main Route Table Association (%s): %s", d.Get("route_table_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Main Route Table Association (%s): %s", d.Get(attrRouteTableID).(string), err)
 	}
 
 	if _, err := waitRouteTableAssociationUpdated(ctx, conn, aws.ToString(output.NewAssociationId), d.Timeout(schema.TimeoutDelete)); err != nil {

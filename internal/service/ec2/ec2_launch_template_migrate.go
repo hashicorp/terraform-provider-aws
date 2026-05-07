@@ -742,7 +742,7 @@ func launchTemplateSchemaV0() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"ipv6_addresses": {
+						attrIPv6Addresses: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{

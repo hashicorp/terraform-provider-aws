@@ -842,7 +842,7 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"ipv6_addresses": {
+						attrIPv6Addresses: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -2072,7 +2072,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.Ipv6AddressCount = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["ipv6_addresses"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrIPv6Addresses].(*schema.Set); ok && v.Len() > 0 {
 		for _, v := range v.List() {
 			apiObject.Ipv6Addresses = append(apiObject.Ipv6Addresses, awstypes.InstanceIpv6AddressRequest{
 				Ipv6Address: aws.String(v.(string)),
@@ -3059,7 +3059,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv6Addresses; len(v) > 0 {
-		tfMap["ipv6_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.InstanceIpv6Address) string {
+		tfMap[attrIPv6Addresses] = tfslices.ApplyToAll(v, func(v awstypes.InstanceIpv6Address) string {
 			return aws.ToString(v.Ipv6Address)
 		})
 	}

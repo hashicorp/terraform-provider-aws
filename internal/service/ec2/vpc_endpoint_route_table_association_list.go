@@ -55,14 +55,14 @@ func (l *vpcEndpointRouteTableAssociationListResource) List(ctx context.Context,
 
 			for _, routeTableID := range endpoint.RouteTableIds {
 				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrVPCEndpointID), endpointID)
-				ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("route_table_id"), routeTableID)
+				ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(attrRouteTableID), routeTableID)
 
 				result := request.NewListResult(ctx)
 
 				rd := l.ResourceData()
 				rd.SetId(vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 				rd.Set(names.AttrVPCEndpointID, endpointID)
-				rd.Set("route_table_id", routeTableID)
+				rd.Set(attrRouteTableID, routeTableID)
 
 				if request.IncludeResource { //nolint:revive,staticcheck // Be explicit about IncludeResource handling.
 					// No-op, all readable attributes are already populated above.

@@ -38,7 +38,7 @@ func resourceManagedPrefixListEntry() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr": {
+			attrCIDR: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,7 +64,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	cidr := d.Get("cidr").(string)
+	cidr := d.Get(attrCIDR).(string)
 	plID := d.Get("prefix_list_id").(string)
 	id := managedPrefixListEntryCreateResourceID(plID, cidr)
 
@@ -132,7 +132,7 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cidr", entry.Cidr)
+	d.Set(attrCIDR, entry.Cidr)
 	d.Set(names.AttrDescription, entry.Description)
 
 	return diags
@@ -193,7 +193,7 @@ func resourceManagedPrefixListEntryImport(ctx context.Context, d *schema.Resourc
 		return nil, err
 	}
 
-	d.Set("cidr", cidr)
+	d.Set(attrCIDR, cidr)
 	d.Set("prefix_list_id", plID)
 
 	return []*schema.ResourceData{d}, nil

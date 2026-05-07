@@ -37,7 +37,7 @@ func resourceVPCEndpointRouteTableAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceVPCEndpointRouteTableAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"route_table_id": {
+			attrRouteTableID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -56,7 +56,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
@@ -87,7 +87,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
@@ -113,7 +113,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
@@ -157,12 +157,12 @@ func (vpcEndpointRouteTableAssociationImportID) Parse(id string) (string, map[st
 
 	result := map[string]any{
 		names.AttrVPCEndpointID: endpointID,
-		"route_table_id":        routeTableID,
+		attrRouteTableID:        routeTableID,
 	}
 
 	return vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID), result, nil
 }
 
 func (vpcEndpointRouteTableAssociationImportID) Create(d *schema.ResourceData) string {
-	return vpcEndpointRouteTableAssociationCreateID(d.Get(names.AttrVPCEndpointID).(string), d.Get("route_table_id").(string))
+	return vpcEndpointRouteTableAssociationCreateID(d.Get(names.AttrVPCEndpointID).(string), d.Get(attrRouteTableID).(string))
 }

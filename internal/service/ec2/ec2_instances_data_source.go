@@ -47,7 +47,7 @@ func dataSourceInstances() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.InstanceStateName](),
 				},
 			},
-			"ipv6_addresses": {
+			attrIPv6Addresses: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -117,7 +117,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, instanceIDs)
-	d.Set("ipv6_addresses", ipv6Addresses)
+	d.Set(attrIPv6Addresses, ipv6Addresses)
 	d.Set("private_ips", privateIPs)
 	d.Set("public_ips", publicIPs)
 

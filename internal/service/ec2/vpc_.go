@@ -824,7 +824,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 	}
 
 	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{
-		"count": len(sgs),
+		attrCount: len(sgs),
 	})
 
 	for _, sg := range sgs {
@@ -867,7 +867,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 	}
 
 	tflog.Debug(ctx, "Found GuardDuty VPC endpoints", map[string]any{
-		"count": len(endpoints),
+		attrCount: len(endpoints),
 	})
 
 	for _, endpoint := range endpoints {

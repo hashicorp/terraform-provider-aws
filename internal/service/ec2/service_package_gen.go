@@ -1656,7 +1656,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Route",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("route_table_id", true),
+				inttypes.StringIdentityAttribute(attrRouteTableID, true),
 				inttypes.StringIdentityAttribute("destination_cidr_block", false),
 				inttypes.StringIdentityAttribute("destination_ipv6_cidr_block", false),
 				inttypes.StringIdentityAttribute("destination_prefix_list_id", false),
@@ -1882,7 +1882,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrVPCEndpointID, true),
-				inttypes.StringIdentityAttribute("route_table_id", true),
+				inttypes.StringIdentityAttribute(attrRouteTableID, true),
 			}),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -2134,7 +2134,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Name:     "Route",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("route_table_id", true),
+				inttypes.StringIdentityAttribute(attrRouteTableID, true),
 				inttypes.StringIdentityAttribute("destination_cidr_block", false),
 				inttypes.StringIdentityAttribute("destination_ipv6_cidr_block", false),
 				inttypes.StringIdentityAttribute("destination_prefix_list_id", false),
@@ -2217,7 +2217,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrVPCEndpointID, true),
-				inttypes.StringIdentityAttribute("route_table_id", true),
+				inttypes.StringIdentityAttribute(attrRouteTableID, true),
 			}),
 		},
 	})

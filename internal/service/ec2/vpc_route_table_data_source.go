@@ -39,12 +39,12 @@ func dataSourceRouteTable() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"gateway_id": {
+			attrGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"route_table_id": {
+			attrRouteTableID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -97,7 +97,7 @@ func dataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"gateway_id": {
+						attrGatewayID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -150,7 +150,7 @@ func dataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"route_table_id": {
+						attrRouteTableID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -160,7 +160,7 @@ func dataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"gateway_id": {
+						attrGatewayID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -195,8 +195,8 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	req := &ec2.DescribeRouteTablesInput{}
 	vpcId, vpcIdOk := d.GetOk(names.AttrVPCID)
 	subnetId, subnetIdOk := d.GetOk(names.AttrSubnetID)
-	gatewayId, gatewayIdOk := d.GetOk("gateway_id")
-	rtbId, rtbOk := d.GetOk("route_table_id")
+	gatewayId, gatewayIdOk := d.GetOk(attrGatewayID)
+	rtbId, rtbOk := d.GetOk(attrRouteTableID)
 	tags, tagsOk := d.GetOk(names.AttrTags)
 	filter, filterOk := d.GetOk(names.AttrFilter)
 
@@ -237,7 +237,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, routeTableARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 
-	d.Set("route_table_id", rt.RouteTableId)
+	d.Set(attrRouteTableID, rt.RouteTableId)
 	d.Set(names.AttrVPCID, rt.VpcId)
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
@@ -310,7 +310,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []aws
 			if strings.HasPrefix(*r.GatewayId, "vpce-") {
 				m[names.AttrVPCEndpointID] = aws.ToString(r.GatewayId)
 			} else {
-				m["gateway_id"] = aws.ToString(r.GatewayId)
+				m[attrGatewayID] = aws.ToString(r.GatewayId)
 			}
 		}
 		if r.NatGatewayId != nil {
@@ -342,14 +342,14 @@ func dataSourceAssociationsRead(ec2Assocations []awstypes.RouteTableAssociation)
 	// Loop through the routes and add them to the set
 	for _, a := range ec2Assocations {
 		m := make(map[string]any)
-		m["route_table_id"] = aws.ToString(a.RouteTableId)
+		m[attrRouteTableID] = aws.ToString(a.RouteTableId)
 		m["route_table_association_id"] = aws.ToString(a.RouteTableAssociationId)
 		// GH[11134]
 		if a.SubnetId != nil {
 			m[names.AttrSubnetID] = aws.ToString(a.SubnetId)
 		}
 		if a.GatewayId != nil {
-			m["gateway_id"] = aws.ToString(a.GatewayId)
+			m[attrGatewayID] = aws.ToString(a.GatewayId)
 		}
 		m["main"] = aws.ToBool(a.Main)
 		associations = append(associations, m)

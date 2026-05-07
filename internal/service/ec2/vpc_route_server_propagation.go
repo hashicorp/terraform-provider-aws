@@ -53,7 +53,7 @@ func (r *vpcRouteServerPropagationResource) Schema(ctx context.Context, request 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"route_table_id": schema.StringAttribute{
+			attrRouteTableID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -175,7 +175,7 @@ func (r *vpcRouteServerPropagationResource) ImportState(ctx context.Context, req
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("route_server_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("route_table_id"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attrRouteTableID), parts[1])...)
 }
 
 type vpcRouteServerPropagationResourceModel struct {

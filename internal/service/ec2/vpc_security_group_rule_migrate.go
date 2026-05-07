@@ -71,7 +71,7 @@ func migrateExpandIPPerm(attrs map[string]string) (*awstypes.IpPermission, error
 	perm.IpProtocol = aws.String(attrs[names.AttrProtocol])
 
 	groups := make(map[string]bool)
-	if attrs["self"] == "true" {
+	if attrs[attrSelf] == "true" {
 		groups[attrs["security_group_id"]] = true
 	}
 
@@ -96,7 +96,7 @@ func migrateExpandIPPerm(attrs map[string]string) (*awstypes.IpPermission, error
 
 	var cb []string
 	for k, v := range attrs {
-		if k != "cidr_blocks.#" && strings.HasPrefix(k, "cidr_blocks") {
+		if k != "cidr_blocks.#" && strings.HasPrefix(k, attrCIDRBlocks) {
 			cb = append(cb, v)
 		}
 	}

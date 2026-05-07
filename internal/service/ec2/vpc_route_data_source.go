@@ -29,7 +29,7 @@ func dataSourceRoute() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"route_table_id": {
+			attrRouteTableID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -71,7 +71,7 @@ func dataSourceRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"gateway_id": {
+			attrGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -114,7 +114,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 
 	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
@@ -159,7 +159,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			continue
 		}
 
-		if v, ok := d.GetOk("gateway_id"); ok && aws.ToString(r.GatewayId) != v.(string) {
+		if v, ok := d.GetOk(attrGatewayID); ok && aws.ToString(r.GatewayId) != v.(string) {
 			continue
 		}
 
@@ -214,7 +214,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
-	d.Set("gateway_id", route.GatewayId)
+	d.Set(attrGatewayID, route.GatewayId)
 	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)

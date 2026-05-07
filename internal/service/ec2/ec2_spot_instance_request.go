@@ -392,7 +392,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 		d.Set("primary_network_interface_id", "")
 	}
 
-	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
+	if err := d.Set(attrIPv6Addresses, ipv6Addresses); err != nil {
 		log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
 	}
 

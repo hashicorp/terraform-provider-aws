@@ -655,7 +655,7 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"ipv6_addresses": {
+						attrIPv6Addresses: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},

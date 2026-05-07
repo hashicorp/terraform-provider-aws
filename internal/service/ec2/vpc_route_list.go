@@ -39,7 +39,7 @@ type routeListResourceModel struct {
 func (l *routeListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"route_table_id": listschema.StringAttribute{
+			attrRouteTableID: listschema.StringAttribute{
 				Required: true,
 			},
 		},
@@ -60,7 +60,7 @@ func (l *routeListResource) List(ctx context.Context, request list.ListRequest, 
 	routeTableID := query.RouteTableID.ValueString()
 
 	tflog.Info(ctx, "Listing routes", map[string]any{
-		"route_table_id": routeTableID,
+		attrRouteTableID: routeTableID,
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -104,7 +104,7 @@ func (l *routeListResource) List(ctx context.Context, request list.ListRequest, 
 
 			rd := l.ResourceData()
 			rd.SetId(routeCreateID(routeTableID, destination))
-			rd.Set("route_table_id", routeTableID)
+			rd.Set(attrRouteTableID, routeTableID)
 			rd.Set(destinationKey, destination)
 
 			diags := resourceRouteRead(ctx, rd, awsClient)

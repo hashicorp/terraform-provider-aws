@@ -167,7 +167,7 @@ func resourceNATGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"route_table_id": {
+			attrRouteTableID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -411,7 +411,7 @@ func resourceNATGatewayFlatten(d *schema.ResourceData, natGateway *awstypes.NatG
 			return fmt.Errorf("setting regional_nat_gateway_address: %w", err)
 		}
 		d.Set("regional_nat_gateway_auto_mode", natGateway.AutoProvisionZones)
-		d.Set("route_table_id", natGateway.RouteTableId)
+		d.Set(attrRouteTableID, natGateway.RouteTableId)
 	}
 
 	return nil

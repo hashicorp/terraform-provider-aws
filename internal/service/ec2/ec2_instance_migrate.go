@@ -530,9 +530,9 @@ func resourceInstanceV1() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"ipv6_addresses"},
+				ConflictsWith: []string{attrIPv6Addresses},
 			},
-			"ipv6_addresses": {
+			attrIPv6Addresses: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -644,7 +644,7 @@ func resourceInstanceV1() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", names.AttrSubnetID, "private_ip", "secondary_private_ips", names.AttrVPCSecurityGroupIDs, names.AttrSecurityGroups, "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", names.AttrSubnetID, "private_ip", "secondary_private_ips", names.AttrVPCSecurityGroupIDs, names.AttrSecurityGroups, attrIPv6Addresses, "ipv6_address_count", "source_dest_check"},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,

@@ -121,7 +121,7 @@ func networkInsightsAnalysisPathComponentsSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cidr": {
+							attrCIDR: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -377,7 +377,7 @@ func networkInsightsAnalysisPathComponentsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"gateway_id": {
+							attrGatewayID: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -413,7 +413,7 @@ func networkInsightsAnalysisPathComponentsSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cidr": {
+							attrCIDR: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -608,7 +608,7 @@ func networkInsightsAnalysisExplanationsSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cidr": {
+							attrCIDR: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -1032,7 +1032,7 @@ func networkInsightsAnalysisExplanationsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"gateway_id": {
+							attrGatewayID: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -1088,7 +1088,7 @@ func networkInsightsAnalysisExplanationsSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cidr": {
+							attrCIDR: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -1582,7 +1582,7 @@ func flattenAnalysisAclRule(apiObject *awstypes.AnalysisAclRule) map[string]any 
 	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
-		tfMap["cidr"] = aws.ToString(v)
+		tfMap[attrCIDR] = aws.ToString(v)
 	}
 
 	if v := apiObject.Egress; v != nil {
@@ -1738,7 +1738,7 @@ func flattenAnalysisRouteTableRoute(apiObject *awstypes.AnalysisRouteTableRoute)
 	}
 
 	if v := apiObject.GatewayId; v != nil {
-		tfMap["gateway_id"] = aws.ToString(v)
+		tfMap[attrGatewayID] = aws.ToString(v)
 	}
 
 	if v := apiObject.InstanceId; v != nil {
@@ -1776,7 +1776,7 @@ func flattenAnalysisSecurityGroupRule(apiObject *awstypes.AnalysisSecurityGroupR
 	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
-		tfMap["cidr"] = aws.ToString(v)
+		tfMap[attrCIDR] = aws.ToString(v)
 	}
 
 	if v := apiObject.PortRange; v != nil {

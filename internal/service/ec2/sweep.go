@@ -751,7 +751,7 @@ func sweepEBSSnapshots(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 	input := ec2.DescribeSnapshotsInput{
-		OwnerIds: []string{"self"},
+		OwnerIds: []string{attrSelf},
 	}
 	conn := client.EC2Client(ctx)
 	var sweepResources []sweep.Sweepable
@@ -2734,7 +2734,7 @@ func sweepAMIs(region string) error {
 	}
 
 	input := ec2.DescribeImagesInput{
-		Owners: []string{"self"},
+		Owners: []string{attrSelf},
 	}
 	conn := client.EC2Client(ctx)
 	var sweepResources []sweep.Sweepable
@@ -3233,7 +3233,7 @@ func sweepRouteServerPropagations(ctx context.Context, client *conns.AWSClient) 
 			for _, v := range output.RouteServerPropagations {
 				sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerPropagationResource, client,
 					framework.NewAttribute("route_server_id", routeServerID),
-					framework.NewAttribute("route_table_id", aws.ToString(v.RouteTableId))))
+					framework.NewAttribute(attrRouteTableID, aws.ToString(v.RouteTableId))))
 			}
 		}
 	}

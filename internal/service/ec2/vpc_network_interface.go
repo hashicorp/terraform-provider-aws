@@ -141,21 +141,21 @@ func resourceNetworkInterface() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"ipv6_addresses", "ipv6_address_list"},
+				ConflictsWith: []string{attrIPv6Addresses, "ipv6_address_list"},
 			},
 			"ipv6_address_list": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"ipv6_addresses", "ipv6_address_count"},
+				ConflictsWith: []string{attrIPv6Addresses, "ipv6_address_count"},
 			},
 			"ipv6_address_list_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"ipv6_addresses": {
+			attrIPv6Addresses: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -337,7 +337,7 @@ func resourceNetworkInterface() *schema.Resource {
 					return diff.HasChange("private_ips") || diff.HasChange("private_ips_count") || diff.HasChange("private_ip_list")
 				}
 			}),
-			customdiff.ComputedIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+			customdiff.ComputedIf(attrIPv6Addresses, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				if !diff.Get("ipv6_address_list_enabled").(bool) {
 					// it is not computed if we are actively updating it
 					if diff.HasChange("private_ips") {
@@ -356,7 +356,7 @@ func resourceNetworkInterface() *schema.Resource {
 						return false
 					} else {
 						// compute the new count if ipv6_addresses change
-						return diff.HasChange("ipv6_addresses")
+						return diff.HasChange(attrIPv6Addresses)
 					}
 				} else {
 					// compute the new count if ipv6_address_list changes
@@ -369,7 +369,7 @@ func resourceNetworkInterface() *schema.Resource {
 					return false
 				} else {
 					// list is not controlling so compute new list if anything changes
-					return diff.HasChange("ipv6_addresses") || diff.HasChange("ipv6_address_count") || diff.HasChange("ipv6_address_list")
+					return diff.HasChange(attrIPv6Addresses) || diff.HasChange("ipv6_address_count") || diff.HasChange("ipv6_address_list")
 				}
 			}),
 		),
@@ -412,7 +412,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		input.Ipv6AddressCount = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("ipv6_addresses"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(attrIPv6Addresses); ok && v.(*schema.Set).Len() > 0 {
 		input.Ipv6Addresses = expandInstanceIPv6Addresses(v.(*schema.Set).List())
 	}
 
@@ -607,7 +607,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv6 address list: %s", err)
 	}
-	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
+	if err := d.Set(attrIPv6Addresses, flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv6_addresses: %s", err)
 	}
 	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
@@ -897,8 +897,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("ipv6_addresses") && !d.Get("ipv6_address_list_enabled").(bool) {
-		o, n := d.GetChange("ipv6_addresses")
+	if d.HasChange(attrIPv6Addresses) && !d.Get("ipv6_address_list_enabled").(bool) {
+		o, n := d.GetChange(attrIPv6Addresses)
 		if o == nil {
 			o = new(schema.Set)
 		}
@@ -941,7 +941,7 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if d.HasChange("ipv6_address_count") && !d.Get("ipv6_address_list_enabled").(bool) {
 		o, n := d.GetChange("ipv6_address_count")
-		ipv6Addresses := d.Get("ipv6_addresses").(*schema.Set).List()
+		ipv6Addresses := d.Get(attrIPv6Addresses).(*schema.Set).List()
 
 		if o != nil && n != nil && n != len(ipv6Addresses) {
 			if diff := n.(int) - o.(int); diff > 0 {

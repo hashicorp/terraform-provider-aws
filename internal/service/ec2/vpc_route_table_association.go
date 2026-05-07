@@ -52,13 +52,13 @@ func resourceRouteTableAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"gateway_id": {
+			attrGatewayID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrSubnetID, "gateway_id"},
+				ExactlyOneOf: []string{names.AttrSubnetID, attrGatewayID},
 			},
-			"route_table_id": {
+			attrRouteTableID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -66,7 +66,7 @@ func resourceRouteTableAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrSubnetID, "gateway_id"},
+				ExactlyOneOf: []string{names.AttrSubnetID, attrGatewayID},
 			},
 		},
 	}
@@ -76,12 +76,12 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	input := &ec2.AssociateRouteTableInput{
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	if v, ok := d.GetOk("gateway_id"); ok {
+	if v, ok := d.GetOk(attrGatewayID); ok {
 		input.GatewayId = aws.String(v.(string))
 	}
 
@@ -133,8 +133,8 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceRouteTableAssociationFlatten(association *awstypes.RouteTableAssociation, d *schema.ResourceData) {
-	d.Set("gateway_id", association.GatewayId)
-	d.Set("route_table_id", association.RouteTableId)
+	d.Set(attrGatewayID, association.GatewayId)
+	d.Set(attrRouteTableID, association.RouteTableId)
 	d.Set(names.AttrSubnetID, association.SubnetId)
 }
 
@@ -144,7 +144,7 @@ func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.Resource
 
 	input := &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),
-		RouteTableId:  aws.String(d.Get("route_table_id").(string)),
+		RouteTableId:  aws.String(d.Get(attrRouteTableID).(string)),
 	}
 
 	output, err := conn.ReplaceRouteTableAssociation(ctx, input)

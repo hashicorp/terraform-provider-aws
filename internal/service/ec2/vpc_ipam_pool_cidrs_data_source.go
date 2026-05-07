@@ -39,7 +39,7 @@ func dataSourceIPAMPoolCIDRs() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr": {
+						attrCIDR: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -93,7 +93,7 @@ func flattenIPAMPoolCIDRs(c []awstypes.IpamPoolCidr) []any {
 
 func flattenIPAMPoolCIDR(c awstypes.IpamPoolCidr) map[string]any {
 	cidr := make(map[string]any)
-	cidr["cidr"] = aws.ToString(c.Cidr)
+	cidr[attrCIDR] = aws.ToString(c.Cidr)
 	cidr[names.AttrState] = c.State
 	return cidr
 }

@@ -29,7 +29,7 @@ func resourceIPAMPreviewNextCIDR() *schema.Resource {
 		ReadWithoutTimeout:   resourceIPAMPreviewNextCIDRRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 		Schema: map[string]*schema.Schema{
-			"cidr": {
+			attrCIDR: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -99,7 +99,7 @@ func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceDa
 
 	cidr := output.IpamPoolAllocation.Cidr
 
-	d.Set("cidr", cidr)
+	d.Set(attrCIDR, cidr)
 	d.SetId(encodeIPAMPreviewNextCIDRID(aws.ToString(cidr), poolId))
 
 	return append(diags, resourceIPAMPreviewNextCIDRRead(ctx, d, meta)...)
@@ -113,7 +113,7 @@ func resourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 IPAM Preview Next CIDR: %s", err)
 	}
 
-	d.Set("cidr", cidr)
+	d.Set(attrCIDR, cidr)
 	d.Set("ipam_pool_id", poolId)
 
 	return diags

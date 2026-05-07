@@ -55,7 +55,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 		MigrateState:  securityGroupRuleMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"cidr_blocks": {
+			attrCIDRBlocks: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -63,8 +63,8 @@ func resourceSecurityGroupRule() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 				},
-				ConflictsWith: []string{"source_security_group_id", "self"},
-				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
+				ConflictsWith: []string{"source_security_group_id", attrSelf},
+				AtLeastOneOf:  []string{attrCIDRBlocks, "ipv6_cidr_blocks", "prefix_list_ids", attrSelf, "source_security_group_id"},
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -92,8 +92,8 @@ func resourceSecurityGroupRule() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 				},
-				ConflictsWith: []string{"source_security_group_id", "self"},
-				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
+				ConflictsWith: []string{"source_security_group_id", attrSelf},
+				AtLeastOneOf:  []string{attrCIDRBlocks, "ipv6_cidr_blocks", "prefix_list_ids", attrSelf, "source_security_group_id"},
 			},
 			"prefix_list_ids": {
 				Type:     schema.TypeList,
@@ -103,7 +103,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.NoZeroValues,
 				},
-				AtLeastOneOf: []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
+				AtLeastOneOf: []string{attrCIDRBlocks, "ipv6_cidr_blocks", "prefix_list_ids", attrSelf, "source_security_group_id"},
 			},
 			names.AttrProtocol: {
 				Type:      schema.TypeString,
@@ -120,21 +120,21 @@ func resourceSecurityGroupRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"self": {
+			attrSelf: {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				Default:       false,
 				ForceNew:      true,
-				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "source_security_group_id"},
-				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
+				ConflictsWith: []string{attrCIDRBlocks, "ipv6_cidr_blocks", "source_security_group_id"},
+				AtLeastOneOf:  []string{attrCIDRBlocks, "ipv6_cidr_blocks", "prefix_list_ids", attrSelf, "source_security_group_id"},
 			},
 			"source_security_group_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				Computed:      true,
-				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "self"},
-				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
+				ConflictsWith: []string{attrCIDRBlocks, "ipv6_cidr_blocks", attrSelf},
+				AtLeastOneOf:  []string{attrCIDRBlocks, "ipv6_cidr_blocks", "prefix_list_ids", attrSelf, "source_security_group_id"},
 			},
 			"to_port": {
 				Type:     schema.TypeInt,
@@ -487,7 +487,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 
 	for _, v := range sources {
 		// will be properly validated later
-		if v != "self" && !strings.Contains(v, "sg-") && !strings.Contains(v, "pl-") && !strings.Contains(v, ":") && !strings.Contains(v, ".") {
+		if v != attrSelf && !strings.Contains(v, "sg-") && !strings.Contains(v, "pl-") && !strings.Contains(v, ":") && !strings.Contains(v, ".") {
 			return nil, invalidIDError("source must be cidr, ipv6cidr, prefix list, 'self', or a Security Group ID")
 		}
 	}
@@ -501,14 +501,14 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 	if v, err := strconv.Atoi(toPort); err == nil {
 		d.Set("to_port", v)
 	}
-	d.Set("self", false)
+	d.Set(attrSelf, false)
 
 	var cidrBlocks, ipv6CIDRBlocks, prefixListIDs []string
 
 	for _, v := range sources {
 		switch {
-		case v == "self":
-			d.Set("self", true)
+		case v == attrSelf:
+			d.Set(attrSelf, true)
 		case strings.Contains(v, "sg-"):
 			d.Set("source_security_group_id", v)
 		case strings.Contains(v, ":"):
@@ -520,7 +520,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	d.Set("cidr_blocks", cidrBlocks)
+	d.Set(attrCIDRBlocks, cidrBlocks)
 	d.Set("ipv6_cidr_blocks", ipv6CIDRBlocks)
 	d.Set("prefix_list_ids", prefixListIDs)
 
@@ -777,7 +777,7 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 		apiObject.ToPort = aws.Int32(int32(d.Get("to_port").(int)))
 	}
 
-	if v, ok := d.GetOk("cidr_blocks"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk(attrCIDRBlocks); ok && len(v.([]any)) > 0 {
 		for _, v := range v.([]any) {
 			apiObject.IpRanges = append(apiObject.IpRanges, awstypes.IpRange{
 				CidrIp: aws.String(v.(string)),
@@ -803,7 +803,7 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 
 	var self string
 
-	if _, ok := d.GetOk("self"); ok {
+	if _, ok := d.GetOk(attrSelf); ok {
 		self = aws.ToString(sg.GroupId)
 		apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, awstypes.UserIdGroupPair{
 			GroupId: aws.String(self),
@@ -864,7 +864,7 @@ func flattenIpPermission(d *schema.ResourceData, apiObject *awstypes.IpPermissio
 			ipRanges = append(ipRanges, aws.ToString(v.CidrIp))
 		}
 
-		d.Set("cidr_blocks", ipRanges)
+		d.Set(attrCIDRBlocks, ipRanges)
 	}
 
 	if v := apiObject.Ipv6Ranges; len(v) > 0 {

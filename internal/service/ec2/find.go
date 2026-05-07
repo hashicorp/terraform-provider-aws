@@ -4301,7 +4301,7 @@ func findIPAMPoolCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.GetIpam
 func findIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, cidrBlock, poolID string) (*awstypes.IpamPoolCidr, error) {
 	input := ec2.GetIpamPoolCidrsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"cidr": cidrBlock,
+			attrCIDR: cidrBlock,
 		}),
 		IpamPoolId: aws.String(poolID),
 	}

@@ -40,7 +40,7 @@ var routeTableValidTargets = []string{
 	"carrier_gateway_id",
 	"core_network_arn",
 	"egress_only_gateway_id",
-	"gateway_id",
+	attrGatewayID,
 	"local_gateway_id",
 	"nat_gateway_id",
 	names.AttrNetworkInterfaceID,
@@ -122,7 +122,7 @@ func resourceRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"gateway_id": {
+						attrGatewayID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -404,7 +404,7 @@ func resourceRouteTableHash(v any) int {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
-	if v, ok := m["gateway_id"]; ok {
+	if v, ok := m[attrGatewayID]; ok {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
@@ -680,7 +680,7 @@ func expandCreateRouteInput(tfMap map[string]any) *ec2.CreateRouteInput {
 		apiObject.EgressOnlyInternetGatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap["gateway_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrGatewayID].(string); ok && v != "" {
 		apiObject.GatewayId = aws.String(v)
 	}
 
@@ -742,7 +742,7 @@ func expandReplaceRouteInput(tfMap map[string]any) *ec2.ReplaceRouteInput {
 		apiObject.EgressOnlyInternetGatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap["gateway_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrGatewayID].(string); ok && v != "" {
 		if v == gatewayIDLocal {
 			apiObject.LocalTarget = aws.Bool(true)
 		} else {
@@ -812,7 +812,7 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 		if strings.HasPrefix(aws.ToString(v), "vpce-") {
 			tfMap[names.AttrVPCEndpointID] = aws.ToString(v)
 		} else {
-			tfMap["gateway_id"] = aws.ToString(v)
+			tfMap[attrGatewayID] = aws.ToString(v)
 		}
 	}
 
@@ -901,7 +901,7 @@ func hasLocalConfig(d *schema.ResourceData, apiObject awstypes.Route) bool {
 				continue
 			}
 
-			if v["gateway_id"].(string) == gatewayIDLocal {
+			if v[attrGatewayID].(string) == gatewayIDLocal {
 				return true
 			}
 		}

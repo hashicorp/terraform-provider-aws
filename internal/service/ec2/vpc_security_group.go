@@ -132,7 +132,7 @@ var (
 
 	securityGroupRuleNestedBlock = &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"cidr_blocks": {
+			attrCIDRBlocks: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -173,7 +173,7 @@ var (
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString, // Required to ensure consistent hashing
 			},
-			"self": {
+			attrSelf: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -583,11 +583,11 @@ func securityGroupRuleHash(v any) int {
 	fmt.Fprintf(&buf, "%d-", m["to_port"].(int))
 	p := protocolForValue(m[names.AttrProtocol].(string))
 	fmt.Fprintf(&buf, "%s-", p)
-	fmt.Fprintf(&buf, "%t-", m["self"].(bool))
+	fmt.Fprintf(&buf, "%t-", m[attrSelf].(bool))
 
 	// We need to make sure to sort the strings below so that we always
 	// generate the same hash code no matter what is in the set.
-	if v, ok := m["cidr_blocks"]; ok {
+	if v, ok := m[attrCIDRBlocks]; ok {
 		vs := v.([]any)
 		s := make([]string, len(vs))
 		for i, raw := range vs {
@@ -651,13 +651,13 @@ func securityGroupIPPermGather(groupId string, permissions []awstypes.IpPermissi
 
 				rule := initSecurityGroupRule(ruleMap, perm, desc)
 
-				raw, ok := rule["cidr_blocks"]
+				raw, ok := rule[attrCIDRBlocks]
 				if !ok {
 					raw = make([]string, 0)
 				}
 				list := raw.([]string)
 
-				rule["cidr_blocks"] = append(list, *ip.CidrIp)
+				rule[attrCIDRBlocks] = append(list, *ip.CidrIp)
 			}
 		}
 
@@ -701,7 +701,7 @@ func securityGroupIPPermGather(groupId string, permissions []awstypes.IpPermissi
 				rule := initSecurityGroupRule(ruleMap, perm, desc)
 
 				if aws.ToString(g.GroupId) == groupId {
-					rule["self"] = true
+					rule[attrSelf] = true
 					continue
 				}
 
@@ -846,7 +846,7 @@ func expandIPPerms(group *awstypes.SecurityGroup, configured []any) ([]awstypes.
 				groups = append(groups, v.(string))
 			}
 		}
-		if v, ok := m["self"]; ok && v.(bool) {
+		if v, ok := m[attrSelf]; ok && v.(bool) {
 			groups = append(groups, aws.ToString(group.GroupId))
 		}
 
@@ -868,7 +868,7 @@ func expandIPPerms(group *awstypes.SecurityGroup, configured []any) ([]awstypes.
 			}
 		}
 
-		if raw, ok := m["cidr_blocks"]; ok {
+		if raw, ok := m[attrCIDRBlocks]; ok {
 			list := raw.([]any)
 			for _, v := range list {
 				perm.IpRanges = append(perm.IpRanges, awstypes.IpRange{CidrIp: aws.String(v.(string))})
@@ -969,7 +969,7 @@ func matchRules(rType string, local []any, remote []map[string]any) []map[string
 		l := raw.(map[string]any)
 
 		var selfVal bool
-		if v, ok := l["self"]; ok {
+		if v, ok := l[attrSelf]; ok {
 			selfVal = v.(bool)
 		}
 
@@ -981,7 +981,7 @@ func matchRules(rType string, local []any, remote []map[string]any) []map[string
 		// loop remote rules, looking for a matching hash
 		for _, r := range remote {
 			var remoteSelfVal bool
-			if v, ok := r["self"]; ok {
+			if v, ok := r[attrSelf]; ok {
 				remoteSelfVal = v.(bool)
 			}
 
@@ -997,9 +997,9 @@ func matchRules(rType string, local []any, remote []map[string]any) []map[string
 
 				// grab the local/remote cidr and sg groups, capturing the expected and
 				// actual counts
-				lcRaw, ok := l["cidr_blocks"]
+				lcRaw, ok := l[attrCIDRBlocks]
 				if ok {
-					numExpectedCidrs = len(l["cidr_blocks"].([]any))
+					numExpectedCidrs = len(l[attrCIDRBlocks].([]any))
 				}
 				liRaw, ok := l["ipv6_cidr_blocks"]
 				if ok {
@@ -1014,9 +1014,9 @@ func matchRules(rType string, local []any, remote []map[string]any) []map[string
 					numExpectedSGs = len(l[names.AttrSecurityGroups].(*schema.Set).List())
 				}
 
-				rcRaw, ok := r["cidr_blocks"]
+				rcRaw, ok := r[attrCIDRBlocks]
 				if ok {
-					numRemoteCidrs = len(r["cidr_blocks"].([]string))
+					numRemoteCidrs = len(r[attrCIDRBlocks].([]string))
 				}
 				riRaw, ok := r["ipv6_cidr_blocks"]
 				if ok {
@@ -1162,14 +1162,14 @@ func matchRules(rType string, local []any, remote []map[string]any) []map[string
 								// confirm that self references match
 								var lSelf bool
 								var rSelf bool
-								if _, ok := l["self"]; ok {
-									lSelf = l["self"].(bool)
+								if _, ok := l[attrSelf]; ok {
+									lSelf = l[attrSelf].(bool)
 								}
-								if _, ok := r["self"]; ok {
-									rSelf = r["self"].(bool)
+								if _, ok := r[attrSelf]; ok {
+									rSelf = r[attrSelf].(bool)
 								}
 								if rSelf == lSelf {
-									delete(r, "self")
+									delete(r, attrSelf)
 									// pop local cidrs from remote
 									diffCidr := remoteCidrSet.Difference(localCidrSet)
 									var newCidr []string
@@ -1179,9 +1179,9 @@ func matchRules(rType string, local []any, remote []map[string]any) []map[string
 
 									// reassigning
 									if len(newCidr) > 0 {
-										r["cidr_blocks"] = newCidr
+										r[attrCIDRBlocks] = newCidr
 									} else {
-										delete(r, "cidr_blocks")
+										delete(r, attrCIDRBlocks)
 									}
 
 									//// IPV6
@@ -1241,7 +1241,7 @@ func matchRules(rType string, local []any, remote []map[string]any) []map[string
 	// rules are added externally to Terraform
 	for _, r := range remote {
 		var lenCidr, lenIpv6Cidr, lenPrefixLists, lenSGs int
-		if rCidrs, ok := r["cidr_blocks"]; ok {
+		if rCidrs, ok := r[attrCIDRBlocks]; ok {
 			lenCidr = len(rCidrs.([]string))
 		}
 		if rIpv6Cidrs, ok := r["ipv6_cidr_blocks"]; ok {
@@ -1254,8 +1254,8 @@ func matchRules(rType string, local []any, remote []map[string]any) []map[string
 			lenSGs = len(rawSGs.(*schema.Set).List())
 		}
 
-		if _, ok := r["self"]; ok {
-			if r["self"].(bool) {
+		if _, ok := r[attrSelf]; ok {
+			if r[attrSelf].(bool) {
 				lenSGs++
 			}
 		}
@@ -1283,8 +1283,8 @@ func resourceSecurityGroupCopyRule(src map[string]any, self bool, k string, v an
 	if k != "" {
 		dst[k] = v
 	}
-	if _, ok := src["self"]; ok {
-		dst["self"] = self
+	if _, ok := src[attrSelf]; ok {
+		dst[attrSelf] = self
 	}
 	return dst
 }
@@ -1297,7 +1297,7 @@ func resourceSecurityGroupCopyRule(src map[string]any, self bool, k string, v an
 // For more detail, see comments for
 // securityGroupExpandRules()
 func securityGroupCollapseRules(ruleset string, rules []any) []any {
-	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
+	var keys_to_collapse = []string{attrCIDRBlocks, "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
 	collapsed := make(map[string]map[string]any)
 
@@ -1307,8 +1307,8 @@ func securityGroupCollapseRules(ruleset string, rules []any) []any {
 		ruleHash := idCollapseHash(ruleset, r[names.AttrProtocol].(string), int32(r["to_port"].(int)), int32(r["from_port"].(int)), r[names.AttrDescription].(string))
 
 		if _, ok := collapsed[ruleHash]; ok {
-			if v, ok := r["self"]; ok && v.(bool) {
-				collapsed[ruleHash]["self"] = r["self"]
+			if v, ok := r[attrSelf]; ok && v.(bool) {
+				collapsed[ruleHash][attrSelf] = r[attrSelf]
 			}
 		} else {
 			collapsed[ruleHash] = r
@@ -1383,14 +1383,14 @@ func securityGroupCollapseRules(ruleset string, rules []any) []any {
 // execution. Such compact form helps reduce the number of
 // API calls.
 func securityGroupExpandRules(rules *schema.Set) *schema.Set {
-	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
+	var keys_to_expand = []string{attrCIDRBlocks, "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
 	normalized := schema.NewSet(securityGroupRuleHash, nil)
 
 	for _, rawRule := range rules.List() {
 		rule := rawRule.(map[string]any)
 
-		if v, ok := rule["self"]; ok && v.(bool) {
+		if v, ok := rule[attrSelf]; ok && v.(bool) {
 			new_rule := resourceSecurityGroupCopyRule(rule, true, "", nil)
 			normalized.Add(new_rule)
 		}

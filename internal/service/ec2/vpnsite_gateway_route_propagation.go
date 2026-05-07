@@ -31,7 +31,7 @@ func resourceVPNGatewayRoutePropagation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"route_table_id": {
+			attrRouteTableID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
-	routeTableID := d.Get("route_table_id").(string)
+	routeTableID := d.Get(attrRouteTableID).(string)
 	err := routeTableEnableVGWRoutePropagation(ctx, conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {

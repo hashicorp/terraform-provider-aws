@@ -40,7 +40,7 @@ func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr": {
+			attrCIDR: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
@@ -84,7 +84,7 @@ func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 				ForceNew:      true,
 				Computed:      true,
 				ValidateFunc:  validation.IntBetween(0, 128),
-				ConflictsWith: []string{"cidr"},
+				ConflictsWith: []string{attrCIDR},
 			},
 			names.AttrResourceID: {
 				Type:     schema.TypeString,
@@ -112,7 +112,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 		IpamPoolId:  aws.String(ipamPoolID),
 	}
 
-	if v, ok := d.GetOk("cidr"); ok {
+	if v, ok := d.GetOk(attrCIDR); ok {
 		input.Cidr = aws.String(v.(string))
 	}
 
@@ -170,7 +170,7 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	cidr := aws.ToString(allocation.Cidr)
-	d.Set("cidr", cidr)
+	d.Set(attrCIDR, cidr)
 	d.Set(names.AttrDescription, allocation.Description)
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
@@ -203,7 +203,7 @@ func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR Allocation: %s", d.Id())
 	input := ec2.ReleaseIpamPoolAllocationInput{
-		Cidr:                 aws.String(d.Get("cidr").(string)),
+		Cidr:                 aws.String(d.Get(attrCIDR).(string)),
 		IpamPoolAllocationId: aws.String(allocationID),
 		IpamPoolId:           aws.String(poolID),
 	}

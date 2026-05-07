@@ -29,7 +29,7 @@ func dataSourcePrefixList() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr_blocks": {
+			attrCIDRBlocks: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -75,7 +75,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(pl.PrefixListId))
-	d.Set("cidr_blocks", pl.Cidrs)
+	d.Set(attrCIDRBlocks, pl.Cidrs)
 	d.Set(names.AttrName, pl.PrefixListName)
 
 	return diags

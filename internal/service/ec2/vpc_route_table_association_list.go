@@ -38,7 +38,7 @@ type routeTableAssociationListResource struct {
 func (l *routeTableAssociationListResource) ListResourceConfigSchema(ctx context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"route_table_id": listschema.StringAttribute{
+			attrRouteTableID: listschema.StringAttribute{
 				Required:    true,
 				Description: "ID of the Route Table to list Associations from.",
 			},
@@ -60,7 +60,7 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 	routeTableID := query.RouteTableID.ValueString()
 
 	tflog.Info(ctx, "Listing Resources", map[string]any{
-		logging.ResourceAttributeKey("route_table_id"): routeTableID,
+		logging.ResourceAttributeKey(attrRouteTableID): routeTableID,
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {

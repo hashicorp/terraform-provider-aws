@@ -487,9 +487,9 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"ipv6_addresses"},
+				ConflictsWith: []string{attrIPv6Addresses},
 			},
-			"ipv6_addresses": {
+			attrIPv6Addresses: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -600,7 +600,7 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "primary_network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", attrIPv6Addresses, "ipv6_address_count", "primary_network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -667,7 +667,7 @@ func resourceInstance() *schema.Resource {
 			},
 			"primary_network_interface": {
 				// Note: Changes to `primary_network_interface` should be mirrored in `aws_spot_instance_request`
-				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", attrIPv6Addresses, "ipv6_address_count", "network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Optional:      true,
@@ -1099,11 +1099,11 @@ func resourceInstance() *schema.Resource {
 
 				return true
 			}),
-			customdiff.ComputedIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+			customdiff.ComputedIf(attrIPv6Addresses, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("ipv6_address_count")
 			}),
-			customdiff.ForceNewIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				if !diff.HasChange("ipv6_addresses") {
+			customdiff.ForceNewIf(attrIPv6Addresses, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if !diff.HasChange(attrIPv6Addresses) {
 					return false
 				}
 
@@ -2417,7 +2417,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 			ni.Ipv6AddressCount = aws.Int32(int32(v.(int)))
 		}
 
-		if v, ok := d.GetOk("ipv6_addresses"); ok {
+		if v, ok := d.GetOk(attrIPv6Addresses); ok {
 			ipv6Addresses := make([]awstypes.InstanceIpv6Address, len(v.([]any)))
 			for i, address := range v.([]any) {
 				ipv6Addresses[i] = awstypes.InstanceIpv6Address{
@@ -2981,7 +2981,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 			opts.Ipv6AddressCount = aws.Int32(int32(v.(int)))
 		}
 
-		if v, ok := d.GetOk("ipv6_addresses"); ok {
+		if v, ok := d.GetOk(attrIPv6Addresses); ok {
 			ipv6Addresses := make([]awstypes.InstanceIpv6Address, len(v.([]any)))
 			for i, address := range v.([]any) {
 				ipv6Addresses[i] = awstypes.InstanceIpv6Address{
@@ -3390,7 +3390,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		}
 	}
 
-	if err := rd.Set("ipv6_addresses", ipv6Addresses); err != nil {
+	if err := rd.Set(attrIPv6Addresses, ipv6Addresses); err != nil {
 		log.Printf("[WARN] Error setting ipv6_addresses for AWS Instance (%s): %s", rd.Id(), err)
 	}
 

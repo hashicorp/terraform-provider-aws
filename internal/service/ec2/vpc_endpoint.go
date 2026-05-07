@@ -64,7 +64,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"cidr_blocks": {
+			attrCIDRBlocks: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -840,18 +840,18 @@ func resourceVPCEndpointFlatten(ctx context.Context, awsClient *conns.AWSClient,
 
 		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
 			if retry.NotFound(err) {
-				d.Set("cidr_blocks", nil)
+				d.Set(attrCIDRBlocks, nil)
 			} else {
 				return fmt.Errorf("reading EC2 Prefix List (%s): %w", serviceName, err)
 			}
 		} else {
-			d.Set("cidr_blocks", pl.Cidrs)
+			d.Set(attrCIDRBlocks, pl.Cidrs)
 			d.Set("prefix_list_id", pl.PrefixListId)
 		}
 
 		d.Set(names.AttrServiceName, serviceName)
 	} else {
-		d.Set("cidr_blocks", nil)
+		d.Set(attrCIDRBlocks, nil)
 		d.Set(names.AttrServiceName, nil)
 	}
 

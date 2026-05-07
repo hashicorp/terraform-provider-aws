@@ -31,7 +31,7 @@ func dataSourceIPAMPreviewNextCIDR() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr": {
+			attrCIDR: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +98,7 @@ func dataSourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceDa
 
 	cidr := output.IpamPoolAllocation.Cidr
 
-	d.Set("cidr", cidr)
+	d.Set(attrCIDR, cidr)
 	d.SetId(encodeIPAMPreviewNextCIDRID(aws.ToString(cidr), poolId))
 
 	return diags

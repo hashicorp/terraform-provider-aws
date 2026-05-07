@@ -135,7 +135,7 @@ func dataSourceInstanceType() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"count": {
+						attrCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -163,7 +163,7 @@ func dataSourceInstanceType() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"count": {
+						attrCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -195,7 +195,7 @@ func dataSourceInstanceType() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"count": {
+						attrCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -219,7 +219,7 @@ func dataSourceInstanceType() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"count": {
+						attrCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -267,7 +267,7 @@ func dataSourceInstanceType() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"count": {
+						attrCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -335,7 +335,7 @@ func dataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"count": {
+						attrCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -488,7 +488,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		tfList := make([]any, len(v.Fpgas))
 		for i, v := range v.Fpgas {
 			tfMap := map[string]any{
-				"count":        aws.ToInt32(v.Count),
+				attrCount:      aws.ToInt32(v.Count),
 				"manufacturer": aws.ToString(v.Manufacturer),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
 				names.AttrName: aws.ToString(v.Name),
@@ -503,7 +503,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		tfList := make([]any, len(v.Gpus))
 		for i, v := range v.Gpus {
 			tfMap := map[string]any{
-				"count":        aws.ToInt32(v.Count),
+				attrCount:      aws.ToInt32(v.Count),
 				"manufacturer": aws.ToString(v.Manufacturer),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
 				names.AttrName: aws.ToString(v.Name),
@@ -519,7 +519,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		tfList := make([]any, len(v.Accelerators))
 		for i, v := range v.Accelerators {
 			tfMap := map[string]any{
-				"count":        aws.ToInt32(v.Count),
+				attrCount:      aws.ToInt32(v.Count),
 				"manufacturer": aws.ToString(v.Manufacturer),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
 				names.AttrName: aws.ToString(v.Name),
@@ -534,7 +534,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 			tfList := make([]any, len(v))
 			for i, v := range v {
 				tfMap := map[string]any{
-					"count":        aws.ToInt32(v.Count),
+					attrCount:      aws.ToInt32(v.Count),
 					names.AttrSize: aws.ToInt64(v.SizeInGB),
 					names.AttrType: v.Type,
 				}
@@ -555,7 +555,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		tfList := make([]any, len(v.Accelerators))
 		for i, v := range v.Accelerators {
 			tfMap := map[string]any{
-				"count":        aws.ToInt32(v.Count),
+				attrCount:      aws.ToInt32(v.Count),
 				"manufacturer": aws.ToString(v.Manufacturer),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
 				names.AttrName: aws.ToString(v.Name),
@@ -570,7 +570,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		tfList := make([]any, len(v.NeuronDevices))
 		for i, v := range v.NeuronDevices {
 			tfMap := map[string]any{
-				"count":        aws.ToInt32(v.Count),
+				attrCount:      aws.ToInt32(v.Count),
 				"core_count":   aws.ToInt32(v.CoreInfo.Count),
 				"core_version": aws.ToInt32(v.CoreInfo.Version),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),

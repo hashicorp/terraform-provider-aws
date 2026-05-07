@@ -63,7 +63,7 @@ func resourceManagedPrefixList() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr": {
+						attrCIDR: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
@@ -352,7 +352,7 @@ func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries
 func expandAddPrefixListEntry(tfMap map[string]any) awstypes.AddPrefixListEntry {
 	apiObject := awstypes.AddPrefixListEntry{}
 
-	if v, ok := tfMap["cidr"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCIDR].(string); ok && v != "" {
 		apiObject.Cidr = aws.String(v)
 	}
 
@@ -386,7 +386,7 @@ func expandAddPrefixListEntries(tfList []any) []awstypes.AddPrefixListEntry {
 func expandRemovePrefixListEntry(tfMap map[string]any) awstypes.RemovePrefixListEntry {
 	apiObject := awstypes.RemovePrefixListEntry{}
 
-	if v, ok := tfMap["cidr"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCIDR].(string); ok && v != "" {
 		apiObject.Cidr = aws.String(v)
 	}
 
@@ -417,7 +417,7 @@ func flattenPrefixListEntry(apiObject awstypes.PrefixListEntry) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
-		tfMap["cidr"] = aws.ToString(v)
+		tfMap[attrCIDR] = aws.ToString(v)
 	}
 
 	if v := apiObject.Description; v != nil {
