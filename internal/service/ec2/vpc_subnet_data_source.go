@@ -91,7 +91,7 @@ func dataSourceSubnet() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6_cidr_block": {
+			attrIPv6CIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -112,7 +112,7 @@ func dataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"outpost_arn": {
+			attrOutpostARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,7 +171,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any)
 		filters["cidrBlock"] = v.(string)
 	}
 
-	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
+	if v, ok := d.GetOk(attrIPv6CIDRBlock); ok {
 		filters["ipv6-cidr-block-association.ipv6-cidr-block"] = v.(string)
 	}
 
@@ -213,18 +213,18 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
 	d.Set("ipv6_cidr_block_association_id", nil)
-	d.Set("ipv6_cidr_block", nil)
+	d.Set(attrIPv6CIDRBlock, nil)
 
 	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
 		if v.Ipv6CidrBlockState != nil && v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
 			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
-			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
+			d.Set(attrIPv6CIDRBlock, v.Ipv6CidrBlock)
 		}
 	}
 
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	d.Set("outpost_arn", subnet.OutpostArn)
+	d.Set(attrOutpostARN, subnet.OutpostArn)
 	d.Set(names.AttrOwnerID, subnet.OwnerId)
 	d.Set(names.AttrState, subnet.State)
 

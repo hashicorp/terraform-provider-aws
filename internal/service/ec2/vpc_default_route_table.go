@@ -83,7 +83,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"ipv6_cidr_block": {
+						attrIPv6CIDRBlock: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,

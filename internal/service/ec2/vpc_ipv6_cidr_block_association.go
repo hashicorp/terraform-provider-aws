@@ -54,12 +54,12 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 
 		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 			// ipv6_cidr_block can be set by a value returned from IPAM or explicitly in config.
-			if diff.Id() != "" && diff.HasChange("ipv6_cidr_block") {
+			if diff.Id() != "" && diff.HasChange(attrIPv6CIDRBlock) {
 				// If netmask is set then ipv6_cidr_block is derived from IPAM, ignore changes.
 				if diff.Get("ipv6_netmask_length") != 0 {
-					return diff.Clear("ipv6_cidr_block")
+					return diff.Clear(attrIPv6CIDRBlock)
 				}
-				return diff.ForceNew("ipv6_cidr_block")
+				return diff.ForceNew(attrIPv6CIDRBlock)
 			}
 			return nil
 		},
@@ -69,7 +69,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"ipv6_pool", "ipv6_ipam_pool_id", "ipv6_cidr_block", "ipv6_netmask_length"},
+				ConflictsWith: []string{"ipv6_pool", "ipv6_ipam_pool_id", attrIPv6CIDRBlock, "ipv6_netmask_length"},
 			},
 			"ip_source": {
 				Type:     schema.TypeString,
@@ -79,7 +79,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ipv6_cidr_block": {
+			attrIPv6CIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -97,7 +97,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
+				ConflictsWith: []string{attrIPv6CIDRBlock},
 			},
 			"ipv6_pool": {
 				Type:          schema.TypeString,
@@ -133,7 +133,7 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 		input.AmazonProvidedIpv6CidrBlock = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
+	if v, ok := d.GetOk(attrIPv6CIDRBlock); ok {
 		input.Ipv6CidrBlock = aws.String(v.(string))
 	}
 
@@ -186,7 +186,7 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 	d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
 	d.Set("ip_source", vpcIpv6CidrBlockAssociation.IpSource)
 	d.Set("ipv6_address_attribute", vpcIpv6CidrBlockAssociation.Ipv6AddressAttribute)
-	d.Set("ipv6_cidr_block", vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
+	d.Set(attrIPv6CIDRBlock, vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
 	d.Set("ipv6_pool", ipv6PoolID)
 	d.Set(names.AttrVPCID, vpc.VpcId)
 

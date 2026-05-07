@@ -67,7 +67,7 @@ func dataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"outpost_arn": {
+			attrOutpostARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -149,7 +149,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrIOPS, volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
-	d.Set("outpost_arn", volume.OutpostArn)
+	d.Set(attrOutpostARN, volume.OutpostArn)
 	d.Set(names.AttrSize, volume.Size)
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
 	d.Set(names.AttrThroughput, volume.Throughput)

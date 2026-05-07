@@ -43,7 +43,7 @@ func dataSourceLocalGatewayRouteTable() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"outpost_arn": {
+			attrOutpostARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -71,7 +71,7 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
-			"outpost-arn":      d.Get("outpost_arn").(string),
+			"outpost-arn":      d.Get(attrOutpostARN).(string),
 			names.AttrState:    d.Get(names.AttrState).(string),
 		},
 	)
@@ -98,7 +98,7 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	d.SetId(aws.ToString(localGatewayRouteTable.LocalGatewayRouteTableId))
 	d.Set("local_gateway_id", localGatewayRouteTable.LocalGatewayId)
 	d.Set("local_gateway_route_table_id", localGatewayRouteTable.LocalGatewayRouteTableId)
-	d.Set("outpost_arn", localGatewayRouteTable.OutpostArn)
+	d.Set(attrOutpostARN, localGatewayRouteTable.OutpostArn)
 	d.Set(names.AttrState, localGatewayRouteTable.State)
 
 	setTagsOut(ctx, localGatewayRouteTable.Tags)

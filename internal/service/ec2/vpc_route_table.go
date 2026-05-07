@@ -32,7 +32,7 @@ import (
 
 var routeTableValidDestinations = []string{
 	names.AttrCIDRBlock,
-	"ipv6_cidr_block",
+	attrIPv6CIDRBlock,
 	"destination_prefix_list_id",
 }
 
@@ -102,7 +102,7 @@ func resourceRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"ipv6_cidr_block": {
+						attrIPv6CIDRBlock: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
@@ -392,7 +392,7 @@ func resourceRouteTableHash(v any) int {
 		return 0
 	}
 
-	if v, ok := m["ipv6_cidr_block"]; ok {
+	if v, ok := m[attrIPv6CIDRBlock]; ok {
 		fmt.Fprintf(&buf, "%s-", inttypes.CanonicalCIDRBlock(v.(string)))
 	}
 
@@ -465,7 +465,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 	switch destinationAttributeKey {
 	case "cidr_block":
 		routeFinder = findRouteByIPv4Destination
-	case "ipv6_cidr_block":
+	case attrIPv6CIDRBlock:
 		routeFinder = findRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		routeFinder = findRouteByPrefixListIDDestination
@@ -537,7 +537,7 @@ func routeTableDeleteRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 	case "cidr_block":
 		input.DestinationCidrBlock = destination
 		routeFinder = findRouteByIPv4Destination
-	case "ipv6_cidr_block":
+	case attrIPv6CIDRBlock:
 		input.DestinationIpv6CidrBlock = destination
 		routeFinder = findRouteByIPv6Destination
 	case "destination_prefix_list_id":
@@ -580,7 +580,7 @@ func routeTableUpdateRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 	switch destinationAttributeKey {
 	case "cidr_block":
 		routeFinder = findRouteByIPv4Destination
-	case "ipv6_cidr_block":
+	case attrIPv6CIDRBlock:
 		routeFinder = findRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		routeFinder = findRouteByPrefixListIDDestination
@@ -660,7 +660,7 @@ func expandCreateRouteInput(tfMap map[string]any) *ec2.CreateRouteInput {
 		apiObject.DestinationCidrBlock = aws.String(v)
 	}
 
-	if v, ok := tfMap["ipv6_cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIPv6CIDRBlock].(string); ok && v != "" {
 		apiObject.DestinationIpv6CidrBlock = aws.String(v)
 	}
 
@@ -722,7 +722,7 @@ func expandReplaceRouteInput(tfMap map[string]any) *ec2.ReplaceRouteInput {
 		apiObject.DestinationCidrBlock = aws.String(v)
 	}
 
-	if v, ok := tfMap["ipv6_cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIPv6CIDRBlock].(string); ok && v != "" {
 		apiObject.DestinationIpv6CidrBlock = aws.String(v)
 	}
 
@@ -789,7 +789,7 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 	}
 
 	if v := apiObject.DestinationIpv6CidrBlock; v != nil {
-		tfMap["ipv6_cidr_block"] = aws.ToString(v)
+		tfMap[attrIPv6CIDRBlock] = aws.ToString(v)
 	}
 
 	if v := apiObject.DestinationPrefixListId; v != nil {
@@ -897,7 +897,7 @@ func hasLocalConfig(d *schema.ResourceData, apiObject awstypes.Route) bool {
 			v := v.(map[string]any)
 			if v[names.AttrCIDRBlock].(string) != aws.ToString(apiObject.DestinationCidrBlock) &&
 				v["destination_prefix_list_id"] != aws.ToString(apiObject.DestinationPrefixListId) &&
-				v["ipv6_cidr_block"] != aws.ToString(apiObject.DestinationIpv6CidrBlock) {
+				v[attrIPv6CIDRBlock] != aws.ToString(apiObject.DestinationIpv6CidrBlock) {
 				continue
 			}
 

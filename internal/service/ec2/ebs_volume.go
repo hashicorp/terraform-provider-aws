@@ -95,7 +95,7 @@ func resourceEBSVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"outpost_arn": {
+			attrOutpostARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -162,7 +162,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.MultiAttachEnabled = aws.Bool(value.(bool))
 	}
 
-	if value, ok := d.GetOk("outpost_arn"); ok {
+	if value, ok := d.GetOk(attrOutpostARN); ok {
 		input.OutpostArn = aws.String(value.(string))
 	}
 
@@ -247,7 +247,7 @@ func resourceEBSVolumeFlatten(ctx context.Context, awsClient *conns.AWSClient, v
 	if err := d.Set("multi_attach_enabled", volume.MultiAttachEnabled); err != nil {
 		return fmt.Errorf("setting multi_attach_enabled: %w", err)
 	}
-	if err := d.Set("outpost_arn", volume.OutpostArn); err != nil {
+	if err := d.Set(attrOutpostARN, volume.OutpostArn); err != nil {
 		return fmt.Errorf("setting outpost_arn: %w", err)
 	}
 	if err := d.Set(names.AttrSize, volume.Size); err != nil {

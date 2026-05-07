@@ -70,7 +70,7 @@ func dataSourceHost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"outpost_arn": {
+			attrOutpostARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set(names.AttrInstanceType, host.HostProperties.InstanceType)
-	d.Set("outpost_arn", host.OutpostArn)
+	d.Set(attrOutpostARN, host.OutpostArn)
 	d.Set(names.AttrOwnerID, host.OwnerId)
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)

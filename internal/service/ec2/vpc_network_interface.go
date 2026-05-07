@@ -185,7 +185,7 @@ func resourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"outpost_arn": {
+			attrOutpostARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -615,7 +615,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
 	d.Set("mac_address", eni.MacAddress)
-	d.Set("outpost_arn", eni.OutpostArn)
+	d.Set(attrOutpostARN, eni.OutpostArn)
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)

@@ -111,7 +111,7 @@ func resourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ipv6_cidr_block": {
+			attrIPv6CIDRBlock: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -134,7 +134,7 @@ func resourceDefaultVPC() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
+				ConflictsWith: []string{attrIPv6CIDRBlock},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
 			"main_route_table_id": {
@@ -251,7 +251,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("ipv6_association_id", associationID)
 	}
 
-	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlock, newIPv6PoolID := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block").(string), d.Get("ipv6_ipam_pool_id").(string); !newAssignGeneratedIPv6CIDRBlock && (oldIPv6CIDRBlock != newIPv6CIDRBlock || oldIPv6PoolID != newIPv6PoolID) {
+	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlock, newIPv6PoolID := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get(attrIPv6CIDRBlock).(string), d.Get("ipv6_ipam_pool_id").(string); !newAssignGeneratedIPv6CIDRBlock && (oldIPv6CIDRBlock != newIPv6CIDRBlock || oldIPv6PoolID != newIPv6PoolID) {
 		associationID, err := modifyVPCIPv6CIDRBlockAssociation(ctx, conn, d.Id(),
 			associationID,
 			false,

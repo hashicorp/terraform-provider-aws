@@ -96,7 +96,7 @@ func dataSourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ipv6_cidr_block": {
+			attrIPv6CIDRBlock: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -214,10 +214,10 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 {
 		d.Set("ipv6_association_id", vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
-		d.Set("ipv6_cidr_block", vpc.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock)
+		d.Set(attrIPv6CIDRBlock, vpc.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock)
 	} else {
 		d.Set("ipv6_association_id", nil)
-		d.Set("ipv6_cidr_block", nil)
+		d.Set(attrIPv6CIDRBlock, nil)
 	}
 
 	setTagsOut(ctx, vpc.Tags)

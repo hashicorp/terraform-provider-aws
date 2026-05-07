@@ -116,7 +116,7 @@ func (r *capacityBlockReservationResource) Schema(ctx context.Context, _ resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"outpost_arn": schema.StringAttribute{
+			attrOutpostARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

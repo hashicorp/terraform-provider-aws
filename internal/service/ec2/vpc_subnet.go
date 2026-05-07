@@ -91,7 +91,7 @@ func resourceSubnet() *schema.Resource {
 			"customer_owned_ipv4_pool": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"map_customer_owned_ip_on_launch", "outpost_arn"},
+				RequiredWith: []string{"map_customer_owned_ip_on_launch", attrOutpostARN},
 			},
 			"enable_dns64": {
 				Type:     schema.TypeBool,
@@ -127,7 +127,7 @@ func resourceSubnet() *schema.Resource {
 				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
 				RequiredWith:  []string{"ipv4_ipam_pool_id"},
 			},
-			"ipv6_cidr_block": {
+			attrIPv6CIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -153,20 +153,20 @@ func resourceSubnet() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.IntInSlice(subnetCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
+				ConflictsWith: []string{attrIPv6CIDRBlock},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
 			"map_customer_owned_ip_on_launch": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"customer_owned_ipv4_pool", "outpost_arn"},
+				RequiredWith: []string{"customer_owned_ipv4_pool", attrOutpostARN},
 			},
 			"map_public_ip_on_launch": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"outpost_arn": {
+			attrOutpostARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -190,9 +190,9 @@ func resourceSubnet() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-		CustomizeDiff: customdiff.ForceNewIf("ipv6_cidr_block", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
-			if d.HasChange("ipv6_cidr_block") {
-				ob, _ := d.GetChange("ipv6_cidr_block")
+		CustomizeDiff: customdiff.ForceNewIf(attrIPv6CIDRBlock, func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+			if d.HasChange(attrIPv6CIDRBlock) {
+				ob, _ := d.GetChange(attrIPv6CIDRBlock)
 				oa, _ := d.GetChange("assign_ipv6_address_on_creation")
 				// If the previous ipv6 subnet was created with assign_ipv6_address_on_creation=true,
 				// resource recreation is required.
@@ -236,7 +236,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Ipv4NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
+	if v, ok := d.GetOk(attrIPv6CIDRBlock); ok {
 		input.Ipv6CidrBlock = aws.String(v.(string))
 	}
 
@@ -252,7 +252,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("outpost_arn"); ok {
+	if v, ok := d.GetOk(attrOutpostARN); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
@@ -285,7 +285,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	var computedIPv6CidrBlock bool
-	_, cidrExists := d.GetOk("ipv6_cidr_block")
+	_, cidrExists := d.GetOk(attrIPv6CIDRBlock)
 
 	if !cidrExists {
 		if _, ok := d.GetOk("ipv6_native"); ok {
@@ -350,10 +350,10 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	// If we're enabling dns64 and resource_name_dns_aaaa_record_on_launch, do that after modifying the IPv6 CIDR block.
 	// Check if ipv6_cidr_block needs to be modified. When Optional+Computed, removal from config doesn't trigger HasChange()
 	rawConfig := d.GetRawConfig()
-	if currentIPv6, ipv6InConfig := d.Get("ipv6_cidr_block").(string), !rawConfig.GetAttr("ipv6_cidr_block").IsNull(); d.HasChange("ipv6_cidr_block") || (currentIPv6 != "" && !ipv6InConfig) {
+	if currentIPv6, ipv6InConfig := d.Get(attrIPv6CIDRBlock).(string), !rawConfig.GetAttr(attrIPv6CIDRBlock).IsNull(); d.HasChange(attrIPv6CIDRBlock) || (currentIPv6 != "" && !ipv6InConfig) {
 		targetValue := ""
 		if ipv6InConfig {
-			targetValue = d.Get("ipv6_cidr_block").(string)
+			targetValue = d.Get(attrIPv6CIDRBlock).(string)
 		}
 
 		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), targetValue); err != nil {
@@ -502,7 +502,7 @@ func modifySubnetAttributesOnCreate(ctx context.Context, conn *ec2.Client, d *sc
 				break
 			}
 		}
-		if new := d.Get("ipv6_cidr_block").(string); oldIPv6CIDRBlock != new {
+		if new := d.Get(attrIPv6CIDRBlock).(string); oldIPv6CIDRBlock != new {
 			if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), oldAssociationID, new); err != nil {
 				return err
 			}
@@ -778,18 +778,18 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	rd.Set("ipv6_native", subnet.Ipv6Native)
 	rd.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	rd.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	rd.Set("outpost_arn", subnet.OutpostArn)
+	rd.Set(attrOutpostARN, subnet.OutpostArn)
 	rd.Set(names.AttrOwnerID, subnet.OwnerId)
 	rd.Set(names.AttrVPCID, subnet.VpcId)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
 	rd.Set("ipv6_cidr_block_association_id", nil)
-	rd.Set("ipv6_cidr_block", nil)
+	rd.Set(attrIPv6CIDRBlock, nil)
 
 	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
 		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
 			rd.Set("ipv6_cidr_block_association_id", v.AssociationId)
-			rd.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
+			rd.Set(attrIPv6CIDRBlock, v.Ipv6CidrBlock)
 			break
 		}
 	}

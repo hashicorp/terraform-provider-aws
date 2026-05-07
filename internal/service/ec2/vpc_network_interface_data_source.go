@@ -152,7 +152,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"outpost_arn": {
+			attrOutpostARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -246,7 +246,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("interface_type", eni.InterfaceType)
 	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)
-	d.Set("outpost_arn", eni.OutpostArn)
+	d.Set(attrOutpostARN, eni.OutpostArn)
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)

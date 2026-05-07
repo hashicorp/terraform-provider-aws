@@ -96,7 +96,7 @@ func resourceAMIFromInstance() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"outpost_arn": {
+						attrOutpostARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

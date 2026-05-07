@@ -69,7 +69,7 @@ func dataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"ipv6_cidr_block": {
+						attrIPv6CIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -292,7 +292,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []aws
 			m[names.AttrCIDRBlock] = aws.ToString(r.DestinationCidrBlock)
 		}
 		if r.DestinationIpv6CidrBlock != nil {
-			m["ipv6_cidr_block"] = aws.ToString(r.DestinationIpv6CidrBlock)
+			m[attrIPv6CIDRBlock] = aws.ToString(r.DestinationIpv6CidrBlock)
 		}
 		if r.DestinationPrefixListId != nil {
 			m["destination_prefix_list_id"] = aws.ToString(r.DestinationPrefixListId)

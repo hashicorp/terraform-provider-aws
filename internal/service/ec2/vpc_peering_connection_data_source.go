@@ -68,7 +68,7 @@ func dataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv6_cidr_block": {
+						attrIPv6CIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -102,7 +102,7 @@ func dataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv6_cidr_block": {
+						attrIPv6CIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -212,7 +212,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	}
 	if err := d.Set("ipv6_cidr_block_set", tfslices.ApplyToAll(requesterVPCInfo.Ipv6CidrBlockSet, func(v awstypes.Ipv6CidrBlock) any {
 		return map[string]any{
-			"ipv6_cidr_block": aws.ToString(v.Ipv6CidrBlock),
+			attrIPv6CIDRBlock: aws.ToString(v.Ipv6CidrBlock),
 		}
 	})); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv6_cidr_block_set: %s", err)
@@ -228,7 +228,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	}
 	if err := d.Set("peer_ipv6_cidr_block_set", tfslices.ApplyToAll(accepterVPCInfo.Ipv6CidrBlockSet, func(v awstypes.Ipv6CidrBlock) any {
 		return map[string]any{
-			"ipv6_cidr_block": aws.ToString(v.Ipv6CidrBlock),
+			attrIPv6CIDRBlock: aws.ToString(v.Ipv6CidrBlock),
 		}
 	})); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting peer_ipv6_cidr_block_set: %s", err)

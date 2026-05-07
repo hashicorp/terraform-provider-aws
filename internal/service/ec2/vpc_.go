@@ -161,7 +161,7 @@ func resourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ipv6_cidr_block": {
+			attrIPv6CIDRBlock: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -184,7 +184,7 @@ func resourceVPC() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
+				ConflictsWith: []string{attrIPv6CIDRBlock},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
 			"main_route_table_id": {
@@ -223,7 +223,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.Ipv4NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
+	if v, ok := d.GetOk(attrIPv6CIDRBlock); ok {
 		input.Ipv6CidrBlock = aws.String(v.(string))
 	}
 
@@ -375,11 +375,11 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set("ipv6_association_id", associationID)
 	}
 
-	if d.HasChanges("ipv6_cidr_block", "ipv6_ipam_pool_id") {
+	if d.HasChanges(attrIPv6CIDRBlock, "ipv6_ipam_pool_id") {
 		associationID, err := modifyVPCIPv6CIDRBlockAssociation(ctx, conn, d.Id(),
 			d.Get("ipv6_association_id").(string),
 			false,
-			d.Get("ipv6_cidr_block").(string),
+			d.Get(attrIPv6CIDRBlock).(string),
 			d.Get("ipv6_ipam_pool_id").(string),
 			d.Get("ipv6_netmask_length").(int),
 			"")
@@ -517,7 +517,7 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v an
 		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
 			return fmt.Errorf("setting ipv6_association_id to computed: %w", err)
 		}
-		if err := diff.SetNewComputed("ipv6_cidr_block"); err != nil {
+		if err := diff.SetNewComputed(attrIPv6CIDRBlock); err != nil {
 			return fmt.Errorf("setting ipv6_cidr_block to computed: %w", err)
 		}
 	}
@@ -771,7 +771,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
 		d.Set("assign_generated_ipv6_cidr_block", nil)
 		d.Set("ipv6_association_id", nil)
-		d.Set("ipv6_cidr_block", nil)
+		d.Set(attrIPv6CIDRBlock, nil)
 		d.Set("ipv6_cidr_block_network_border_group", nil)
 		d.Set("ipv6_ipam_pool_id", nil)
 		d.Set("ipv6_netmask_length", nil)
@@ -781,7 +781,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 		isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
 		d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
 		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
-		d.Set("ipv6_cidr_block", cidrBlock)
+		d.Set(attrIPv6CIDRBlock, cidrBlock)
 		d.Set("ipv6_cidr_block_network_border_group", ipv6CIDRBlockAssociation.NetworkBorderGroup)
 		if isAmazonIPv6Pool {
 			d.Set("ipv6_ipam_pool_id", nil)

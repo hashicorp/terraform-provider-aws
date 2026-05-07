@@ -134,7 +134,7 @@ func networkACLRuleNestedBlock() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"ipv6_cidr_block": {
+			attrIPv6CIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
@@ -391,7 +391,7 @@ func networkACLRuleHash(v any) int {
 	if v, ok := tfMap[names.AttrCIDRBlock]; ok {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
-	if v, ok := tfMap["ipv6_cidr_block"]; ok {
+	if v, ok := tfMap[attrIPv6CIDRBlock]; ok {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := tfMap["icmp_type"]; ok {
@@ -506,7 +506,7 @@ func expandNetworkACLEntry(tfMap map[string]any, egress bool) *awstypes.NetworkA
 		apiObject.CidrBlock = aws.String(v)
 	}
 
-	if v, ok := tfMap["ipv6_cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIPv6CIDRBlock].(string); ok && v != "" {
 		apiObject.Ipv6CidrBlock = aws.String(v)
 	}
 
@@ -585,7 +585,7 @@ func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) map[string]any {
 	}
 
 	if v := apiObject.Ipv6CidrBlock; v != nil {
-		tfMap["ipv6_cidr_block"] = aws.ToString(v)
+		tfMap[attrIPv6CIDRBlock] = aws.ToString(v)
 	}
 
 	if apiObject := apiObject.PortRange; apiObject != nil {
