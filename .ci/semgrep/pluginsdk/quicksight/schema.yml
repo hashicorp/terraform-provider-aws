@@ -2,7 +2,7 @@
 # "SPDX-License-Identifier: MPL-2.0"
 
 rules:
-  - id: quicksight-schema-string-len-between-required
+  - id: schema-string-len-between-required
     languages: [go]
     message: String attributes with length validation should use stringLenBetweenSchema
     paths:
@@ -19,7 +19,7 @@ rules:
     fix: stringLenBetweenSchema(attrRequired, $MIN, $MAX)
     severity: WARNING
 
-  - id: quicksight-schema-string-len-between-optional
+  - id: schema-string-len-between-optional
     languages: [go]
     message: String attributes with length validation should use stringLenBetweenSchema
     paths:
@@ -36,7 +36,7 @@ rules:
     fix: stringLenBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
 
-  - id: quicksight-schema-string-len-between-optionalcomputed
+  - id: schema-string-len-between-optionalcomputed
     languages: [go]
     message: String attributes with length validation should use stringLenBetweenSchema
     paths:
@@ -62,9 +62,9 @@ rules:
     fix: stringLenBetweenSchema(attrOptionalComputed, $MIN, $MAX)
     severity: WARNING
 
-  - id: quicksight-schema-string-enum
+  - id: schema-string-enum
     languages: [go]
-    message: String attributes with enum validation should use stringEnumSchema[<type>](<required>)
+    message: String attributes with enum validation should use sdkschema.StringEnumSchema[<type>](<required>)
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -100,7 +100,7 @@ rules:
     # Cannot be auto-fixed
     severity: WARNING
 
-  - id: quicksight-schema-int-between-required
+  - id: schema-int-between-required
     languages: [go]
     message: Int attributes with between validation should use intBetweenSchema
     paths:
@@ -117,7 +117,7 @@ rules:
     fix: intBetweenSchema(attrRequired, $MIN, $MAX)
     severity: WARNING
 
-  - id: quicksight-schema-int-between-optional
+  - id: schema-int-between-optional
     languages: [go]
     message: Int attributes with between validation should use intBetweenSchema
     paths:
@@ -134,7 +134,7 @@ rules:
     fix: intBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
 
-  - id: quicksight-schema-float-between-required
+  - id: schema-float-between-required
     languages: [go]
     message: Float attributes with between validation should use floatBetweenSchema
     paths:
@@ -151,7 +151,7 @@ rules:
     fix: floatBetweenSchema(attrRequired, $MIN, $MAX)
     severity: WARNING
 
-  - id: quicksight-schema-float-between-optional
+  - id: schema-float-between-optional
     languages: [go]
     message: Float attributes with between validation should use floatBetweenSchema
     paths:
@@ -168,9 +168,9 @@ rules:
     fix: floatBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
 
-  - id: quicksight-schema-string-computed-only
+  - id: schema-string-computed-only
     languages: [go]
-    message: Computed-Only String attributes should use stringComputedOnly
+    message: Computed-Only String attributes should use sdkschema.StringComputedOnly
     paths:
       include:
         - "/internal/service/quicksight/schema"
@@ -184,7 +184,7 @@ rules:
     fix: stringComputedOnly()
     severity: WARNING
 
-  - id: quicksight-schema-bool-computed-only
+  - id: schema-bool-computed-only
     languages: [go]
     message: Computed-Only Bool attributes should use boolComputedOnly
     paths:
@@ -200,7 +200,7 @@ rules:
     fix: boolComputedOnly()
     severity: WARNING
 
-  - id: quicksight-schema-int-computed-only
+  - id: schema-int-computed-only
     languages: [go]
     message: Computed-Only Int attributes should use intComputedOnly
     paths:
@@ -216,7 +216,7 @@ rules:
     fix: intComputedOnly()
     severity: WARNING
 
-  - id: quicksight-schema-float-computed-only
+  - id: schema-float-computed-only
     languages: [go]
     message: Computed-Only Float attributes should use floatComputedOnly
     paths:
