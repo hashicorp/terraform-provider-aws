@@ -86,7 +86,7 @@ func resourceBucketIntelligentTieringConfiguration() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.IntelligentTieringAccessTier](),
 						},
-						"days": {
+						attrDays: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -332,7 +332,7 @@ func expandTiering(tfMap map[string]any) *types.Tiering {
 		apiObject.AccessTier = types.IntelligentTieringAccessTier(v)
 	}
 
-	if v, ok := tfMap["days"].(int); ok && v != 0 {
+	if v, ok := tfMap[attrDays].(int); ok && v != 0 {
 		apiObject.Days = aws.Int32(int32(v))
 	}
 
@@ -398,7 +398,7 @@ func flattenIntelligentTieringFilter(ctx context.Context, apiObject *types.Intel
 func flattenTiering(apiObject types.Tiering) map[string]any {
 	tfMap := map[string]any{
 		"access_tier": apiObject.AccessTier,
-		"days":        apiObject.Days,
+		attrDays:      apiObject.Days,
 	}
 
 	return tfMap

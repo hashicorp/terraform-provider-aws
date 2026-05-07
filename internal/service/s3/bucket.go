@@ -260,7 +260,7 @@ func resourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validBucketLifecycleTimestamp,
 									},
-									"days": {
+									attrDays: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
@@ -284,7 +284,7 @@ func resourceBucket() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"days": {
+									attrDays: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -297,7 +297,7 @@ func resourceBucket() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"days": {
+									attrDays: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
@@ -325,7 +325,7 @@ func resourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validBucketLifecycleTimestamp,
 									},
-									"days": {
+									attrDays: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
@@ -390,7 +390,7 @@ func resourceBucket() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"days": {
+												attrDays: {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
@@ -2284,7 +2284,7 @@ func expandBucketLifecycleExpiration(tfList []any) *types.LifecycleExpiration {
 	if v, ok := tfMap["date"].(string); ok && v != "" {
 		t, _ := time.Parse(time.RFC3339, v+"T00:00:00Z")
 		apiObject.Date = aws.Time(t)
-	} else if v, ok := tfMap["days"].(int); ok && v > 0 {
+	} else if v, ok := tfMap[attrDays].(int); ok && v > 0 {
 		apiObject.Days = aws.Int32(int32(v))
 	} else if v, ok := tfMap["expired_object_delete_marker"].(bool); ok {
 		apiObject.ExpiredObjectDeleteMarker = aws.Bool(v)
@@ -2300,7 +2300,7 @@ func expandBucketNoncurrentVersionExpiration(tfMap map[string]any) *types.Noncur
 
 	var apiObject *types.NoncurrentVersionExpiration
 
-	if v, ok := tfMap["days"].(int); ok {
+	if v, ok := tfMap[attrDays].(int); ok {
 		apiObject = &types.NoncurrentVersionExpiration{
 			NoncurrentDays: aws.Int32(int32(v)),
 		}
@@ -2324,7 +2324,7 @@ func expandBucketNoncurrentVersionTransition(tfList []any) []types.NoncurrentVer
 
 		apiObject := types.NoncurrentVersionTransition{}
 
-		if v, ok := tfMap["days"].(int); ok {
+		if v, ok := tfMap[attrDays].(int); ok {
 			apiObject.NoncurrentDays = aws.Int32(int32(v))
 		}
 
@@ -2356,7 +2356,7 @@ func expandBucketTransitions(tfList []any) []types.Transition {
 		if v, ok := tfMap["date"].(string); ok && v != "" {
 			t, _ := time.Parse(time.RFC3339, v+"T00:00:00Z")
 			apiObject.Date = aws.Time(t)
-		} else if v, ok := tfMap["days"].(int); ok && v >= 0 {
+		} else if v, ok := tfMap[attrDays].(int); ok && v >= 0 {
 			apiObject.Days = aws.Int32(int32(v))
 		}
 
@@ -2424,7 +2424,7 @@ func flattenBucketLifecycleRules(ctx context.Context, apiObjects []types.Lifecyc
 			m := make(map[string]any)
 
 			if v := apiObject.NoncurrentDays; v != nil {
-				m["days"] = aws.ToInt32(v)
+				m[attrDays] = aws.ToInt32(v)
 			}
 
 			tfMap["noncurrent_version_expiration"] = []any{m}
@@ -2456,7 +2456,7 @@ func flattenBucketLifecycleExpiration(apiObject *types.LifecycleExpiration) []an
 	}
 
 	if v := apiObject.Days; v != nil {
-		tfMap["days"] = aws.ToInt32(v)
+		tfMap[attrDays] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.ExpiredObjectDeleteMarker; v != nil {
@@ -2479,7 +2479,7 @@ func flattenBucketNoncurrentVersionTransitions(apiObjects []types.NoncurrentVers
 		}
 
 		if v := apiObject.NoncurrentDays; v != nil {
-			tfMap["days"] = aws.ToInt32(v)
+			tfMap[attrDays] = aws.ToInt32(v)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -2505,7 +2505,7 @@ func flattenBucketTransitions(apiObjects []types.Transition) []any {
 		}
 
 		if v := apiObject.Days; v != nil {
-			tfMap["days"] = aws.ToInt32(v)
+			tfMap[attrDays] = aws.ToInt32(v)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -3009,7 +3009,7 @@ func expandBucketObjectLockConfiguration(l []any) *types.ObjectLockConfiguration
 				DefaultRetention: &types.DefaultRetention{},
 			}
 
-			if v, ok := tfMap["days"].(int); ok && v > 0 {
+			if v, ok := tfMap[attrDays].(int); ok && v > 0 {
 				apiObject.Rule.DefaultRetention.Days = aws.Int32(int32(v))
 			}
 			if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
@@ -3038,7 +3038,7 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 		tfMap := map[string]any{
 			"default_retention": []any{
 				map[string]any{
-					"days":         aws.ToInt32(apiObject.Days),
+					attrDays:       aws.ToInt32(apiObject.Days),
 					names.AttrMode: apiObject.Mode,
 					"years":        aws.ToInt32(apiObject.Years),
 				},

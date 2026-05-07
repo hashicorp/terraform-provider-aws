@@ -71,7 +71,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"days": {
+									attrDays: {
 										Type:          schema.TypeInt,
 										Optional:      true,
 										ConflictsWith: []string{"rule.0.default_retention.0.years"},
@@ -336,7 +336,7 @@ func expandDefaultRetention(l []any) *types.DefaultRetention {
 
 	dr := &types.DefaultRetention{}
 
-	if v, ok := tfMap["days"].(int); ok && v > 0 {
+	if v, ok := tfMap[attrDays].(int); ok && v > 0 {
 		dr.Days = aws.Int32(int32(v))
 	}
 
@@ -371,7 +371,7 @@ func flattenDefaultRetention(dr *types.DefaultRetention) []any {
 	}
 
 	m := map[string]any{
-		"days":         dr.Days,
+		attrDays:       dr.Days,
 		names.AttrMode: dr.Mode,
 		"years":        dr.Years,
 	}

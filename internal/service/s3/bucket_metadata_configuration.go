@@ -180,7 +180,7 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"days": schema.Int32Attribute{
+												attrDays: schema.Int32Attribute{
 													Optional: true,
 													Validators: []validator.Int32{
 														int32validator.Between(7, 2147483647),

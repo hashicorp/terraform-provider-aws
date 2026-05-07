@@ -73,7 +73,7 @@ func bucketLifeCycleConfigurationSchemaV0(ctx context.Context) schema.Schema {
 									"date": schema.StringAttribute{
 										Optional: true,
 									},
-									"days": schema.Int64Attribute{
+									attrDays: schema.Int64Attribute{
 										Optional: true,
 										Computed: true,
 										Default:  int64default.StaticInt64(0),
@@ -173,7 +173,7 @@ func bucketLifeCycleConfigurationSchemaV0(ctx context.Context) schema.Schema {
 									"date": schema.StringAttribute{
 										Optional: true,
 									},
-									"days": schema.Int64Attribute{
+									attrDays: schema.Int64Attribute{
 										Optional: true,
 									},
 									names.AttrStorageClass: schema.StringAttribute{

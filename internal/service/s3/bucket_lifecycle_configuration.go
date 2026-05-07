@@ -164,7 +164,7 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 										CustomType: timetypes.RFC3339Type{},
 										Optional:   true,
 									},
-									"days": schema.Int32Attribute{
+									attrDays: schema.Int32Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int32{
@@ -182,7 +182,7 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 								Validators: []validator.Object{
 									tfobjectvalidator.WarnExactlyOneOfChildren(
 										path.MatchRelative().AtName("date"),
-										path.MatchRelative().AtName("days"),
+										path.MatchRelative().AtName(attrDays),
 										path.MatchRelative().AtName("expired_object_delete_marker"),
 									),
 								},
@@ -355,7 +355,7 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 										CustomType: timetypes.RFC3339Type{},
 										Optional:   true,
 									},
-									"days": schema.Int32Attribute{
+									attrDays: schema.Int32Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int32{
@@ -1196,7 +1196,7 @@ func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, 
 
 	paths := path.Paths{
 		req.Path.AtName("date"),
-		req.Path.AtName("days"),
+		req.Path.AtName(attrDays),
 	}
 	if !config.Date.IsNull() && !config.Days.IsNull() {
 		resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
