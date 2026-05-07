@@ -16,7 +16,7 @@ linters:
     - mnd
   settings:
     goconst:
-      min-occurrences: 30
+      min-occurrences: 20
       ignore-tests: true
     gocritic:
       enabled-tags:
