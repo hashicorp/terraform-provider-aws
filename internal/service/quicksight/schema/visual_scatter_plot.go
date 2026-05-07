@@ -20,7 +20,7 @@ func scatterPlotVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -28,7 +28,7 @@ func scatterPlotVisualSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"data_labels": dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -76,7 +76,7 @@ func scatterPlotVisualSchema() *schema.Schema {
 					},
 				},
 				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
 				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
@@ -101,13 +101,13 @@ func expandScatterPlotVisual(tfList []any) *awstypes.ScatterPlotVisual {
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandScatterPlotConfiguration(v)
 	}
 	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
@@ -132,7 +132,7 @@ func expandScatterPlotConfiguration(tfList []any) *awstypes.ScatterPlotConfigura
 	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandScatterPlotFieldWells(v)
 	}
 	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
@@ -248,13 +248,13 @@ func flattenScatterPlotVisual(apiObject *awstypes.ScatterPlotVisual) []any {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
-		tfMap["chart_configuration"] = flattenScatterPlotConfiguration(apiObject.ChartConfiguration)
+		tfMap[attrChartConfiguration] = flattenScatterPlotConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
 		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
-		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
 		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
@@ -274,7 +274,7 @@ func flattenScatterPlotConfiguration(apiObject *awstypes.ScatterPlotConfiguratio
 		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.FieldWells != nil {
-		tfMap["field_wells"] = flattenScatterPlotFieldWells(apiObject.FieldWells)
+		tfMap[attrFieldWells] = flattenScatterPlotFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
 		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)

@@ -39,7 +39,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrColumn:             columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
@@ -854,7 +854,7 @@ func expandColumnConfiguration(tfMap map[string]any) *awstypes.ColumnConfigurati
 
 	apiObject := &awstypes.ColumnConfiguration{}
 
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
@@ -1383,7 +1383,7 @@ func flattenColumnConfigurations(apiObjects []awstypes.ColumnConfiguration) []an
 		tfMap := map[string]any{}
 
 		if apiObject.Column != nil {
-			tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+			tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 		}
 		if apiObject.FormatConfiguration != nil {
 			tfMap["format_configuration"] = flattenFormatConfiguration(apiObject.FormatConfiguration)

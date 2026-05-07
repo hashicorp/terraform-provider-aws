@@ -21,7 +21,7 @@ func treeMapVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -31,7 +31,7 @@ func treeMapVisualSchema() *schema.Schema {
 							"color_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_scale":         colorScaleSchema(),            // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColorScale.html
 							"data_labels":         dataLabelOptionsSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -75,7 +75,7 @@ func treeMapVisualSchema() *schema.Schema {
 					},
 				},
 				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
 				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
@@ -100,13 +100,13 @@ func expandTreeMapVisual(tfList []any) *awstypes.TreeMapVisual {
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandTreeMapConfiguration(v)
 	}
 	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
@@ -137,7 +137,7 @@ func expandTreeMapConfiguration(tfList []any) *awstypes.TreeMapConfiguration {
 	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandTreeMapFieldWells(v)
 	}
 	if v, ok := tfMap["group_label_options"].([]any); ok && len(v) > 0 {
@@ -238,13 +238,13 @@ func flattenTreeMapVisual(apiObject *awstypes.TreeMapVisual) []any {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
-		tfMap["chart_configuration"] = flattenTreeMapConfiguration(apiObject.ChartConfiguration)
+		tfMap[attrChartConfiguration] = flattenTreeMapConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
 		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
-		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
 		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
@@ -270,7 +270,7 @@ func flattenTreeMapConfiguration(apiObject *awstypes.TreeMapConfiguration) []any
 		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.FieldWells != nil {
-		tfMap["field_wells"] = flattenTreeMapFieldWells(apiObject.FieldWells)
+		tfMap[attrFieldWells] = flattenTreeMapFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.GroupLabelOptions != nil {
 		tfMap["group_label_options"] = flattenChartAxisLabelOptions(apiObject.GroupLabelOptions)

@@ -21,14 +21,14 @@ func filledMapVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -91,7 +91,7 @@ func filledMapVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 													names.AttrFormat: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShapeConditionalFormat.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -112,8 +112,8 @@ func filledMapVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:  visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -137,7 +137,7 @@ func expandFilledMapVisual(tfList []any) *awstypes.FilledMapVisual {
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandFilledMapConfiguration(v)
 	}
 	if v, ok := tfMap["conditional_formatting"].([]any); ok && len(v) > 0 {
@@ -146,7 +146,7 @@ func expandFilledMapVisual(tfList []any) *awstypes.FilledMapVisual {
 	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
@@ -168,7 +168,7 @@ func expandFilledMapConfiguration(tfList []any) *awstypes.FilledMapConfiguration
 
 	apiObject := &awstypes.FilledMapConfiguration{}
 
-	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandFilledMapFieldWells(v)
 	}
 	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
@@ -319,7 +319,7 @@ func expandFilledMapShapeConditionalFormatting(tfList []any) *awstypes.FilledMap
 
 	apiObject := &awstypes.FilledMapShapeConditionalFormatting{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrFormat].([]any); ok && len(v) > 0 {
@@ -361,7 +361,7 @@ func flattenFilledMapVisual(apiObject *awstypes.FilledMapVisual) []any {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
-		tfMap["chart_configuration"] = flattenFilledMapConfiguration(apiObject.ChartConfiguration)
+		tfMap[attrChartConfiguration] = flattenFilledMapConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
 		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
@@ -370,7 +370,7 @@ func flattenFilledMapVisual(apiObject *awstypes.FilledMapVisual) []any {
 		tfMap["conditional_formatting"] = flattenFilledMapConditionalFormatting(apiObject.ConditionalFormatting)
 	}
 	if apiObject.Subtitle != nil {
-		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
 		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
@@ -387,7 +387,7 @@ func flattenFilledMapConfiguration(apiObject *awstypes.FilledMapConfiguration) [
 	tfMap := map[string]any{}
 
 	if apiObject.FieldWells != nil {
-		tfMap["field_wells"] = flattenFilledMapFieldWells(apiObject.FieldWells)
+		tfMap[attrFieldWells] = flattenFilledMapFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
 		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
@@ -495,7 +495,7 @@ func flattenFilledMapShapeConditionalFormatting(apiObject *awstypes.FilledMapSha
 	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Format != nil {
 		tfMap[names.AttrFormat] = flattenShapeConditionalFormat(apiObject.Format)

@@ -53,7 +53,7 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"direction": stringEnumSchema[awstypes.SortDirection](attrRequired),
-				"field_id":  stringLenBetweenSchema(attrRequired, 1, 512),
+				attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 			},
 		},
 	}
@@ -140,7 +140,7 @@ func expandFieldSort(tfList []any) *awstypes.FieldSort {
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
 		apiObject.Direction = awstypes.SortDirection(v)
 	}
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 

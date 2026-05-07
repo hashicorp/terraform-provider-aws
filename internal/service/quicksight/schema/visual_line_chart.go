@@ -24,7 +24,7 @@ func lineChartVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -46,7 +46,7 @@ func lineChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -206,7 +206,7 @@ func lineChartVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrRequired),
-													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID:    stringLenBetweenSchema(attrRequired, 1, 512),
 													"field_value": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -234,7 +234,7 @@ func lineChartVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrRequired),
-													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID:    stringLenBetweenSchema(attrRequired, 1, 512),
 													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -279,7 +279,7 @@ func lineChartVisualSchema() *schema.Schema {
 					},
 				},
 				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
 				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
@@ -344,13 +344,13 @@ func expandLineChartVisual(tfList []any) *awstypes.LineChartVisual {
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandLineChartConfiguration(v)
 	}
 	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
@@ -384,7 +384,7 @@ func expandLineChartConfiguration(tfList []any) *awstypes.LineChartConfiguration
 	if v, ok := tfMap["default_series_settings"].([]any); ok && len(v) > 0 {
 		apiObject.DefaultSeriesSettings = expandLineChartDefaultSeriesSettings(v)
 	}
-	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandLineChartFieldWells(v)
 	}
 	if v, ok := tfMap["forecast_configurations"].([]any); ok && len(v) > 0 {
@@ -856,7 +856,7 @@ func expandDataFieldSeriesItem(tfList []any) *awstypes.DataFieldSeriesItem {
 	if v, ok := tfMap["axis_binding"].(string); ok && v != "" {
 		apiObject.AxisBinding = awstypes.AxisBinding(v)
 	}
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["field_value"].(string); ok && v != "" {
@@ -884,7 +884,7 @@ func expandFieldSeriesItem(tfList []any) *awstypes.FieldSeriesItem {
 	if v, ok := tfMap["axis_binding"].(string); ok && v != "" {
 		apiObject.AxisBinding = awstypes.AxisBinding(v)
 	}
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["settings"].([]any); ok && len(v) > 0 {
@@ -929,13 +929,13 @@ func flattenLineChartVisual(apiObject *awstypes.LineChartVisual) []any {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
-		tfMap["chart_configuration"] = flattenLineChartConfiguration(apiObject.ChartConfiguration)
+		tfMap[attrChartConfiguration] = flattenLineChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
 		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
-		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
 		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
@@ -961,7 +961,7 @@ func flattenLineChartConfiguration(apiObject *awstypes.LineChartConfiguration) [
 		tfMap["default_series_settings"] = flattenLineChartDefaultSeriesSettings(apiObject.DefaultSeriesSettings)
 	}
 	if apiObject.FieldWells != nil {
-		tfMap["field_wells"] = flattenLineChartFieldWells(apiObject.FieldWells)
+		tfMap[attrFieldWells] = flattenLineChartFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.ForecastConfigurations != nil {
 		tfMap["forecast_configurations"] = flattenForecastConfiguration(apiObject.ForecastConfigurations)
@@ -1273,7 +1273,7 @@ func flattenDataFieldSeriesItem(apiObject *awstypes.DataFieldSeriesItem) []any {
 	}
 
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FieldValue != nil {
 		tfMap["field_value"] = aws.ToString(apiObject.FieldValue)
@@ -1312,7 +1312,7 @@ func flattenFieldSeriesItem(apiObject *awstypes.FieldSeriesItem) []any {
 	}
 
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Settings != nil {
 		tfMap["settings"] = flattenLineChartSeriesSettings(apiObject.Settings)

@@ -211,8 +211,8 @@ var chartAxisLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column":   columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
+										attrColumn:  columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+										attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 									},
 								},
 							},
@@ -299,7 +299,7 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"calculation":                  numericalAggregationFunctionSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-										"column":                       columnSchema(true),                       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+										attrColumn:                     columnSchema(true),                       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 										"measure_aggregation_function": aggregationFunctionSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 									},
 								},
@@ -813,10 +813,10 @@ func expandAxisLabelReferenceOptions(tfList []any) *awstypes.AxisLabelReferenceO
 
 	apiObject := &awstypes.AxisLabelReferenceOptions{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
@@ -951,7 +951,7 @@ func expandReferenceLineDynamicDataConfiguration(tfList []any) *awstypes.Referen
 	if v, ok := tfMap["calculation"].([]any); ok && len(v) > 0 {
 		apiObject.Calculation = expandNumericalAggregationFunction(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["measure_aggregation_function"].([]any); ok && len(v) > 0 {
@@ -1469,10 +1469,10 @@ func flattenAxisLabelReferenceOptions(apiObject *awstypes.AxisLabelReferenceOpti
 	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 
 	return []any{tfMap}
@@ -1575,7 +1575,7 @@ func flattenReferenceLineDynamicDataConfiguration(apiObject *awstypes.ReferenceL
 		tfMap["calculation"] = flattenNumericalAggregationFunction(apiObject.Calculation)
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.MeasureAggregationFunction != nil {
 		tfMap["measure_aggregation_function"] = flattenAggregationFunction(apiObject.MeasureAggregationFunction)

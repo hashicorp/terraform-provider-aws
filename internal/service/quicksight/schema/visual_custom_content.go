@@ -22,7 +22,7 @@ func customContentVisualSchema() *schema.Schema {
 				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
 				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
 					Type:             schema.TypeList,
 					Optional:         true,
 					MinItems:         1,
@@ -36,8 +36,8 @@ func customContentVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:  visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -64,10 +64,10 @@ func expandCustomContentVisual(tfList []any) *awstypes.CustomContentVisual {
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandCustomContentConfiguration(v)
 	}
-	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
@@ -116,10 +116,10 @@ func flattenCustomContentVisual(apiObject *awstypes.CustomContentVisual) []any {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
-		tfMap["chart_configuration"] = flattenCustomContentConfiguration(apiObject.ChartConfiguration)
+		tfMap[attrChartConfiguration] = flattenCustomContentConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.Subtitle != nil {
-		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
 		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)

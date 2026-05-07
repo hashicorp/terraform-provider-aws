@@ -26,7 +26,7 @@ func pivotTableVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -54,7 +54,7 @@ func pivotTableVisualSchema() *schema.Schema {
 														MaxItems: 20,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"field_id":    stringLenBetweenSchema(attrRequired, 1, 512),
+																attrFieldID:   stringLenBetweenSchema(attrRequired, 1, 512),
 																"field_value": stringLenBetweenSchema(attrRequired, 1, 2048),
 															},
 														},
@@ -73,7 +73,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID:    stringLenBetweenSchema(attrRequired, 1, 512),
 													"custom_label": stringLenBetweenSchema(attrOptional, 1, 2048),
 													attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
@@ -82,7 +82,7 @@ func pivotTableVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -132,7 +132,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 200,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 													"sort_by": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableSortBy.html
 														Type:     schema.TypeList,
 														Required: true,
@@ -140,7 +140,7 @@ func pivotTableVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"column": columnSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+																attrColumn: columnSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
 																"data_path": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathSort.html
 																	Type:     schema.TypeList,
 																	Optional: true,
@@ -221,7 +221,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 													names.AttrScope: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConditionalFormattingScope.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -243,8 +243,8 @@ func pivotTableVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:  visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -333,7 +333,7 @@ var subtotalOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 100,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"field_id": stringLenBetweenSchema(attrOptional, 1, 512),
+							attrFieldID: stringLenBetweenSchema(attrOptional, 1, 512),
 						},
 					},
 				},
@@ -424,13 +424,13 @@ func expandPivotTableVisual(tfList []any) *awstypes.PivotTableVisual {
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandPivotTableConfiguration(v)
 	}
 	if v, ok := tfMap["conditional_formatting"].([]any); ok && len(v) > 0 {
 		apiObject.ConditionalFormatting = expandPivotTableConditionalFormatting(v)
 	}
-	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
@@ -455,7 +455,7 @@ func expandPivotTableConfiguration(tfList []any) *awstypes.PivotTableConfigurati
 	if v, ok := tfMap["field_options"].([]any); ok && len(v) > 0 {
 		apiObject.FieldOptions = expandPivotTableFieldOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandPivotTableFieldWells(v)
 	}
 	if v, ok := tfMap["paginated_report_options"].([]any); ok && len(v) > 0 {
@@ -568,7 +568,7 @@ func expandPivotFieldSortOptions(tfMap map[string]any) *awstypes.PivotFieldSortO
 
 	apiObject := &awstypes.PivotFieldSortOptions{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["sort_by"].([]any); ok && len(v) > 0 {
@@ -590,7 +590,7 @@ func expandPivotTableSortBy(tfList []any) *awstypes.PivotTableSortBy {
 
 	apiObject := &awstypes.PivotTableSortBy{}
 
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnSort(v)
 	}
 	if v, ok := tfMap["data_path"].([]any); ok && len(v) > 0 {
@@ -719,7 +719,7 @@ func expandPivotTableFieldOption(tfMap map[string]any) *awstypes.PivotTableField
 
 	apiObject := &awstypes.PivotTableFieldOption{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
@@ -1017,7 +1017,7 @@ func expandPivotTableFieldSubtotalOptions(tfMap map[string]any) *awstypes.PivotT
 
 	apiObject := &awstypes.PivotTableFieldSubtotalOptions{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 
@@ -1152,7 +1152,7 @@ func expandPivotTableCellConditionalFormatting(tfList []any) *awstypes.PivotTabl
 
 	apiObject := &awstypes.PivotTableCellConditionalFormatting{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrScope].([]any); ok && len(v) > 0 {
@@ -1197,13 +1197,13 @@ func flattenPivotTableVisual(apiObject *awstypes.PivotTableVisual) []any {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
-		tfMap["chart_configuration"] = flattenPivotTableConfiguration(apiObject.ChartConfiguration)
+		tfMap[attrChartConfiguration] = flattenPivotTableConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ConditionalFormatting != nil {
 		tfMap["conditional_formatting"] = flattenPivotTableConditionalFormatting(apiObject.ConditionalFormatting)
 	}
 	if apiObject.Subtitle != nil {
-		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
 		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
@@ -1223,7 +1223,7 @@ func flattenPivotTableConfiguration(apiObject *awstypes.PivotTableConfiguration)
 		tfMap["field_options"] = flattenPivotTableFieldOptions(apiObject.FieldOptions)
 	}
 	if apiObject.FieldWells != nil {
-		tfMap["field_wells"] = flattenPivotTableFieldWells(apiObject.FieldWells)
+		tfMap[attrFieldWells] = flattenPivotTableFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.PaginatedReportOptions != nil {
 		tfMap["paginated_report_options"] = flattenPivotTablePaginatedReportOptions(apiObject.PaginatedReportOptions)
@@ -1353,7 +1353,7 @@ func flattenPivotFieldSortOptions(apiObjects []awstypes.PivotFieldSortOptions) [
 		tfMap := map[string]any{}
 
 		if apiObject.FieldId != nil {
-			tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+			tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 		}
 		if apiObject.SortBy != nil {
 			tfMap["sort_by"] = flattenPivotTableSortBy(apiObject.SortBy)
@@ -1373,7 +1373,7 @@ func flattenPivotTableSortBy(apiObject *awstypes.PivotTableSortBy) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnSort(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnSort(apiObject.Column)
 	}
 	if apiObject.DataPath != nil {
 		tfMap["data_path"] = flattenDataPathSort(apiObject.DataPath)
@@ -1605,7 +1605,7 @@ func flattenPivotTableFieldSubtotalOptions(apiObjects []awstypes.PivotTableField
 		tfMap := map[string]any{}
 
 		if apiObject.FieldId != nil {
-			tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+			tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1654,7 +1654,7 @@ func flattenPivotTableFieldOption(apiObjects []awstypes.PivotTableFieldOption) [
 		}
 
 		if apiObject.FieldId != nil {
-			tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+			tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 		}
 		if apiObject.CustomLabel != nil {
 			tfMap["custom_label"] = aws.ToString(apiObject.CustomLabel)
@@ -1706,7 +1706,7 @@ func flattenPivotTableCellConditionalFormatting(apiObject *awstypes.PivotTableCe
 	}
 
 	tfMap := map[string]any{
-		"field_id": aws.ToString(apiObject.FieldId),
+		attrFieldID: aws.ToString(apiObject.FieldId),
 	}
 
 	if apiObject.Scope != nil {

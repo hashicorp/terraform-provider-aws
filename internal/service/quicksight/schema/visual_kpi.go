@@ -21,14 +21,14 @@ func kpiVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -206,8 +206,8 @@ func kpiVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:  visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -231,7 +231,7 @@ func expandKPIVisual(tfList []any) *awstypes.KPIVisual {
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandKPIConfiguration(v)
 	}
 	if v, ok := tfMap["conditional_formatting"].([]any); ok && len(v) > 0 {
@@ -240,7 +240,7 @@ func expandKPIVisual(tfList []any) *awstypes.KPIVisual {
 	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
 	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
@@ -262,7 +262,7 @@ func expandKPIConfiguration(tfList []any) *awstypes.KPIConfiguration {
 
 	apiObject := &awstypes.KPIConfiguration{}
 
-	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandKPIFieldWells(v)
 	}
 	if v, ok := tfMap["kpi_options"].([]any); ok && len(v) > 0 {
@@ -648,7 +648,7 @@ func flattenKPIVisual(apiObject *awstypes.KPIVisual) []any {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
-		tfMap["chart_configuration"] = flattenKPIConfiguration(apiObject.ChartConfiguration)
+		tfMap[attrChartConfiguration] = flattenKPIConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ConditionalFormatting != nil {
 		tfMap["conditional_formatting"] = flattenKPIConditionalFormatting(apiObject.ConditionalFormatting)
@@ -657,7 +657,7 @@ func flattenKPIVisual(apiObject *awstypes.KPIVisual) []any {
 		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
-		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
 		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
@@ -674,7 +674,7 @@ func flattenKPIConfiguration(apiObject *awstypes.KPIConfiguration) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.FieldWells != nil {
-		tfMap["field_wells"] = flattenKPIFieldWells(apiObject.FieldWells)
+		tfMap[attrFieldWells] = flattenKPIFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.KPIOptions != nil {
 		tfMap["kpi_options"] = flattenKPIOptions(apiObject.KPIOptions)

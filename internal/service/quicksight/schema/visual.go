@@ -107,7 +107,7 @@ var tooltipOptionsSchema = sync.OnceValue(func() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column":      columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+													attrColumn:    columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 													"aggregation": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 													"label": {
 														Type:     schema.TypeString,
@@ -124,7 +124,7 @@ var tooltipOptionsSchema = sync.OnceValue(func() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 													"label": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -182,7 +182,7 @@ func dataPathValueSchema(maxItems int) *schema.Schema {
 		MaxItems: maxItems,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_id":    stringLenBetweenSchema(attrRequired, 1, 512),
+				attrFieldID:   stringLenBetweenSchema(attrRequired, 1, 512),
 				"field_value": stringLenBetweenSchema(attrRequired, 1, 2048),
 			},
 		},
@@ -417,7 +417,7 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field_id":     stringLenBetweenSchema(attrOptional, 1, 512),
+										attrFieldID:    stringLenBetweenSchema(attrOptional, 1, 512),
 										"field_value":  stringLenBetweenSchema(attrOptional, 1, 2048),
 										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
@@ -430,7 +430,7 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field_id":     stringLenBetweenSchema(attrOptional, 1, 512),
+										attrFieldID:    stringLenBetweenSchema(attrOptional, 1, 512),
 										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
@@ -672,7 +672,7 @@ func expandDataPathLabelType(tfList []any) *awstypes.DataPathLabelType {
 
 	apiObject := &awstypes.DataPathLabelType{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["field_value"].(string); ok && v != "" {
@@ -697,7 +697,7 @@ func expandFieldLabelType(tfList []any) *awstypes.FieldLabelType {
 
 	apiObject := &awstypes.FieldLabelType{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
@@ -904,7 +904,7 @@ func expandColumnTooltipItem(tfList []any) *awstypes.ColumnTooltipItem {
 	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["aggregation"].([]any); ok && len(v) > 0 {
@@ -926,7 +926,7 @@ func expandFieldTooltipItem(tfList []any) *awstypes.FieldTooltipItem {
 
 	apiObject := &awstypes.FieldTooltipItem{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["label"].(string); ok && v != "" {
@@ -1036,7 +1036,7 @@ func expandDataPathValueInternal(tfMap map[string]any) *awstypes.DataPathValue {
 
 	apiObject := &awstypes.DataPathValue{}
 
-	if v, ok := tfMap["field_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["field_value"].(string); ok && v != "" {
@@ -1511,7 +1511,7 @@ func flattenDataPathLabelType(apiObject *awstypes.DataPathLabelType) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FieldValue != nil {
 		tfMap["field_value"] = aws.ToString(apiObject.FieldValue)
@@ -1529,7 +1529,7 @@ func flattenFieldLabelType(apiObject *awstypes.FieldLabelType) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	tfMap[attrVisibility] = apiObject.Visibility
 
@@ -1657,7 +1657,7 @@ func flattenColumnTooltipItem(apiObject *awstypes.ColumnTooltipItem) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.Aggregation != nil {
 		tfMap["aggregation"] = flattenAggregationFunction(apiObject.Aggregation)
@@ -1677,7 +1677,7 @@ func flattenFieldTooltipItem(apiObject *awstypes.FieldTooltipItem) []any {
 
 	tfMap := map[string]any{}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Label != nil {
 		tfMap["label"] = aws.ToString(apiObject.Label)
@@ -1735,7 +1735,7 @@ func flattenDataPathValue(apiObject *awstypes.DataPathValue) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FieldValue != nil {
 		tfMap["field_value"] = aws.ToString(apiObject.FieldValue)
@@ -1755,7 +1755,7 @@ func flattenDataPathValues(apiObjects []awstypes.DataPathValue) []any {
 		tfMap := map[string]any{}
 
 		if apiObject.FieldId != nil {
-			tfMap["field_id"] = aws.ToString(apiObject.FieldId)
+			tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 		}
 		if apiObject.FieldValue != nil {
 			tfMap["field_value"] = aws.ToString(apiObject.FieldValue)
@@ -1847,7 +1847,7 @@ func flattenCategoryDrillDownFilter(apiObject *awstypes.CategoryDrillDownFilter)
 		tfMap["category_values"] = apiObject.CategoryValues
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 
 	return []any{tfMap}
@@ -1861,7 +1861,7 @@ func flattenNumericEqualityDrillDownFilter(apiObject *awstypes.NumericEqualityDr
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	tfMap[names.AttrValue] = apiObject.Value
 
@@ -1876,7 +1876,7 @@ func flattenTimeRangeDrillDownFilter(apiObject *awstypes.TimeRangeDrillDownFilte
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.RangeMaximum != nil {
 		tfMap["range_maximum"] = aws.ToTime(apiObject.RangeMaximum).Format(time.RFC3339)

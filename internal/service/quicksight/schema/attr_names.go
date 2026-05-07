@@ -5,7 +5,13 @@ package schema
 
 // Schema attribute name constants used across package
 const (
-	attrTitle      = "title"
-	attrVisibility = "visibility"
-	attrVisualID   = "visual_id"
+	attrChartConfiguration = "chart_configuration"
+	attrColumn             = "column"
+	attrFieldID            = "field_id"
+	attrFieldWells         = "field_wells"
+	attrHost               = "host"
+	attrSubtitle           = "subtitle"
+	attrTitle              = "title"
+	attrVisibility         = "visibility"
+	attrVisualID           = "visual_id"
 )
