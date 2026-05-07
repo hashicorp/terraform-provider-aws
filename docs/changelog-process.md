@@ -3,168 +3,425 @@
 
 # Changelog Process
 
-HashiCorp’s open-source projects have always maintained user-friendly, readable `CHANGELOG.md` that allows users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
+HashiCorp's open-source projects have always maintained user-friendly, readable `CHANGELOG.md` that allows users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
 
-We use [go-changelog](https://github.com/hashicorp/go-changelog) to generate the changelog from files created in the `.changelog/` directory.
-It is important that when you raise your pull request, there is a changelog entry which describes the changes your contribution makes.
-Not all changes require an entry in the changelog, guidance follows on what changes do.
+We use [Changie](https://changie.dev/) to generate the CHANGELOG from change fragment files created in the `.changes/` directory. It is important that when you raise your pull request, there is a CHANGELOG entry which describes the changes your contribution makes. Not all changes require an entry in the CHANGELOG; guidance follows on what changes do.
 
-## Changelog format
+## Installing Changie
 
-The changelog format requires an entry in the following format, where HEADER corresponds to the changelog category, and the entry is the changelog entry itself. The entry should be included in a file in the `.changelog` directory with the naming convention `{PR-NUMBER}.txt`. For example, to create a changelog entry for pull request 1234, there should be a file named `.changelog/1234.txt`.
+Before creating CHANGELOG entries, you'll need to install Changie. The recommended method is to install it along with the other project tools:
 
-``````
-```release-note:{HEADER}
-{ENTRY}
-```
-``````
-
-If a pull request should contain multiple changelog entries, then multiple blocks can be added to the same changelog file. For example:
-
-``````
-```release-note:note
-resource/aws_example_thing: The `broken` attribute has been deprecated. All configurations using `broken` should be updated to use the new `not_broken` attribute instead.
+```console
+$ make tools
 ```
 
-```release-note:enhancement
-resource/aws_example_thing: Add `not_broken` attribute
-```
-``````
+This will install Changie and all other required development tools for the project. Alternatively, you can install Changie directly using Go:
 
-While generally an antipattern to have a PR contain multiple resources/data sources, in the case that it is required a changelog file should have multiple new resource/data sources blocks. ie
-
-``````
-```release-note:new-resource
-aws_ecs_daemon
+```console
+$ go install github.com/miniscruff/changie@latest
 ```
 
-```release-note:new-resource
-aws_ecs_daemon_task_definition
+For other installation methods, see the [Changie installation documentation](https://changie.dev/guide/installation/).
+
+## Quick Start
+
+To create a new CHANGELOG entry, run:
+
+```console
+$ changie new
 ```
-``````
 
-## Pull request types to CHANGELOG
+The interactive tool will guide you through creating a properly formatted CHANGELOG entry. You'll be prompted to:
 
-The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines and examples for when a decision needs to be made to decide whether a change should have an entry.
+1. Select the **kind** of change (Breaking Change, Note, Feature, Enhancement, or Bug)
+2. Specify what resources, data sources, or other components are affected (the **Impact**)
+3. Provide a description of the change
+4. Enter the pull request number (if known)
 
-### Changes that should have a CHANGELOG entry
+The tool will create a YAML file in `.changes/<major version number>.x/unreleased/` with a unique filename.
 
-#### New resource
+> **Note:** Manually creating CHANGELOG files is not recommended. Changie uses a specific file naming format to properly generate the CHANGELOG. Always use `changie new` to create entries.
 
-A new resource entry should only contain the name of the resource, and use the `release-note:new-resource` header.
+## Updating an Existing Entry
 
-``````
-```release-note:new-resource
-aws_secretsmanager_secret_policy
+If you need to correct a CHANGELOG entry after creating it, edit the YAML file directly in `.changes/<major>.x/unreleased/`. Fragment filenames use a timestamp format (e.g., `enhancement-20260120-143022.yaml`), so the easiest way to locate the right file is to search by content:
+
+```console
+$ grep -rl "your entry text" .changes/
 ```
-``````
 
-#### New data source
+Alternatively, if you know the pull request number:
 
-A new data source entry should only contain the name of the data source, and use the `release-note:new-data-source` header.
-
-``````
-```release-note:new-data-source
-aws_workspaces_workspace
+```console
+$ grep -rl "PullRequest: 12345" .changes/
 ```
-``````
 
-#### New full-length documentation guides (e.g., EKS Getting Started Guide, IAM Policy Documents with Terraform)
+Once located, open the file and edit the relevant fields. Do not rename the file — the filename is used by Changie during CHANGELOG generation.
 
-A new full-length documentation entry gives the title of the documentation added, using the `release-note:new-guide` header.
+> **Note:** If the change has already been released, edit the per-version CHANGELOG file (e.g., `.changes/6.x/6.1.0.md`) directly instead. Editing the main `CHANGELOG.md` is not supported, as it will be overwritten the next time the CHANGELOG is regenerated.
 
-``````
-```release-note:new-guide
-Custom Service Endpoint Configuration
+When the CHANGELOG is regenerated by GitHub Actions, entries within each section (`BREAKING CHANGES`, `NOTES`, `FEATURES`, `ENHANCEMENTS`, `BUG FIXES`) are automatically sorted alphabetically.
+
+### Example
+
+Here's what a CHANGELOG entry looks like after running `changie new`:
+
+**Entry File Created by Changie:**
+
+```yaml
+kind: enhancement
+body: Add `not_broken` attribute
+custom:
+  Impact: |-
+    resource/aws_example_thing
+  PullRequest: 12345
 ```
-``````
 
-#### New list resource
+**Generated CHANGELOG Entry:**
 
-A new list resource should only contain the name of the resource, and use the `release-note:new-list-resource` header.
-
-``````
-```release-note:new-list-resource
-aws_ebs_volume_attachment
+```markdown
+* resource/aws_example_thing: Add `not_broken` attribute ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
 ```
-``````
 
-### Resource identity support
+## Pull Request Types to CHANGELOG
 
-Adding resource identity support should use the `release-note:enhancement` header and have a prefix indicating the resource it corresponds to, a colon and "Adding resource identity support".
+The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines and examples for when a decision needs to be made about whether a change should have an entry.
 
-``````
-```release-note:enhancement
-resource/aws_ebs_volume_attachment: Add resource identity support
+### Changes That Should Have a CHANGELOG Entry
+
+#### New Resource
+
+New resources should use the `feature` kind with "New Resource" selected as the type.
+
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Resource, Data Source, Ephemeral Resource, Function, List Resource, Action
+? What type of functionality are you adding?: New Resource
+? Name of the Resource, Data Source, etc.: aws_secretsmanager_secret_policy
+? Pull Request Number (if known): 12345
 ```
-``````
 
-#### Resource and provider bug fixes
+**Generated CHANGELOG Entry:**
 
-A new bug entry should use the `release-note:bug` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level fixes.
-
-``````
-```release-note:bug
-resource/aws_glue_classifier: Fix quote_symbol being optional
+```markdown
+* **New Resource**: `aws_secretsmanager_secret_policy` ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
 ```
-``````
 
-#### Resource and provider enhancements
+#### New Data Source
 
-A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level enhancements.
+New data sources should use the `feature` kind with "New Data Source" selected as the type.
 
-``````
-```release-note:enhancement
-resource/aws_eip: Add network_border_group argument
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Resource, Data Source, Ephemeral Resource, Function, List Resource, Action
+? What type of functionality are you adding?: New Data Source
+? Name of the Resource, Data Source, etc.: aws_workspaces_workspace
+? Pull Request Number (if known): 12345
 ```
-``````
+
+**Generated CHANGELOG Entry:**
+
+```markdown
+* **New Data Source**: `aws_workspaces_workspace` ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+#### New Ephemeral Resource
+
+New ephemeral resources should use the `feature` kind with "New Ephemeral Resource" selected as the type.
+
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Resource, Data Source, Ephemeral Resource, Function, List Resource, Action
+? What type of functionality are you adding?: New Ephemeral Resource
+? Name of the Resource, Data Source, etc.: aws_secretsmanager_secret_version
+? Pull Request Number (if known): 12345
+```
+
+**Generated CHANGELOG Entry:**
+
+```markdown
+* **New Ephemeral Resource**: `aws_secretsmanager_secret_version` ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+#### New Function
+
+New provider functions should use the `feature` kind with "New Function" selected as the type.
+
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Resource, Data Source, Ephemeral Resource, Function, List Resource, Action
+? What type of functionality are you adding?: New Function
+? Name of the Resource, Data Source, etc.: arn_parse
+? Pull Request Number (if known): 12345
+```
+
+**Generated CHANGELOG Entry:**
+
+```markdown
+* **New Function**: `arn_parse` ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+#### New List Resource
+
+New list resources should use the `feature` kind with "New List Resource" selected as the type.
+
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Resource, Data Source, Ephemeral Resource, Function, List Resource, Action
+? What type of functionality are you adding?: New List Resource
+? Name of the Resource, Data Source, etc.: aws_ec2_instances
+? Pull Request Number (if known): 12345
+```
+
+**Generated CHANGELOG Entry:**
+
+```markdown
+* **New List Resource**: `aws_ec2_instances` ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+#### New Action
+
+New actions should use the `feature` kind with "New Action" selected as the type.
+
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Resource, Data Source, Ephemeral Resource, Function, List Resource, Action
+? What type of functionality are you adding?: New Action
+? Name of the Resource, Data Source, etc.: aws_lambda_invoke
+? Pull Request Number (if known): 12345
+```
+
+**Generated CHANGELOG Entry:**
+
+```markdown
+* **New Action**: `aws_lambda_invoke` ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+#### Resource and Provider Bug Fixes
+
+Bug fixes should use the `bug` kind. In the Impact field, specify the affected resource, data source, or use `provider` for provider-level fixes.
+
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Bug
+? What resource(s), data source(s), etc. does this affect? Where multiple
+  resources are impacted, separate them with a newline similar to:
+  -------------------------
+  provider
+  resource/aws_instance
+  data-source/aws_instance
+
+  Response: resource/aws_glue_classifier
+? Change entry body: Fix `quote_symbol` being optional
+? Pull Request Number (if known): 12345
+```
+
+**Generated CHANGELOG Entry:**
+
+```markdown
+* resource/aws_glue_classifier: Fix `quote_symbol` being optional ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+> **Note:** The Impact field supports multiple lines. If you specify multiple resources, data sources, etc. (one per line), Changie will generate a separate CHANGELOG entry for each, all using the same body text. See [Multiple resources affected by a single change](#multiple-resources-affected-by-a-single-change) for an example.
+
+#### Resource and Provider Enhancements
+
+Enhancements should use the `enhancement` kind. In the Impact field, specify the affected resource, data source, or use `provider` for provider-level enhancements.
+
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Enhancement
+? What resource(s), data source(s), etc. does this affect? Where multiple
+  resources are impacted, separate them with a newline similar to:
+  -------------------------
+  provider
+  resource/aws_instance
+  data-source/aws_instance
+  
+  Response: resource/aws_eip
+? Change entry body: Add `network_border_group` argument
+? Pull Request Number (if known): 12345
+```
+
+**Generated CHANGELOG Entry:**
+
+```markdown
+* resource/aws_eip: Add `network_border_group` argument ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+> **Note:** The Impact field supports multiple lines. If you specify multiple resources, data sources, etc. (one per line), Changie will generate a separate CHANGELOG entry for each, all using the same body text. See [Multiple resources affected by a single change](#multiple-resources-affected-by-a-single-change) for an example.
 
 #### Deprecations
 
-A deprecation entry should use the `release-note:note` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level changes.
+Deprecations should use the `note` kind. In the Impact field, specify the affected resource, data source, or use `provider` for provider-level changes.
 
-``````
-```release-note:note
-resource/aws_dx_gateway_association: The vpn_gateway_id attribute is being deprecated in favor of the new associated_gateway_id attribute to support transit gateway associations
-```
-``````
+**Interactive Prompts:**
 
-#### Breaking changes and removals
-
-A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level changes.
-
-``````
-```release-note:breaking-change
-resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
-```
-``````
-
-#### Region validation support
-
-``````
-```release-note:note
-provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g., `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g., `data.aws_availability_zones.available: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
+```console
+? What kind of change is this?: Note
+? What resource(s), data source(s), etc. does this affect? Where multiple
+  resources are impacted, separate them with a newline similar to:
+  -------------------------
+  provider
+  resource/aws_instance
+  data-source/aws_instance
+  
+  Response: resource/aws_dx_gateway_association
+? Change entry body: The `vpn_gateway_id` attribute is being deprecated in favor of the new `associated_gateway_id` attribute to support transit gateway associations
+? Pull Request Number (if known): 12345
 ```
 
-```release-note:enhancement
-provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
+**Generated CHANGELOG Entry:**
+
+```markdown
+* resource/aws_dx_gateway_association: The `vpn_gateway_id` attribute is being deprecated in favor of the new `associated_gateway_id` attribute to support transit gateway associations ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
 ```
-``````
 
-### Changes that may have a CHANGELOG entry
+> **Note:** The Impact field supports multiple lines. If you specify multiple resources, data sources, etc. (one per line), Changie will generate a separate CHANGELOG entry for each, all using the same body text. See [Multiple resources affected by a single change](#multiple-resources-affected-by-a-single-change) for an example.
 
-Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
-Any changes which do not fit into the above categories but warrant highlighting.
-Use resource/data source/provider prefixes where appropriate.
+#### Breaking Changes and Removals
 
-``````
-```release-note:note
-resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
+Breaking changes should use the `breaking-change` kind. In the Impact field, specify the affected resource, data source, or use `provider` for provider-level changes.
+
+**Interactive Prompts:**
+
+```console
+? What kind of change is this?: Breaking Change
+? What resource(s), data source(s), etc. does this affect? Where multiple
+  resources are impacted, separate them with a newline similar to:
+  -------------------------
+  provider
+  resource/aws_instance
+  data-source/aws_instance
+
+  Response: resource/aws_lambda_alias
+? Change entry body: Resource import no longer converts Lambda Function name to ARN
+? Pull Request Number (if known): 12345
 ```
-``````
 
-### Changes that should _not_ have a CHANGELOG entry
+**Generated CHANGELOG Entry:**
+
+```markdown
+* resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+> **Note:** The Impact field supports multiple lines. If you specify multiple resources, data sources, etc. (one per line), Changie will generate a separate CHANGELOG entry for each, all using the same body text. See [Multiple resources affected by a single change](#multiple-resources-affected-by-a-single-change) for an example.
+
+#### Multiple Resources Affected by a Single Change
+
+If a single change affects multiple resources or data sources, you can list each one on a separate line in the Impact field. Changie will create a separate CHANGELOG entry for each, all using the same body text.
+
+**Example - Enhancement Affecting Multiple Resources:**
+
+When prompted for Impact, enter each resource on a new line:
+
+```console
+? What resource(s), data source(s), etc. does this affect? Where multiple
+  resources are impacted, separate them with a newline similar to:
+  -------------------------
+  provider
+  resource/aws_instance
+  data-source/aws_instance
+
+  Response:
+  resource/aws_instance
+  resource/aws_spot_instance_request
+  data-source/aws_instance
+```
+
+**Entry File Created:**
+
+```yaml
+kind: enhancement
+body: Add configurable timeouts
+custom:
+  Impact: |-
+    resource/aws_instance
+    resource/aws_spot_instance_request
+    data-source/aws_instance
+  PullRequest: 12345
+```
+
+**Generated CHANGELOG Entries:**
+
+```markdown
+* resource/aws_instance: Add configurable timeouts ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+* resource/aws_spot_instance_request: Add configurable timeouts ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+* data-source/aws_instance: Add configurable timeouts ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+#### Region Validation Support
+
+Adding support for a new AWS region typically requires creating two separate CHANGELOG entries using `changie new`:
+
+1. A **note** entry explaining the new region and requirements
+2. An **enhancement** entry for the validation support
+
+Run `changie new` twice to create both entries. The note entry should provide detailed information about enabling the region, while the enhancement entry should be brief.
+
+**First Entry (Note About the New Region):**
+
+```console
+? What kind of change is this?: Note
+? What resource(s), data source(s), etc. does this affect? Where multiple
+  resources are impacted, separate them with a newline similar to:
+  -------------------------
+  provider
+  resource/aws_instance
+  data-source/aws_instance
+  
+  Response: provider
+? Change entry body: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation or AWS operations will throw their own errors.
+? Pull Request Number (if known): 12345
+```
+
+**Second Entry (Enhancement for Validation):**
+
+```console
+? What kind of change is this?: Enhancement
+? What resource(s), data source(s), etc. does this affect? Where multiple
+  resources are impacted, separate them with a newline similar to:
+  -------------------------
+  provider
+  resource/aws_instance
+  data-source/aws_instance
+  
+  Response: provider
+? Change entry body: Support automatic region validation for `XX-XXXXX-#`
+? Pull Request Number (if known): 12345
+```
+
+### Changes That May Have a CHANGELOG Entry
+
+- **Dependency updates**: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out
+- **Other notable changes**: Any changes which do not fit into the above categories but warrant highlighting for operators. Use resource/data source/provider prefixes where appropriate
+
+### Changes That Should Not Have a CHANGELOG Entry
 
 - Resource and provider documentation updates
 - Testing updates
 - Code refactoring
+
+## Migrating from go-changelog
+
+If you have an existing pull request with a `.changelog/` entry file from the previous `go-changelog` system, you can convert it to the new Changie format using the conversion tool:
+
+```console
+$ make changelog-convert FILE=.changelog/12345.txt
+```
+
+This will:
+
+1. Parse your existing `go-changelog` entry file
+2. Create the equivalent Changie YAML file(s) in `.changes/<major>.x/unreleased/`
+3. Delete the original `.changelog/` file
+
+The conversion tool handles all entry types, including legacy `new-action` fragments, and preserves your PR number automatically. If your pull request is flagged by CI for having legacy CHANGELOG entries, follow the guidance in the automated comment to run this conversion command.
