@@ -16,7 +16,7 @@ rules:
             Required:     true,
             ValidateFunc: validation.StringLenBetween($MIN, $MAX),
           }
-    fix: sdkschema.StringLenBetweenSchema(attrRequired, $MIN, $MAX)
+    fix: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-string-len-between-optional
@@ -33,7 +33,7 @@ rules:
             Optional:     true,
             ValidateFunc: validation.StringLenBetween($MIN, $MAX),
           }
-    fix: sdkschema.StringLenBetweenSchema(attrOptional, $MIN, $MAX)
+    fix: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-string-len-between-optionalcomputed
@@ -59,7 +59,7 @@ rules:
                 Optional:     true,
                 ValidateFunc: validation.StringLenBetween($MIN, $MAX),
               }
-    fix: sdkschema.StringLenBetweenSchema(attrOptionalComputed, $MIN, $MAX)
+    fix: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptionalComputed, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-string-enum
@@ -114,7 +114,7 @@ rules:
             Required:     true,
             ValidateFunc: validation.IntBetween($MIN, $MAX),
           }
-    fix: sdkschema.IntBetweenSchema(attrRequired, $MIN, $MAX)
+    fix: sdkschema.IntBetweenSchema(sdkschema.AttrRequired, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-int-between-optional
@@ -131,7 +131,7 @@ rules:
             Optional:     true,
             ValidateFunc: validation.IntBetween($MIN, $MAX),
           }
-    fix: sdkschema.IntBetweenSchema(attrOptional, $MIN, $MAX)
+    fix: sdkschema.IntBetweenSchema(sdkschema.AttrOptional, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-float-between-required
@@ -148,7 +148,7 @@ rules:
             Required:     true,
             ValidateFunc: validation.FloatBetween($MIN, $MAX),
           }
-    fix: sdkschema.FloatBetweenSchema(attrRequired, $MIN, $MAX)
+    fix: sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-float-between-optional
@@ -165,7 +165,7 @@ rules:
             Optional:     true,
             ValidateFunc: validation.FloatBetween($MIN, $MAX),
           }
-    fix: sdkschema.FloatBetweenSchema(attrOptional, $MIN, $MAX)
+    fix: sdkschema.FloatBetweenSchema(sdkschema.AttrOptional, $MIN, $MAX)
     severity: WARNING
 
   - id: schema-string-computed-only
