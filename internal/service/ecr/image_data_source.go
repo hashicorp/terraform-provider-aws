@@ -65,7 +65,7 @@ func dataSourceImage() *schema.Resource {
 				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
 				ConflictsWith: []string{"image_digest", "image_tag"},
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -107,7 +107,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	if v, ok := d.GetOk("registry_id"); ok {
+	if v, ok := d.GetOk(attrRegistryID); ok {
 		input.RegistryId = aws.String(v.(string))
 	}
 
@@ -157,7 +157,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("image_size_in_bytes", imageDetail.ImageSizeInBytes)
 	d.Set("image_tags", imageDetail.ImageTags)
 	d.Set("image_uri", fmt.Sprintf("%s@%s", aws.ToString(repository.RepositoryUri), aws.ToString(imageDetail.ImageDigest)))
-	d.Set("registry_id", imageDetail.RegistryId)
+	d.Set(attrRegistryID, imageDetail.RegistryId)
 	d.Set(names.AttrRepositoryName, imageDetail.RepositoryName)
 
 	return diags

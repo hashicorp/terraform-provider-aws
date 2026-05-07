@@ -58,7 +58,7 @@ func resourcePullThroughCacheRule() *schema.Resource {
 						"must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
 				),
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("credential_arn", rule.CredentialArn)
 	d.Set("custom_role_arn", rule.CustomRoleArn)
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
-	d.Set("registry_id", rule.RegistryId)
+	d.Set(attrRegistryID, rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
 	d.Set("upstream_repository_prefix", rule.UpstreamRepositoryPrefix)
 
@@ -173,7 +173,7 @@ func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceD
 	log.Printf("[DEBUG] Deleting ECR Pull Through Cache Rule: %s", d.Id())
 	_, err := conn.DeletePullThroughCacheRule(ctx, &ecr.DeletePullThroughCacheRuleInput{
 		EcrRepositoryPrefix: aws.String(d.Id()),
-		RegistryId:          aws.String(d.Get("registry_id").(string)),
+		RegistryId:          aws.String(d.Get(attrRegistryID).(string)),
 	})
 
 	if errs.IsA[*types.PullThroughCacheRuleNotFoundException](err) {

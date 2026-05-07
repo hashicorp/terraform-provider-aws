@@ -49,7 +49,7 @@ func resourceRegistryPolicy() *schema.Resource {
 					return json
 				},
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +108,7 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set(names.AttrPolicy, policyToSet)
-	d.Set("registry_id", output.RegistryId)
+	d.Set(attrRegistryID, output.RegistryId)
 
 	return diags
 }

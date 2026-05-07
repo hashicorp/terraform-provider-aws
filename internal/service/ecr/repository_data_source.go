@@ -88,7 +88,7 @@ func dataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -111,7 +111,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		RepositoryNames: []string{name},
 	}
 
-	if v, ok := d.GetOk("registry_id"); ok {
+	if v, ok := d.GetOk(attrRegistryID); ok {
 		input.RegistryId = aws.String(v.(string))
 	}
 
@@ -135,7 +135,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting image_tag_mutability_exclusion_filter: %s", err)
 	}
 	d.Set(names.AttrName, repository.RepositoryName)
-	d.Set("registry_id", repository.RegistryId)
+	d.Set(attrRegistryID, repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
 
 	imageDetails, err := findImageDetails(ctx, conn, &ecr.DescribeImagesInput{

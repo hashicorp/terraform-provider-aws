@@ -35,7 +35,7 @@ func sweepRepositories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.RepositoryName))
 			d.Set(names.AttrForceDelete, true)
-			d.Set("registry_id", v.RegistryId)
+			d.Set(attrRegistryID, v.RegistryId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

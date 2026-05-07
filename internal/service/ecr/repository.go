@@ -135,7 +135,7 @@ func resourceRepository() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
-				"registry_id": {
+				attrRegistryID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -235,7 +235,7 @@ func resourceRepositoryFlatten(_ context.Context, d *schema.ResourceData, reposi
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 	d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(repository.ImageTagMutabilityExclusionFilters))
 	d.Set(names.AttrName, repository.RepositoryName)
-	d.Set("registry_id", repository.RegistryId)
+	d.Set(attrRegistryID, repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
 }
 
@@ -246,7 +246,7 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChanges("image_tag_mutability", "image_tag_mutability_exclusion_filter") {
 		input := &ecr.PutImageTagMutabilityInput{
 			ImageTagMutability: types.ImageTagMutability((d.Get("image_tag_mutability").(string))),
-			RegistryId:         aws.String(d.Get("registry_id").(string)),
+			RegistryId:         aws.String(d.Get(attrRegistryID).(string)),
 			RepositoryName:     aws.String(d.Id()),
 		}
 
@@ -264,7 +264,7 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("image_scanning_configuration") {
 		input := &ecr.PutImageScanningConfigurationInput{
 			ImageScanningConfiguration: &types.ImageScanningConfiguration{},
-			RegistryId:                 aws.String(d.Get("registry_id").(string)),
+			RegistryId:                 aws.String(d.Get(attrRegistryID).(string)),
 			RepositoryName:             aws.String(d.Id()),
 		}
 
@@ -290,7 +290,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Deleting ECR Repository: %s", d.Id())
 	_, err := conn.DeleteRepository(ctx, &ecr.DeleteRepositoryInput{
 		Force:          d.Get(names.AttrForceDelete).(bool),
-		RegistryId:     aws.String(d.Get("registry_id").(string)),
+		RegistryId:     aws.String(d.Get(attrRegistryID).(string)),
 		RepositoryName: aws.String(d.Id()),
 	})
 

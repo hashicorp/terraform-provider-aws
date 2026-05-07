@@ -92,7 +92,7 @@ func dataSourceRepositoryCreationTemplate() *schema.Resource {
 						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
 				),
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +135,7 @@ func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Res
 
 	d.Set("lifecycle_policy", policy)
 	d.Set(names.AttrPrefix, rct.Prefix)
-	d.Set("registry_id", registryID)
+	d.Set(attrRegistryID, registryID)
 
 	policy, err = structure.NormalizeJsonString(aws.ToString(rct.RepositoryPolicy))
 	if err != nil {

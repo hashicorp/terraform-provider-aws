@@ -37,7 +37,7 @@ func resourceRegistryScanningConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading ECR Registry Scanning Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("registry_id", output.RegistryId)
+	d.Set(attrRegistryID, output.RegistryId)
 	if err := d.Set(names.AttrRule, flattenScanningConfigurationRules(output.ScanningConfiguration.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}

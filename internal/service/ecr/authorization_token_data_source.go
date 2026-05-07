@@ -44,7 +44,7 @@ func dataSourceAuthorizationToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -61,7 +61,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := ecr.GetAuthorizationTokenInput{}
-	if v, ok := d.GetOk("registry_id"); ok {
+	if v, ok := d.GetOk(attrRegistryID); ok {
 		input.RegistryIds = []string{v.(string)}
 	}
 

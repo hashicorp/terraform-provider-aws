@@ -34,7 +34,7 @@ func (d *imagesDataSource) Schema(ctx context.Context, request datasource.Schema
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"image_ids": framework.DataSourceComputedListOfObjectAttribute[imagesIDsModel](ctx),
-			"registry_id": schema.StringAttribute{
+			attrRegistryID: schema.StringAttribute{
 				Optional:    true,
 				Description: "ID of the registry (AWS account ID)",
 			},

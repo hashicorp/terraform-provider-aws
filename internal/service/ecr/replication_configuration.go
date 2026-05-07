@@ -36,7 +36,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidRegionName,
 												},
-												"registry_id": {
+												attrRegistryID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidAccountID,
@@ -137,7 +137,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading ECR Replication Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("registry_id", output.RegistryId)
+	d.Set(attrRegistryID, output.RegistryId)
 	if err := d.Set("replication_configuration", flattenReplicationConfigurationReplicationConfiguration(output.ReplicationConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting replication_configuration: %s", err)
 	}
@@ -254,7 +254,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesDestinations(dat
 		ec := dest.(map[string]any)
 		config := types.ReplicationDestination{
 			Region:     aws.String(ec[names.AttrRegion].(string)),
-			RegistryId: aws.String(ec["registry_id"].(string)),
+			RegistryId: aws.String(ec[attrRegistryID].(string)),
 		}
 
 		dests = append(dests, config)
@@ -272,7 +272,7 @@ func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec
 	for _, apiObject := range ec {
 		tfMap := map[string]any{
 			names.AttrRegion: aws.ToString(apiObject.Region),
-			"registry_id":    aws.ToString(apiObject.RegistryId),
+			attrRegistryID:   aws.ToString(apiObject.RegistryId),
 		}
 
 		tfList = append(tfList, tfMap)

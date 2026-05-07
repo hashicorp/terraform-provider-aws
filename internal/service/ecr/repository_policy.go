@@ -38,7 +38,7 @@ func resourceRepositoryPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,7 +116,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRepositoryPolicyFlatten(d *schema.ResourceData, output *ecr.GetRepositoryPolicyOutput, policy string) {
 	d.Set(names.AttrPolicy, policy)
-	d.Set("registry_id", output.RegistryId)
+	d.Set(attrRegistryID, output.RegistryId)
 	d.Set("repository", output.RepositoryName)
 }
 
@@ -126,7 +126,7 @@ func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Deleting ECR Repository Policy: %s", d.Id())
 	_, err := conn.DeleteRepositoryPolicy(ctx, &ecr.DeleteRepositoryPolicyInput{
-		RegistryId:     aws.String(d.Get("registry_id").(string)),
+		RegistryId:     aws.String(d.Get(attrRegistryID).(string)),
 		RepositoryName: aws.String(d.Id()),
 	})
 

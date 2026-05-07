@@ -136,7 +136,7 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
 				),
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -245,7 +245,7 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 
 	d.Set("lifecycle_policy", policyToSet)
 	d.Set(names.AttrPrefix, rct.Prefix)
-	d.Set("registry_id", registryID)
+	d.Set(attrRegistryID, registryID)
 
 	policyToSet, err = verify.SecondJSONUnlessEquivalent(d.Get("repository_policy").(string), aws.ToString(rct.RepositoryPolicy))
 	if err != nil {

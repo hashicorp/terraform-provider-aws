@@ -52,7 +52,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 				DiffSuppressOnRefresh: true,
 				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +86,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(aws.ToString(output.RepositoryName))
-	d.Set("registry_id", output.RegistryId)
+	d.Set(attrRegistryID, output.RegistryId)
 
 	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
@@ -120,7 +120,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set(names.AttrPolicy, policyToSet)
 	}
 
-	d.Set("registry_id", output.RegistryId)
+	d.Set(attrRegistryID, output.RegistryId)
 	d.Set("repository", output.RepositoryName)
 
 	return diags

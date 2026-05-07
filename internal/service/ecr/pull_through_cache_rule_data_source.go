@@ -42,7 +42,7 @@ func dataSourcePullThroughCacheRule() *schema.Resource {
 						"must only include alphanumeric, underscore, period, hyphen, or slash characters"),
 				),
 			},
-			"registry_id": {
+			attrRegistryID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 	d.Set("credential_arn", rule.CredentialArn)
 	d.Set("custom_role_arn", rule.CustomRoleArn)
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
-	d.Set("registry_id", rule.RegistryId)
+	d.Set(attrRegistryID, rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
 	d.Set("upstream_repository_prefix", rule.UpstreamRepositoryPrefix)
 
