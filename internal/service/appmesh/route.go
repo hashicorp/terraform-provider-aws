@@ -169,7 +169,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"exact": {
+														attrExact: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -230,7 +230,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"exact": {
+											attrExact: {
 												Type:         schema.TypeString,
 												Optional:     true,
 												ValidateFunc: validation.StringLenBetween(1, 255),
@@ -267,7 +267,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"exact": {
+														attrExact: {
 															Type:     schema.TypeString,
 															Optional: true,
 														},
@@ -464,7 +464,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"exact": {
+																attrExact: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),

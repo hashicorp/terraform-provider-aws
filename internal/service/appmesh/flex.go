@@ -85,7 +85,7 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 
 					mMatch := vMatch[0].(map[string]any)
 
-					if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+					if vExact, ok := mMatch[attrExact].(*schema.Set); ok && vExact.Len() > 0 {
 						match.Exact = flex.ExpandStringValueSet(vExact)
 					}
 
@@ -248,7 +248,7 @@ func expandGRPCRoute(vGrpcRoute []any) *awstypes.GrpcRoute {
 					if vMatch, ok := mGrpcRouteMetadata["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 						mMatch := vMatch[0].(map[string]any)
 
-						if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+						if vExact, ok := mMatch[attrExact].(string); ok && vExact != "" {
 							grpcRouteMetadata.Match = &awstypes.GrpcRouteMetadataMatchMethodMemberExact{Value: vExact}
 						}
 						if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
@@ -417,7 +417,7 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 				if vMatch, ok := mHttpRouteHeader["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 					mMatch := vMatch[0].(map[string]any)
 
-					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+					if vExact, ok := mMatch[attrExact].(string); ok && vExact != "" {
 						httpRouteHeader.Match = &awstypes.HeaderMatchMethodMemberExact{Value: vExact}
 					}
 					if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
@@ -457,7 +457,7 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 
 			mHttpRoutePath := vHttpRoutePath[0].(map[string]any)
 
-			if vExact, ok := mHttpRoutePath["exact"].(string); ok && vExact != "" {
+			if vExact, ok := mHttpRoutePath[attrExact].(string); ok && vExact != "" {
 				httpRoutePath.Exact = aws.String(vExact)
 			}
 			if vRegex, ok := mHttpRoutePath["regex"].(string); ok && vRegex != "" {
@@ -484,7 +484,7 @@ func expandHTTPRoute(vHttpRoute []any) *awstypes.HttpRoute {
 
 					mMatch := vMatch[0].(map[string]any)
 
-					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+					if vExact, ok := mMatch[attrExact].(string); ok && vExact != "" {
 						httpRouteQueryParameter.Match.Exact = aws.String(vExact)
 					}
 				}
@@ -974,7 +974,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 							mMatch := vMatch[0].(map[string]any)
 
-							if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+							if vExact, ok := mMatch[attrExact].(*schema.Set); ok && vExact.Len() > 0 {
 								match.Exact = flex.ExpandStringValueSet(vExact)
 							}
 
@@ -1265,7 +1265,7 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []any {
 
 				if match := subjectAlternativeNames.Match; match != nil {
 					mMatch := map[string]any{
-						"exact": match.Exact,
+						attrExact: match.Exact,
 					}
 
 					mSubjectAlternativeNames["match"] = []any{mMatch}
@@ -1369,7 +1369,7 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []any {
 
 				switch v := match.(type) {
 				case *awstypes.GrpcRouteMetadataMatchMethodMemberExact:
-					mMatch["exact"] = v.Value
+					mMatch[attrExact] = v.Value
 				case *awstypes.GrpcRouteMetadataMatchMethodMemberPrefix:
 					mMatch[names.AttrPrefix] = v.Value
 				case *awstypes.GrpcRouteMetadataMatchMethodMemberRegex:
@@ -1477,7 +1477,7 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 				switch v := match.(type) {
 				case *awstypes.HeaderMatchMethodMemberExact:
-					mMatch["exact"] = v.Value
+					mMatch[attrExact] = v.Value
 				case *awstypes.HeaderMatchMethodMemberPrefix:
 					mMatch[names.AttrPrefix] = v.Value
 				case *awstypes.HeaderMatchMethodMemberRegex:
@@ -1503,8 +1503,8 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 		if httpRoutePath := httpRouteMatch.Path; httpRoutePath != nil {
 			mHttpRoutePath := map[string]any{
-				"exact": aws.ToString(httpRoutePath.Exact),
-				"regex": aws.ToString(httpRoutePath.Regex),
+				attrExact: aws.ToString(httpRoutePath.Exact),
+				"regex":   aws.ToString(httpRoutePath.Regex),
 			}
 
 			vHttpRoutePath = []any{mHttpRoutePath}
@@ -1519,7 +1519,7 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []any {
 
 			if match := httpRouteQueryParameter.Match; match != nil {
 				mMatch := map[string]any{
-					"exact": aws.ToString(match.Exact),
+					attrExact: aws.ToString(match.Exact),
 				}
 
 				mHttpRouteQueryParameter["match"] = []any{mMatch}
@@ -1831,7 +1831,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 
 						if match := subjectAlternativeNames.Match; match != nil {
 							mMatch := map[string]any{
-								"exact": match.Exact,
+								attrExact: match.Exact,
 							}
 
 							mSubjectAlternativeNames["match"] = []any{mMatch}

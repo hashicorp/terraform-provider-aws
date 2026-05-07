@@ -185,7 +185,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 															MaxItems: 1,
 															Elem: &schema.Resource{
 																Schema: map[string]*schema.Schema{
-																	"exact": {
+																	attrExact: {
 																		Type:     schema.TypeSet,
 																		Required: true,
 																		Elem:     &schema.Schema{Type: schema.TypeString},
@@ -780,7 +780,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"exact": {
+																			attrExact: {
 																				Type:     schema.TypeSet,
 																				Required: true,
 																				Elem:     &schema.Schema{Type: schema.TypeString},

@@ -206,7 +206,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"exact": {
+																						attrExact: {
 																							Type:     schema.TypeSet,
 																							Required: true,
 																							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -525,7 +525,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"exact": {
+																			attrExact: {
 																				Type:     schema.TypeSet,
 																				Required: true,
 																				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1033,7 +1033,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 
 							mMatch := vMatch[0].(map[string]any)
 
-							if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+							if vExact, ok := mMatch[attrExact].(*schema.Set); ok && vExact.Len() > 0 {
 								match.Exact = flex.ExpandStringValueSet(vExact)
 							}
 
@@ -1212,7 +1212,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 
 					mMatch := vMatch[0].(map[string]any)
 
-					if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+					if vExact, ok := mMatch[attrExact].(*schema.Set); ok && vExact.Len() > 0 {
 						match.Exact = flex.ExpandStringValueSet(vExact)
 					}
 
@@ -1384,7 +1384,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 
 						if match := subjectAlternativeNames.Match; match != nil {
 							mMatch := map[string]any{
-								"exact": match.Exact,
+								attrExact: match.Exact,
 							}
 
 							mSubjectAlternativeNames["match"] = []any{mMatch}
@@ -1515,7 +1515,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 
 				if match := subjectAlternativeNames.Match; match != nil {
 					mMatch := map[string]any{
-						"exact": match.Exact,
+						attrExact: match.Exact,
 					}
 
 					mSubjectAlternativeNames["match"] = []any{mMatch}

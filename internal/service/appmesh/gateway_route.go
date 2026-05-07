@@ -147,7 +147,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"exact": {
+														attrExact: {
 															Type:         schema.TypeString,
 															Required:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -255,7 +255,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"exact": {
+														attrExact: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -311,7 +311,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"exact": {
+											attrExact: {
 												Type:     schema.TypeString,
 												Optional: true,
 												ExactlyOneOf: []string{
@@ -342,7 +342,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"exact": {
+											attrExact: {
 												Type:         schema.TypeString,
 												Optional:     true,
 												ValidateFunc: validation.StringLenBetween(1, 255),
@@ -389,7 +389,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"exact": {
+														attrExact: {
 															Type:     schema.TypeString,
 															Optional: true,
 														},
@@ -809,7 +809,7 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []any) *awstypes.HttpGatewa
 	if vRoutePathRewrite, ok := mRouteRewrite[names.AttrPath].([]any); ok && len(vRoutePathRewrite) > 0 && vRoutePathRewrite[0] != nil {
 		mRoutePathRewrite := vRoutePathRewrite[0].(map[string]any)
 		routePathRewrite := &awstypes.HttpGatewayRoutePathRewrite{}
-		if vExact, ok := mRoutePathRewrite["exact"].(string); ok && vExact != "" {
+		if vExact, ok := mRoutePathRewrite[attrExact].(string); ok && vExact != "" {
 			routePathRewrite.Exact = aws.String(vExact)
 		}
 		routeRewrite.Path = routePathRewrite
@@ -865,7 +865,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []any) *awstypes.HttpGatewayRou
 			if vMatch, ok := mHeader["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 				mMatch := vMatch[0].(map[string]any)
 
-				if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+				if vExact, ok := mMatch[attrExact].(string); ok && vExact != "" {
 					header.Match = &awstypes.HeaderMatchMethodMemberExact{Value: vExact}
 				}
 				if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
@@ -904,7 +904,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []any) *awstypes.HttpGatewayRou
 
 		mHostname := vHostname[0].(map[string]any)
 
-		if vExact, ok := mHostname["exact"].(string); ok && vExact != "" {
+		if vExact, ok := mHostname[attrExact].(string); ok && vExact != "" {
 			hostnameMatch.Exact = aws.String(vExact)
 		}
 		if vSuffix, ok := mHostname["suffix"].(string); ok && vSuffix != "" {
@@ -919,7 +919,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []any) *awstypes.HttpGatewayRou
 
 		mHostname := vPath[0].(map[string]any)
 
-		if vExact, ok := mHostname["exact"].(string); ok && vExact != "" {
+		if vExact, ok := mHostname[attrExact].(string); ok && vExact != "" {
 			pathMatch.Exact = aws.String(vExact)
 		}
 		if vRegex, ok := mHostname["regex"].(string); ok && vRegex != "" {
@@ -946,7 +946,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []any) *awstypes.HttpGatewayRou
 
 				mMatch := vMatch[0].(map[string]any)
 
-				if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+				if vExact, ok := mMatch[attrExact].(string); ok && vExact != "" {
 					queryParameter.Match.Exact = aws.String(vExact)
 				}
 			}
@@ -1084,7 +1084,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 		if match := header.Match; match != nil {
 			switch v := match.(type) {
 			case *awstypes.HeaderMatchMethodMemberExact:
-				mMatch["exact"] = v.Value
+				mMatch[attrExact] = v.Value
 			case *awstypes.HeaderMatchMethodMemberPrefix:
 				mMatch[names.AttrPrefix] = v.Value
 			case *awstypes.HeaderMatchMethodMemberRegex:
@@ -1111,7 +1111,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 		mHostname := map[string]any{}
 
 		if hostname.Exact != nil {
-			mHostname["exact"] = aws.ToString(hostname.Exact)
+			mHostname[attrExact] = aws.ToString(hostname.Exact)
 		}
 		if hostname.Suffix != nil {
 			mHostname["suffix"] = aws.ToString(hostname.Suffix)
@@ -1124,7 +1124,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 		mPath := map[string]any{}
 
 		if path.Exact != nil {
-			mPath["exact"] = aws.ToString(path.Exact)
+			mPath[attrExact] = aws.ToString(path.Exact)
 		}
 		if path.Regex != nil {
 			mPath["regex"] = aws.ToString(path.Regex)
@@ -1142,7 +1142,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 
 		if match := queryParameter.Match; match != nil {
 			mMatch := map[string]any{
-				"exact": aws.ToString(match.Exact),
+				attrExact: aws.ToString(match.Exact),
 			}
 
 			mQueryParameter["match"] = []any{mMatch}
@@ -1172,7 +1172,7 @@ func flattenHTTPGatewayRouteRewrite(routeRewrite *awstypes.HttpGatewayRouteRewri
 
 	if rewritePath := routeRewrite.Path; rewritePath != nil {
 		mRewritePath := map[string]any{
-			"exact": aws.ToString(rewritePath.Exact),
+			attrExact: aws.ToString(rewritePath.Exact),
 		}
 		mRouteRewrite[names.AttrPath] = []any{mRewritePath}
 	}
