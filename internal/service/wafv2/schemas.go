@@ -56,20 +56,20 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         statementSchema(level),
-				"asn_match_statement":                   asnMatchStatementSchema(),
-				"byte_match_statement":                  byteMatchStatementSchema(),
-				"geo_match_statement":                   geoMatchStatementSchema(),
-				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
-				"label_match_statement":                 labelMatchStatementSchema(),
-				"not_statement":                         statementSchema(level),
-				"or_statement":                          statementSchema(level),
-				"rate_based_statement":                  rateBasedStatementSchema(level),
-				"regex_match_statement":                 regexMatchStatementSchema(),
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-				"size_constraint_statement":             sizeConstraintSchema(),
-				"sqli_match_statement":                  sqliMatchStatementSchema(),
-				"xss_match_statement":                   xssMatchStatementSchema(),
+				"and_statement":                       statementSchema(level),
+				attrASNMatchStatement:                 asnMatchStatementSchema(),
+				attrByteMatchStatement:                byteMatchStatementSchema(),
+				attrGeoMatchStatement:                 geoMatchStatementSchema(),
+				attrIPSetReferenceStatement:           ipSetReferenceStatementSchema(),
+				attrLabelMatchStatement:               labelMatchStatementSchema(),
+				"not_statement":                       statementSchema(level),
+				"or_statement":                        statementSchema(level),
+				"rate_based_statement":                rateBasedStatementSchema(level),
+				attrRegexMatchStatement:               regexMatchStatementSchema(),
+				attrRegexPatternSetReferenceStatement: regexPatternSetReferenceStatementSchema(),
+				attrSizeConstraintStatement:           sizeConstraintSchema(),
+				attrSQLiMatchStatement:                sqliMatchStatementSchema(),
+				attrXSSMatchStatement:                 xssMatchStatementSchema(),
 			},
 		},
 	}
@@ -96,21 +96,21 @@ func (c *schemaCache) get(level int) *schema.Schema {
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"statement": {
+					attrStatement: {
 						Type:     schema.TypeList,
 						Required: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"asn_match_statement":                   asnMatchStatementSchema(),
-								"byte_match_statement":                  byteMatchStatementSchema(),
-								"geo_match_statement":                   geoMatchStatementSchema(),
-								"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
-								"label_match_statement":                 labelMatchStatementSchema(),
-								"regex_match_statement":                 regexMatchStatementSchema(),
-								"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-								"size_constraint_statement":             sizeConstraintSchema(),
-								"sqli_match_statement":                  sqliMatchStatementSchema(),
-								"xss_match_statement":                   xssMatchStatementSchema(),
+								attrASNMatchStatement:                 asnMatchStatementSchema(),
+								attrByteMatchStatement:                byteMatchStatementSchema(),
+								attrGeoMatchStatement:                 geoMatchStatementSchema(),
+								attrIPSetReferenceStatement:           ipSetReferenceStatementSchema(),
+								attrLabelMatchStatement:               labelMatchStatementSchema(),
+								attrRegexMatchStatement:               regexMatchStatementSchema(),
+								attrRegexPatternSetReferenceStatement: regexPatternSetReferenceStatementSchema(),
+								attrSizeConstraintStatement:           sizeConstraintSchema(),
+								attrSQLiMatchStatement:                sqliMatchStatementSchema(),
+								attrXSSMatchStatement:                 xssMatchStatementSchema(),
 							},
 						},
 					},
@@ -127,24 +127,24 @@ func (c *schemaCache) get(level int) *schema.Schema {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"statement": {
+						attrStatement: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"and_statement":                         previous,
-									"asn_match_statement":                   asnMatchStatementSchema(),
-									"byte_match_statement":                  byteMatchStatementSchema(),
-									"geo_match_statement":                   geoMatchStatementSchema(),
-									"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
-									"label_match_statement":                 labelMatchStatementSchema(),
-									"not_statement":                         previous,
-									"or_statement":                          previous,
-									"regex_match_statement":                 regexMatchStatementSchema(),
-									"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-									"size_constraint_statement":             sizeConstraintSchema(),
-									"sqli_match_statement":                  sqliMatchStatementSchema(),
-									"xss_match_statement":                   xssMatchStatementSchema(),
+									"and_statement":                       previous,
+									attrASNMatchStatement:                 asnMatchStatementSchema(),
+									attrByteMatchStatement:                byteMatchStatementSchema(),
+									attrGeoMatchStatement:                 geoMatchStatementSchema(),
+									attrIPSetReferenceStatement:           ipSetReferenceStatementSchema(),
+									attrLabelMatchStatement:               labelMatchStatementSchema(),
+									"not_statement":                       previous,
+									"or_statement":                        previous,
+									attrRegexMatchStatement:               regexMatchStatementSchema(),
+									attrRegexPatternSetReferenceStatement: regexPatternSetReferenceStatementSchema(),
+									attrSizeConstraintStatement:           sizeConstraintSchema(),
+									attrSQLiMatchStatement:                sqliMatchStatementSchema(),
+									attrXSSMatchStatement:                 xssMatchStatementSchema(),
 								},
 							},
 						},
@@ -171,7 +171,7 @@ var byteMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match": fieldToMatchSchema(),
+				attrFieldToMatch: fieldToMatchSchema(),
 				"positional_constraint": {
 					Type:             schema.TypeString,
 					Required:         true,
@@ -225,7 +225,7 @@ var ipSetReferenceStatementSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"fallback_behavior": {
+							attrFallbackBehavior: {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
@@ -291,7 +291,7 @@ var regexMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 						validation.StringIsValidRegExp,
 					),
 				},
-				"field_to_match":       fieldToMatchSchema(),
+				attrFieldToMatch:       fieldToMatchSchema(),
 				attrTextTransformation: textTransformationSchema(),
 			},
 		},
@@ -310,7 +310,7 @@ var regexPatternSetReferenceStatementSchema = sync.OnceValue(func() *schema.Sche
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"field_to_match":       fieldToMatchSchema(),
+				attrFieldToMatch:       fieldToMatchSchema(),
 				attrTextTransformation: textTransformationSchema(),
 			},
 		},
@@ -329,7 +329,7 @@ var sizeConstraintSchema = sync.OnceValue(func() *schema.Schema {
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
 				},
-				"field_to_match": fieldToMatchSchema(),
+				attrFieldToMatch: fieldToMatchSchema(),
 				names.AttrSize: {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -348,7 +348,7 @@ var sqliMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match": fieldToMatchSchema(),
+				attrFieldToMatch: fieldToMatchSchema(),
 				"sensitivity_level": {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -367,7 +367,7 @@ var xssMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":       fieldToMatchSchema(),
+				attrFieldToMatch:       fieldToMatchSchema(),
 				attrTextTransformation: textTransformationSchema(),
 			},
 		},
@@ -431,7 +431,7 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"fallback_behavior": {
+						attrFallbackBehavior: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -472,7 +472,7 @@ var jsonBodySchema = sync.OnceValue(func() *schema.Schema {
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.JsonMatchScope](),
 				},
-				"oversize_handling": oversizeHandlingOptionalDefaultContinueSchema(),
+				attrOversizeHandling: oversizeHandlingOptionalDefaultContinueSchema(),
 			},
 		},
 	}
@@ -509,7 +509,7 @@ var forwardedIPConfigSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"fallback_behavior": {
+				attrFallbackBehavior: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
@@ -530,7 +530,7 @@ var rateLimitJAFingerprintConfigSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"fallback_behavior": {
+				attrFallbackBehavior: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
@@ -642,7 +642,7 @@ var allowConfigSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"custom_request_handling": customRequestHandlingSchema(),
+				attrCustomRequestHandling: customRequestHandlingSchema(),
 			},
 		},
 	}
@@ -655,7 +655,7 @@ var captchaConfigSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"custom_request_handling": customRequestHandlingSchema(),
+				attrCustomRequestHandling: customRequestHandlingSchema(),
 			},
 		},
 	}
@@ -693,7 +693,7 @@ var challengeConfigSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"custom_request_handling": customRequestHandlingSchema(),
+				attrCustomRequestHandling: customRequestHandlingSchema(),
 			},
 		},
 	}
@@ -731,7 +731,7 @@ var countConfigSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"custom_request_handling": customRequestHandlingSchema(),
+				attrCustomRequestHandling: customRequestHandlingSchema(),
 			},
 		},
 	}
@@ -866,9 +866,9 @@ func cookiesSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"match_scope":       matchScopeSchema(),
-				"oversize_handling": oversizeHandlingRequiredSchema(),
-				"match_pattern":     cookiesMatchPatternSchema(),
+				"match_scope":        matchScopeSchema(),
+				attrOversizeHandling: oversizeHandlingRequiredSchema(),
+				"match_pattern":      cookiesMatchPatternSchema(),
 			},
 		},
 	}
@@ -903,7 +903,7 @@ func jaFingerprintSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"fallback_behavior": {
+				attrFallbackBehavior: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
@@ -920,7 +920,7 @@ func bodySchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"oversize_handling": oversizeHandlingOptionalDefaultContinueSchema(),
+				attrOversizeHandling: oversizeHandlingOptionalDefaultContinueSchema(),
 			},
 		},
 	}
@@ -957,7 +957,7 @@ func headerOrderSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"oversize_handling": oversizeHandlingRequiredSchema(),
+				attrOversizeHandling: oversizeHandlingRequiredSchema(),
 			},
 		},
 	}
@@ -982,8 +982,8 @@ func headersSchema() *schema.Schema {
 						},
 					},
 				},
-				"match_scope":       matchScopeSchema(),
-				"oversize_handling": oversizeHandlingRequiredSchema(),
+				"match_scope":        matchScopeSchema(),
+				attrOversizeHandling: oversizeHandlingRequiredSchema(),
 			},
 		},
 	}
@@ -1012,22 +1012,22 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         statementSchema(level),
-				"asn_match_statement":                   asnMatchStatementSchema(),
-				"byte_match_statement":                  byteMatchStatementSchema(),
-				"geo_match_statement":                   geoMatchStatementSchema(),
-				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
-				"label_match_statement":                 labelMatchStatementSchema(),
-				"managed_rule_group_statement":          managedRuleGroupStatementSchema(level),
-				"not_statement":                         statementSchema(level),
-				"or_statement":                          statementSchema(level),
-				"rate_based_statement":                  rateBasedStatementSchema(level),
-				"regex_match_statement":                 regexMatchStatementSchema(),
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-				"rule_group_reference_statement":        ruleGroupReferenceStatementSchema(),
-				"size_constraint_statement":             sizeConstraintSchema(),
-				"sqli_match_statement":                  sqliMatchStatementSchema(),
-				"xss_match_statement":                   xssMatchStatementSchema(),
+				"and_statement":                       statementSchema(level),
+				attrASNMatchStatement:                 asnMatchStatementSchema(),
+				attrByteMatchStatement:                byteMatchStatementSchema(),
+				attrGeoMatchStatement:                 geoMatchStatementSchema(),
+				attrIPSetReferenceStatement:           ipSetReferenceStatementSchema(),
+				attrLabelMatchStatement:               labelMatchStatementSchema(),
+				"managed_rule_group_statement":        managedRuleGroupStatementSchema(level),
+				"not_statement":                       statementSchema(level),
+				"or_statement":                        statementSchema(level),
+				"rate_based_statement":                rateBasedStatementSchema(level),
+				attrRegexMatchStatement:               regexMatchStatementSchema(),
+				attrRegexPatternSetReferenceStatement: regexPatternSetReferenceStatementSchema(),
+				"rule_group_reference_statement":      ruleGroupReferenceStatementSchema(),
+				attrSizeConstraintStatement:           sizeConstraintSchema(),
+				attrSQLiMatchStatement:                sqliMatchStatementSchema(),
+				attrXSSMatchStatement:                 xssMatchStatementSchema(),
 			},
 		},
 	}
@@ -1199,19 +1199,19 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         statementSchema(level),
-				"asn_match_statement":                   asnMatchStatementSchema(),
-				"byte_match_statement":                  byteMatchStatementSchema(),
-				"geo_match_statement":                   geoMatchStatementSchema(),
-				"label_match_statement":                 labelMatchStatementSchema(),
-				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
-				"not_statement":                         statementSchema(level),
-				"or_statement":                          statementSchema(level),
-				"regex_match_statement":                 regexMatchStatementSchema(),
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-				"size_constraint_statement":             sizeConstraintSchema(),
-				"sqli_match_statement":                  sqliMatchStatementSchema(),
-				"xss_match_statement":                   xssMatchStatementSchema(),
+				"and_statement":                       statementSchema(level),
+				attrASNMatchStatement:                 asnMatchStatementSchema(),
+				attrByteMatchStatement:                byteMatchStatementSchema(),
+				attrGeoMatchStatement:                 geoMatchStatementSchema(),
+				attrLabelMatchStatement:               labelMatchStatementSchema(),
+				attrIPSetReferenceStatement:           ipSetReferenceStatementSchema(),
+				"not_statement":                       statementSchema(level),
+				"or_statement":                        statementSchema(level),
+				attrRegexMatchStatement:               regexMatchStatementSchema(),
+				attrRegexPatternSetReferenceStatement: regexPatternSetReferenceStatementSchema(),
+				attrSizeConstraintStatement:           sizeConstraintSchema(),
+				attrSQLiMatchStatement:                sqliMatchStatementSchema(),
+				attrXSSMatchStatement:                 xssMatchStatementSchema(),
 			},
 		},
 	}

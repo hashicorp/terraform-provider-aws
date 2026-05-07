@@ -129,7 +129,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"custom_request_handling": customRequestHandlingBlock(ctx),
+									attrCustomRequestHandling: customRequestHandlingBlock(ctx),
 								},
 							},
 						},
@@ -147,7 +147,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"custom_request_handling": customRequestHandlingBlock(ctx),
+									attrCustomRequestHandling: customRequestHandlingBlock(ctx),
 								},
 							},
 						},
@@ -156,7 +156,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"custom_request_handling": customRequestHandlingBlock(ctx),
+									attrCustomRequestHandling: customRequestHandlingBlock(ctx),
 								},
 							},
 						},
@@ -165,7 +165,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"custom_request_handling": customRequestHandlingBlock(ctx),
+									attrCustomRequestHandling: customRequestHandlingBlock(ctx),
 								},
 							},
 						},
@@ -243,7 +243,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Description: "Labels to apply to matching web requests.",
 			},
-			"statement": statementBlock(ctx, webACLRuleStatementSchemaLevel),
+			attrStatement: statementBlock(ctx, webACLRuleStatementSchemaLevel),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,

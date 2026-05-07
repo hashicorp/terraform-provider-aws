@@ -144,7 +144,7 @@ func resourceRuleGroup() *schema.Resource {
 								Required: true,
 							},
 							"rule_label":        ruleLabelsSchema(),
-							"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
+							attrStatement:       ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
 							"visibility_config": visibilityConfigSchema(),
 						},
 					},

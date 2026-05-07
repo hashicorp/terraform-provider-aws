@@ -5,5 +5,20 @@ package wafv2
 
 // Schema attribute name constants used across package
 const (
-	attrTextTransformation = "text_transformation"
+	attrASNMatchStatement                 = "asn_match_statement"
+	attrByteMatchStatement                = "byte_match_statement"
+	attrCustomRequestHandling             = "custom_request_handling"
+	attrFallbackBehavior                  = "fallback_behavior"
+	attrFieldToMatch                      = "field_to_match"
+	attrGeoMatchStatement                 = "geo_match_statement"
+	attrIPSetReferenceStatement           = "ip_set_reference_statement"
+	attrLabelMatchStatement               = "label_match_statement"
+	attrOversizeHandling                  = "oversize_handling"
+	attrRegexMatchStatement               = "regex_match_statement"
+	attrRegexPatternSetReferenceStatement = "regex_pattern_set_reference_statement"
+	attrSQLiMatchStatement                = "sqli_match_statement"
+	attrSizeConstraintStatement           = "size_constraint_statement"
+	attrStatement                         = "statement"
+	attrTextTransformation                = "text_transformation"
+	attrXSSMatchStatement                 = "xss_match_statement"
 )

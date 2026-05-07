@@ -51,7 +51,7 @@ var jaFingerprintBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Bl
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"fallback_behavior": fallbackBehaviorAttrRequired(),
+				attrFallbackBehavior: fallbackBehaviorAttrRequired(),
 			},
 		},
 	}
@@ -71,7 +71,7 @@ var ipSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context)
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIPSetReferenceStatementModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
-			listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("geo_match_statement")),
+			listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName(attrGeoMatchStatement)),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -86,7 +86,7 @@ var ipSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context)
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": fallbackBehaviorAttrRequired(),
+							attrFallbackBehavior: fallbackBehaviorAttrRequired(),
 							"header_name": schema.StringAttribute{
 								Required: true,
 							},
@@ -108,7 +108,7 @@ var geoMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleGeoMatchStatementModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
-			listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("ip_set_reference_statement")),
+			listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName(attrIPSetReferenceStatement)),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -124,7 +124,7 @@ var geoMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": fallbackBehaviorAttrRequired(),
+							attrFallbackBehavior: fallbackBehaviorAttrRequired(),
 							"header_name": schema.StringAttribute{
 								Required: true,
 							},
@@ -234,7 +234,7 @@ var regexPatternSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx contex
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":       fieldToMatchBlock(ctx),
+				attrFieldToMatch:       fieldToMatchBlock(ctx),
 				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
@@ -299,7 +299,7 @@ var byteMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":       fieldToMatchBlock(ctx),
+				attrFieldToMatch:       fieldToMatchBlock(ctx),
 				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
@@ -322,7 +322,7 @@ var sqliMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":       fieldToMatchBlock(ctx),
+				attrFieldToMatch:       fieldToMatchBlock(ctx),
 				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
@@ -336,7 +336,7 @@ var xssMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"field_to_match":       fieldToMatchBlock(ctx),
+				attrFieldToMatch:       fieldToMatchBlock(ctx),
 				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
@@ -362,7 +362,7 @@ var sizeConstraintStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context)
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":       fieldToMatchBlock(ctx),
+				attrFieldToMatch:       fieldToMatchBlock(ctx),
 				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
@@ -385,7 +385,7 @@ var regexMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sch
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":       fieldToMatchBlock(ctx),
+				attrFieldToMatch:       fieldToMatchBlock(ctx),
 				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
@@ -829,7 +829,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"custom_request_handling": customRequestHandlingBlock(ctx),
+										attrCustomRequestHandling: customRequestHandlingBlock(ctx),
 									},
 								},
 							},
@@ -847,7 +847,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"custom_request_handling": customRequestHandlingBlock(ctx),
+										attrCustomRequestHandling: customRequestHandlingBlock(ctx),
 									},
 								},
 							},
@@ -856,7 +856,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"custom_request_handling": customRequestHandlingBlock(ctx),
+										attrCustomRequestHandling: customRequestHandlingBlock(ctx),
 									},
 								},
 							},
@@ -865,7 +865,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"custom_request_handling": customRequestHandlingBlock(ctx),
+										attrCustomRequestHandling: customRequestHandlingBlock(ctx),
 									},
 								},
 							},
@@ -885,16 +885,16 @@ var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),
-				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-				"xss_match_statement":                   xssMatchStatementBlock(ctx),
-				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-				"regex_match_statement":                 regexMatchStatementBlock(ctx),
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
-				"label_match_statement":                 labelMatchStatementBlock(ctx),
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),
+				attrIPSetReferenceStatement:           ipSetReferenceStatementBlock(ctx),
+				attrGeoMatchStatement:                 geoMatchStatementBlock(ctx),
+				attrByteMatchStatement:                byteMatchStatementBlock(ctx),
+				attrSQLiMatchStatement:                sqliMatchStatementBlock(ctx),
+				attrXSSMatchStatement:                 xssMatchStatementBlock(ctx),
+				attrSizeConstraintStatement:           sizeConstraintStatementBlock(ctx),
+				attrRegexMatchStatement:               regexMatchStatementBlock(ctx),
+				attrRegexPatternSetReferenceStatement: regexPatternSetReferenceStatementBlock(ctx),
+				attrLabelMatchStatement:               labelMatchStatementBlock(ctx),
+				attrASNMatchStatement:                 asnMatchStatementBlock(ctx),
 			},
 		},
 		Description: "Scope down statement for managed rule groups.",
@@ -956,7 +956,7 @@ var forwardedIPConfigBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"fallback_behavior": fallbackBehaviorAttrRequired(),
+				attrFallbackBehavior: fallbackBehaviorAttrRequired(),
 				"header_name": schema.StringAttribute{
 					Required: true,
 				},
@@ -980,7 +980,7 @@ var fieldToMatchBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"oversize_handling": schema.StringAttribute{
+							attrOversizeHandling: schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
 								Optional:   true,
 								Computed:   true, // legacy has a default of CONTINUE
@@ -998,7 +998,7 @@ var fieldToMatchBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 								CustomType: fwtypes.StringEnumType[awstypes.MapMatchScope](),
 								Required:   true,
 							},
-							"oversize_handling": schema.StringAttribute{
+							attrOversizeHandling: schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
 								Required:   true,
 							},
@@ -1032,7 +1032,7 @@ var fieldToMatchBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleHeaderOrderModel](ctx),
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"oversize_handling": schema.StringAttribute{
+							attrOversizeHandling: schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
 								Required:   true,
 							},
@@ -1047,7 +1047,7 @@ var fieldToMatchBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 								CustomType: fwtypes.StringEnumType[awstypes.MapMatchScope](),
 								Required:   true,
 							},
-							"oversize_handling": schema.StringAttribute{
+							attrOversizeHandling: schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
 								Required:   true,
 							},
@@ -1096,7 +1096,7 @@ var fieldToMatchBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 								CustomType: fwtypes.StringEnumType[awstypes.JsonMatchScope](),
 								Required:   true,
 							},
-							"oversize_handling": schema.StringAttribute{
+							attrOversizeHandling: schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
 								Optional:   true,
 								Computed:   true, // legacy has a default of CONTINUE
@@ -1137,7 +1137,7 @@ var fieldToMatchBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
+							attrFallbackBehavior: schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
 								Optional:   true,
 								Computed:   true,

@@ -527,7 +527,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"custom_request_handling": schema.ListNestedBlock{
+										attrCustomRequestHandling: schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
 											Validators: []validator.List{
 												listvalidator.SizeAtMost(1),
@@ -622,7 +622,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"custom_request_handling": schema.ListNestedBlock{
+										attrCustomRequestHandling: schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
 											Validators: []validator.List{
 												listvalidator.SizeAtMost(1),
@@ -664,7 +664,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"custom_request_handling": schema.ListNestedBlock{
+										attrCustomRequestHandling: schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
 											Validators: []validator.List{
 												listvalidator.SizeAtMost(1),
@@ -706,7 +706,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"custom_request_handling": schema.ListNestedBlock{
+										attrCustomRequestHandling: schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
 											Validators: []validator.List{
 												listvalidator.SizeAtMost(1),

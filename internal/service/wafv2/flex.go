@@ -41,7 +41,7 @@ func expandRule(m map[string]any) awstypes.Rule {
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]any)),
 		Name:             aws.String(m[names.AttrName].(string)),
 		Priority:         int32(m[names.AttrPriority].(int)),
-		Statement:        expandRuleGroupRootStatement(m["statement"].([]any)),
+		Statement:        expandRuleGroupRootStatement(m[attrStatement].([]any)),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]any)),
 	}
 
@@ -234,7 +234,7 @@ func expandAllowAction(l []any) *awstypes.AllowAction {
 		return action
 	}
 
-	if v, ok := m["custom_request_handling"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrCustomRequestHandling].([]any); ok && len(v) > 0 {
 		action.CustomRequestHandling = expandCustomRequestHandling(v)
 	}
 
@@ -272,7 +272,7 @@ func expandCaptchaAction(l []any) *awstypes.CaptchaAction {
 		return action
 	}
 
-	if v, ok := m["custom_request_handling"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrCustomRequestHandling].([]any); ok && len(v) > 0 {
 		action.CustomRequestHandling = expandCustomRequestHandling(v)
 	}
 
@@ -291,7 +291,7 @@ func expandChallengeAction(l []any) *awstypes.ChallengeAction {
 		return action
 	}
 
-	if v, ok := m["custom_request_handling"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrCustomRequestHandling].([]any); ok && len(v) > 0 {
 		action.CustomRequestHandling = expandCustomRequestHandling(v)
 	}
 
@@ -310,7 +310,7 @@ func expandCountAction(l []any) *awstypes.CountAction {
 		return action
 	}
 
-	if v, ok := m["custom_request_handling"].([]any); ok && len(v) > 0 {
+	if v, ok := m[attrCustomRequestHandling].([]any); ok && len(v) > 0 {
 		action.CustomRequestHandling = expandCustomRequestHandling(v)
 	}
 
@@ -460,23 +460,23 @@ func expandStatement(m map[string]any) *awstypes.Statement {
 		statement.AndStatement = expandAndStatement(v.([]any))
 	}
 
-	if v, ok := m["asn_match_statement"]; ok {
+	if v, ok := m[attrASNMatchStatement]; ok {
 		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["byte_match_statement"]; ok {
+	if v, ok := m[attrByteMatchStatement]; ok {
 		statement.ByteMatchStatement = expandByteMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["ip_set_reference_statement"]; ok {
+	if v, ok := m[attrIPSetReferenceStatement]; ok {
 		statement.IPSetReferenceStatement = expandIPSetReferenceStatement(v.([]any))
 	}
 
-	if v, ok := m["geo_match_statement"]; ok {
+	if v, ok := m[attrGeoMatchStatement]; ok {
 		statement.GeoMatchStatement = expandGeoMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["label_match_statement"]; ok {
+	if v, ok := m[attrLabelMatchStatement]; ok {
 		statement.LabelMatchStatement = expandLabelMatchStatement(v.([]any))
 	}
 
@@ -492,23 +492,23 @@ func expandStatement(m map[string]any) *awstypes.Statement {
 		statement.RateBasedStatement = expandRateBasedStatement(v.([]any))
 	}
 
-	if v, ok := m["regex_match_statement"]; ok {
+	if v, ok := m[attrRegexMatchStatement]; ok {
 		statement.RegexMatchStatement = expandRegexMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
+	if v, ok := m[attrRegexPatternSetReferenceStatement]; ok {
 		statement.RegexPatternSetReferenceStatement = expandRegexPatternSetReferenceStatement(v.([]any))
 	}
 
-	if v, ok := m["size_constraint_statement"]; ok {
+	if v, ok := m[attrSizeConstraintStatement]; ok {
 		statement.SizeConstraintStatement = expandSizeConstraintStatement(v.([]any))
 	}
 
-	if v, ok := m["sqli_match_statement"]; ok {
+	if v, ok := m[attrSQLiMatchStatement]; ok {
 		statement.SqliMatchStatement = expandSQLiMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["xss_match_statement"]; ok {
+	if v, ok := m[attrXSSMatchStatement]; ok {
 		statement.XssMatchStatement = expandXSSMatchStatement(v.([]any))
 	}
 
@@ -523,7 +523,7 @@ func expandAndStatement(l []any) *awstypes.AndStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.AndStatement{
-		Statements: expandStatements(m["statement"].([]any)),
+		Statements: expandStatements(m[attrStatement].([]any)),
 	}
 }
 
@@ -553,7 +553,7 @@ func expandByteMatchStatement(l []any) *awstypes.ByteMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.ByteMatchStatement{
-		FieldToMatch:         expandFieldToMatch(m["field_to_match"].([]any)),
+		FieldToMatch:         expandFieldToMatch(m[attrFieldToMatch].([]any)),
 		PositionalConstraint: awstypes.PositionalConstraint(m["positional_constraint"].(string)),
 		SearchString:         []byte(m["search_string"].(string)),
 		TextTransformations:  expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
@@ -635,7 +635,7 @@ func expandForwardedIPConfig(l []any) *awstypes.ForwardedIPConfig {
 	m := l[0].(map[string]any)
 
 	return &awstypes.ForwardedIPConfig{
-		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+		FallbackBehavior: awstypes.FallbackBehavior(m[attrFallbackBehavior].(string)),
 		HeaderName:       aws.String(m["header_name"].(string)),
 	}
 }
@@ -648,7 +648,7 @@ func expandIPSetForwardedIPConfig(l []any) *awstypes.IPSetForwardedIPConfig {
 	m := l[0].(map[string]any)
 
 	return &awstypes.IPSetForwardedIPConfig{
-		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+		FallbackBehavior: awstypes.FallbackBehavior(m[attrFallbackBehavior].(string)),
 		HeaderName:       aws.String(m["header_name"].(string)),
 		Position:         awstypes.ForwardedIPPosition(m["position"].(string)),
 	}
@@ -663,7 +663,7 @@ func expandCookies(l []any) *awstypes.Cookies {
 
 	cookies := &awstypes.Cookies{
 		MatchScope:       awstypes.MapMatchScope(m["match_scope"].(string)),
-		OversizeHandling: awstypes.OversizeHandling(m["oversize_handling"].(string)),
+		OversizeHandling: awstypes.OversizeHandling(m[attrOversizeHandling].(string)),
 	}
 
 	if v, ok := m["match_pattern"]; ok && len(v.([]any)) > 0 {
@@ -705,7 +705,7 @@ func expandJSONBody(l []any) *awstypes.JsonBody {
 
 	jsonBody := &awstypes.JsonBody{
 		MatchScope:       awstypes.JsonMatchScope(m["match_scope"].(string)),
-		OversizeHandling: awstypes.OversizeHandling(m["oversize_handling"].(string)),
+		OversizeHandling: awstypes.OversizeHandling(m[attrOversizeHandling].(string)),
 		MatchPattern:     expandJSONMatchPattern(m["match_pattern"].([]any)),
 	}
 
@@ -725,7 +725,7 @@ func expandBody(l []any) *awstypes.Body {
 
 	body := &awstypes.Body{}
 
-	if v, ok := m["oversize_handling"].(string); ok && v != "" {
+	if v, ok := m[attrOversizeHandling].(string); ok && v != "" {
 		body.OversizeHandling = awstypes.OversizeHandling(v)
 	}
 
@@ -740,7 +740,7 @@ func expandJA3Fingerprint(l []any) *awstypes.JA3Fingerprint {
 	m := l[0].(map[string]any)
 
 	ja3fingerprint := &awstypes.JA3Fingerprint{
-		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+		FallbackBehavior: awstypes.FallbackBehavior(m[attrFallbackBehavior].(string)),
 	}
 
 	return ja3fingerprint
@@ -754,7 +754,7 @@ func expandJA4Fingerprint(l []any) *awstypes.JA4Fingerprint {
 	m := l[0].(map[string]any)
 
 	ja4fingerprint := &awstypes.JA4Fingerprint{
-		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+		FallbackBehavior: awstypes.FallbackBehavior(m[attrFallbackBehavior].(string)),
 	}
 
 	return ja4fingerprint
@@ -811,7 +811,7 @@ func expandURIFragment(tfList []any) *awstypes.UriFragment {
 
 	apiObject := &awstypes.UriFragment{}
 
-	if v, ok := tfMap["fallback_behavior"].(string); ok && v != "" {
+	if v, ok := tfMap[attrFallbackBehavior].(string); ok && v != "" {
 		apiObject.FallbackBehavior = awstypes.FallbackBehavior(v)
 	}
 
@@ -899,7 +899,7 @@ func expandNotStatement(l []any) *awstypes.NotStatement {
 	}
 
 	m := l[0].(map[string]any)
-	s := m["statement"].([]any)
+	s := m[attrStatement].([]any)
 
 	if len(s) == 0 || s[0] == nil {
 		return nil
@@ -920,7 +920,7 @@ func expandOrStatement(l []any) *awstypes.OrStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.OrStatement{
-		Statements: expandStatements(m["statement"].([]any)),
+		Statements: expandStatements(m[attrStatement].([]any)),
 	}
 }
 
@@ -933,7 +933,7 @@ func expandRegexMatchStatement(l []any) *awstypes.RegexMatchStatement {
 
 	return &awstypes.RegexMatchStatement{
 		RegexString:         aws.String(m["regex_string"].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
+		FieldToMatch:        expandFieldToMatch(m[attrFieldToMatch].([]any)),
 		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
@@ -947,7 +947,7 @@ func expandRegexPatternSetReferenceStatement(l []any) *awstypes.RegexPatternSetR
 
 	return &awstypes.RegexPatternSetReferenceStatement{
 		ARN:                 aws.String(m[names.AttrARN].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
+		FieldToMatch:        expandFieldToMatch(m[attrFieldToMatch].([]any)),
 		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
@@ -961,7 +961,7 @@ func expandSizeConstraintStatement(l []any) *awstypes.SizeConstraintStatement {
 
 	return &awstypes.SizeConstraintStatement{
 		ComparisonOperator:  awstypes.ComparisonOperator(m["comparison_operator"].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
+		FieldToMatch:        expandFieldToMatch(m[attrFieldToMatch].([]any)),
 		Size:                int64(m[names.AttrSize].(int)),
 		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
@@ -975,7 +975,7 @@ func expandSQLiMatchStatement(l []any) *awstypes.SqliMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.SqliMatchStatement{
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
+		FieldToMatch:        expandFieldToMatch(m[attrFieldToMatch].([]any)),
 		SensitivityLevel:    awstypes.SensitivityLevel(m["sensitivity_level"].(string)),
 		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
@@ -989,7 +989,7 @@ func expandXSSMatchStatement(l []any) *awstypes.XssMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.XssMatchStatement{
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
+		FieldToMatch:        expandFieldToMatch(m[attrFieldToMatch].([]any)),
 		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
@@ -1002,7 +1002,7 @@ func expandHeaderOrder(l []any) *awstypes.HeaderOrder {
 	m := l[0].(map[string]any)
 
 	return &awstypes.HeaderOrder{
-		OversizeHandling: awstypes.OversizeHandling(m["oversize_handling"].(string)),
+		OversizeHandling: awstypes.OversizeHandling(m[attrOversizeHandling].(string)),
 	}
 }
 
@@ -1016,7 +1016,7 @@ func expandHeaders(l []any) *awstypes.Headers {
 	return &awstypes.Headers{
 		MatchPattern:     expandHeaderMatchPattern(m["match_pattern"].([]any)),
 		MatchScope:       awstypes.MapMatchScope(m["match_scope"].(string)),
-		OversizeHandling: awstypes.OversizeHandling(m["oversize_handling"].(string)),
+		OversizeHandling: awstypes.OversizeHandling(m[attrOversizeHandling].(string)),
 	}
 }
 
@@ -1232,7 +1232,7 @@ func expandWebACLRule(m map[string]any) awstypes.Rule {
 		Name:             aws.String(m[names.AttrName].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]any)),
 		Priority:         int32(m[names.AttrPriority].(int)),
-		Statement:        expandWebACLRootStatement(m["statement"].([]any)),
+		Statement:        expandWebACLRootStatement(m[attrStatement].([]any)),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]any)),
 	}
 
@@ -1302,23 +1302,23 @@ func expandWebACLStatement(m map[string]any) *awstypes.Statement {
 		statement.AndStatement = expandAndStatement(v.([]any))
 	}
 
-	if v, ok := m["asn_match_statement"]; ok {
+	if v, ok := m[attrASNMatchStatement]; ok {
 		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["byte_match_statement"]; ok {
+	if v, ok := m[attrByteMatchStatement]; ok {
 		statement.ByteMatchStatement = expandByteMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["ip_set_reference_statement"]; ok {
+	if v, ok := m[attrIPSetReferenceStatement]; ok {
 		statement.IPSetReferenceStatement = expandIPSetReferenceStatement(v.([]any))
 	}
 
-	if v, ok := m["geo_match_statement"]; ok {
+	if v, ok := m[attrGeoMatchStatement]; ok {
 		statement.GeoMatchStatement = expandGeoMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["label_match_statement"]; ok {
+	if v, ok := m[attrLabelMatchStatement]; ok {
 		statement.LabelMatchStatement = expandLabelMatchStatement(v.([]any))
 	}
 
@@ -1338,11 +1338,11 @@ func expandWebACLStatement(m map[string]any) *awstypes.Statement {
 		statement.RateBasedStatement = expandRateBasedStatement(v.([]any))
 	}
 
-	if v, ok := m["regex_match_statement"]; ok {
+	if v, ok := m[attrRegexMatchStatement]; ok {
 		statement.RegexMatchStatement = expandRegexMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
+	if v, ok := m[attrRegexPatternSetReferenceStatement]; ok {
 		statement.RegexPatternSetReferenceStatement = expandRegexPatternSetReferenceStatement(v.([]any))
 	}
 
@@ -1350,15 +1350,15 @@ func expandWebACLStatement(m map[string]any) *awstypes.Statement {
 		statement.RuleGroupReferenceStatement = expandRuleGroupReferenceStatement(v.([]any))
 	}
 
-	if v, ok := m["size_constraint_statement"]; ok {
+	if v, ok := m[attrSizeConstraintStatement]; ok {
 		statement.SizeConstraintStatement = expandSizeConstraintStatement(v.([]any))
 	}
 
-	if v, ok := m["sqli_match_statement"]; ok {
+	if v, ok := m[attrSQLiMatchStatement]; ok {
 		statement.SqliMatchStatement = expandSQLiMatchStatement(v.([]any))
 	}
 
-	if v, ok := m["xss_match_statement"]; ok {
+	if v, ok := m[attrXSSMatchStatement]; ok {
 		statement.XssMatchStatement = expandXSSMatchStatement(v.([]any))
 	}
 
@@ -1792,7 +1792,7 @@ func expandRateLimitJa3Fingerprint(l []any) *awstypes.RateLimitJA3Fingerprint {
 	}
 	m := l[0].(map[string]any)
 	return &awstypes.RateLimitJA3Fingerprint{
-		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+		FallbackBehavior: awstypes.FallbackBehavior(m[attrFallbackBehavior].(string)),
 	}
 }
 
@@ -1802,7 +1802,7 @@ func expandRateLimitJa4Fingerprint(l []any) *awstypes.RateLimitJA4Fingerprint {
 	}
 	m := l[0].(map[string]any)
 	return &awstypes.RateLimitJA4Fingerprint{
-		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+		FallbackBehavior: awstypes.FallbackBehavior(m[attrFallbackBehavior].(string)),
 	}
 }
 
@@ -2052,7 +2052,7 @@ func flattenRules(r []awstypes.Rule) any {
 		m[names.AttrName] = aws.ToString(rule.Name)
 		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
-		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
+		m[attrStatement] = flattenRuleGroupRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
 		out[i] = m
 	}
@@ -2097,7 +2097,7 @@ func flattenAllow(a *awstypes.AllowAction) []any {
 	m := map[string]any{}
 
 	if a.CustomRequestHandling != nil {
-		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
+		m[attrCustomRequestHandling] = flattenCustomRequestHandling(a.CustomRequestHandling)
 	}
 
 	return []any{m}
@@ -2125,7 +2125,7 @@ func flattenCaptcha(a *awstypes.CaptchaAction) []any {
 	m := map[string]any{}
 
 	if a.CustomRequestHandling != nil {
-		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
+		m[attrCustomRequestHandling] = flattenCustomRequestHandling(a.CustomRequestHandling)
 	}
 
 	return []any{m}
@@ -2199,7 +2199,7 @@ func flattenChallenge(a *awstypes.ChallengeAction) []any {
 	m := map[string]any{}
 
 	if a.CustomRequestHandling != nil {
-		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
+		m[attrCustomRequestHandling] = flattenCustomRequestHandling(a.CustomRequestHandling)
 	}
 
 	return []any{m}
@@ -2212,7 +2212,7 @@ func flattenCount(a *awstypes.CountAction) []any {
 	m := map[string]any{}
 
 	if a.CustomRequestHandling != nil {
-		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
+		m[attrCustomRequestHandling] = flattenCustomRequestHandling(a.CustomRequestHandling)
 	}
 
 	return []any{m}
@@ -2332,23 +2332,23 @@ func flattenStatement(s *awstypes.Statement) map[string]any {
 	}
 
 	if s.AsnMatchStatement != nil {
-		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
+		m[attrASNMatchStatement] = flattenASNMatchStatement(s.AsnMatchStatement)
 	}
 
 	if s.ByteMatchStatement != nil {
-		m["byte_match_statement"] = flattenByteMatchStatement(s.ByteMatchStatement)
+		m[attrByteMatchStatement] = flattenByteMatchStatement(s.ByteMatchStatement)
 	}
 
 	if s.IPSetReferenceStatement != nil {
-		m["ip_set_reference_statement"] = flattenIPSetReferenceStatement(s.IPSetReferenceStatement)
+		m[attrIPSetReferenceStatement] = flattenIPSetReferenceStatement(s.IPSetReferenceStatement)
 	}
 
 	if s.GeoMatchStatement != nil {
-		m["geo_match_statement"] = flattenGeoMatchStatement(s.GeoMatchStatement)
+		m[attrGeoMatchStatement] = flattenGeoMatchStatement(s.GeoMatchStatement)
 	}
 
 	if s.LabelMatchStatement != nil {
-		m["label_match_statement"] = flattenLabelMatchStatement(s.LabelMatchStatement)
+		m[attrLabelMatchStatement] = flattenLabelMatchStatement(s.LabelMatchStatement)
 	}
 
 	if s.NotStatement != nil {
@@ -2364,23 +2364,23 @@ func flattenStatement(s *awstypes.Statement) map[string]any {
 	}
 
 	if s.RegexMatchStatement != nil {
-		m["regex_match_statement"] = flattenRegexMatchStatement(s.RegexMatchStatement)
+		m[attrRegexMatchStatement] = flattenRegexMatchStatement(s.RegexMatchStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {
-		m["regex_pattern_set_reference_statement"] = flattenRegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
+		m[attrRegexPatternSetReferenceStatement] = flattenRegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
 	}
 
 	if s.SizeConstraintStatement != nil {
-		m["size_constraint_statement"] = flattenSizeConstraintStatement(s.SizeConstraintStatement)
+		m[attrSizeConstraintStatement] = flattenSizeConstraintStatement(s.SizeConstraintStatement)
 	}
 
 	if s.SqliMatchStatement != nil {
-		m["sqli_match_statement"] = flattenSQLiMatchStatement(s.SqliMatchStatement)
+		m[attrSQLiMatchStatement] = flattenSQLiMatchStatement(s.SqliMatchStatement)
 	}
 
 	if s.XssMatchStatement != nil {
-		m["xss_match_statement"] = flattenXSSMatchStatement(s.XssMatchStatement)
+		m[attrXSSMatchStatement] = flattenXSSMatchStatement(s.XssMatchStatement)
 	}
 
 	return m
@@ -2392,7 +2392,7 @@ func flattenAndStatement(a *awstypes.AndStatement) any {
 	}
 
 	m := map[string]any{
-		"statement": flattenStatements(a.Statements),
+		attrStatement: flattenStatements(a.Statements),
 	}
 
 	return []any{m}
@@ -2417,7 +2417,7 @@ func flattenByteMatchStatement(b *awstypes.ByteMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"field_to_match":        flattenFieldToMatch(b.FieldToMatch),
+		attrFieldToMatch:        flattenFieldToMatch(b.FieldToMatch),
 		"positional_constraint": b.PositionalConstraint,
 		"search_string":         string(b.SearchString),
 		attrTextTransformation:  flattenTextTransformations(b.TextTransformations),
@@ -2498,8 +2498,8 @@ func flattenForwardedIPConfig(f *awstypes.ForwardedIPConfig) any {
 	}
 
 	m := map[string]any{
-		"fallback_behavior": f.FallbackBehavior,
-		"header_name":       aws.ToString(f.HeaderName),
+		attrFallbackBehavior: f.FallbackBehavior,
+		"header_name":        aws.ToString(f.HeaderName),
 	}
 
 	return []any{m}
@@ -2511,9 +2511,9 @@ func flattenIPSetForwardedIPConfig(i *awstypes.IPSetForwardedIPConfig) any {
 	}
 
 	m := map[string]any{
-		"fallback_behavior": i.FallbackBehavior,
-		"header_name":       aws.ToString(i.HeaderName),
-		"position":          i.Position,
+		attrFallbackBehavior: i.FallbackBehavior,
+		"header_name":        aws.ToString(i.HeaderName),
+		"position":           i.Position,
 	}
 
 	return []any{m}
@@ -2525,9 +2525,9 @@ func flattenCookies(c *awstypes.Cookies) any {
 	}
 
 	m := map[string]any{
-		"match_scope":       c.MatchScope,
-		"oversize_handling": c.OversizeHandling,
-		"match_pattern":     flattenCookiesMatchPattern(c.MatchPattern),
+		"match_scope":        c.MatchScope,
+		attrOversizeHandling: c.OversizeHandling,
+		"match_pattern":      flattenCookiesMatchPattern(c.MatchPattern),
 	}
 
 	return []any{m}
@@ -2556,7 +2556,7 @@ func flattenJA3Fingerprint(j *awstypes.JA3Fingerprint) any {
 	}
 
 	m := map[string]any{
-		"fallback_behavior": j.FallbackBehavior,
+		attrFallbackBehavior: j.FallbackBehavior,
 	}
 
 	return []any{m}
@@ -2568,7 +2568,7 @@ func flattenJA4Fingerprint(j *awstypes.JA4Fingerprint) any {
 	}
 
 	m := map[string]any{
-		"fallback_behavior": j.FallbackBehavior,
+		attrFallbackBehavior: j.FallbackBehavior,
 	}
 
 	return []any{m}
@@ -2583,7 +2583,7 @@ func flattenJSONBody(b *awstypes.JsonBody) any {
 		"invalid_fallback_behavior": b.InvalidFallbackBehavior,
 		"match_pattern":             flattenJSONMatchPattern(b.MatchPattern),
 		"match_scope":               b.MatchScope,
-		"oversize_handling":         b.OversizeHandling,
+		attrOversizeHandling:        b.OversizeHandling,
 	}
 
 	return []any{m}
@@ -2595,7 +2595,7 @@ func flattenBody(b *awstypes.Body) any {
 	}
 
 	m := map[string]any{
-		"oversize_handling": b.OversizeHandling,
+		attrOversizeHandling: b.OversizeHandling,
 	}
 
 	return []any{m}
@@ -2649,7 +2649,7 @@ func flattenURIFragment(apiObject *awstypes.UriFragment) any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.FallbackBehavior; v != "" {
-		tfMap["fallback_behavior"] = v
+		tfMap[attrFallbackBehavior] = v
 	}
 	return []any{tfMap}
 }
@@ -2710,7 +2710,7 @@ func flattenNotStatement(a *awstypes.NotStatement) any {
 	}
 
 	m := map[string]any{
-		"statement": []any{flattenStatement(a.Statement)},
+		attrStatement: []any{flattenStatement(a.Statement)},
 	}
 
 	return []any{m}
@@ -2722,7 +2722,7 @@ func flattenOrStatement(a *awstypes.OrStatement) any {
 	}
 
 	m := map[string]any{
-		"statement": flattenStatements(a.Statements),
+		attrStatement: flattenStatements(a.Statements),
 	}
 
 	return []any{m}
@@ -2735,7 +2735,7 @@ func flattenRegexMatchStatement(r *awstypes.RegexMatchStatement) any {
 
 	m := map[string]any{
 		"regex_string":         aws.ToString(r.RegexString),
-		"field_to_match":       flattenFieldToMatch(r.FieldToMatch),
+		attrFieldToMatch:       flattenFieldToMatch(r.FieldToMatch),
 		attrTextTransformation: flattenTextTransformations(r.TextTransformations),
 	}
 
@@ -2749,7 +2749,7 @@ func flattenRegexPatternSetReferenceStatement(r *awstypes.RegexPatternSetReferen
 
 	m := map[string]any{
 		names.AttrARN:          aws.ToString(r.ARN),
-		"field_to_match":       flattenFieldToMatch(r.FieldToMatch),
+		attrFieldToMatch:       flattenFieldToMatch(r.FieldToMatch),
 		attrTextTransformation: flattenTextTransformations(r.TextTransformations),
 	}
 
@@ -2763,7 +2763,7 @@ func flattenSizeConstraintStatement(s *awstypes.SizeConstraintStatement) any {
 
 	m := map[string]any{
 		"comparison_operator":  s.ComparisonOperator,
-		"field_to_match":       flattenFieldToMatch(s.FieldToMatch),
+		attrFieldToMatch:       flattenFieldToMatch(s.FieldToMatch),
 		names.AttrSize:         s.Size,
 		attrTextTransformation: flattenTextTransformations(s.TextTransformations),
 	}
@@ -2777,7 +2777,7 @@ func flattenSQLiMatchStatement(s *awstypes.SqliMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"field_to_match":       flattenFieldToMatch(s.FieldToMatch),
+		attrFieldToMatch:       flattenFieldToMatch(s.FieldToMatch),
 		"sensitivity_level":    s.SensitivityLevel,
 		attrTextTransformation: flattenTextTransformations(s.TextTransformations),
 	}
@@ -2791,7 +2791,7 @@ func flattenXSSMatchStatement(s *awstypes.XssMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"field_to_match":       flattenFieldToMatch(s.FieldToMatch),
+		attrFieldToMatch:       flattenFieldToMatch(s.FieldToMatch),
 		attrTextTransformation: flattenTextTransformations(s.TextTransformations),
 	}
 
@@ -2818,7 +2818,7 @@ func flattenHeaderOrder(s *awstypes.HeaderOrder) any {
 	}
 
 	m := map[string]any{
-		"oversize_handling": s.OversizeHandling,
+		attrOversizeHandling: s.OversizeHandling,
 	}
 
 	return []any{m}
@@ -2830,9 +2830,9 @@ func flattenHeaders(s *awstypes.Headers) any {
 	}
 
 	m := map[string]any{
-		"match_scope":       s.MatchScope,
-		"match_pattern":     flattenHeaderMatchPattern(s.MatchPattern),
-		"oversize_handling": s.OversizeHandling,
+		"match_scope":        s.MatchScope,
+		"match_pattern":      flattenHeaderMatchPattern(s.MatchPattern),
+		attrOversizeHandling: s.OversizeHandling,
 	}
 
 	return []any{m}
@@ -2880,23 +2880,23 @@ func flattenWebACLStatement(s *awstypes.Statement) map[string]any {
 	}
 
 	if s.AsnMatchStatement != nil {
-		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
+		m[attrASNMatchStatement] = flattenASNMatchStatement(s.AsnMatchStatement)
 	}
 
 	if s.ByteMatchStatement != nil {
-		m["byte_match_statement"] = flattenByteMatchStatement(s.ByteMatchStatement)
+		m[attrByteMatchStatement] = flattenByteMatchStatement(s.ByteMatchStatement)
 	}
 
 	if s.IPSetReferenceStatement != nil {
-		m["ip_set_reference_statement"] = flattenIPSetReferenceStatement(s.IPSetReferenceStatement)
+		m[attrIPSetReferenceStatement] = flattenIPSetReferenceStatement(s.IPSetReferenceStatement)
 	}
 
 	if s.GeoMatchStatement != nil {
-		m["geo_match_statement"] = flattenGeoMatchStatement(s.GeoMatchStatement)
+		m[attrGeoMatchStatement] = flattenGeoMatchStatement(s.GeoMatchStatement)
 	}
 
 	if s.LabelMatchStatement != nil {
-		m["label_match_statement"] = flattenLabelMatchStatement(s.LabelMatchStatement)
+		m[attrLabelMatchStatement] = flattenLabelMatchStatement(s.LabelMatchStatement)
 	}
 
 	if s.ManagedRuleGroupStatement != nil {
@@ -2916,11 +2916,11 @@ func flattenWebACLStatement(s *awstypes.Statement) map[string]any {
 	}
 
 	if s.RegexMatchStatement != nil {
-		m["regex_match_statement"] = flattenRegexMatchStatement(s.RegexMatchStatement)
+		m[attrRegexMatchStatement] = flattenRegexMatchStatement(s.RegexMatchStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {
-		m["regex_pattern_set_reference_statement"] = flattenRegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
+		m[attrRegexPatternSetReferenceStatement] = flattenRegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
 	}
 
 	if s.RuleGroupReferenceStatement != nil {
@@ -2928,15 +2928,15 @@ func flattenWebACLStatement(s *awstypes.Statement) map[string]any {
 	}
 
 	if s.SizeConstraintStatement != nil {
-		m["size_constraint_statement"] = flattenSizeConstraintStatement(s.SizeConstraintStatement)
+		m[attrSizeConstraintStatement] = flattenSizeConstraintStatement(s.SizeConstraintStatement)
 	}
 
 	if s.SqliMatchStatement != nil {
-		m["sqli_match_statement"] = flattenSQLiMatchStatement(s.SqliMatchStatement)
+		m[attrSQLiMatchStatement] = flattenSQLiMatchStatement(s.SqliMatchStatement)
 	}
 
 	if s.XssMatchStatement != nil {
-		m["xss_match_statement"] = flattenXSSMatchStatement(s.XssMatchStatement)
+		m[attrXSSMatchStatement] = flattenXSSMatchStatement(s.XssMatchStatement)
 	}
 
 	return m
@@ -2953,7 +2953,7 @@ func flattenWebACLRules(r []awstypes.Rule) any {
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
-		m["statement"] = flattenWebACLRootStatement(rule.Statement)
+		m[attrStatement] = flattenWebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
 		out[i] = m
 	}
@@ -3395,7 +3395,7 @@ func flattenRateLimitJa3Fingerprint(apiObject *awstypes.RateLimitJA3Fingerprint)
 	}
 	return []any{
 		map[string]any{
-			"fallback_behavior": apiObject.FallbackBehavior,
+			attrFallbackBehavior: apiObject.FallbackBehavior,
 		},
 	}
 }
@@ -3406,7 +3406,7 @@ func flattenRateLimitJa4Fingerprint(apiObject *awstypes.RateLimitJA4Fingerprint)
 	}
 	return []any{
 		map[string]any{
-			"fallback_behavior": apiObject.FallbackBehavior,
+			attrFallbackBehavior: apiObject.FallbackBehavior,
 		},
 	}
 }
