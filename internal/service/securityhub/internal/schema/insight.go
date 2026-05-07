@@ -4,6 +4,8 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -119,7 +121,7 @@ func InsightFiltersSchema() *schema.Schema {
 	}
 }
 
-func dateFilterSchema() *schema.Schema {
+var dateFilterSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -151,9 +153,9 @@ func dateFilterSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func ipFilterSchema() *schema.Schema {
+var ipFilterSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -168,7 +170,7 @@ func ipFilterSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func keywordFilterSchema() *schema.Schema {
 	return &schema.Schema{
@@ -186,7 +188,7 @@ func keywordFilterSchema() *schema.Schema {
 	}
 }
 
-func mapFilterSchema() *schema.Schema {
+var mapFilterSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -205,9 +207,9 @@ func mapFilterSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func numberFilterSchema() *schema.Schema {
+var numberFilterSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -232,9 +234,9 @@ func numberFilterSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func stringFilterSchema() *schema.Schema {
+var stringFilterSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -249,7 +251,7 @@ func stringFilterSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func workflowStatusSchema() *schema.Schema {
 	return &schema.Schema{
