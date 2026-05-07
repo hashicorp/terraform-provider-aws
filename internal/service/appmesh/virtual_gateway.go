@@ -158,7 +158,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"secret_name": {
+																			attrSecretName: {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
@@ -274,7 +274,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"secret_name": {
+																						attrSecretName: {
 																							Type:         schema.TypeString,
 																							Required:     true,
 																							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -489,7 +489,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"secret_name": {
+																attrSecretName: {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
@@ -565,7 +565,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"secret_name": {
+																			attrSecretName: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -1009,7 +1009,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 
 						mSds := vSds[0].(map[string]any)
 
-						if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+						if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 							sds.SecretName = aws.String(vSecretName)
 						}
 
@@ -1066,7 +1066,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 
 							mSds := vSds[0].(map[string]any)
 
-							if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+							if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 								sds.SecretName = aws.String(vSecretName)
 							}
 
@@ -1180,7 +1180,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 
 				mSds := vSds[0].(map[string]any)
 
-				if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+				if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 					sds.SecretName = aws.String(vSecretName)
 				}
 
@@ -1259,7 +1259,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 
 					mSds := vSds[0].(map[string]any)
 
-					if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+					if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 						sds.SecretName = aws.String(vSecretName)
 					}
 
@@ -1367,7 +1367,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 						mCertificate["file"] = []any{mFile}
 					case *awstypes.VirtualGatewayListenerTlsCertificateMemberSds:
 						mSds := map[string]any{
-							"secret_name": aws.ToString(v.Value.SecretName),
+							attrSecretName: aws.ToString(v.Value.SecretName),
 						}
 
 						mCertificate["sds"] = []any{mSds}
@@ -1405,7 +1405,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 							mTrust["file"] = []any{mFile}
 						case *awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberSds:
 							mSds := map[string]any{
-								"secret_name": aws.ToString(v.Value.SecretName),
+								attrSecretName: aws.ToString(v.Value.SecretName),
 							}
 
 							mTrust["sds"] = []any{mSds}
@@ -1498,7 +1498,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 				mCertificate["file"] = []any{mFile}
 			case *awstypes.VirtualGatewayClientTlsCertificateMemberSds:
 				mSds := map[string]any{
-					"secret_name": aws.ToString(v.Value.SecretName),
+					attrSecretName: aws.ToString(v.Value.SecretName),
 				}
 
 				mCertificate["sds"] = []any{mSds}
@@ -1542,7 +1542,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 					mTrust["file"] = []any{mFile}
 				case *awstypes.VirtualGatewayTlsValidationContextTrustMemberSds:
 					mSds := map[string]any{
-						"secret_name": aws.ToString(v.Value.SecretName),
+						attrSecretName: aws.ToString(v.Value.SecretName),
 					}
 
 					mTrust["sds"] = []any{mSds}

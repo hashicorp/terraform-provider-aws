@@ -144,7 +144,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"secret_name": {
+														attrSecretName: {
 															Type:     schema.TypeString,
 															Required: true,
 														},
@@ -240,7 +240,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 															MaxItems: 1,
 															Elem: &schema.Resource{
 																Schema: map[string]*schema.Schema{
-																	"secret_name": {
+																	attrSecretName: {
 																		Type:         schema.TypeString,
 																		Required:     true,
 																		ValidateFunc: validation.StringLenBetween(1, 255),
@@ -744,7 +744,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"secret_name": {
+																attrSecretName: {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
@@ -820,7 +820,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"secret_name": {
+																			attrSecretName: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),

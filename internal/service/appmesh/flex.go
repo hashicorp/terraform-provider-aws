@@ -53,7 +53,7 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 
 				mSds := vSds[0].(map[string]any)
 
-				if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+				if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 					sds.SecretName = aws.String(vSecretName)
 				}
 
@@ -135,7 +135,7 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 
 					mSds := vSds[0].(map[string]any)
 
-					if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+					if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 						sds.SecretName = aws.String(vSecretName)
 					}
 
@@ -950,7 +950,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 						mSds := vSds[0].(map[string]any)
 
-						if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+						if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 							sds.SecretName = aws.String(vSecretName)
 						}
 
@@ -1009,7 +1009,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 
 							mSds := vSds[0].(map[string]any)
 
-							if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+							if vSecretName, ok := mSds[attrSecretName].(string); ok && vSecretName != "" {
 								sds.SecretName = aws.String(vSecretName)
 							}
 
@@ -1248,7 +1248,7 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []any {
 				mCertificate["file"] = []any{mFile}
 			case *awstypes.ClientTlsCertificateMemberSds:
 				mSds := map[string]any{
-					"secret_name": aws.ToString(v.Value.SecretName),
+					attrSecretName: aws.ToString(v.Value.SecretName),
 				}
 
 				mCertificate["sds"] = []any{mSds}
@@ -1292,7 +1292,7 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []any {
 					mTrust["file"] = []any{mFile}
 				case *awstypes.TlsValidationContextTrustMemberSds:
 					mSds := map[string]any{
-						"secret_name": aws.ToString(v.Value.SecretName),
+						attrSecretName: aws.ToString(v.Value.SecretName),
 					}
 
 					mTrust["sds"] = []any{mSds}
@@ -1814,7 +1814,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 						mCertificate["file"] = []any{mFile}
 					case *awstypes.ListenerTlsCertificateMemberSds:
 						mSds := map[string]any{
-							"secret_name": aws.ToString(v.Value.SecretName),
+							attrSecretName: aws.ToString(v.Value.SecretName),
 						}
 
 						mCertificate["sds"] = []any{mSds}
@@ -1852,7 +1852,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 							mTrust["file"] = []any{mFile}
 						case *awstypes.ListenerTlsValidationContextTrustMemberSds:
 							mSds := map[string]any{
-								"secret_name": aws.ToString(v.Value.SecretName),
+								attrSecretName: aws.ToString(v.Value.SecretName),
 							}
 
 							mTrust["sds"] = []any{mSds}

@@ -5,5 +5,6 @@ package appmesh
 
 // Schema attribute name constants used across package
 const (
-	attrExact = "exact"
+	attrExact      = "exact"
+	attrSecretName = "secret_name"
 )
