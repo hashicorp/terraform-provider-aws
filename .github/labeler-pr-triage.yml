@@ -717,6 +717,12 @@ service/devicefarm:
           - any-glob-to-any-file:
               - 'internal/service/devicefarm/**/*'
               - 'website/**/devicefarm_*'
+service/devopsagent:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/devopsagent/**/*'
+              - 'website/**/devopsagent_*'
 service/devopsguru:
   - any:
       - changed-files:
