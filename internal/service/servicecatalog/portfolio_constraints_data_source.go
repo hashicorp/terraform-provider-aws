@@ -28,7 +28,7 @@ func dataSourcePortfolioConstraints() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -82,7 +82,7 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := waitPortfolioConstraintsReady(ctx, conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
+	output, err := waitPortfolioConstraintsReady(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Get("portfolio_id").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Portfolio Constraints: %s", err)
@@ -92,13 +92,13 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio Constraints: no results, change your input")
 	}
 
-	acceptLanguage := d.Get("accept_language").(string)
+	acceptLanguage := d.Get(attrAcceptLanguage).(string)
 
 	if acceptLanguage == "" {
 		acceptLanguage = acceptLanguageEnglish
 	}
 
-	d.Set("accept_language", acceptLanguage)
+	d.Set(attrAcceptLanguage, acceptLanguage)
 	d.Set("portfolio_id", d.Get("portfolio_id").(string))
 	d.Set("product_id", d.Get("product_id").(string))
 
@@ -106,7 +106,7 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting details: %s", err)
 	}
 
-	d.SetId(portfolioConstraintsID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
+	d.SetId(portfolioConstraintsID(d.Get(attrAcceptLanguage).(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
 	return diags
 }

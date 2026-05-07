@@ -55,7 +55,7 @@ func resourcePrincipalPortfolioAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -87,7 +87,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	acceptLanguage, principalARN, portfolioID, principalType := d.Get("accept_language").(string), d.Get("principal_arn").(string), d.Get("portfolio_id").(string), d.Get("principal_type").(string)
+	acceptLanguage, principalARN, portfolioID, principalType := d.Get(attrAcceptLanguage).(string), d.Get("principal_arn").(string), d.Get("portfolio_id").(string), d.Get("principal_type").(string)
 	id := principalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
 	input := &servicecatalog.AssociatePrincipalWithPortfolioInput{
 		AcceptLanguage: aws.String(acceptLanguage),
@@ -138,7 +138,7 @@ func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading Service Catalog Principal Portfolio Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("accept_language", acceptLanguage)
+	d.Set(attrAcceptLanguage, acceptLanguage)
 	d.Set("portfolio_id", portfolioID)
 	d.Set("principal_arn", output.PrincipalARN)
 	d.Set("principal_type", output.PrincipalType)
@@ -253,7 +253,7 @@ func findPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog
 func resourcePrincipalPortfolioAssociationV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -287,7 +287,7 @@ func principalPortfolioAssociationUpgradeV0(_ context.Context, rawState map[stri
 
 	// Is resource ID in the correct format?
 	if _, _, _, _, err := principalPortfolioAssociationParseResourceID(rawState[names.AttrID].(string)); err != nil {
-		acceptLanguage, principalARN, portfolioID, principalType := rawState["accept_language"].(string), rawState["principal_arn"].(string), rawState["portfolio_id"].(string), rawState["principal_type"].(string)
+		acceptLanguage, principalARN, portfolioID, principalType := rawState[attrAcceptLanguage].(string), rawState["principal_arn"].(string), rawState["portfolio_id"].(string), rawState["principal_type"].(string)
 		rawState[names.AttrID] = principalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
 	}
 

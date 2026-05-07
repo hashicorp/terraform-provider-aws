@@ -148,8 +148,8 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		Id:             aws.String(d.Id()),
 	}
 
-	if d.HasChange("accept_language") {
-		input.AcceptLanguage = aws.String(d.Get("accept_language").(string))
+	if d.HasChange(attrAcceptLanguage) {
+		input.AcceptLanguage = aws.String(d.Get(attrAcceptLanguage).(string))
 	}
 
 	if d.HasChange(names.AttrDescription) {

@@ -44,7 +44,7 @@ func resourceConstraint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -101,7 +101,7 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Type:             aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -151,7 +151,7 @@ func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := waitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := waitConstraintReady(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Constraint (%s) not found, removing from state", d.Id())
@@ -167,13 +167,13 @@ func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Constraint (%s): empty response", d.Id())
 	}
 
-	acceptLanguage := d.Get("accept_language").(string)
+	acceptLanguage := d.Get(attrAcceptLanguage).(string)
 
 	if acceptLanguage == "" {
 		acceptLanguage = acceptLanguageEnglish
 	}
 
-	d.Set("accept_language", acceptLanguage)
+	d.Set(attrAcceptLanguage, acceptLanguage)
 
 	d.Set(names.AttrParameters, output.ConstraintParameters)
 	d.Set(names.AttrStatus, output.Status)
@@ -197,8 +197,8 @@ func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		Id: aws.String(d.Id()),
 	}
 
-	if d.HasChange("accept_language") {
-		input.AcceptLanguage = aws.String(d.Get("accept_language").(string))
+	if d.HasChange(attrAcceptLanguage) {
+		input.AcceptLanguage = aws.String(d.Get(attrAcceptLanguage).(string))
 	}
 
 	if d.HasChange(names.AttrDescription) {
@@ -238,7 +238,7 @@ func resourceConstraintDelete(ctx context.Context, d *schema.ResourceData, meta 
 		Id: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -252,7 +252,7 @@ func resourceConstraintDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Constraint (%s): %s", d.Id(), err)
 	}
 
-	err = waitConstraintDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = waitConstraintDeleted(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Constraint (%s) to be deleted: %s", d.Id(), err)

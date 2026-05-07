@@ -29,7 +29,7 @@ func dataSourceProvisioningArtifacts() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Default:      acceptLanguageEnglish,
 				Optional:     true,
@@ -85,7 +85,7 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 
 	productID := d.Get("product_id").(string)
 	input := &servicecatalog.ListProvisioningArtifactsInput{
-		AcceptLanguage: aws.String(d.Get("accept_language").(string)),
+		AcceptLanguage: aws.String(d.Get(attrAcceptLanguage).(string)),
 		ProductId:      aws.String(productID),
 	}
 

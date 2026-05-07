@@ -27,7 +27,7 @@ func dataSourceConstraint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -74,7 +74,7 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := waitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
+	output, err := waitConstraintReady(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Constraint: %s", err)
@@ -84,13 +84,13 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Constraint: empty response")
 	}
 
-	acceptLanguage := d.Get("accept_language").(string)
+	acceptLanguage := d.Get(attrAcceptLanguage).(string)
 
 	if acceptLanguage == "" {
 		acceptLanguage = acceptLanguageEnglish
 	}
 
-	d.Set("accept_language", acceptLanguage)
+	d.Set(attrAcceptLanguage, acceptLanguage)
 
 	d.Set(names.AttrParameters, output.ConstraintParameters)
 	d.Set(names.AttrStatus, output.Status)

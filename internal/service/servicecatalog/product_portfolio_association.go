@@ -39,7 +39,7 @@ func resourceProductPortfolioAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -74,7 +74,7 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 		ProductId:   aws.String(d.Get("product_id").(string)),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -106,7 +106,7 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Product Portfolio Association: empty response")
 	}
 
-	d.SetId(productPortfolioAssociationCreateID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
+	d.SetId(productPortfolioAssociationCreateID(d.Get(attrAcceptLanguage).(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
 	return append(diags, resourceProductPortfolioAssociationRead(ctx, d, meta)...)
 }
@@ -137,7 +137,7 @@ func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Product Portfolio Association (%s): empty response", d.Id())
 	}
 
-	d.Set("accept_language", acceptLanguage)
+	d.Set(attrAcceptLanguage, acceptLanguage)
 	d.Set("portfolio_id", output.Id)
 	d.Set("product_id", productID)
 	d.Set("source_portfolio_id", d.Get("source_portfolio_id").(string))

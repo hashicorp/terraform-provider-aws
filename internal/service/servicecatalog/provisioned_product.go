@@ -54,7 +54,7 @@ func resourceProvisionedProduct() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -291,7 +291,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:                   getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -354,7 +354,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.ToString(output.RecordDetail.ProvisionedProductId))
 
-	if _, err := waitProvisionedProductReady(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitProvisionedProductReady(ctx, conn, d.Id(), d.Get(attrAcceptLanguage).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) create: %s", d.Id(), err)
 	}
 
@@ -373,7 +373,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	// DescribeRecord is available in the data source aws_servicecatalog_record.
 
 	acceptLanguage := acceptLanguageEnglish
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		acceptLanguage = v.(string)
 	}
 
@@ -465,7 +465,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		UpdateToken:          aws.String(create.UniqueId(ctx)),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -521,7 +521,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitProvisionedProductReady(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitProvisionedProductReady(ctx, conn, d.Id(), d.Get(attrAcceptLanguage).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		if failureErr, ok := errors.AsType[*provisionedProductFailureError](err); ok {
 			log.Printf("[WARN] Service Catalog Provisioned Product (%s) update failed with status %s, refreshing state", d.Id(), failureErr.Status)
 			refreshDiags := resourceProvisionedProductRead(ctx, d, meta)
@@ -556,7 +556,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -578,7 +578,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "terminating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutDelete))
+	_, err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get(attrAcceptLanguage).(string), d.Timeout(schema.TimeoutDelete))
 
 	if errs.IsA[*provisionedProductFailureError](err) {
 		input.IgnoreErrors = true
@@ -591,7 +591,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "terminating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 		}
 
-		_, err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutDelete))
+		_, err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get(attrAcceptLanguage).(string), d.Timeout(schema.TimeoutDelete))
 	}
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

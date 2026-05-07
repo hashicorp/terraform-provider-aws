@@ -36,7 +36,7 @@ func dataSourceProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -99,7 +99,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := waitProductReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
+	output, err := waitProductReady(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Product: %s", err)

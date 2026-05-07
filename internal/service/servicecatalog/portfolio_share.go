@@ -45,7 +45,7 @@ func resourcePortfolioShare() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -113,7 +113,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 	input := servicecatalog.CreatePortfolioShareInput{
 		PortfolioId:     aws.String(d.Get("portfolio_id").(string)),
 		SharePrincipals: d.Get("share_principals").(bool),
-		AcceptLanguage:  aws.String(d.Get("accept_language").(string)),
+		AcceptLanguage:  aws.String(d.Get(attrAcceptLanguage).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(awstypes.DescribePortfolioShareTypeAccount) {
@@ -229,7 +229,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	input := servicecatalog.UpdatePortfolioShareInput{
 		PortfolioId:    aws.String(d.Get("portfolio_id").(string)),
-		AcceptLanguage: aws.String(d.Get("accept_language").(string)),
+		AcceptLanguage: aws.String(d.Get(attrAcceptLanguage).(string)),
 	}
 
 	if d.HasChange("share_principals") {
@@ -285,7 +285,7 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 

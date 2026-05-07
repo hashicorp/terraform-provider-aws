@@ -50,7 +50,7 @@ func resourceProduct() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -182,7 +182,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta any
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -227,7 +227,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := waitProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := waitProductReady(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Product (%s) not found, removing from state", d.Id())
@@ -273,7 +273,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		Id: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -338,7 +338,7 @@ func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta any
 		Id: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -352,7 +352,7 @@ func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Product (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitProductDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitProductDeleted(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Product (%s) to be deleted: %s", d.Id(), err)
 	}
 

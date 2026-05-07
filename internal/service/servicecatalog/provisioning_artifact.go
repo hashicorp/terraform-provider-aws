@@ -44,7 +44,7 @@ func resourceProvisioningArtifact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -135,7 +135,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 		ProductId:        aws.String(d.Get("product_id").(string)),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -226,7 +226,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	if d.HasChanges("accept_language", "active", names.AttrDescription, "guidance", names.AttrName, "product_id") {
+	if d.HasChanges(attrAcceptLanguage, "active", names.AttrDescription, "guidance", names.AttrName, "product_id") {
 		artifactID, productID, err := provisioningArtifactParseID(d.Id())
 
 		if err != nil {
@@ -239,7 +239,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 			Active:                 aws.Bool(d.Get("active").(bool)),
 		}
 
-		if v, ok := d.GetOk("accept_language"); ok {
+		if v, ok := d.GetOk(attrAcceptLanguage); ok {
 			input.AcceptLanguage = aws.String(v.(string))
 		}
 
@@ -292,7 +292,7 @@ func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceD
 		ProvisioningArtifactId: aws.String(artifactID),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 

@@ -43,7 +43,7 @@ func resourceServiceAction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -107,7 +107,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 		DefinitionType:   awstypes.ServiceActionDefinitionType(d.Get("definition.0.type").(string)),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
@@ -149,7 +149,7 @@ func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := waitServiceActionReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := waitServiceActionReady(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Service Action (%s) not found, removing from state", d.Id())
@@ -187,8 +187,8 @@ func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, me
 		Id: aws.String(d.Id()),
 	}
 
-	if d.HasChange("accept_language") {
-		input.AcceptLanguage = aws.String(d.Get("accept_language").(string))
+	if d.HasChange(attrAcceptLanguage) {
+		input.AcceptLanguage = aws.String(d.Get(attrAcceptLanguage).(string))
 	}
 
 	if d.HasChange("definition") {
@@ -255,7 +255,7 @@ func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Service Action (%s): %s", d.Id(), err)
 	}
 
-	if err := waitServiceActionDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitServiceActionDeleted(ctx, conn, d.Get(attrAcceptLanguage).(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Service Action (%s) to be deleted: %s", d.Id(), err)
 	}
 

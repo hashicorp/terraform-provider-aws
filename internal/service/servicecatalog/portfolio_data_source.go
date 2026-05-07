@@ -33,7 +33,7 @@ func dataSourcePortfolio() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"accept_language": {
+			attrAcceptLanguage: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      acceptLanguageEnglish,
@@ -76,7 +76,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta a
 		Id: aws.String(d.Get(names.AttrID).(string)),
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
+	if v, ok := d.GetOk(attrAcceptLanguage); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
