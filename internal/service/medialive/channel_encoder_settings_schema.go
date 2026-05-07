@@ -149,7 +149,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bitrate": {
+													attrBitrate: {
 														Type:     schema.TypeFloat,
 														Optional: true,
 														Computed: true,
@@ -210,7 +210,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bitrate": {
+													attrBitrate: {
 														Type:     schema.TypeFloat,
 														Optional: true,
 														Computed: true,
@@ -259,7 +259,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bitrate": {
+													attrBitrate: {
 														Type:     schema.TypeFloat,
 														Optional: true,
 														Computed: true,
@@ -312,7 +312,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.Eac3AttenuationControl](),
 													},
-													"bitrate": {
+													attrBitrate: {
 														Type:     schema.TypeFloat,
 														Optional: true,
 														Computed: true,
@@ -429,7 +429,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bitrate": {
+													attrBitrate: {
 														Type:     schema.TypeFloat,
 														Optional: true,
 														Computed: true,
@@ -1365,7 +1365,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.AfdSignaling](),
 													},
-													"bitrate": {
+													attrBitrate: {
 														Type:     schema.TypeInt,
 														Optional: true,
 														Computed: true,
@@ -1636,7 +1636,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.H265AlternativeTransferFunction](),
 													},
-													"bitrate": {
+													attrBitrate: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
@@ -2860,7 +2860,7 @@ func m2tsSettingsSchema() *schema.Schema {
 					Optional:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsAudioStreamType](),
 				},
-				"bitrate": {
+				attrBitrate: {
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
@@ -3286,7 +3286,7 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []any) *types.AacSet
 	m := tfList[0].(map[string]any)
 
 	var out types.AacSettings
-	if v, ok := m["bitrate"].(float64); ok && v != 0.0 {
+	if v, ok := m[attrBitrate].(float64); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(v)
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
@@ -3325,7 +3325,7 @@ func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []any) *types.Ac3Set
 	m := tfList[0].(map[string]any)
 
 	var out types.Ac3Settings
-	if v, ok := m["bitrate"].(float64); ok && v != 0.0 {
+	if v, ok := m[attrBitrate].(float64); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(v)
 	}
 	if v, ok := m["bitstream_mode"].(string); ok && v != "" {
@@ -3358,7 +3358,7 @@ func expandAudioDescriptionsCodecSettingsEac3AtmosSettings(tfList []any) *types.
 	m := tfList[0].(map[string]any)
 
 	var out types.Eac3AtmosSettings
-	if v, ok := m["bitrate"].(float32); ok && v != 0.0 {
+	if v, ok := m[attrBitrate].(float32); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(float64(v))
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
@@ -3394,7 +3394,7 @@ func expandAudioDescriptionsCodecSettingsEac3Settings(tfList []any) *types.Eac3S
 	if v, ok := m["attenuation_control"].(string); ok && v != "" {
 		out.AttenuationControl = types.Eac3AttenuationControl(v)
 	}
-	if v, ok := m["bitrate"].(float32); ok && v != 0.0 {
+	if v, ok := m[attrBitrate].(float32); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(float64(v))
 	}
 	if v, ok := m["bitstream_mode"].(string); ok && v != "" {
@@ -3460,7 +3460,7 @@ func expandAudioDescriptionsCodecSettingsMp2Settings(tfList []any) *types.Mp2Set
 	m := tfList[0].(map[string]any)
 
 	var out types.Mp2Settings
-	if v, ok := m["bitrate"].(float32); ok && v != 0.0 {
+	if v, ok := m[attrBitrate].(float32); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(float64(v))
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
@@ -4730,7 +4730,7 @@ func expandM2tsSettings(tfList []any) *types.M2tsSettings {
 	if v, ok := m["audio_stream_type"].(string); ok && v != "" {
 		s.AudioStreamType = types.M2tsAudioStreamType(v)
 	}
-	if v, ok := m["bitrate"].(int); ok && v != 0 {
+	if v, ok := m[attrBitrate].(int); ok && v != 0 {
 		s.Bitrate = aws.Int32(int32(v))
 	}
 	if v, ok := m["buffer_model"].(string); ok && v != "" {
@@ -5439,7 +5439,7 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []any) *types.H264
 	if v, ok := m["afd_signaling"].(string); ok && v != "" {
 		out.AfdSignaling = types.AfdSignaling(v)
 	}
-	if v, ok := m["bitrate"].(int); ok && v != 0 {
+	if v, ok := m[attrBitrate].(int); ok && v != 0 {
 		out.Bitrate = aws.Int32(int32(v))
 	}
 	if v, ok := m["buf_fill_pct"].(int); ok && v != 0 {
@@ -5613,7 +5613,7 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []any) *types.H265
 	if v, ok := m["alternative_transfer_function"].(string); ok && v != "" {
 		out.AlternativeTransferFunction = types.H265AlternativeTransferFunction(v)
 	}
-	if v, ok := m["bitrate"].(int); ok && v != 0 {
+	if v, ok := m[attrBitrate].(int); ok && v != 0 {
 		out.Bitrate = aws.Int32(int32(v))
 	}
 	if v, ok := m["buf_size"].(int); ok && v != 0 {
@@ -6228,7 +6228,7 @@ func flattenM2tsSettings(in *types.M2tsSettings) []any {
 		"audio_frames_per_pes":        int(aws.ToInt32(in.AudioFramesPerPes)),
 		"audio_pids":                  aws.ToString(in.AudioPids),
 		"audio_stream_type":           string(in.AudioStreamType),
-		"bitrate":                     int(aws.ToInt32(in.Bitrate)),
+		attrBitrate:                   int(aws.ToInt32(in.Bitrate)),
 		"buffer_model":                string(in.BufferModel),
 		"cc_descriptor":               string(in.CcDescriptor),
 		"dvb_nit_settings":            flattenDvbNitSettings(in.DvbNitSettings),
@@ -7008,7 +7008,7 @@ func flattenCodecSettingsH264Settings(in *types.H264Settings) []any {
 	m := map[string]any{
 		"adaptive_quantization":   string(in.AdaptiveQuantization),
 		"afd_signaling":           string(in.AfdSignaling),
-		"bitrate":                 int(aws.ToInt32(in.Bitrate)),
+		attrBitrate:               int(aws.ToInt32(in.Bitrate)),
 		"buf_fill_pct":            int(aws.ToInt32(in.BufFillPct)),
 		"buf_size":                int(aws.ToInt32(in.BufSize)),
 		"color_metadata":          string(in.ColorMetadata),
@@ -7086,7 +7086,7 @@ func flattenCodecSettingsH265Settings(in *types.H265Settings) []any {
 		"adaptive_quantization":         string(in.AdaptiveQuantization),
 		"afd_signaling":                 string(in.AfdSignaling),
 		"alternative_transfer_function": string(in.AlternativeTransferFunction),
-		"bitrate":                       int(aws.ToInt32(in.Bitrate)),
+		attrBitrate:                     int(aws.ToInt32(in.Bitrate)),
 		"buf_size":                      int(aws.ToInt32(in.BufSize)),
 		"color_metadata":                string(in.ColorMetadata),
 		"color_space_settings":          flattenH265ColorSpaceSettings(in.ColorSpaceSettings),
@@ -7264,7 +7264,7 @@ func flattenCodecSettingsAacSettings(in *types.AacSettings) []any {
 	}
 
 	m := map[string]any{
-		"bitrate":           in.Bitrate,
+		attrBitrate:         in.Bitrate,
 		"coding_mode":       string(in.CodingMode),
 		"input_type":        string(in.InputType),
 		names.AttrProfile:   string(in.Profile),
@@ -7284,7 +7284,7 @@ func flattenCodecSettingsAc3Settings(in *types.Ac3Settings) []any {
 	}
 
 	m := map[string]any{
-		"bitrate":          in.Bitrate,
+		attrBitrate:        in.Bitrate,
 		"bitstream_mode":   string(in.BitstreamMode),
 		"coding_mode":      string(in.CodingMode),
 		"dialnorm":         int(aws.ToInt32(in.Dialnorm)),
@@ -7302,7 +7302,7 @@ func flattenCodecSettingsEac3AtmosSettings(in *types.Eac3AtmosSettings) []any {
 	}
 
 	m := map[string]any{
-		"bitrate":       float32(aws.ToFloat64(in.Bitrate)),
+		attrBitrate:     float32(aws.ToFloat64(in.Bitrate)),
 		"coding_mode":   string(in.CodingMode),
 		"dialnorm":      int(aws.ToInt32(in.Dialnorm)),
 		"drc_line":      string(in.DrcLine),
@@ -7321,7 +7321,7 @@ func flattenCodecSettingsEac3Settings(in *types.Eac3Settings) []any {
 
 	m := map[string]any{
 		"attenuation_control":      string(in.AttenuationControl),
-		"bitrate":                  float32(aws.ToFloat64(in.Bitrate)),
+		attrBitrate:                float32(aws.ToFloat64(in.Bitrate)),
 		"bitstream_mode":           string(in.BitstreamMode),
 		"coding_mode":              string(in.CodingMode),
 		"dc_filter":                string(in.DcFilter),
@@ -7351,7 +7351,7 @@ func flattenCodecSettingsMp2Settings(in *types.Mp2Settings) []any {
 	}
 
 	m := map[string]any{
-		"bitrate":     float32(aws.ToFloat64(in.Bitrate)),
+		attrBitrate:   float32(aws.ToFloat64(in.Bitrate)),
 		"coding_mode": string(in.CodingMode),
 		"sample_rate": float32(aws.ToFloat64(in.SampleRate)),
 	}
