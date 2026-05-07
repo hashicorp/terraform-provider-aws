@@ -110,6 +110,140 @@ func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreBrowser_browserSigning(t *testing.T) {
+	ctx := acctest.Context(t)
+	var browser bedrockagentcorecontrol.GetBrowserOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_browser.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckBrowser(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrowserConfig_browserSigning(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_signing"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrEnabled: knownvalue.Bool(true),
+					})})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_id"),
+				ImportStateVerifyIdentifierAttribute: "browser_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreBrowser_enterprisePolicies(t *testing.T) {
+	ctx := acctest.Context(t)
+	var browser bedrockagentcorecontrol.GetBrowserOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	resourceName := "aws_bedrockagentcore_browser.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckBrowser(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrowserConfig_enterprisePolicies(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enterprise_policies"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrType: tfknownvalue.StringExact(awstypes.BrowserEnterprisePolicyTypeManaged),
+						names.AttrLocation: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"s3": knownvalue.ListSizeExact(1),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_id"),
+				ImportStateVerifyIdentifierAttribute: "browser_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreBrowser_certificates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var browser bedrockagentcorecontrol.GetBrowserOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_browser.test"
+
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckBrowser(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrowserConfig_certificates(rName, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificates"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_id"),
+				ImportStateVerifyIdentifierAttribute: "browser_id",
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
@@ -474,4 +608,168 @@ resource "aws_bedrockagentcore_browser" "test" {
   }
 }
 `, rName))
+}
+
+func testAccBrowserConfig_enterprisePolicies(rName, bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+}
+
+data "aws_iam_policy_document" "test_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": ["s3:GetObject", "s3:GetObjectVersion"],
+    "Resource": "*"
+  }
+}
+EOF
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "managed.json"
+  content = jsonencode({
+    AutofillAddressEnabled    = false
+    AutofillCreditCardEnabled = false
+    PasswordManagerEnabled    = false
+  })
+}
+
+resource "aws_bedrockagentcore_browser" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  enterprise_policies {
+    type = "MANAGED"
+    location {
+      s3 {
+        bucket = aws_s3_bucket.test.bucket
+        prefix = aws_s3_object.test.key
+      }
+    }
+  }
+}
+`, rName, bucketName)
+}
+
+func testAccBrowserConfig_certificates(rName, certificate string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+}
+
+data "aws_iam_policy_document" "test_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": ["secretsmanager:GetSecretValue"],
+    "Resource": "*"
+  }
+}
+EOF
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = %[2]q
+}
+
+resource "aws_bedrockagentcore_browser" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  certificates {
+    location {
+      secrets_manager {
+        secret_arn = aws_secretsmanager_secret_version.test.arn
+      }
+    }
+  }
+}
+`, rName, certificate)
+}
+
+func testAccBrowserConfig_browserSigning(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_bedrockagentcore_browser" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  browser_signing {
+    enabled = %[2]t
+  }
+}
+`, rName, enabled)
 }

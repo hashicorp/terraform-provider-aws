@@ -7,6 +7,7 @@ package bedrockagentcore
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -182,6 +184,159 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"browser_signing": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[browserSigningConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrEnabled: schema.BoolAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+			},
+			"enterprise_policies": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[browserEnterprisePolicyModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(100),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrType: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.BrowserEnterprisePolicyType](),
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						names.AttrLocation: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[resourceLocationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"s3": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[s3LocationFullModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ExactlyOneOf(
+												// If another member is added to the union, this will need to be updated.
+												path.MatchRelative().AtParent().AtName("s3"),
+											),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrBucket: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												names.AttrPrefix: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 1024),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"version_id": schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(3, 1024),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"certificates": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[certificateModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(200),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						names.AttrLocation: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[certificateLocationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"secrets_manager": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[secretsManagerLocationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ExactlyOneOf(
+												// If another member is added to the union, this will need to be updated.
+												path.MatchRelative().AtParent().AtName("secrets_manager"),
+											),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"secret_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
 										},
 									},
 								},
@@ -397,7 +552,10 @@ type browserResourceModel struct {
 	framework.WithRegionModel
 	BrowserARN           types.String                                                      `tfsdk:"browser_arn"`
 	BrowserID            types.String                                                      `tfsdk:"browser_id"`
+	BrowserSigning       fwtypes.ListNestedObjectValueOf[browserSigningConfigModel]        `tfsdk:"browser_signing"`
+	Certificates         fwtypes.ListNestedObjectValueOf[certificateModel]                 `tfsdk:"certificates"`
 	Description          types.String                                                      `tfsdk:"description"`
+	EnterprisePolicies   fwtypes.ListNestedObjectValueOf[browserEnterprisePolicyModel]     `tfsdk:"enterprise_policies"`
 	ExecutionRoleARN     fwtypes.ARN                                                       `tfsdk:"execution_role_arn"`
 	Name                 types.String                                                      `tfsdk:"name"`
 	NetworkConfiguration fwtypes.ListNestedObjectValueOf[browserNetworkConfigurationModel] `tfsdk:"network_configuration"`
@@ -420,4 +578,123 @@ type recordingConfigModel struct {
 type s3LocationModel struct {
 	Bucket types.String `tfsdk:"bucket"`
 	Prefix types.String `tfsdk:"prefix"`
+}
+
+type browserSigningConfigModel struct {
+	Enabled types.Bool `tfsdk:"enabled"`
+}
+
+type browserEnterprisePolicyModel struct {
+	Location fwtypes.ListNestedObjectValueOf[resourceLocationModel]    `tfsdk:"location"`
+	Type     fwtypes.StringEnum[awstypes.BrowserEnterprisePolicyType] `tfsdk:"type"`
+}
+
+type resourceLocationModel struct {
+	S3 fwtypes.ListNestedObjectValueOf[s3LocationFullModel] `tfsdk:"s3"`
+}
+
+type s3LocationFullModel struct {
+	Bucket    types.String `tfsdk:"bucket"`
+	Prefix    types.String `tfsdk:"prefix"`
+	VersionID types.String `tfsdk:"version_id"`
+}
+
+var (
+	_ fwflex.Expander  = resourceLocationModel{}
+	_ fwflex.Flattener = &resourceLocationModel{}
+)
+
+func (m *resourceLocationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.ResourceLocationMemberS3:
+		var data s3LocationFullModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("resource location flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m resourceLocationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.S3.IsNull():
+		data, d := m.S3.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ResourceLocationMemberS3
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
+}
+
+type certificateModel struct {
+	Location fwtypes.ListNestedObjectValueOf[certificateLocationModel] `tfsdk:"location"`
+}
+
+type certificateLocationModel struct {
+	SecretsManager fwtypes.ListNestedObjectValueOf[secretsManagerLocationModel] `tfsdk:"secrets_manager"`
+}
+
+type secretsManagerLocationModel struct {
+	SecretARN fwtypes.ARN `tfsdk:"secret_arn"`
+}
+
+var (
+	_ fwflex.Expander  = certificateLocationModel{}
+	_ fwflex.Flattener = &certificateLocationModel{}
+)
+
+func (m *certificateLocationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.CertificateLocationMemberSecretsManager:
+		var data secretsManagerLocationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.SecretsManager = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("certificate location flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m certificateLocationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.SecretsManager.IsNull():
+		data, d := m.SecretsManager.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.CertificateLocationMemberSecretsManager
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
 }
