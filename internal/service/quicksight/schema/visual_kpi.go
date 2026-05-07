@@ -81,7 +81,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"color":              hexColorSchema(attrOptional),
+													attrColor:            hexColorSchema(attrOptional),
 													"tooltip_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 													names.AttrType:       stringEnumSchema[awstypes.KPISparklineType](attrRequired),
 													attrVisibility:       stringEnumSchema[awstypes.Visibility](attrOptional),
@@ -123,7 +123,7 @@ func kpiVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -138,7 +138,7 @@ func kpiVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrColumnHierarchies: columnHierarchiesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
 				"conditional_formatting": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConditionalFormatting.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -237,7 +237,7 @@ func expandKPIVisual(tfList []any) *awstypes.KPIVisual {
 	if v, ok := tfMap["conditional_formatting"].([]any); ok && len(v) > 0 {
 		apiObject.ConditionalFormatting = expandKPIConditionalFormatting(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
@@ -268,7 +268,7 @@ func expandKPIConfiguration(tfList []any) *awstypes.KPIConfiguration {
 	if v, ok := tfMap["kpi_options"].([]any); ok && len(v) > 0 {
 		apiObject.KPIOptions = expandKPIOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandKPISortConfiguration(v)
 	}
 
@@ -392,7 +392,7 @@ func expandKPISparklineOptions(tfList []any) *awstypes.KPISparklineOptions {
 
 	apiObject := &awstypes.KPISparklineOptions{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["tooltip_visibility"].(string); ok && v != "" {
@@ -654,7 +654,7 @@ func flattenKPIVisual(apiObject *awstypes.KPIVisual) []any {
 		tfMap["conditional_formatting"] = flattenKPIConditionalFormatting(apiObject.ConditionalFormatting)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -680,7 +680,7 @@ func flattenKPIConfiguration(apiObject *awstypes.KPIConfiguration) []any {
 		tfMap["kpi_options"] = flattenKPIOptions(apiObject.KPIOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenKPISortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenKPISortConfiguration(apiObject.SortConfiguration)
 	}
 
 	return []any{tfMap}
@@ -774,7 +774,7 @@ func flattenKPISparklineOptions(apiObject *awstypes.KPISparklineOptions) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	tfMap["tooltip_visibility"] = apiObject.TooltipVisibility
 	tfMap[names.AttrType] = apiObject.Type

@@ -254,7 +254,7 @@ func lineChartVisualSchema() *schema.Schema {
 								},
 							},
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -278,9 +278,9 @@ func lineChartVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -347,7 +347,7 @@ func expandLineChartVisual(tfList []any) *awstypes.LineChartVisual {
 	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandLineChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
@@ -414,7 +414,7 @@ func expandLineChartConfiguration(tfList []any) *awstypes.LineChartConfiguration
 	if v, ok := tfMap["small_multiples_options"].([]any); ok && len(v) > 0 {
 		apiObject.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandLineChartSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
@@ -932,7 +932,7 @@ func flattenLineChartVisual(apiObject *awstypes.LineChartVisual) []any {
 		tfMap[attrChartConfiguration] = flattenLineChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -991,7 +991,7 @@ func flattenLineChartConfiguration(apiObject *awstypes.LineChartConfiguration) [
 		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenLineChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenLineChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)

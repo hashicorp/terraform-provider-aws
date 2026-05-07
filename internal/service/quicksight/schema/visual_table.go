@@ -199,7 +199,7 @@ func tableVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -390,7 +390,7 @@ func expandTableConfiguration(tfList []any) *awstypes.TableConfiguration {
 	if v, ok := tfMap["paginated_report_options"].([]any); ok && len(v) > 0 {
 		apiObject.PaginatedReportOptions = expandTablePaginatedReportOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandTableSortConfiguration(v)
 	}
 	if v, ok := tfMap["table_inline_visualizations"].([]any); ok && len(v) > 0 {
@@ -1045,7 +1045,7 @@ func flattenTableConfiguration(apiObject *awstypes.TableConfiguration) []any {
 		tfMap["paginated_report_options"] = flattenTablePaginatedReportOptions(apiObject.PaginatedReportOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenTableSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenTableSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.TableInlineVisualizations != nil {
 		tfMap["table_inline_visualizations"] = flattenTableInlineVisualization(apiObject.TableInlineVisualizations)

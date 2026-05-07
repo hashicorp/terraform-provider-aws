@@ -57,7 +57,7 @@ func treeMapVisualSchema() *schema.Schema {
 							"group_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"legend":              legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"size_label_options":  chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -74,9 +74,9 @@ func treeMapVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -103,7 +103,7 @@ func expandTreeMapVisual(tfList []any) *awstypes.TreeMapVisual {
 	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandTreeMapConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
@@ -149,7 +149,7 @@ func expandTreeMapConfiguration(tfList []any) *awstypes.TreeMapConfiguration {
 	if v, ok := tfMap["size_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.SizeLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandTreeMapSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
@@ -241,7 +241,7 @@ func flattenTreeMapVisual(apiObject *awstypes.TreeMapVisual) []any {
 		tfMap[attrChartConfiguration] = flattenTreeMapConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -282,7 +282,7 @@ func flattenTreeMapConfiguration(apiObject *awstypes.TreeMapConfiguration) []any
 		tfMap["size_label_options"] = flattenChartAxisLabelOptions(apiObject.SizeLabelOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenTreeMapSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenTreeMapSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)

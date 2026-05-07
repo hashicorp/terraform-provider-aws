@@ -62,7 +62,7 @@ func barCharVisualSchema() *schema.Schema {
 							"orientation":             stringEnumSchema[awstypes.BarChartOrientation](attrOptionalComputed),
 							"reference_lines":         referenceLineSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -86,9 +86,9 @@ func barCharVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -115,7 +115,7 @@ func expandBarChartVisual(tfList []any) *awstypes.BarChartVisual {
 	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandBarChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
@@ -173,7 +173,7 @@ func expandBarChartConfiguration(tfList []any) *awstypes.BarChartConfiguration {
 	if v, ok := tfMap["small_multiples_options"].([]any); ok && len(v) > 0 {
 		apiObject.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandBarChartSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
@@ -288,7 +288,7 @@ func flattenBarChartVisual(apiObject *awstypes.BarChartVisual) []any {
 		tfMap[attrChartConfiguration] = flattenBarChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -337,7 +337,7 @@ func flattenBarChartConfiguration(apiObject *awstypes.BarChartConfiguration) []a
 		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenBarChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenBarChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)

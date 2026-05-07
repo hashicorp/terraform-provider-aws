@@ -5,11 +5,15 @@ package schema
 
 // Schema attribute name constants used across package
 const (
+	attrAvailabilityStatus = "availability_status"
 	attrChartConfiguration = "chart_configuration"
+	attrColor              = "color"
 	attrColumn             = "column"
+	attrColumnHierarchies  = "column_hierarchies"
 	attrFieldID            = "field_id"
 	attrFieldWells         = "field_wells"
 	attrHost               = "host"
+	attrSortConfiguration  = "sort_configuration"
 	attrSubtitle           = "subtitle"
 	attrTitle              = "title"
 	attrVisibility         = "visibility"

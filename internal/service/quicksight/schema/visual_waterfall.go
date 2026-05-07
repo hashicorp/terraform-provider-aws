@@ -57,7 +57,7 @@ func waterfallVisualSchema() *schema.Schema {
 							"legend":                         legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"primary_y_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"primary_y_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -88,9 +88,9 @@ func waterfallVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -117,7 +117,7 @@ func expandWaterfallVisual(tfList []any) *awstypes.WaterfallVisual {
 	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandWaterfallChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
@@ -163,7 +163,7 @@ func expandWaterfallChartConfiguration(tfList []any) *awstypes.WaterfallChartCon
 	if v, ok := tfMap["primary_y_axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryYAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandWaterfallChartSortConfiguration(v)
 	}
 	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
@@ -277,7 +277,7 @@ func flattenWaterfallVisual(apiObject *awstypes.WaterfallVisual) []any {
 		tfMap[attrChartConfiguration] = flattenWaterfallChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -318,7 +318,7 @@ func flattenWaterfallChartConfiguration(apiObject *awstypes.WaterfallChartConfig
 		tfMap["primary_y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.PrimaryYAxisLabelOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenWaterfallChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenWaterfallChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.VisualPalette != nil {
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)

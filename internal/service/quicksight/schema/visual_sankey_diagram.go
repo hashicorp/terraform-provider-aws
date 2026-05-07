@@ -52,7 +52,7 @@ func sankeyDiagramVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -125,7 +125,7 @@ func expandSankeyDiagramConfiguration(tfList []any) *awstypes.SankeyDiagramChart
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandSankeyDiagramFieldWells(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandSankeyDiagramSortConfiguration(v)
 	}
 
@@ -240,7 +240,7 @@ func flattenSankeyDiagramChartConfiguration(apiObject *awstypes.SankeyDiagramCha
 		tfMap[attrFieldWells] = flattenSankeyDiagramFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenSankeyDiagramSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenSankeyDiagramSortConfiguration(apiObject.SortConfiguration)
 	}
 
 	return []any{tfMap}

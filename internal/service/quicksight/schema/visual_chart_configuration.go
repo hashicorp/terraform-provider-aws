@@ -366,7 +366,7 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":   hexColorSchema(attrOptional),
+							attrColor: hexColorSchema(attrOptional),
 							"pattern": stringEnumSchema[awstypes.ReferenceLinePatternType](attrOptional),
 						},
 					},
@@ -1067,7 +1067,7 @@ func expandReferenceLineStyleConfiguration(tfList []any) *awstypes.ReferenceLine
 
 	apiObject := &awstypes.ReferenceLineStyleConfiguration{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["pattern"].(string); ok && v != "" {
@@ -1655,7 +1655,7 @@ func flattenReferenceLineStyleConfiguration(apiObject *awstypes.ReferenceLineSty
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	tfMap["pattern"] = apiObject.Pattern
 

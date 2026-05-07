@@ -80,7 +80,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"color": hexColorSchema(attrOptional),
+																			attrColor: hexColorSchema(attrOptional),
 																		},
 																	},
 																},
@@ -100,9 +100,9 @@ func geospatialMapVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -129,7 +129,7 @@ func expandGeospatialMapVisual(tfList []any) *awstypes.GeospatialMapVisual {
 	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandGeospatialMapConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
@@ -295,7 +295,7 @@ func expandSimpleClusterMarker(tfList []any) *awstypes.SimpleClusterMarker {
 
 	apiObject := &awstypes.SimpleClusterMarker{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 
@@ -318,7 +318,7 @@ func flattenGeospatialMapVisual(apiObject *awstypes.GeospatialMapVisual) []any {
 		tfMap[attrChartConfiguration] = flattenGeospatialMapConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -446,7 +446,7 @@ func flattenSimpleClusterMarker(apiObject *awstypes.SimpleClusterMarker) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 
 	return []any{tfMap}

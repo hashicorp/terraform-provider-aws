@@ -163,7 +163,7 @@ var visualPaletteSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 5000,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":            hexColorSchema(attrRequired),
+							attrColor:          hexColorSchema(attrRequired),
 							"element":          dataPathValueSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
 							"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrOptional),
 						},
@@ -366,7 +366,7 @@ var colorScaleSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 3,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": hexColorSchema(attrOptional),
+							attrColor: hexColorSchema(attrOptional),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -381,7 +381,7 @@ var colorScaleSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": hexColorSchema(attrOptional),
+							attrColor: hexColorSchema(attrOptional),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -992,7 +992,7 @@ func expandDataPathColor(tfMap map[string]any) *awstypes.DataPathColor {
 
 	apiObject := &awstypes.DataPathColor{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
@@ -1325,7 +1325,7 @@ func expandDataColor(tfList []any) *awstypes.DataColor {
 func expandDataColorInternal(tfMap map[string]any) *awstypes.DataColor {
 	apiObject := &awstypes.DataColor{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["data_value"].(float64); ok {
@@ -1714,7 +1714,7 @@ func flattenDataPathColor(apiObjects []awstypes.DataPathColor) []any {
 		tfMap := map[string]any{}
 
 		if apiObject.Color != nil {
-			tfMap["color"] = aws.ToString(apiObject.Color)
+			tfMap[attrColor] = aws.ToString(apiObject.Color)
 		}
 		if apiObject.Element != nil {
 			tfMap["element"] = flattenDataPathValue(apiObject.Element)
@@ -2019,7 +2019,7 @@ func flattenDataColor(apiObject *awstypes.DataColor) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	if apiObject.DataValue != nil {
 		tfMap["data_value"] = aws.ToFloat64(apiObject.DataValue)
@@ -2039,7 +2039,7 @@ func flattenDataColors(apiObject []awstypes.DataColor) []any {
 		tfMap := map[string]any{}
 
 		if apiObject.Color != nil {
-			tfMap["color"] = aws.ToString(apiObject.Color)
+			tfMap[attrColor] = aws.ToString(apiObject.Color)
 		}
 		if apiObject.DataValue != nil {
 			tfMap["data_value"] = aws.ToFloat64(apiObject.DataValue)

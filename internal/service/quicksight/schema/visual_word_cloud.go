@@ -51,7 +51,7 @@ func wordCloudVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -83,9 +83,9 @@ func wordCloudVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -112,7 +112,7 @@ func expandWordCloudVisual(tfList []any) *awstypes.WordCloudVisual {
 	if v, ok := tfMap[attrChartConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandWordCloudChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap[attrSubtitle].([]any); ok && len(v) > 0 {
@@ -143,7 +143,7 @@ func expandWordCloudChartConfiguration(tfList []any) *awstypes.WordCloudChartCon
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandWordCloudFieldWells(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandWordCloudSortConfiguration(v)
 	}
 	if v, ok := tfMap["word_cloud_options"].([]any); ok && len(v) > 0 {
@@ -266,7 +266,7 @@ func flattenWordCloudVisual(apiObject *awstypes.WordCloudVisual) []any {
 		tfMap[attrChartConfiguration] = flattenWordCloudChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap[attrSubtitle] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -292,7 +292,7 @@ func flattenWordCloudChartConfiguration(apiObject *awstypes.WordCloudChartConfig
 		tfMap[attrFieldWells] = flattenWordCloudFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenWordCloudSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenWordCloudSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.WordCloudOptions != nil {
 		tfMap["word_cloud_options"] = flattenWordCloudOptions(apiObject.WordCloudOptions)

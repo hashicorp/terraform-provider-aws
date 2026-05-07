@@ -117,7 +117,7 @@ func pivotTableVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -258,7 +258,7 @@ var tableBorderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color":     hexColorSchema(attrOptional),
+				attrColor:   hexColorSchema(attrOptional),
 				"style":     stringEnumSchema[awstypes.TableBorderStyle](attrOptional),
 				"thickness": intBetweenSchema(attrOptional, 1, 4),
 			},
@@ -461,7 +461,7 @@ func expandPivotTableConfiguration(tfList []any) *awstypes.PivotTableConfigurati
 	if v, ok := tfMap["paginated_report_options"].([]any); ok && len(v) > 0 {
 		apiObject.PaginatedReportOptions = expandPivotTablePaginatedReportOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandPivotTableSortConfiguration(v)
 	}
 	if v, ok := tfMap["table_options"].([]any); ok && len(v) > 0 {
@@ -908,7 +908,7 @@ func expandTableBorderOptions(tfList []any) *awstypes.TableBorderOptions {
 
 	apiObject := &awstypes.TableBorderOptions{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["style"].(string); ok && v != "" {
@@ -1229,7 +1229,7 @@ func flattenPivotTableConfiguration(apiObject *awstypes.PivotTableConfiguration)
 		tfMap["paginated_report_options"] = flattenPivotTablePaginatedReportOptions(apiObject.PaginatedReportOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenPivotTableSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenPivotTableSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.TableOptions != nil {
 		tfMap["table_options"] = flattenPivotTableOptions(apiObject.TableOptions)
@@ -1517,7 +1517,7 @@ func flattenTableBorderOptions(apiObject *awstypes.TableBorderOptions) []any {
 	}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	if apiObject.Thickness != nil {
 		tfMap["thickness"] = aws.ToInt32(apiObject.Thickness)
