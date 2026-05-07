@@ -46,7 +46,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 			names.AttrEnabled: schema.BoolAttribute{
 				Required: true,
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),

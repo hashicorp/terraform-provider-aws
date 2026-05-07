@@ -66,7 +66,7 @@ func (r *connectionGroupResource) Schema(ctx context.Context, req resource.Schem
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),

@@ -341,7 +341,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1086,7 +1086,7 @@ func resourceDistributionFlatten(ctx context.Context, awsClient *conns.AWSClient
 	d.Set("default_root_object", distributionConfig.DefaultRootObject)
 	d.Set(names.AttrDomainName, output.Distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
 	d.Set(names.AttrHostedZoneID, awsClient.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
@@ -1157,7 +1157,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		input := cloudfront.UpdateDistributionInput{
 			DistributionConfig: expandDistributionConfig(d),
 			Id:                 aws.String(d.Id()),
-			IfMatch:            aws.String(d.Get("etag").(string)),
+			IfMatch:            aws.String(d.Get(attrEtag).(string)),
 		}
 
 		// ACM and IAM certificate eventual consistency.

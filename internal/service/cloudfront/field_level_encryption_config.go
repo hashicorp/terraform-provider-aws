@@ -92,7 +92,7 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 					},
 				},
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -200,7 +200,7 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 	} else {
 		d.Set("content_type_profile_config", nil)
 	}
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	if apiObject.QueryArgProfileConfig != nil {
 		if err := d.Set("query_arg_profile_config", []any{flattenQueryArgProfileConfig(apiObject.QueryArgProfileConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting query_arg_profile_config: %s", err)
@@ -235,7 +235,7 @@ func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.Res
 	input := &cloudfront.UpdateFieldLevelEncryptionConfigInput{
 		FieldLevelEncryptionConfig: apiObject,
 		Id:                         aws.String(d.Id()),
-		IfMatch:                    aws.String(d.Get("etag").(string)),
+		IfMatch:                    aws.String(d.Get(attrEtag).(string)),
 	}
 
 	_, err := conn.UpdateFieldLevelEncryptionConfig(ctx, input)
@@ -254,7 +254,7 @@ func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.Res
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Config: (%s)", d.Id())
 	input := cloudfront.DeleteFieldLevelEncryptionConfigInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 	}
 	_, err := conn.DeleteFieldLevelEncryptionConfig(ctx, &input)
 

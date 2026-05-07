@@ -5,5 +5,6 @@ package cloudfront
 
 // Schema attribute name constants used across package
 const (
+	attrEtag  = "etag"
 	attrItems = "items"
 )

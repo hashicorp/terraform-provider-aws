@@ -73,7 +73,7 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),

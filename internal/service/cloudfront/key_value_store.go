@@ -60,7 +60,7 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),

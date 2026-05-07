@@ -59,7 +59,7 @@ func (d *distributionTenantDataSource) Schema(ctx context.Context, _ datasource.
 			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
-			"etag": schema.StringAttribute{
+			attrEtag: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{

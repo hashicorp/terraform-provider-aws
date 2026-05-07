@@ -50,7 +50,7 @@ func resourceCachePolicy() *schema.Resource {
 				Optional: true,
 				Default:  86400,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -227,7 +227,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 	apiObject := output.CachePolicy.CachePolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set("max_ttl", apiObject.MaxTTL)
 	d.Set("min_ttl", apiObject.MinTTL)
 	d.Set(names.AttrName, apiObject.Name)
@@ -268,7 +268,7 @@ func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta
 	input := &cloudfront.UpdateCachePolicyInput{
 		CachePolicyConfig: apiObject,
 		Id:                aws.String(d.Id()),
-		IfMatch:           aws.String(d.Get("etag").(string)),
+		IfMatch:           aws.String(d.Get(attrEtag).(string)),
 	}
 
 	_, err := conn.UpdateCachePolicy(ctx, input)
@@ -287,7 +287,7 @@ func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
 	input := cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
+		IfMatch: aws.String(d.Get(attrEtag).(string)),
 	}
 	_, err := conn.DeleteCachePolicy(ctx, &input)
 

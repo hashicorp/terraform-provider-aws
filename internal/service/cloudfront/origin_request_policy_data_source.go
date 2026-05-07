@@ -56,7 +56,7 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -178,7 +178,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	} else {
 		d.Set("cookies_config", nil)
 	}
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	if apiObject.HeadersConfig != nil {
 		if err := d.Set("headers_config", []any{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)

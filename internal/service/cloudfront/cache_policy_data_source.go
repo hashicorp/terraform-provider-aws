@@ -35,7 +35,7 @@ func dataSourceCachePolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"etag": {
+			attrEtag: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -199,7 +199,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	apiObject := output.CachePolicy.CachePolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)
-	d.Set("etag", output.ETag)
+	d.Set(attrEtag, output.ETag)
 	d.Set("max_ttl", apiObject.MaxTTL)
 	d.Set("min_ttl", apiObject.MinTTL)
 	d.Set(names.AttrName, apiObject.Name)
