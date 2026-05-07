@@ -75,13 +75,29 @@ var (
 		},
 		"platform_credential": {
 			Type:      schema.TypeString,
-			Required:  true,
+			Optional:  true,
 			Sensitive: true,
+			// ExactlyOneOf is used here because a credential is required by the AWS API.
+			ExactlyOneOf: []string{"platform_credential", "platform_credential_wo"},
+		},
+		"platform_credential_wo": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Sensitive:    true,
+			ExactlyOneOf: []string{"platform_credential", "platform_credential_wo"},
 		},
 		"platform_principal": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
+			// ConflictsWith is used here (instead of ExactlyOneOf) because the principal attribute is optional in the AWS API.
+			ConflictsWith: []string{"platform_principal_wo"},
+		},
+		"platform_principal_wo": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Sensitive:     true,
+			ConflictsWith: []string{"platform_principal"},
 		},
 		"success_feedback_role_arn": {
 			Type:     schema.TypeString,
@@ -102,10 +118,12 @@ var (
 		"event_endpoint_updated_topic_arn": platformApplicationAttributeNameEventEndpointUpdated,
 		"failure_feedback_role_arn":        platformApplicationAttributeNameFailureFeedbackRoleARN,
 		"platform_credential":              platformApplicationAttributeNamePlatformCredential,
+		"platform_credential_wo":           platformApplicationAttributeNamePlatformCredential,
 		"platform_principal":               platformApplicationAttributeNamePlatformPrincipal,
+		"platform_principal_wo":            platformApplicationAttributeNamePlatformPrincipal,
 		"success_feedback_role_arn":        platformApplicationAttributeNameSuccessFeedbackRoleARN,
 		"success_feedback_sample_rate":     platformApplicationAttributeNameSuccessFeedbackSampleRate,
-	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_principal")
+	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_credential_wo").WithSkipUpdate("platform_principal").WithSkipUpdate("platform_principal_wo")
 )
 
 // @SDKResource("aws_sns_platform_application", name="Platform Application")
@@ -199,34 +217,39 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("apple_platform_bundle_id", "apple_platform_team_id", "platform_credential", "platform_principal") {
-		// If APNS platform was configured with token-based authentication then the only way to update them
-		// is to update all 4 attributes as they must be specified together in the request.
+	if d.HasChanges("apple_platform_bundle_id", "apple_platform_team_id", "platform_credential", "platform_credential_wo", "platform_principal", "platform_principal_wo") {
+
 		if d.HasChanges("apple_platform_team_id", "apple_platform_bundle_id") {
 			attributes[platformApplicationAttributeNameApplePlatformTeamID] = d.Get("apple_platform_team_id").(string)
 			attributes[platformApplicationAttributeNameApplePlatformBundleID] = d.Get("apple_platform_bundle_id").(string)
 		}
 
-		// Prior to version 3.0.0 of the Terraform AWS Provider, the platform_credential and platform_principal
-		// attributes were stored in state as SHA256 hashes. If the changes to these two attributes are the only
-		// changes and if both of their changes only match updating the state value, then skip the API call.
 		oPCRaw, nPCRaw := d.GetChange("platform_credential")
 		oPPRaw, nPPRaw := d.GetChange("platform_principal")
+		oPCWORaw, nPCWORaw := d.GetChange("platform_credential_wo")
+		oPPWORaw, nPPWORaw := d.GetChange("platform_principal_wo")
 
-		if len(attributes) == 0 && isChangeSha256Removal(oPCRaw, nPCRaw) && isChangeSha256Removal(oPPRaw, nPPRaw) {
+		if len(attributes) == 0 && isChangeSha256Removal(oPCRaw, nPCRaw) && isChangeSha256Removal(oPPRaw, nPPRaw) && isChangeSha256Removal(oPCWORaw, nPCWORaw) && isChangeSha256Removal(oPPWORaw, nPPWORaw) {
 			return diags
 		}
 
-		attributes[platformApplicationAttributeNamePlatformCredential] = d.Get("platform_credential").(string)
-		// If the platform requires a principal it must also be specified, even if it didn't change
-		// since credential is stored as a hash, the only way to update principal is to update both
-		// as they must be specified together in the request.
+		if v, ok := d.GetOk("platform_credential"); ok {
+			attributes[platformApplicationAttributeNamePlatformCredential] = v.(string)
+		} else if v, ok := d.GetOk("platform_credential_wo"); ok {
+			attributes[platformApplicationAttributeNamePlatformCredential] = v.(string)
+		}
+
 		if v, ok := d.GetOk("platform_principal"); ok {
+			attributes[platformApplicationAttributeNamePlatformPrincipal] = v.(string)
+		} else if v, ok := d.GetOk("platform_principal_wo"); ok {
 			attributes[platformApplicationAttributeNamePlatformPrincipal] = v.(string)
 		}
 	}
 
-	// Make API call to update attributes
+	if len(attributes) == 0 {
+		return append(diags, resourcePlatformApplicationRead(ctx, d, meta)...)
+	}
+
 	input := &sns.SetPlatformApplicationAttributesInput{
 		Attributes:             attributes,
 		PlatformApplicationArn: aws.String(d.Id()),

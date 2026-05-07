@@ -1,0 +1,7 @@
+```release-note:enhancement
+service/sns: Add write-only credential support for platform applications
+```
+
+```release-note:upgrade-note
+service/sns: When migrating an existing `aws_sns_platform_application` resource from `platform_credential` to `platform_credential_wo`, an explicit state move or manual reconfiguration is required.
+```

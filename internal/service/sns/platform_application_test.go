@@ -636,3 +636,54 @@ resource "aws_sns_platform_application" "test" {
 }
 `, name, platform.Name, platform.Credential, platform.Principal, applePlatformTeamId, applePlatformBundleId)
 }
+
+func testAccPlatformApplicationConfig_gcmWriteOnly(rName, credentials string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                   = %[1]q
+  platform               = "GCM"
+  platform_credential_wo = %[2]q
+}
+`, rName, credentials)
+}
+
+func TestAccSNSPlatformApplication_GCM_writeOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
+	resourceName := "aws_sns_platform_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlatformApplicationConfig_gcmWriteOnly(rName, apiKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, t, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_delivery_failure_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_created_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_deleted_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_updated_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "failure_feedback_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
+					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_role_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_sample_rate"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Ignoramos los campos write-only en la verificación porque no se pueden leer de vuelta desde AWS
+				ImportStateVerifyIgnore: []string{"platform_credential_wo", "platform_principal_wo"},
+			},
+		},
+	})
+}

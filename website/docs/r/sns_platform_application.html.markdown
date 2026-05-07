@@ -53,13 +53,15 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The friendly name for the SNS platform application
 * `platform` - (Required) The platform that the app is registered with. See [Platform][1] for supported platforms.
-* `platform_credential` - (Required) Application Platform credential. See [Credential][1] for type of credential required for platform. The value of this attribute when stored into the Terraform state is only a hash of the real value, so therefore it is not practical to use this as an attribute for other resources.
+* `platform_credential` - (Optional) Application Platform credential. See [Credential][1] for type of credential required for platform. The value of this attribute when stored into the Terraform state is only a hash of the real value, so therefore it is not practical to use this as an attribute for other resources.
+* `platform_credential_wo` - (Optional) The write-only, sensitive platform credential. **Note:** Drift detection is not possible for write-only attributes. If the credential is rotated in AWS, you must perform a `terraform apply` to push the new value. Users migrating from standard credentials to write-only credentials will need to perform an explicit state move or reconfigure.
 * `event_delivery_failure_topic_arn` - (Optional) The ARN of the SNS Topic triggered when a delivery to any of the platform endpoints associated with your platform application encounters a permanent failure.
 * `event_endpoint_created_topic_arn` - (Optional) The ARN of the SNS Topic triggered when a new platform endpoint is added to your platform application.
 * `event_endpoint_deleted_topic_arn` - (Optional) The ARN of the SNS Topic triggered when an existing platform endpoint is deleted from your platform application.
 * `event_endpoint_updated_topic_arn` - (Optional) The ARN of the SNS Topic triggered when an existing platform endpoint is changed from your platform application.
 * `failure_feedback_role_arn` - (Optional) The IAM role ARN permitted to receive failure feedback for this application and give SNS write access to use CloudWatch logs on your behalf.
 * `platform_principal` - (Optional) Application Platform principal. See [Principal][2] for type of principal required for platform. The value of this attribute when stored into the Terraform state is only a hash of the real value, so therefore it is not practical to use this as an attribute for other resources.
+* `platform_principal_wo` - (Optional) The write-only, sensitive platform principal. **Note:** Drift detection is not possible for write-only attributes.
 * `success_feedback_role_arn` - (Optional) The IAM role ARN permitted to receive success feedback for this application and give SNS write access to use CloudWatch logs on your behalf.
 * `success_feedback_sample_rate` - (Optional) The sample rate percentage (0-100) of successfully delivered messages.
 
