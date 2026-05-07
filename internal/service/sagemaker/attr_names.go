@@ -10,5 +10,6 @@ const (
 	attrImageVersionARN     = "sagemaker_image_version_arn"
 	attrImageVersionAlias   = "sagemaker_image_version_alias"
 	attrLifecycleConfigARN  = "lifecycle_config_arn"
+	attrS3OutputPath        = "s3_output_path"
 	attrS3URI               = "s3_uri"
 )

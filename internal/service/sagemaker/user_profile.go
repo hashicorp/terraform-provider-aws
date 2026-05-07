@@ -808,7 +808,7 @@ func resourceUserProfile() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"s3_output_path": {
+									attrS3OutputPath: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},

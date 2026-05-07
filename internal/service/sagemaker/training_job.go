@@ -424,7 +424,7 @@ func debugHookConfigBlock(ctx context.Context) schema.Block {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_output_path": schema.StringAttribute{
+				attrS3OutputPath: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
@@ -521,7 +521,7 @@ func debugRuleConfigurationsBlock(ctx context.Context) schema.Block {
 						mapplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_output_path": schema.StringAttribute{
+				attrS3OutputPath: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
@@ -953,7 +953,7 @@ func trainingJobOutputDataConfigBlock(ctx context.Context) schema.Block {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_output_path": schema.StringAttribute{
+				attrS3OutputPath: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
@@ -998,7 +998,7 @@ func profilerConfigBlock(ctx context.Context) schema.Block {
 						)),
 					},
 				},
-				"s3_output_path": schema.StringAttribute{
+				attrS3OutputPath: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
@@ -1053,7 +1053,7 @@ func profilerRuleConfigurationsBlock(ctx context.Context) schema.Block {
 						)),
 					},
 				},
-				"s3_output_path": schema.StringAttribute{
+				attrS3OutputPath: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
@@ -1431,7 +1431,7 @@ func tensorBoardOutputConfigBlock(ctx context.Context) schema.Block {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_output_path": schema.StringAttribute{
+				attrS3OutputPath: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),

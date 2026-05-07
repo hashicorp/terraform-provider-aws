@@ -76,7 +76,7 @@ func resourceHub() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3_output_path": {
+						attrS3OutputPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -248,7 +248,7 @@ func expandS3StorageConfig(configured []any) *awstypes.HubS3StorageConfig {
 
 	c := &awstypes.HubS3StorageConfig{}
 
-	if v, ok := m["s3_output_path"].(string); ok && v != "" {
+	if v, ok := m[attrS3OutputPath].(string); ok && v != "" {
 		c.S3OutputPath = aws.String(v)
 	}
 
@@ -263,7 +263,7 @@ func flattenS3StorageConfig(config *awstypes.HubS3StorageConfig) []map[string]an
 	m := map[string]any{}
 
 	if config.S3OutputPath != nil {
-		m["s3_output_path"] = aws.ToString(config.S3OutputPath)
+		m[attrS3OutputPath] = aws.ToString(config.S3OutputPath)
 	}
 
 	return []map[string]any{m}

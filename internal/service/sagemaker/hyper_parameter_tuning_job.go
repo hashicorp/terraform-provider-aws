@@ -1154,7 +1154,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"s3_output_path": schema.StringAttribute{
+						attrS3OutputPath: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(0, 1024),

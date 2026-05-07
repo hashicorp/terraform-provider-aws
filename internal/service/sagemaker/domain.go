@@ -1169,7 +1169,7 @@ func resourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"s3_output_path": {
+									attrS3OutputPath: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -2332,7 +2332,7 @@ func expandDomainShareSettings(l []any) *awstypes.SharingSettings {
 		config.S3KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["s3_output_path"].(string); ok && v != "" {
+	if v, ok := m[attrS3OutputPath].(string); ok && v != "" {
 		config.S3OutputPath = aws.String(v)
 	}
 
@@ -2960,7 +2960,7 @@ func flattenDomainShareSettings(config *awstypes.SharingSettings) []map[string]a
 	}
 
 	if config.S3OutputPath != nil {
-		m["s3_output_path"] = aws.ToString(config.S3OutputPath)
+		m[attrS3OutputPath] = aws.ToString(config.S3OutputPath)
 	}
 
 	return []map[string]any{m}

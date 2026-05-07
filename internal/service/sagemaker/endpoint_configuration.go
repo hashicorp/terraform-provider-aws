@@ -126,7 +126,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 											validation.StringLenBetween(1, 512),
 										),
 									},
-									"s3_output_path": {
+									attrS3OutputPath: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -1142,7 +1142,7 @@ func expandEndpointConfigOutputConfig(configured []any) *awstypes.AsyncInference
 	m := configured[0].(map[string]any)
 
 	c := &awstypes.AsyncInferenceOutputConfig{
-		S3OutputPath: aws.String(m["s3_output_path"].(string)),
+		S3OutputPath: aws.String(m[attrS3OutputPath].(string)),
 	}
 
 	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
@@ -1309,7 +1309,7 @@ func flattenEndpointConfigOutputConfig(config *awstypes.AsyncInferenceOutputConf
 	}
 
 	cfg := map[string]any{
-		"s3_output_path": aws.ToString(config.S3OutputPath),
+		attrS3OutputPath: aws.ToString(config.S3OutputPath),
 	}
 
 	if config.KmsKeyId != nil {

@@ -1310,7 +1310,7 @@ func outputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_output_path": schema.StringAttribute{
+				attrS3OutputPath: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),
@@ -1746,7 +1746,7 @@ func transformOutputBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"s3_output_path": schema.StringAttribute{
+				attrS3OutputPath: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),

@@ -226,7 +226,7 @@ func resourceFlowDefinition() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"s3_output_path": {
+						attrS3OutputPath: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -458,7 +458,7 @@ func expandFlowDefinitionOutputConfig(l []any) *awstypes.FlowDefinitionOutputCon
 	m := l[0].(map[string]any)
 
 	config := &awstypes.FlowDefinitionOutputConfig{
-		S3OutputPath: aws.String(m["s3_output_path"].(string)),
+		S3OutputPath: aws.String(m[attrS3OutputPath].(string)),
 	}
 
 	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
@@ -475,7 +475,7 @@ func flattenFlowDefinitionOutputConfig(config *awstypes.FlowDefinitionOutputConf
 
 	m := map[string]any{
 		names.AttrKMSKeyID: aws.ToString(config.KmsKeyId),
-		"s3_output_path":   aws.ToString(config.S3OutputPath),
+		attrS3OutputPath:   aws.ToString(config.S3OutputPath),
 	}
 
 	return []map[string]any{m}
