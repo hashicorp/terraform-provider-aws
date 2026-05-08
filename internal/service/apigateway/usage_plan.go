@@ -697,5 +697,5 @@ func flattenThrottleSettingsMap(apiObjects map[string]types.ThrottleSettings) []
 }
 
 func usagePlanARN(ctx context.Context, c *conns.AWSClient, usagePlanID string) string {
-	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/usageplans/%s", usagePlanID))
+	return c.RegionalARNNoAccount(ctx, names.APIGatewayID, fmt.Sprintf("/usageplans/%s", usagePlanID))
 }

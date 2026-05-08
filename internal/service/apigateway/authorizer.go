@@ -413,7 +413,7 @@ func findAuthorizer(ctx context.Context, conn *apigateway.Client, input *apigate
 }
 
 func authorizerARN(ctx context.Context, c *conns.AWSClient, apiID, authorizerID string) string {
-	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s/authorizers/%s", apiID, authorizerID))
+	return c.RegionalARNNoAccount(ctx, names.APIGatewayID, fmt.Sprintf("/restapis/%s/authorizers/%s", apiID, authorizerID))
 }
 
 type authorizerResourceModel struct {

@@ -189,7 +189,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if d.HasChange("request_parameters") {
-		ops := expandMethodParametersOperations(d, "request_parameters", "requestParameters")
+		ops := expandMethodParametersOperations(d, "request_parameters", requestParameterType)
 		operations = append(operations, ops...)
 	}
 

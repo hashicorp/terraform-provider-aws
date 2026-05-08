@@ -661,7 +661,7 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 }
 
 func stageARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
-	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName))
+	return c.RegionalARNNoAccount(ctx, names.APIGatewayID, fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName))
 }
 
 func stageInvokeARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {

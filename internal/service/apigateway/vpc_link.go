@@ -278,5 +278,5 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigateway.Client, id string)
 }
 
 func vpcLinkARN(ctx context.Context, c *conns.AWSClient, vpcLinkID string) string {
-	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/vpclinks/%s", vpcLinkID))
+	return c.RegionalARNNoAccount(ctx, names.APIGatewayID, fmt.Sprintf("/vpclinks/%s", vpcLinkID))
 }

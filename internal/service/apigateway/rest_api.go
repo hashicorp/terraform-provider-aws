@@ -837,7 +837,7 @@ func flattenAPIPolicy(apiObject *string) (string, error) {
 }
 
 func apiARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
-	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s", apiID))
+	return c.RegionalARNNoAccount(ctx, names.APIGatewayID, fmt.Sprintf("/restapis/%s", apiID))
 }
 
 func apiInvokeARN(ctx context.Context, c *conns.AWSClient, apiID string) string {

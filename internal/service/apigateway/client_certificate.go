@@ -188,5 +188,5 @@ func findClientCertificateByID(ctx context.Context, conn *apigateway.Client, id 
 }
 
 func clientCertificateARN(ctx context.Context, c *conns.AWSClient, certificateID string) string {
-	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/clientcertificates/%s", certificateID))
+	return c.RegionalARNNoAccount(ctx, names.APIGatewayID, fmt.Sprintf("/clientcertificates/%s", certificateID))
 }
