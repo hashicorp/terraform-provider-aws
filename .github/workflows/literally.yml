@@ -49,7 +49,5 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - name: Build literally
-        run: cd tools/literally && go build -o ../../literally .
       - name: Run literally checks
         run: make literally-check

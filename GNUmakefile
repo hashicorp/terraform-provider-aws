@@ -329,7 +329,7 @@ examples-tflint: tflint-init ## [CI] Examples Checks / tflint
 
 fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
-literally-check: ## Check package-local constants with literally
+literally-check: prereq-go ## Check package-local constants with literally
 	@echo "make: Running literally constant checks..."
 	@cd tools/literally && $(GO_VER) install .
 	@failed=0; \
