@@ -140,8 +140,8 @@ func resourceWebACL() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"allow": allowConfigSchema(),
-							"block": blockConfigSchema(),
+							attrActionAllow: allowConfigSchema(),
+							attrActionBlock: blockConfigSchema(),
 						},
 					},
 				},
@@ -199,11 +199,11 @@ func resourceWebACL() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"allow":     allowConfigSchema(),
-										"block":     blockConfigSchema(),
-										"captcha":   captchaConfigSchema(),
-										"challenge": challengeConfigSchema(),
-										"count":     countConfigSchema(),
+										attrActionAllow:     allowConfigSchema(),
+										attrActionBlock:     blockConfigSchema(),
+										attrActionCaptcha:   captchaConfigSchema(),
+										attrActionChallenge: challengeConfigSchema(),
+										attrActionCount:     countConfigSchema(),
 									},
 								},
 							},
@@ -220,8 +220,8 @@ func resourceWebACL() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"count": emptySchema(),
-										"none":  emptySchema(),
+										attrActionCount: emptySchema(),
+										attrActionNone:  emptySchema(),
 									},
 								},
 							},

@@ -46,8 +46,6 @@ import (
 
 const (
 	webACLRuleGroupAssociationResourceIDPartCount = 4
-	overrideActionNone                            = "none"
-	overrideActionCount                           = "count"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
@@ -397,7 +395,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
-										"challenge": schema.ListNestedBlock{
+										attrActionChallenge: schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[clientSideActionModel](ctx),
 											Validators: []validator.List{
 												listvalidator.SizeAtMost(1),
@@ -520,7 +518,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 					},
 					NestedObject: schema.NestedBlockObject{
 						Blocks: map[string]schema.Block{
-							"allow": schema.ListNestedBlock{
+							attrActionAllow: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[allowActionModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
@@ -562,7 +560,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 									},
 								},
 							},
-							"block": schema.ListNestedBlock{
+							attrActionBlock: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[blockActionModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
@@ -615,7 +613,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 									},
 								},
 							},
-							"captcha": schema.ListNestedBlock{
+							attrActionCaptcha: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[captchaActionModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
@@ -657,7 +655,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 									},
 								},
 							},
-							"challenge": schema.ListNestedBlock{
+							attrActionChallenge: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[challengeActionModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
@@ -699,7 +697,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 									},
 								},
 							},
-							"count": schema.ListNestedBlock{
+							attrActionCount: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[countActionModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
@@ -785,7 +783,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(overrideActionNone, overrideActionCount),
+					stringvalidator.OneOf(attrActionNone, attrActionCount),
 				},
 				Description: "Override action for the rule group. Valid values are 'none' and 'count'. Defaults to 'none'.",
 			},
@@ -1110,16 +1108,16 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	// Set override action
 	overrideAction := plan.OverrideAction.ValueString()
 	if overrideAction == "" {
-		overrideAction = overrideActionNone
-		plan.OverrideAction = types.StringValue(overrideActionNone) // Set the default in the plan
+		overrideAction = attrActionNone
+		plan.OverrideAction = types.StringValue(attrActionNone) // Set the default in the plan
 	}
 
 	switch overrideAction {
-	case overrideActionNone:
+	case attrActionNone:
 		newRule.OverrideAction = &awstypes.OverrideAction{
 			None: &awstypes.NoneAction{},
 		}
-	case overrideActionCount:
+	case attrActionCount:
 		newRule.OverrideAction = &awstypes.OverrideAction{
 			Count: &awstypes.CountAction{},
 		}
@@ -1323,12 +1321,12 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 				}
 
 				// Determine override action
-				overrideAction := overrideActionNone
+				overrideAction := attrActionNone
 				if rule.OverrideAction != nil {
 					if rule.OverrideAction.Count != nil {
-						overrideAction = overrideActionCount
+						overrideAction = attrActionCount
 					} else if rule.OverrideAction.None != nil {
-						overrideAction = overrideActionNone
+						overrideAction = attrActionNone
 					}
 				}
 				state.OverrideAction = types.StringValue(overrideAction)
@@ -1399,15 +1397,15 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 			// Update override action
 			overrideAction := plan.OverrideAction.ValueString()
 			if overrideAction == "" {
-				overrideAction = overrideActionNone // Default value
+				overrideAction = attrActionNone // Default value
 			}
 
 			switch overrideAction {
-			case overrideActionNone:
+			case attrActionNone:
 				webACL.WebACL.Rules[i].OverrideAction = &awstypes.OverrideAction{
 					None: &awstypes.NoneAction{},
 				}
-			case overrideActionCount:
+			case attrActionCount:
 				webACL.WebACL.Rules[i].OverrideAction = &awstypes.OverrideAction{
 					Count: &awstypes.CountAction{},
 				}

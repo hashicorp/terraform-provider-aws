@@ -610,7 +610,7 @@ var requestBodySchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"api_gateway":              requestBodyAssociatedResourceTypeSchema(),
 				"app_runner_service":       requestBodyAssociatedResourceTypeSchema(),
-				"cloudfront":               requestBodyAssociatedResourceTypeSchema(),
+				names.CloudFront:           requestBodyAssociatedResourceTypeSchema(),
 				"cognito_user_pool":        requestBodyAssociatedResourceTypeSchema(),
 				"verified_access_instance": requestBodyAssociatedResourceTypeSchema(),
 			},
@@ -1285,7 +1285,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"challenge": {
+										attrActionChallenge: {
 											Type:     schema.TypeList,
 											Required: true,
 											MaxItems: 1,
@@ -1433,11 +1433,11 @@ func actionToUseSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"allow":     allowConfigSchema(),
-				"block":     blockConfigSchema(),
-				"captcha":   captchaConfigSchema(),
-				"challenge": challengeConfigSchema(),
-				"count":     countConfigSchema(),
+				attrActionAllow:     allowConfigSchema(),
+				attrActionBlock:     blockConfigSchema(),
+				attrActionCaptcha:   captchaConfigSchema(),
+				attrActionChallenge: challengeConfigSchema(),
+				attrActionCount:     countConfigSchema(),
 			},
 		},
 	}

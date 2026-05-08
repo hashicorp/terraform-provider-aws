@@ -625,7 +625,7 @@ var clientSideActionConfigBlock = tfsync.OnceValueCtx(func(ctx context.Context) 
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"challenge": clientSideActionBlock(ctx),
+				attrActionChallenge: clientSideActionBlock(ctx),
 			},
 		},
 	}
@@ -824,7 +824,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Blocks: map[string]schema.Block{
-							"allow": schema.ListNestedBlock{
+							attrActionAllow: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{
@@ -833,7 +833,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 									},
 								},
 							},
-							"block": schema.ListNestedBlock{
+							attrActionBlock: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBlockActionModel](ctx),
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{
@@ -842,7 +842,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 									},
 								},
 							},
-							"captcha": schema.ListNestedBlock{
+							attrActionCaptcha: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{
@@ -851,7 +851,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 									},
 								},
 							},
-							"challenge": schema.ListNestedBlock{
+							attrActionChallenge: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{
@@ -860,7 +860,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 									},
 								},
 							},
-							"count": schema.ListNestedBlock{
+							attrActionCount: schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
 								Validators: []validator.List{listvalidator.SizeAtMost(1)},
 								NestedObject: schema.NestedBlockObject{

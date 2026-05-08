@@ -81,10 +81,6 @@ func newResourceWebACLRule(_ context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
-const (
-	ResNameWebACLRule = "Web ACL Rule"
-)
-
 type resourceWebACLRule struct {
 	framework.ResourceWithModel[webACLRuleModel]
 	framework.WithImportByIdentity
@@ -124,7 +120,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"allow": schema.ListNestedBlock{
+						attrActionAllow: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
@@ -133,7 +129,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 								},
 							},
 						},
-						"block": schema.ListNestedBlock{
+						attrActionBlock: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBlockActionModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
@@ -142,7 +138,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 								},
 							},
 						},
-						"count": schema.ListNestedBlock{
+						attrActionCount: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
@@ -151,7 +147,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 								},
 							},
 						},
-						"captcha": schema.ListNestedBlock{
+						attrActionCaptcha: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
@@ -160,7 +156,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 								},
 							},
 						},
-						"challenge": schema.ListNestedBlock{
+						attrActionChallenge: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{
@@ -217,12 +213,12 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"count": schema.ListNestedBlock{
+						attrActionCount: schema.ListNestedBlock{
 							CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleOverrideActionEmptyModel](ctx),
 							Validators:   []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{},
 						},
-						"none": schema.ListNestedBlock{
+						attrActionNone: schema.ListNestedBlock{
 							CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleOverrideActionEmptyModel](ctx),
 							Validators:   []validator.List{listvalidator.SizeAtMost(1)},
 							NestedObject: schema.NestedBlockObject{},

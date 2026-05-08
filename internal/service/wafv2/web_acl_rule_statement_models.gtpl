@@ -69,19 +69,19 @@ type webACLRuleOrStatementModel = webACLRuleOrStatementLevel{{minus .MaxLevel}}M
 {{range .Levels}}
 func statementBlockLevel{{.}}(ctx context.Context) schema.ListNestedBlock {
 	blocks := map[string]schema.Block{
-		"asn_match_statement":                   asnMatchStatementBlock(ctx),
-		"byte_match_statement":                  byteMatchStatementBlock(ctx),
-		"geo_match_statement":                   geoMatchStatementBlock(ctx),
-		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		attrASNMatchStatement:                   asnMatchStatementBlock(ctx),
+		attrByteMatchStatement:                  byteMatchStatementBlock(ctx),
+		attrGeoMatchStatement:                   geoMatchStatementBlock(ctx),
+		attrIPSetReferenceStatement:             ipSetReferenceStatementBlock(ctx),
+		attrLabelMatchStatement:                 labelMatchStatementBlock(ctx),
 		"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
 		"rate_based_statement":                  rateBasedStatementBlock(ctx),
-		"regex_match_statement":                 regexMatchStatementBlock(ctx),
-		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		attrRegexMatchStatement:                 regexMatchStatementBlock(ctx),
+		attrRegexPatternSetReferenceStatement:   regexPatternSetReferenceStatementBlock(ctx),
 		"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
-		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		attrSizeConstraintStatement:             sizeConstraintStatementBlock(ctx),
+		attrSQLiMatchStatement:                  sqliMatchStatementBlock(ctx),
+		attrXSSMatchStatement:                   xssMatchStatementBlock(ctx),
 {{- if gt . 0}}
 		"and_statement":                         andStatementBlockLevel{{minus .}}(ctx),
 		"not_statement":                         notStatementBlockLevel{{minus .}}(ctx),
@@ -110,7 +110,7 @@ var andStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Con
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": statementBlockLevel{{minus .}}NoMinMax(ctx),
+				attrStatement: statementBlockLevel{{minus .}}NoMinMax(ctx),
 			},
 		},
 		Description: "Logical AND statement.",
@@ -123,7 +123,7 @@ var notStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Con
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": statementBlockLevel{{minus .}}Single(ctx),
+				attrStatement: statementBlockLevel{{minus .}}Single(ctx),
 			},
 		},
 		Description: "Logical NOT statement.",
@@ -136,7 +136,7 @@ var orStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Cont
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": statementBlockLevel{{minus .}}NoMinMax(ctx),
+				attrStatement: statementBlockLevel{{minus .}}NoMinMax(ctx),
 			},
 		},
 		Description: "Logical OR statement.",
@@ -146,19 +146,19 @@ var orStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Cont
 // statementBlockLevel{{minus .}}NoMinMax is for AND/OR statements that need multiple nested statements.
 var statementBlockLevel{{minus .}}NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
-		"asn_match_statement":                   asnMatchStatementBlock(ctx),
-		"byte_match_statement":                  byteMatchStatementBlock(ctx),
-		"geo_match_statement":                   geoMatchStatementBlock(ctx),
-		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		attrASNMatchStatement:                   asnMatchStatementBlock(ctx),
+		attrByteMatchStatement:                  byteMatchStatementBlock(ctx),
+		attrGeoMatchStatement:                   geoMatchStatementBlock(ctx),
+		attrIPSetReferenceStatement:             ipSetReferenceStatementBlock(ctx),
+		attrLabelMatchStatement:                 labelMatchStatementBlock(ctx),
 		"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
 		"rate_based_statement":                  rateBasedStatementBlock(ctx),
-		"regex_match_statement":                 regexMatchStatementBlock(ctx),
-		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		attrRegexMatchStatement:                 regexMatchStatementBlock(ctx),
+		attrRegexPatternSetReferenceStatement:   regexPatternSetReferenceStatementBlock(ctx),
 		"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
-		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		attrSizeConstraintStatement:             sizeConstraintStatementBlock(ctx),
+		attrSQLiMatchStatement:                  sqliMatchStatementBlock(ctx),
+		attrXSSMatchStatement:                   xssMatchStatementBlock(ctx),
 {{- if gt (minus .) 0}}
 		"and_statement":                         andStatementBlockLevel{{minus (minus .)}}(ctx),
 		"not_statement":                         notStatementBlockLevel{{minus (minus .)}}(ctx),
@@ -181,19 +181,19 @@ var statementBlockLevel{{minus .}}NoMinMax = tfsync.OnceValueCtx(func(ctx contex
 // statementBlockLevel{{minus .}}Single is for NOT statement that needs exactly one nested statement.
 var statementBlockLevel{{minus .}}Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
-		"asn_match_statement":                   asnMatchStatementBlock(ctx),
-		"byte_match_statement":                  byteMatchStatementBlock(ctx),
-		"geo_match_statement":                   geoMatchStatementBlock(ctx),
-		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		attrASNMatchStatement:                   asnMatchStatementBlock(ctx),
+		attrByteMatchStatement:                  byteMatchStatementBlock(ctx),
+		attrGeoMatchStatement:                   geoMatchStatementBlock(ctx),
+		attrIPSetReferenceStatement:             ipSetReferenceStatementBlock(ctx),
+		attrLabelMatchStatement:                 labelMatchStatementBlock(ctx),
 		"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
 		"rate_based_statement":                  rateBasedStatementBlock(ctx),
-		"regex_match_statement":                 regexMatchStatementBlock(ctx),
-		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		attrRegexMatchStatement:                 regexMatchStatementBlock(ctx),
+		attrRegexPatternSetReferenceStatement:   regexPatternSetReferenceStatementBlock(ctx),
 		"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
-		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		attrSizeConstraintStatement:             sizeConstraintStatementBlock(ctx),
+		attrSQLiMatchStatement:                  sqliMatchStatementBlock(ctx),
+		attrXSSMatchStatement:                   xssMatchStatementBlock(ctx),
 {{- if gt (minus .) 0}}
 		"and_statement":                         andStatementBlockLevel{{minus (minus .)}}(ctx),
 		"not_statement":                         notStatementBlockLevel{{minus (minus .)}}(ctx),

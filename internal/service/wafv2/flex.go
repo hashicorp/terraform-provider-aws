@@ -199,23 +199,23 @@ func expandRuleAction(l []any) *awstypes.RuleAction {
 	m := l[0].(map[string]any)
 	action := &awstypes.RuleAction{}
 
-	if v, ok := m["allow"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionAllow]; ok && len(v.([]any)) > 0 {
 		action.Allow = expandAllowAction(v.([]any))
 	}
 
-	if v, ok := m["block"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionBlock]; ok && len(v.([]any)) > 0 {
 		action.Block = expandBlockAction(v.([]any))
 	}
 
-	if v, ok := m["captcha"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionCaptcha]; ok && len(v.([]any)) > 0 {
 		action.Captcha = expandCaptchaAction(v.([]any))
 	}
 
-	if v, ok := m["challenge"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionChallenge]; ok && len(v.([]any)) > 0 {
 		action.Challenge = expandChallengeAction(v.([]any))
 	}
 
-	if v, ok := m["count"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionCount]; ok && len(v.([]any)) > 0 {
 		action.Count = expandCountAction(v.([]any))
 	}
 
@@ -1251,11 +1251,11 @@ func expandOverrideAction(l []any) *awstypes.OverrideAction {
 	m := l[0].(map[string]any)
 	action := &awstypes.OverrideAction{}
 
-	if v, ok := m["count"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionCount]; ok && len(v.([]any)) > 0 {
 		action.Count = &awstypes.CountAction{}
 	}
 
-	if v, ok := m["none"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionNone]; ok && len(v.([]any)) > 0 {
 		action.None = &awstypes.NoneAction{}
 	}
 
@@ -1270,11 +1270,11 @@ func expandDefaultAction(l []any) *awstypes.DefaultAction {
 	m := l[0].(map[string]any)
 	action := &awstypes.DefaultAction{}
 
-	if v, ok := m["allow"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionAllow]; ok && len(v.([]any)) > 0 {
 		action.Allow = expandAllowAction(v.([]any))
 	}
 
-	if v, ok := m["block"]; ok && len(v.([]any)) > 0 {
+	if v, ok := m[attrActionBlock]; ok && len(v.([]any)) > 0 {
 		action.Block = expandBlockAction(v.([]any))
 	}
 
@@ -1572,7 +1572,7 @@ func expandClientSideActionConfig(tfList []any) *awstypes.ClientSideActionConfig
 
 	m := tfList[0].(map[string]any)
 	out := &awstypes.ClientSideActionConfig{
-		Challenge: expandClientSideAction(m["challenge"].([]any)),
+		Challenge: expandClientSideAction(m[attrActionChallenge].([]any)),
 	}
 
 	return out
@@ -2068,23 +2068,23 @@ func flattenRuleAction(a *awstypes.RuleAction) any {
 	m := map[string]any{}
 
 	if a.Allow != nil {
-		m["allow"] = flattenAllow(a.Allow)
+		m[attrActionAllow] = flattenAllow(a.Allow)
 	}
 
 	if a.Block != nil {
-		m["block"] = flattenBlock(a.Block)
+		m[attrActionBlock] = flattenBlock(a.Block)
 	}
 
 	if a.Captcha != nil {
-		m["captcha"] = flattenCaptcha(a.Captcha)
+		m[attrActionCaptcha] = flattenCaptcha(a.Captcha)
 	}
 
 	if a.Challenge != nil {
-		m["challenge"] = flattenChallenge(a.Challenge)
+		m[attrActionChallenge] = flattenChallenge(a.Challenge)
 	}
 
 	if a.Count != nil {
-		m["count"] = flattenCount(a.Count)
+		m[attrActionCount] = flattenCount(a.Count)
 	}
 
 	return []any{m}
@@ -2969,11 +2969,11 @@ func flattenOverrideAction(a *awstypes.OverrideAction) any {
 	m := map[string]any{}
 
 	if a.Count != nil {
-		m["count"] = make([]map[string]any, 1)
+		m[attrActionCount] = make([]map[string]any, 1)
 	}
 
 	if a.None != nil {
-		m["none"] = make([]map[string]any, 1)
+		m[attrActionNone] = make([]map[string]any, 1)
 	}
 
 	return []any{m}
@@ -2987,11 +2987,11 @@ func flattenDefaultAction(a *awstypes.DefaultAction) any {
 	m := map[string]any{}
 
 	if a.Allow != nil {
-		m["allow"] = flattenAllow(a.Allow)
+		m[attrActionAllow] = flattenAllow(a.Allow)
 	}
 
 	if a.Block != nil {
-		m["block"] = flattenBlock(a.Block)
+		m[attrActionBlock] = flattenBlock(a.Block)
 	}
 
 	return []any{m}
@@ -3197,7 +3197,7 @@ func flattenClientSideActionConfig(apiObject *awstypes.ClientSideActionConfig) [
 	}
 
 	m := map[string]any{
-		"challenge": flattenClientSideAction(apiObject.Challenge),
+		attrActionChallenge: flattenClientSideAction(apiObject.Challenge),
 	}
 
 	return []any{m}
