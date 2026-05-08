@@ -1,0 +1,26 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+# Services with literally constant enforcement enabled.
+# Add a service directory (relative to internal/service/) per line.
+# Lines starting with # are comments.
+apigateway
+appflow
+appmesh
+cloudfront
+directconnect
+dms
+ec2
+ecr
+firehose
+imagebuilder
+lakeformation
+lambda
+medialive
+networkmanager
+quicksight
+s3
+sagemaker
+servicecatalog
+ssoadmin
+wafv2
