@@ -769,7 +769,7 @@ func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, i
 	}
 
 	// Wait for distribution tenant to be deployed first
-	dtOutput, err := waitForDistributionTenantDeployed(ctx, conn, id)
+	dtOutput, err := waitDistributionTenantDeployed(ctx, conn, id)
 	if err != nil {
 		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
 	}
@@ -784,21 +784,6 @@ func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, i
 	return updateDistributionTenantWithManagedCertificate(ctx, conn, dtOutput, mcOutput)
 }
 
-func waitForDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
-	// Simple loop to wait for deployment - reuse existing logic if needed
-	for {
-		dtOutput, err := findDistributionTenantByIdentifier(ctx, conn, id)
-		if err != nil {
-			return nil, fmt.Errorf("failed reading CloudFront Distribution Tenant (%s): %w", id, err)
-		}
-
-		if aws.ToString(dtOutput.DistributionTenant.Status) == distributionTenantStatusDeployed {
-			return dtOutput, nil
-		}
-
-		time.Sleep(distributionTenantPollInterval)
-	}
-}
 
 func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetManagedCertificateDetailsOutput, error) {
 	timeout := 3 * time.Hour
@@ -877,7 +862,7 @@ func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *c
 	}
 
 	// Wait for the distribution tenant update to be deployed
-	_, err = waitForDistributionTenantDeployed(ctx, conn, aws.ToString(dtOutput.DistributionTenant.Id))
+	_, err = waitDistributionTenantDeployed(ctx, conn, aws.ToString(dtOutput.DistributionTenant.Id))
 	if err != nil {
 		return fmt.Errorf("failed waiting for CloudFront Distribution Tenant (%s) deploy: %w", aws.ToString(dtOutput.DistributionTenant.Id), err)
 	}
