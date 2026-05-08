@@ -8,10 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,6 +39,19 @@ func TestAccSSMResourceDataSync_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrBucketName:            knownvalue.StringExact(bucketName),
+							names.AttrKMSKeyARN:             knownvalue.StringExact(""),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrRegion:                knownvalue.StringExact(acctest.Region()),
+							"sync_format":                   tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
+							"destination_data_sharing_type": knownvalue.StringExact(""),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -91,6 +109,19 @@ func TestAccSSMResourceDataSync_Update_s3DestinationPrefix(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrBucketName:            knownvalue.StringExact(bucketName),
+							names.AttrKMSKeyARN:             knownvalue.StringExact(""),
+							names.AttrPrefix:                knownvalue.StringExact("test-"),
+							names.AttrRegion:                knownvalue.StringExact(acctest.Region()),
+							"sync_format":                   tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
+							"destination_data_sharing_type": knownvalue.StringExact(""),
+						}),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
