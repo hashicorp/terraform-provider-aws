@@ -49,6 +49,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
+			Factory:  resourceConfiguration,
+			TypeName: "aws_inspector2_configuration",
+			Name:     "Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  resourceDelegatedAdminAccount,
 			TypeName: "aws_inspector2_delegated_admin_account",
 			Name:     "Delegated Admin Account",
