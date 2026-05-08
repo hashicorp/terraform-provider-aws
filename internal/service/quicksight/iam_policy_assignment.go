@@ -74,12 +74,12 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, request resour
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"group": schema.SetAttribute{
+						identitiesGroupKey: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 						},
-						"user": schema.SetAttribute{
+						identitiesUserKey: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,

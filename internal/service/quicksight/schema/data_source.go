@@ -110,7 +110,7 @@ func DataSourceParametersSchema() *schema.Schema {
 					},
 					ExactlyOneOf: exactlyOneOf,
 				},
-				"athena": {
+				names.Athena: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -355,7 +355,7 @@ func DataSourceParametersSchema() *schema.Schema {
 					},
 					ExactlyOneOf: exactlyOneOf,
 				},
-				"rds": {
+				names.RDS: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -375,7 +375,7 @@ func DataSourceParametersSchema() *schema.Schema {
 					},
 					ExactlyOneOf: exactlyOneOf,
 				},
-				"redshift": {
+				names.Redshift: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -403,7 +403,7 @@ func DataSourceParametersSchema() *schema.Schema {
 					},
 					ExactlyOneOf: exactlyOneOf,
 				},
-				"s3": {
+				names.S3: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -676,7 +676,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 		}
 	}
 
-	if v := tfMap["athena"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v := tfMap[names.Athena].([]any); ok && len(v) > 0 && v[0] != nil {
 		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberAthenaParameters{}
 
@@ -856,7 +856,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 		}
 	}
 
-	if v := tfMap["rds"].([]any); ok && len(v) > 0 && v != nil {
+	if v := tfMap[names.RDS].([]any); ok && len(v) > 0 && v != nil {
 		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberRdsParameters{}
 
@@ -871,7 +871,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 		}
 	}
 
-	if v := tfMap["redshift"].([]any); ok && len(v) > 0 && v != nil {
+	if v := tfMap[names.Redshift].([]any); ok && len(v) > 0 && v != nil {
 		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberRedshiftParameters{}
 
@@ -892,7 +892,7 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 		}
 	}
 
-	if v := tfMap["s3"].([]any); ok && len(v) > 0 && v != nil {
+	if v := tfMap[names.S3].([]any); ok && len(v) > 0 && v != nil {
 		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberS3Parameters{}
 
@@ -1033,7 +1033,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 			},
 		}
 	case *awstypes.DataSourceParametersMemberAthenaParameters:
-		tfMap["athena"] = []any{
+		tfMap[names.Athena] = []any{
 			map[string]any{
 				"work_group": aws.ToString(v.Value.WorkGroup),
 			},
@@ -1115,14 +1115,14 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 			},
 		}
 	case *awstypes.DataSourceParametersMemberRdsParameters:
-		tfMap["rds"] = []any{
+		tfMap[names.RDS] = []any{
 			map[string]any{
 				names.AttrDatabase:   aws.ToString(v.Value.Database),
 				names.AttrInstanceID: aws.ToString(v.Value.InstanceId),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberRedshiftParameters:
-		tfMap["redshift"] = []any{
+		tfMap[names.Redshift] = []any{
 			map[string]any{
 				"cluster_id":       aws.ToString(v.Value.ClusterId),
 				names.AttrDatabase: aws.ToString(v.Value.Database),
@@ -1131,7 +1131,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 			},
 		}
 	case *awstypes.DataSourceParametersMemberS3Parameters:
-		tfMap["s3"] = []any{
+		tfMap[names.S3] = []any{
 			map[string]any{
 				"manifest_file_location": []any{
 					map[string]any{
