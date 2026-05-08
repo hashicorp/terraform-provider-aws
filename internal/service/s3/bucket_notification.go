@@ -54,7 +54,7 @@ func resourceBucketNotification() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"events": {
+						attrEvents: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -84,7 +84,7 @@ func resourceBucketNotification() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"events": {
+						attrEvents: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -114,7 +114,7 @@ func resourceBucketNotification() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"events": {
+						attrEvents: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -458,7 +458,7 @@ func flattenTopicConfigurations(configs []types.TopicConfiguration) []map[string
 		}
 
 		conf[names.AttrID] = aws.ToString(notification.Id)
-		conf["events"] = notification.Events
+		conf[attrEvents] = notification.Events
 		conf[names.AttrTopicARN] = aws.ToString(notification.TopicArn)
 		topicNotifications = append(topicNotifications, conf)
 	}
@@ -477,7 +477,7 @@ func flattenQueueConfigurations(configs []types.QueueConfiguration) []map[string
 		}
 
 		conf[names.AttrID] = aws.ToString(notification.Id)
-		conf["events"] = notification.Events
+		conf[attrEvents] = notification.Events
 		conf["queue_arn"] = aws.ToString(notification.QueueArn)
 		queueNotifications = append(queueNotifications, conf)
 	}
@@ -496,7 +496,7 @@ func flattenLambdaFunctionConfigurations(configs []types.LambdaFunctionConfigura
 		}
 
 		conf[names.AttrID] = aws.ToString(notification.Id)
-		conf["events"] = notification.Events
+		conf[attrEvents] = notification.Events
 		conf["lambda_function_arn"] = aws.ToString(notification.LambdaFunctionArn)
 		lambdaFunctionNotifications = append(lambdaFunctionNotifications, conf)
 	}

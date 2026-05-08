@@ -90,7 +90,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 											},
 										},
 									},
-									"account": {
+									attrAccount: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidAccountID,
@@ -574,7 +574,7 @@ func expandDestination(tfList []any) *types.Destination {
 		apiObject.AccessControlTranslation = expandAccessControlTranslation(v)
 	}
 
-	if v, ok := tfMap["account"].(string); ok && v != "" {
+	if v, ok := tfMap[attrAccount].(string); ok && v != "" {
 		apiObject.Account = aws.String(v)
 	}
 
@@ -937,7 +937,7 @@ func flattenDestination(apiObject *types.Destination) []any {
 	}
 
 	if apiObject.Account != nil {
-		tfMap["account"] = aws.ToString(apiObject.Account)
+		tfMap[attrAccount] = aws.ToString(apiObject.Account)
 	}
 
 	if apiObject.Bucket != nil {

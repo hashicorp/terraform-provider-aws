@@ -5,5 +5,7 @@ package s3
 
 // Schema attribute name constants used across package
 const (
-	attrDays = "days"
+	attrAccount = "account"
+	attrDays    = "days"
+	attrEvents  = "events"
 )

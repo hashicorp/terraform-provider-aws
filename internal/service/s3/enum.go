@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type bucketNameType int
@@ -30,7 +31,7 @@ func bucketNameTypeFor(bucket string) bucketNameType {
 		switch {
 		case strings.HasPrefix(v.Resource, "accesspoint/"):
 			switch v.Service {
-			case "s3":
+			case names.S3:
 				if v.Region == "" {
 					return bucketNameTypeMultiRegionAccessPointARN
 				}

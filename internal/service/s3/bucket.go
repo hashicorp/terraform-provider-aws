@@ -1745,7 +1745,7 @@ func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duratio
 }
 
 func bucketARN(ctx context.Context, c *conns.AWSClient, bucket string) string {
-	return c.GlobalARNNoAccount(ctx, "s3", bucket)
+	return c.GlobalARNNoAccount(ctx, names.S3, bucket)
 }
 
 // https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
