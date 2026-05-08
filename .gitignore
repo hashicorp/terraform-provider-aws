@@ -55,3 +55,6 @@ awssdk.patch
 
 # go-vcr recordings
 /testdata
+
+# literally binary
+/tools/literally/literally
