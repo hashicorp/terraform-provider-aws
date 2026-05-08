@@ -1680,7 +1680,7 @@ func waitNetworkInterfaceDetached(ctx context.Context, conn *ec2.Client, id stri
 func waitNetworkInterfacePermissionCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInterfacePermission, error) {
 	stateConf := &retry.StateChangeConf{
 		// For some reason, the API returns all caps statuses (e.g. "PENDING" instead of "pending")
-		Pending:                   []string{"PENDING"},
+		Pending:                   []string{ptrUpdateStatusPending},
 		Target:                    []string{"GRANTED"},
 		Refresh:                   statusNetworkInterfacePermission(conn, id),
 		Timeout:                   timeout,
@@ -1700,7 +1700,7 @@ func waitNetworkInterfacePermissionCreated(ctx context.Context, conn *ec2.Client
 
 func waitNetworkInterfacePermissionDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInterfacePermission, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"PENDING", "GRANTED", "REVOKING"},
+		Pending: []string{ptrUpdateStatusPending, "GRANTED", "REVOKING"},
 		Target:  []string{},
 		Refresh: statusNetworkInterfacePermission(conn, id),
 		Timeout: timeout,

@@ -74,7 +74,7 @@ func dataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"destination_prefix_list_id": {
+						routeDestinationPrefixListID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -295,7 +295,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []aws
 			m[attrIPv6CIDRBlock] = aws.ToString(r.DestinationIpv6CidrBlock)
 		}
 		if r.DestinationPrefixListId != nil {
-			m["destination_prefix_list_id"] = aws.ToString(r.DestinationPrefixListId)
+			m[routeDestinationPrefixListID] = aws.ToString(r.DestinationPrefixListId)
 		}
 		if r.CarrierGatewayId != nil {
 			m["carrier_gateway_id"] = aws.ToString(r.CarrierGatewayId)

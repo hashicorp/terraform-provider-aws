@@ -92,7 +92,7 @@ func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"s3": {
+						attrS3: {
 							Type:             schema.TypeList,
 							Optional:         true,
 							MaxItems:         1,
@@ -295,7 +295,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []any) *awstypes.Verified
 		result.LogVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrS3].([]any); ok && len(v) > 0 {
 		result.S3 = expandVerifiedAccessLogS3(v)
 	}
 
@@ -397,7 +397,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *awstypes.VerifiedAccessL
 	}
 
 	if v := apiObject.S3; v != nil {
-		tfMap["s3"] = flattenVerifiedAccessLogS3(v)
+		tfMap[attrS3] = flattenVerifiedAccessLogS3(v)
 	}
 
 	return []any{tfMap}

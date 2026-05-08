@@ -1068,7 +1068,7 @@ func sweepInternetGateways(region string) error {
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("isDefault"),
-				Values: []string{"true"},
+				Values: []string{filterValueTrue},
 			},
 		},
 	}
@@ -1609,7 +1609,7 @@ func sweepSecurityGroups(region string) error {
 		}
 
 		for _, sg := range page.SecurityGroups {
-			if aws.ToString(sg.GroupName) == "default" {
+			if aws.ToString(sg.GroupName) == defaultSecurityGroupName {
 				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.ToString(sg.GroupId))
 				continue
 			}
@@ -1652,7 +1652,7 @@ func sweepSecurityGroups(region string) error {
 		}
 
 		for _, sg := range page.SecurityGroups {
-			if aws.ToString(sg.GroupName) == "default" {
+			if aws.ToString(sg.GroupName) == defaultSecurityGroupName {
 				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.ToString(sg.GroupId))
 				continue
 			}
@@ -1665,7 +1665,7 @@ func sweepSecurityGroups(region string) error {
 			err := tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 				_, err := conn.DeleteSecurityGroup(ctx, &input)
 
-				if tfawserr.ErrCodeEquals(err, "DependencyViolation") {
+				if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
 					return tfresource.RetryableError(err)
 				}
 				if err != nil {

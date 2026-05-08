@@ -48,7 +48,7 @@ func resourceTrafficMirrorFilterRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"destination_cidr_block": {
+			routeDestinationCIDRBlock: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidCIDRNetworkAddress,
@@ -129,7 +129,7 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 
 	input := &ec2.CreateTrafficMirrorFilterRuleInput{
 		ClientToken:           aws.String(create.UniqueId(ctx)),
-		DestinationCidrBlock:  aws.String(d.Get("destination_cidr_block").(string)),
+		DestinationCidrBlock:  aws.String(d.Get(routeDestinationCIDRBlock).(string)),
 		RuleAction:            awstypes.TrafficMirrorRuleAction(d.Get("rule_action").(string)),
 		RuleNumber:            aws.Int32(int32(d.Get("rule_number").(int))),
 		SourceCidrBlock:       aws.String(d.Get("source_cidr_block").(string)),
@@ -183,7 +183,7 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 
 	d.Set(names.AttrARN, trafficMirrorFilterRuleARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, rule.Description)
-	d.Set("destination_cidr_block", rule.DestinationCidrBlock)
+	d.Set(routeDestinationCIDRBlock, rule.DestinationCidrBlock)
 	if rule.DestinationPortRange != nil {
 		if err := d.Set("destination_port_range", []any{flattenTrafficMirrorPortRange(rule.DestinationPortRange)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination_port_range: %s", err)
@@ -226,8 +226,8 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	if d.HasChange("destination_cidr_block") {
-		input.DestinationCidrBlock = aws.String(d.Get("destination_cidr_block").(string))
+	if d.HasChange(routeDestinationCIDRBlock) {
+		input.DestinationCidrBlock = aws.String(d.Get(routeDestinationCIDRBlock).(string))
 	}
 
 	if d.HasChange("destination_port_range") {

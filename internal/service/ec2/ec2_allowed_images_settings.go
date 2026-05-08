@@ -77,7 +77,7 @@ func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request reso
 								setvalidator.SizeAtMost(200),
 								setvalidator.ValueStringsAre(
 									stringvalidator.Any(
-										stringvalidator.OneOf("amazon", "aws-marketplace", "aws-backup-vault", "none"),
+										stringvalidator.OneOf("amazon", "aws-marketplace", "aws-backup-vault", "none"), //lintignore:literally
 										fwvalidators.AWSAccountID(),
 									),
 								),

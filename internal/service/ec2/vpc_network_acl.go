@@ -78,8 +78,8 @@ func resourceNetworkACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"egress":  networkACLRuleSetNestedBlock(),
-				"ingress": networkACLRuleSetNestedBlock(),
+				securityGroupRuleTypeEgress:  networkACLRuleSetNestedBlock(),
+				securityGroupRuleTypeIngress: networkACLRuleSetNestedBlock(),
 				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -237,10 +237,10 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 			ingressEntries = append(ingressEntries, v)
 		}
 	}
-	if err := d.Set("egress", flattenNetworkACLEntries(egressEntries)); err != nil {
+	if err := d.Set(securityGroupRuleTypeEgress, flattenNetworkACLEntries(egressEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting egress: %s", err)
 	}
-	if err := d.Set("ingress", flattenNetworkACLEntries(ingressEntries)); err != nil {
+	if err := d.Set(securityGroupRuleTypeIngress, flattenNetworkACLEntries(ingressEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
 	}
 
@@ -309,13 +309,13 @@ func resourceNetworkACLDelete(ctx context.Context, d *schema.ResourceData, meta 
 // Called after new NACL creation or existing default NACL adoption.
 // Tags are not configured.
 func modifyNetworkACLAttributesOnCreate(ctx context.Context, conn *ec2.Client, d *schema.ResourceData) error {
-	if v, ok := d.GetOk("egress"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(securityGroupRuleTypeEgress); ok && v.(*schema.Set).Len() > 0 {
 		if err := createNetworkACLEntries(ctx, conn, d.Id(), v.(*schema.Set).List(), true); err != nil {
 			return err
 		}
 	}
 
-	if v, ok := d.GetOk("ingress"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(securityGroupRuleTypeIngress); ok && v.(*schema.Set).Len() > 0 {
 		if err := createNetworkACLEntries(ctx, conn, d.Id(), v.(*schema.Set).List(), false); err != nil {
 			return err
 		}
@@ -335,8 +335,8 @@ func modifyNetworkACLAttributesOnCreate(ctx context.Context, conn *ec2.Client, d
 // modifyNetworkACLAttributesOnUpdate sets NACL attributes on resource Update.
 // Tags are configured.
 func modifyNetworkACLAttributesOnUpdate(ctx context.Context, conn *ec2.Client, d *schema.ResourceData, deleteAssociations bool) error {
-	if d.HasChange("ingress") {
-		o, n := d.GetChange("ingress")
+	if d.HasChange(securityGroupRuleTypeIngress) {
+		o, n := d.GetChange(securityGroupRuleTypeIngress)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if err := updateNetworkACLEntries(ctx, conn, d.Id(), os, ns, false); err != nil {
@@ -344,8 +344,8 @@ func modifyNetworkACLAttributesOnUpdate(ctx context.Context, conn *ec2.Client, d
 		}
 	}
 
-	if d.HasChange("egress") {
-		o, n := d.GetChange("egress")
+	if d.HasChange(securityGroupRuleTypeEgress) {
+		o, n := d.GetChange(securityGroupRuleTypeEgress)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if err := updateNetworkACLEntries(ctx, conn, d.Id(), os, ns, true); err != nil {

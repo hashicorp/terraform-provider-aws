@@ -120,7 +120,7 @@ func resourceVPNConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_cidr_block": {
+						routeDestinationCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1536,7 +1536,7 @@ func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.DestinationCidrBlock; v != nil {
-		tfMap["destination_cidr_block"] = aws.ToString(v)
+		tfMap[routeDestinationCIDRBlock] = aws.ToString(v)
 	}
 
 	tfMap[names.AttrSource] = apiObject.Source

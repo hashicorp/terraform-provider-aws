@@ -71,7 +71,7 @@ func migrateExpandIPPerm(attrs map[string]string) (*awstypes.IpPermission, error
 	perm.IpProtocol = aws.String(attrs[names.AttrProtocol])
 
 	groups := make(map[string]bool)
-	if attrs[attrSelf] == "true" {
+	if attrs[attrSelf] == "true" { //lintignore:literally
 		groups[attrs["security_group_id"]] = true
 	}
 

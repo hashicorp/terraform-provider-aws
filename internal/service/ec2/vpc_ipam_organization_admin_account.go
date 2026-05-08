@@ -78,7 +78,7 @@ func resourceIPAMOrganizationAdminAccountCreate(ctx context.Context, d *schema.R
 	output, err := conn.EnableIpamOrganizationAdminAccount(ctx, input)
 
 	if err == nil && !aws.ToBool(output.Success) {
-		err = errors.New("failed")
+		err = errors.New("failed") //lintignore:literally
 	}
 
 	if err != nil {
@@ -130,7 +130,7 @@ func resourceIPAMOrganizationAdminAccountDelete(ctx context.Context, d *schema.R
 	}
 
 	if err == nil && !aws.ToBool(output.Success) {
-		err = errors.New("failed")
+		err = errors.New("failed") //lintignore:literally
 	}
 
 	if err != nil {

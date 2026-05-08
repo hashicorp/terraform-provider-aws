@@ -44,7 +44,7 @@ func resourceTransitGatewayRoute() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			"destination_cidr_block": {
+			routeDestinationCIDRBlock: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -71,7 +71,7 @@ func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	destination := d.Get("destination_cidr_block").(string)
+	destination := d.Get(routeDestinationCIDRBlock).(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	id := transitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination)
 	input := &ec2.CreateTransitGatewayRouteInput{
@@ -119,7 +119,7 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock)
+	d.Set(routeDestinationCIDRBlock, transitGatewayRoute.DestinationCidrBlock)
 	if len(transitGatewayRoute.TransitGatewayAttachments) > 0 {
 		d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayRoute.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
 		d.Set("blackhole", false)

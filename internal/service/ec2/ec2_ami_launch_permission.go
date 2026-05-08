@@ -43,14 +43,14 @@ func resourceAMILaunchPermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, attrGroup, "organization_arn", "organizational_unit_arn"},
 			},
-			"group": {
+			attrGroup: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.PermissionGroup](),
-				ExactlyOneOf:     []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf:     []string{names.AttrAccountID, attrGroup, "organization_arn", "organizational_unit_arn"},
 			},
 			"image_id": {
 				Type:     schema.TypeString,
@@ -62,14 +62,14 @@ func resourceAMILaunchPermission() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, attrGroup, "organization_arn", "organizational_unit_arn"},
 			},
 			"organizational_unit_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, attrGroup, "organization_arn", "organizational_unit_arn"},
 			},
 		},
 	}
@@ -82,7 +82,7 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 
 	imageID := d.Get("image_id").(string)
 	accountID := d.Get(names.AttrAccountID).(string)
-	group := d.Get("group").(string)
+	group := d.Get(attrGroup).(string)
 	organizationARN := d.Get("organization_arn").(string)
 	organizationalUnitARN := d.Get("organizational_unit_arn").(string)
 	id := amiLaunchPermissionCreateResourceID(imageID, accountID, group, organizationARN, organizationalUnitARN)
@@ -127,7 +127,7 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set(names.AttrAccountID, accountID)
-	d.Set("group", group)
+	d.Set(attrGroup, group)
 	d.Set("image_id", imageID)
 	d.Set("organization_arn", organizationARN)
 	d.Set("organizational_unit_arn", organizationalUnitARN)
@@ -179,7 +179,7 @@ func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceDa
 				d.SetId(amiLaunchPermissionCreateResourceID(imageID, permissionID, "", "", ""))
 				ok = true
 			} else if arn.IsARN(permissionID) {
-				if v, _ := arn.Parse(permissionID); v.Service == "organizations" {
+				if v, _ := arn.Parse(permissionID); v.Service == names.Organizations {
 					// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsorganizations.html#awsorganizations-resources-for-iam-policies.
 					if strings.HasPrefix(v.Resource, "organization/") {
 						// Organization ARN.

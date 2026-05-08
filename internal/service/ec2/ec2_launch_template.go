@@ -699,7 +699,7 @@ func resourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"monitoring": {
+			attrMonitoring: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -1078,7 +1078,7 @@ func resourceLaunchTemplate() *schema.Resource {
 			customdiff.ComputedIf("default_version", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
-					case "name", "name_prefix", "description":
+					case names.AttrName, names.AttrNamePrefix, names.AttrDescription:
 						continue
 					default:
 						return diff.Get("update_default_version").(bool)
@@ -1089,7 +1089,7 @@ func resourceLaunchTemplate() *schema.Resource {
 			customdiff.ComputedIf("latest_version", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
-					case "name", "name_prefix", "description", "default_version", "update_default_version":
+					case names.AttrName, names.AttrNamePrefix, names.AttrDescription, "default_version", "update_default_version":
 						continue
 					default:
 						return true
@@ -1208,7 +1208,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"key_name",
 		"license_specification",
 		"metadata_options",
-		"monitoring",
+		attrMonitoring,
 		"network_interfaces",
 		"network_performance_options",
 		"placement",
@@ -1398,7 +1398,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("monitoring"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrMonitoring); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		tfMap := v.([]any)[0].(map[string]any)
 
 		apiObject.Monitoring = &awstypes.LaunchTemplatesMonitoringRequest{
@@ -2413,11 +2413,11 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 			names.AttrEnabled: aws.ToBool(apiObject.Monitoring.Enabled),
 		}
 
-		if err := d.Set("monitoring", []any{tfMap}); err != nil {
+		if err := d.Set(attrMonitoring, []any{tfMap}); err != nil {
 			return fmt.Errorf("setting monitoring: %w", err)
 		}
 	} else {
-		d.Set("monitoring", nil)
+		d.Set(attrMonitoring, nil)
 	}
 	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
 		return fmt.Errorf("setting network_interfaces: %w", err)

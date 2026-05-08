@@ -638,7 +638,7 @@ func resourceInstanceV1() *schema.Resource {
 					},
 				},
 			},
-			"monitoring": {
+			attrMonitoring: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

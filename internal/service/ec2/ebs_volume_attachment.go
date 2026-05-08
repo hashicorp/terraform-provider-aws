@@ -170,7 +170,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[DEBUG] Deleting EBS Volume Attachment: %s", d.Id())
 	_, err := conn.DetachVolume(ctx, &input)
 
-	if tfawserr.ErrMessageContains(err, errCodeIncorrectState, "available") {
+	if tfawserr.ErrMessageContains(err, errCodeIncorrectState, "available") { //lintignore:literally
 		return diags
 	}
 

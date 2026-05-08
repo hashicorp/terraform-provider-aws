@@ -24,12 +24,13 @@ import (
 )
 
 const (
-	filterKeyVPCID        = "vpc-id"
+	filterKeyDefault      = "default"
+	filterKeyDescription  = "description"
 	filterKeyGroupName    = "group-name"
-	filterKeyServiceName  = "service-name"
 	filterKeyResourceID   = "resource-id"
 	filterKeyResourceType = "resource-type"
-	filterKeyDefault      = "default"
+	filterKeyServiceName  = "service-name"
+	filterKeyVPCID        = "vpc-id"
 	filterValueTrue       = "true"
 )
 
@@ -2206,8 +2207,8 @@ func findSecurityGroupByDescriptionAndVPCID(ctx context.Context, conn *ec2.Clien
 	input := ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"description":  description, // nosemgrep:ci.literal-description-string-constant
-				filterKeyVPCID: vpcID,
+				filterKeyDescription: description, // nosemgrep:ci.literal-description-string-constant
+				filterKeyVPCID:       vpcID,
 			},
 		),
 	}

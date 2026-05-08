@@ -48,7 +48,7 @@ type transitGatewayMeteringPolicyEntryResource struct {
 func (r *transitGatewayMeteringPolicyEntryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"destination_cidr_block": schema.StringAttribute{
+			routeDestinationCIDRBlock: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

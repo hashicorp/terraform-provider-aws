@@ -594,7 +594,7 @@ func resourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"monitoring": {
+			attrMonitoring: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -1384,7 +1384,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						err := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
 							if err != nil {
-								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+								if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
 									return tfresource.RetryableError(err)
 								}
 								return tfresource.NonRetryableError(err)
@@ -1728,9 +1728,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if d.HasChange("monitoring") {
+	if d.HasChange(attrMonitoring) {
 		var mErr error
-		if d.Get("monitoring").(bool) {
+		if d.Get(attrMonitoring).(bool) {
 			log.Printf("[DEBUG] Enabling monitoring for Instance (%s)", d.Id())
 			input := ec2.MonitorInstancesInput{
 				InstanceIds: []string{d.Id()},
@@ -2308,7 +2308,7 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 	err := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(ctx, &input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
 				return tfresource.RetryableError(err)
 			}
 			return tfresource.NonRetryableError(err)
@@ -2864,7 +2864,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 	}
 
 	opts.Monitoring = &awstypes.RunInstancesMonitoringEnabled{
-		Enabled: aws.Bool(d.Get("monitoring").(bool)),
+		Enabled: aws.Bool(d.Get(attrMonitoring).(bool)),
 	}
 
 	if v, ok := d.GetOk("iam_instance_profile"); ok {
@@ -3401,7 +3401,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 
 	if instance.Monitoring != nil && instance.Monitoring.State != "" {
 		monitoringState := instance.Monitoring.State
-		rd.Set("monitoring", monitoringState == awstypes.MonitoringStateEnabled || monitoringState == awstypes.MonitoringStatePending)
+		rd.Set(attrMonitoring, monitoringState == awstypes.MonitoringStateEnabled || monitoringState == awstypes.MonitoringStatePending)
 	}
 
 	setTagsOut(ctx, instance.Tags)

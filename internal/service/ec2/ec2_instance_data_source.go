@@ -257,7 +257,7 @@ func dataSourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"monitoring": {
+			attrMonitoring: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -546,7 +546,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	if instance.Monitoring != nil {
 		monitoringState := string(instance.Monitoring.State)
-		d.Set("monitoring", monitoringState == names.AttrEnabled || monitoringState == "pending")
+		d.Set(attrMonitoring, monitoringState == names.AttrEnabled || monitoringState == string(awstypes.MonitoringStatePending))
 	}
 
 	setTagsOut(ctx, instance.Tags)

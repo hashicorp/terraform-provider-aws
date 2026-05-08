@@ -53,7 +53,7 @@ func resourceClientVPNRoute() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"destination_cidr_block": {
+			routeDestinationCIDRBlock: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -82,7 +82,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetSubnetID := d.Get("target_vpc_subnet_id").(string)
-	destinationCIDR := d.Get("destination_cidr_block").(string)
+	destinationCIDR := d.Get(routeDestinationCIDRBlock).(string)
 	id := clientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR)
 	input := &ec2.CreateClientVpnRouteInput{
 		ClientToken:          aws.String(create.UniqueId(ctx)),
@@ -135,7 +135,7 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("client_vpn_endpoint_id", route.ClientVpnEndpointId)
 	d.Set(names.AttrDescription, route.Description)
-	d.Set("destination_cidr_block", route.DestinationCidr)
+	d.Set(routeDestinationCIDRBlock, route.DestinationCidr)
 	d.Set("origin", route.Origin)
 	d.Set("target_vpc_subnet_id", route.TargetSubnet)
 	d.Set(names.AttrType, route.Type)

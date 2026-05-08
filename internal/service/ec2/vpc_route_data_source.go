@@ -37,17 +37,17 @@ func dataSourceRoute() *schema.Resource {
 			///
 			// Destinations.
 			///
-			"destination_cidr_block": {
+			routeDestinationCIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destination_ipv6_cidr_block": {
+			routeDestinationIPv6CIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destination_prefix_list_id": {
+			routeDestinationPrefixListID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -135,15 +135,15 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			continue
 		}
 
-		if v, ok := d.GetOk("destination_cidr_block"); ok && aws.ToString(r.DestinationCidrBlock) != v.(string) {
+		if v, ok := d.GetOk(routeDestinationCIDRBlock); ok && aws.ToString(r.DestinationCidrBlock) != v.(string) {
 			continue
 		}
 
-		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok && aws.ToString(r.DestinationIpv6CidrBlock) != v.(string) {
+		if v, ok := d.GetOk(routeDestinationIPv6CIDRBlock); ok && aws.ToString(r.DestinationIpv6CidrBlock) != v.(string) {
 			continue
 		}
 
-		if v, ok := d.GetOk("destination_prefix_list_id"); ok && aws.ToString(r.DestinationPrefixListId) != v.(string) {
+		if v, ok := d.GetOk(routeDestinationPrefixListID); ok && aws.ToString(r.DestinationPrefixListId) != v.(string) {
 			continue
 		}
 
@@ -210,9 +210,9 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
-	d.Set("destination_cidr_block", route.DestinationCidrBlock)
-	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
-	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
+	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)
+	d.Set(routeDestinationIPv6CIDRBlock, route.DestinationIpv6CidrBlock)
+	d.Set(routeDestinationPrefixListID, route.DestinationPrefixListId)
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set(attrGatewayID, route.GatewayId)
 	d.Set(names.AttrInstanceID, route.InstanceId)

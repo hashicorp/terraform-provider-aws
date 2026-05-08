@@ -49,8 +49,8 @@ func resourceDefaultSecurityGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"egress":  securityGroupRuleSetNestedBlock,
-			"ingress": securityGroupRuleSetNestedBlock,
+			securityGroupRuleTypeEgress:  securityGroupRuleSetNestedBlock,
+			securityGroupRuleTypeIngress: securityGroupRuleSetNestedBlock,
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,

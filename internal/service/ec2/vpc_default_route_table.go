@@ -79,7 +79,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 						},
-						"destination_prefix_list_id": {
+						routeDestinationPrefixListID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},

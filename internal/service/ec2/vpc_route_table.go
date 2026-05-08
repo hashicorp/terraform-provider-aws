@@ -33,7 +33,7 @@ import (
 var routeTableValidDestinations = []string{
 	names.AttrCIDRBlock,
 	attrIPv6CIDRBlock,
-	"destination_prefix_list_id",
+	routeDestinationPrefixListID,
 }
 
 var routeTableValidTargets = []string{
@@ -98,7 +98,7 @@ func resourceRouteTable() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 						},
-						"destination_prefix_list_id": {
+						routeDestinationPrefixListID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -400,7 +400,7 @@ func resourceRouteTableHash(v any) int {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
-	if v, ok := m["destination_prefix_list_id"]; ok {
+	if v, ok := m[routeDestinationPrefixListID]; ok {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
@@ -463,11 +463,11 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 	var routeFinder routeFinder
 
 	switch destinationAttributeKey {
-	case "cidr_block":
+	case names.AttrCIDRBlock:
 		routeFinder = findRouteByIPv4Destination
 	case attrIPv6CIDRBlock:
 		routeFinder = findRouteByIPv6Destination
-	case "destination_prefix_list_id":
+	case routeDestinationPrefixListID:
 		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
@@ -534,13 +534,13 @@ func routeTableDeleteRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 	var routeFinder routeFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
-	case "cidr_block":
+	case names.AttrCIDRBlock:
 		input.DestinationCidrBlock = destination
 		routeFinder = findRouteByIPv4Destination
 	case attrIPv6CIDRBlock:
 		input.DestinationIpv6CidrBlock = destination
 		routeFinder = findRouteByIPv6Destination
-	case "destination_prefix_list_id":
+	case routeDestinationPrefixListID:
 		input.DestinationPrefixListId = destination
 		routeFinder = findRouteByPrefixListIDDestination
 	default:
@@ -578,11 +578,11 @@ func routeTableUpdateRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 	var routeFinder routeFinder
 
 	switch destinationAttributeKey {
-	case "cidr_block":
+	case names.AttrCIDRBlock:
 		routeFinder = findRouteByIPv4Destination
 	case attrIPv6CIDRBlock:
 		routeFinder = findRouteByIPv6Destination
-	case "destination_prefix_list_id":
+	case routeDestinationPrefixListID:
 		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
@@ -664,7 +664,7 @@ func expandCreateRouteInput(tfMap map[string]any) *ec2.CreateRouteInput {
 		apiObject.DestinationIpv6CidrBlock = aws.String(v)
 	}
 
-	if v, ok := tfMap["destination_prefix_list_id"].(string); ok && v != "" {
+	if v, ok := tfMap[routeDestinationPrefixListID].(string); ok && v != "" {
 		apiObject.DestinationPrefixListId = aws.String(v)
 	}
 
@@ -726,7 +726,7 @@ func expandReplaceRouteInput(tfMap map[string]any) *ec2.ReplaceRouteInput {
 		apiObject.DestinationIpv6CidrBlock = aws.String(v)
 	}
 
-	if v, ok := tfMap["destination_prefix_list_id"].(string); ok && v != "" {
+	if v, ok := tfMap[routeDestinationPrefixListID].(string); ok && v != "" {
 		apiObject.DestinationPrefixListId = aws.String(v)
 	}
 
@@ -793,7 +793,7 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 	}
 
 	if v := apiObject.DestinationPrefixListId; v != nil {
-		tfMap["destination_prefix_list_id"] = aws.ToString(v)
+		tfMap[routeDestinationPrefixListID] = aws.ToString(v)
 	}
 
 	if v := apiObject.CarrierGatewayId; v != nil {
@@ -896,7 +896,7 @@ func hasLocalConfig(d *schema.ResourceData, apiObject awstypes.Route) bool {
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(map[string]any)
 			if v[names.AttrCIDRBlock].(string) != aws.ToString(apiObject.DestinationCidrBlock) &&
-				v["destination_prefix_list_id"] != aws.ToString(apiObject.DestinationPrefixListId) &&
+				v[routeDestinationPrefixListID] != aws.ToString(apiObject.DestinationPrefixListId) &&
 				v[attrIPv6CIDRBlock] != aws.ToString(apiObject.DestinationIpv6CidrBlock) {
 				continue
 			}

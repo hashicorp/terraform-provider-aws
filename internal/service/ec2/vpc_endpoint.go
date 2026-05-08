@@ -795,7 +795,7 @@ func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []any {
 }
 
 func vpcEndpointARN(ctx context.Context, c *conns.AWSClient, ownerID, vpceID string) string {
-	return c.RegionalARNWithAccount(ctx, "ec2", ownerID, "vpc-endpoint/"+vpceID)
+	return c.RegionalARNWithAccount(ctx, names.EC2, ownerID, "vpc-endpoint/"+vpceID)
 }
 
 func resourceVPCEndpointFlatten(ctx context.Context, awsClient *conns.AWSClient, vpce *awstypes.VpcEndpoint, d *schema.ResourceData) error {

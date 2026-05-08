@@ -37,7 +37,7 @@ func resourceLocalGatewayRoute() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"destination_cidr_block": {
+			routeDestinationCIDRBlock: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -61,7 +61,7 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	destinationCIDRBlock := d.Get("destination_cidr_block").(string)
+	destinationCIDRBlock := d.Get(routeDestinationCIDRBlock).(string)
 	localGatewayRouteTableID := d.Get("local_gateway_route_table_id").(string)
 	id := localGatewayRouteCreateResourceID(localGatewayRouteTableID, destinationCIDRBlock)
 	input := &ec2.CreateLocalGatewayRouteInput{
@@ -107,7 +107,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	d.Set("destination_cidr_block", localGatewayRoute.DestinationCidrBlock)
+	d.Set(routeDestinationCIDRBlock, localGatewayRoute.DestinationCidrBlock)
 	d.Set("local_gateway_virtual_interface_group_id", localGatewayRoute.LocalGatewayVirtualInterfaceGroupId)
 	d.Set("local_gateway_route_table_id", localGatewayRoute.LocalGatewayRouteTableId)
 

@@ -72,8 +72,8 @@ func resourceDefaultNetworkACL() *schema.Resource {
 				// We want explicit management of Rules here, so we do not allow them to be
 				// computed. Instead, an empty config will enforce just that; removal of the
 				// rules
-				"egress":  networkACLRuleSetNestedBlock(),
-				"ingress": networkACLRuleSetNestedBlock(),
+				securityGroupRuleTypeEgress:  networkACLRuleSetNestedBlock(),
+				securityGroupRuleTypeIngress: networkACLRuleSetNestedBlock(),
 				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,

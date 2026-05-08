@@ -125,7 +125,7 @@ func networkInsightsAnalysisPathComponentsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"egress": {
+							securityGroupRuleTypeEgress: {
 								Type:     schema.TypeBool,
 								Computed: true,
 							},
@@ -369,7 +369,7 @@ func networkInsightsAnalysisPathComponentsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"destination_prefix_list_id": {
+							routeDestinationPrefixListID: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -612,7 +612,7 @@ func networkInsightsAnalysisExplanationsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"egress": {
+							securityGroupRuleTypeEgress: {
 								Type:     schema.TypeBool,
 								Computed: true,
 							},
@@ -1024,7 +1024,7 @@ func networkInsightsAnalysisExplanationsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"destination_prefix_list_id": {
+							routeDestinationPrefixListID: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -1586,7 +1586,7 @@ func flattenAnalysisAclRule(apiObject *awstypes.AnalysisAclRule) map[string]any 
 	}
 
 	if v := apiObject.Egress; v != nil {
-		tfMap["egress"] = aws.ToBool(v)
+		tfMap[securityGroupRuleTypeEgress] = aws.ToBool(v)
 	}
 
 	if v := apiObject.PortRange; v != nil {
@@ -1730,7 +1730,7 @@ func flattenAnalysisRouteTableRoute(apiObject *awstypes.AnalysisRouteTableRoute)
 	}
 
 	if v := apiObject.DestinationPrefixListId; v != nil {
-		tfMap["destination_prefix_list_id"] = aws.ToString(v)
+		tfMap[routeDestinationPrefixListID] = aws.ToString(v)
 	}
 
 	if v := apiObject.EgressOnlyInternetGatewayId; v != nil {

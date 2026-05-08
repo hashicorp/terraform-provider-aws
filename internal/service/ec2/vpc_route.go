@@ -238,11 +238,11 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.LocalGatewayId = target
 	case "nat_gateway_id":
 		input.NatGatewayId = target
-	case "network_interface_id":
+	case names.AttrNetworkInterfaceID:
 		input.NetworkInterfaceId = target
-	case "transit_gateway_id":
+	case names.AttrTransitGatewayID:
 		input.TransitGatewayId = target
-	case "vpc_endpoint_id":
+	case names.AttrVPCEndpointID:
 		input.VpcEndpointId = target
 	case "vpc_peering_connection_id":
 		input.VpcPeeringConnectionId = target
@@ -407,11 +407,11 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.LocalGatewayId = target
 	case "nat_gateway_id":
 		input.NatGatewayId = target
-	case "network_interface_id":
+	case names.AttrNetworkInterfaceID:
 		input.NetworkInterfaceId = target
-	case "transit_gateway_id":
+	case names.AttrTransitGatewayID:
 		input.TransitGatewayId = target
-	case "vpc_endpoint_id":
+	case names.AttrVPCEndpointID:
 		input.VpcEndpointId = target
 	case "vpc_peering_connection_id":
 		input.VpcPeeringConnectionId = target

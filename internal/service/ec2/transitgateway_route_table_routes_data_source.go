@@ -30,7 +30,7 @@ func dataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_cidr_block": {
+						routeDestinationCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -83,11 +83,11 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 	routes := []any{}
 	for _, route := range output {
 		routes = append(routes, map[string]any{
-			"destination_cidr_block": aws.ToString(route.DestinationCidrBlock),
-			"prefix_list_id":         aws.ToString(route.PrefixListId),
-			names.AttrState:          route.State,
+			routeDestinationCIDRBlock:                     aws.ToString(route.DestinationCidrBlock),
+			"prefix_list_id":                              aws.ToString(route.PrefixListId),
+			names.AttrState:                               route.State,
 			"transit_gateway_route_table_announcement_id": aws.ToString(route.TransitGatewayRouteTableAnnouncementId),
-			names.AttrType: route.Type,
+			names.AttrType:                                route.Type,
 		})
 	}
 

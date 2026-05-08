@@ -615,7 +615,7 @@ func launchTemplateSchemaV0() *schema.Resource {
 					},
 				},
 			},
-			"monitoring": {
+			attrMonitoring: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,

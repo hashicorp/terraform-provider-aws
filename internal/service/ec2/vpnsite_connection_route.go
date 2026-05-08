@@ -29,7 +29,7 @@ func resourceVPNConnectionRoute() *schema.Resource {
 		DeleteWithoutTimeout: resourceVPNConnectionRouteDelete,
 
 		Schema: map[string]*schema.Schema{
-			"destination_cidr_block": {
+			routeDestinationCIDRBlock: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,7 +47,7 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	cidrBlock := d.Get("destination_cidr_block").(string)
+	cidrBlock := d.Get(routeDestinationCIDRBlock).(string)
 	vpnConnectionID := d.Get("vpn_connection_id").(string)
 	id := vpnConnectionRouteCreateResourceID(cidrBlock, vpnConnectionID)
 	input := ec2.CreateVpnConnectionRouteInput{
@@ -91,7 +91,7 @@ func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection Route (%s): %s", d.Id(), err)
 	}
 
-	d.Set("destination_cidr_block", cidrBlock)
+	d.Set(routeDestinationCIDRBlock, cidrBlock)
 	d.Set("vpn_connection_id", vpnConnectionID)
 
 	return diags

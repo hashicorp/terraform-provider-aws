@@ -246,7 +246,7 @@ func resourceSpotFleetRequest() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.NoZeroValues,
 						},
-						"monitoring": {
+						attrMonitoring: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -1244,7 +1244,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]any, me
 		opts.EbsOptimized = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d["monitoring"]; ok {
+	if v, ok := d[attrMonitoring]; ok {
 		opts.Monitoring = &awstypes.SpotFleetMonitoring{
 			Enabled: aws.Bool(v.(bool)),
 		}
@@ -1888,7 +1888,7 @@ func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecificatio
 	}
 
 	if l.Monitoring != nil && l.Monitoring.Enabled != nil {
-		m["monitoring"] = aws.ToBool(l.Monitoring.Enabled)
+		m[attrMonitoring] = aws.ToBool(l.Monitoring.Enabled)
 	}
 
 	if l.IamInstanceProfile != nil && l.IamInstanceProfile.Name != nil {

@@ -567,7 +567,7 @@ func dataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"monitoring": {
+			attrMonitoring: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{

@@ -812,7 +812,7 @@ func isUnauthorizedError(err error) bool {
 		return false
 	}
 	errMsg := err.Error()
-	return strings.Contains(errMsg, "UnauthorizedOperation") ||
+	return strings.Contains(errMsg, errCodeUnauthorizedOperation) ||
 		strings.Contains(errMsg, "AccessDenied") ||
 		strings.Contains(errMsg, "not authorized")
 }

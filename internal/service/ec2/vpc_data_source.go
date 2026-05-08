@@ -64,7 +64,7 @@ func dataSourceVPC() *schema.Resource {
 					},
 				},
 			},
-			"default": {
+			attrDefault: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -133,7 +133,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	// the default, because Terraform can't distinguish between
 	// "false" and "not set".
 	isDefaultStr := ""
-	if d.Get("default").(bool) {
+	if d.Get(attrDefault).(bool) {
 		isDefaultStr = filterValueTrue
 	}
 	input := &ec2.DescribeVpcsInput{
@@ -169,7 +169,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	ownerID := aws.String(aws.ToString(vpc.OwnerId))
 	d.Set(names.AttrARN, vpcARN(ctx, c, aws.ToString(ownerID), d.Id()))
 	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
-	d.Set("default", vpc.IsDefault)
+	d.Set(attrDefault, vpc.IsDefault)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set(names.AttrOwnerID, ownerID)
