@@ -42,7 +42,10 @@ import (
 )
 
 // @FrameworkResource("aws_neptunegraph_graph", name="Graph")
+// @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/neptunegraph;neptunegraph.GetGraphOutput")
+// @Testing(preIdentityVersion="v6.44.0")
 func newGraphResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &graphResource{}
 
@@ -55,7 +58,7 @@ func newGraphResource(_ context.Context) (resource.ResourceWithConfigure, error)
 
 type graphResource struct {
 	framework.ResourceWithModel[graphResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -332,7 +335,7 @@ func (r *graphResource) Create(ctx context.Context, request resource.CreateReque
 		create.WithConfiguredName(data.Name.ValueString()),
 		create.WithConfiguredPrefix(data.NamePrefix.ValueString()),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 
 	// Determine whether to use CreateGraphUsingImportTask or CreateGraph API
 	if !data.ImportTask.IsNull() && !data.ImportTask.IsUnknown() {
