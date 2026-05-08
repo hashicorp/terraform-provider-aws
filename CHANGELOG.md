@@ -5,8 +5,13 @@ FEATURES:
 * **New Resource:** `aws_observabilityadmin_telemetry_evaluation` ([#47799](https://github.com/hashicorp/terraform-provider-aws/issues/47799))
 * **New Resource:** `aws_securityhub_aggregator_v2` ([#47651](https://github.com/hashicorp/terraform-provider-aws/issues/47651))
 
+ENHANCEMENTS:
+
+* resource/aws_secretsmanager_secret_version: Allow switching from `secret_string` to `secret_string_wo` without re-creating the resource. ([#47815](https://github.com/hashicorp/terraform-provider-aws/issues/47815))
+
 BUG FIXES:
 
+* resource/aws_elasticache_cluster: Fixed by removing valkey as an engine option to keep an alignment with aws sdk CreateCacheCluster ([#45017](https://github.com/hashicorp/terraform-provider-aws/issues/45017))
 * resource/aws_grafana_workspace: Fix `network_access_control` regression causing `ValidationException` when only one of `vpce_ids` or `prefix_list_ids` is set ([#47646](https://github.com/hashicorp/terraform-provider-aws/issues/47646))
 
 ## 6.44.0 (May 6, 2025)

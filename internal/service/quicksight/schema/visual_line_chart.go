@@ -286,6 +286,222 @@ func lineChartVisualSchema() *schema.Schema {
 	}
 }
 
+func lineChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"contribution_analysis_defaults": contributionAnalysisDefaultsDataSourceSchema(),
+							"data_labels":                    dataLabelOptionsDataSourceSchema(),
+							"default_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartDefaultSeriesSettings.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"axis_binding":          stringEnumDataSourceSchema[awstypes.AxisBinding](),
+										"line_style_settings":   lineChartLineStyleSettingsDataSourceSchema(),
+										"marker_style_settings": lineChartMarkerStyleSettingsDataSourceSchema(),
+									},
+								},
+							},
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"line_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":        dimensionFieldDataSourceSchema(),
+													"colors":          dimensionFieldDataSourceSchema(),
+													"small_multiples": dimensionFieldDataSourceSchema(),
+													names.AttrValues:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"forecast_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ForecastConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"forecast_properties": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeBasedForecastProperties.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"lower_boundary":      floatComputedOnly(),
+													"periods_backward":    intComputedOnly(),
+													"periods_forward":     intComputedOnly(),
+													"prediction_interval": intComputedOnly(),
+													"seasonality":         intComputedOnly(),
+													"upper_boundary":      floatComputedOnly(),
+												},
+											},
+										},
+										"scenario": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ForecastScenario.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"what_if_point_scenario": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WhatIfPointScenario.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"date":          stringComputedOnly(),
+																names.AttrValue: floatComputedOnly(),
+															},
+														},
+													},
+													"what_if_range_scenario": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WhatIfRangeScenario.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"end_date":      stringComputedOnly(),
+																"start_date":    stringComputedOnly(),
+																names.AttrValue: floatComputedOnly(),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend": legendOptionsDataSourceSchema(),
+							"primary_y_axis_display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineSeriesAxisDisplayOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"axis_options": axisDisplayOptionsDataSourceSchema(),
+										"missing_data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MissingDataConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"treatment_option": stringEnumDataSourceSchema[awstypes.MissingDataTreatmentOption](),
+												},
+											},
+										},
+									},
+								},
+							},
+							"primary_y_axis_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"reference_lines":              referenceLineDataSourceSchema(),
+							"secondary_y_axis_display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineSeriesAxisDisplayOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"axis_options": axisDisplayOptionsDataSourceSchema(),
+										"missing_data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MissingDataConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"treatment_option": stringEnumDataSourceSchema[awstypes.MissingDataTreatmentOption](),
+												},
+											},
+										},
+									},
+								},
+							},
+							"secondary_y_axis_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"series": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SeriesItem.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"data_field_series_item": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataFieldSeriesItem.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"axis_binding": stringEnumDataSourceSchema[awstypes.AxisBinding](),
+													"field_id":     stringComputedOnly(),
+													"field_value":  stringComputedOnly(),
+													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"line_style_settings":   lineChartLineStyleSettingsDataSourceSchema(),
+																"marker_style_settings": lineChartMarkerStyleSettingsDataSourceSchema(),
+															},
+														},
+													},
+												},
+											},
+										},
+										"field_series_item": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSeriesItem.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"axis_binding": stringEnumDataSourceSchema[awstypes.AxisBinding](),
+													"field_id":     stringComputedOnly(),
+													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"line_style_settings":   lineChartLineStyleSettingsDataSourceSchema(),
+																"marker_style_settings": lineChartMarkerStyleSettingsDataSourceSchema(),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"small_multiples_options": smallMultiplesOptionsDataSourceSchema(),
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit_configuration":  itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":                       fieldSortOptionsDataSourceSchema(),
+										"color_items_limit_configuration":     itemsLimitConfigurationDataSourceSchema(),
+										"small_multiples_limit_configuration": itemsLimitConfigurationDataSourceSchema(),
+										"small_multiples_sort":                fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip":                tooltipOptionsDataSourceSchema(),
+							names.AttrType:           stringEnumDataSourceSchema[awstypes.LineChartType](),
+							"visual_palette":         visualPaletteDataSourceSchema(),
+							"x_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+							"x_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":              visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 var lineChartLineStyleSettingsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartLineStyleSettings.html
 		Type:     schema.TypeList,
@@ -306,6 +522,21 @@ var lineChartLineStyleSettingsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var lineChartLineStyleSettingsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartLineStyleSettings.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"line_interpolation": stringEnumDataSourceSchema[awstypes.LineInterpolation](),
+				"line_style":         stringEnumDataSourceSchema[awstypes.LineChartLineStyle](),
+				"line_visibility":    stringEnumDataSourceSchema[awstypes.Visibility](),
+				"line_width":         stringComputedOnly(),
+			},
+		},
+	}
+})
+
 var lineChartMarkerStyleSettingsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartMarkerStyleSettings.html
 		Type:     schema.TypeList,
@@ -321,6 +552,21 @@ var lineChartMarkerStyleSettingsSchema = sync.OnceValue(func() *schema.Schema {
 					Optional: true,
 				},
 				"marker_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+			},
+		},
+	}
+})
+
+var lineChartMarkerStyleSettingsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartMarkerStyleSettings.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"marker_color":      stringComputedOnly(),
+				"marker_shape":      stringEnumDataSourceSchema[awstypes.LineChartMarkerShape](),
+				"marker_size":       stringComputedOnly(),
+				"marker_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}

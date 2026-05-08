@@ -18,7 +18,7 @@ func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_glue_connection.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

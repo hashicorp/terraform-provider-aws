@@ -111,6 +111,81 @@ func histogramVisualSchema() *schema.Schema {
 	}
 }
 
+func histogramVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bin_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramBinOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bin_count": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BinCountOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrValue: intComputedOnly(),
+												},
+											},
+										},
+										"bin_width": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BinWidthOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"bin_count_limit": intComputedOnly(),
+													names.AttrValue:   floatComputedOnly(),
+												},
+											},
+										},
+										"selected_bin_type": stringEnumDataSourceSchema[awstypes.HistogramBinType](),
+										"start_value":       floatComputedOnly(),
+									},
+								},
+							},
+							"data_labels": dataLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"histogram_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrValues: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"tooltip":                tooltipOptionsDataSourceSchema(),
+							"visual_palette":         visualPaletteDataSourceSchema(),
+							"x_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+							"x_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
+							"y_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+						},
+					},
+				},
+				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":    visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandHistogramVisual(tfList []any) *awstypes.HistogramVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

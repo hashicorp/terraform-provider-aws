@@ -921,7 +921,7 @@ func testAccServer_protocols(t *testing.T) {
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rootDomain := acctest.RandomDomainName()
+	rootDomain := acctest.RandomDomainName(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1131,7 +1131,7 @@ func testAccServer_directoryService(t *testing.T) {
 	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {

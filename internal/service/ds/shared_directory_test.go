@@ -22,7 +22,7 @@ func TestAccDSSharedDirectory_basic(t *testing.T) {
 	var v awstypes.SharedDirectory
 	resourceName := "aws_directory_service_shared_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -56,7 +56,7 @@ func TestAccDSSharedDirectory_disappears(t *testing.T) {
 	var v awstypes.SharedDirectory
 	resourceName := "aws_directory_service_shared_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

@@ -1136,7 +1136,7 @@ func TestAccRDSCluster_domain(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

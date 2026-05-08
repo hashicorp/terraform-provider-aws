@@ -19,7 +19,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)AWS"
+            - pattern-regex: "(AWS|Aws|aws)"
       - focus-metavariable: $NAME
     severity: WARNING
   - id: aws-in-const-name
@@ -37,7 +37,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)AWS"
+            - pattern-regex: "(AWS|Aws|aws)"
             - pattern-not-regex: "[Aa]wsSdkId"
     severity: WARNING
   - id: aws-in-var-name
@@ -56,7 +56,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)AWS"
+            - pattern-regex: "(AWS|Aws|aws)"
             - pattern-not-regex: "[Aa]wsSdkId"
     severity: WARNING
   - id: caps0-in-func-name

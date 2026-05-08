@@ -640,7 +640,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 	var def awstypes.TaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

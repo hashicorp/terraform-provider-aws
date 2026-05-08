@@ -17,7 +17,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -55,7 +55,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

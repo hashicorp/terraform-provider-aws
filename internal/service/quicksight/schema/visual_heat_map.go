@@ -83,6 +83,67 @@ func heatMapVisualSchema() *schema.Schema {
 	}
 }
 
+func heatMapVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"color_scale":          colorScaleDataSourceSchema(),
+							"column_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"data_labels":          dataLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"heat_map_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"columns":        dimensionFieldDataSourceSchema(),
+													"rows":           dimensionFieldDataSourceSchema(),
+													names.AttrValues: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":            legendOptionsDataSourceSchema(),
+							"row_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"heat_map_column_items_limit_configuration": itemsLimitConfigurationDataSourceSchema(),
+										"heat_map_column_sort":                      fieldSortOptionsDataSourceSchema(),
+										"heat_map_row_items_limit_configuration":    itemsLimitConfigurationDataSourceSchema(),
+										"heat_map_row_sort":                         fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip": tooltipOptionsDataSourceSchema(),
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":              visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandHeatMapVisual(tfList []any) *awstypes.HeatMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

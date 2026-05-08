@@ -119,6 +119,95 @@ func filledMapVisualSchema() *schema.Schema {
 	}
 }
 
+func filledMapVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"filled_map_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"geospatial":     dimensionFieldDataSourceSchema(),
+													names.AttrValues: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":            legendOptionsDataSourceSchema(),
+							"map_style_options": geospatialMapStyleOptionsDataSourceSchema(),
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_sort": fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip":        tooltipOptionsDataSourceSchema(),
+							"window_options": geospatialWindowOptionsDataSourceSchema(),
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"conditional_formatting": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapConditionalFormatting.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"conditional_formatting_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapConditionalFormattingOption.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"shape": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapShapeConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"field_id": stringComputedOnly(),
+													names.AttrFormat: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShapeConditionalFormat.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"background_color": conditionalFormattingColorDataSourceSchema(),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":    visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandFilledMapVisual(tfList []any) *awstypes.FilledMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

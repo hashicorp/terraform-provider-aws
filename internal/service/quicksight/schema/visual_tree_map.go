@@ -82,6 +82,66 @@ func treeMapVisualSchema() *schema.Schema {
 	}
 }
 
+func treeMapVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"color_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"color_scale":         colorScaleDataSourceSchema(),
+							"data_labels":         dataLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"tree_map_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"colors": measureFieldDataSourceSchema(),
+													"groups": dimensionFieldDataSourceSchema(),
+													"sizes":  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"group_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"legend":              legendOptionsDataSourceSchema(),
+							"size_label_options":  chartAxisLabelOptionsDataSourceSchema(),
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"tree_map_group_items_limit_configuration": itemsLimitConfigurationDataSourceSchema(),
+										"tree_map_sort": fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip": tooltipOptionsDataSourceSchema(),
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":              visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandTreeMapVisual(tfList []any) *awstypes.TreeMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

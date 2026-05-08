@@ -96,6 +96,75 @@ func waterfallVisualSchema() *schema.Schema {
 	}
 }
 
+func waterfallVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"category_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+							"category_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
+							"data_labels":                   dataLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"waterfall_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"breakdowns":     dimensionFieldDataSourceSchema(),
+													"categories":     dimensionFieldDataSourceSchema(),
+													names.AttrValues: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":                         legendOptionsDataSourceSchema(),
+							"primary_y_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+							"primary_y_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"breakdown_items_limit": itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":         fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"visual_palette": visualPaletteDataSourceSchema(),
+							"waterfall_chart_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"total_bar_label": stringComputedOnly(),
+									},
+								},
+							},
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":              visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandWaterfallVisual(tfList []any) *awstypes.WaterfallVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

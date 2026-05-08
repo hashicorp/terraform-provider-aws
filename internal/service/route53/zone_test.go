@@ -29,7 +29,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -83,7 +83,7 @@ func TestAccRoute53Zone_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -106,7 +106,7 @@ func TestAccRoute53Zone_disappears(t *testing.T) {
 func TestAccRoute53Zone_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone0, zone1, zone2, zone3, zone4 route53.GetHostedZoneOutput
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -137,7 +137,7 @@ func TestAccRoute53Zone_comment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -184,7 +184,7 @@ func TestAccRoute53Zone_delegationSetID(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 	delegationSetResourceName := "aws_route53_delegation_set.test"
 	resourceName := "aws_route53_zone.test"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -213,7 +213,7 @@ func TestAccRoute53Zone_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -238,7 +238,7 @@ func TestAccRoute53Zone_ForceDestroy_trailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -263,7 +263,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -336,7 +336,7 @@ func TestAccRoute53Zone_VPC_single(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_zone.test"
 	vpcResourceName := "aws_vpc.test1"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -369,7 +369,7 @@ func TestAccRoute53Zone_VPC_multiple(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	vpcResourceName1 := "aws_vpc.test1"
 	vpcResourceName2 := "aws_vpc.test2"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -403,7 +403,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	vpcResourceName1 := "aws_vpc.test1"
 	vpcResourceName2 := "aws_vpc.test2"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -465,7 +465,7 @@ func TestAccRoute53Zone_VPC_single_forceDestroy(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_zone.test"
 	vpcResourceName := "aws_vpc.test1"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -492,7 +492,7 @@ func TestAccRoute53Zone_escapedCharacter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -546,7 +546,7 @@ func TestAccRoute53Zone_escapedSlash(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	zoneName := "0/24." + acctest.RandomDomainName()
+	zoneName := "0/24." + acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -575,7 +575,7 @@ func TestAccRoute53Zone_escapedSpace(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
 	// double-escape is required for templating the tf resource
-	zoneName := "a\\\\040b." + acctest.RandomDomainName()
+	zoneName := "a\\\\040b." + acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -604,8 +604,8 @@ func TestAccRoute53Zone_enableAcceleratedRecovery(t *testing.T) {
 	var zone1, zone2 route53.GetHostedZoneOutput
 	resourceName1 := "aws_route53_zone.test1"
 	resourceName2 := "aws_route53_zone.test2"
-	zoneName1 := acctest.RandomDomainName()
-	zoneName2 := acctest.RandomDomainName()
+	zoneName1 := acctest.RandomDomainName(t)
+	zoneName2 := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -663,8 +663,8 @@ func TestAccRoute53Zone_nameUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var zone1, zone2 route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
-	zoneName1 := acctest.RandomDomainName()
-	zoneName2 := acctest.RandomDomainName()
+	zoneName1 := acctest.RandomDomainName(t)
+	zoneName2 := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

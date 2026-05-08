@@ -381,7 +381,7 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 	emailAddress3 := acctest.RandomEmailAddress(domain)

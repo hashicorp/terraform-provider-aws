@@ -108,6 +108,88 @@ func geospatialMapVisualSchema() *schema.Schema {
 	}
 }
 
+func geospatialMapVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"geospatial_map_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"colors":         dimensionFieldDataSourceSchema(),
+													"geospatial":     dimensionFieldDataSourceSchema(),
+													names.AttrValues: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":            legendOptionsDataSourceSchema(),
+							"map_style_options": geospatialMapStyleOptionsDataSourceSchema(),
+							"point_style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialPointStyleOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cluster_marker_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ClusterMarkerConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cluster_marker": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ClusterMarker.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"simple_cluster_marker": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SimpleClusterMarker.html
+																	Type:     schema.TypeList,
+																	Computed: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"color": stringComputedOnly(),
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"selected_point_style": stringEnumDataSourceSchema[awstypes.GeospatialSelectedPointStyle](),
+									},
+								},
+							},
+							"tooltip":        tooltipOptionsDataSourceSchema(),
+							"visual_palette": visualPaletteDataSourceSchema(),
+							"window_options": geospatialWindowOptionsDataSourceSchema(),
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":              visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandGeospatialMapVisual(tfList []any) *awstypes.GeospatialMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

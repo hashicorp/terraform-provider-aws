@@ -213,6 +213,173 @@ func kpiVisualSchema() *schema.Schema {
 	}
 }
 
+func kpiVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_values":  measureFieldDataSourceSchema(),
+										"trend_groups":   dimensionFieldDataSourceSchema(),
+										names.AttrValues: measureFieldDataSourceSchema(),
+									},
+								},
+							},
+							"kpi_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"comparison":                       comparisonConfigurationDataSourceSchema(),
+										"primary_value_display_type":       stringEnumDataSourceSchema[awstypes.PrimaryValueDisplayType](),
+										"primary_value_font_configuration": fontConfigurationDataSourceSchema(),
+										"progress_bar": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ProgressBarOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+										"secondary_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SecondaryValueOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+										"secondary_value_font_configuration": fontConfigurationDataSourceSchema(),
+										"sparkline": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISparklineOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"color":              stringComputedOnly(),
+													"tooltip_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+													names.AttrType:       stringEnumDataSourceSchema[awstypes.KPISparklineType](),
+													"visibility":         stringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+										"trend_arrows": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TrendArrowOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+										"visual_layout_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIVisualLayoutOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"standard_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIVisualStandardLayout.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrType: stringEnumDataSourceSchema[awstypes.KPIVisualStandardLayoutType](),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"trend_group_sort": fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"conditional_formatting": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConditionalFormatting.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"conditional_formatting_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConditionalFormattingOption.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"actual_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIActualValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconDataSourceSchema(),
+													"text_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+										"comparison_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIComparisonValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconDataSourceSchema(),
+													"text_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+										"primary_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIPrimaryValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconDataSourceSchema(),
+													"text_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+										"progress_bar": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIProgressBarConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"foreground_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":    visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandKPIVisual(tfList []any) *awstypes.KPIVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

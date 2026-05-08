@@ -22,7 +22,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	accountNumber := acctest.RandString(t, 8)
 	accountNumberUpdated := acctest.RandString(t, 8)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
 	emailUpdated := acctest.RandomEmailAddress(domain)
 
@@ -179,7 +179,7 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	accountNumber := acctest.RandString(t, 8)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

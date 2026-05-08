@@ -472,7 +472,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
 			Code: fmt.Sprintf(
-				`domain := acctest.RandomDomainName()
+				`domain := acctest.RandomDomainName(t)
 %s := acctest.RandomEmailAddress(domain)`, varName),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
@@ -492,7 +492,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
+			Code: fmt.Sprintf(`%s := acctest.RandomDomainName(t)`, varName),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
 			GoVarName: varName,
@@ -518,10 +518,10 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := acctest.RandomDomain()`, parentName),
+			Code: fmt.Sprintf(`%s := acctest.RandomDomain(t)`, parentName),
 		})
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
+			Code: fmt.Sprintf(`%s := %s.RandomSubdomain(t)`, varName, parentName),
 		})
 		stuff.AdditionalTfVars_[parentName] = TFVar{
 			GoVarName: fmt.Sprintf("%s.String()", parentName),

@@ -22,7 +22,7 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 	var channel awstypes.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 
@@ -67,7 +67,7 @@ func TestAccPinpointEmailChannel_set(t *testing.T) {
 	resourceName := "aws_pinpoint_email_channel.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -98,7 +98,7 @@ func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 	resourceName := "aws_pinpoint_email_channel.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -129,7 +129,7 @@ func TestAccPinpointEmailChannel_orchestrationSendingRoleARN(t *testing.T) {
 	resourceName := "aws_pinpoint_email_channel.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -159,7 +159,7 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 	var channel awstypes.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

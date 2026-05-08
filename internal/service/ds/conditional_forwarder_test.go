@@ -20,7 +20,7 @@ func TestAccDSConditionalForwarder_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_conditional_forwarder.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -60,7 +60,7 @@ func TestAccDSConditionalForwarder_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_conditional_forwarder.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	ip1, ip2 := "8.8.8.8", "1.1.1.1"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

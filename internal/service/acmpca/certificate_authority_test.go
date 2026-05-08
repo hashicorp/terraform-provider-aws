@@ -25,7 +25,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -73,7 +73,7 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -97,7 +97,7 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -145,7 +145,7 @@ func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -176,7 +176,7 @@ func TestAccACMPCACertificateAuthority_keyStorageSecurityStandard(t *testing.T) 
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -211,7 +211,7 @@ func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -235,7 +235,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -284,7 +284,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	domain := acctest.RandomDomain()
+	domain := acctest.RandomDomain(t)
 	commonName := domain.String()
 	customCName := domain.Subdomain("crl").String()
 	customCName2 := domain.Subdomain("crl2").String()
@@ -375,7 +375,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customPath(t *testing.T) {
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 	customPath1 := "root"
 	customPath2 := "root/ca"
 
@@ -442,7 +442,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -514,7 +514,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -576,7 +576,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -627,7 +627,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -694,7 +694,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	domain := acctest.RandomDomain()
+	domain := acctest.RandomDomain(t)
 	commonName := domain.String()
 	customCName := domain.Subdomain("ocspl").String()
 	customCName2 := domain.Subdomain("ocsp2").String()

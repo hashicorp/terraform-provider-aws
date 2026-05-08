@@ -23,7 +23,7 @@ func TestAccWorkSpacesConnectionAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -58,7 +58,7 @@ func TestAccWorkSpacesConnectionAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -87,7 +87,7 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

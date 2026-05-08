@@ -621,7 +621,7 @@ semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -697,7 +697,7 @@ semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -719,7 +719,7 @@ semgrep-fix-core: semgrep-validate ## Fix Semgrep issues in core directories
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -745,12 +745,14 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config .ci/.semgrep-caps-aws-ec2.yml
+		--config .ci/semgrep-caps-aws-ec2.yml
 
 semgrep-test: semgrep-validate ## Test Semgrep configuration files
 	@echo "make: Running Semgrep rule tests..."
 	@semgrep --quiet \
 		--test .ci/semgrep/
+	@semgrep --quiet \
+		--test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
@@ -768,7 +770,7 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \

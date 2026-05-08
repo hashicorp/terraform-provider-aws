@@ -155,6 +155,117 @@ func gaugeChartVisualSchema() *schema.Schema {
 	}
 }
 
+func gaugeChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_labels": dataLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_values":  measureFieldDataSourceSchema(),
+										names.AttrValues: measureFieldDataSourceSchema(),
+									},
+								},
+							},
+							"gauge_chart_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"arc": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ArcConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"arc_angle":     floatComputedOnly(),
+													"arc_thickness": stringEnumDataSourceSchema[awstypes.ArcThicknessOptions](),
+												},
+											},
+										},
+										"arc_axis": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ArcAxisConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"range": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ArcAxisDisplayRange.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrMax: floatComputedOnly(),
+																names.AttrMin: floatComputedOnly(),
+															},
+														},
+													},
+													"reserve_range": intComputedOnly(),
+												},
+											},
+										},
+										"comparison":                       comparisonConfigurationDataSourceSchema(),
+										"primary_value_display_type":       stringEnumDataSourceSchema[awstypes.PrimaryValueDisplayType](),
+										"primary_value_font_configuration": fontConfigurationDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip":        tooltipOptionsDataSourceSchema(),
+							"visual_palette": visualPaletteDataSourceSchema(),
+						},
+					},
+				},
+				"conditional_formatting": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartConditionalFormatting.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"conditional_formatting_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartConditionalFormattingOption.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"arc": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartArcConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"foreground_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+										"primary_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartPrimaryValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconDataSourceSchema(),
+													"text_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":    visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandGaugeChartVisual(tfList []any) *awstypes.GaugeChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

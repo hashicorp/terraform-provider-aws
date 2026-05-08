@@ -76,6 +76,60 @@ func sankeyDiagramVisualSchema() *schema.Schema {
 	}
 }
 
+func sankeyDiagramVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_labels": dataLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"sankey_diagram_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrDestination: dimensionFieldDataSourceSchema(),
+													names.AttrSource:      dimensionFieldDataSourceSchema(),
+													names.AttrWeight:      measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_items_limit": itemsLimitConfigurationDataSourceSchema(),
+										"source_items_limit":      itemsLimitConfigurationDataSourceSchema(),
+										"weight_sort":             fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+						},
+					},
+				},
+				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":    visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandSankeyDiagramVisual(tfList []any) *awstypes.SankeyDiagramVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

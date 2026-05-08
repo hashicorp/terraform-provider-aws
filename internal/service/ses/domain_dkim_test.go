@@ -21,7 +21,7 @@ import (
 func TestAccSESDomainDKIM_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ses_domain_dkim.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -48,7 +48,7 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 func TestAccSESDomainDKIM_Disappears_identity(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ses_domain_dkim.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

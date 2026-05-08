@@ -94,6 +94,78 @@ func barCharVisualSchema() *schema.Schema {
 	}
 }
 
+func barChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bars_arrangement":               stringEnumDataSourceSchema[awstypes.BarsArrangement](),
+							"category_axis":                  axisDisplayOptionsDataSourceSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
+							"category_label_options":         chartAxisLabelOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"color_label_options":            chartAxisLabelOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"contribution_analysis_defaults": contributionAnalysisDefaultsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ContributionAnalysisDefault.html
+							"data_labels":                    dataLabelOptionsDataSourceSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bar_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":        dimensionFieldDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"colors":          dimensionFieldDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"small_multiples": dimensionFieldDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues:  measureFieldDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":                  legendOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							"orientation":             stringEnumDataSourceSchema[awstypes.BarChartOrientation](),
+							"reference_lines":         referenceLineDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
+							"small_multiples_options": smallMultiplesOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit":                itemsLimitConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"category_sort":                       fieldSortOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"color_items_limit":                   itemsLimitConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"color_sort":                          fieldSortOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"small_multiples_limit_configuration": itemsLimitConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"small_multiples_sort":                fieldSortOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+									},
+								},
+							},
+							"tooltip":             tooltipOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							"value_axis":          axisDisplayOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
+							"value_label_options": chartAxisLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"visual_palette":      visualPaletteDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				"title":              visualTitleLabelOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
 func expandBarChartVisual(tfList []any) *awstypes.BarChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

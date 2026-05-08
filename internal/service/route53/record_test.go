@@ -35,8 +35,8 @@ func TestAccRoute53Record_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -231,8 +231,8 @@ func TestAccRoute53Record_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -255,7 +255,7 @@ func TestAccRoute53Record_disappears(t *testing.T) {
 func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3, v4, v5 awstypes.ResourceRecordSet
-	zoneName := acctest.RandomDomain()
+	zoneName := acctest.RandomDomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -816,8 +816,8 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 	resourceName := "aws_route53_record.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	locationName := acctest.RandString(t, 16)
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1735,8 +1735,8 @@ func TestAccRoute53Record_ttl0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1780,7 +1780,7 @@ func TestAccRoute53Record_aliasWildcardName(t *testing.T) {
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	zoneName := acctest.RandomDomain()
+	zoneName := acctest.RandomDomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1808,7 +1808,7 @@ func TestAccRoute53Record_escapedSlash(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := "0/24." + acctest.RandomDomain()
+	zoneName := "0/24." + acctest.RandomDomain(t)
 	recordName := "0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1836,7 +1836,7 @@ func TestAccRoute53Record_escapedSpace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := "a\\040b." + acctest.RandomDomain()
+	zoneName := "a\\040b." + acctest.RandomDomain(t)
 	recordName := "0\\040to\\0401"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1865,7 +1865,7 @@ func TestAccRoute53Record_escapedJustSpace(t *testing.T) {
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 	// zone name always needs an escape code if any
-	zoneName := "a\\040b." + acctest.RandomDomain()
+	zoneName := "a\\040b." + acctest.RandomDomain(t)
 	// as for record name, r53 API can accept a space as is but will send the escaped version of it back
 	recordName := "0 to 1"
 

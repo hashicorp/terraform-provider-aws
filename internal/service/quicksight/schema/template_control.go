@@ -156,6 +156,122 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"date_time_picker": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterDateTimePickerControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							"title":             stringComputedOnly(),
+							"display_options":   dateTimePickerControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
+							names.AttrType:      stringEnumDataSourceSchema[awstypes.SheetControlDateTimePickerType](),
+						},
+					},
+				},
+				"dropdown": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterDropDownControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id":               idDataSourceSchema(),
+							"source_filter_id":                idDataSourceSchema(),
+							"title":                           stringComputedOnly(),
+							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
+							"display_options":                 dropDownControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
+							"selectable_values":               filterSelectableValuesDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
+							names.AttrType:                    stringEnumDataSourceSchema[awstypes.SheetControlListType](),
+						},
+					},
+				},
+				"list": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterListControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id":               idDataSourceSchema(),
+							"source_filter_id":                idDataSourceSchema(),
+							"title":                           stringComputedOnly(),
+							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
+							"display_options":                 listControlDisplayOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
+							"selectable_values":               filterSelectableValuesDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
+							names.AttrType:                    stringEnumDataSourceSchema[awstypes.SheetControlListType](),
+						},
+					},
+				},
+				"relative_date_time": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterRelativeDateTimeControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							"title":             stringComputedOnly(),
+							"display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"date_time_format": stringComputedOnly(),
+										"title_options":    labelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+									},
+								},
+							},
+						},
+					},
+				},
+				"slider": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSliderControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							"title":             stringComputedOnly(),
+							"maximum_value":     floatComputedOnly(),
+							"minimum_value":     floatComputedOnly(),
+							"step_size":         floatComputedOnly(),
+							"display_options":   sliderControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
+							names.AttrType:      stringEnumDataSourceSchema[awstypes.SheetControlSliderType](),
+						},
+					},
+				},
+				"text_area": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterTextAreaControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							"title":             stringComputedOnly(),
+							"delimiter":         stringComputedOnly(),
+							"display_options":   textAreaControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
+						},
+					},
+				},
+				"text_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterTextFieldControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							"title":             stringComputedOnly(),
+							"display_options":   textFieldControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
 var textFieldControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 		Type:     schema.TypeList,
@@ -166,6 +282,19 @@ var textFieldControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema 
 			Schema: map[string]*schema.Schema{
 				"placeholder_options": placeholderOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
 				"title_options":       labelOptionsSchema(),       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
+var textFieldControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"placeholder_options": placeholderOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
+				"title_options":       labelOptionsDataSourceSchema(),       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 			},
 		},
 	}
@@ -186,6 +315,19 @@ var textAreaControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var textAreaControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"placeholder_options": placeholderOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
+				"title_options":       labelOptionsDataSourceSchema(),       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
 var sliderControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
 		Type:     schema.TypeList,
@@ -195,6 +337,18 @@ var sliderControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"title_options": labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
+var sliderControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"title_options": labelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 			},
 		},
 	}
@@ -210,6 +364,19 @@ var dateTimePickerControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Sc
 			Schema: map[string]*schema.Schema{
 				"date_time_format": stringLenBetweenSchema(attrOptional, 1, 128),
 				"title_options":    labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
+var dateTimePickerControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"date_time_format": stringComputedOnly(),
+				"title_options":    labelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 			},
 		},
 	}
@@ -236,6 +403,28 @@ var listControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 				},
 				"select_all_options": selectAllOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
 				"title_options":      labelOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
+var listControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"search_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSearchOptions.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+						},
+					},
+				},
+				"select_all_options": selectAllOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
+				"title_options":      labelOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 			},
 		},
 	}
@@ -269,6 +458,27 @@ var cascadingControlConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var cascadingControlConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"source_controls": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlSource.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column_to_match":         columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"source_sheet_control_id": stringComputedOnly(),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
 var selectAllOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
 		Type:     schema.TypeList,
@@ -278,6 +488,18 @@ var selectAllOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+			},
+		},
+	}
+})
+
+var selectAllOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -298,6 +520,19 @@ var dropDownControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var dropDownControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"select_all_options": selectAllOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
+				"title_options":      labelOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
 var placeholderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
 		Type:     schema.TypeList,
@@ -307,6 +542,18 @@ var placeholderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+			},
+		},
+	}
+})
+
+var placeholderOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}

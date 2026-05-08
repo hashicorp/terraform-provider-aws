@@ -16,7 +16,7 @@ func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_route53_resolver_firewall_domain_list.test"
 	resourceName := "aws_route53_resolver_firewall_domain_list.test"
-	domainName := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

@@ -92,6 +92,76 @@ func comboChartVisualSchema() *schema.Schema {
 	}
 }
 
+func comboChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComboChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComboChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bar_data_labels":        dataLabelOptionsDataSourceSchema(),
+							"bars_arrangement":       stringEnumDataSourceSchema[awstypes.BarsArrangement](),
+							"category_axis":          axisDisplayOptionsDataSourceSchema(),
+							"category_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"color_label_options":    chartAxisLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComboChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"combo_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComboChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"bar_values":  measureFieldDataSourceSchema(),
+													"category":    dimensionFieldDataSourceSchema(),
+													"colors":      dimensionFieldDataSourceSchema(),
+													"line_values": measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":                           legendOptionsDataSourceSchema(),
+							"line_data_labels":                 dataLabelOptionsDataSourceSchema(),
+							"primary_y_axis_display_options":   axisDisplayOptionsDataSourceSchema(),
+							"primary_y_axis_label_options":     chartAxisLabelOptionsDataSourceSchema(),
+							"reference_lines":                  referenceLineDataSourceSchema(),
+							"secondary_y_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+							"secondary_y_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComboChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit": itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":        fieldSortOptionsDataSourceSchema(),
+										"color_items_limit":    itemsLimitConfigurationDataSourceSchema(),
+										"color_sort":           fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip":        tooltipOptionsDataSourceSchema(),
+							"visual_palette": visualPaletteDataSourceSchema(),
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":              visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandComboChartVisual(tfList []any) *awstypes.ComboChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

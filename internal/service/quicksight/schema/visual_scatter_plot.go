@@ -83,6 +83,69 @@ func scatterPlotVisualSchema() *schema.Schema {
 	}
 }
 
+func scatterPlotVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_labels": dataLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"scatter_plot_categorically_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotCategoricallyAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":     dimensionFieldDataSourceSchema(),
+													names.AttrSize: measureFieldDataSourceSchema(),
+													"x_axis":       measureFieldDataSourceSchema(),
+													"y_axis":       measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"scatter_plot_unaggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotUnaggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrSize: measureFieldDataSourceSchema(),
+													"x_axis":       dimensionFieldDataSourceSchema(),
+													"y_axis":       dimensionFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":                 legendOptionsDataSourceSchema(),
+							"tooltip":                tooltipOptionsDataSourceSchema(),
+							"visual_palette":         visualPaletteDataSourceSchema(),
+							"x_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+							"x_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
+							"y_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+							"y_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":              visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandScatterPlotVisual(tfList []any) *awstypes.ScatterPlotVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

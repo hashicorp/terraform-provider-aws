@@ -4,6 +4,8 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -100,6 +102,54 @@ func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 	return s
 }
 
+var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"categorical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalDimensionField.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"field_id":             stringComputedOnly(),
+							"format_configuration": stringFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+							"hierarchy_id":         stringComputedOnly(),
+						},
+					},
+				},
+				"date_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateDimensionField.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"field_id":             stringComputedOnly(),
+							"date_granularity":     stringEnumDataSourceSchema[awstypes.TimeGranularity](),
+							"format_configuration": dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+							"hierarchy_id":         stringComputedOnly(),
+						},
+					},
+				},
+				"numerical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalDimensionField.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"field_id":             stringComputedOnly(),
+							"format_configuration": numberFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+							"hierarchy_id":         stringComputedOnly(),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
 type meaureFieldSchemaIdentity measureFieldsSize
 
 var measureFieldSchemaCache syncMap[meaureFieldSchemaIdentity, *schema.Schema]
@@ -183,6 +233,63 @@ func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 	)
 	return s
 }
+
+var measureFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"calculated_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedMeasureField.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrExpression: stringComputedOnly(),
+							"field_id":           stringComputedOnly(),
+						},
+					},
+				},
+				"categorical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalMeasureField.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"field_id":             stringComputedOnly(),
+							"aggregation_function": stringEnumDataSourceSchema[awstypes.CategoricalAggregationFunction](),
+							"format_configuration": stringFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+						},
+					},
+				},
+				"date_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateMeasureField.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"field_id":             stringComputedOnly(),
+							"aggregation_function": stringEnumDataSourceSchema[awstypes.DateAggregationFunction](),
+							"format_configuration": dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+						},
+					},
+				},
+				"numerical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalMeasureField.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"field_id":             stringComputedOnly(),
+							"aggregation_function": numericalAggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+							"format_configuration": numberFormatConfigurationDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+						},
+					},
+				},
+			},
+		},
+	}
+})
 
 func expandDimensionFields(tfList []any) []awstypes.DimensionField {
 	if len(tfList) == 0 {

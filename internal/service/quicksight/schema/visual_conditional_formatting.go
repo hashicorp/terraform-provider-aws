@@ -77,6 +77,55 @@ var conditionalFormattingColorSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var conditionalFormattingColorDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"gradient": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingGradientColor.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"color": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GradientColor.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"stops": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GradientStop.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"gradient_offset": floatComputedOnly(),
+													"color":           stringComputedOnly(),
+													"data_value":      floatComputedOnly(),
+												},
+											},
+										},
+									},
+								},
+							},
+							names.AttrExpression: stringComputedOnly(),
+						},
+					},
+				},
+				"solid": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingSolidColor.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"color":              stringComputedOnly(),
+							names.AttrExpression: stringComputedOnly(),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
 var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
 		Type:     schema.TypeList,
@@ -128,6 +177,56 @@ var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 							"icon_set_type":      stringEnumSchema[awstypes.ConditionalFormattingIconSetType](attrOptional),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var conditionalFormattingIconDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_condition": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconCondition.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"color":              stringComputedOnly(),
+							names.AttrExpression: stringComputedOnly(),
+							"icon_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"icon":         stringEnumDataSourceSchema[awstypes.Icon](),
+										"unicode_icon": stringComputedOnly(),
+									},
+								},
+							},
+							"display_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIconDisplayConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"icon_display_option": stringEnumDataSourceSchema[awstypes.ConditionalFormattingIconDisplayOption](),
+									},
+								},
+							},
+						},
+					},
+				},
+				"icon_set": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIconSet.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrExpression: stringComputedOnly(),
+							"icon_set_type":      stringEnumDataSourceSchema[awstypes.ConditionalFormattingIconSetType](),
 						},
 					},
 				},

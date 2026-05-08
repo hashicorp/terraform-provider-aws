@@ -91,6 +91,73 @@ func wordCloudVisualSchema() *schema.Schema {
 	}
 }
 
+func wordCloudVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"category_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"word_cloud_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"group_by":     dimensionFieldDataSourceSchema(),
+													names.AttrSize: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit": itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":        fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"word_cloud_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cloud_layout":          stringEnumDataSourceSchema[awstypes.WordCloudCloudLayout](),
+										"maximum_string_length": intComputedOnly(),
+										"word_casing":           stringEnumDataSourceSchema[awstypes.WordCloudWordCasing](),
+										"word_orientation":      stringEnumDataSourceSchema[awstypes.WordCloudWordOrientation](),
+										"word_padding":          stringEnumDataSourceSchema[awstypes.WordCloudWordPadding](),
+										"word_scaling":          stringEnumDataSourceSchema[awstypes.WordCloudWordScaling](),
+									},
+								},
+							},
+						},
+					},
+				},
+				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":              visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
+	}
+}
+
 func expandWordCloudVisual(tfList []any) *awstypes.WordCloudVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

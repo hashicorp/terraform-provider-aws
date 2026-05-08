@@ -43,6 +43,33 @@ func customContentVisualSchema() *schema.Schema {
 	}
 }
 
+func customContentVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringComputedOnly(),
+				"visual_id":           idDataSourceSchema(),
+				names.AttrActions:     visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrContentType: stringEnumDataSourceSchema[awstypes.CustomContentType](),
+							"content_url":         stringComputedOnly(),
+							"image_scaling":       stringEnumDataSourceSchema[awstypes.CustomContentImageScalingConfiguration](),
+						},
+					},
+				},
+				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				"title":    visualTitleLabelOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
 func expandCustomContentVisual(tfList []any) *awstypes.CustomContentVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

@@ -26,6 +26,20 @@ func emptyVisualSchema() *schema.Schema {
 	}
 }
 
+func emptyVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_EmptyVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringComputedOnly(),
+				"visual_id":           idDataSourceSchema(),
+				names.AttrActions:     visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+			},
+		},
+	}
+}
+
 func expandEmptyVisual(tfList []any) *awstypes.EmptyVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil

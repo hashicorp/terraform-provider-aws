@@ -20,7 +20,7 @@ func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -52,7 +52,7 @@ func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -76,7 +76,7 @@ func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
@@ -102,7 +102,7 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -135,7 +135,7 @@ func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

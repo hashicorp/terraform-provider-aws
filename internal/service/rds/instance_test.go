@@ -3066,7 +3066,7 @@ func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
-	domain := acctest.RandomDomain().String()
+	domain := acctest.RandomDomain(t).String()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4685,9 +4685,9 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := acctest.RandomDomain()
-	domain1 := domain.RandomSubdomain().String()
-	domain2 := domain.RandomSubdomain().String()
+	domain := acctest.RandomDomain(t)
+	domain1 := domain.RandomSubdomain(t).String()
+	domain2 := domain.RandomSubdomain(t).String()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4732,7 +4732,7 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4768,9 +4768,9 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 	var vBefore, vAfter types.DBInstance
 	resourceName := "aws_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomain().String()
+	domain := acctest.RandomDomain(t).String()
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
-	domain1 := acctest.RandomDomain().String()
+	domain1 := acctest.RandomDomain(t).String()
 	domain1Ou := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain1, ".")[0], strings.Split(domain1, ".")[1])
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -4817,7 +4817,7 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSingleDomainDNSIP(t *testing.T) {
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomain().String()
+	domain := acctest.RandomDomain(t).String()
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -4857,7 +4857,7 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSnapshotRestore(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
