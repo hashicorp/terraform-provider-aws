@@ -1672,12 +1672,12 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
 func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
-	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2015-03-31/functions/"+functionOrAliasARN+"/invocations")
+	return c.RegionalARNWithAccount(ctx, names.APIGateway, names.Lambda, "path/2015-03-31/functions/"+functionOrAliasARN+"/invocations")
 }
 
 // See https://aws.amazon.com/blogs/compute/building-responsive-apis-with-amazon-api-gateway-response-streaming/
 func responseStreamingInvokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
-	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2021-11-15/functions/"+functionOrAliasARN+"/response-streaming-invocations")
+	return c.RegionalARNWithAccount(ctx, names.APIGateway, names.Lambda, "path/2021-11-15/functions/"+functionOrAliasARN+"/response-streaming-invocations")
 }
 
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.

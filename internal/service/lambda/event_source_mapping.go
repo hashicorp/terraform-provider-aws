@@ -114,13 +114,13 @@ func resourceEventSourceMapping() *schema.Resource {
 
 							serviceName = eventSourceARN.Service
 						} else if _, ok := d.GetOk("self_managed_event_source"); ok {
-							serviceName = "kafka"
+							serviceName = names.Kafka
 						}
 
 						switch serviceName {
-						case "dynamodb", "kinesis", "kafka", "mq", "rds":
+						case names.DynamoDB, names.Kinesis, names.Kafka, names.MQ, names.RDS:
 							return old == "100"
-						case "sqs":
+						case names.SQS:
 							return old == "10"
 						}
 

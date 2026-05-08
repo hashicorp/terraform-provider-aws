@@ -297,7 +297,7 @@ func invocationParseResourceID(id string) (string, string, string, error) {
 	resultHash := parts[2]
 
 	// Validate qualifier format
-	if qualifier != "$LATEST" && !regexache.MustCompile(`^[0-9]+$`).MatchString(qualifier) {
+	if qualifier != FunctionVersionLatest && !regexache.MustCompile(`^[0-9]+$`).MatchString(qualifier) {
 		return "", "", "", fmt.Errorf("invalid qualifier format: %s, expected $LATEST or numeric version", qualifier)
 	}
 

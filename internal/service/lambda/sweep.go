@@ -18,9 +18,9 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_lambda_capacity_provider", sweepCapacityProviders, "aws_lambda_function")
-	awsv2.Register("aws_lambda_function", sweepFunctions)
-	awsv2.Register("aws_lambda_layer", sweepLayerVersions, "aws_lambda_function")
+	awsv2.Register("aws_lambda_capacity_provider", sweepCapacityProviders, "aws_lambda_function") // lintignore:literally
+	awsv2.Register("aws_lambda_function", sweepFunctions)                                         // lintignore:literally
+	awsv2.Register("aws_lambda_layer", sweepLayerVersions, "aws_lambda_function")                 // lintignore:literally
 }
 
 func sweepCapacityProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
