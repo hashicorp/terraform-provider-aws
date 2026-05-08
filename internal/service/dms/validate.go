@@ -51,7 +51,7 @@ func validReplicationInstanceID(v any, k string) (ws []string, es []error) {
 func validReplicationSubnetGroupID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
-	if val == "default" {
+	if val == "default" { //lintignore:literally
 		es = append(es, fmt.Errorf("%q must not be default", k))
 	}
 	if len(val) > 255 {

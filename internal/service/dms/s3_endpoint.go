@@ -330,7 +330,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(endpointID),
 		EndpointType:       awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string)),
-		EngineName:         aws.String("s3"),
+		EngineName:         aws.String(engineNameS3),
 		Tags:               getTagsIn(ctx),
 	}
 
