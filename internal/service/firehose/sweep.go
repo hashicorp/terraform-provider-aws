@@ -39,7 +39,7 @@ func sweepDeliveryStreams(region string) error {
 		for _, name := range page.DeliveryStreamNames {
 			r := resourceDeliveryStream()
 			d := r.Data(nil)
-			d.SetId(client.RegionalARN(ctx, "firehose", fmt.Sprintf("deliverystream/%s", name)))
+			d.SetId(client.RegionalARN(ctx, names.Firehose, fmt.Sprintf("deliverystream/%s", name)))
 			d.Set(names.AttrName, name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
