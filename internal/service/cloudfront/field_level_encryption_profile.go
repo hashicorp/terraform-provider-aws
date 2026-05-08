@@ -392,5 +392,5 @@ func flattenFieldPatterns(apiObject *awstypes.FieldPatterns) map[string]any {
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
 func fieldLevelEncryptionProfileARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "cloudfront", "field-level-encryption-profile/"+id)
+	return c.GlobalARN(ctx, names.CloudFront, "field-level-encryption-profile/"+id)
 }

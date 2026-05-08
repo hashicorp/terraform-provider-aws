@@ -211,7 +211,7 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 		ProgressInterval: 60 * time.Second,
 		SuccessStates:    []actionwait.Status{"Completed"},
 		TransitionalStates: []actionwait.Status{
-			"InProgress",
+			distributionStatusInProgress,
 		},
 		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
 			cb(ctx, "Invalidation %s is currently '%s', continuing to wait for completion...", invalidationID, fr.Status)

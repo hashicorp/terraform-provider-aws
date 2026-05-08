@@ -1316,5 +1316,5 @@ func flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject *awstypes.R
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
 func responseHeadersPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "cloudfront", "response-headers-policy/"+id)
+	return c.GlobalARN(ctx, names.CloudFront, "response-headers-policy/"+id)
 }

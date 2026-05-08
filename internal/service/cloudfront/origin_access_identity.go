@@ -197,10 +197,10 @@ func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstype
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
 func originAccessIdentityARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "cloudfront", "origin-access-identity/"+id)
+	return c.GlobalARN(ctx, names.CloudFront, "origin-access-identity/"+id)
 }
 
 // See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#private-content-updating-s3-bucket-policies-principal.
 func originAccessIdentityIAMUserARN(ctx context.Context, c *conns.AWSClient, originAccessControlID string) string {
-	return c.GlobalARNWithAccount(ctx, "iam", "cloudfront", "user/CloudFront Origin Access Identity "+originAccessControlID)
+	return c.GlobalARNWithAccount(ctx, names.IAM, names.CloudFront, "user/CloudFront Origin Access Identity "+originAccessControlID)
 }

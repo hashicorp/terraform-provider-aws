@@ -419,5 +419,5 @@ func flattenOriginRequestPolicyQueryStringsConfig(apiObject *awstypes.OriginRequ
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
 func originRequestPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "cloudfront", "origin-request-policy/"+id)
+	return c.GlobalARN(ctx, names.CloudFront, "origin-request-policy/"+id)
 }

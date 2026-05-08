@@ -202,5 +202,5 @@ func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.Client, i
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
 func originAccessControlARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "cloudfront", "origin-access-control/"+id)
+	return c.GlobalARN(ctx, names.CloudFront, "origin-access-control/"+id)
 }

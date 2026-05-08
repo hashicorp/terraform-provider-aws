@@ -580,5 +580,5 @@ func flattenQueryStringNames(apiObject *awstypes.QueryStringNames) map[string]an
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
 func cachePolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "cloudfront", "cache-policy/"+id)
+	return c.GlobalARN(ctx, names.CloudFront, "cache-policy/"+id)
 }
