@@ -207,8 +207,8 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta any
 		ProjectName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") ||
-		tfawserr.ErrMessageContains(err, "ValidationException", "Cannot delete Project in DeleteCompleted status") {
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "does not exist") ||
+		tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot delete Project in DeleteCompleted status") {
 		return diags
 	}
 

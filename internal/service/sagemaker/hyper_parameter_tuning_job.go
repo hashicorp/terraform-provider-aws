@@ -126,7 +126,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					},
 				},
 			},
-			"config": schema.ListNestedBlock{
+			"config": schema.ListNestedBlock{ // lintignore:literally
 				CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),

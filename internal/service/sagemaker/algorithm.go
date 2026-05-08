@@ -1919,7 +1919,7 @@ func (r *algorithmResource) Delete(ctx context.Context, request resource.DeleteR
 func (r *algorithmResource) flatten(ctx context.Context, apiObject any, data, prior *algorithmResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	diags.Append(fwflex.Flatten(ctx, apiObject, data, fwflex.WithFieldNamePrefix("Algorithm"))...)
+	diags.Append(fwflex.Flatten(ctx, apiObject, data, fwflex.WithFieldNamePrefix(ResNameAlgorithm))...)
 	if diags.HasError() {
 		return diags
 	}
@@ -2060,7 +2060,7 @@ func findAlgorithmByName(ctx context.Context, conn *sagemaker.Client, name strin
 	}
 
 	output, err := conn.DescribeAlgorithm(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFound](err) || tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
+	if errs.IsA[*awstypes.ResourceNotFound](err) || tfawserr.ErrMessageContains(err, ErrCodeValidationException, "does not exist") {
 		return nil, &retry.NotFoundError{LastError: err}
 	}
 	if err != nil {

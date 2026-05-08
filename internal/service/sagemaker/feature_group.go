@@ -349,10 +349,10 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.CreateFeatureGroup(ctx, input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
+			if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "The execution role ARN is invalid.") {
 				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid S3Uri provided") {
+			if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Invalid S3Uri provided") {
 				return tfresource.RetryableError(err)
 			}
 			return tfresource.NonRetryableError(err)
