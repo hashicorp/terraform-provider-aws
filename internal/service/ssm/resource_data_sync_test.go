@@ -138,15 +138,15 @@ func testAccCheckResourceDataSyncExists(ctx context.Context, t *testing.T, n str
 
 func testAccResourceDataSyncConfig_basic(rInt int, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "hoge" {
+resource "aws_s3_bucket" "test" {
   bucket        = "tf-test-bucket-%[1]d"
   force_destroy = true
 }
 
 data "aws_partition" "current" {}
 
-resource "aws_s3_bucket_policy" "hoge" {
-  bucket = aws_s3_bucket.hoge.bucket
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.bucket
 
   policy = <<EOF
 {
@@ -187,8 +187,8 @@ resource "aws_ssm_resource_data_sync" "test" {
   name = "tf-test-ssm-%[2]s"
 
   s3_destination {
-    bucket_name = aws_s3_bucket.hoge.bucket
-    region      = aws_s3_bucket.hoge.region
+    bucket_name = aws_s3_bucket.test.bucket
+    region      = aws_s3_bucket.test.region
   }
 }
 `, rInt, rName)
@@ -196,15 +196,15 @@ resource "aws_ssm_resource_data_sync" "test" {
 
 func testAccResourceDataSyncConfig_update(rInt int, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "hoge" {
+resource "aws_s3_bucket" "test" {
   bucket        = "tf-test-bucket-%[1]d"
   force_destroy = true
 }
 
 data "aws_partition" "current" {}
 
-resource "aws_s3_bucket_policy" "hoge" {
-  bucket = aws_s3_bucket.hoge.bucket
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.bucket
 
   policy = <<EOF
 {
@@ -245,8 +245,8 @@ resource "aws_ssm_resource_data_sync" "test" {
   name = "tf-test-ssm-%[2]s"
 
   s3_destination {
-    bucket_name = aws_s3_bucket.hoge.bucket
-    region      = aws_s3_bucket.hoge.region
+    bucket_name = aws_s3_bucket.test.bucket
+    region      = aws_s3_bucket.test.region
     prefix      = "test-"
   }
 }
