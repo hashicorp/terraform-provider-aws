@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_elasticache_serverless_cache: Support `network_type` attribute.
+```
+```release-note:enhancement
+data/aws_elasticache_serverless_cache: Retrieve `network_type` attribute.
+```
