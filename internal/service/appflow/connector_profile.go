@@ -518,7 +518,7 @@ func resourceConnectorProfile() *schema.Resource {
 											},
 										},
 									},
-									"redshift": {
+									names.Redshift: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -1092,7 +1092,7 @@ func resourceConnectorProfile() *schema.Resource {
 											},
 										},
 									},
-									"redshift": {
+									names.Redshift: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -1597,7 +1597,7 @@ func expandConnectorProfileCredentials(m map[string]any) *types.ConnectorProfile
 	if v, ok := m["marketo"].([]any); ok && len(v) > 0 && v[0] != nil {
 		cpc.Marketo = expandMarketoConnectorProfileCredentials(v[0].(map[string]any))
 	}
-	if v, ok := m["redshift"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.Redshift].([]any); ok && len(v) > 0 && v[0] != nil {
 		cpc.Redshift = expandRedshiftConnectorProfileCredentials(v[0].(map[string]any))
 	}
 	if v, ok := m["salesforce"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -1982,7 +1982,7 @@ func expandConnectorProfileProperties(m map[string]any) *types.ConnectorProfileP
 	if v, ok := m["marketo"].([]any); ok && len(v) > 0 && v[0] != nil {
 		cpc.Marketo = expandMarketoConnectorProfileProperties(v[0].(map[string]any))
 	}
-	if v, ok := m["redshift"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.Redshift].([]any); ok && len(v) > 0 && v[0] != nil {
 		cpc.Redshift = expandRedshiftConnectorProfileProperties(v[0].(map[string]any))
 	}
 	if v, ok := m["salesforce"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -2243,7 +2243,7 @@ func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []
 		result["marketo"] = []any{m}
 	}
 	if cpp.Redshift != nil {
-		result["redshift"] = flattenRedshiftConnectorProfileProperties(cpp.Redshift)
+		result[names.Redshift] = flattenRedshiftConnectorProfileProperties(cpp.Redshift)
 	}
 	if cpp.SAPOData != nil {
 		result["sapo_data"] = flattenSAPODataConnectorProfileProperties(cpp.SAPOData)
