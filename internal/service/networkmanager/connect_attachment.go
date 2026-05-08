@@ -432,5 +432,5 @@ func flattenConnectAttachmentOptions(apiObject *awstypes.ConnectAttachmentOption
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsnetworkmanager.html#awsnetworkmanager-resources-for-iam-policies.
 func attachmentARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "networkmanager", "attachment/"+id)
+	return c.GlobalARN(ctx, names.NetworkManager, "attachment/"+id)
 }

@@ -268,5 +268,5 @@ func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsnetworkmanager.html#awsnetworkmanager-resources-for-iam-policies.
 func peeringARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "networkmanager", "peering/"+id)
+	return c.GlobalARN(ctx, names.NetworkManager, "peering/"+id)
 }

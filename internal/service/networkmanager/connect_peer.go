@@ -478,5 +478,5 @@ func flattenConnectPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguratio
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsnetworkmanager.html#awsnetworkmanager-resources-for-iam-policies.
 func connectPeerARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.GlobalARN(ctx, "networkmanager", "connect-peer/"+id)
+	return c.GlobalARN(ctx, names.NetworkManager, "connect-peer/"+id)
 }
