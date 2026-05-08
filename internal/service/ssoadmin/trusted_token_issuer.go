@@ -305,7 +305,7 @@ func trustedTokenIssuerParseInstanceARN(ctx context.Context, c *conns.AWSClient,
 	parts := strings.Split(id, "/")
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return c.GlobalARNNoAccount(ctx, "sso", "instance/"+parts[1])
+		return c.GlobalARNNoAccount(ctx, names.SSO, "instance/"+parts[1])
 	}
 
 	return ""
