@@ -128,6 +128,54 @@ func TestAccSSMResourceDataSync_Update_s3DestinationPrefix(t *testing.T) {
 					},
 				},
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMResourceDataSync_destinationDataSharing_sameAccount(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ssm_resource_data_sync.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceDataSyncConfig_destinationDataSharing_sameAccount(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrBucketName:            knownvalue.StringExact(bucketName),
+							names.AttrKMSKeyARN:             knownvalue.StringExact(""),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrRegion:                knownvalue.StringExact(acctest.Region()),
+							"sync_format":                   tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
+							"destination_data_sharing_type": knownvalue.StringExact("Organization"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"s3_destination.0.destination_data_sharing_type",
+				},
+			},
 		},
 	})
 }
@@ -284,6 +332,76 @@ resource "aws_ssm_resource_data_sync" "test" {
     region      = aws_s3_bucket.test.region
     prefix      = "test-"
   }
+}
+`, rName, bucketName)
+}
+
+func testAccResourceDataSyncConfig_destinationDataSharing_sameAccount(rName, bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_resource_data_sync" "test" {
+  name = %[1]q
+
+  s3_destination {
+    bucket_name = aws_s3_bucket.test.bucket
+    region      = aws_s3_bucket.test.region
+
+	destination_data_sharing_type = "Organization"
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SSMBucketPermissionsCheck",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "${aws_s3_bucket.test.arn}"
+    },
+    {
+      "Sid": " SSMBucketDelivery",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "s3:PutObject",
+      "Resource": [
+        "${aws_s3_bucket.test.arn}/*/accountid=*/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    },
+    {
+      "Sid": " SSMBucketDeliveryTagging",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "s3:PutObjectTagging",
+      "Resource": [
+        "${aws_s3_bucket.test.arn}/*/accountid=*/*"
+      ]
+     }
+  ]
+}
+      EOF
 }
 `, rName, bucketName)
 }
