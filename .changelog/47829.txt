@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_distribution_tenant: Fix potential indefinite hang when waiting for deploy status by using existing `retry.StateChangeConf` waiter with 30-minute timeout
+```
