@@ -136,6 +136,20 @@ func resourceTable() *schema.Resource {
 				}
 
 				if diff.HasChange("attribute") && !diff.HasChange("global_secondary_index") {
+					// Only suppress the attribute diff if no attribute's type changed.
+					// A type change on a GSI key attribute requires the index to be recreated.
+					o, n := diff.GetChange("attribute")
+					oldTypes := map[string]string{}
+					for _, a := range o.(*schema.Set).List() {
+						attr := a.(map[string]any)
+						oldTypes[attr[names.AttrName].(string)] = attr[names.AttrType].(string)
+					}
+					for _, a := range n.(*schema.Set).List() {
+						attr := a.(map[string]any)
+						if t, ok := oldTypes[attr[names.AttrName].(string)]; ok && t != attr[names.AttrType].(string) {
+							return nil
+						}
+					}
 					return diff.Clear("attribute")
 				}
 
