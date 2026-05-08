@@ -70,7 +70,7 @@ func radarChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":       dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrCategory:     dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													attrColor:        dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrValues: measureFieldSchema(measureFieldsMaxItems20), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
@@ -79,8 +79,8 @@ func radarChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend": legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"shape":  stringEnumSchema[awstypes.RadarChartShape](attrOptional),
+							attrLegend: legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							"shape":    stringEnumSchema[awstypes.RadarChartShape](attrOptional),
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
@@ -90,14 +90,14 @@ func radarChartVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":        fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										attrCategorySort:       fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 										"color_items_limit":    itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
 										"color_sort":           fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
-							"start_angle":    floatBetweenSchema(attrOptional, -360, 360),
-							"visual_palette": visualPaletteSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							"start_angle":     floatBetweenSchema(attrOptional, -360, 360),
+							attrVisualPalette: visualPaletteSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
 				},
@@ -115,7 +115,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartConfiguration.html
 					Type:     schema.TypeList,
@@ -156,7 +156,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":       dimensionFieldDataSourceSchema(),
+													attrCategory:     dimensionFieldDataSourceSchema(),
 													attrColor:        dimensionFieldDataSourceSchema(),
 													names.AttrValues: measureFieldDataSourceSchema(),
 												},
@@ -165,22 +165,22 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend": legendOptionsDataSourceSchema(),
-							"shape":  stringEnumDataSourceSchema[awstypes.RadarChartShape](),
+							attrLegend: legendOptionsDataSourceSchema(),
+							"shape":    stringEnumDataSourceSchema[awstypes.RadarChartShape](),
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit": itemsLimitConfigurationDataSourceSchema(),
-										"category_sort":        fieldSortOptionsDataSourceSchema(),
+										attrCategorySort:       fieldSortOptionsDataSourceSchema(),
 										"color_items_limit":    itemsLimitConfigurationDataSourceSchema(),
 										"color_sort":           fieldSortOptionsDataSourceSchema(),
 									},
 								},
 							},
-							"start_angle":    floatComputedOnly(),
-							"visual_palette": visualPaletteDataSourceSchema(),
+							"start_angle":     floatComputedOnly(),
+							attrVisualPalette: visualPaletteDataSourceSchema(),
 						},
 					},
 				},
@@ -271,13 +271,13 @@ func expandRadarChartConfiguration(tfList []any) *awstypes.RadarChartConfigurati
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandRadarChartFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandRadarChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
@@ -315,7 +315,7 @@ func expandRadarChartAggregatedFieldWells(tfList []any) *awstypes.RadarChartAggr
 
 	apiObject := &awstypes.RadarChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
 	if v, ok := tfMap["colors"].([]any); ok && len(v) > 0 {
@@ -343,7 +343,7 @@ func expandRadarChartSortConfiguration(tfList []any) *awstypes.RadarChartSortCon
 	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategorySort].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 	if v, ok := tfMap["color_items_limit"].([]any); ok && len(v) > 0 {
@@ -455,7 +455,7 @@ func flattenRadarChartConfiguration(apiObject *awstypes.RadarChartConfiguration)
 		tfMap[attrFieldWells] = flattenRadarChartFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	tfMap["shape"] = apiObject.Shape
 	if apiObject.SortConfiguration != nil {
@@ -465,7 +465,7 @@ func flattenRadarChartConfiguration(apiObject *awstypes.RadarChartConfiguration)
 		tfMap["start_angle"] = aws.ToFloat64(apiObject.StartAngle)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
 	return []any{tfMap}
@@ -519,7 +519,7 @@ func flattenRadarChartAggregatedFieldWells(apiObject *awstypes.RadarChartAggrega
 	tfMap := map[string]any{}
 
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Color != nil {
 		tfMap[attrColor] = flattenDimensionFields(apiObject.Color)
@@ -542,7 +542,7 @@ func flattenRadarChartSortConfiguration(apiObject *awstypes.RadarChartSortConfig
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
 	}
 	if apiObject.CategorySort != nil {
-		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+		tfMap[attrCategorySort] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 	if apiObject.ColorItemsLimit != nil {
 		tfMap["color_items_limit"] = flattenItemsLimitConfiguration(apiObject.ColorItemsLimit)

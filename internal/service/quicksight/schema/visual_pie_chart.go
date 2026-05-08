@@ -30,7 +30,7 @@ func pieChartVisualSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"category_label_options":         chartAxisLabelOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"contribution_analysis_defaults": contributionAnalysisDefaultsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ContributionAnalysisDefault.html
-							"data_labels":                    dataLabelOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrDataLabels:                   dataLabelOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							"donut_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DonutOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -77,7 +77,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":        dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrCategory:      dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"small_multiples": dimensionFieldSchema(1),                          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrValues:  measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
@@ -86,7 +86,7 @@ func pieChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                  legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend:                legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartSortConfiguration.html
 								Type:             schema.TypeList,
@@ -97,15 +97,15 @@ func pieChartVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit":                itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":                       fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										attrCategorySort:                      fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 										"small_multiples_limit_configuration": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
 										"small_multiples_sort":                fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
-							"tooltip":             tooltipOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrTooltip:           tooltipOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
 							"value_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"visual_palette":      visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrVisualPalette:     visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
 				},
@@ -123,7 +123,7 @@ func pieChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartConfiguration.html
 					Type:     schema.TypeList,
@@ -132,7 +132,7 @@ func pieChartVisualDataSourceSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"category_label_options":         chartAxisLabelOptionsDataSourceSchema(),
 							"contribution_analysis_defaults": contributionAnalysisDefaultsDataSourceSchema(),
-							"data_labels":                    dataLabelOptionsDataSourceSchema(),
+							attrDataLabels:                   dataLabelOptionsDataSourceSchema(),
 							"donut_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DonutOptions.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -169,7 +169,7 @@ func pieChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":        dimensionFieldDataSourceSchema(),
+													attrCategory:      dimensionFieldDataSourceSchema(),
 													"small_multiples": dimensionFieldDataSourceSchema(),
 													names.AttrValues:  measureFieldDataSourceSchema(),
 												},
@@ -178,7 +178,7 @@ func pieChartVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                  legendOptionsDataSourceSchema(),
+							attrLegend:                legendOptionsDataSourceSchema(),
 							"small_multiples_options": smallMultiplesOptionsDataSourceSchema(),
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartSortConfiguration.html
 								Type:     schema.TypeList,
@@ -186,15 +186,15 @@ func pieChartVisualDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit":                itemsLimitConfigurationDataSourceSchema(),
-										"category_sort":                       fieldSortOptionsDataSourceSchema(),
+										attrCategorySort:                      fieldSortOptionsDataSourceSchema(),
 										"small_multiples_limit_configuration": itemsLimitConfigurationDataSourceSchema(),
 										"small_multiples_sort":                fieldSortOptionsDataSourceSchema(),
 									},
 								},
 							},
-							"tooltip":             tooltipOptionsDataSourceSchema(),
+							attrTooltip:           tooltipOptionsDataSourceSchema(),
 							"value_label_options": chartAxisLabelOptionsDataSourceSchema(),
-							"visual_palette":      visualPaletteDataSourceSchema(),
+							attrVisualPalette:     visualPaletteDataSourceSchema(),
 						},
 					},
 				},
@@ -258,7 +258,7 @@ func expandPieChartConfiguration(tfList []any) *awstypes.PieChartConfiguration {
 	if v, ok := tfMap["contribution_analysis_defaults"].([]any); ok && len(v) > 0 {
 		apiObject.ContributionAnalysisDefaults = expandContributionAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrDataLabels].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap["donut_options"].([]any); ok && len(v) > 0 {
@@ -267,7 +267,7 @@ func expandPieChartConfiguration(tfList []any) *awstypes.PieChartConfiguration {
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandPieChartFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["small_multiples_options"].([]any); ok && len(v) > 0 {
@@ -276,13 +276,13 @@ func expandPieChartConfiguration(tfList []any) *awstypes.PieChartConfiguration {
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandPieChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 	if v, ok := tfMap["value_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.ValueLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
@@ -320,7 +320,7 @@ func expandPieChartAggregatedFieldWells(tfList []any) *awstypes.PieChartAggregat
 
 	apiObject := &awstypes.PieChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
 	if v, ok := tfMap["small_multiples"].([]any); ok && len(v) > 0 {
@@ -348,7 +348,7 @@ func expandPieChartSortConfiguration(tfList []any) *awstypes.PieChartSortConfigu
 	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategorySort].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 	if v, ok := tfMap["small_multiples_limit_configuration"].([]any); ok && len(v) > 0 {
@@ -463,7 +463,7 @@ func flattenPieChartConfiguration(apiObject *awstypes.PieChartConfiguration) []a
 		tfMap["contribution_analysis_defaults"] = flattenContributionAnalysisDefault(apiObject.ContributionAnalysisDefaults)
 	}
 	if apiObject.DataLabels != nil {
-		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+		tfMap[attrDataLabels] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.DonutOptions != nil {
 		tfMap["donut_options"] = flattenDonutOptions(apiObject.DonutOptions)
@@ -472,7 +472,7 @@ func flattenPieChartConfiguration(apiObject *awstypes.PieChartConfiguration) []a
 		tfMap[attrFieldWells] = flattenPieChartFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.SmallMultiplesOptions != nil {
 		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
@@ -481,13 +481,13 @@ func flattenPieChartConfiguration(apiObject *awstypes.PieChartConfiguration) []a
 		tfMap[attrSortConfiguration] = flattenPieChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.ValueLabelOptions != nil {
 		tfMap["value_label_options"] = flattenChartAxisLabelOptions(apiObject.ValueLabelOptions)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
 	return []any{tfMap}
@@ -556,7 +556,7 @@ func flattenPieChartAggregatedFieldWells(apiObject *awstypes.PieChartAggregatedF
 	tfMap := map[string]any{}
 
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.SmallMultiples != nil {
 		tfMap["small_multiples"] = flattenDimensionFields(apiObject.SmallMultiples)
@@ -579,7 +579,7 @@ func flattenPieChartSortConfiguration(apiObject *awstypes.PieChartSortConfigurat
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
 	}
 	if apiObject.CategorySort != nil {
-		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+		tfMap[attrCategorySort] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 	if apiObject.SmallMultiplesLimitConfiguration != nil {
 		tfMap["small_multiples_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.SmallMultiplesLimitConfiguration)

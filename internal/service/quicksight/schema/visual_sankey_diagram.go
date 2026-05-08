@@ -28,7 +28,7 @@ func sankeyDiagramVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_labels": dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrDataLabels: dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -82,14 +82,14 @@ func sankeyDiagramVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramChartConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_labels": dataLabelOptionsDataSourceSchema(),
+							attrDataLabels: dataLabelOptionsDataSourceSchema(),
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -173,7 +173,7 @@ func expandSankeyDiagramConfiguration(tfList []any) *awstypes.SankeyDiagramChart
 
 	apiObject := &awstypes.SankeyDiagramChartConfiguration{}
 
-	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrDataLabels].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
@@ -288,7 +288,7 @@ func flattenSankeyDiagramChartConfiguration(apiObject *awstypes.SankeyDiagramCha
 	tfMap := map[string]any{}
 
 	if apiObject.DataLabels != nil {
-		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+		tfMap[attrDataLabels] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.FieldWells != nil {
 		tfMap[attrFieldWells] = flattenSankeyDiagramFieldWells(apiObject.FieldWells)

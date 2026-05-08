@@ -76,7 +76,7 @@ func boxPlotVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                         legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend:                       legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"primary_y_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"primary_y_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"reference_lines":                referenceLineSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
@@ -88,13 +88,13 @@ func boxPlotVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_sort":            fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										attrCategorySort:           fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 										"pagination_configuration": paginationConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PaginationConfiguration.html
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"visual_palette": visualPaletteSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrTooltip:       tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrVisualPalette: visualPaletteSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
 				},
@@ -112,7 +112,7 @@ func boxPlotVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotChartConfiguration.html
 					Type:     schema.TypeList,
@@ -158,7 +158,7 @@ func boxPlotVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                         legendOptionsDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend:                       legendOptionsDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"primary_y_axis_display_options": axisDisplayOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"primary_y_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"reference_lines":                referenceLineDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
@@ -167,13 +167,13 @@ func boxPlotVisualDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_sort":            fieldSortOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										attrCategorySort:           fieldSortOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 										"pagination_configuration": paginationConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PaginationConfiguration.html
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"visual_palette": visualPaletteDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrTooltip:       tooltipOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrVisualPalette: visualPaletteDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
 				},
@@ -278,7 +278,7 @@ func expandBoxPlotChartConfiguration(tfList []any) *awstypes.BoxPlotChartConfigu
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandBoxPlotFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["primary_y_axis_display_options"].([]any); ok && len(v) > 0 {
@@ -293,10 +293,10 @@ func expandBoxPlotChartConfiguration(tfList []any) *awstypes.BoxPlotChartConfigu
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandBoxPlotSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
@@ -400,7 +400,7 @@ func expandBoxPlotSortConfiguration(tfList []any) *awstypes.BoxPlotSortConfigura
 
 	apiObject := &awstypes.BoxPlotSortConfiguration{}
 
-	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategorySort].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 	if v, ok := tfMap["pagination_configuration"].([]any); ok && len(v) > 0 {
@@ -479,7 +479,7 @@ func flattenBoxPlotChartConfiguration(apiObject *awstypes.BoxPlotChartConfigurat
 		tfMap[attrFieldWells] = flattenBoxPlotFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.PrimaryYAxisDisplayOptions != nil {
 		tfMap["primary_y_axis_display_options"] = flattenAxisDisplayOptions(apiObject.PrimaryYAxisDisplayOptions)
@@ -494,10 +494,10 @@ func flattenBoxPlotChartConfiguration(apiObject *awstypes.BoxPlotChartConfigurat
 		tfMap[attrSortConfiguration] = flattenBoxPlotSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
 	return []any{tfMap}
@@ -570,7 +570,7 @@ func flattenBoxPlotSortConfiguration(apiObject *awstypes.BoxPlotSortConfiguratio
 	tfMap := map[string]any{}
 
 	if apiObject.CategorySort != nil {
-		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+		tfMap[attrCategorySort] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 	if apiObject.PaginationConfiguration != nil {
 		tfMap["pagination_configuration"] = flattenPaginationConfiguration(apiObject.PaginationConfiguration)

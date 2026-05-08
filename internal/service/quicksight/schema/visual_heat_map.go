@@ -30,7 +30,7 @@ func heatMapVisualSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"color_scale":          colorScaleSchema(),            // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColorScale.html
 							"column_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"data_labels":          dataLabelOptionsSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrDataLabels:         dataLabelOptionsSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -45,7 +45,7 @@ func heatMapVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"columns":        dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrColumns:      dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"rows":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrValues: measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
@@ -54,7 +54,7 @@ func heatMapVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":            legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend:          legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"row_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapSortConfiguration.html
 								Type:             schema.TypeList,
@@ -71,7 +71,7 @@ func heatMapVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip": tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrTooltip: tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
 						},
 					},
 				},
@@ -89,7 +89,7 @@ func heatMapVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapConfiguration.html
 					Type:     schema.TypeList,
@@ -98,7 +98,7 @@ func heatMapVisualDataSourceSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"color_scale":          colorScaleDataSourceSchema(),
 							"column_label_options": chartAxisLabelOptionsDataSourceSchema(),
-							"data_labels":          dataLabelOptionsDataSourceSchema(),
+							attrDataLabels:         dataLabelOptionsDataSourceSchema(),
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -109,7 +109,7 @@ func heatMapVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"columns":        dimensionFieldDataSourceSchema(),
+													attrColumns:      dimensionFieldDataSourceSchema(),
 													"rows":           dimensionFieldDataSourceSchema(),
 													names.AttrValues: measureFieldDataSourceSchema(),
 												},
@@ -118,7 +118,7 @@ func heatMapVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":            legendOptionsDataSourceSchema(),
+							attrLegend:          legendOptionsDataSourceSchema(),
 							"row_label_options": chartAxisLabelOptionsDataSourceSchema(),
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeatMapSortConfiguration.html
 								Type:     schema.TypeList,
@@ -132,7 +132,7 @@ func heatMapVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip": tooltipOptionsDataSourceSchema(),
+							attrTooltip: tooltipOptionsDataSourceSchema(),
 						},
 					},
 				},
@@ -196,13 +196,13 @@ func expandHeatMapConfiguration(tfList []any) *awstypes.HeatMapConfiguration {
 	if v, ok := tfMap["column_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrDataLabels].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandHeatMapFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["row_label_options"].([]any); ok && len(v) > 0 {
@@ -211,7 +211,7 @@ func expandHeatMapConfiguration(tfList []any) *awstypes.HeatMapConfiguration {
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandHeatMapSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 
@@ -249,7 +249,7 @@ func expandHeatMapAggregatedFieldWells(tfList []any) *awstypes.HeatMapAggregated
 
 	apiObject := &awstypes.HeatMapAggregatedFieldWells{}
 
-	if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumns].([]any); ok && len(v) > 0 {
 		apiObject.Columns = expandDimensionFields(v)
 	}
 	if v, ok := tfMap["rows"].([]any); ok && len(v) > 0 {
@@ -332,13 +332,13 @@ func flattenHeatMapConfiguration(apiObject *awstypes.HeatMapConfiguration) []any
 		tfMap["column_label_options"] = flattenChartAxisLabelOptions(apiObject.ColumnLabelOptions)
 	}
 	if apiObject.DataLabels != nil {
-		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+		tfMap[attrDataLabels] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.FieldWells != nil {
 		tfMap[attrFieldWells] = flattenHeatMapFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.RowLabelOptions != nil {
 		tfMap["row_label_options"] = flattenChartAxisLabelOptions(apiObject.RowLabelOptions)
@@ -347,7 +347,7 @@ func flattenHeatMapConfiguration(apiObject *awstypes.HeatMapConfiguration) []any
 		tfMap[attrSortConfiguration] = flattenHeatMapSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 
 	return []any{tfMap}
@@ -375,7 +375,7 @@ func flattenHeatMapAggregatedFieldWells(apiObject *awstypes.HeatMapAggregatedFie
 	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
-		tfMap["columns"] = flattenDimensionFields(apiObject.Columns)
+		tfMap[attrColumns] = flattenDimensionFields(apiObject.Columns)
 	}
 	if apiObject.Rows != nil {
 		tfMap["rows"] = flattenDimensionFields(apiObject.Rows)

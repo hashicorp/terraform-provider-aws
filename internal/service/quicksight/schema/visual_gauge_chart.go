@@ -27,7 +27,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_labels": dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrDataLabels: dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -100,8 +100,8 @@ func gaugeChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"visual_palette": visualPaletteSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrTooltip:       tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrVisualPalette: visualPaletteSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
 				},
@@ -137,7 +137,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"icon":       conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
+													attrIcon:     conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
 													"text_color": conditionalFormattingColorSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
 												},
 											},
@@ -161,14 +161,14 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_labels": dataLabelOptionsDataSourceSchema(),
+							attrDataLabels: dataLabelOptionsDataSourceSchema(),
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -219,8 +219,8 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsDataSourceSchema(),
-							"visual_palette": visualPaletteDataSourceSchema(),
+							attrTooltip:       tooltipOptionsDataSourceSchema(),
+							attrVisualPalette: visualPaletteDataSourceSchema(),
 						},
 					},
 				},
@@ -248,7 +248,7 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"icon":       conditionalFormattingIconDataSourceSchema(),
+													attrIcon:     conditionalFormattingIconDataSourceSchema(),
 													"text_color": conditionalFormattingColorDataSourceSchema(),
 												},
 											},
@@ -312,7 +312,7 @@ func expandGaugeChartConfiguration(tfList []any) *awstypes.GaugeChartConfigurati
 
 	apiObject := &awstypes.GaugeChartConfiguration{}
 
-	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrDataLabels].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
@@ -321,10 +321,10 @@ func expandGaugeChartConfiguration(tfList []any) *awstypes.GaugeChartConfigurati
 	if v, ok := tfMap["gauge_chart_options"].([]any); ok && len(v) > 0 {
 		apiObject.GaugeChartOptions = expandGaugeChartOptions(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.TooltipOptions = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
@@ -475,7 +475,7 @@ func expandGaugeChartPrimaryValueConditionalFormatting(tfList []any) *awstypes.G
 
 	apiObject := &awstypes.GaugeChartPrimaryValueConditionalFormatting{}
 
-	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrIcon].([]any); ok && len(v) > 0 {
 		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
 	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
@@ -587,7 +587,7 @@ func flattenGaugeChartConfiguration(apiObject *awstypes.GaugeChartConfiguration)
 	tfMap := map[string]any{}
 
 	if apiObject.DataLabels != nil {
-		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+		tfMap[attrDataLabels] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.FieldWells != nil {
 		tfMap[attrFieldWells] = flattenGaugeChartFieldWells(apiObject.FieldWells)
@@ -596,10 +596,10 @@ func flattenGaugeChartConfiguration(apiObject *awstypes.GaugeChartConfiguration)
 		tfMap["gauge_chart_options"] = flattenGaugeChartOptions(apiObject.GaugeChartOptions)
 	}
 	if apiObject.TooltipOptions != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.TooltipOptions)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.TooltipOptions)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
 	return []any{tfMap}
@@ -784,7 +784,7 @@ func flattenGaugeChartPrimaryValueConditionalFormatting(apiObject *awstypes.Gaug
 	tfMap := map[string]any{}
 
 	if apiObject.Icon != nil {
-		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
+		tfMap[attrIcon] = flattenConditionalFormattingIcon(apiObject.Icon)
 	}
 	if apiObject.TextColor != nil {
 		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)

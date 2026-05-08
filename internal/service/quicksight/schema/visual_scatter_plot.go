@@ -27,7 +27,7 @@ func scatterPlotVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_labels": dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrDataLabels: dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -42,7 +42,7 @@ func scatterPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":     dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrCategory:   dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrSize: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 													"x_axis":       measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 													"y_axis":       measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
@@ -65,9 +65,9 @@ func scatterPlotVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                 legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"tooltip":                tooltipOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrLegend:               legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrTooltip:              tooltipOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrVisualPalette:        visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"y_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
@@ -89,14 +89,14 @@ func scatterPlotVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_labels": dataLabelOptionsDataSourceSchema(),
+							attrDataLabels: dataLabelOptionsDataSourceSchema(),
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -107,7 +107,7 @@ func scatterPlotVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":     dimensionFieldDataSourceSchema(),
+													attrCategory:   dimensionFieldDataSourceSchema(),
 													names.AttrSize: measureFieldDataSourceSchema(),
 													"x_axis":       measureFieldDataSourceSchema(),
 													"y_axis":       measureFieldDataSourceSchema(),
@@ -128,9 +128,9 @@ func scatterPlotVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                 legendOptionsDataSourceSchema(),
-							"tooltip":                tooltipOptionsDataSourceSchema(),
-							"visual_palette":         visualPaletteDataSourceSchema(),
+							attrLegend:               legendOptionsDataSourceSchema(),
+							attrTooltip:              tooltipOptionsDataSourceSchema(),
+							attrVisualPalette:        visualPaletteDataSourceSchema(),
 							"x_axis_display_options": axisDisplayOptionsDataSourceSchema(),
 							"x_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
 							"y_axis_display_options": axisDisplayOptionsDataSourceSchema(),
@@ -192,19 +192,19 @@ func expandScatterPlotConfiguration(tfList []any) *awstypes.ScatterPlotConfigura
 
 	apiObject := &awstypes.ScatterPlotConfiguration{}
 
-	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrDataLabels].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandScatterPlotFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 	if v, ok := tfMap["x_axis_display_options"].([]any); ok && len(v) > 0 {
@@ -257,7 +257,7 @@ func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []any) *awstypes.
 
 	apiObject := &awstypes.ScatterPlotCategoricallyAggregatedFieldWells{}
 
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
 	if v, ok := tfMap[names.AttrSize].([]any); ok && len(v) > 0 {
@@ -334,19 +334,19 @@ func flattenScatterPlotConfiguration(apiObject *awstypes.ScatterPlotConfiguratio
 	tfMap := map[string]any{}
 
 	if apiObject.DataLabels != nil {
-		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+		tfMap[attrDataLabels] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.FieldWells != nil {
 		tfMap[attrFieldWells] = flattenScatterPlotFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 	if apiObject.XAxisDisplayOptions != nil {
 		tfMap["x_axis_display_options"] = flattenAxisDisplayOptions(apiObject.XAxisDisplayOptions)
@@ -388,7 +388,7 @@ func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *awstypes.Sca
 	tfMap := map[string]any{}
 
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Size != nil {
 		tfMap[names.AttrSize] = flattenMeasureFields(apiObject.Size)

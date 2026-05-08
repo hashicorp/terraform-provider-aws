@@ -32,7 +32,7 @@ func lineChartVisualSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"contribution_analysis_defaults": contributionAnalysisDefaultsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ContributionAnalysisDefault.html
-							"data_labels":                    dataLabelOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrDataLabels:                   dataLabelOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							"default_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartDefaultSeriesSettings.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -60,7 +60,7 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":        dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrCategory:      dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"colors":          dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"small_multiples": dimensionFieldSchema(1),                          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrValues:  measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
@@ -143,7 +143,7 @@ func lineChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend": legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend: legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"primary_y_axis_display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineSeriesAxisDisplayOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -263,16 +263,16 @@ func lineChartVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit_configuration":  itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":                       fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										attrCategorySort:                      fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 										"color_items_limit_configuration":     itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
 										"small_multiples_limit_configuration": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
 										"small_multiples_sort":                fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
-							"tooltip":                tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrTooltip:              tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
 							names.AttrType:           stringEnumSchema[awstypes.LineChartType](attrOptionalComputed),
-							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrVisualPalette:        visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 						},
@@ -292,7 +292,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
 					Type:     schema.TypeList,
@@ -300,7 +300,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"contribution_analysis_defaults": contributionAnalysisDefaultsDataSourceSchema(),
-							"data_labels":                    dataLabelOptionsDataSourceSchema(),
+							attrDataLabels:                   dataLabelOptionsDataSourceSchema(),
 							"default_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartDefaultSeriesSettings.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -322,7 +322,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":        dimensionFieldDataSourceSchema(),
+													attrCategory:      dimensionFieldDataSourceSchema(),
 													"colors":          dimensionFieldDataSourceSchema(),
 													"small_multiples": dimensionFieldDataSourceSchema(),
 													names.AttrValues:  measureFieldDataSourceSchema(),
@@ -383,7 +383,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend": legendOptionsDataSourceSchema(),
+							attrLegend: legendOptionsDataSourceSchema(),
 							"primary_y_axis_display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineSeriesAxisDisplayOptions.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -479,16 +479,16 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit_configuration":  itemsLimitConfigurationDataSourceSchema(),
-										"category_sort":                       fieldSortOptionsDataSourceSchema(),
+										attrCategorySort:                      fieldSortOptionsDataSourceSchema(),
 										"color_items_limit_configuration":     itemsLimitConfigurationDataSourceSchema(),
 										"small_multiples_limit_configuration": itemsLimitConfigurationDataSourceSchema(),
 										"small_multiples_sort":                fieldSortOptionsDataSourceSchema(),
 									},
 								},
 							},
-							"tooltip":                tooltipOptionsDataSourceSchema(),
+							attrTooltip:              tooltipOptionsDataSourceSchema(),
 							names.AttrType:           stringEnumDataSourceSchema[awstypes.LineChartType](),
-							"visual_palette":         visualPaletteDataSourceSchema(),
+							attrVisualPalette:        visualPaletteDataSourceSchema(),
 							"x_axis_display_options": axisDisplayOptionsDataSourceSchema(),
 							"x_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
 						},
@@ -624,7 +624,7 @@ func expandLineChartConfiguration(tfList []any) *awstypes.LineChartConfiguration
 	if v, ok := tfMap["contribution_analysis_defaults"].([]any); ok && len(v) > 0 {
 		apiObject.ContributionAnalysisDefaults = expandContributionAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrDataLabels].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap["default_series_settings"].([]any); ok && len(v) > 0 {
@@ -636,7 +636,7 @@ func expandLineChartConfiguration(tfList []any) *awstypes.LineChartConfiguration
 	if v, ok := tfMap["forecast_configurations"].([]any); ok && len(v) > 0 {
 		apiObject.ForecastConfigurations = expandForecastConfigurations(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["primary_y_axis_display_options"].([]any); ok && len(v) > 0 {
@@ -663,10 +663,10 @@ func expandLineChartConfiguration(tfList []any) *awstypes.LineChartConfiguration
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandLineChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 	if v, ok := tfMap["x_axis_display_options"].([]any); ok && len(v) > 0 {
@@ -710,7 +710,7 @@ func expandLineChartAggregatedFieldWells(tfList []any) *awstypes.LineChartAggreg
 
 	apiObject := &awstypes.LineChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
 	if v, ok := tfMap["colors"].([]any); ok && len(v) > 0 {
@@ -741,7 +741,7 @@ func expandLineChartSortConfiguration(tfList []any) *awstypes.LineChartSortConfi
 	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryItemsLimitConfiguration = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategorySort].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 	if v, ok := tfMap["color_items_limit_configuration"].([]any); ok && len(v) > 0 {
@@ -1201,7 +1201,7 @@ func flattenLineChartConfiguration(apiObject *awstypes.LineChartConfiguration) [
 		tfMap["contribution_analysis_defaults"] = flattenContributionAnalysisDefault(apiObject.ContributionAnalysisDefaults)
 	}
 	if apiObject.DataLabels != nil {
-		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+		tfMap[attrDataLabels] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.DefaultSeriesSettings != nil {
 		tfMap["default_series_settings"] = flattenLineChartDefaultSeriesSettings(apiObject.DefaultSeriesSettings)
@@ -1213,7 +1213,7 @@ func flattenLineChartConfiguration(apiObject *awstypes.LineChartConfiguration) [
 		tfMap["forecast_configurations"] = flattenForecastConfiguration(apiObject.ForecastConfigurations)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.PrimaryYAxisDisplayOptions != nil {
 		tfMap["primary_y_axis_display_options"] = flattenLineSeriesAxisDisplayOptions(apiObject.PrimaryYAxisDisplayOptions)
@@ -1240,11 +1240,11 @@ func flattenLineChartConfiguration(apiObject *awstypes.LineChartConfiguration) [
 		tfMap[attrSortConfiguration] = flattenLineChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	tfMap[names.AttrType] = apiObject.Type
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 	if apiObject.XAxisDisplayOptions != nil {
 		tfMap["x_axis_display_options"] = flattenAxisDisplayOptions(apiObject.XAxisDisplayOptions)
@@ -1334,7 +1334,7 @@ func flattenLineChartAggregatedFieldWells(apiObject *awstypes.LineChartAggregate
 	tfMap := map[string]any{}
 
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Colors != nil {
 		tfMap["colors"] = flattenDimensionFields(apiObject.Colors)
@@ -1578,7 +1578,7 @@ func flattenLineChartSortConfiguration(apiObject *awstypes.LineChartSortConfigur
 		tfMap["category_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimitConfiguration)
 	}
 	if apiObject.CategorySort != nil {
-		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+		tfMap[attrCategorySort] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 	if apiObject.ColorItemsLimitConfiguration != nil {
 		tfMap["color_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.ColorItemsLimitConfiguration)

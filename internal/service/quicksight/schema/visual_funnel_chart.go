@@ -60,7 +60,7 @@ func funnelChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrCategory:     dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrValues: measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -77,13 +77,13 @@ func funnelChartVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":        fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										attrCategorySort:       fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 									},
 								},
 							},
-							"tooltip":             tooltipOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrTooltip:           tooltipOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
 							"value_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"visual_palette":      visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrVisualPalette:     visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
 				},
@@ -101,7 +101,7 @@ func funnelChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartConfiguration.html
 					Type:     schema.TypeList,
@@ -134,7 +134,7 @@ func funnelChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":       dimensionFieldDataSourceSchema(),
+													attrCategory:     dimensionFieldDataSourceSchema(),
 													names.AttrValues: measureFieldDataSourceSchema(),
 												},
 											},
@@ -148,13 +148,13 @@ func funnelChartVisualDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit": itemsLimitConfigurationDataSourceSchema(),
-										"category_sort":        fieldSortOptionsDataSourceSchema(),
+										attrCategorySort:       fieldSortOptionsDataSourceSchema(),
 									},
 								},
 							},
-							"tooltip":             tooltipOptionsDataSourceSchema(),
+							attrTooltip:           tooltipOptionsDataSourceSchema(),
 							"value_label_options": chartAxisLabelOptionsDataSourceSchema(),
-							"visual_palette":      visualPaletteDataSourceSchema(),
+							attrVisualPalette:     visualPaletteDataSourceSchema(),
 						},
 					},
 				},
@@ -224,13 +224,13 @@ func expandFunnelChartConfiguration(tfList []any) *awstypes.FunnelChartConfigura
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandFunnelChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 	if v, ok := tfMap["value_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.ValueLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
@@ -268,7 +268,7 @@ func expandFunnelChartAggregatedFieldWells(tfList []any) *awstypes.FunnelChartAg
 
 	apiObject := &awstypes.FunnelChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
 	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
@@ -293,7 +293,7 @@ func expandFunnelChartSortConfiguration(tfList []any) *awstypes.FunnelChartSortC
 	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategorySort].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 
@@ -385,13 +385,13 @@ func flattenFunnelChartConfiguration(apiObject *awstypes.FunnelChartConfiguratio
 		tfMap[attrSortConfiguration] = flattenFunnelChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.ValueLabelOptions != nil {
 		tfMap["value_label_options"] = flattenChartAxisLabelOptions(apiObject.ValueLabelOptions)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
 	return []any{tfMap}
@@ -441,7 +441,7 @@ func flattenFunnelChartAggregatedFieldWells(apiObject *awstypes.FunnelChartAggre
 	tfMap := map[string]any{}
 
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Values != nil {
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
@@ -461,7 +461,7 @@ func flattenFunnelChartSortConfiguration(apiObject *awstypes.FunnelChartSortConf
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
 	}
 	if apiObject.CategorySort != nil {
-		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+		tfMap[attrCategorySort] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 
 	return []any{tfMap}

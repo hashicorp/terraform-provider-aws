@@ -344,7 +344,7 @@ var chartAxisLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 									},
 								},
 							},
-							"custom_label": {
+							attrCustomLabel: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -380,7 +380,7 @@ var chartAxisLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema
 									},
 								},
 							},
-							"custom_label":       stringComputedOnly(),
+							attrCustomLabel:      stringComputedOnly(),
 							"font_configuration": fontConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 						},
 					},
@@ -438,8 +438,8 @@ var contributionAnalysisDefaultsSchema = sync.OnceValue(func() *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-							"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrColumnName:        stringLenBetweenSchema(attrRequired, 1, 128),
+							attrDataSetIdentifier: stringLenBetweenSchema(attrRequired, 1, 2048),
 						},
 					},
 				},
@@ -460,8 +460,8 @@ var contributionAnalysisDefaultsDataSourceSchema = sync.OnceValue(func() *schema
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"column_name":         stringComputedOnly(),
-							"data_set_identifier": stringComputedOnly(),
+							attrColumnName:        stringComputedOnly(),
+							attrDataSetIdentifier: stringComputedOnly(),
 						},
 					},
 				},
@@ -531,7 +531,7 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label": stringMatchSchema(attrRequired, `.*\S.*`, ""),
+										attrCustomLabel: stringMatchSchema(attrRequired, `.*\S.*`, ""),
 									},
 								},
 							},
@@ -545,8 +545,8 @@ var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"format_configuration": numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
-										"relative_position":    stringEnumSchema[awstypes.ReferenceLineValueLabelRelativePosition](attrOptional),
+										attrFormatConfiguration: numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
+										"relative_position":     stringEnumSchema[awstypes.ReferenceLineValueLabelRelativePosition](attrOptional),
 									},
 								},
 							},
@@ -617,7 +617,7 @@ var referenceLineDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label": stringComputedOnly(),
+										attrCustomLabel: stringComputedOnly(),
 									},
 								},
 							},
@@ -629,8 +629,8 @@ var referenceLineDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"format_configuration": numericFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
-										"relative_position":    stringEnumDataSourceSchema[awstypes.ReferenceLineValueLabelRelativePosition](),
+										attrFormatConfiguration: numericFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
+										"relative_position":     stringEnumDataSourceSchema[awstypes.ReferenceLineValueLabelRelativePosition](),
 									},
 								},
 							},
@@ -1106,7 +1106,7 @@ func expandAxisLabelOptions(tfMap map[string]any) *awstypes.AxisLabelOptions {
 
 	apiObject := &awstypes.AxisLabelOptions{}
 
-	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCustomLabel].(string); ok && v != "" {
 		apiObject.CustomLabel = aws.String(v)
 	}
 	if v, ok := tfMap["apply_to"].([]any); ok && len(v) > 0 {
@@ -1344,7 +1344,7 @@ func expandReferenceLineCustomLabelConfiguration(tfList []any) *awstypes.Referen
 
 	apiObject := &awstypes.ReferenceLineCustomLabelConfiguration{}
 
-	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCustomLabel].(string); ok && v != "" {
 		apiObject.CustomLabel = aws.String(v)
 	}
 
@@ -1366,7 +1366,7 @@ func expandReferenceLineValueLabelConfiguration(tfList []any) *awstypes.Referenc
 	if v, ok := tfMap["relative_position"].(string); ok && v != "" {
 		apiObject.RelativePosition = awstypes.ReferenceLineValueLabelRelativePosition(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandNumericFormatConfiguration(v)
 	}
 
@@ -1767,7 +1767,7 @@ func flattenAxisLabelOptions(apiObjects []awstypes.AxisLabelOptions) []any {
 			tfMap["apply_to"] = flattenAxisLabelReferenceOptions(apiObject.ApplyTo)
 		}
 		if apiObject.CustomLabel != nil {
-			tfMap["custom_label"] = aws.ToString(apiObject.CustomLabel)
+			tfMap[attrCustomLabel] = aws.ToString(apiObject.CustomLabel)
 		}
 		if apiObject.FontConfiguration != nil {
 			tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
@@ -1827,8 +1827,8 @@ func flattenColumnIdentifiers(apiObjects []awstypes.ColumnIdentifier) []any {
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"column_name":         aws.ToString(apiObject.ColumnName),
-			"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
+			attrColumnName:        aws.ToString(apiObject.ColumnName),
+			attrDataSetIdentifier: aws.ToString(apiObject.DataSetIdentifier),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1944,7 +1944,7 @@ func flattenReferenceLineCustomLabelConfiguration(apiObject *awstypes.ReferenceL
 	}
 
 	tfMap := map[string]any{
-		"custom_label": aws.ToString(apiObject.CustomLabel),
+		attrCustomLabel: aws.ToString(apiObject.CustomLabel),
 	}
 
 	return []any{tfMap}
@@ -1958,7 +1958,7 @@ func flattenReferenceLineValueLabelConfiguration(apiObject *awstypes.ReferenceLi
 	tfMap := map[string]any{}
 
 	if apiObject.FormatConfiguration != nil {
-		tfMap["format_configuration"] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
+		tfMap[attrFormatConfiguration] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	tfMap["relative_position"] = apiObject.RelativePosition
 

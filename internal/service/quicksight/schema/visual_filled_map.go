@@ -50,7 +50,7 @@ func filledMapVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":            legendOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend:          legendOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"map_style_options": geospatialMapStyleOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapStyleOptions.html
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapSortConfiguration.html
 								Type:             schema.TypeList,
@@ -60,11 +60,11 @@ func filledMapVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_sort": fieldSortOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										attrCategorySort: fieldSortOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrTooltip:      tooltipOptionsSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
 							"window_options": geospatialWindowOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialWindowOptions.html
 						},
 					},
@@ -125,7 +125,7 @@ func filledMapVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapConfiguration.html
 					Type:     schema.TypeList,
@@ -150,18 +150,18 @@ func filledMapVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":            legendOptionsDataSourceSchema(),
+							attrLegend:          legendOptionsDataSourceSchema(),
 							"map_style_options": geospatialMapStyleOptionsDataSourceSchema(),
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_sort": fieldSortOptionsDataSourceSchema(),
+										attrCategorySort: fieldSortOptionsDataSourceSchema(),
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsDataSourceSchema(),
+							attrTooltip:      tooltipOptionsDataSourceSchema(),
 							"window_options": geospatialWindowOptionsDataSourceSchema(),
 						},
 					},
@@ -260,7 +260,7 @@ func expandFilledMapConfiguration(tfList []any) *awstypes.FilledMapConfiguration
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandFilledMapFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["map_style_options"].([]any); ok && len(v) > 0 {
@@ -269,7 +269,7 @@ func expandFilledMapConfiguration(tfList []any) *awstypes.FilledMapConfiguration
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandFilledMapSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 	if v, ok := tfMap["value_axis"].([]any); ok && len(v) > 0 {
@@ -332,7 +332,7 @@ func expandFilledMapSortConfiguration(tfList []any) *awstypes.FilledMapSortConfi
 
 	apiObject := &awstypes.FilledMapSortConfiguration{}
 
-	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategorySort].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 
@@ -479,7 +479,7 @@ func flattenFilledMapConfiguration(apiObject *awstypes.FilledMapConfiguration) [
 		tfMap[attrFieldWells] = flattenFilledMapFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.MapStyleOptions != nil {
 		tfMap["map_style_options"] = flattenGeospatialMapStyleOptions(apiObject.MapStyleOptions)
@@ -488,7 +488,7 @@ func flattenFilledMapConfiguration(apiObject *awstypes.FilledMapConfiguration) [
 		tfMap[attrSortConfiguration] = flattenFilledMapSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.WindowOptions != nil {
 		tfMap["window_options"] = flattenGeospatialWindowOptions(apiObject.WindowOptions)
@@ -536,7 +536,7 @@ func flattenFilledMapSortConfiguration(apiObject *awstypes.FilledMapSortConfigur
 	tfMap := map[string]any{}
 
 	if apiObject.CategorySort != nil {
-		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+		tfMap[attrCategorySort] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 
 	return []any{tfMap}

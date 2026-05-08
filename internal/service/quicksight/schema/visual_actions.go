@@ -195,7 +195,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 																},
 																"select_all_value_options": stringEnumSchema[awstypes.SelectAllValueOptions](attrOptional),
 																"source_field":             stringLenBetweenSchema(attrOptional, 1, 2048),
-																"source_parameter_name": {
+																attrSourceParameterName: {
 																	Type:     schema.TypeString,
 																	Optional: true,
 																},
@@ -359,7 +359,7 @@ func visualCustomActionsDataSourceSchema() *schema.Schema {
 																},
 																"select_all_value_options": stringEnumDataSourceSchema[awstypes.SelectAllValueOptions](),
 																"source_field":             stringComputedOnly(),
-																"source_parameter_name":    stringComputedOnly(),
+																attrSourceParameterName:    stringComputedOnly(),
 															},
 														},
 													},
@@ -691,7 +691,7 @@ func expandDestinationParameterValueConfiguration(tfList []any) *awstypes.Destin
 	if v, ok := tfMap["source_field"].(string); ok && v != "" {
 		apiObject.SourceField = aws.String(v)
 	}
-	if v, ok := tfMap["source_parameter_name"].(string); ok && v != "" {
+	if v, ok := tfMap[attrSourceParameterName].(string); ok && v != "" {
 		apiObject.SourceParameterName = aws.String(v)
 	}
 
@@ -957,7 +957,7 @@ func flattenDestinationParameterValueConfiguration(apiObject *awstypes.Destinati
 		tfMap["source_field"] = aws.ToString(apiObject.SourceField)
 	}
 	if apiObject.SourceParameterName != nil {
-		tfMap["source_parameter_name"] = aws.ToString(apiObject.SourceParameterName)
+		tfMap[attrSourceParameterName] = aws.ToString(apiObject.SourceParameterName)
 	}
 
 	return []any{tfMap}

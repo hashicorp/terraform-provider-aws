@@ -150,7 +150,7 @@ var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon":         stringEnumSchema[awstypes.Icon](attrOptional),
+										attrIcon:       stringEnumSchema[awstypes.Icon](attrOptional),
 										"unicode_icon": stringMatchSchema(attrOptional, `^[^\\u0000-\\u00FF]$`, ""),
 									},
 								},
@@ -203,7 +203,7 @@ var conditionalFormattingIconDataSourceSchema = sync.OnceValue(func() *schema.Sc
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon":         stringEnumDataSourceSchema[awstypes.Icon](),
+										attrIcon:       stringEnumDataSourceSchema[awstypes.Icon](),
 										"unicode_icon": stringComputedOnly(),
 									},
 								},
@@ -426,7 +426,7 @@ func expandConditionalFormattingCustomIconOptions(tfList []any) *awstypes.Condit
 
 	apiObject := &awstypes.ConditionalFormattingCustomIconOptions{}
 
-	if v, ok := tfMap["icon"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIcon].(string); ok && v != "" {
 		apiObject.Icon = awstypes.Icon(v)
 	}
 	if v, ok := tfMap["unicode_icon"].(string); ok && v != "" {
@@ -492,7 +492,7 @@ func expandTextConditionalFormat(tfList []any) *awstypes.TextConditionalFormat {
 	if v, ok := tfMap["background_color"].([]any); ok && len(v) > 0 {
 		apiObject.BackgroundColor = expandConditionalFormattingColor(v)
 	}
-	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrIcon].([]any); ok && len(v) > 0 {
 		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
 	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
@@ -638,7 +638,7 @@ func flattenConditionalFormattingCustomIconOptions(apiObject *awstypes.Condition
 
 	tfMap := map[string]any{}
 
-	tfMap["icon"] = apiObject.Icon
+	tfMap[attrIcon] = apiObject.Icon
 	if apiObject.UnicodeIcon != nil {
 		tfMap["unicode_icon"] = aws.ToString(apiObject.UnicodeIcon)
 	}

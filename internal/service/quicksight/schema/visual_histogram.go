@@ -74,7 +74,7 @@ func histogramVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"data_labels": dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrDataLabels: dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -96,8 +96,8 @@ func histogramVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip":                tooltipOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrTooltip:              tooltipOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrVisualPalette:        visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"y_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
@@ -117,7 +117,7 @@ func histogramVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramConfiguration.html
 					Type:     schema.TypeList,
@@ -153,7 +153,7 @@ func histogramVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"data_labels": dataLabelOptionsDataSourceSchema(),
+							attrDataLabels: dataLabelOptionsDataSourceSchema(),
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -171,8 +171,8 @@ func histogramVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip":                tooltipOptionsDataSourceSchema(),
-							"visual_palette":         visualPaletteDataSourceSchema(),
+							attrTooltip:              tooltipOptionsDataSourceSchema(),
+							attrVisualPalette:        visualPaletteDataSourceSchema(),
 							"x_axis_display_options": axisDisplayOptionsDataSourceSchema(),
 							"x_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
 							"y_axis_display_options": axisDisplayOptionsDataSourceSchema(),
@@ -232,16 +232,16 @@ func expandHistogramConfiguration(tfList []any) *awstypes.HistogramConfiguration
 	if v, ok := tfMap["bin_options"].([]any); ok && len(v) > 0 {
 		apiObject.BinOptions = expandHistogramBinOptions(v)
 	}
-	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrDataLabels].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandHistogramFieldWells(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 	if v, ok := tfMap["x_axis_display_options"].([]any); ok && len(v) > 0 {
@@ -400,16 +400,16 @@ func flattenHistogramConfiguration(apiObject *awstypes.HistogramConfiguration) [
 		tfMap["bin_options"] = flattenHistogramBinOptions(apiObject.BinOptions)
 	}
 	if apiObject.DataLabels != nil {
-		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+		tfMap[attrDataLabels] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.FieldWells != nil {
 		tfMap[attrFieldWells] = flattenHistogramFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 	if apiObject.XAxisDisplayOptions != nil {
 		tfMap["x_axis_display_options"] = flattenAxisDisplayOptions(apiObject.XAxisDisplayOptions)

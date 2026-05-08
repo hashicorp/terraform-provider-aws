@@ -48,7 +48,7 @@ func comboChartVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"bar_values":  measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-													"category":    dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrCategory:  dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"colors":      dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"line_values": measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
@@ -57,7 +57,7 @@ func comboChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                           legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend:                         legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"line_data_labels":                 dataLabelOptionsSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							"primary_y_axis_display_options":   axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"primary_y_axis_label_options":     chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -73,14 +73,14 @@ func comboChartVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":        fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										attrCategorySort:       fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 										"color_items_limit":    itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
 										"color_sort":           fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"visual_palette": visualPaletteSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							attrTooltip:       tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrVisualPalette: visualPaletteSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
 				},
@@ -98,7 +98,7 @@ func comboChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComboChartConfiguration.html
 					Type:     schema.TypeList,
@@ -121,7 +121,7 @@ func comboChartVisualDataSourceSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"bar_values":  measureFieldDataSourceSchema(),
-													"category":    dimensionFieldDataSourceSchema(),
+													attrCategory:  dimensionFieldDataSourceSchema(),
 													"colors":      dimensionFieldDataSourceSchema(),
 													"line_values": measureFieldDataSourceSchema(),
 												},
@@ -130,7 +130,7 @@ func comboChartVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                           legendOptionsDataSourceSchema(),
+							attrLegend:                         legendOptionsDataSourceSchema(),
 							"line_data_labels":                 dataLabelOptionsDataSourceSchema(),
 							"primary_y_axis_display_options":   axisDisplayOptionsDataSourceSchema(),
 							"primary_y_axis_label_options":     chartAxisLabelOptionsDataSourceSchema(),
@@ -143,14 +143,14 @@ func comboChartVisualDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit": itemsLimitConfigurationDataSourceSchema(),
-										"category_sort":        fieldSortOptionsDataSourceSchema(),
+										attrCategorySort:       fieldSortOptionsDataSourceSchema(),
 										"color_items_limit":    itemsLimitConfigurationDataSourceSchema(),
 										"color_sort":           fieldSortOptionsDataSourceSchema(),
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsDataSourceSchema(),
-							"visual_palette": visualPaletteDataSourceSchema(),
+							attrTooltip:       tooltipOptionsDataSourceSchema(),
+							attrVisualPalette: visualPaletteDataSourceSchema(),
 						},
 					},
 				},
@@ -226,7 +226,7 @@ func expandComboChartConfiguration(tfList []any) *awstypes.ComboChartConfigurati
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandComboChartFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["line_data_labels"].([]any); ok && len(v) > 0 {
@@ -250,10 +250,10 @@ func expandComboChartConfiguration(tfList []any) *awstypes.ComboChartConfigurati
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandComboChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVisualPalette].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
@@ -294,7 +294,7 @@ func expandComboChartAggregatedFieldWells(tfList []any) *awstypes.ComboChartAggr
 	if v, ok := tfMap["bar_values"].([]any); ok && len(v) > 0 {
 		apiObject.BarValues = expandMeasureFields(v)
 	}
-	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategory].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
 	if v, ok := tfMap["colors"].([]any); ok && len(v) > 0 {
@@ -322,7 +322,7 @@ func expandComboChartSortConfiguration(tfList []any) *awstypes.ComboChartSortCon
 	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrCategorySort].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 	if v, ok := tfMap["color_items_limit"].([]any); ok && len(v) > 0 {
@@ -387,7 +387,7 @@ func flattenComboChartConfiguration(apiObject *awstypes.ComboChartConfiguration)
 		tfMap[attrFieldWells] = flattenComboChartFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.LineDataLabels != nil {
 		tfMap["line_data_labels"] = flattenDataLabelOptions(apiObject.LineDataLabels)
@@ -411,10 +411,10 @@ func flattenComboChartConfiguration(apiObject *awstypes.ComboChartConfiguration)
 		tfMap[attrSortConfiguration] = flattenComboChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
 	return []any{tfMap}
@@ -445,7 +445,7 @@ func flattenComboChartAggregatedFieldWells(apiObject *awstypes.ComboChartAggrega
 		tfMap["bar_values"] = flattenMeasureFields(apiObject.BarValues)
 	}
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+		tfMap[attrCategory] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Colors != nil {
 		tfMap["colors"] = flattenDimensionFields(apiObject.Colors)
@@ -468,7 +468,7 @@ func flattenComboChartSortConfiguration(apiObject *awstypes.ComboChartSortConfig
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
 	}
 	if apiObject.CategorySort != nil {
-		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+		tfMap[attrCategorySort] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 	if apiObject.ColorItemsLimit != nil {
 		tfMap["color_items_limit"] = flattenItemsLimitConfiguration(apiObject.ColorItemsLimit)

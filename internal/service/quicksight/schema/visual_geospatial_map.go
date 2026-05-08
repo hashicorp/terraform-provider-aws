@@ -50,7 +50,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":            legendOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend:          legendOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"map_style_options": geospatialMapStyleOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapStyleOptions.html
 							"point_style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialPointStyleOptions.html
 								Type:     schema.TypeList,
@@ -94,9 +94,9 @@ func geospatialMapVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"visual_palette": visualPaletteSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
-							"window_options": geospatialWindowOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialWindowOptions.html
+							attrTooltip:       tooltipOptionsSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrVisualPalette: visualPaletteSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+							"window_options":  geospatialWindowOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialWindowOptions.html
 						},
 					},
 				},
@@ -114,7 +114,7 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapConfiguration.html
 					Type:     schema.TypeList,
@@ -140,7 +140,7 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":            legendOptionsDataSourceSchema(),
+							attrLegend:          legendOptionsDataSourceSchema(),
 							"map_style_options": geospatialMapStyleOptionsDataSourceSchema(),
 							"point_style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialPointStyleOptions.html
 								Type:     schema.TypeList,
@@ -176,9 +176,9 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip":        tooltipOptionsDataSourceSchema(),
-							"visual_palette": visualPaletteDataSourceSchema(),
-							"window_options": geospatialWindowOptionsDataSourceSchema(),
+							attrTooltip:       tooltipOptionsDataSourceSchema(),
+							attrVisualPalette: visualPaletteDataSourceSchema(),
+							"window_options":  geospatialWindowOptionsDataSourceSchema(),
 						},
 					},
 				},
@@ -239,7 +239,7 @@ func expandGeospatialMapConfiguration(tfList []any) *awstypes.GeospatialMapConfi
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandGeospatialMapFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["map_style_options"].([]any); ok && len(v) > 0 {
@@ -248,7 +248,7 @@ func expandGeospatialMapConfiguration(tfList []any) *awstypes.GeospatialMapConfi
 	if v, ok := tfMap["point_style_options"].([]any); ok && len(v) > 0 {
 		apiObject.PointStyleOptions = expandGeospatialPointStyleOptions(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 	if v, ok := tfMap["visual_palatte"].([]any); ok && len(v) > 0 {
@@ -423,7 +423,7 @@ func flattenGeospatialMapConfiguration(apiObject *awstypes.GeospatialMapConfigur
 		tfMap[attrFieldWells] = flattenGeospatialMapFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.MapStyleOptions != nil {
 		tfMap["map_style_options"] = flattenGeospatialMapStyleOptions(apiObject.MapStyleOptions)
@@ -432,13 +432,13 @@ func flattenGeospatialMapConfiguration(apiObject *awstypes.GeospatialMapConfigur
 		tfMap["point_style_options"] = flattenGeospatialPointStyleOptions(apiObject.PointStyleOptions)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.WindowOptions != nil {
 		tfMap["window_options"] = flattenGeospatialWindowOptions(apiObject.WindowOptions)
 	}
 	if apiObject.VisualPalette != nil {
-		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+		tfMap[attrVisualPalette] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
 	return []any{tfMap}

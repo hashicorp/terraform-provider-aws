@@ -18,7 +18,7 @@ func emptyVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				attrDataSetIdentifier: stringLenBetweenSchema(attrRequired, 1, 2048),
 				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 			},
@@ -32,8 +32,8 @@ func emptyVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringComputedOnly(),
-				"visual_id":           idDataSourceSchema(),
+				attrDataSetIdentifier: stringComputedOnly(),
+				attrVisualID:          idDataSourceSchema(),
 				names.AttrActions:     visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 			},
 		},
@@ -52,7 +52,7 @@ func expandEmptyVisual(tfList []any) *awstypes.EmptyVisual {
 
 	apiObject := &awstypes.EmptyVisual{}
 
-	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[attrDataSetIdentifier].(string); ok && v != "" {
 		apiObject.DataSetIdentifier = aws.String(v)
 	}
 	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
@@ -71,7 +71,7 @@ func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
+		attrDataSetIdentifier: aws.ToString(apiObject.DataSetIdentifier),
 		attrVisualID:          aws.ToString(apiObject.VisualId),
 	}
 

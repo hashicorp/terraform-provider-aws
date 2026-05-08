@@ -59,10 +59,10 @@ func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								attrFieldID:            stringLenBetweenSchema(attrRequired, 1, 512),
-								"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
-								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+								attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:             stringLenBetweenSchema(attrRequired, 1, 512),
+								attrFormatConfiguration: stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+								"hierarchy_id":          stringLenBetweenSchema(attrOptional, 1, 512),
 							},
 						},
 					},
@@ -73,11 +73,11 @@ func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								attrFieldID:            stringLenBetweenSchema(attrRequired, 1, 512),
-								"date_granularity":     stringEnumSchema[awstypes.TimeGranularity](attrOptional),
-								"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
-								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+								attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:             stringLenBetweenSchema(attrRequired, 1, 512),
+								"date_granularity":      stringEnumSchema[awstypes.TimeGranularity](attrOptional),
+								attrFormatConfiguration: dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+								"hierarchy_id":          stringLenBetweenSchema(attrOptional, 1, 512),
 							},
 						},
 					},
@@ -88,10 +88,10 @@ func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								attrFieldID:            stringLenBetweenSchema(attrRequired, 1, 512),
-								"format_configuration": numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
-								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+								attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:             stringLenBetweenSchema(attrRequired, 1, 512),
+								attrFormatConfiguration: numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+								"hierarchy_id":          stringLenBetweenSchema(attrOptional, 1, 512),
 							},
 						},
 					},
@@ -113,10 +113,10 @@ var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							attrFieldID:            stringComputedOnly(),
-							"format_configuration": stringFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
-							"hierarchy_id":         stringComputedOnly(),
+							attrColumn:              columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:             stringComputedOnly(),
+							attrFormatConfiguration: stringFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+							"hierarchy_id":          stringComputedOnly(),
 						},
 					},
 				},
@@ -125,11 +125,11 @@ var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							attrFieldID:            stringComputedOnly(),
-							"date_granularity":     stringEnumDataSourceSchema[awstypes.TimeGranularity](),
-							"format_configuration": dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
-							"hierarchy_id":         stringComputedOnly(),
+							attrColumn:              columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:             stringComputedOnly(),
+							"date_granularity":      stringEnumDataSourceSchema[awstypes.TimeGranularity](),
+							attrFormatConfiguration: dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+							"hierarchy_id":          stringComputedOnly(),
 						},
 					},
 				},
@@ -138,10 +138,10 @@ var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							attrFieldID:            stringComputedOnly(),
-							"format_configuration": numberFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
-							"hierarchy_id":         stringComputedOnly(),
+							attrColumn:              columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:             stringComputedOnly(),
+							attrFormatConfiguration: numberFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+							"hierarchy_id":          stringComputedOnly(),
 						},
 					},
 				},
@@ -192,10 +192,10 @@ func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								attrFieldID:            stringLenBetweenSchema(attrRequired, 1, 512),
-								"aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
-								"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+								attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function":  stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
+								attrFormatConfiguration: stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
 							},
 						},
 					},
@@ -206,10 +206,10 @@ func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								attrFieldID:            stringLenBetweenSchema(attrRequired, 1, 512),
-								"aggregation_function": stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
-								"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+								attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function":  stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
+								attrFormatConfiguration: dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
 							},
 						},
 					},
@@ -220,10 +220,10 @@ func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								attrFieldID:            stringLenBetweenSchema(attrRequired, 1, 512),
-								"aggregation_function": numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-								"format_configuration": numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+								attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function":  numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+								attrFormatConfiguration: numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 							},
 						},
 					},
@@ -255,10 +255,10 @@ var measureFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							attrFieldID:            stringComputedOnly(),
-							"aggregation_function": stringEnumDataSourceSchema[awstypes.CategoricalAggregationFunction](),
-							"format_configuration": stringFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+							attrColumn:              columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:             stringComputedOnly(),
+							"aggregation_function":  stringEnumDataSourceSchema[awstypes.CategoricalAggregationFunction](),
+							attrFormatConfiguration: stringFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
 						},
 					},
 				},
@@ -267,10 +267,10 @@ var measureFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							attrFieldID:            stringComputedOnly(),
-							"aggregation_function": stringEnumDataSourceSchema[awstypes.DateAggregationFunction](),
-							"format_configuration": dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+							attrColumn:              columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:             stringComputedOnly(),
+							"aggregation_function":  stringEnumDataSourceSchema[awstypes.DateAggregationFunction](),
+							attrFormatConfiguration: dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
 						},
 					},
 				},
@@ -279,10 +279,10 @@ var measureFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							attrFieldID:            stringComputedOnly(),
-							"aggregation_function": numericalAggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-							"format_configuration": numberFormatConfigurationDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+							attrColumn:              columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:             stringComputedOnly(),
+							"aggregation_function":  numericalAggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+							attrFormatConfiguration: numberFormatConfigurationDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 						},
 					},
 				},
@@ -373,7 +373,7 @@ func expandCategoricalDimensionField(tfList []any) *awstypes.CategoricalDimensio
 	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandStringFormatConfiguration(v)
 	}
 
@@ -404,7 +404,7 @@ func expandDateDimensionField(tfList []any) *awstypes.DateDimensionField {
 	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandDateTimeFormatConfiguration(v)
 	}
 
@@ -432,7 +432,7 @@ func expandNumericalDimensionField(tfList []any) *awstypes.NumericalDimensionFie
 	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandNumberFormatConfiguration(v)
 	}
 
@@ -542,7 +542,7 @@ func expandCategoricalMeasureField(tfList []any) *awstypes.CategoricalMeasureFie
 	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandStringFormatConfiguration(v)
 	}
 
@@ -570,7 +570,7 @@ func expandDateMeasureField(tfList []any) *awstypes.DateMeasureField {
 	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandDateTimeFormatConfiguration(v)
 	}
 
@@ -598,7 +598,7 @@ func expandNumericalMeasureField(tfList []any) *awstypes.NumericalMeasureField {
 	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandNumericalAggregationFunction(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandNumberFormatConfiguration(v)
 	}
 
@@ -665,7 +665,7 @@ func flattenCategoricalDimensionField(apiObject *awstypes.CategoricalDimensionFi
 		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
-		tfMap["format_configuration"] = flattenStringFormatConfiguration(apiObject.FormatConfiguration)
+		tfMap[attrFormatConfiguration] = flattenStringFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	if apiObject.HierarchyId != nil {
 		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
@@ -689,7 +689,7 @@ func flattenDateDimensionField(apiObject *awstypes.DateDimensionField) []any {
 		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
-		tfMap["format_configuration"] = flattenDateTimeFormatConfiguration(apiObject.FormatConfiguration)
+		tfMap[attrFormatConfiguration] = flattenDateTimeFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	if apiObject.HierarchyId != nil {
 		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
@@ -712,7 +712,7 @@ func flattenNumericalDimensionField(apiObject *awstypes.NumericalDimensionField)
 		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
-		tfMap["format_configuration"] = flattenNumberFormatConfiguration(apiObject.FormatConfiguration)
+		tfMap[attrFormatConfiguration] = flattenNumberFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	if apiObject.HierarchyId != nil {
 		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
@@ -805,7 +805,7 @@ func flattenCategoricalMeasureField(apiObject *awstypes.CategoricalMeasureField)
 		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
-		tfMap["format_configuration"] = flattenStringFormatConfiguration(apiObject.FormatConfiguration)
+		tfMap[attrFormatConfiguration] = flattenStringFormatConfiguration(apiObject.FormatConfiguration)
 	}
 
 	return []any{tfMap}
@@ -826,7 +826,7 @@ func flattenDateMeasureField(apiObject *awstypes.DateMeasureField) []any {
 		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
-		tfMap["format_configuration"] = flattenDateTimeFormatConfiguration(apiObject.FormatConfiguration)
+		tfMap[attrFormatConfiguration] = flattenDateTimeFormatConfiguration(apiObject.FormatConfiguration)
 	}
 
 	return []any{tfMap}
@@ -849,7 +849,7 @@ func flattenNumericalMeasureField(apiObject *awstypes.NumericalMeasureField) []a
 		tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
-		tfMap["format_configuration"] = flattenNumberFormatConfiguration(apiObject.FormatConfiguration)
+		tfMap[attrFormatConfiguration] = flattenNumberFormatConfiguration(apiObject.FormatConfiguration)
 	}
 
 	return []any{tfMap}

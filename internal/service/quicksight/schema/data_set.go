@@ -28,7 +28,7 @@ func DataSetColumnGroupsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"columns": {
+							attrColumns: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -59,7 +59,7 @@ func DataSetColumnGroupsSchemaDataSourceSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"columns": {
+							attrColumns: {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Schema{
@@ -169,7 +169,7 @@ func DataSetFieldFoldersSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"columns": {
+				attrColumns: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 5000,
@@ -188,7 +188,7 @@ func DataSetFieldFoldersSchemaDataSourceSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"field_folders_id": stringComputedOnly(),
-				"columns": {
+				attrColumns: {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
@@ -223,7 +223,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name":     stringLenBetweenSchema(attrRequired, 1, 128),
+										attrColumnName:    stringLenBetweenSchema(attrRequired, 1, 128),
 										names.AttrFormat:  stringLenBetweenSchema(attrOptionalComputed, 0, 32),
 										"new_column_type": stringEnumSchema[awstypes.ColumnDataType](attrRequired),
 									},
@@ -236,7 +236,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"columns": {
+										attrColumns: {
 											Type:     schema.TypeList,
 											Required: true,
 											MinItems: 1,
@@ -244,7 +244,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"column_id":          stringLenBetweenSchema(attrRequired, 1, 64),
-													"column_name":        stringLenBetweenSchema(attrRequired, 1, 128),
+													attrColumnName:       stringLenBetweenSchema(attrRequired, 1, 128),
 													names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 												},
 											},
@@ -287,7 +287,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name":     stringLenBetweenSchema(attrRequired, 1, 128),
+										attrColumnName:    stringLenBetweenSchema(attrRequired, 1, 128),
 										"new_column_name": stringLenBetweenSchema(attrRequired, 1, 128),
 									},
 								},
@@ -299,7 +299,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": stringLenBetweenSchema(attrRequired, 1, 128),
+										attrColumnName: stringLenBetweenSchema(attrRequired, 1, 128),
 										names.AttrTags: {
 											Type:     schema.TypeList,
 											Required: true,
@@ -332,7 +332,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": stringLenBetweenSchema(attrRequired, 1, 128),
+										attrColumnName: stringLenBetweenSchema(attrRequired, 1, 128),
 										"tag_names": {
 											Type:     schema.TypeList,
 											Required: true,
@@ -401,7 +401,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name":     stringComputedOnly(),
+										attrColumnName:    stringComputedOnly(),
 										names.AttrFormat:  stringComputedOnly(),
 										"new_column_type": stringEnumDataSourceSchema[awstypes.ColumnDataType](),
 									},
@@ -412,13 +412,13 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"columns": {
+										attrColumns: {
 											Type:     schema.TypeList,
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"column_id":          stringComputedOnly(),
-													"column_name":        stringComputedOnly(),
+													attrColumnName:       stringComputedOnly(),
 													names.AttrExpression: stringComputedOnly(),
 												},
 											},
@@ -453,7 +453,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name":     stringComputedOnly(),
+										attrColumnName:    stringComputedOnly(),
 										"new_column_name": stringComputedOnly(),
 									},
 								},
@@ -463,7 +463,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": stringComputedOnly(),
+										attrColumnName: stringComputedOnly(),
 										names.AttrTags: {
 											Type:     schema.TypeList,
 											Computed: true,
@@ -490,7 +490,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": stringComputedOnly(),
+										attrColumnName: stringComputedOnly(),
 										"tag_names": {
 											Type:     schema.TypeList,
 											Computed: true,
@@ -591,7 +591,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"columns": {
+							attrColumns: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -703,7 +703,7 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"columns": {
+							attrColumns: {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -827,7 +827,7 @@ func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
 					MaxItems: 50,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_name": {
+							attrColumnName: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
@@ -855,7 +855,7 @@ func DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema() *schema.S
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_name":               stringComputedOnly(),
+							attrColumnName:              stringComputedOnly(),
 							"match_all_value":           stringComputedOnly(),
 							"tag_key":                   stringComputedOnly(),
 							"tag_multi_value_delimiter": stringComputedOnly(),
@@ -892,7 +892,7 @@ func DataSetRefreshPropertiesSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column_name": {
+													attrColumnName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -960,7 +960,7 @@ func expandGeoSpatialColumnGroup(tfMap map[string]any) *awstypes.GeoSpatialColum
 
 	apiObject := &awstypes.GeoSpatialColumnGroup{}
 
-	if v, ok := tfMap["columns"].([]any); ok {
+	if v, ok := tfMap[attrColumns].([]any); ok {
 		apiObject.Columns = flex.ExpandStringValueList(v)
 	}
 	if v, ok := tfMap["country_code"].(string); ok && v != "" {
@@ -1038,7 +1038,7 @@ func ExpandFieldFolders(tfList []any) map[string]awstypes.FieldFolder {
 
 		apiObject := awstypes.FieldFolder{}
 
-		if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 {
+		if v, ok := tfMap[attrColumns].([]any); ok && len(v) > 0 {
 			apiObject.Columns = flex.ExpandStringValueList(v)
 		}
 		if v, ok := tfMap[names.AttrDescription].(string); ok {
@@ -1241,7 +1241,7 @@ func expandCastColumnTypeOperation(tfList []any) *awstypes.CastColumnTypeOperati
 
 	apiObject := &awstypes.CastColumnTypeOperation{}
 
-	if v, ok := tfMap["column_name"].(string); ok {
+	if v, ok := tfMap[attrColumnName].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
 	if v, ok := tfMap["new_column_type"].(string); ok {
@@ -1266,7 +1266,7 @@ func expandCreateColumnsOperation(tfList []any) *awstypes.CreateColumnsOperation
 
 	apiObject := &awstypes.CreateColumnsOperation{}
 
-	if v, ok := tfMap["columns"].([]any); ok {
+	if v, ok := tfMap[attrColumns].([]any); ok {
 		apiObject.Columns = expandCalculatedColumns(v)
 	}
 
@@ -1307,7 +1307,7 @@ func expandCalculatedColumn(tfMap map[string]any) *awstypes.CalculatedColumn {
 	if v, ok := tfMap["column_id"].(string); ok {
 		apiObject.ColumnId = aws.String(v)
 	}
-	if v, ok := tfMap["column_name"].(string); ok {
+	if v, ok := tfMap[attrColumnName].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrExpression].(string); ok {
@@ -1367,7 +1367,7 @@ func expandRenameColumnOperation(tfList []any) *awstypes.RenameColumnOperation {
 
 	apiObject := &awstypes.RenameColumnOperation{}
 
-	if v, ok := tfMap["column_name"].(string); ok {
+	if v, ok := tfMap[attrColumnName].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
 	if v, ok := tfMap["new_column_name"].(string); ok {
@@ -1389,7 +1389,7 @@ func expandTagColumnOperation(tfList []any) *awstypes.TagColumnOperation {
 
 	apiObject := &awstypes.TagColumnOperation{}
 
-	if v, ok := tfMap["column_name"].(string); ok {
+	if v, ok := tfMap[attrColumnName].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrTags].([]any); ok {
@@ -1470,7 +1470,7 @@ func expandUntagColumnOperation(tfList []any) *awstypes.UntagColumnOperation {
 
 	apiObject := &awstypes.UntagColumnOperation{}
 
-	if v, ok := tfMap["column_name"].(string); ok {
+	if v, ok := tfMap[attrColumnName].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
 	if v, ok := tfMap["tag_names"].([]any); ok {
@@ -1526,7 +1526,7 @@ func expandCustomSQL(tfMap map[string]any) *awstypes.CustomSql {
 
 	apiObject := &awstypes.CustomSql{}
 
-	if v, ok := tfMap["columns"].([]any); ok {
+	if v, ok := tfMap[attrColumns].([]any); ok {
 		apiObject.Columns = expandInputColumns(v)
 	}
 	if v, ok := tfMap["data_source_arn"].(string); ok {
@@ -1777,7 +1777,7 @@ func expandLookbackWindow(tfList []any) *awstypes.LookbackWindow {
 
 	apiObject := &awstypes.LookbackWindow{}
 
-	if v, ok := tfMap["column_name"].(string); ok {
+	if v, ok := tfMap[attrColumnName].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrSize].(int); ok {
@@ -1821,7 +1821,7 @@ func expandRowLevelPermissionTagRule(tfMap map[string]any) *awstypes.RowLevelPer
 
 	apiObject := &awstypes.RowLevelPermissionTagRule{}
 
-	if v, ok := tfMap["column_name"].(string); ok {
+	if v, ok := tfMap[attrColumnName].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
 	if v, ok := tfMap["tag_key"].(string); ok {
@@ -1889,7 +1889,7 @@ func flattenGeoSpatialColumnGroup(apiObject *awstypes.GeoSpatialColumnGroup) []a
 	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
-		tfMap["columns"] = apiObject.Columns
+		tfMap[attrColumns] = apiObject.Columns
 	}
 	tfMap["country_code"] = apiObject.CountryCode
 	if apiObject.Name != nil {
@@ -1948,7 +1948,7 @@ func FlattenFieldFolders(apiObjects map[string]awstypes.FieldFolder) []any {
 		}
 
 		if len(apiObject.Columns) > 0 {
-			tfMap["columns"] = apiObject.Columns
+			tfMap[attrColumns] = apiObject.Columns
 		}
 		if apiObject.Description != nil {
 			tfMap[names.AttrDescription] = aws.ToString(apiObject.Description)
@@ -2031,7 +2031,7 @@ func flattenCastColumnTypeOperation(apiObject *awstypes.CastColumnTypeOperation)
 	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
-		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
+		tfMap[attrColumnName] = aws.ToString(apiObject.ColumnName)
 	}
 	if apiObject.Format != nil {
 		tfMap[names.AttrFormat] = aws.ToString(apiObject.Format)
@@ -2049,7 +2049,7 @@ func flattenCreateColumnsOperation(apiObject *awstypes.CreateColumnsOperation) [
 	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
-		tfMap["columns"] = flattenCalculatedColumns(apiObject.Columns)
+		tfMap[attrColumns] = flattenCalculatedColumns(apiObject.Columns)
 	}
 
 	return []any{tfMap}
@@ -2069,7 +2069,7 @@ func flattenCalculatedColumns(apiObjects []awstypes.CalculatedColumn) any {
 			tfMap["column_id"] = aws.ToString(apiObject.ColumnId)
 		}
 		if apiObject.ColumnName != nil {
-			tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
+			tfMap[attrColumnName] = aws.ToString(apiObject.ColumnName)
 		}
 		if apiObject.Expression != nil {
 			tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
@@ -2117,7 +2117,7 @@ func flattenRenameColumnOperation(apiObject *awstypes.RenameColumnOperation) []a
 	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
-		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
+		tfMap[attrColumnName] = aws.ToString(apiObject.ColumnName)
 	}
 	if apiObject.NewColumnName != nil {
 		tfMap["new_column_name"] = aws.ToString(apiObject.NewColumnName)
@@ -2134,7 +2134,7 @@ func flattenTagColumnOperation(apiObject *awstypes.TagColumnOperation) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
-		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
+		tfMap[attrColumnName] = aws.ToString(apiObject.ColumnName)
 	}
 	if apiObject.Tags != nil {
 		tfMap[names.AttrTags] = flattenColumnTags(apiObject.Tags)
@@ -2186,7 +2186,7 @@ func flattenUntagColumnOperation(apiObject *awstypes.UntagColumnOperation) []any
 	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
-		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
+		tfMap[attrColumnName] = aws.ToString(apiObject.ColumnName)
 	}
 	if apiObject.TagNames != nil {
 		tfMap["tag_names"] = apiObject.TagNames
@@ -2289,7 +2289,7 @@ func flattenCustomSQL(apiObject *awstypes.CustomSql) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
-		tfMap["columns"] = flattenInputColumns(apiObject.Columns)
+		tfMap[attrColumns] = flattenInputColumns(apiObject.Columns)
 	}
 	if apiObject.DataSourceArn != nil {
 		tfMap["data_source_arn"] = aws.ToString(apiObject.DataSourceArn)
@@ -2482,7 +2482,7 @@ func flattenLookbackWindow(apiObject *awstypes.LookbackWindow) any {
 	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
-		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
+		tfMap[attrColumnName] = aws.ToString(apiObject.ColumnName)
 	}
 	if apiObject.Size != nil {
 		tfMap[names.AttrSize] = aws.ToInt64(apiObject.Size)
@@ -2503,7 +2503,7 @@ func flattenRowLevelPermissionTagRules(apiObjects []awstypes.RowLevelPermissionT
 		tfMap := map[string]any{}
 
 		if apiObject.ColumnName != nil {
-			tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
+			tfMap[attrColumnName] = aws.ToString(apiObject.ColumnName)
 		}
 		if apiObject.MatchAllValue != nil {
 			tfMap["match_all_value"] = aws.ToString(apiObject.MatchAllValue)

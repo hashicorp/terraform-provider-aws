@@ -356,15 +356,15 @@ var columnHierarchiesSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"columns": {
+							attrColumns: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 2,
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-										"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+										attrColumnName:        stringLenBetweenSchema(attrRequired, 1, 128),
+										attrDataSetIdentifier: stringLenBetweenSchema(attrRequired, 1, 2048),
 									},
 								},
 							},
@@ -380,15 +380,15 @@ var columnHierarchiesSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"columns": {
+							attrColumns: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-										"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+										attrColumnName:        stringLenBetweenSchema(attrRequired, 1, 128),
+										attrDataSetIdentifier: stringLenBetweenSchema(attrRequired, 1, 2048),
 									},
 								},
 							},
@@ -423,13 +423,13 @@ var columnHierarchiesDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"columns": {
+							attrColumns: {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringComputedOnly(),
-										"data_set_identifier": stringComputedOnly(),
+										attrColumnName:        stringComputedOnly(),
+										attrDataSetIdentifier: stringComputedOnly(),
 									},
 								},
 							},
@@ -443,13 +443,13 @@ var columnHierarchiesDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"columns": {
+							attrColumns: {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringComputedOnly(),
-										"data_set_identifier": stringComputedOnly(),
+										attrColumnName:        stringComputedOnly(),
+										attrDataSetIdentifier: stringComputedOnly(),
 									},
 								},
 							},
@@ -1522,7 +1522,7 @@ func expandExplicitHierarchy(tfList []any) *awstypes.ExplicitHierarchy {
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
 		apiObject.HierarchyId = aws.String(v)
 	}
-	if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumns].([]any); ok && len(v) > 0 {
 		apiObject.Columns = expandColumnIdentifiers(v)
 	}
 	if v, ok := tfMap["drill_down_filters"].([]any); ok && len(v) > 0 {
@@ -1546,7 +1546,7 @@ func expandPredefinedHierarchy(tfList []any) *awstypes.PredefinedHierarchy {
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
 		apiObject.HierarchyId = aws.String(v)
 	}
-	if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumns].([]any); ok && len(v) > 0 {
 		apiObject.Columns = expandColumnIdentifiers(v)
 	}
 	if v, ok := tfMap["drill_down_filters"].([]any); ok && len(v) > 0 {
@@ -2279,7 +2279,7 @@ func flattenExplicitHierarchy(apiObject *awstypes.ExplicitHierarchy) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
-		tfMap["columns"] = flattenColumnIdentifiers(apiObject.Columns)
+		tfMap[attrColumns] = flattenColumnIdentifiers(apiObject.Columns)
 	}
 	if apiObject.HierarchyId != nil {
 		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
@@ -2299,7 +2299,7 @@ func flattenPredefinedHierarchy(apiObject *awstypes.PredefinedHierarchy) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
-		tfMap["columns"] = flattenColumnIdentifiers(apiObject.Columns)
+		tfMap[attrColumns] = flattenColumnIdentifiers(apiObject.Columns)
 	}
 	if apiObject.HierarchyId != nil {
 		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)

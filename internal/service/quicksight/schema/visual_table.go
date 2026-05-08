@@ -51,8 +51,8 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID:    stringLenBetweenSchema(attrRequired, 1, 512),
-													"custom_label": stringLenBetweenSchema(attrOptional, 1, 2048),
+													attrFieldID:     stringLenBetweenSchema(attrRequired, 1, 512),
+													attrCustomLabel: stringLenBetweenSchema(attrOptional, 1, 2048),
 													"url_styling": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldURLConfiguration.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -102,7 +102,7 @@ func tableVisualSchema() *schema.Schema {
 																							MaxItems: 1,
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
-																									"icon": stringEnumSchema[awstypes.TableFieldIconSetType](attrOptional),
+																									attrIcon: stringEnumSchema[awstypes.TableFieldIconSetType](attrOptional),
 																								},
 																							},
 																						},
@@ -175,9 +175,9 @@ func tableVisualSchema() *schema.Schema {
 														MaxItems: 200,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-																attrFieldID:            stringLenBetweenSchema(attrRequired, 1, 512),
-																"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
+																attrColumn:              columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+																attrFieldID:             stringLenBetweenSchema(attrRequired, 1, 512),
+																attrFormatConfiguration: formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 															},
 														},
 													},
@@ -270,7 +270,7 @@ func tableVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label": {
+										attrCustomLabel: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -341,7 +341,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableConfiguration.html
 					Type:     schema.TypeList,
@@ -363,8 +363,8 @@ func tableVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID:    stringComputedOnly(),
-													"custom_label": stringComputedOnly(),
+													attrFieldID:     stringComputedOnly(),
+													attrCustomLabel: stringComputedOnly(),
 													"url_styling": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldURLConfiguration.html
 														Type:     schema.TypeList,
 														Computed: true,
@@ -402,7 +402,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 																							Computed: true,
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
-																									"icon": stringEnumDataSourceSchema[awstypes.TableFieldIconSetType](),
+																									attrIcon: stringEnumDataSourceSchema[awstypes.TableFieldIconSetType](),
 																								},
 																							},
 																						},
@@ -459,9 +459,9 @@ func tableVisualDataSourceSchema() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																attrColumn:             columnDataSourceSchema(),
-																attrFieldID:            stringComputedOnly(),
-																"format_configuration": formatConfigurationDataSourceSchema(),
+																attrColumn:              columnDataSourceSchema(),
+																attrFieldID:             stringComputedOnly(),
+																attrFormatConfiguration: formatConfigurationDataSourceSchema(),
 															},
 														},
 													},
@@ -536,7 +536,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label":      stringComputedOnly(),
+										attrCustomLabel:     stringComputedOnly(),
 										"placement":         stringEnumDataSourceSchema[awstypes.TableTotalsPlacement](),
 										"scroll_status":     stringEnumDataSourceSchema[awstypes.TableTotalsScrollStatus](),
 										"total_cell_style":  tableCellStyleDataSourceSchema(),
@@ -761,7 +761,7 @@ func expandUnaggregatedField(tfMap map[string]any) *awstypes.UnaggregatedField {
 	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrFormatConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandFormatConfiguration(v)
 	}
 
@@ -846,7 +846,7 @@ func expandTableFieldOption(tfMap map[string]any) *awstypes.TableFieldOption {
 	if v, ok := tfMap[attrFieldID].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCustomLabel].(string); ok && v != "" {
 		apiObject.CustomLabel = aws.String(v)
 	}
 	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
@@ -978,7 +978,7 @@ func expandTableFieldCustomIconContent(tfList []any) *awstypes.TableFieldCustomI
 
 	apiObject := &awstypes.TableFieldCustomIconContent{}
 
-	if v, ok := tfMap["icon"].(string); ok && v != "" {
+	if v, ok := tfMap[attrIcon].(string); ok && v != "" {
 		apiObject.Icon = awstypes.TableFieldIconSetType(v)
 	}
 
@@ -1069,7 +1069,7 @@ func expandTableTotalOptions(tfList []any) *awstypes.TotalOptions {
 
 	apiObject := &awstypes.TotalOptions{}
 
-	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
+	if v, ok := tfMap[attrCustomLabel].(string); ok && v != "" {
 		apiObject.CustomLabel = aws.String(v)
 	}
 	if v, ok := tfMap["placement"].(string); ok && v != "" {
@@ -1346,7 +1346,7 @@ func flattenTableFieldOption(apiObjects []awstypes.TableFieldOption) []any {
 			tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 		}
 		if apiObject.CustomLabel != nil {
-			tfMap["custom_label"] = aws.ToString(apiObject.CustomLabel)
+			tfMap[attrCustomLabel] = aws.ToString(apiObject.CustomLabel)
 		}
 		if apiObject.URLStyling != nil {
 			tfMap["url_styling"] = flattenTableFieldURLConfiguration(apiObject.URLStyling)
@@ -1443,7 +1443,7 @@ func flattenTableFieldCustomIconContent(apiObject *awstypes.TableFieldCustomIcon
 	}
 
 	tfMap := map[string]any{
-		"icon": apiObject.Icon,
+		attrIcon: apiObject.Icon,
 	}
 
 	return []any{tfMap}
@@ -1531,7 +1531,7 @@ func flattenUnaggregatedField(apiObjects []awstypes.UnaggregatedField) []any {
 			tfMap[attrFieldID] = aws.ToString(apiObject.FieldId)
 		}
 		if apiObject.FormatConfiguration != nil {
-			tfMap["format_configuration"] = flattenFormatConfiguration(apiObject.FormatConfiguration)
+			tfMap[attrFormatConfiguration] = flattenFormatConfiguration(apiObject.FormatConfiguration)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1638,7 +1638,7 @@ func flattenTotalOptions(apiObject *awstypes.TotalOptions) []any {
 
 	tfMap := map[string]any{}
 	if apiObject.CustomLabel != nil {
-		tfMap["custom_label"] = aws.ToString(apiObject.CustomLabel)
+		tfMap[attrCustomLabel] = aws.ToString(apiObject.CustomLabel)
 	}
 	tfMap["placement"] = apiObject.Placement
 	tfMap["scroll_status"] = apiObject.ScrollStatus

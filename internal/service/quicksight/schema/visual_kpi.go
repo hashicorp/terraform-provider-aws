@@ -160,7 +160,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"icon":       conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
+													attrIcon:     conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
 													"text_color": conditionalFormattingColorSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
 												},
 											},
@@ -172,7 +172,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"icon":       conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
+													attrIcon:     conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
 													"text_color": conditionalFormattingColorSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
 												},
 											},
@@ -184,7 +184,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"icon":       conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
+													attrIcon:     conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
 													"text_color": conditionalFormattingColorSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
 												},
 											},
@@ -219,7 +219,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConfiguration.html
 					Type:     schema.TypeList,
@@ -333,7 +333,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"icon":       conditionalFormattingIconDataSourceSchema(),
+													attrIcon:     conditionalFormattingIconDataSourceSchema(),
 													"text_color": conditionalFormattingColorDataSourceSchema(),
 												},
 											},
@@ -343,7 +343,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"icon":       conditionalFormattingIconDataSourceSchema(),
+													attrIcon:     conditionalFormattingIconDataSourceSchema(),
 													"text_color": conditionalFormattingColorDataSourceSchema(),
 												},
 											},
@@ -353,7 +353,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"icon":       conditionalFormattingIconDataSourceSchema(),
+													attrIcon:     conditionalFormattingIconDataSourceSchema(),
 													"text_color": conditionalFormattingColorDataSourceSchema(),
 												},
 											},
@@ -729,7 +729,7 @@ func expandKPIActualValueConditionalFormatting(tfList []any) *awstypes.KPIActual
 
 	apiObject := &awstypes.KPIActualValueConditionalFormatting{}
 
-	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrIcon].([]any); ok && len(v) > 0 {
 		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
 	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
@@ -751,7 +751,7 @@ func expandKPIComparisonValueConditionalFormatting(tfList []any) *awstypes.KPICo
 
 	apiObject := &awstypes.KPIComparisonValueConditionalFormatting{}
 
-	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrIcon].([]any); ok && len(v) > 0 {
 		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
 	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
@@ -773,7 +773,7 @@ func expandKPIPrimaryValueConditionalFormatting(tfList []any) *awstypes.KPIPrima
 
 	apiObject := &awstypes.KPIPrimaryValueConditionalFormatting{}
 
-	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrIcon].([]any); ok && len(v) > 0 {
 		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
 	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
@@ -1053,7 +1053,7 @@ func flattenKPIActualValueConditionalFormatting(apiObject *awstypes.KPIActualVal
 	tfMap := map[string]any{}
 
 	if apiObject.Icon != nil {
-		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
+		tfMap[attrIcon] = flattenConditionalFormattingIcon(apiObject.Icon)
 	}
 	if apiObject.TextColor != nil {
 		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
@@ -1070,7 +1070,7 @@ func flattenKPIComparisonValueConditionalFormatting(apiObject *awstypes.KPICompa
 	tfMap := map[string]any{}
 
 	if apiObject.Icon != nil {
-		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
+		tfMap[attrIcon] = flattenConditionalFormattingIcon(apiObject.Icon)
 	}
 	if apiObject.TextColor != nil {
 		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
@@ -1087,7 +1087,7 @@ func flattenKPIPrimaryValueConditionalFormatting(apiObject *awstypes.KPIPrimaryV
 	tfMap := map[string]any{}
 
 	if apiObject.Icon != nil {
-		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
+		tfMap[attrIcon] = flattenConditionalFormattingIcon(apiObject.Icon)
 	}
 	if apiObject.TextColor != nil {
 		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)

@@ -30,7 +30,7 @@ func treeMapVisualSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"color_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_scale":         colorScaleSchema(),            // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColorScale.html
-							"data_labels":         dataLabelOptionsSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrDataLabels:        dataLabelOptionsSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -55,7 +55,7 @@ func treeMapVisualSchema() *schema.Schema {
 								},
 							},
 							"group_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"legend":              legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							attrLegend:            legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"size_label_options":  chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapSortConfiguration.html
 								Type:             schema.TypeList,
@@ -70,7 +70,7 @@ func treeMapVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip": tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							attrTooltip: tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
 						},
 					},
 				},
@@ -88,7 +88,7 @@ func treeMapVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapConfiguration.html
 					Type:     schema.TypeList,
@@ -97,7 +97,7 @@ func treeMapVisualDataSourceSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"color_label_options": chartAxisLabelOptionsDataSourceSchema(),
 							"color_scale":         colorScaleDataSourceSchema(),
-							"data_labels":         dataLabelOptionsDataSourceSchema(),
+							attrDataLabels:        dataLabelOptionsDataSourceSchema(),
 							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -118,7 +118,7 @@ func treeMapVisualDataSourceSchema() *schema.Schema {
 								},
 							},
 							"group_label_options": chartAxisLabelOptionsDataSourceSchema(),
-							"legend":              legendOptionsDataSourceSchema(),
+							attrLegend:            legendOptionsDataSourceSchema(),
 							"size_label_options":  chartAxisLabelOptionsDataSourceSchema(),
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapSortConfiguration.html
 								Type:     schema.TypeList,
@@ -130,7 +130,7 @@ func treeMapVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip": tooltipOptionsDataSourceSchema(),
+							attrTooltip: tooltipOptionsDataSourceSchema(),
 						},
 					},
 				},
@@ -194,7 +194,7 @@ func expandTreeMapConfiguration(tfList []any) *awstypes.TreeMapConfiguration {
 	if v, ok := tfMap["color_scale"].([]any); ok && len(v) > 0 {
 		apiObject.ColorScale = expandColorScale(v)
 	}
-	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrDataLabels].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
 	if v, ok := tfMap[attrFieldWells].([]any); ok && len(v) > 0 {
@@ -203,7 +203,7 @@ func expandTreeMapConfiguration(tfList []any) *awstypes.TreeMapConfiguration {
 	if v, ok := tfMap["group_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.GroupLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrLegend].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
 	if v, ok := tfMap["size_label_options"].([]any); ok && len(v) > 0 {
@@ -212,7 +212,7 @@ func expandTreeMapConfiguration(tfList []any) *awstypes.TreeMapConfiguration {
 	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandTreeMapSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTooltip].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 
@@ -327,7 +327,7 @@ func flattenTreeMapConfiguration(apiObject *awstypes.TreeMapConfiguration) []any
 		tfMap["color_scale"] = flattenColorScale(apiObject.ColorScale)
 	}
 	if apiObject.DataLabels != nil {
-		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+		tfMap[attrDataLabels] = flattenDataLabelOptions(apiObject.DataLabels)
 	}
 	if apiObject.FieldWells != nil {
 		tfMap[attrFieldWells] = flattenTreeMapFieldWells(apiObject.FieldWells)
@@ -336,7 +336,7 @@ func flattenTreeMapConfiguration(apiObject *awstypes.TreeMapConfiguration) []any
 		tfMap["group_label_options"] = flattenChartAxisLabelOptions(apiObject.GroupLabelOptions)
 	}
 	if apiObject.Legend != nil {
-		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+		tfMap[attrLegend] = flattenLegendOptions(apiObject.Legend)
 	}
 	if apiObject.SizeLabelOptions != nil {
 		tfMap["size_label_options"] = flattenChartAxisLabelOptions(apiObject.SizeLabelOptions)
@@ -345,7 +345,7 @@ func flattenTreeMapConfiguration(apiObject *awstypes.TreeMapConfiguration) []any
 		tfMap[attrSortConfiguration] = flattenTreeMapSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
-		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+		tfMap[attrTooltip] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 
 	return []any{tfMap}

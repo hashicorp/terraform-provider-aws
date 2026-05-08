@@ -366,7 +366,7 @@ var labelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"custom_label": {
+				attrCustomLabel: {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
@@ -383,7 +383,7 @@ var labelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"custom_label":       stringComputedOnly(),
+				attrCustomLabel:      stringComputedOnly(),
 				"font_configuration": fontConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 				attrVisibility:       stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
@@ -758,7 +758,7 @@ func expandLabelOptions(tfList []any) *awstypes.LabelOptions {
 
 	apiObject := &awstypes.LabelOptions{}
 
-	if v, ok := tfMap["custom_label"].(string); ok {
+	if v, ok := tfMap[attrCustomLabel].(string); ok {
 		apiObject.CustomLabel = aws.String(v)
 	}
 	if v, ok := tfMap[attrVisibility].(string); ok {
