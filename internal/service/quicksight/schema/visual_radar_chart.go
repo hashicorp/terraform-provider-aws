@@ -117,7 +117,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"visual_id":       idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -146,7 +146,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 							"category_label_options": chartAxisLabelOptionsDataSourceSchema(),
 							"color_axis":             axisDisplayOptionsDataSourceSchema(),
 							"color_label_options":    chartAxisLabelOptionsDataSourceSchema(),
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -185,7 +185,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 					},
 				},
 				"column_hierarchies": columnHierarchiesDataSourceSchema(),
-				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
+				attrSubtitle:         visualSubtitleLabelOptionsDataSourceSchema(),
 				"title":              visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},

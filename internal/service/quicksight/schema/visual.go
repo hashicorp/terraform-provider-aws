@@ -219,7 +219,7 @@ var tooltipOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column":      columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+													attrColumn:    columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 													"aggregation": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 													"label":       stringComputedOnly(),
 													"visibility":  stringEnumDataSourceSchema[awstypes.Visibility](),
@@ -231,7 +231,7 @@ var tooltipOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":   stringComputedOnly(),
+													attrFieldID:  stringComputedOnly(),
 													"label":      stringComputedOnly(),
 													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
 												},
@@ -322,7 +322,7 @@ func dataPathValueDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_id":    stringComputedOnly(),
+				attrFieldID:   stringComputedOnly(),
 				"field_value": stringComputedOnly(),
 			},
 		},
@@ -807,7 +807,7 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field_id":    stringComputedOnly(),
+										attrFieldID:   stringComputedOnly(),
 										"field_value": stringComputedOnly(),
 										"visibility":  stringEnumDataSourceSchema[awstypes.Visibility](),
 									},
@@ -818,7 +818,7 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field_id":   stringComputedOnly(),
+										attrFieldID:  stringComputedOnly(),
 										"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},

@@ -93,7 +93,7 @@ var fieldSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"direction": stringEnumDataSourceSchema[awstypes.SortDirection](),
-				"field_id":  stringComputedOnly(),
+				attrFieldID: stringComputedOnly(),
 			},
 		},
 	}

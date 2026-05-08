@@ -343,7 +343,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"visual_id":       idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -363,7 +363,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":     stringComputedOnly(),
+													attrFieldID:    stringComputedOnly(),
 													"custom_label": stringComputedOnly(),
 													"url_styling": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldURLConfiguration.html
 														Type:     schema.TypeList,
@@ -434,7 +434,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -459,8 +459,8 @@ func tableVisualDataSourceSchema() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"column":               columnDataSourceSchema(),
-																"field_id":             stringComputedOnly(),
+																attrColumn:             columnDataSourceSchema(),
+																attrFieldID:            stringComputedOnly(),
 																"format_configuration": formatConfigurationDataSourceSchema(),
 															},
 														},
@@ -510,7 +510,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":       stringComputedOnly(),
+													attrFieldID:      stringComputedOnly(),
 													"negative_color": stringComputedOnly(),
 													"positive_color": stringComputedOnly(),
 												},
@@ -562,7 +562,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":    stringComputedOnly(),
+													attrFieldID:   stringComputedOnly(),
 													"text_format": textConditionalFormatDataSourceSchema(),
 												},
 											},
@@ -583,8 +583,8 @@ func tableVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":    visualTitleLabelOptionsDataSourceSchema(),
+				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
+				"title":      visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
