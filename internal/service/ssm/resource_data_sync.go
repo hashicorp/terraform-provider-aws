@@ -217,10 +217,10 @@ func flattenResourceDataSyncS3Destination(d *schema.ResourceData, apiObject *aws
 
 	// Since we can't get the destination_data_sharing_type from the API response, we'll use the value from the configuration..
 	if v, ok := d.GetOk("s3_destination"); ok {
-		s3Destination := v.([]interface{})
+		s3Destination := v.([]any)
 
 		for _, s3DestConfig := range s3Destination {
-			config := s3DestConfig.(map[string]interface{})
+			config := s3DestConfig.(map[string]any)
 
 			if aws.String(config["destination_data_sharing_type"].(string)) != nil {
 				tfMap["destination_data_sharing_type"] = aws.String(config["destination_data_sharing_type"].(string))
@@ -228,7 +228,7 @@ func flattenResourceDataSyncS3Destination(d *schema.ResourceData, apiObject *aws
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func expandResourceDataSyncS3Destination(d *schema.ResourceData) *awstypes.ResourceDataSyncS3Destination {
