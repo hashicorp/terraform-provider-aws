@@ -28,7 +28,7 @@ func TestAccSSMResourceDataSync_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
 			},
@@ -53,7 +53,7 @@ func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceResourceDataSync(), resourceName),
 				),
@@ -76,7 +76,7 @@ func TestAccSSMResourceDataSync_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
 			},
@@ -87,7 +87,7 @@ func TestAccSSMResourceDataSync_update(t *testing.T) {
 			},
 			{
 				Config: testAccResourceDataSyncConfig_update(acctest.RandInt(t), rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
 			},
