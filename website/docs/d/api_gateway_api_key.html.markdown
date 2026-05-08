@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_api_key"
 description: |-
@@ -21,15 +21,21 @@ data "aws_api_gateway_api_key" "my_api_key" {
 
 ## Argument Reference
 
-* `id` - (Required) The ID of the API Key to look up.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `id` - (Required) ID of the API Key to look up.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Set to the ID of the API Key.
 * `name` - Set to the name of the API Key.
 * `value` - Set to the value of the API Key.
-* `created_date` - The date and time when the API Key was created.
-* `last_updated_date` - The date and time when the API Key was last updated.
-* `description` - The description of the API Key.
-* `enabled` - Specifies whether the API Key is enabled.
-* `tags` - A map of tags for the resource.
+* `created_date` - Date and time when the API Key was created.
+* `last_updated_date` - Date and time when the API Key was last updated.
+* `customer_id` - Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
+* `description` - Description of the API Key.
+* `enabled` - Whether the API Key is enabled.
+* `tags` - Map of tags for the resource.

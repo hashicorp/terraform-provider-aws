@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Accept 'NoSuchTagSetError' responses from S3-compatible services
+```
+
+```release-note:enhancement
+resource/aws_s3_object: Accept 'NoSuchTagSetError' responses from S3-compatible services
+```

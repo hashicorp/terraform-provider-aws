@@ -1,35 +1,51 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceJob() *schema.Resource {
+// @SDKResource("aws_glue_job", name="Job")
+// @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/glue/types;types.Job")
+// @Testing(preIdentityVersion="v6.39.0")
+func resourceJob() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceJobCreate,
-		Read:   resourceJobRead,
-		Update: resourceJobUpdate,
-		Delete: resourceJobDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		CreateWithoutTimeout: resourceJobCreate,
+		ReadWithoutTimeout:   resourceJobRead,
+		UpdateWithoutTimeout: resourceJobUpdate,
+		DeleteWithoutTimeout: resourceJobDelete,
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: resourceJobCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,20 +55,26 @@ func ResourceJob() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "glueetl",
-						},
-						"script_location": {
-							Type:     schema.TypeString,
-							Required: true,
+							Default:  jobCommandNameApacheSparkETL,
 						},
 						"python_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"2", "3"}, true),
+							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
+						},
+						"runtime": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+						},
+						"script_location": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -67,14 +89,14 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+			"execution_class": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ExecutionClass](),
 			},
 			"execution_property": {
 				Type:     schema.TypeList,
@@ -92,22 +114,46 @@ func ResourceJob() *schema.Resource {
 					},
 				},
 			},
-			"max_capacity": {
+			"glue_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"job_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.JobMode](),
+			},
+			"job_run_queuing_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			names.AttrMaxCapacity: {
 				Type:          schema.TypeFloat,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"number_of_workers", "worker_type"},
+			},
+			"maintenance_window": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 10),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
+			},
+			"non_overridable_arguments": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"notification_property": {
 				Type:     schema.TypeList,
@@ -124,334 +170,428 @@ func ResourceJob() *schema.Resource {
 					},
 				},
 			},
-			"role_arn": {
+			"number_of_workers": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{names.AttrMaxCapacity},
+				ValidateFunc:  validation.IntAtLeast(1),
+			},
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  2880,
 			},
 			"security_configuration": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"source_control_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SourceControlAuthStrategy](),
+						},
+						"auth_token": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"branch": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"folder": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"last_commit_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrOwner: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"provider": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SourceControlProvider](),
+						},
+						"repository": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTimeout: {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"worker_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
-				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
-			},
-			"number_of_workers": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
-				ValidateFunc:  validation.IntAtLeast(2),
-			},
-			"non_overridable_arguments": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed:      true,
+				ConflictsWith: []string{names.AttrMaxCapacity},
+				ValidateFunc:  validation.StringInSlice(workerType_Values(), false),
 			},
 		},
 	}
 }
 
-func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
+func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	input := &glue.CreateJobInput{
-		Command: expandGlueJobCommand(d.Get("command").([]interface{})),
+	name := d.Get(names.AttrName).(string)
+	input := glue.CreateJobInput{
+		Command: expandJobCommand(d.Get("command").([]any)),
 		Name:    aws.String(name),
-		Role:    aws.String(d.Get("role_arn").(string)),
-		Tags:    Tags(tags.IgnoreAWS()),
-		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
-	}
-
-	if v, ok := d.GetOk("max_capacity"); ok {
-		input.MaxCapacity = aws.Float64(v.(float64))
+		Role:    aws.String(d.Get(names.AttrRoleARN).(string)),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("connections"); ok {
-		input.Connections = &glue.ConnectionsList{
-			Connections: flex.ExpandStringList(v.([]interface{})),
+		input.Connections = &awstypes.ConnectionsList{
+			Connections: flex.ExpandStringValueList(v.([]any)),
 		}
 	}
 
-	if kv, ok := d.GetOk("default_arguments"); ok {
-		input.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
+	if v, ok := d.GetOk("default_arguments"); ok {
+		input.DefaultArguments = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-		input.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("execution_class"); ok {
+		input.ExecutionClass = awstypes.ExecutionClass(v.(string))
+	}
+
+	if v, ok := d.GetOk("execution_property"); ok {
+		input.ExecutionProperty = expandExecutionProperty(v.([]any))
 	}
 
 	if v, ok := d.GetOk("glue_version"); ok {
 		input.GlueVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("execution_property"); ok {
-		input.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
+	if v, ok := d.GetOk("job_mode"); ok {
+		input.JobMode = awstypes.JobMode(v.(string))
+	}
+
+	if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
+		input.JobRunQueuingEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("maintenance_window"); ok {
+		input.MaintenanceWindow = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
+		input.MaxCapacity = aws.Float64(v.(float64))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
-		input.MaxRetries = aws.Int64(int64(v.(int)))
+		input.MaxRetries = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("notification_property"); ok {
-		input.NotificationProperty = expandGlueNotificationProperty(v.([]interface{}))
+	if v, ok := d.GetOk("non_overridable_arguments"); ok {
+		input.NonOverridableArguments = flex.ExpandStringValueMap(v.(map[string]any))
+	}
+
+	if v, ok := d.GetOk("notification_property"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NotificationProperty = expandNotificationProperty(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("number_of_workers"); ok {
+		input.NumberOfWorkers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("security_configuration"); ok {
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceControlDetails = expandSourceControlDetails(v.([]any))
+	}
+
+	if v, ok := d.GetOk(names.AttrTimeout); ok {
+		input.Timeout = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("worker_type"); ok {
-		input.WorkerType = aws.String(v.(string))
+		input.WorkerType = awstypes.WorkerType(v.(string))
 	}
 
-	if v, ok := d.GetOk("number_of_workers"); ok {
-		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
-	}
+	output, err := conn.CreateJob(ctx, &input)
 
-	log.Printf("[DEBUG] Creating Glue Job: %s", input)
-	_, err := conn.CreateJob(input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Job (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Job (%s): %s", name, err)
 	}
 
-	d.SetId(name)
+	d.SetId(aws.ToString(output.Name))
 
-	return resourceJobRead(d, meta)
+	return append(diags, resourceJobRead(ctx, d, meta)...)
 }
 
-func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.GlueClient(ctx)
 
-	input := &glue.GetJobInput{
-		JobName: aws.String(d.Id()),
-	}
+	job, err := findJobByName(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading Glue Job: %s", input)
-	output, err := conn.GetJob(input)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
-			log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Glue Job (%s): %s", d.Id(), err)
-	}
-
-	job := output.Job
-	if job == nil {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-
-	jobARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("job/%s", d.Id()),
-	}.String()
-	d.Set("arn", jobARN)
-
-	if err := d.Set("command", flattenGlueJobCommand(job.Command)); err != nil {
-		return fmt.Errorf("error setting command: %s", err)
-	}
-	if err := d.Set("connections", flattenGlueConnectionsList(job.Connections)); err != nil {
-		return fmt.Errorf("error setting connections: %s", err)
-	}
-	if err := d.Set("default_arguments", aws.StringValueMap(job.DefaultArguments)); err != nil {
-		return fmt.Errorf("error setting default_arguments: %s", err)
-	}
-	if err := d.Set("non_overridable_arguments", aws.StringValueMap(job.NonOverridableArguments)); err != nil {
-		return fmt.Errorf("error setting non_overridable_arguments: %w", err)
-	}
-	d.Set("description", job.Description)
-	d.Set("glue_version", job.GlueVersion)
-	if err := d.Set("execution_property", flattenGlueExecutionProperty(job.ExecutionProperty)); err != nil {
-		return fmt.Errorf("error setting execution_property: %s", err)
-	}
-	d.Set("max_capacity", job.MaxCapacity)
-	d.Set("max_retries", job.MaxRetries)
-	if err := d.Set("notification_property", flattenGlueNotificationProperty(job.NotificationProperty)); err != nil {
-		return fmt.Errorf("error setting notification_property: #{err}")
-	}
-	d.Set("name", job.Name)
-	d.Set("role_arn", job.Role)
-
-	tags, err := ListTags(conn, jobARN)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Job (%s): %s", jobARN, err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Job (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := resourceJobFlatten(ctx, awsClient, job, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("timeout", job.Timeout)
-	if err := d.Set("security_configuration", job.SecurityConfiguration); err != nil {
-		return fmt.Errorf("error setting security_configuration: %s", err)
-	}
-
-	d.Set("worker_type", job.WorkerType)
-	d.Set("number_of_workers", job.NumberOfWorkers)
-
-	return nil
+	return diags
 }
 
-func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	if d.HasChanges("command", "connections", "default_arguments", "description",
-		"execution_property", "glue_version", "max_capacity", "max_retries", "notification_property", "number_of_workers",
-		"role_arn", "security_configuration", "timeout", "worker_type", "non_overridable_arguments") {
-		jobUpdate := &glue.JobUpdate{
-			Command: expandGlueJobCommand(d.Get("command").([]interface{})),
-			Role:    aws.String(d.Get("role_arn").(string)),
-			Timeout: aws.Int64(int64(d.Get("timeout").(int))),
-		}
-
-		if v, ok := d.GetOk("number_of_workers"); ok {
-			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
-		} else {
-			if v, ok := d.GetOk("max_capacity"); ok {
-				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
-			}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		jobUpdate := &awstypes.JobUpdate{
+			Command: expandJobCommand(d.Get("command").([]any)),
+			Role:    aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 
 		if v, ok := d.GetOk("connections"); ok {
-			jobUpdate.Connections = &glue.ConnectionsList{
-				Connections: flex.ExpandStringList(v.([]interface{})),
+			jobUpdate.Connections = &awstypes.ConnectionsList{
+				Connections: flex.ExpandStringValueList(v.([]any)),
 			}
 		}
 
 		if kv, ok := d.GetOk("default_arguments"); ok {
-			jobUpdate.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
+			jobUpdate.DefaultArguments = flex.ExpandStringValueMap(kv.(map[string]any))
 		}
 
-		if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-			jobUpdate.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
-		}
-
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			jobUpdate.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("execution_class"); ok {
+			jobUpdate.ExecutionClass = awstypes.ExecutionClass(v.(string))
+		}
+
+		if v, ok := d.GetOk("execution_property"); ok {
+			jobUpdate.ExecutionProperty = expandExecutionProperty(v.([]any))
 		}
 
 		if v, ok := d.GetOk("glue_version"); ok {
 			jobUpdate.GlueVersion = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("execution_property"); ok {
-			jobUpdate.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
+		if v, ok := d.GetOk("job_mode"); ok {
+			jobUpdate.JobMode = awstypes.JobMode(v.(string))
+		}
+
+		if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
+			jobUpdate.JobRunQueuingEnabled = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("maintenance_window"); ok {
+			jobUpdate.MaintenanceWindow = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("max_retries"); ok {
-			jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
+			jobUpdate.MaxRetries = int32(v.(int))
 		}
 
-		if v, ok := d.GetOk("notification_property"); ok {
-			jobUpdate.NotificationProperty = expandGlueNotificationProperty(v.([]interface{}))
+		if kv, ok := d.GetOk("non_overridable_arguments"); ok {
+			jobUpdate.NonOverridableArguments = flex.ExpandStringValueMap(kv.(map[string]any))
+		}
+
+		if v, ok := d.GetOk("notification_property"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			jobUpdate.NotificationProperty = expandNotificationProperty(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("number_of_workers"); ok {
+			jobUpdate.NumberOfWorkers = aws.Int32(int32(v.(int)))
+		} else {
+			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
+				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
+			}
 		}
 
 		if v, ok := d.GetOk("security_configuration"); ok {
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("worker_type"); ok {
-			jobUpdate.WorkerType = aws.String(v.(string))
+		if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			jobUpdate.SourceControlDetails = expandSourceControlDetails(v.([]any))
 		}
 
-		input := &glue.UpdateJobInput{
+		if !strings.EqualFold(jobCommandNameRay, aws.ToString(jobUpdate.Command.Name)) {
+			if v, ok := d.GetOk(names.AttrTimeout); ok {
+				jobUpdate.Timeout = aws.Int32(int32(v.(int)))
+			}
+		}
+
+		if v, ok := d.GetOk("worker_type"); ok {
+			jobUpdate.WorkerType = awstypes.WorkerType(v.(string))
+		}
+
+		input := glue.UpdateJobInput{
 			JobName:   aws.String(d.Id()),
 			JobUpdate: jobUpdate,
 		}
 
-		log.Printf("[DEBUG] Updating Glue Job: %s", input)
-		_, err := conn.UpdateJob(input)
+		_, err := conn.UpdateJob(ctx, &input)
+
 		if err != nil {
-			return fmt.Errorf("error updating Glue Job (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue Job (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
-		}
-	}
-
-	return resourceJobRead(d, meta)
+	return append(diags, resourceJobRead(ctx, d, meta)...)
 }
 
-func resourceJobDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
-	err := DeleteJob(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("error deleting Glue Job (%s): %s", d.Id(), err)
+	input := glue.DeleteJobInput{
+		JobName: aws.String(d.Id()),
+	}
+	_, err := conn.DeleteJob(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Job (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func DeleteJob(conn *glue.Glue, jobName string) error {
-	input := &glue.DeleteJobInput{
-		JobName: aws.String(jobName),
-	}
-
-	_, err := conn.DeleteJob(input)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
-			return nil
+func resourceJobCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if command := expandJobCommand(diff.Get("command").([]any)); command != nil {
+		commandName := aws.ToString(command.Name)
+		// Allow 0 timeout for streaming jobs.
+		var minVal int64
+		if !strings.EqualFold(jobCommandNameApacheSparkStreamingETL, commandName) {
+			minVal = 1
 		}
-		return err
+
+		key := names.AttrTimeout
+		if v := diff.GetRawConfig().GetAttr(key); v.IsKnown() && !v.IsNull() {
+			// InvalidInputException: Timeout not supported for Ray jobs.
+			if strings.EqualFold(jobCommandNameRay, commandName) {
+				return fmt.Errorf("%s must not be configured for Ray jobs", key)
+			}
+
+			if v, _ := v.AsBigFloat().Int64(); v < minVal {
+				return fmt.Errorf("expected %s to be at least (%d), got %d", key, minVal, v)
+			}
+		}
 	}
 
 	return nil
 }
 
-func expandGlueExecutionProperty(l []interface{}) *glue.ExecutionProperty {
-	m := l[0].(map[string]interface{})
+func resourceJobFlatten(ctx context.Context, awsClient *conns.AWSClient, job *awstypes.Job, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, jobARN(ctx, awsClient, d.Id()))
+	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
+		return fmt.Errorf("setting command: %w", err)
+	}
+	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
+		return fmt.Errorf("setting connections: %w", err)
+	}
+	d.Set("default_arguments", job.DefaultArguments)
+	d.Set(names.AttrDescription, job.Description)
+	d.Set("execution_class", job.ExecutionClass)
+	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
+		return fmt.Errorf("setting execution_property: %w", err)
+	}
+	d.Set("glue_version", job.GlueVersion)
+	d.Set("job_mode", job.JobMode)
+	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
+	d.Set("maintenance_window", job.MaintenanceWindow)
+	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
+	d.Set("max_retries", job.MaxRetries)
+	d.Set(names.AttrName, job.Name)
+	d.Set("non_overridable_arguments", job.NonOverridableArguments)
+	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
+		return fmt.Errorf("setting notification_property: %w", err)
+	}
+	d.Set("number_of_workers", job.NumberOfWorkers)
+	d.Set(names.AttrRoleARN, job.Role)
+	d.Set("security_configuration", job.SecurityConfiguration)
+	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
+		return fmt.Errorf("setting source_control_details: %w", err)
+	}
+	d.Set(names.AttrTimeout, job.Timeout)
+	d.Set("worker_type", job.WorkerType)
 
-	executionProperty := &glue.ExecutionProperty{
-		MaxConcurrentRuns: aws.Int64(int64(m["max_concurrent_runs"].(int))),
+	return nil
+}
+
+func findJobByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Job, error) {
+	input := glue.GetJobInput{
+		JobName: aws.String(name),
+	}
+
+	output, err := conn.GetJob(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Job == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.Job, nil
+}
+
+func expandExecutionProperty(l []any) *awstypes.ExecutionProperty {
+	m := l[0].(map[string]any)
+
+	executionProperty := &awstypes.ExecutionProperty{
+		MaxConcurrentRuns: int32(m["max_concurrent_runs"].(int)),
 	}
 
 	return executionProperty
 }
 
-func expandGlueJobCommand(l []interface{}) *glue.JobCommand {
-	m := l[0].(map[string]interface{})
+func expandJobCommand(l []any) *awstypes.JobCommand {
+	m := l[0].(map[string]any)
 
-	jobCommand := &glue.JobCommand{
-		Name:           aws.String(m["name"].(string)),
+	jobCommand := &awstypes.JobCommand{
+		Name:           aws.String(m[names.AttrName].(string)),
 		ScriptLocation: aws.String(m["script_location"].(string)),
 	}
 
@@ -459,61 +599,130 @@ func expandGlueJobCommand(l []interface{}) *glue.JobCommand {
 		jobCommand.PythonVersion = aws.String(v)
 	}
 
+	if v, ok := m["runtime"].(string); ok && v != "" {
+		jobCommand.Runtime = aws.String(v)
+	}
+
 	return jobCommand
 }
 
-func expandGlueNotificationProperty(l []interface{}) *glue.NotificationProperty {
-	m := l[0].(map[string]interface{})
+func expandNotificationProperty(tfMap map[string]any) *awstypes.NotificationProperty {
+	if tfMap == nil {
+		return nil
+	}
 
-	notificationProperty := &glue.NotificationProperty{
-		NotifyDelayAfter: aws.Int64(int64(m["notify_delay_after"].(int))),
+	notificationProperty := &awstypes.NotificationProperty{}
+
+	if v, ok := tfMap["notify_delay_after"].(int); ok && v != 0 {
+		notificationProperty.NotifyDelayAfter = aws.Int32(int32(v))
 	}
 
 	return notificationProperty
 }
 
-func flattenGlueConnectionsList(connectionsList *glue.ConnectionsList) []interface{} {
+func flattenConnectionsList(connectionsList *awstypes.ConnectionsList) []any {
 	if connectionsList == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return flex.FlattenStringList(connectionsList.Connections)
+	return flex.FlattenStringValueList(connectionsList.Connections)
 }
 
-func flattenGlueExecutionProperty(executionProperty *glue.ExecutionProperty) []map[string]interface{} {
+func flattenExecutionProperty(executionProperty *awstypes.ExecutionProperty) []map[string]any {
 	if executionProperty == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"max_concurrent_runs": int(aws.Int64Value(executionProperty.MaxConcurrentRuns)),
+	m := map[string]any{
+		"max_concurrent_runs": int(executionProperty.MaxConcurrentRuns),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenGlueJobCommand(jobCommand *glue.JobCommand) []map[string]interface{} {
+func flattenJobCommand(jobCommand *awstypes.JobCommand) []map[string]any {
 	if jobCommand == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"name":            aws.StringValue(jobCommand.Name),
-		"script_location": aws.StringValue(jobCommand.ScriptLocation),
-		"python_version":  aws.StringValue(jobCommand.PythonVersion),
+	m := map[string]any{
+		names.AttrName:    aws.ToString(jobCommand.Name),
+		"script_location": aws.ToString(jobCommand.ScriptLocation),
+		"python_version":  aws.ToString(jobCommand.PythonVersion),
+		"runtime":         aws.ToString(jobCommand.Runtime),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenGlueNotificationProperty(notificationProperty *glue.NotificationProperty) []map[string]interface{} {
+func flattenNotificationProperty(notificationProperty *awstypes.NotificationProperty) []map[string]any {
 	if notificationProperty == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"notify_delay_after": int(aws.Int64Value(notificationProperty.NotifyDelayAfter)),
+	m := map[string]any{
+		"notify_delay_after": int(aws.ToInt32(notificationProperty.NotifyDelayAfter)),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
+}
+
+func expandSourceControlDetails(l []any) *awstypes.SourceControlDetails {
+	m := l[0].(map[string]any)
+
+	sourceControlDetails := &awstypes.SourceControlDetails{}
+
+	if v, ok := m["auth_token"].(string); ok && v != "" {
+		sourceControlDetails.AuthToken = aws.String(v)
+	}
+
+	if v, ok := m["folder"].(string); ok && v != "" {
+		sourceControlDetails.Folder = aws.String(v)
+	}
+	if v, ok := m["auth_strategy"].(string); ok && v != "" {
+		sourceControlDetails.AuthStrategy = awstypes.SourceControlAuthStrategy(v)
+	}
+	if v, ok := m["branch"].(string); ok && v != "" {
+		sourceControlDetails.Branch = aws.String(v)
+	}
+	if v, ok := m["last_commit_id"].(string); ok && v != "" {
+		sourceControlDetails.LastCommitId = aws.String(v)
+	}
+	if v, ok := m[names.AttrOwner].(string); ok && v != "" {
+		sourceControlDetails.Owner = aws.String(v)
+	}
+	if v, ok := m["provider"].(string); ok && v != "" {
+		sourceControlDetails.Provider = awstypes.SourceControlProvider(v)
+	}
+	if v, ok := m["repository"].(string); ok && v != "" {
+		sourceControlDetails.Repository = aws.String(v)
+	}
+
+	return sourceControlDetails
+}
+
+func flattenSourceControlDetails(sourceControlDetails *awstypes.SourceControlDetails) []map[string]any {
+	if sourceControlDetails == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		"auth_strategy":  sourceControlDetails.AuthStrategy,
+		"branch":         aws.ToString(sourceControlDetails.Branch),
+		"folder":         aws.ToString(sourceControlDetails.Folder),
+		"last_commit_id": aws.ToString(sourceControlDetails.LastCommitId),
+		names.AttrOwner:  aws.ToString(sourceControlDetails.Owner),
+		"provider":       sourceControlDetails.Provider,
+		"repository":     aws.ToString(sourceControlDetails.Repository),
+	}
+
+	return []map[string]any{m}
+}
+
+func workerType_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.WorkerType](), "G.12X", "G.16X", "R.1X", "R.2X", "R.4X", "R.8X")
+}
+
+func jobARN(ctx context.Context, c *conns.AWSClient, jobID string) string {
+	return c.RegionalARN(ctx, "glue", "job/"+jobID)
 }

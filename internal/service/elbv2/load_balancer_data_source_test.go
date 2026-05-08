@@ -1,78 +1,93 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_lb.alb_test_with_name"
 	dataSourceName3 := "data.aws_lb.alb_test_with_tags"
 	resourceName := "aws_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbBasicDataSourceConfig(rName),
+				Config: testAccLoadBalancerDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_timeout", resourceName, "idle_timeout"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", resourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enable_zonal_shift", resourceName, "enable_zonal_shift"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipam_pools.#", resourceName, "ipam_pools.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "idle_timeout", resourceName, "idle_timeout"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrVPCID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "zone_id", resourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "enforce_security_group_inbound_rules_on_private_link_traffic", resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_zonal_shift", resourceName, "enable_zonal_shift"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "ipam_pools.#", resourceName, "ipam_pools.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "idle_timeout", resourceName, "idle_timeout"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrVPCID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "zone_id", resourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enforce_security_group_inbound_rules_on_private_link_traffic", resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_tls_version_and_cipher_suite_headers", resourceName, "enable_tls_version_and_cipher_suite_headers"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_xff_client_port", resourceName, "enable_xff_client_port"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "xff_header_processing_mode", resourceName, "xff_header_processing_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_zonal_shift", resourceName, "enable_zonal_shift"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "ipam_pools.#", resourceName, "ipam_pools.#"),
 				),
 			},
 		},
@@ -80,32 +95,33 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 }
 
 func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	resourceName := "aws_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbOutpostDataSourceConfig(rName),
+				Config: testAccLoadBalancerDataSourceConfig_outpost(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_timeout", resourceName, "idle_timeout"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", resourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_mapping.0.outpost_id", resourceName, "subnet_mapping.0.outpost_id"),
 				),
@@ -115,85 +131,117 @@ func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 }
 
 func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"
 	dataSourceName3 := "data.aws_alb.alb_test_with_tags"
 	resourceName := "aws_alb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbBackwardsCompatibilityDataSourceConfig(rName),
+				Config: testAccLoadBalancerDataSourceConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName1, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "idle_timeout", resourceName, "idle_timeout"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrVPCID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "zone_id", resourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "preserve_host_header", resourceName, "preserve_host_header"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "access_logs.#", resourceName, "access_logs.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "connection_logs.#", resourceName, "connection_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "health_check_logs.#", resourceName, "health_check_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "idle_timeout", resourceName, "idle_timeout"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrVPCID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "zone_id", resourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "preserve_host_header", resourceName, "preserve_host_header"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "access_logs.#", resourceName, "access_logs.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "connection_logs.#", resourceName, "connection_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "health_check_logs.#", resourceName, "health_check_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "idle_timeout", resourceName, "idle_timeout"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrVPCID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "zone_id", resourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "dns_name", resourceName, "dns_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName3, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrDNSName, resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "preserve_host_header", resourceName, "preserve_host_header"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "connection_logs.#", resourceName, "connection_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "health_check_logs.#", resourceName, "health_check_logs.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAcclbBasicDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func TestAccELBV2LoadBalancerDataSource_nlbSecondaryIPAddresses(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb.nlb_test_with_arn"
+	resourceName := "aws_lb.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerDataSourceConfig_nlbSecondaryIPAddresses(rName, 3, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "secondary_ips_auto_assigned_per_subnet", resourceName, "secondary_ips_auto_assigned_per_subnet"),
+				),
+			},
+		},
+	})
+}
+
+func testAccLoadBalancerDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
@@ -211,35 +259,9 @@ resource "aws_lb" "test" {
   }
 }
 
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -274,7 +296,7 @@ data "aws_lb" "alb_test_with_tags" {
 `, rName))
 }
 
-func testAcclbOutpostDataSourceConfig(rName string) string {
+func testAccLoadBalancerDataSourceConfig_outpost(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -346,8 +368,8 @@ data "aws_lb" "alb_test_with_arn" {
 `, rName)
 }
 
-func testAcclbBackwardsCompatibilityDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccLoadBalancerDataSourceConfig_backwardsCompatibility(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_alb" "test" {
   name            = %[1]q
   internal        = true
@@ -363,35 +385,9 @@ resource "aws_alb" "test" {
   }
 }
 
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -424,4 +420,12 @@ data "aws_alb" "alb_test_with_tags" {
   tags = aws_alb.test.tags
 }
 `, rName))
+}
+
+func testAccLoadBalancerDataSourceConfig_nlbSecondaryIPAddresses(rName string, subnetCount, addressCount int) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_nlbSecondaryIPAddresses(rName, subnetCount, addressCount), `
+data "aws_lb" "nlb_test_with_arn" {
+  arn = aws_lb.test.arn
+}
+`)
 }

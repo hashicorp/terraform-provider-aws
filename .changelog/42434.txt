@@ -1,0 +1,36 @@
+```release-note:breaking-change
+resource/aws_accessanalyzer_archive_rule: `filter.exists` now only accepts one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_cloudtrail_event_data_store: `suspend` now only accepts one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_ec2_spot_instance_fleet: `terminate_instances_on_delete` now only accepts one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_elasticache_cluster: `auto_minor_version_upgrade` now only accepts one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_elasticache_replication_group: `at_rest_encryption_enabled` and `auto_minor_version_upgrade` now only accept one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_evidently_feature: `variations.value.bool_value` now only accepts one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_imagebuilder_container_recipe: `instance_configuration.block_device_mapping.ebs.delete_on_termination` and `instance_configuration.block_device_mapping.ebs.encrypted` now only accept one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_imagebuilder_image_recipe: `block_device_mapping.ebs.delete_on_termination` and `block_device_mapping.ebs.encrypted` now only accept one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_launch_template:  `block_device_mappings.ebs.delete_on_termination`, `block_device_mappings.ebs.encrypted`, `ebs_optimized`, `network_interfaces.associate_carrier_ip_address`, `network_interfaces.associate_public_ip_address`, `network_interfaces.delete_on_termination`, and `network_interfaces.primary_ipv6` now only accept one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_lb_target_group: `preserve_client_ip` now only accepts one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_alb_target_group: `preserve_client_ip` now only accepts one of `""` (empty string), `true`, or `false`
+```
+```release-note:breaking-change
+resource/aws_mq_broker: `logs.audit` now only accepts one of `""` (empty string), `true`, or `false`
+```

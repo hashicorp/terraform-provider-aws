@@ -1,37 +1,44 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssm
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceDocument() *schema.Resource {
+// @SDKDataSource("aws_ssm_document", name="Document")
+func dataSourceDocument() *schema.Resource {
 	return &schema.Resource{
-		Read: dataDocumentRead,
+		ReadWithoutTimeout: dataDocumentRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"document_format": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ssm.DocumentFormatJson,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.DocumentFormatJson,
-					ssm.DocumentFormatYaml,
-				}, false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.DocumentFormatJson,
+				ValidateDiagFunc: enum.Validate[awstypes.DocumentFormat](),
 			},
 			"document_type": {
 				Type:     schema.TypeString,
@@ -41,7 +48,7 @@ func DataSourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -49,43 +56,38 @@ func DataSourceDocument() *schema.Resource {
 	}
 }
 
-func dataDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	name := d.Get("name").(string)
-
-	docInput := &ssm.GetDocumentInput{
+	name := d.Get(names.AttrName).(string)
+	input := &ssm.GetDocumentInput{
+		DocumentFormat: awstypes.DocumentFormat(d.Get("document_format").(string)),
 		Name:           aws.String(name),
-		DocumentFormat: aws.String(d.Get("document_format").(string)),
 	}
 
-	if docVersion, ok := d.GetOk("document_version"); ok {
-		docInput.DocumentVersion = aws.String(docVersion.(string))
+	if v, ok := d.GetOk("document_version"); ok {
+		input.DocumentVersion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Reading SSM Document: %s", docInput)
-	resp, err := conn.GetDocument(docInput)
+	output, err := conn.GetDocument(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error reading SSM Document: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.Name))
+	documentType, name := output.DocumentType, aws.ToString(output.Name)
+	d.SetId(name)
+	if !strings.HasPrefix(name, "AWS-") {
+		d.Set(names.AttrARN, documentARN(ctx, meta.(*conns.AWSClient), documentType, name))
+	} else {
+		d.Set(names.AttrARN, name)
+	}
+	d.Set(names.AttrContent, output.Content)
+	d.Set("document_format", output.DocumentFormat)
+	d.Set("document_type", documentType)
+	d.Set("document_version", output.DocumentVersion)
+	d.Set(names.AttrName, name)
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("document/%s", aws.StringValue(resp.Name)),
-	}.String()
-
-	d.Set("arn", arn)
-	d.Set("name", resp.Name)
-	d.Set("content", resp.Content)
-	d.Set("document_version", resp.DocumentVersion)
-	d.Set("document_format", resp.DocumentFormat)
-	d.Set("document_type", resp.DocumentType)
-
-	return nil
+	return diags
 }

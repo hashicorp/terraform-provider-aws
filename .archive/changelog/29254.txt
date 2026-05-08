@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_flow_log: Add `deliver_cross_account_role` argument
+```
+
+```release-note:bug
+resource/aws_flow_log: Fix IAM eventual consistency errors on resource Create
+```

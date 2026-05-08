@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_keyspaces_table: Change `schema_definition.clustering_key` and `schema_definition.partition_key` to lists in order to respect configured orderings
+```

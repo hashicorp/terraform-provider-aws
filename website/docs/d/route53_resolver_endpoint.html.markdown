@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_endpoint"
 description: |-
@@ -31,17 +31,26 @@ data "aws_route53_resolver_endpoint" "example" {
 
 ## Argument Reference
 
-* `resolver_endpoint_id` - (Optional) The ID of the Route53 Resolver Endpoint.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resolver_endpoint_id` - (Optional) ID of the Route53 Resolver Endpoint.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [Route53resolver Filter value in the AWS API reference][1].
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
 
-* `arn` - The computed ARN of the Route53 Resolver Endpoint.
-* `direction` - The direction of the queries to or from the Resolver Endpoint .
-* `ip_addresses` - A list of IPaddresses that have been associated with the Resolver Endpoint.
-* `status` - The current status of the Resolver Endpoint.
-* `vpc_id` - The ID of the Host VPC that the Resolver Endpoint resides in.
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - Computed ARN of the Route53 Resolver Endpoint.
+* `direction` - Direction of the queries to or from the Resolver Endpoint .
+* `ip_addresses` - List of IPaddresses that have been associated with the Resolver Endpoint.
+* `protocols` - The protocols used by the Resolver endpoint.
+* `resolver_endpoint_type` - The Resolver endpoint IP address type.
+* `rni_enhanced_metrics_enabled` - Boolean indicating whether RNI enhanced metrics are enabled for the Resolver endpoint.
+* `status` - Current status of the Resolver Endpoint.
+* `target_name_server_metrics_enabled` - Boolean indicating whether target name server metrics are enabled for the outbound Resolver endpoints.
+* `vpc_id` - ID of the Host VPC that the Resolver Endpoint resides in.
 
 [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html

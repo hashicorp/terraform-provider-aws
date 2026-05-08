@@ -1,5 +1,5 @@
 ---
-subcategory: "SSM"
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_maintenance_window_task"
 description: |-
@@ -84,7 +84,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
   task_invocation_parameters {
     run_command_parameters {
-      output_s3_bucket     = aws_s3_bucket.example.bucket
+      output_s3_bucket     = aws_s3_bucket.example.id
       output_s3_key_prefix = "output"
       service_role_arn     = aws_iam_role.example.arn
       timeout_seconds      = 600
@@ -131,17 +131,19 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `window_id` - (Required) The Id of the maintenance window to register the task with.
-* `max_concurrency` - (Required) The maximum number of targets this task can be run for in parallel.
-* `max_errors` - (Required) The maximum number of errors allowed before this task stops being scheduled.
+* `max_concurrency` - (Optional) The maximum number of targets this task can be run for in parallel.
+* `max_errors` - (Optional) The maximum number of errors allowed before this task stops being scheduled.
+* `cutoff_behavior` - (Optional) Indicates whether tasks should continue to run after the cutoff time specified in the maintenance windows is reached. Valid values are `CONTINUE_TASK` and `CANCEL_TASK`.
 * `task_type` - (Required) The type of task being registered. Valid values: `AUTOMATION`, `LAMBDA`, `RUN_COMMAND` or `STEP_FUNCTIONS`.
 * `task_arn` - (Required) The ARN of the task to execute.
 * `service_role_arn` - (Optional) The role that should be assumed when executing the task. If a role is not provided, Systems Manager uses your account's service-linked role. If no service-linked role for Systems Manager exists in your account, it is created for you.
 * `name` - (Optional) The name of the maintenance window task.
 * `description` - (Optional) The description of the maintenance window task.
-* `targets` - (Required) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
+* `targets` - (Optional) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
 * `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
 * `task_invocation_parameters` - (Optional) Configuration block with parameters for task execution.
 
@@ -172,7 +174,7 @@ The following arguments are supported:
 * `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
 * `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
 * `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
-* `service_role_arn` - (Optional) The IAM service role to assume during task execution.
+* `service_role_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 * `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
 * `cloudwatch_config` - (Optional) Configuration options for sending command output to CloudWatch Logs. Documented below.
 
@@ -197,16 +199,55 @@ The following arguments are supported:
 * `name` - (Required) The parameter name.
 * `values` - (Required) The array of strings.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the maintenance window task.
 * `id` - The ID of the maintenance window task.
+* `window_task_id` - The ID of the maintenance window task.
 
 ## Import
 
-AWS Maintenance Window Task can be imported using the `window_id` and `window_task_id` separated by `/`.
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
-```sh
-$ terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
+```terraform
+import {
+  to = aws_ssm_maintenance_window_task.example
+  identity = {
+    window_id = "mw-0c50858d01EXAMPLE"
+    id        = "4f7ca192-7e9a-40fe-9192-5cb15EXAMPLE"
+  }
+}
+
+resource "aws_ssm_maintenance_window_task" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `window_id` - (String) ID of the maintenance window.
+* `id` - (String) ID of the maintenance window task.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window_task.example
+  id = "<window_id>/<window_task_id>"
+}
+```
+
+Using `terraform import`, import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
+
+```console
+% terraform import aws_ssm_maintenance_window_task.example <window_id>/<window_task_id>
 ```

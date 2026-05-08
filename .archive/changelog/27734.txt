@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_connect_instance: Add `multi_party_conference_enabled` attribute
+```
+
+```release-note:enhancement
+resource/aws_connect_instance: Add `multi_party_conference_enabled` argument
+```

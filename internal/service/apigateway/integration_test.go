@@ -1,39 +1,44 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayIntegration_basic(t *testing.T) {
-	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig(rName),
+				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -47,14 +52,19 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
-
 			{
-				Config: testAccIntegrationUpdateConfig(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIntegrationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -67,14 +77,13 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "2000"),
 				),
 			},
-
 			{
-				Config: testAccIntegrationUpdateURIConfig(rName),
+				Config: testAccIntegrationConfig_updateURI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de/updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de/updated"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -87,14 +96,13 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "2000"),
 				),
 			},
-
 			{
-				Config: testAccIntegrationUpdateNoTemplatesConfig(rName),
+				Config: testAccIntegrationConfig_updateNoTemplates(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -103,14 +111,13 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "2000"),
 				),
 			},
-
 			{
-				Config: testAccIntegrationConfig(rName),
+				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -122,34 +129,29 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
 
 func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
-	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig(rName),
+				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -163,12 +165,12 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 			},
 
 			{
-				Config: testAccIntegrationUpdateContentHandlingConfig(rName),
+				Config: testAccIntegrationConfig_updateContentHandling(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_BINARY"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -181,12 +183,12 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIntegrationRemoveContentHandlingConfig(rName),
+				Config: testAccIntegrationConfig_removeContentHandling(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -208,24 +210,25 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
-	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
+func TestAccAPIGatewayIntegration_Parameters_cacheKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationCacheKeyParametersConfig(rName),
+				Config: testAccIntegrationConfig_Parameters_cacheKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -251,39 +254,283 @@ func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
-	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
+func TestAccAPIGatewayIntegration_Parameters_cacheKeyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_IntegrationTypeInternet(rName),
+				Config: testAccIntegrationConfig_Parameters_cacheKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
+					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
+					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.X-Authorization", "'static'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.X-Foo", "'Bar'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.param", "method.request.path.param"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.param"),
+					resource.TestCheckResourceAttr(resourceName, "cache_namespace", "foobar"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", ""),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 				),
 			},
 			{
-				Config: testAccIntegrationConfig_IntegrationTypeVPCLink(rName),
+				Config: testAccIntegrationConfig_Parameters_cacheKeyUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
+					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
+					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.X-Authorization", "'static'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.X-Foo", "'Bar'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.param", "method.request.path.param"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.param"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.test1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_namespace", "foobar"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", ""),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_Parameters_requestUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_Parameters_requestUpdate(rName, []string{"X-Some-Header-1", "X-Some-Header-2", "X-Some-Header-3"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-1", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-2", "method.request.querystring.X-Some-Header-2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-3", "method.request.querystring.X-Some-Header-3"),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_Parameters_requestUpdate(rName, []string{"X-Some-Header-1", "X-Some-Header-3"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-1", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-3", "method.request.querystring.X-Some-Header-3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_Parameters_requestCacheKeyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_Parameters_requestCacheKeyUpdate(rName, []string{"X-Some-Header-1", "X-Some-Header-2", "X-Some-Header-3"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.Host", "'method.request.querystring.name'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.proxy", "method.request.path.proxy"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-1", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-2", "method.request.querystring.X-Some-Header-2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-3", "method.request.querystring.X-Some-Header-3"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "9"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.header.Host"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-3"),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_Parameters_requestCacheKeyUpdate(rName, []string{"X-Some-Header-1", "X-Some-Header-3"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.Host", "'method.request.querystring.name'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.proxy", "method.request.path.proxy"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-1", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-3", "method.request.querystring.X-Some-Header-3"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.header.Host"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-3"),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_Parameters_requestCacheKeyUpdate(rName, []string{"X-Some-Header-1", "X-Some-Header-4"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.Host", "'method.request.querystring.name'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.proxy", "method.request.path.proxy"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-1", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-4", "method.request.querystring.X-Some-Header-4"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.header.Host"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-4"),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_Parameters_requestCacheKeyUpdate(rName, []string{"X-Some-Header-1", "X-Some-Header-4", "X-Some-Header-5", "X-Some-Header-6", "X-Some-Header-7"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "7"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.Host", "'method.request.querystring.name'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.proxy", "method.request.path.proxy"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-1", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-4", "method.request.querystring.X-Some-Header-4"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-5", "method.request.querystring.X-Some-Header-5"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-6", "method.request.querystring.X-Some-Header-6"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-7", "method.request.querystring.X-Some-Header-7"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "13"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.header.Host"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-6"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-6"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-7"),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_Parameters_requestCacheKeyUpdate(rName, []string{"X-Some-Header-2"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.Host", "'method.request.querystring.name'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.proxy", "method.request.path.proxy"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.X-Some-Header-2", "method.request.querystring.X-Some-Header-2"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.path.proxy"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.header.Host"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.querystring.X-Some-Header-2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "integration.request.querystring.X-Some-Header-2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_typeInternet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_typeVPCLink(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
-					resource.TestMatchResourceAttr(resourceName, "connection_id", regexp.MustCompile("^[0-9a-z]+$")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrConnectionID, regexache.MustCompile("^[0-9a-z]+$")),
 				),
 			},
 			{
-				Config: testAccIntegrationConfig_IntegrationTypeInternet(rName),
+				Config: testAccIntegrationConfig_typeInternet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 				),
 			},
 			{
@@ -297,22 +544,23 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 }
 
 func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
-	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_TLSConfig_InsecureSkipVerification(rName, true),
+				Config: testAccIntegrationConfig_tlsInsecureSkipVerification(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", acctest.CtTrue),
 				),
 			},
 			{
@@ -322,33 +570,162 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIntegrationConfig_TLSConfig_InsecureSkipVerification(rName, false),
+				Config: testAccIntegrationConfig_tlsInsecureSkipVerification(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
-	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
+func TestAccAPIGatewayIntegration_responseTransferMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig(rName),
+				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeStream)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceIntegration(), resourceName),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				// Switch to Buffered
+				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeBuffered)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeBuffered)),
+				),
+			},
+			{
+				// Switch back to Stream, with timeout specified
+				Config: testAccIntegrationConfig_responseTransferModeWithTimeout(rName, string(awstypes.ResponseTransferModeStream), 900000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "900000"),
+				),
+			},
+			{
+				// Invalid: Stream with timeout > 900000
+				Config:      testAccIntegrationConfig_responseTransferModeWithTimeout(rName, string(awstypes.ResponseTransferModeStream), 900001),
+				ExpectError: regexache.MustCompile(`timeout_milliseconds must be at most 900000 when response_transfer_mode is STREAM`),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_lambdaIntegrationResponseTransferModeBuffered(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_lambdaIntegration(rName, "invoke_arn", string(awstypes.ResponseTransferModeBuffered), 29000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "POST"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrURI, lambdaFunctionResourceName, "invoke_arn"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeBuffered)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_lambdaIntegrationResponseTransferModeStream(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_lambdaIntegration(rName, "response_streaming_invoke_arn", string(awstypes.ResponseTransferModeStream), 900000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "POST"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrURI, lambdaFunctionResourceName, "response_streaming_invoke_arn"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "900000"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -356,66 +733,51 @@ func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationExists(n string, res *apigateway.Integration) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Method ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		output, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
-		req := &apigateway.GetIntegrationInput{
-			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-		}
-		describe, err := conn.GetIntegration(req)
 		if err != nil {
 			return err
 		}
 
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckIntegrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckIntegrationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_integration" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_integration" {
+				continue
+			}
 
-		req := &apigateway.GetIntegrationInput{
-			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-		}
-		_, err := conn.GetIntegration(req)
+			_, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
-		if err == nil {
-			return fmt.Errorf("API Gateway Method still exists")
-		}
+			if retry.NotFound(err) {
+				continue
+			}
 
-		aws2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if aws2err.Code() != "NotFoundException" {
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("API Gateway Integration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
@@ -425,14 +787,76 @@ func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportSta
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"]), nil
+		return tfapigateway.IntegrationCreateImportID(rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"]), nil
 	}
 }
 
-func testAccIntegrationConfig(rName string) string {
+func TestAccAPIGatewayIntegration_vpcLinkV2WithALB(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_vpcLinkV2ALB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, "aws_apigatewayv2_vpc_link.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_vpcLinkV2Update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_vpcLinkV2ALB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_vpcLinkV2ALBUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test2", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func testAccIntegrationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -476,10 +900,10 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccIntegrationUpdateConfig(rName string) string {
+func testAccIntegrationConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -524,10 +948,10 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccIntegrationUpdateURIConfig(rName string) string {
+func testAccIntegrationConfig_updateURI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -572,10 +996,10 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccIntegrationUpdateContentHandlingConfig(rName string) string {
+func testAccIntegrationConfig_updateContentHandling(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -620,10 +1044,10 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccIntegrationRemoveContentHandlingConfig(rName string) string {
+func testAccIntegrationConfig_removeContentHandling(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -667,10 +1091,10 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccIntegrationUpdateNoTemplatesConfig(rName string) string {
+func testAccIntegrationConfig_updateNoTemplates(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -705,10 +1129,10 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccIntegrationCacheKeyParametersConfig(rName string) string {
+func testAccIntegrationConfig_Parameters_cacheKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -761,37 +1185,167 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccIntegrationConfig_IntegrationTypeBase(rName string) string {
+func testAccIntegrationConfig_Parameters_cacheKeyUpdate(rName string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
-}
-
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = var.name
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.10.0.0/24"
-  availability_zone = data.aws_availability_zones.test.names[0]
-}
-
 resource "aws_api_gateway_rest_api" "test" {
-  name = var.name
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "{param}"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+
+  request_models = {
+    "application/json" = "Error"
+  }
+
+  request_parameters = {
+    "method.request.path.param"        = false
+    "method.request.querystring.test1" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+
+  request_templates = {
+    "application/json" = ""
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
+  }
+
+  request_parameters = {
+    "integration.request.header.X-Authorization" = "'static'"
+    "integration.request.header.X-Foo"           = "'Bar'"
+    "integration.request.path.param"             = "method.request.path.param"
+  }
+
+  cache_key_parameters = ["method.request.path.param", "method.request.querystring.test1"]
+  cache_namespace      = "foobar"
+
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
+  integration_http_method = "GET"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
+  timeout_milliseconds    = 2000
+}
+`, rName)
+}
+
+func testAccIntegrationConfig_Parameters_requestUpdate(rName string, params []string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "{param}"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+
+  request_models = {
+    "application/json" = "Error"
+  }
+
+  request_parameters = { for param in var.utm_params : "method.request.querystring.${param}" => false }
+}
+
+variable "utm_params" {
+  type    = list(string)
+  default = ["%[2]s"]
+}
+
+resource "aws_api_gateway_integration" "test" {
+  http_method             = aws_api_gateway_method.test.http_method
+  integration_http_method = "ANY"
+  resource_id             = aws_api_gateway_resource.test.id
+  rest_api_id             = aws_api_gateway_rest_api.test.id
+  timeout_milliseconds    = 2000
+  type                    = "HTTP_PROXY"
+  uri                     = "https://www.google.de"
+
+  request_parameters = { for param in var.utm_params : "integration.request.querystring.${param}" => "method.request.querystring.${param}" }
+}
+`, rName, strings.Join(params, `", "`))
+}
+
+func testAccIntegrationConfig_Parameters_requestCacheKeyUpdate(rName string, headers []string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "{param}"
+}
+
+variable "utm_params" {
+  type    = list(string)
+  default = ["%[2]s"]
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "ANY"
+  authorization = "NONE"
+
+  request_parameters = merge(
+    {
+      "method.request.path.proxy" = true
+    },
+    { for param in var.utm_params : "method.request.querystring.${param}" => false }
+  )
+}
+
+resource "aws_api_gateway_integration" "test" {
+  http_method             = aws_api_gateway_method.test.http_method
+  integration_http_method = "ANY"
+  resource_id             = aws_api_gateway_resource.test.id
+  rest_api_id             = aws_api_gateway_rest_api.test.id
+  timeout_milliseconds    = 2000
+  type                    = "HTTP_PROXY"
+  uri                     = "https://www.google.de"
+
+  request_parameters = merge({
+    "integration.request.path.proxy"  = "method.request.path.proxy"
+    "integration.request.header.Host" = "'method.request.querystring.name'"
+    },
+    { for param in var.utm_params : "integration.request.querystring.${param}" => "method.request.querystring.${param}" }
+  )
+
+  cache_key_parameters = concat(
+    ["method.request.path.proxy", "integration.request.path.proxy", "integration.request.header.Host"],
+    [for param in var.utm_params : "integration.request.querystring.${param}"],
+    [for param in var.utm_params : "method.request.querystring.${param}"]
+  )
+}
+`, rName, strings.Join(headers, `", "`))
+}
+
+func testAccIntegrationConfig_IntegrationTypeBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -812,21 +1366,21 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_lb" "test" {
-  name               = var.name
+  name               = %[1]q
   internal           = true
   load_balancer_type = "network"
-  subnets            = [aws_subnet.test.id]
+  subnets            = aws_subnet.test[*].id
 }
 
 resource "aws_api_gateway_vpc_link" "test" {
-  name        = var.name
+  name        = %[1]q
   target_arns = [aws_lb.test.arn]
 }
-`, rName)
+`, rName))
 }
 
-func testAccIntegrationConfig_IntegrationTypeVPCLink(rName string) string {
-	return testAccIntegrationConfig_IntegrationTypeBase(rName) + `
+func testAccIntegrationConfig_typeVPCLink(rName string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_IntegrationTypeBase(rName), `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
@@ -841,11 +1395,11 @@ resource "aws_api_gateway_integration" "test" {
   connection_type = "VPC_LINK"
   connection_id   = aws_api_gateway_vpc_link.test.id
 }
-`
+`)
 }
 
-func testAccIntegrationConfig_IntegrationTypeInternet(rName string) string {
-	return testAccIntegrationConfig_IntegrationTypeBase(rName) + `
+func testAccIntegrationConfig_typeInternet(rName string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_IntegrationTypeBase(rName), `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
@@ -857,10 +1411,10 @@ resource "aws_api_gateway_integration" "test" {
   passthrough_behavior    = "WHEN_NO_MATCH"
   content_handling        = "CONVERT_TO_TEXT"
 }
-`
+`)
 }
 
-func testAccIntegrationConfig_TLSConfig_InsecureSkipVerification(rName string, insecureSkipVerification bool) string {
+func testAccIntegrationConfig_tlsInsecureSkipVerification(rName string, insecureSkipVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -903,4 +1457,331 @@ resource "aws_api_gateway_integration" "test" {
   }
 }
 `, rName, insecureSkipVerification)
+}
+
+func testAccIntegrationConfig_responseTransferMode(rName, responseTransferMode string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "api" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  path_part   = "resource"
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "ANY"
+  type                    = "HTTP_PROXY"
+  uri                     = "https://example.com"
+
+  response_transfer_mode = %[2]q
+}
+`, rName, responseTransferMode)
+}
+
+func testAccIntegrationConfig_responseTransferModeWithTimeout(rName, responseTransferMode string, timeoutMilliseconds int) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "api" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  path_part   = "resource"
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "ANY"
+  type                    = "HTTP_PROXY"
+  uri                     = "https://example.com"
+
+  response_transfer_mode = %[2]q
+  timeout_milliseconds   = %[3]d
+}
+`, rName, responseTransferMode, timeoutMilliseconds)
+}
+
+func testAccIntegrationConfig_vpcLinkV2ALB(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_apigatewayv2_vpc_link" "test" {
+  name               = %[1]q
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "OK"
+      status_code  = "200"
+    }
+  }
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.test.id
+  resource_id             = aws_api_gateway_resource.test.id
+  http_method             = aws_api_gateway_method.test.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  connection_type         = "VPC_LINK"
+  connection_id           = aws_apigatewayv2_vpc_link.test.id
+  integration_target      = aws_lb.test.arn
+  uri                     = "http://example.com"
+}
+`, rName))
+}
+
+func testAccIntegrationConfig_vpcLinkV2ALBUpdated(rName string) string {
+	rName2 := fmt.Sprintf("%.27s-alt", rName)
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_apigatewayv2_vpc_link" "test" {
+  name               = %[1]q
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "OK"
+      status_code  = "200"
+    }
+  }
+}
+
+resource "aws_lb" "test2" {
+  name               = %[2]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_listener" "test2" {
+  load_balancer_arn = aws_lb.test2.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "OK"
+      status_code  = "200"
+    }
+  }
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.test.id
+  resource_id             = aws_api_gateway_resource.test.id
+  http_method             = aws_api_gateway_method.test.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  connection_type         = "VPC_LINK"
+  connection_id           = aws_apigatewayv2_vpc_link.test.id
+  integration_target      = aws_lb.test2.arn
+  uri                     = "http://example.com"
+}
+`, rName, rName2))
+}
+
+func testAccIntegrationConfig_lambdaIntegration(rName, invokeArnIdentifier, responseTransferMode string, timeoutMilliseconds int) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_api_gateway_rest_api" "api" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  path_part   = "resource"
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "arn:${data.aws_partition.current.partition}:execute-api:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.role.arn
+  handler       = "lambdatest.handler"
+  runtime       = "nodejs22.x"
+  timeout       = 900
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "role" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.test.%[2]s
+  response_transfer_mode  = %[3]q
+  timeout_milliseconds    = %[4]d
+}
+`, rName, invokeArnIdentifier, responseTransferMode, timeoutMilliseconds)
 }

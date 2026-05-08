@@ -1,80 +1,91 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEventsPermission_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	principal1 := "111111111111"
 	principal2 := "*"
-	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	statementID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_permission.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCheckPermissionResourceBasicConfig("", statementID),
-				ExpectError: regexp.MustCompile(`must be \* or a 12 digit AWS account ID`),
+				Config:      testAccPermissionConfig_basic("", statementID),
+				ExpectError: regexache.MustCompile(`must be \* or a 12 digit AWS account ID`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceBasicConfig(".", statementID),
-				ExpectError: regexp.MustCompile(`must be \* or a 12 digit AWS account ID`),
+				Config:      testAccPermissionConfig_basic(".", statementID),
+				ExpectError: regexache.MustCompile(`must be \* or a 12 digit AWS account ID`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceBasicConfig("12345678901", statementID),
-				ExpectError: regexp.MustCompile(`must be \* or a 12 digit AWS account ID`),
+				Config:      testAccPermissionConfig_basic("12345678901", statementID),
+				ExpectError: regexache.MustCompile(`must be \* or a 12 digit AWS account ID`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceBasicConfig("abcdefghijkl", statementID),
-				ExpectError: regexp.MustCompile(`must be \* or a 12 digit AWS account ID`),
+				Config:      testAccPermissionConfig_basic("abcdefghijkl", statementID),
+				ExpectError: regexache.MustCompile(`must be \* or a 12 digit AWS account ID`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceBasicConfig(principal1, ""),
-				ExpectError: regexp.MustCompile(`must be between 1 and 64 characters`),
+				Config:      testAccPermissionConfig_basic(principal1, ""),
+				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceBasicConfig(principal1, sdkacctest.RandString(65)),
-				ExpectError: regexp.MustCompile(`must be between 1 and 64 characters`),
+				Config:      testAccPermissionConfig_basic(principal1, acctest.RandString(t, 65)),
+				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceBasicConfig(principal1, " "),
-				ExpectError: regexp.MustCompile(`must be one or more alphanumeric, hyphen, or underscore characters`),
+				Config:      testAccPermissionConfig_basic(principal1, " "),
+				ExpectError: regexache.MustCompile(`must be one or more alphanumeric, hyphen, or underscore characters`),
 			},
 			{
-				Config: testAccCheckPermissionResourceBasicConfig(principal1, statementID),
+				Config: testAccPermissionConfig_basic(principal1, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					testAccCheckPermissionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", tfevents.DefaultEventBusName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config: testAccCheckPermissionResourceBasicConfig(principal2, statementID),
+				Config: testAccPermissionConfig_basic(principal2, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal2),
+					testAccCheckPermissionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -82,33 +93,41 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccCheckPermissionResourceDefaultEventBusNameConfig(principal2, statementID),
-				PlanOnly: true,
+				Config: testAccPermissionConfig_defaultBusName(principal2, statementID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
 }
 
 func TestAccEventsPermission_eventBusName(t *testing.T) {
+	ctx := acctest.Context(t)
 	principal1 := "111111111111"
-	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
+	statementID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, "tf-acc-test-bus")
 
 	resourceName := "aws_cloudwatch_event_permission.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPermissionResourceEventBusNameConfig(principal1, busName, statementID),
+				Config: testAccPermissionConfig_eventBusName(principal1, busName, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					testAccCheckPermissionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 				),
@@ -123,37 +142,38 @@ func TestAccEventsPermission_eventBusName(t *testing.T) {
 }
 
 func TestAccEventsPermission_action(t *testing.T) {
+	ctx := acctest.Context(t)
 	principal := "111111111111"
-	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	statementID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_permission.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCheckPermissionResourceActionConfig("", principal, statementID),
-				ExpectError: regexp.MustCompile(`must be between 1 and 64 characters`),
+				Config:      testAccPermissionConfig_action("", principal, statementID),
+				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceActionConfig(sdkacctest.RandString(65), principal, statementID),
-				ExpectError: regexp.MustCompile(`must be between 1 and 64 characters`),
+				Config:      testAccPermissionConfig_action(acctest.RandString(t, 65), principal, statementID),
+				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceActionConfig("events:", principal, statementID),
-				ExpectError: regexp.MustCompile(`must be: events: followed by one or more alphabetic characters`),
+				Config:      testAccPermissionConfig_action("events:", principal, statementID),
+				ExpectError: regexache.MustCompile(`must be: events: followed by one or more alphabetic characters`),
 			},
 			{
-				Config:      testAccCheckPermissionResourceActionConfig("events:1", principal, statementID),
-				ExpectError: regexp.MustCompile(`must be: events: followed by one or more alphabetic characters`),
+				Config:      testAccPermissionConfig_action("events:1", principal, statementID),
+				ExpectError: regexache.MustCompile(`must be: events: followed by one or more alphabetic characters`),
 			},
 			{
-				Config: testAccCheckPermissionResourceActionConfig("events:PutEvents", principal, statementID),
+				Config: testAccPermissionConfig_action("events:PutEvents", principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					testAccCheckPermissionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 				),
 			},
 			{
@@ -166,19 +186,20 @@ func TestAccEventsPermission_action(t *testing.T) {
 }
 
 func TestAccEventsPermission_condition(t *testing.T) {
-	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	statementID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_permission.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPermissionResourceConditionOrganizationConfig(statementID, "o-1234567890"),
+				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-1234567890"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName),
+					testAccCheckPermissionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
@@ -186,9 +207,9 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckPermissionResourceConditionOrganizationConfig(statementID, "o-0123456789"),
+				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-0123456789"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName),
+					testAccCheckPermissionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
@@ -205,35 +226,36 @@ func TestAccEventsPermission_condition(t *testing.T) {
 }
 
 func TestAccEventsPermission_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	principal1 := "111111111111"
 	principal2 := "222222222222"
-	statementID1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	statementID2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	statementID1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	statementID2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName1 := "aws_cloudwatch_event_permission.test"
 	resourceName2 := "aws_cloudwatch_event_permission.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPermissionResourceBasicConfig(principal1, statementID1),
+				Config: testAccPermissionConfig_basic(principal1, statementID1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName1),
-					resource.TestCheckResourceAttr(resourceName1, "principal", principal1),
+					testAccCheckPermissionExists(ctx, t, resourceName1),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName1, "statement_id", statementID1),
 				),
 			},
 			{
-				Config: testAccCheckPermissionResourceMultipleConfig(principal1, statementID1, principal2, statementID2),
+				Config: testAccPermissionConfig_multiple(principal1, statementID1, principal2, statementID2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName1),
-					testAccCheckPermissionExists(resourceName2),
-					resource.TestCheckResourceAttr(resourceName1, "principal", principal1),
+					testAccCheckPermissionExists(ctx, t, resourceName1),
+					testAccCheckPermissionExists(ctx, t, resourceName2),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName1, "statement_id", statementID1),
-					resource.TestCheckResourceAttr(resourceName2, "principal", principal2),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrPrincipal, principal2),
 					resource.TestCheckResourceAttr(resourceName2, "statement_id", statementID2),
 				),
 			},
@@ -242,21 +264,22 @@ func TestAccEventsPermission_multiple(t *testing.T) {
 }
 
 func TestAccEventsPermission_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_permission.test"
 	principal := "111111111111"
-	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	statementID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPermissionResourceBasicConfig(principal, statementID),
+				Config: testAccPermissionConfig_basic(principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourcePermission(), resourceName),
+					testAccCheckPermissionExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -264,95 +287,48 @@ func TestAccEventsPermission_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPermissionExists(pr string) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
-		rs, ok := s.RootModule().Resources[pr]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
-		eventBusName, statementID, err := tfevents.PermissionParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error reading EventBridge permission (%s): %w", pr, err)
-		}
-		input := &eventbridge.DescribeEventBusInput{
-			Name: aws.String(eventBusName),
-		}
-		debo, err := conn.DescribeEventBus(input)
-		if err != nil {
-			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
-		}
+		_, err := tfevents.FindPermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["statement_id"])
 
-		if debo.Policy == nil {
-			return fmt.Errorf("Not found: %s", pr)
-		}
-
-		var policyDoc tfevents.PermissionPolicyDoc
-		err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
-		if err != nil {
-			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
-		}
-
-		_, err = tfevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
 		return err
 	}
 }
 
-func testAccCheckPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+func testAccCheckPermissionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_permission" {
-			continue
-		}
-
-		eventBusName, statementID, err := tfevents.PermissionParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error reading EventBridge permission (%s): %w", rs.Primary.ID, err)
-		}
-		input := &eventbridge.DescribeEventBusInput{
-			Name: aws.String(eventBusName),
-		}
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-			debo, err := conn.DescribeEventBus(input)
-			if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_event_permission" {
+				continue
 			}
+
+			_, err := tfevents.FindPermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["statement_id"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			if debo.Policy == nil {
-				return nil
+				return err
 			}
 
-			var policyDoc tfevents.PermissionPolicyDoc
-			err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
-			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("Reading EventBridge permission '%s' failed: %w", rs.Primary.ID, err))
-			}
-
-			_, err = tfevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
-			if err == nil {
-				return resource.RetryableError(fmt.Errorf("EventBridge permission exists: %s", rs.Primary.ID))
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			return err
+			return fmt.Errorf("EventBridge Permission %s still exists", rs.Primary.ID)
 		}
+
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPermissionResourceBasicConfig(principal, statementID string) string {
+func testAccPermissionConfig_basic(principal, statementID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
   principal    = "%[1]s"
@@ -361,7 +337,7 @@ resource "aws_cloudwatch_event_permission" "test" {
 `, principal, statementID)
 }
 
-func testAccCheckPermissionResourceDefaultEventBusNameConfig(principal, statementID string) string {
+func testAccPermissionConfig_defaultBusName(principal, statementID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
   principal      = %[1]q
@@ -371,7 +347,7 @@ resource "aws_cloudwatch_event_permission" "test" {
 `, principal, statementID)
 }
 
-func testAccCheckPermissionResourceEventBusNameConfig(principal, busName, statementID string) string {
+func testAccPermissionConfig_eventBusName(principal, busName, statementID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
   principal      = %[1]q
@@ -385,7 +361,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, principal, statementID, busName)
 }
 
-func testAccCheckPermissionResourceActionConfig(action, principal, statementID string) string {
+func testAccPermissionConfig_action(action, principal, statementID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
   action       = "%[1]s"
@@ -395,7 +371,7 @@ resource "aws_cloudwatch_event_permission" "test" {
 `, action, principal, statementID)
 }
 
-func testAccCheckPermissionResourceConditionOrganizationConfig(statementID, value string) string {
+func testAccPermissionConfig_conditionOrganization(statementID, value string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
   principal    = "*"
@@ -410,7 +386,7 @@ resource "aws_cloudwatch_event_permission" "test" {
 `, statementID, value)
 }
 
-func testAccCheckPermissionResourceMultipleConfig(principal1, statementID1, principal2, statementID2 string) string {
+func testAccPermissionConfig_multiple(principal1, statementID1, principal2, statementID2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
   principal    = "%[1]s"

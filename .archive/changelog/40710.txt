@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Set new computed value for `public_dns` and `public_ip` attributes when changing `instance_type`, `user_data`, or `user_data_base64`
+```

@@ -1,79 +1,183 @@
-//go:build sweep
-// +build sweep
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
 
 package neptune
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_neptune_event_subscription", &resource.Sweeper{
-		Name: "aws_neptune_event_subscription",
-		F:    sweepEventSubscriptions,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_neptune_cluster", sweepClusters, "aws_neptune_cluster_instance")
+	awsv2.Register("aws_neptune_cluster_instance", sweepClusterInstances)
+	awsv2.Register("aws_neptune_cluster_snapshot", sweepClusterSnapshots, "aws_neptune_cluster")
+	awsv2.Register("aws_neptune_global_cluster", sweepGlobalClusters, "aws_neptune_cluster")
+
+	// No sweepers for
+	// * aws_neptune_cluster_parameter_group
+	// * aws_neptune_event_subscription
+	// * aws_neptune_parameter_group
+	// * aws_neptune_subnet_group
+	// as they are the same as the RDS resources, and will be swept by RDS.
 }
 
-func sweepEventSubscriptions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).NeptuneConn
-	var sweeperErrs *multierror.Error
+func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.NeptuneClient(ctx)
+	var input neptune.DescribeDBClustersInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeDBClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, eventSubscription := range page.EventSubscriptionsList {
-			name := aws.StringValue(eventSubscription.CustSubscriptionId)
-
-			log.Printf("[INFO] Deleting Neptune Event Subscription: %s", name)
-			_, err = conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
-				SubscriptionName: aws.String(name),
-			})
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Neptune Event Subscription (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		for _, v := range page.DBClusters {
+			if engine := aws.ToString(v.Engine); engine != defaultEngine {
 				continue
 			}
 
-			_, err = WaitEventSubscriptionDeleted(conn, name)
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			id := aws.ToString(v.DBClusterIdentifier)
+			r := resourceCluster()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping Neptune Cluster %s: %s", id, err)
 				continue
 			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error waiting for Neptune Event Subscription (%s) deletion: %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+
+			d.Set(names.AttrApplyImmediately, true)
+			d.Set(names.AttrDeletionProtection, false)
+			d.Set("skip_final_snapshot", true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepClusterSnapshots(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.NeptuneClient(ctx)
+	var input neptune.DescribeDBClusterSnapshotsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := neptune.NewDescribeDBClusterSnapshotsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Event Subscriptions sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Neptune Event Subscriptions: %w", err))
+		for _, v := range page.DBClusterSnapshots {
+			if engine := aws.ToString(v.Engine); engine != defaultEngine {
+				continue
+			}
+
+			id := aws.ToString(v.DBClusterSnapshotIdentifier)
+
+			if typ := aws.ToString(v.SnapshotType); typ != "manual" {
+				log.Printf("[INFO] Skipping Neptune Cluster Snapshot %s: SnapshotType=%s", id, typ)
+				continue
+			}
+
+			r := resourceClusterSnapshot()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
+}
+
+func sweepClusterInstances(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.NeptuneClient(ctx)
+	var input neptune.DescribeDBInstancesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := neptune.NewDescribeDBInstancesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBInstances {
+			if aws.ToString(v.Engine) != defaultEngine {
+				continue
+			}
+
+			id := aws.ToString(v.DBInstanceIdentifier)
+
+			if state := aws.ToString(v.DBInstanceStatus); state == dbInstanceStatusDeleting {
+				log.Printf("[INFO] Skipping Neptune Cluster Instance %s: DBInstanceStatus=%s", id, state)
+				continue
+			}
+
+			r := resourceClusterInstance()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set(names.AttrApplyImmediately, true)
+			d.Set("skip_final_snapshot", true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepGlobalClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.NeptuneClient(ctx)
+	var input neptune.DescribeGlobalClustersInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := neptune.NewDescribeGlobalClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.GlobalClusters {
+			if engine := aws.ToString(v.Engine); engine != defaultEngine {
+				continue
+			}
+
+			id := aws.ToString(v.GlobalClusterIdentifier)
+			r := resourceGlobalCluster()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping Neptune Global Cluster %s: %s", id, err)
+				continue
+			}
+
+			d.Set(names.AttrDeletionProtection, false)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
 }

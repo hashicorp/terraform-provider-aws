@@ -1,192 +1,332 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package athena
 
 import (
+	"bytes"
+	"context"
 	"fmt"
-	"regexp"
+	"log"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/athena"
+	"github.com/aws/aws-sdk-go-v2/service/athena/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDatabase() *schema.Resource {
+// @SDKResource("aws_athena_database", name="Database")
+func resourceDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDatabaseCreate,
-		Read:   resourceDatabaseRead,
-		Update: resourceDatabaseUpdate,
-		Delete: resourceDatabaseDelete,
+		CreateWithoutTimeout: resourceDatabaseCreate,
+		ReadWithoutTimeout:   resourceDatabaseRead,
+		UpdateWithoutTimeout: schema.NoopContext, // force_destroy isn't ForceNew.
+		DeleteWithoutTimeout: resourceDatabaseDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
+			"acl_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_acl_option": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.S3AclOption](),
+						},
+					},
+				},
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+			},
+			names.AttrComment: {
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
-			"force_destroy": {
+			names.AttrEncryptionConfiguration: {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"encryption_option": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
+						},
+						names.AttrKMSKey: {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			names.AttrExpectedBucketOwner: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"encryption_configuration": {
-				Type:     schema.TypeList,
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
+			},
+			names.AttrProperties: {
+				Type:     schema.TypeMap,
 				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kms_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"encryption_option": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								athena.EncryptionOptionCseKms,
-								athena.EncryptionOptionSseKms,
-								athena.EncryptionOptionSseS3,
-							}, false),
-						},
-					},
-				},
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"workgroup": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 		},
 	}
 }
 
-func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList []interface{}) *athena.ResultConfiguration {
-	resultConfig := athena.ResultConfiguration{
-		OutputLocation: aws.String("s3://" + bucket),
+func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
+
+	name := d.Get(names.AttrName).(string)
+	createStmt := fmt.Sprintf("create database `%s`", name)
+	var queryString bytes.Buffer
+	queryString.WriteString(createStmt)
+
+	if v, ok := d.GetOk(names.AttrComment); ok && v.(string) != "" {
+		commentStmt := fmt.Sprintf(" comment '%s'", strings.Replace(v.(string), "'", "\\'", -1))
+		queryString.WriteString(commentStmt)
 	}
 
-	if len(encryptionConfigurationList) <= 0 {
-		return &resultConfig
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.(map[string]any)) > 0 {
+		var props []string
+		for k, v := range v.(map[string]any) {
+			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
+			props = append(props, prop)
+		}
+
+		propStmt := fmt.Sprintf(" WITH DBPROPERTIES(%s)", strings.Join(props, ","))
+		queryString.WriteString(propStmt)
 	}
 
-	data := encryptionConfigurationList[0].(map[string]interface{})
-	keyType := data["encryption_option"].(string)
-	keyID := data["kms_key"].(string)
+	queryString.WriteString(";")
 
-	encryptionConfig := athena.EncryptionConfiguration{
-		EncryptionOption: aws.String(keyType),
+	input := athena.StartQueryExecutionInput{
+		QueryString:         aws.String(queryString.String()),
+		ResultConfiguration: expandResultConfiguration(d),
 	}
 
-	if len(keyID) > 0 {
-		encryptionConfig.KmsKey = aws.String(keyID)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
 	}
 
-	resultConfig.EncryptionConfiguration = &encryptionConfig
+	output, err := conn.StartQueryExecution(ctx, &input)
 
-	return &resultConfig
-}
-
-func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
-
-	input := &athena.StartQueryExecutionInput{
-		QueryString:         aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
-		ResultConfiguration: expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{})),
-	}
-
-	resp, err := conn.StartQueryExecution(input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating Athena Database (%s): %s", name, err)
 	}
 
-	if err := executeAndExpectNoRowsWhenCreate(*resp.QueryExecutionId, conn); err != nil {
-		return err
+	if err := executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Athena Database (%s): %s", name, err)
 	}
-	d.SetId(d.Get("name").(string))
-	return resourceDatabaseRead(d, meta)
+
+	d.SetId(name)
+
+	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	input := &athena.GetDatabaseInput{
-		DatabaseName: aws.String(d.Get("name").(string)),
-		CatalogName:  aws.String("AwsDataCatalog"),
+	db, err := findDatabaseByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Athena Database (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-	_, err := conn.GetDatabase(input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Athena Database (%s): %s", d.Id(), err)
 	}
-	return nil
+
+	d.Set(names.AttrComment, db.Description)
+	d.Set(names.AttrName, db.Name)
+	d.Set(names.AttrProperties, db.Parameters)
+
+	return diags
 }
 
-func resourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceDatabaseRead(d, meta)
-}
+func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
-
-	name := d.Get("name").(string)
-
-	queryString := fmt.Sprintf("drop database `%s`", name)
-	if d.Get("force_destroy").(bool) {
+	queryString := fmt.Sprintf("drop database `%s`", d.Id())
+	if d.Get(names.AttrForceDestroy).(bool) {
 		queryString += " cascade"
 	}
 	queryString += ";"
 
-	input := &athena.StartQueryExecutionInput{
+	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
-		ResultConfiguration: expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{})),
+		ResultConfiguration: expandResultConfiguration(d),
 	}
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+	output, err := conn.StartQueryExecution(ctx, &input)
 
-	resp, err := conn.StartQueryExecution(input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
-	if err := executeAndExpectNoRowsWhenDrop(*resp.QueryExecutionId, conn); err != nil {
-		return err
+	err = executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId))
+
+	// "reason: FAILED: SemanticException [Error 10072]: Database does not exist: ...".
+	if errs.Contains(err, "does not exist") {
+		return diags
 	}
-	return nil
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func executeAndExpectNoRowsWhenCreate(qeid string, conn *athena.Athena) error {
-	rs, err := QueryExecutionResult(qeid, conn)
+func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (*types.Database, error) {
+	input := athena.GetDatabaseInput{
+		CatalogName:  aws.String("AwsDataCatalog"),
+		DatabaseName: aws.String(name),
+	}
+
+	output, err := conn.GetDatabase(ctx, &input)
+
+	if errs.IsAErrorMessageContains[*types.MetadataException](err, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Database == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.Database, nil
+}
+
+func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguration {
+	resultConfig := &types.ResultConfiguration{
+		OutputLocation:          aws.String("s3://" + d.Get(names.AttrBucket).(string)),
+		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]any)),
+	}
+
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
+		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]any)) > 0 {
+		resultConfig.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
+	}
+
+	return resultConfig
+}
+
+func expandResultConfigurationEncryptionConfig(config []any) *types.EncryptionConfiguration {
+	if len(config) == 0 {
+		return nil
+	}
+
+	data := config[0].(map[string]any)
+
+	encryptionConfig := &types.EncryptionConfiguration{
+		EncryptionOption: types.EncryptionOption(data["encryption_option"].(string)),
+	}
+
+	if v, ok := data[names.AttrKMSKey].(string); ok && v != "" {
+		encryptionConfig.KmsKey = aws.String(v)
+	}
+
+	return encryptionConfig
+}
+
+func expandResultConfigurationACLConfig(config []any) *types.AclConfiguration {
+	if len(config) == 0 {
+		return nil
+	}
+
+	data := config[0].(map[string]any)
+
+	encryptionConfig := &types.AclConfiguration{
+		S3AclOption: types.S3AclOption(data["s3_acl_option"].(string)),
+	}
+
+	return encryptionConfig
+}
+
+func executeAndExpectNoRows(ctx context.Context, conn *athena.Client, qeid string) error {
+	rs, err := queryExecutionResult(ctx, conn, qeid)
 	if err != nil {
 		return err
 	}
 	if len(rs.Rows) != 0 {
-		return fmt.Errorf("Athena create database, unexpected query result: %s", flattenAthenaResultSet(rs))
+		return fmt.Errorf("unexpected query result: %s", flattenResultSet(rs))
 	}
 	return nil
 }
 
-func executeAndExpectNoRowsWhenDrop(qeid string, conn *athena.Athena) error {
-	rs, err := QueryExecutionResult(qeid, conn)
-	if err != nil {
-		return err
-	}
-	if len(rs.Rows) != 0 {
-		return fmt.Errorf("Athena drop database, unexpected query result: %s", flattenAthenaResultSet(rs))
-	}
-	return nil
-}
-
-func QueryExecutionResult(qeid string, conn *athena.Athena) (*athena.ResultSet, error) {
-	executionStateConf := &resource.StateChangeConf{
-		Pending:    []string{athena.QueryExecutionStateQueued, athena.QueryExecutionStateRunning},
-		Target:     []string{athena.QueryExecutionStateSucceeded},
-		Refresh:    queryExecutionStateRefreshFunc(qeid, conn),
+func queryExecutionResult(ctx context.Context, conn *athena.Client, qeid string) (*types.ResultSet, error) {
+	executionStateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.QueryExecutionStateQueued, types.QueryExecutionStateRunning),
+		Target:     enum.Slice(types.QueryExecutionStateSucceeded),
+		Refresh:    queryExecutionStateRefreshFunc(conn, qeid),
 		Timeout:    10 * time.Minute,
 		Delay:      3 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, err := executionStateConf.WaitForState()
+	_, err := executionStateConf.WaitForStateContext(ctx)
+
 	if err != nil {
 		return nil, err
 	}
@@ -194,19 +334,19 @@ func QueryExecutionResult(qeid string, conn *athena.Athena) (*athena.ResultSet, 
 	qrinput := &athena.GetQueryResultsInput{
 		QueryExecutionId: aws.String(qeid),
 	}
-	resp, err := conn.GetQueryResults(qrinput)
+	resp, err := conn.GetQueryResults(ctx, qrinput)
 	if err != nil {
 		return nil, err
 	}
 	return resp.ResultSet, nil
 }
 
-func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func queryExecutionStateRefreshFunc(conn *athena.Client, qeid string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &athena.GetQueryExecutionInput{
 			QueryExecutionId: aws.String(qeid),
 		}
-		out, err := conn.GetQueryExecution(input)
+		out, err := conn.GetQueryExecution(ctx, input)
 		if err != nil {
 			return nil, "failed", err
 		}
@@ -217,19 +357,19 @@ func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.S
 
 		status := out.QueryExecution.Status
 
-		if aws.StringValue(status.State) == athena.QueryExecutionStateFailed && status.StateChangeReason != nil {
-			err = fmt.Errorf("reason: %s", aws.StringValue(status.StateChangeReason))
+		if status.State == types.QueryExecutionStateFailed && status.StateChangeReason != nil {
+			err = fmt.Errorf("reason: %s", aws.ToString(status.StateChangeReason))
 		}
 
-		return out, aws.StringValue(out.QueryExecution.Status.State), err
+		return out, string(out.QueryExecution.Status.State), err
 	}
 }
 
-func flattenAthenaResultSet(rs *athena.ResultSet) string {
+func flattenResultSet(rs *types.ResultSet) string {
 	ss := make([]string, 0)
 	for _, row := range rs.Rows {
 		for _, datum := range row.Data {
-			ss = append(ss, aws.StringValue(datum.VarCharValue))
+			ss = append(ss, aws.ToString(datum.VarCharValue))
 		}
 	}
 	return strings.Join(ss, "\n")

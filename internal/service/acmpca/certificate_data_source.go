@@ -1,36 +1,42 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package acmpca
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceCertificate() *schema.Resource {
+// @SDKDataSource("aws_acmpca_certificate", name="Certificate")
+func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCertificateRead,
+		ReadWithoutTimeout: dataSourceCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrCertificate: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"certificate_authority_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"certificate": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,25 +44,20 @@ func DataSourceCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
-	certificateArn := d.Get("arn").(string)
+func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	getCertificateInput := &acmpca.GetCertificateInput{
-		CertificateArn:          aws.String(certificateArn),
-		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
-	}
+	certificateARN := d.Get(names.AttrARN).(string)
+	output, err := findCertificateByTwoPartKey(ctx, conn, certificateARN, d.Get("certificate_authority_arn").(string))
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
-
-	certificateOutput, err := conn.GetCertificate(getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error reading ACM PCA Certificate (%s): %w", certificateArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate (%s): %s", certificateARN, err)
 	}
 
-	d.SetId(certificateArn)
-	d.Set("certificate", certificateOutput.Certificate)
-	d.Set("certificate_chain", certificateOutput.CertificateChain)
+	d.SetId(certificateARN)
+	d.Set(names.AttrCertificate, output.Certificate)
+	d.Set(names.AttrCertificateChain, output.CertificateChain)
 
-	return nil
+	return diags
 }

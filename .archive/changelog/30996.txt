@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rds_global_cluster: Add plan-time validation of `global_cluster_identifier`
+```

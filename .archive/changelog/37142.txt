@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_launch_template: Add `network_interfaces.primary_ipv6` argument
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `network_interfaces.primary_ipv6` attribute
+```

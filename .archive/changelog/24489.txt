@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_ami: Add `deprecation_time` argument
+```
+
+```release-note:enhancement
+resource/aws_ami_copy: Add `deprecation_time` argument
+```
+
+```release-note:enhancement
+resource/aws_ami_from_instance: Add `deprecation_time` argument
+```
+
+```release-note:enhancement
+data-source/aws_ami: Add `deprecation_time` attribute
+```

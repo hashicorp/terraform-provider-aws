@@ -1,38 +1,53 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccMember_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member.test"
 	accountID := "111111111111"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
+				Config: testAccMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
-					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "email", acctest.DefaultEmailAddress),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
+					testAccCheckMemberExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEmail), knownvalue.StringExact(acctest.DefaultEmailAddress)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("relationship_status"), knownvalue.StringExact("Created")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -43,32 +58,84 @@ func testAccMember_basic(t *testing.T) {
 	})
 }
 
+func testAccMember_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_member.test"
+	accountID := "111111111111"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMemberExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourceMember(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccMember_invite_disassociate(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member.test"
 	accountID, email := testAccMemberFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, true),
+				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
+					testAccCheckMemberExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invite"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("relationship_status"), knownvalue.StringExact("Invited")),
+				},
 			},
 			// Disassociate member
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, false),
+				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Removed"),
+					testAccCheckMemberExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invite"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("relationship_status"), knownvalue.StringExact("Removed")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -83,31 +150,49 @@ func testAccMember_invite_disassociate(t *testing.T) {
 }
 
 func testAccMember_invite_onUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member.test"
 	accountID, email := testAccMemberFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, false),
+				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
+					testAccCheckMemberExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invite"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("relationship_status"), knownvalue.StringExact("Created")),
+				},
 			},
 			// Invite member
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, true),
+				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
+					testAccCheckMemberExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invite"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("relationship_status"), knownvalue.StringExact("Invited")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -122,28 +207,37 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 }
 
 func testAccMember_invitationMessage(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member.test"
 	accountID, email := testAccMemberFromEnv(t)
 	invitationMessage := "inviting"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_invitationMessage(accountID, email, invitationMessage),
+				Config: testAccMemberConfig_invitationMessage(accountID, email, invitationMessage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
-					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", "true"),
-					resource.TestCheckResourceAttr(resourceName, "email", email),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
-					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
+					testAccCheckMemberExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("disable_email_notification"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEmail), knownvalue.StringExact(email)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invitation_message"), knownvalue.StringExact(invitationMessage)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invite"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("relationship_status"), knownvalue.StringExact("Invited")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -158,110 +252,78 @@ func testAccMember_invitationMessage(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_guardduty_member" {
-			continue
-		}
-
-		accountID, detectorID, err := tfguardduty.DecodeMemberID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &guardduty.GetMembersInput{
-			AccountIds: []*string{aws.String(accountID)},
-			DetectorId: aws.String(detectorID),
-		}
-
-		gmo, err := conn.GetMembers(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-				return nil
-			}
-			return err
-		}
-
-		if len(gmo.Members) < 1 {
-			continue
-		}
-
-		return fmt.Errorf("Expected GuardDuty Detector to be destroyed, %s found", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckMemberExists(name string) resource.TestCheckFunc {
+func testAccCheckMemberDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
-		accountID, detectorID, err := tfguardduty.DecodeMemberID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_guardduty_member" {
+				continue
+			}
 
-		input := &guardduty.GetMembersInput{
-			AccountIds: []*string{aws.String(accountID)},
-			DetectorId: aws.String(detectorID),
-		}
+			_, err := tfguardduty.FindMemberByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrAccountID])
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
-		gmo, err := conn.GetMembers(input)
-		if err != nil {
-			return err
-		}
+			if retry.NotFound(err) {
+				continue
+			}
 
-		if len(gmo.Members) < 1 {
-			return fmt.Errorf("Not found: %s", name)
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("GuardDuty Member %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccGuardDutyMemberConfig_basic(accountID, email string) string {
-	return fmt.Sprintf(`
-%[1]s
+func testAccCheckMemberExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
+
+		_, err := tfguardduty.FindMemberByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrAccountID])
+
+		return err
+	}
+}
+
+func testAccMemberConfig_basic(accountID, email string) string {
+	return acctest.ConfigCompose(testAccDetectorConfig_basic, fmt.Sprintf(`
 resource "aws_guardduty_member" "test" {
-  account_id  = "%[2]s"
+  account_id  = %[1]q
   detector_id = aws_guardduty_detector.test.id
-  email       = "%[3]s"
+  email       = %[2]q
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email)
+`, accountID, email))
 }
 
-func testAccGuardDutyMemberConfig_invite(accountID, email string, invite bool) string {
-	return fmt.Sprintf(`
-%[1]s
-
+func testAccMemberConfig_invite(accountID, email string, invite bool) string {
+	return acctest.ConfigCompose(testAccDetectorConfig_basic, fmt.Sprintf(`
 resource "aws_guardduty_member" "test" {
-  account_id                 = "%[2]s"
+  account_id                 = %[1]q
   detector_id                = aws_guardduty_detector.test.id
   disable_email_notification = true
-  email                      = "%[3]s"
-  invite                     = %[4]t
+  email                      = %[2]q
+  invite                     = %[3]t
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invite)
+`, accountID, email, invite))
 }
 
-func testAccGuardDutyMemberConfig_invitationMessage(accountID, email, invitationMessage string) string {
-	return fmt.Sprintf(`
-%[1]s
-
+func testAccMemberConfig_invitationMessage(accountID, email, invitationMessage string) string {
+	return acctest.ConfigCompose(testAccDetectorConfig_basic, fmt.Sprintf(`
 resource "aws_guardduty_member" "test" {
-  account_id                 = "%[2]s"
+  account_id                 = %[1]q
   detector_id                = aws_guardduty_detector.test.id
   disable_email_notification = true
-  email                      = "%[3]s"
-  invitation_message         = "%[4]s"
+  email                      = %[2]q
+  invitation_message         = %[3]q
   invite                     = true
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invitationMessage)
+`, accountID, email, invitationMessage))
 }

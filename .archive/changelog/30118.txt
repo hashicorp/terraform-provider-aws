@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_feature_group: Add `table_format` to the `offline_store_config` configuration block
+```

@@ -1,56 +1,66 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPolicy_basic(t *testing.T) {
-	var policy organizations.Policy
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
 	content1 := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
 	content2 := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "s3:*", "Resource": "*"}}`
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_Required(rName, content1),
+				Config: testAccPolicyConfig_required(rName, content1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
-					resource.TestCheckResourceAttr(resourceName, "content", content1),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeServiceControlPolicy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("policy/"+organizationIDRegexPattern+"/service_control_policy/p-[0-9a-z]{8}")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeServiceControlPolicy)),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_Required(rName, content2),
+				Config: testAccPolicyConfig_required(rName, content2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "content", content2),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content2),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -58,28 +68,32 @@ func testAccPolicy_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5073
 func testAccPolicy_concurrent(t *testing.T) {
-	var policy1, policy2, policy3, policy4, policy5 organizations.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var policy1, policy2, policy3, policy4, policy5 awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName1 := "aws_organizations_policy.test1"
 	resourceName2 := "aws_organizations_policy.test2"
 	resourceName3 := "aws_organizations_policy.test3"
 	resourceName4 := "aws_organizations_policy.test4"
 	resourceName5 := "aws_organizations_policy.test5"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConcurrentConfig(rName),
+				Config: testAccPolicyConfig_concurrent(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName1, &policy1),
-					testAccCheckPolicyExists(resourceName2, &policy2),
-					testAccCheckPolicyExists(resourceName3, &policy3),
-					testAccCheckPolicyExists(resourceName4, &policy4),
-					testAccCheckPolicyExists(resourceName5, &policy5),
+					testAccCheckPolicyExists(ctx, t, resourceName1, &policy1),
+					testAccCheckPolicyExists(ctx, t, resourceName2, &policy2),
+					testAccCheckPolicyExists(ctx, t, resourceName3, &policy3),
+					testAccCheckPolicyExists(ctx, t, resourceName4, &policy4),
+					testAccCheckPolicyExists(ctx, t, resourceName5, &policy5),
 				),
 			},
 		},
@@ -87,86 +101,70 @@ func testAccPolicy_concurrent(t *testing.T) {
 }
 
 func testAccPolicy_description(t *testing.T) {
-	var policy organizations.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_Description(rName, "description1"),
+				Config: testAccPolicyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_Description(rName, "description2"),
+				Config: testAccPolicyConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
 }
 
-func testAccPolicy_tags(t *testing.T) {
-	var p1, p2, p3, p4 organizations.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+func testAccPolicy_skipDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	content := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyNoDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_TagA(rName),
+				Config: testAccPolicyConfig_skipDestroy(rName, content),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &p1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Alpha", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccPolicyConfig_TagB(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &p2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Beta", "1"),
-				),
-			},
-			{
-				Config: testAccPolicyConfig_TagC(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &p3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
-				),
-			},
-			{
-				Config: testAccPolicyConfig_NoTag(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &p4),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("policy/"+organizationIDRegexPattern+"/service_control_policy/p-.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeServiceControlPolicy)),
 				),
 			},
 		},
@@ -174,21 +172,25 @@ func testAccPolicy_tags(t *testing.T) {
 }
 
 func testAccPolicy_disappears(t *testing.T) {
-	var p organizations.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_Description(rName, ""),
+				Config: testAccPolicyConfig_description(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &p),
-					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourcePolicy(), resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -197,37 +199,43 @@ func testAccPolicy_disappears(t *testing.T) {
 }
 
 func testAccPolicy_type_AI_OPT_OUT(t *testing.T) {
-	var policy organizations.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out_syntax.html
 	AiOptOutPolicyContent := `{ "services": { "rekognition": { "opt_out_policy": { "@@assign": "optOut" } }, "lex": { "opt_out_policy": { "@@assign": "optIn" } } } }`
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_Type(rName, AiOptOutPolicyContent, organizations.PolicyTypeAiservicesOptOutPolicy),
+				Config: testAccPolicyConfig_type(rName, AiOptOutPolicyContent, string(awstypes.PolicyTypeAiservicesOptOutPolicy)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeAiservicesOptOutPolicy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeAiservicesOptOutPolicy)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
 }
 
 func testAccPolicy_type_Backup(t *testing.T) {
-	var policy organizations.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html
 	backupPolicyContent := fmt.Sprintf(`{
@@ -300,183 +308,436 @@ func testAccPolicy_type_Backup(t *testing.T) {
    }
 }`, acctest.AlternateRegion(), acctest.Region(), acctest.Partition())
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_Type(rName, backupPolicyContent, organizations.PolicyTypeBackupPolicy),
+				Config: testAccPolicyConfig_type(rName, backupPolicyContent, string(awstypes.PolicyTypeBackupPolicy)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeBackupPolicy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeBackupPolicy)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
 }
 
 func testAccPolicy_type_SCP(t *testing.T) {
-	var policy organizations.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 	serviceControlPolicyContent := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_Type(rName, serviceControlPolicyContent, organizations.PolicyTypeServiceControlPolicy),
+				Config: testAccPolicyConfig_type(rName, serviceControlPolicyContent, string(awstypes.PolicyTypeServiceControlPolicy)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeServiceControlPolicy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeServiceControlPolicy)),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_Required(rName, serviceControlPolicyContent),
+				Config: testAccPolicyConfig_required(rName, serviceControlPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeServiceControlPolicy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeServiceControlPolicy)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
 }
 
 func testAccPolicy_type_Tag(t *testing.T) {
-	var policy organizations.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 	tagPolicyContent := `{ "tags": { "Product": { "tag_key": { "@@assign": "Product" }, "enforced_for": { "@@assign": [ "ec2:instance" ] } } } }`
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_Type(rName, tagPolicyContent, organizations.PolicyTypeTagPolicy),
+				Config: testAccPolicyConfig_type(rName, tagPolicyContent, string(awstypes.PolicyTypeTagPolicy)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeTagPolicy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeTagPolicy)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
 }
 
-func testAccPolicy_ImportAwsManagedPolicy(t *testing.T) {
+func testAccPolicy_type_SecurityHub(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_security_hub_syntax.html
+	inspectorPolicyContent := `{
+    "securityhub" : {
+      "enable_in_regions" : {
+        "@@assign" : [
+          "ALL_SUPPORTED"
+        ]
+      },
+      "disable_in_regions" : {
+        "@@assign" : []
+      }
+    }
+}`
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, inspectorPolicyContent, string(awstypes.PolicyTypeSecurityhubPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeSecurityhubPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_Inspector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_inspector_syntax.html
+	//lintignore:AWSAT003
+	inspectorPolicyContent := `{
+    "inspector" : {
+      "enablement" : {
+        "ec2_scanning" : {
+          "enable_in_regions" : {
+            "@@assign" : ["us-east-1", "us-west-2"]
+          },
+          "disable_in_regions" : {
+            "@@assign" : ["eu-west-1"]
+          }
+        }
+      }
+    }
+}`
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, inspectorPolicyContent, string(awstypes.PolicyTypeInspectorPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeInspectorPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_UpgradeRollout(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_upgrade_syntax.html
+	upgradeRolloutPolicyContent := `{
+      "upgrade_rollout" : {
+        "default" : {
+          "patch_order" : {
+            "@@assign" : "last"
+          }
+        },
+        "tags" : {
+          "my_patch_order_tag" : {
+            "tag_values" : {
+              "tag1" : {
+                "patch_order" : {
+                  "@@assign" : "first"
+                }
+              },
+              "tag2" : {
+                "patch_order" : {
+                  "@@assign" : "second"
+                }
+              },
+              "tag3" : {
+                "patch_order" : {
+                  "@@assign" : "last"
+                }
+              }
+            }
+          }
+        }
+      }
+}`
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, upgradeRolloutPolicyContent, string(awstypes.PolicyTypeUpgradeRolloutPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeUpgradeRolloutPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_S3(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_s3_syntax.html
+	s3PolicyContent := `{
+    "s3_attributes": {
+        "public_access_block_configuration": {
+            "@@assign": "all"
+        }
+    }
+}`
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, s3PolicyContent, string(awstypes.PolicyTypeS3Policy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeS3Policy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_Bedrock(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_Bedrock(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeBedrockPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_importManagedPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_policy.test"
 
 	resourceID := "p-FullAWSAccess"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_AwsManagedPolicySetup,
-			},
-			{
-				Config:        testAccPolicyConfig_AwsManagedPolicy,
+				Config:        testAccPolicyConfig_managed,
 				ResourceName:  resourceName,
 				ImportStateId: resourceID,
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf("AWS-managed Organizations policy (%s) cannot be imported.", resourceID))),
+				ExpectError:   regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("AWS-managed Organizations policy (%s) cannot be imported.", resourceID))),
 			},
 		},
 	})
 }
 
-func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_organizations_policy" {
-			continue
-		}
-
-		input := &organizations.DescribePolicyInput{
-			PolicyId: &rs.Primary.ID,
-		}
-
-		resp, err := conn.DescribePolicy(input)
-
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
-			continue
-		}
-
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodePolicyNotFoundException, "") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && resp.Policy != nil {
-			return fmt.Errorf("Policy %q still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-
-}
-
-func testAccCheckPolicyExists(resourceName string, policy *organizations.Policy) resource.TestCheckFunc {
+func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_organizations_policy" {
+				continue
+			}
+
+			_, err := tforganizations.FindPolicyByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Organizations Policy %s still exists", rs.Primary.ID)
 		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
-		input := &organizations.DescribePolicyInput{
-			PolicyId: &rs.Primary.ID,
-		}
-
-		resp, err := conn.DescribePolicy(input)
-
-		if err != nil {
-			return err
-		}
-
-		if resp == nil || resp.Policy == nil {
-			return fmt.Errorf("Policy %q does not exist", rs.Primary.ID)
-		}
-
-		*policy = *resp.Policy
 
 		return nil
 	}
 }
 
-func testAccPolicyConfig_Description(rName, description string) string {
-	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
+// testAccCheckPolicyNoDestroy is a variant of the CheckDestroy function to be used when
+// skip_destroy is true and the policy should still exist after destroy completes
+func testAccCheckPolicyNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_organizations_policy" {
+				continue
+			}
+
+			_, err := tforganizations.FindPolicyByID(ctx, conn, rs.Primary.ID)
+
+			if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
+				// The organization was destroyed, so we can safely assume the policy
+				// skipped during destruction was as well
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *awstypes.Policy) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
+
+		output, err := tforganizations.FindPolicyByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccPolicyConfig_description(rName, description string) string {
+	return fmt.Sprintf(`
 resource "aws_organizations_policy" "test" {
   content = <<EOF
 {
@@ -489,137 +750,23 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  description = "%s"
-  name        = "%s"
-
-  depends_on = [aws_organizations_organization.test]
+  description = %[1]q
+  name        = %[2]q
 }
 `, description, rName)
 }
 
-func testAccPolicyConfig_TagA(rName string) string {
+func testAccPolicyConfig_required(rName, content string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
-  content = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-
-  name = "%s"
-
-  depends_on = [aws_organizations_organization.test]
-
-  tags = {
-    TerraformProviderAwsTest = true
-    Alpha                    = 1
-  }
-}
-`, rName)
-}
-
-func testAccPolicyConfig_TagB(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_policy" "test" {
-  content = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-
-  name = "%s"
-
-  depends_on = [aws_organizations_organization.test]
-
-  tags = {
-    TerraformProviderAwsTest = true
-    Beta                     = 1
-  }
-}
-`, rName)
-}
-
-func testAccPolicyConfig_TagC(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_policy" "test" {
-  content = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-
-  name = "%s"
-
-  depends_on = [aws_organizations_organization.test]
-
-  tags = {
-    TerraformProviderAwsTest = true
-  }
-}
-`, rName)
-}
-
-func testAccPolicyConfig_NoTag(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_policy" "test" {
-  content = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-
-  name = "%s"
-
-  depends_on = [aws_organizations_organization.test]
-}
-`, rName)
-}
-
-func testAccPolicyConfig_Required(rName, content string) string {
-	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_policy" "test" {
-  content = %s
-  name    = "%s"
-
-  depends_on = [aws_organizations_organization.test]
+  content = %[1]s
+  name    = %[2]q
 }
 `, strconv.Quote(content), rName)
 }
 
-func testAccPolicyConcurrentConfig(rName string) string {
+func testAccPolicyConfig_concurrent(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test1" {
   content = <<EOF
 {
@@ -633,8 +780,6 @@ resource "aws_organizations_policy" "test1" {
 EOF
 
   name = "%[1]s1"
-
-  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test2" {
@@ -650,8 +795,6 @@ resource "aws_organizations_policy" "test2" {
 EOF
 
   name = "%[1]s2"
-
-  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test3" {
@@ -667,8 +810,6 @@ resource "aws_organizations_policy" "test3" {
 EOF
 
   name = "%[1]s3"
-
-  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test4" {
@@ -684,8 +825,6 @@ resource "aws_organizations_policy" "test4" {
 EOF
 
   name = "%[1]s4"
-
-  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test5" {
@@ -701,37 +840,131 @@ resource "aws_organizations_policy" "test5" {
 EOF
 
   name = "%[1]s5"
-
-  depends_on = [aws_organizations_organization.test]
 }
 `, rName)
 }
 
-func testAccPolicyConfig_Type(rName, content, policyType string) string {
+func testAccPolicyConfig_type(rName, content, policyType string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
-  content = %s
-  name    = "%s"
-  type    = "%s"
-
-  depends_on = [aws_organizations_organization.test]
+  content = %[1]s
+  name    = %[2]q
+  type    = %[3]q
 }
 `, strconv.Quote(content), rName, policyType)
 }
 
-const testAccPolicyConfig_AwsManagedPolicySetup = `
-resource "aws_organizations_organization" "test" {
-  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
-}
-`
+func testAccPolicyConfig_type_Bedrock(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
 
-const testAccPolicyConfig_AwsManagedPolicy = `
-resource "aws_organizations_organization" "test" {
-  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+
+  content_policy_config {
+    filters_config {
+      input_strength  = "MEDIUM"
+      output_strength = "MEDIUM"
+      type            = "HATE"
+    }
+    filters_config {
+      input_strength  = "HIGH"
+      output_strength = "HIGH"
+      type            = "VIOLENCE"
+    }
+  }
+
+  contextual_grounding_policy_config {
+    filters_config {
+      threshold = 0.4
+      type      = "GROUNDING"
+    }
+  }
+
+  sensitive_information_policy_config {
+    pii_entities_config {
+      action = "BLOCK"
+      type   = "NAME"
+    }
+    pii_entities_config {
+      action = "BLOCK"
+      type   = "DRIVER_ID"
+    }
+    pii_entities_config {
+      action = "ANONYMIZE"
+      type   = "USERNAME"
+    }
+    regexes_config {
+      action      = "BLOCK"
+      description = "example regex"
+      name        = "regex_example"
+      pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
+    }
+  }
+
+  topic_policy_config {
+    topics_config {
+      name       = "investment_topic"
+      examples   = ["Where should I invest my money ?"]
+      type       = "DENY"
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+    }
+  }
+
+  word_policy_config {
+    managed_word_lists_config {
+      type = "PROFANITY"
+    }
+    words_config {
+      text = "HATE"
+    }
+  }
 }
 
+resource "aws_bedrock_guardrail_version" "test" {
+  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
+}
+
+resource "aws_organizations_policy" "test" {
+  # Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_bedrock_syntax.html
+  content = jsonencode({
+    "bedrock" : {
+      "guardrail_inference" : {
+        (data.aws_region.current.region) : {
+          "config_1" : {
+            "identifier" : {
+              "@@assign" : "${aws_bedrock_guardrail.test.guardrail_arn}:${aws_bedrock_guardrail_version.test.version}"
+            },
+            "input_tags" : {
+              "@@assign" : "honor"
+            }
+          }
+        }
+      }
+    }
+  })
+  name = %[1]q
+  type = "BEDROCK_POLICY"
+}
+`, rName)
+}
+
+func testAccPolicyConfig_skipDestroy(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = %[1]s
+  name    = %[2]q
+
+  skip_destroy = true
+}
+
+`, strconv.Quote(content), rName)
+}
+
+const testAccPolicyConfig_managed = `
 resource "aws_organizations_policy" "test" {
   name = "FullAWSAccess"
 }

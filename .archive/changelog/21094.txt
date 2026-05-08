@@ -1,0 +1,7 @@
+release-note:enhancement
+resource/aws_kinesisanalyticsv2_application: Add configurable timeouts
+```
+
+release-note:enhancement
+resource/aws_kinesisanalyticsv2_application_snapshot: Add configurable timeouts
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Add `restore_to_point_in_time.source_cluster_resource_id` argument
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Mark `restore_to_point_in_time.source_cluster_identifier` as Optional
+```

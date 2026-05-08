@@ -1,0 +1,40 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package dynamodb
+
+// Exports for use in tests only.
+var (
+	ResourceContributorInsights         = resourceContributorInsights
+	ResourceGlobalTable                 = resourceGlobalTable
+	ResourceKinesisStreamingDestination = resourceKinesisStreamingDestination
+	ResourceTable                       = resourceTable
+	ResourceTableExport                 = resourceTableExport
+	ResourceTableItem                   = resourceTableItem
+	ResourceTableReplica                = resourceTableReplica
+	ResourceTag                         = resourceTag
+	ResourceResourcePolicy              = newResourcePolicyResource
+	ResourceGlobalSecondaryIndex        = newResourceGlobalSecondaryIndex
+
+	ARNForNewRegion                              = arnForNewRegion
+	ContributorInsightsParseResourceID           = contributorInsightsParseResourceID
+	ExpandTableItemAttributes                    = expandTableItemAttributes
+	ExpandTableItemQueryKey                      = expandTableItemQueryKey
+	FindContributorInsightsByTwoPartKey          = findContributorInsightsByTwoPartKey
+	FindGlobalTableByName                        = findGlobalTableByName
+	FindGSIByTwoPartKey                          = findGSIByTwoPartKey
+	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
+	FindResourcePolicyByARN                      = findResourcePolicyByARN
+	FindTableByName                              = findTableByName
+	FindTableExportByARN                         = findTableExportByARN
+	FindTableItemByTwoPartKey                    = findTableItemByTwoPartKey
+	FindTag                                      = findTag
+	FlattenTableItemAttributes                   = flattenTableItemAttributes
+	ListTags                                     = listTags
+	RegionFromARN                                = regionFromARN
+	ReplicaForRegion                             = replicaForRegion
+	TableNameFromARN                             = tableNameFromARN
+	TableReplicaParseResourceID                  = tableReplicaParseResourceID
+	UpdateDiffGSI                                = updateDiffGSI
+	CheckIfGSIRecreateAttributesChanged          = checkIfGSIRecreateAttributesChanged
+)

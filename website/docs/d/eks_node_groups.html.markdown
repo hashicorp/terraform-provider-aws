@@ -1,5 +1,5 @@
 ---
-subcategory: "EKS"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_node_groups"
 description: |-
@@ -25,12 +25,16 @@ data "aws_eks_node_group" "example" {
 }
 ```
 
-
 ## Argument Reference
 
-* `cluster_name` - (Required) The name of the cluster.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `cluster_name` - (Required) Name of the cluster.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Cluster name.
-* `names` - A set of all node group names in an EKS Cluster.
+* `names` - Set of all node group names in an EKS Cluster.

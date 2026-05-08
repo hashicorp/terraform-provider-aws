@@ -1,0 +1,90 @@
+---
+subcategory: "DataSync"
+layout: "aws"
+page_title: "AWS: aws_datasync_location_azure_blob"
+description: |-
+  Manages an AWS DataSync Microsoft Azure Blob Storage Location
+---
+
+# Resource: aws_datasync_location_azure_blob
+
+Manages a Microsoft Azure Blob Storage Location within AWS DataSync.
+
+~> **NOTE:** The DataSync Agents must be available before creating this resource.
+
+## Example Usage
+
+```terraform
+resource "aws_datasync_location_azure_blob" "example" {
+  agent_arns          = [aws_datasync_agent.example.arn]
+  authentication_type = "SAS"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
+
+  sas_configuration {
+    token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%2FXTI9E%2F%2Fmq171%2BZU178wcwqU%3D"
+  }
+}
+```
+
+## Argument Reference
+
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `access_tier` - (Optional) The access tier that you want your objects or files transferred into. Valid values: `HOT`, `COOL` and `ARCHIVE`. Default: `HOT`.
+* `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
+* `authentication_type` - (Required) The authentication method DataSync uses to access your Azure Blob Storage. Valid values: `SAS`.
+* `blob_type` - (Optional) The type of blob that you want your objects or files to be when transferring them into Azure Blob Storage. Valid values: `BLOB`. Default: `BLOB`.
+* `container_url` - (Required) The URL of the Azure Blob Storage container involved in your transfer.
+* `sas_configuration` - (Optional) The SAS configuration that allows DataSync to access your Azure Blob Storage. See configuration below.
+* `subdirectory` - (Optional) Path segments if you want to limit your transfer to a virtual directory in the container.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### sas_configuration Argument Reference
+
+* `token` - (Required) A SAS token that provides permissions to access your Azure Blob Storage.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - Amazon Resource Name (ARN) of the DataSync Location.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_location_azure_blob.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567"
+  }
+}
+
+resource "aws_datasync_location_azure_blob" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync Azure Blob location.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_azure_blob` using the Amazon Resource Name (ARN). For example:
+
+```terraform
+import {
+  to = aws_datasync_location_azure_blob.example
+  id = "arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567"
+}
+```
+
+Using `terraform import`, import `aws_datasync_location_azure_blob` using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_location_azure_blob.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
+```

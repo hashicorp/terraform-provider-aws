@@ -1,57 +1,83 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ssm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMResourceDataSync_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssm_resource_data_sync.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceDataSyncDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSsmResourceDataSyncConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceDataSyncExists(resourceName),
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMResourceDataSync_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ssm_resource_data_sync.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceResourceDataSync(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
 func TestAccSSMResourceDataSync_update(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	ctx := acctest.Context(t)
+	rName := acctest.RandString(t, 5)
 	resourceName := "aws_ssm_resource_data_sync.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceDataSyncDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSsmResourceDataSyncConfig(sdkacctest.RandInt(), rName),
+				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceDataSyncExists(resourceName),
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -60,45 +86,57 @@ func TestAccSSMResourceDataSync_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSsmResourceDataSyncConfigUpdate(sdkacctest.RandInt(), rName),
+				Config: testAccResourceDataSyncConfig_update(acctest.RandInt(t), rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceDataSyncExists(resourceName),
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckResourceDataSyncDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssm_resource_data_sync" {
-			continue
-		}
-		syncItem, err := tfssm.FindResourceDataSyncItem(conn, rs.Primary.Attributes["name"])
-		if err != nil {
-			return err
-		}
-		if syncItem != nil {
-			return fmt.Errorf("Resource Data Sync (%s) found", rs.Primary.Attributes["name"])
-		}
-	}
-	return nil
-}
-
-func testAccCheckResourceDataSyncExists(name string) resource.TestCheckFunc {
+func testAccCheckResourceDataSyncDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		log.Println(s.RootModule().Resources)
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ssm_resource_data_sync" {
+				continue
+			}
+
+			_, err := tfssm.FindResourceDataSyncByName(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SSM Resource Data Sync %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
+func testAccCheckResourceDataSyncExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
+
+		_, err := tfssm.FindResourceDataSyncByName(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+func testAccResourceDataSyncConfig_basic(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "hoge" {
   bucket        = "tf-test-bucket-%[1]d"
@@ -156,7 +194,7 @@ resource "aws_ssm_resource_data_sync" "test" {
 `, rInt, rName)
 }
 
-func testAccSsmResourceDataSyncConfigUpdate(rInt int, rName string) string {
+func testAccResourceDataSyncConfig_update(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "hoge" {
   bucket        = "tf-test-bucket-%[1]d"

@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_connect_routing_profile: The `queue_configs_associated` attribute has been removed
+```
+
+```release-note:breaking-change
+resource/aws_connect_queue: The `quick_connect_ids_associated` attribute has been removed
+```

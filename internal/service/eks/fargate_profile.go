@@ -1,35 +1,51 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package eks
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceFargateProfile() *schema.Resource {
+// @SDKResource("aws_eks_fargate_profile", name="Fargate Profile")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("fargate_profile_name")
+// @ImportIDHandler("fargateProfileImportID")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.FargateProfile")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
+func resourceFargateProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFargateProfileCreate,
-		Read:   resourceFargateProfileRead,
-		Update: resourceFargateProfileUpdate,
-		Delete: resourceFargateProfileDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
+		CreateWithoutTimeout: resourceFargateProfileCreate,
+		ReadWithoutTimeout:   resourceFargateProfileRead,
+		UpdateWithoutTimeout: resourceFargateProfileUpdate,
+		DeleteWithoutTimeout: resourceFargateProfileDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -37,11 +53,11 @@ func ResourceFargateProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -72,7 +88,7 @@ func ResourceFargateProfile() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -81,43 +97,38 @@ func ResourceFargateProfile() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	fargateProfileName := d.Get("fargate_profile_name").(string)
-	id := FargateProfileCreateResourceID(clusterName, fargateProfileName)
-
-	input := &eks.CreateFargateProfileInput{
-		ClientRequestToken:  aws.String(resource.UniqueId()),
+	profileID := fargateProfileCreateResourceID(clusterName, fargateProfileName)
+	input := eks.CreateFargateProfileInput{
+		ClientRequestToken:  aws.String(create.UniqueId(ctx)),
 		ClusterName:         aws.String(clusterName),
 		FargateProfileName:  aws.String(fargateProfileName),
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
-		Selectors:           expandEksFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
-		Subnets:             flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Selectors:           expandFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
+		Subnets:             flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		Tags:                getTagsIn(ctx),
 	}
 
 	// mutex lock for creation/deletion serialization
@@ -125,188 +136,294 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		_, err := conn.CreateFargateProfile(input)
-
-		// Retry for IAM eventual consistency on error:
-		// InvalidParameterException: Misconfigured PodExecutionRole Trust Policy; Please add the eks-fargate-pods.amazonaws.com Service Principal
-		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Misconfigured PodExecutionRole Trust Policy") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateFargateProfile(input)
-	}
+	// Retry for IAM eventual consistency on error:
+	// InvalidParameterException: Misconfigured PodExecutionRole Trust Policy; Please add the eks-fargate-pods.amazonaws.com Service Principal
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.CreateFargateProfile(ctx, &input)
+	}, "Misconfigured PodExecutionRole Trust Policy")
 
 	if err != nil {
-		return fmt.Errorf("error creating EKS Fargate Profile (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EKS Fargate Profile (%s): %s", profileID, err)
 	}
 
-	d.SetId(id)
+	d.SetId(profileID)
 
-	_, err = waitFargateProfileCreated(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		return fmt.Errorf("error waiting for EKS Fargate Profile (%s) to create: %w", d.Id(), err)
+	if _, err := waitFargateProfileCreated(ctx, conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Fargate Profile (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceFargateProfileRead(d, meta)
+	return append(diags, resourceFargateProfileRead(ctx, d, meta)...)
 }
 
-func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
-
+	clusterName, fargateProfileName, err := fargateProfileParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	fargateProfile, err := FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
+	fargateProfile, err := findFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Fargate Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EKS Fargate Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Fargate Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", fargateProfile.FargateProfileArn)
-	d.Set("cluster_name", fargateProfile.ClusterName)
+	d.Set(names.AttrARN, fargateProfile.FargateProfileArn)
+	d.Set(names.AttrClusterName, fargateProfile.ClusterName)
 	d.Set("fargate_profile_name", fargateProfile.FargateProfileName)
 	d.Set("pod_execution_role_arn", fargateProfile.PodExecutionRoleArn)
-
-	if err := d.Set("selector", flattenEksFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
-		return fmt.Errorf("error setting selector: %w", err)
+	if err := d.Set("selector", flattenFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting selector: %s", err)
 	}
+	d.Set(names.AttrStatus, fargateProfile.Status)
+	d.Set(names.AttrSubnetIDs, fargateProfile.Subnets)
 
-	d.Set("status", fargateProfile.Status)
+	setTagsOut(ctx, fargateProfile.Tags)
 
-	if err := d.Set("subnet_ids", aws.StringValueSlice(fargateProfile.Subnets)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
-	}
-
-	tags := KeyValueTags(fargateProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceFargateProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceFargateProfileRead(d, meta)
+func resourceFargateProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// Tags only.
+	return append(diags, resourceFargateProfileRead(ctx, d, meta)...)
 }
 
-func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+func resourceFargateProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
-
+	clusterName, fargateProfileName, err := fargateProfileParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// mutex lock for creation/deletion serialization
-	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
+	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get(names.AttrClusterName).(string))
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	log.Printf("[DEBUG] Deleting EKS Fargate Profile: %s", d.Id())
-	_, err = conn.DeleteFargateProfile(&eks.DeleteFargateProfileInput{
+	input := eks.DeleteFargateProfileInput{
 		ClusterName:        aws.String(clusterName),
 		FargateProfileName: aws.String(fargateProfileName),
-	})
+	}
+	_, err = conn.DeleteFargateProfile(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EKS Fargate Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EKS Fargate Profile (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitFargateProfileDeleted(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return fmt.Errorf("error waiting for EKS Fargate Profile (%s) to delete: %w", d.Id(), err)
+	if _, err := waitFargateProfileDeleted(ctx, conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Fargate Profile (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandEksFargateProfileSelectors(l []interface{}) []*eks.FargateProfileSelector {
-	if len(l) == 0 {
+func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string) (*types.FargateProfile, error) {
+	input := eks.DescribeFargateProfileInput{
+		ClusterName:        aws.String(clusterName),
+		FargateProfileName: aws.String(fargateProfileName),
+	}
+
+	return findFargateProfile(ctx, conn, &input)
+}
+
+func findFargateProfile(ctx context.Context, conn *eks.Client, input *eks.DescribeFargateProfileInput) (*types.FargateProfile, error) {
+	output, err := conn.DescribeFargateProfile(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FargateProfile == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.FargateProfile, nil
+}
+
+func statusFargateProfile(conn *eks.Client, clusterName, fargateProfileName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitFargateProfileCreated(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string, timeout time.Duration) (*types.FargateProfile, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.FargateProfileStatusCreating),
+		Target:  enum.Slice(types.FargateProfileStatusActive),
+		Refresh: statusFargateProfile(conn, clusterName, fargateProfileName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.FargateProfile); ok {
+		if status, health := output.Status, output.Health; status == types.FargateProfileStatusCreateFailed && health != nil {
+			retry.SetLastError(err, fargateProfileIssuesError(health.Issues))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFargateProfileDeleted(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string, timeout time.Duration) (*types.FargateProfile, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.FargateProfileStatusActive, types.FargateProfileStatusDeleting),
+		Target:  []string{},
+		Refresh: statusFargateProfile(conn, clusterName, fargateProfileName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.FargateProfile); ok {
+		if status, health := output.Status, output.Health; status == types.FargateProfileStatusDeleteFailed && health != nil {
+			retry.SetLastError(err, fargateProfileIssuesError(health.Issues))
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandFargateProfileSelectors(tfList []any) []types.FargateProfileSelector {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	fargateProfileSelectors := make([]*eks.FargateProfileSelector, 0, len(l))
+	apiObjects := make([]types.FargateProfileSelector, 0, len(tfList))
 
-	for _, mRaw := range l {
-		m, ok := mRaw.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		fargateProfileSelector := &eks.FargateProfileSelector{}
+		apiObject := types.FargateProfileSelector{}
 
-		if v, ok := m["labels"].(map[string]interface{}); ok && len(v) > 0 {
-			fargateProfileSelector.Labels = flex.ExpandStringMap(v)
+		if v, ok := tfMap["labels"].(map[string]any); ok && len(v) > 0 {
+			apiObject.Labels = flex.ExpandStringValueMap(v)
 		}
 
-		if v, ok := m["namespace"].(string); ok && v != "" {
-			fargateProfileSelector.Namespace = aws.String(v)
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+			apiObject.Namespace = aws.String(v)
 		}
 
-		fargateProfileSelectors = append(fargateProfileSelectors, fargateProfileSelector)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return fargateProfileSelectors
+	return apiObjects
 }
 
-func flattenEksFargateProfileSelectors(fargateProfileSelectors []*eks.FargateProfileSelector) []map[string]interface{} {
-	if len(fargateProfileSelectors) == 0 {
-		return []map[string]interface{}{}
+func flattenFargateProfileSelectors(apiObjects []types.FargateProfileSelector) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
 	}
 
-	l := make([]map[string]interface{}, 0, len(fargateProfileSelectors))
+	tfList := make([]any, 0, len(apiObjects))
 
-	for _, fargateProfileSelector := range fargateProfileSelectors {
-		m := map[string]interface{}{
-			"labels":    aws.StringValueMap(fargateProfileSelector.Labels),
-			"namespace": aws.StringValue(fargateProfileSelector.Namespace),
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"labels":            apiObject.Labels,
+			names.AttrNamespace: aws.ToString(apiObject.Namespace),
 		}
 
-		l = append(l, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return l
+	return tfList
+}
+
+func fargateProfileIssueError(apiObject types.FargateProfileIssue) error {
+	return fmt.Errorf("%s: %s", apiObject.Code, aws.ToString(apiObject.Message))
+}
+
+func fargateProfileIssuesError(apiObjects []types.FargateProfileIssue) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		err := fargateProfileIssueError(apiObject)
+
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), err))
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+const fargateProfileResourceIDSeparator = ":"
+
+func fargateProfileCreateResourceID(clusterName, fargateProfileName string) string {
+	parts := []string{clusterName, fargateProfileName}
+	id := strings.Join(parts, fargateProfileResourceIDSeparator)
+
+	return id
+}
+
+func fargateProfileParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, fargateProfileResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sfargate-profile-name", id, fargateProfileResourceIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = fargateProfileImportID{}
+)
+
+type fargateProfileImportID struct{}
+
+func (fargateProfileImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, fargateProfileName, err := fargateProfileParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrClusterName:  clusterName,
+		"fargate_profile_name": fargateProfileName,
+	}
+
+	return id, result, nil
+}
+
+func (fargateProfileImportID) Create(d *schema.ResourceData) string {
+	return fargateProfileCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("fargate_profile_name").(string))
 }

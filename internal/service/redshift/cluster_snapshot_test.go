@@ -1,1 +1,157 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Snapshot
+	resourceName := "aws_redshift_cluster_snapshot.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "owner_account"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterSnapshotConfig_retention(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftClusterSnapshot_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Snapshot
+	resourceName := "aws_redshift_cluster_snapshot.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceClusterSnapshot(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckClusterSnapshotExists(ctx context.Context, t *testing.T, n string, v *awstypes.Snapshot) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Redshift Cluster Snapshot is set")
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
+
+		out, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *out
+
+		return nil
+	}
+}
+
+func testAccCheckClusterSnapshotDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_cluster_snapshot" {
+				continue
+			}
+
+			_, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Cluster Snapshot %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccClusterSnapshotConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
+resource "aws_redshift_cluster_snapshot" "test" {
+  cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
+  snapshot_identifier = %[1]q
+}
+`, rName))
+}
+
+func testAccClusterSnapshotConfig_retention(rName string, retention int) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
+resource "aws_redshift_cluster_snapshot" "test" {
+  cluster_identifier               = aws_redshift_cluster.test.cluster_identifier
+  snapshot_identifier              = %[1]q
+  manual_snapshot_retention_period = %[2]d
+}
+`, rName, retention))
+}

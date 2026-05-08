@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_vpc" "main" {
   cidr_block = cidrsubnet(var.base_cidr_block, 4, var.region_numbers[var.region])
 }

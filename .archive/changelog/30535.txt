@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_msk_serverless_cluster: Change `vpc_config.security_group_ids` to Computed
+```

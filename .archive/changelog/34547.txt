@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_networkmanager_vpc_attachment: Fixes error where VPC Attachments waiting for acceptance could not be deleted
+```
+
+```release-note:bug
+resource/aws_networkmanager_vpc_attachment: Fixes error when modifying `options` fields while waiting for acceptance
+```
+
+```release-note:bug
+resource/aws_networkmanager_attachment_accepter: Now revokes attachment on deletion for VPC Attachments
+```

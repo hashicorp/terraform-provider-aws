@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_route_table: Ignore routes managed by VPC Lattice
+```
+
+```release-note:enhancement
+data-source/aws_route_table: Ignore routes managed by VPC Lattice
+```
+
+```release-note:enhancement
+resource/aws_default_route_table: Ignore routes managed by VPC Lattice
+```

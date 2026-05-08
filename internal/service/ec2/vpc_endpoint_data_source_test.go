@@ -1,192 +1,281 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPCEndpointDataSource_gatewayBasic(t *testing.T) {
+func TestAccVPCEndpointDataSource_gatewayBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointDataSourceConfig_gatewayBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
-					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "cidr_blocks.#", resourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_entry.#", resourceName, "dns_entry.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.#", resourceName, "dns_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_interface_ids.#", resourceName, "network_interface_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(datasourceName, "prefix_list_id", resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_enabled", resourceName, "private_dns_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "requester_managed", resourceName, "requester_managed"),
+					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrServiceName, resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "service_region", resourceName, "service_region"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_type", resourceName, "vpc_endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_byID(t *testing.T) {
+func TestAccVPCEndpointDataSource_byID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointDataSourceConfig_byID(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
-					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "cidr_blocks.#", resourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_entry.#", resourceName, "dns_entry.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.#", resourceName, "dns_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_interface_ids.#", resourceName, "network_interface_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(datasourceName, "prefix_list_id", resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_enabled", resourceName, "private_dns_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "requester_managed", resourceName, "requester_managed"),
+					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrServiceName, resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_type", resourceName, "vpc_endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_byFilter(t *testing.T) {
+func TestAccVPCEndpointDataSource_byFilter(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointDataSourceConfig_byFilter(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
-					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "cidr_blocks.#", resourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_entry.#", resourceName, "dns_entry.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.#", resourceName, "dns_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_interface_ids.#", resourceName, "network_interface_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(datasourceName, "prefix_list_id", resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_enabled", resourceName, "private_dns_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "requester_managed", resourceName, "requester_managed"),
+					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrServiceName, resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_type", resourceName, "vpc_endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_byTags(t *testing.T) {
+func TestAccVPCEndpointDataSource_byTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointDataSourceConfig_byTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
-					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "3"),
-					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "cidr_blocks.#", resourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_entry.#", resourceName, "dns_entry.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.#", resourceName, "dns_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_interface_ids.#", resourceName, "network_interface_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(datasourceName, "prefix_list_id", resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_enabled", resourceName, "private_dns_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "requester_managed", resourceName, "requester_managed"),
+					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrServiceName, resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_type", resourceName, "vpc_endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) {
+func TestAccVPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointDataSourceConfig_gatewayWithRouteTableAndTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
-					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+				Config: testAccVPCEndpointDataSourceConfig_gatewayRouteTableAndTags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "cidr_blocks.#", resourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_entry.#", resourceName, "dns_entry.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.#", resourceName, "dns_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_interface_ids.#", resourceName, "network_interface_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(datasourceName, "prefix_list_id", resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_enabled", resourceName, "private_dns_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "requester_managed", resourceName, "requester_managed"),
+					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrServiceName, resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_type", resourceName, "vpc_endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_interface(t *testing.T) {
+func TestAccVPCEndpointDataSource_interface(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointDataSourceConfig_interface(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckNoResourceAttr(datasourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(datasourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "cidr_blocks.#", resourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_entry.#", resourceName, "dns_entry.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.#", resourceName, "dns_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_interface_ids.#", resourceName, "network_interface_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_enabled", resourceName, "private_dns_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "requester_managed", resourceName, "requester_managed"),
+					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrServiceName, resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_type", resourceName, "vpc_endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpointDataSource_resourceConfigurationPrivateDNS(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint.test"
+	datasourceName := "data.aws_vpc_endpoint.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointDataSourceConfig_resourceConfigurationDNSOptions(rName, "SPECIFIED_DOMAINS_ONLY", []string{"example1.com", "example2.com"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.#", resourceName, "dns_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.0.private_dns_preference", resourceName, "dns_options.0.private_dns_preference"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dns_options.0.private_dns_specified_domains", resourceName, "dns_options.0.private_dns_specified_domains"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_enabled", resourceName, "private_dns_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_type", resourceName, "vpc_endpoint_type"),
 				),
 			},
 		},
@@ -207,13 +296,18 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id       = aws_vpc.test.id
-  service_name = aws_vpc_endpoint.test.service_name
-  state        = "available"
+  vpc_id         = aws_vpc.test.id
+  service_name   = aws_vpc_endpoint.test.service_name
+  service_region = data.aws_region.current.region
+  state          = "available"
 }
 `, rName)
 }
@@ -232,7 +326,11 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_vpc_endpoint" "test" {
@@ -255,7 +353,11 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_vpc_endpoint" "test" {
@@ -281,9 +383,10 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
+    Name = %[1]q
     Key1 = "Value1"
     Key2 = "Value2"
     Key3 = "Value3"
@@ -294,6 +397,7 @@ data "aws_vpc_endpoint" "test" {
   vpc_id = aws_vpc_endpoint.test.vpc_id
 
   tags = {
+    Name = %[1]q
     Key1 = "Value1"
     Key2 = "Value2"
     Key3 = "Value3"
@@ -302,7 +406,7 @@ data "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointDataSourceConfig_gatewayWithRouteTableAndTags(rName string) string {
+func testAccVPCEndpointDataSourceConfig_gatewayRouteTableAndTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -324,7 +428,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   route_table_ids = [
     aws_route_table.test.id,
@@ -344,21 +448,12 @@ data "aws_vpc_endpoint" "test" {
 }
 
 func testAccVPCEndpointDataSourceConfig_interface(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
     Name = %[1]q
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -386,7 +481,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
   vpc_endpoint_type   = "Interface"
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2"
   private_dns_enabled = false
 
   subnet_ids = [
@@ -407,5 +502,101 @@ data "aws_vpc_endpoint" "test" {
   service_name = aws_vpc_endpoint.test.service_name
   state        = "available"
 }
-`, rName)
+`, rName))
+}
+func testAccVPCEndpointDataSourceConfig_resourceConfigurationDNSOptions(rName, privateDNSPreference string, privateDNSSpecifiedDomains []string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpclattice_resource_gateway" "test" {
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = [aws_subnet.test.id]
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["80"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+
+resource "aws_vpc" "endpoint" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "endpoint" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.endpoint.id
+  cidr_block        = "10.1.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
+  subnet_ids                 = [aws_subnet.endpoint.id]
+  vpc_endpoint_type          = "Resource"
+  vpc_id                     = aws_vpc.endpoint.id
+
+  private_dns_enabled = true
+
+  dns_options {
+    private_dns_preference        = %[2]q
+    private_dns_specified_domains = ["%[3]s"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.endpoint.id
+  vpc_endpoint_type = aws_vpc_endpoint.test.vpc_endpoint_type
+  state             = "available"
+}
+`, rName, privateDNSPreference, strings.Join(privateDNSSpecifiedDomains, `", "`)))
 }

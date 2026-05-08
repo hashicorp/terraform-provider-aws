@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_channel: Fix setting of `bitrate` and `sample_rate` for `aac_settings`.
+```

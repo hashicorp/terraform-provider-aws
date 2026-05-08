@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add `load_balancing_anomaly_mitigation` argument
+```
+
+```release-note:enhancement
+data-source/aws_lb_target_group: Add `load_balancing_anomaly_mitigation` attribute
+```
+
+```release-note:enhancement
+resource/aws_lb_target_group: Add `weighted_random` as a valid value for `load_balancing_algorithm_type`
+```

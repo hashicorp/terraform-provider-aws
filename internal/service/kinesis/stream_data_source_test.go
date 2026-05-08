@@ -1,102 +1,240 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis_test
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesis"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKinesisStreamDataSource_basic(t *testing.T) {
-	var stream kinesis.StreamDescription
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_kinesis_stream.test"
+	resourceName := "aws_kinesis_stream.test"
 
-	sn := fmt.Sprintf("terraform-kinesis-test-%d", sdkacctest.RandInt())
-	config := fmt.Sprintf(testAccCheckStreamDataSourceConfig, sn)
-
-	updateShardCount := func() {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
-		_, err := conn.UpdateShardCount(&kinesis.UpdateShardCountInput{
-			ScalingType:      aws.String(kinesis.ScalingTypeUniformScaling),
-			StreamName:       aws.String(sn),
-			TargetShardCount: aws.Int64(3),
-		})
-		if err != nil {
-			t.Fatalf("Error calling UpdateShardCount: %s", err)
-		}
-		if err := tfkinesis.WaitForToBeActive(conn, 5*time.Minute, sn); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisStreamDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
-					resource.TestCheckResourceAttrSet("data.aws_kinesis_stream.test_stream", "arn"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "name", sn),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "status", "ACTIVE"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "open_shards.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "closed_shards.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "shard_level_metrics.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "retention_period", "72"),
-					resource.TestCheckResourceAttrSet("data.aws_kinesis_stream.test_stream", "creation_timestamp"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "tags.Name", "tf-test"),
+				Config: testAccStreamDataSourceConfig_basic(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					// resource.TestCheckResourceAttrPair(dataSourceName, "creation_timestamp", resourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "closed_shards.#", resourceName, "closed_shards.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "encryption_type", resourceName, "encryption_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRetentionPeriod, resourceName, names.AttrRetentionPeriod),
+					resource.TestCheckResourceAttrPair(dataSourceName, "shard_level_metrics.#", resourceName, "shard_level_metrics.#"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
 			{
-				Config:    config,
-				PreConfig: updateShardCount,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
-					resource.TestCheckResourceAttrSet("data.aws_kinesis_stream.test_stream", "arn"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "name", sn),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "status", "ACTIVE"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "open_shards.#", "3"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "closed_shards.#", "4"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "shard_level_metrics.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "retention_period", "72"),
-					resource.TestCheckResourceAttrSet("data.aws_kinesis_stream.test_stream", "creation_timestamp"),
-					resource.TestCheckResourceAttr("data.aws_kinesis_stream.test_stream", "tags.Name", "tf-test"),
+				Config: testAccStreamDataSourceConfig_basic(rName, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "4"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
 				),
 			},
 		},
 	})
 }
 
-var testAccCheckStreamDataSourceConfig = `
-resource "aws_kinesis_stream" "test_stream" {
-  name             = "%s"
-  shard_count      = 2
+func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_kinesis_stream.test"
+	resourceName := "aws_kinesis_stream.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamDataSourceConfig_encryption(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					// resource.TestCheckResourceAttrPair(dataSourceName, "creation_timestamp", resourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "encryption_type", resourceName, "encryption_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKinesisStreamDataSource_maxRecordSizeInKiB(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_kinesis_stream.test"
+	resourceName := "aws_kinesis_stream.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName, 10240),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					// resource.TestCheckResourceAttrPair(dataSourceName, "creation_timestamp", resourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "encryption_type", resourceName, "encryption_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_record_size_in_kib", resourceName, "max_record_size_in_kib"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/40494
+func TestAccKinesisStreamDataSource_pagedShards(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_kinesis_stream.test"
+	const shardCount = 1100
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckShardLimitGreaterThanOrEqual(ctx, t, shardCount)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamDataSourceConfig_basic(rName, 1100),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", strconv.Itoa(shardCount)),
+				),
+			},
+		},
+	})
+}
+
+func testAccPreCheckShardLimitGreaterThanOrEqual(ctx context.Context, t *testing.T, n int) {
+	t.Helper()
+
+	conn := acctest.ProviderMeta(ctx, t).KinesisClient(ctx)
+	output, err := tfkinesis.FindLimits(ctx, conn)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	if shardLimit := int(aws.ToInt32(output.ShardLimit)); n > shardLimit {
+		t.Skipf("skipping tests; shard count (%d) > shard limit quota (%d)", n, shardLimit)
+	}
+}
+
+func testAccStreamDataSourceConfig_basic(rName string, shardCount int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name             = %[1]q
+  shard_count      = %[2]d
   retention_period = 72
 
   tags = {
-    Name = "tf-test"
+    Name = %[1]q
   }
 
   shard_level_metrics = [
     "IncomingBytes",
     "OutgoingBytes"
   ]
-
-  lifecycle {
-    ignore_changes = ["shard_count"]
-  }
 }
 
-data "aws_kinesis_stream" "test_stream" {
-  name = aws_kinesis_stream.test_stream.name
+data "aws_kinesis_stream" "test" {
+  name = aws_kinesis_stream.test.name
 }
-`
+`, rName, shardCount)
+}
+func testAccStreamDataSourceConfig_encryption(rName string, shardCount int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name            = %[1]q
+  shard_count     = %[2]d
+  encryption_type = "KMS"
+  kms_key_id      = aws_kms_key.test.id
+}
+
+data "aws_kinesis_stream" "test" {
+  name = aws_kinesis_stream.test.name
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+`, rName, shardCount)
+}
+func testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName string, maxRecordSizeInKiB int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name                   = %[1]q
+  max_record_size_in_kib = %[2]d
+  shard_count            = 1
+}
+
+data "aws_kinesis_stream" "test" {
+  name = aws_kinesis_stream.test.name
+}
+`, rName, maxRecordSizeInKiB)
+}

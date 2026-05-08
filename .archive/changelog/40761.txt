@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_catalog_database: Fix crash when expanding `create_table_default_permission` with a nil `principal` block
+```

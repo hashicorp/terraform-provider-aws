@@ -1,18 +1,20 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lambda"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccCheckLambdaInvocationResult(name, expectedResult string) resource.TestCheckFunc {
+func testAccCheckInvocationResult(name, expectedResult string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -38,18 +40,19 @@ func testAccCheckLambdaInvocationResult(name, expectedResult string) resource.Te
 }
 
 func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvocationDataSource_basic_config(rName, testData),
+				Config: testAccInvocationDataSourceConfig_basic(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -57,18 +60,19 @@ func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 }
 
 func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvocationDataSource_qualifier_config(rName, testData),
+				Config: testAccInvocationDataSourceConfig_qualifier(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -76,18 +80,39 @@ func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 }
 
 func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvocationDataSource_complex_config(rName, testData),
+				Config: testAccInvocationDataSourceConfig_complex(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocationDataSource_tenantId(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	testData := "value3"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvocationDataSourceConfig_tenantId(rName, testData),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -122,7 +147,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
 `, roleName)
 }
 
-func testAccInvocationDataSource_basic_config(rName, testData string) string {
+func testAccInvocationDataSourceConfig_basic(rName, testData string) string {
 	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
@@ -131,7 +156,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs24.x"
 
   environment {
     variables = {
@@ -153,7 +178,7 @@ JSON
 `, rName, testData)
 }
 
-func testAccInvocationDataSource_qualifier_config(rName, testData string) string {
+func testAccInvocationDataSourceConfig_qualifier(rName, testData string) string {
 	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
@@ -162,7 +187,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs24.x"
   publish       = true
 
   environment {
@@ -186,7 +211,7 @@ JSON
 `, rName, testData)
 }
 
-func testAccInvocationDataSource_complex_config(rName, testData string) string {
+func testAccInvocationDataSourceConfig_complex(rName, testData string) string {
 	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
@@ -195,7 +220,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs24.x"
   publish       = true
 
   environment {
@@ -219,6 +244,40 @@ data "aws_lambda_invocation" "invocation_test" {
       "a": "b"
     }
   }
+}
+JSON
+}
+`, rName, testData)
+}
+
+func testAccInvocationDataSourceConfig_tenantId(rName, testData string) string {
+	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
+resource "aws_lambda_function" "lambda" {
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = "%s"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs24.x"
+  tenancy_config {
+    tenant_isolation_mode = "PER_TENANT"
+  }
+
+  environment {
+    variables = {
+      TEST_DATA = "%s"
+    }
+  }
+}
+
+data "aws_lambda_invocation" "invocation_test" {
+  function_name = aws_lambda_function.lambda.function_name
+  tenant_id     = "tenant-1"
+  input         = <<JSON
+{
+  "key1": "value1",
+  "key2": "value2"
 }
 JSON
 }

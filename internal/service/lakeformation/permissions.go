@@ -1,36 +1,50 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lakeformation
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
+	"slices"
+	"strconv"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lakeformation_permissions", name="Permissions")
 func ResourcePermissions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePermissionsCreate,
-		Read:   resourcePermissionsRead,
-		Delete: resourcePermissionsDelete,
+		CreateWithoutTimeout: resourcePermissionsCreate,
+		ReadWithoutTimeout:   resourcePermissionsRead,
+		DeleteWithoutTimeout: resourcePermissionsDelete,
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
+			names.AttrCatalogID: {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
 			},
 			"catalog_resource": {
 				Type:     schema.TypeBool,
@@ -40,9 +54,38 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
+				},
+			},
+			"data_cells_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDatabaseName: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"table_catalog_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrTableName: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
 				},
 			},
 			"data_location": {
@@ -54,29 +97,31 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"catalog_id": {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+						names.AttrCatalogID: {
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
 					},
 				},
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
@@ -85,20 +130,22 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+						names.AttrCatalogID: {
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -106,27 +153,127 @@ func ResourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"permissions": {
+			"lf_tag": {
 				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				ExactlyOneOf: []string{
+					"catalog_resource",
+					"data_location",
+					names.AttrDatabase,
+					"lf_tag",
+					"lf_tag_policy",
+					"table",
+					"table_with_columns",
+					"data_cells_filter",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCatalogID: {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+							Computed: true,
+						},
+						names.AttrKey: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						names.AttrValues: {
+							Type:     schema.TypeSet,
+							Required: true,
+							ForceNew: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateLFTagValues(),
+							},
+						},
+					},
+				},
+			},
+			"lf_tag_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				ExactlyOneOf: []string{
+					"catalog_resource",
+					"data_location",
+					names.AttrDatabase,
+					"lf_tag",
+					"lf_tag_policy",
+					"table",
+					"table_with_columns",
+					"data_cells_filter",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCatalogID: {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						names.AttrExpression: {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrKey: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									names.AttrValues: {
+										Type:     schema.TypeSet,
+										Required: true,
+										ForceNew: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateLFTagValues(),
+										},
+									},
+								},
+							},
+						},
+						names.AttrResourceType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
+						},
+					},
+				},
+			},
+			names.AttrPermissions: {
+				Type:     schema.TypeSet,
 				ForceNew: true,
 				MinItems: 1,
 				Required: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 				},
 			},
 			"permissions_with_grant_option": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				ForceNew: true,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 				},
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -141,25 +288,27 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+						names.AttrCatalogID: {
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 							ForceNew: true,
@@ -191,24 +340,25 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+						names.AttrCatalogID: {
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,
 							ForceNew: true,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -218,7 +368,7 @@ func ResourcePermissions() *schema.Resource {
 								"table_with_columns.0.wildcard",
 							},
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -227,13 +377,12 @@ func ResourcePermissions() *schema.Resource {
 							Type:     schema.TypeSet,
 							ForceNew: true,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -266,240 +415,184 @@ func ResourcePermissions() *schema.Resource {
 // For 2 & 3, some peeking at the config (i.e., d.Get()) is necessary to filter the permissions AWS
 // returns.
 
-func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.GrantPermissionsInput{
-		Permissions: flex.ExpandStringList(d.Get("permissions").([]interface{})),
-		Principal: &lakeformation.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+		Permissions: flex.ExpandStringyValueSet[awstypes.Permission](d.Get(names.AttrPermissions).(*schema.Set)),
+		Principal: &awstypes.DataLakePrincipal{
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
-		Resource: &lakeformation.Resource{},
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("permissions_with_grant_option"); ok {
-		input.PermissionsWithGrantOption = flex.ExpandStringList(v.([]interface{}))
+		input.PermissionsWithGrantOption = flex.ExpandStringyValueSet[awstypes.Permission](v.(*schema.Set))
 	}
 
-	if _, ok := d.GetOk("catalog_resource"); ok {
-		input.Resource.Catalog = ExpandCatalogResource()
-	}
-
-	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandLakeFormationTableWithColumnsResource(v.([]interface{})[0].(map[string]interface{}))
-	}
+	populateResourceForCreate(input, d)
 
 	var output *lakeformation.GrantPermissionsOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
-		output, err = conn.GrantPermissions(input)
+		output, err = conn.GrantPermissions(ctx, input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
-				return resource.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
+				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Grantee has no permissions") {
-				return resource.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Grantee has no permissions") {
+				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "register the S3 path") {
-				return resource.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "register the S3 path") {
+				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return resource.RetryableError(err)
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
+				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access requested permissions") {
-				return resource.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to access requested permissions") {
+				return tfresource.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("error creating Lake Formation Permissions: %w", err))
+			return tfresource.NonRetryableError(fmt.Errorf("creating Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		output, err = conn.GrantPermissions(input)
-	}
-
 	if err != nil {
-		return fmt.Errorf("error creating Lake Formation Permissions (input: %v): %w", input, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lake Formation Permissions: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Lake Formation Permissions: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Lake Formation Permissions: empty response")
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
+	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
-	return resourcePermissionsRead(d, meta)
+	return append(diags, resourcePermissionsRead(ctx, d, meta)...)
 }
 
-func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	input := &lakeformation.ListPermissionsInput{
-		Principal: &lakeformation.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
-		},
-		Resource: &lakeformation.Resource{},
+	var input lakeformation.ListPermissionsInput
+
+	principalIdentifier := d.Get(names.AttrPrincipal).(string)
+	if includePrincipalIdentifierInList(principalIdentifier) {
+		principal := awstypes.DataLakePrincipal{
+			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
+		}
+		input.Principal = &principal
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	if _, ok := d.GetOk("catalog_resource"); ok {
-		input.Resource.Catalog = ExpandCatalogResource()
-	}
+	populateResourceForRead(&input, d)
 
-	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
-	}
+	filter := permissionsFilter(d)
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	tableType := ""
-
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
-		tableType = TableTypeTable
-	}
-
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		// can't ListPermissions for TableWithColumns, so use Table instead
-		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]interface{})[0].(map[string]interface{}))
-		tableType = TableTypeTableWithColumns
-	}
-
-	columnNames := make([]*string, 0)
-	excludedColumnNames := make([]*string, 0)
-	columnWildcard := false
-
-	if tableType == TableTypeTableWithColumns {
-		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
-			columnWildcard = v.(bool)
-		}
-
-		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
-			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				columnNames = flex.ExpandStringSet(v)
-			}
-		}
-
-		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
-			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				excludedColumnNames = flex.ExpandStringSet(v)
-			}
-		}
-	}
-
-	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
-
-	allPermissions, err := waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	permissions, err := waitPermissionsReady(ctx, conn, &input, filter)
 
 	if !d.IsNewResource() {
-		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Resource does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Resource does not exist") {
 			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state: %s", d.Id(), err)
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		if len(allPermissions) == 0 {
+		if len(permissions) == 0 {
 			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state (0 permissions)", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lake Formation permissions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation permissions: %s", err)
 	}
 
-	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	d.Set(names.AttrPrincipal, permissions[0].Principal.DataLakePrincipalIdentifier)
+	d.Set(names.AttrPermissions, flattenResourcePermissions(permissions))
+	d.Set("permissions_with_grant_option", flattenGrantPermissions(permissions))
 
-	if len(cleanPermissions) == 0 {
-		log.Printf("[WARN] No Lake Formation permissions (%s) found", d.Id())
-		d.Set("catalog_resource", false)
-		d.Set("data_location", nil)
-		d.Set("database", nil)
-		d.Set("table_with_columns", nil)
-		d.Set("table", nil)
-		return nil
-	}
-
-	if len(cleanPermissions) != len(allPermissions) {
-		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
-	}
-
-	d.Set("principal", cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set("permissions", flattenLakeFormationPermissions(cleanPermissions))
-	d.Set("permissions_with_grant_option", flattenLakeFormationGrantPermissions(cleanPermissions))
-
-	if cleanPermissions[0].Resource.Catalog != nil {
+	if permissions[0].Resource.Catalog != nil {
 		d.Set("catalog_resource", true)
 	} else {
 		d.Set("catalog_resource", false)
 	}
 
-	if cleanPermissions[0].Resource.DataLocation != nil {
-		if err := d.Set("data_location", []interface{}{flattenLakeFormationDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
-			return fmt.Errorf("error setting data_location: %w", err)
+	if permissions[0].Resource.DataLocation != nil {
+		if err := d.Set("data_location", []any{flattenDataLocationResource(permissions[0].Resource.DataLocation)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting data_location: %s", err)
 		}
 	} else {
 		d.Set("data_location", nil)
 	}
 
-	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set("database", []interface{}{flattenLakeFormationDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
-			return fmt.Errorf("error setting database: %w", err)
+	if permissions[0].Resource.Database != nil {
+		if err := d.Set(names.AttrDatabase, []any{flattenDatabaseResource(permissions[0].Resource.Database)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
-		d.Set("database", nil)
+		d.Set(names.AttrDatabase, nil)
+	}
+
+	if permissions[0].Resource.DataCellsFilter != nil {
+		if err := d.Set("data_cells_filter", flattenDataCellsFilter(permissions[0].Resource.DataCellsFilter)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting data_cells_filter: %s", err)
+		}
+	} else {
+		d.Set("data_cells_filter", nil)
+	}
+
+	if permissions[0].Resource.LFTag != nil {
+		if err := d.Set("lf_tag", []any{flattenLFTagKeyResource(permissions[0].Resource.LFTag)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
+		}
+	} else {
+		d.Set("lf_tag", nil)
+	}
+
+	if permissions[0].Resource.LFTagPolicy != nil {
+		if err := d.Set("lf_tag_policy", []any{flattenLFTagPolicyResource(permissions[0].Resource.LFTagPolicy)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
+		}
+	} else {
+		d.Set("lf_tag_policy", nil)
 	}
 
 	tableSet := false
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 {
 		// since perm list could include TableWithColumns, get the right one
-		for _, perm := range cleanPermissions {
+		for _, perm := range permissions {
 			if perm.Resource == nil {
 				continue
 			}
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
-				if err := d.Set("table", []interface{}{flattenLakeFormationTableWithColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
-					return fmt.Errorf("error setting table: %w", err)
+				if err := d.Set("table", []any{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
 				break
 			}
 
 			if perm.Resource.Table != nil {
-				if err := d.Set("table", []interface{}{flattenLakeFormationTableResource(perm.Resource.Table)}); err != nil {
-					return fmt.Errorf("error setting table: %w", err)
+				if err := d.Set("table", []any{flattenTableResource(perm.Resource.Table)}); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
 				break
@@ -513,12 +606,12 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	twcSet := false
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 {
 		// since perm list could include Table, get the right one
-		for _, perm := range cleanPermissions {
+		for _, perm := range permissions {
 			if perm.Resource.TableWithColumns != nil {
-				if err := d.Set("table_with_columns", []interface{}{flattenLakeFormationTableWithColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
-					return fmt.Errorf("error setting table_with_columns: %w", err)
+				if err := d.Set("table_with_columns", []any{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting table_with_columns: %s", err)
 				}
 				twcSet = true
 				break
@@ -530,84 +623,66 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("table_with_columns", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.RevokePermissionsInput{
-		Permissions:                flex.ExpandStringList(d.Get("permissions").([]interface{})),
-		PermissionsWithGrantOption: flex.ExpandStringList(d.Get("permissions_with_grant_option").([]interface{})),
-		Principal: &lakeformation.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+		Permissions:                flex.ExpandStringyValueSet[awstypes.Permission](d.Get(names.AttrPermissions).(*schema.Set)),
+		PermissionsWithGrantOption: flex.ExpandStringyValueSet[awstypes.Permission](d.Get("permissions_with_grant_option").(*schema.Set)),
+		Principal: &awstypes.DataLakePrincipal{
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
-		Resource: &lakeformation.Resource{},
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	if _, ok := d.GetOk("catalog_resource"); ok {
-		input.Resource.Catalog = ExpandCatalogResource()
-	}
+	populateResourceForDelete(input, d)
 
-	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandLakeFormationTableWithColumnsResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if input.Resource == nil || reflect.DeepEqual(input.Resource, &lakeformation.Resource{}) {
+	if input.Resource == nil || reflect.DeepEqual(input.Resource, &awstypes.Resource{}) {
 		// if resource is empty, don't delete = it won't delete anything since this is the predicate
 		log.Printf("[WARN] No Lake Formation Resource with permissions to revoke")
-		return nil
+		return diags
 	}
 
-	err := resource.Retry(permissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, permissionsDeleteRetryTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
-		_, err = conn.RevokePermissions(input)
+		_, err = conn.RevokePermissions(ctx, input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "register the S3 path") {
-				return resource.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "register the S3 path") {
+				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return resource.RetryableError(err)
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
+				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access requested permissions") {
-				return resource.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to access requested permissions") {
+				return tfresource.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
+			return tfresource.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.RevokePermissions(input)
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "No permissions revoked. Grantee") {
+		return diags
 	}
 
-	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee") {
-		return nil
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "cannot grant/revoke permission on non-existent column") {
+		return diags
 	}
 
-	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "cannot grant/revoke permission on non-existent column") {
-		return nil
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Cell Filter not found") {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
+		return sdkdiag.AppendErrorf(diags, "unable to revoke LakeFormation Permissions (input: %v): %s", input, err)
 	}
 
 	// Attempted to add a waiter here to wait for delete to complete. However, ListPermissions() returns
@@ -618,174 +693,455 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	// You can't just wait until permissions = 0 because there could be many other unrelated permissions
 	// on the resource and filtering is non-trivial for table with columns.
 
-	err = resource.Retry(permissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err = tfresource.Retry(ctx, permissionsDeleteRetryTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
-		_, err = conn.RevokePermissions(input)
+		_, err = conn.RevokePermissions(ctx, input)
 
-		if !tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee has no") {
-			return resource.RetryableError(err)
+		if !errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "No permissions revoked. Grantee has no") {
+			return tfresource.RetryableError(err)
 		}
 
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.RevokePermissions(input)
-	}
-
-	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee") {
-		return nil
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "No permissions revoked. Grantee") {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
+		return sdkdiag.AppendErrorf(diags, "unable to revoke LakeFormation Permissions (input: %v): %s", input, err)
 	}
 
+	return diags
+}
+
+type PermissionsFilter = tfslices.Predicate[awstypes.PrincipalResourcePermissions]
+
+func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
+	principalIdentifier := d.Get(names.AttrPrincipal).(string)
+
+	if _, ok := d.GetOk("catalog_resource"); ok {
+		return filterCatalogPermissions(principalIdentifier)
+	}
+	if _, ok := d.GetOk("data_cells_filter"); ok {
+		return filterDataCellsFilter(principalIdentifier)
+	}
+	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterDataLocationPermissions(principalIdentifier)
+	}
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterDatabasePermissions(principalIdentifier)
+	}
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterLFTagPermissions(principalIdentifier)
+	}
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterLFTagPolicyPermissions(principalIdentifier)
+	}
+	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterTablePermissions(principalIdentifier, ExpandTableResource(v.([]any)[0].(map[string]any)))
+	}
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		var columnNames []string
+		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
+			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+				columnNames = flex.ExpandStringValueSet(v)
+			}
+		}
+
+		var excludedColumnNames []string
+		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
+			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+				excludedColumnNames = flex.ExpandStringValueSet(v)
+			}
+		}
+
+		var columnWildcard bool
+		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
+			columnWildcard = v.(bool)
+		}
+
+		return filterTableWithColumnsPermissions(principalIdentifier, ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any)), columnNames, excludedColumnNames, columnWildcard)
+	}
 	return nil
 }
 
-func ExpandCatalogResource() *lakeformation.CatalogResource {
-	return &lakeformation.CatalogResource{}
+func populateResourceForCreate(input *lakeformation.GrantPermissionsInput, d *schema.ResourceData) {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource = &awstypes.Resource{
+			TableWithColumns: expandTableColumnsResource(v.([]any)[0].(map[string]any)),
+		}
+	} else {
+		input.Resource = expandResource(d)
+	}
 }
 
-func ExpandDataLocationResource(tfMap map[string]interface{}) *lakeformation.DataLocationResource {
+func populateResourceForRead(input *lakeformation.ListPermissionsInput, d *schema.ResourceData) {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		// can't ListPermissions for TableWithColumns, so use Table instead
+		input.Resource = &awstypes.Resource{
+			Table: ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any)),
+		}
+	} else {
+		input.Resource = expandResource(d)
+	}
+}
+
+func populateResourceForDelete(input *lakeformation.RevokePermissionsInput, d *schema.ResourceData) {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource = &awstypes.Resource{
+			TableWithColumns: expandTableColumnsResource(v.([]any)[0].(map[string]any)),
+		}
+	} else {
+		input.Resource = expandResource(d)
+	}
+}
+
+func expandResource(d *schema.ResourceData) *awstypes.Resource {
+	var resource *awstypes.Resource
+
+	if _, ok := d.GetOk("catalog_resource"); ok {
+		resource = &awstypes.Resource{
+			Catalog: ExpandCatalogResource(),
+		}
+	} else if v, ok := d.GetOk("data_cells_filter"); ok {
+		resource = &awstypes.Resource{
+			DataCellsFilter: ExpandDataCellsFilter(v.([]any)),
+		}
+	} else if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		resource = &awstypes.Resource{
+			DataLocation: ExpandDataLocationResource(v.([]any)[0].(map[string]any)),
+		}
+	} else if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		resource = &awstypes.Resource{
+			Database: ExpandDatabaseResource(v.([]any)[0].(map[string]any)),
+		}
+	} else if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		resource = &awstypes.Resource{
+			LFTag: ExpandLFTagKeyResource(v.([]any)[0].(map[string]any)),
+		}
+	} else if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		resource = &awstypes.Resource{
+			LFTagPolicy: ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any)),
+		}
+	} else if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		resource = &awstypes.Resource{
+			Table: ExpandTableResource(v.([]any)[0].(map[string]any)),
+		}
+	}
+
+	return resource
+}
+
+func ExpandCatalogResource() *awstypes.CatalogResource {
+	return &awstypes.CatalogResource{}
+}
+
+func ExpandDataCellsFilter(in []any) *awstypes.DataCellsFilterResource {
+	if len(in) == 0 {
+		return nil
+	}
+
+	m := in[0].(map[string]any)
+	var out awstypes.DataCellsFilterResource
+
+	if v, ok := m[names.AttrDatabaseName].(string); ok && v != "" {
+		out.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := m[names.AttrName].(string); ok && v != "" {
+		out.Name = aws.String(v)
+	}
+
+	if v, ok := m["table_catalog_id"].(string); ok && v != "" {
+		out.TableCatalogId = aws.String(v)
+	}
+
+	if v, ok := m[names.AttrTableName].(string); ok && v != "" {
+		out.TableName = aws.String(v)
+	}
+
+	return &out
+}
+
+func flattenDataCellsFilter(in *awstypes.DataCellsFilterResource) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		names.AttrDatabaseName: aws.ToString(in.DatabaseName),
+		names.AttrName:         aws.ToString(in.Name),
+		"table_catalog_id":     aws.ToString(in.TableCatalogId),
+		names.AttrTableName:    aws.ToString(in.TableName),
+	}
+
+	return []any{m}
+}
+
+func ExpandDataLocationResource(tfMap map[string]any) *awstypes.DataLocationResource {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &lakeformation.DataLocationResource{}
+	apiObject := &awstypes.DataLocationResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.ResourceArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenLakeFormationDataLocationResource(apiObject *lakeformation.DataLocationResource) map[string]interface{} {
+func flattenDataLocationResource(apiObject *awstypes.DataLocationResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.ResourceArn; v != nil {
-		tfMap["arn"] = aws.StringValue(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func ExpandDatabaseResource(tfMap map[string]interface{}) *lakeformation.DatabaseResource {
+func ExpandDatabaseResource(tfMap map[string]any) *awstypes.DatabaseResource {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &lakeformation.DatabaseResource{}
+	apiObject := &awstypes.DatabaseResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenLakeFormationDatabaseResource(apiObject *lakeformation.DatabaseResource) map[string]interface{} {
+func flattenDatabaseResource(apiObject *awstypes.DatabaseResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func ExpandTableResource(tfMap map[string]interface{}) *lakeformation.TableResource {
+func ExpandLFTagPolicyResource(tfMap map[string]any) *awstypes.LFTagPolicyResource {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &lakeformation.TableResource{}
+	apiObject := &awstypes.LFTagPolicyResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Expression = ExpandLFTagExpression(v.List())
+	}
+
+	if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
+		apiObject.ResourceType = awstypes.ResourceType(v)
+	}
+
+	return apiObject
+}
+
+func ExpandLFTagExpression(expression []any) []awstypes.LFTag {
+	tagSlice := []awstypes.LFTag{}
+	for _, element := range expression {
+		elementMap := element.(map[string]any)
+
+		tag := awstypes.LFTag{
+			TagKey:    aws.String(elementMap[names.AttrKey].(string)),
+			TagValues: flex.ExpandStringValueSet(elementMap[names.AttrValues].(*schema.Set)),
+		}
+
+		tagSlice = append(tagSlice, tag)
+	}
+
+	return tagSlice
+}
+
+func flattenLFTagPolicyResource(apiObject *awstypes.LFTagPolicyResource) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
+	}
+
+	if v := apiObject.Expression; v != nil {
+		tfMap[names.AttrExpression] = flattenLFTagExpression(v)
+	}
+
+	if v := apiObject.ResourceType; v != "" {
+		tfMap[names.AttrResourceType] = string(v)
+	}
+
+	return tfMap
+}
+
+func flattenLFTagExpression(ts []awstypes.LFTag) []map[string]any {
+	tagSlice := make([]map[string]any, len(ts))
+	if len(ts) > 0 {
+		for i, t := range ts {
+			tag := make(map[string]any)
+
+			if v := aws.ToString(t.TagKey); v != "" {
+				tag[names.AttrKey] = v
+			}
+
+			if v := flex.FlattenStringValueList(t.TagValues); v != nil {
+				tag[names.AttrValues] = v
+			}
+
+			tagSlice[i] = tag
+		}
+	}
+
+	return tagSlice
+}
+
+func ExpandLFTagKeyResource(tfMap map[string]any) *awstypes.LFTagKeyResource {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.LFTagKeyResource{}
+
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+		apiObject.TagKey = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v != nil {
+		apiObject.TagValues = flex.ExpandStringValueSet(v)
+	}
+
+	return apiObject
+}
+
+func flattenLFTagKeyResource(apiObject *awstypes.LFTagKeyResource) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
+	}
+
+	if v := apiObject.TagKey; v != nil {
+		tfMap[names.AttrKey] = aws.ToString(v)
+	}
+
+	if v := apiObject.TagValues; v != nil {
+		tfMap[names.AttrValues] = flex.FlattenStringValueSet(v)
+	}
+
+	return tfMap
+}
+
+func ExpandTableResource(tfMap map[string]any) *awstypes.TableResource {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.TableResource{}
+
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
 	if v, ok := tfMap["wildcard"].(bool); ok && v {
-		apiObject.TableWildcard = &lakeformation.TableWildcard{}
+		apiObject.TableWildcard = &awstypes.TableWildcard{}
 	}
 
 	return apiObject
 }
 
-func ExpandTableWithColumnsResourceAsTable(tfMap map[string]interface{}) *lakeformation.TableResource {
+func ExpandTableWithColumnsResourceAsTable(tfMap map[string]any) *awstypes.TableResource {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &lakeformation.TableResource{}
+	apiObject := &awstypes.TableResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenLakeFormationTableResource(apiObject *lakeformation.TableResource) map[string]interface{} {
+func flattenTableResource(apiObject *awstypes.TableResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.StringValue(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		if aws.StringValue(v) != TableNameAllTables || apiObject.TableWildcard == nil {
-			tfMap["name"] = aws.StringValue(v)
+		if aws.ToString(v) != TableNameAllTables || apiObject.TableWildcard == nil {
+			tfMap[names.AttrName] = aws.ToString(v)
 		}
 	}
 
@@ -796,70 +1152,70 @@ func flattenLakeFormationTableResource(apiObject *lakeformation.TableResource) m
 	return tfMap
 }
 
-func expandLakeFormationTableWithColumnsResource(tfMap map[string]interface{}) *lakeformation.TableWithColumnsResource {
+func expandTableColumnsResource(tfMap map[string]any) *awstypes.TableWithColumnsResource {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &lakeformation.TableWithColumnsResource{}
+	apiObject := &awstypes.TableWithColumnsResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
 	if v, ok := tfMap["column_names"]; ok {
 		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-			apiObject.ColumnNames = flex.ExpandStringSet(v)
+			apiObject.ColumnNames = flex.ExpandStringValueSet(v)
 		}
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
 	if v, ok := tfMap["excluded_column_names"]; ok {
 		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-			apiObject.ColumnWildcard = &lakeformation.ColumnWildcard{
-				ExcludedColumnNames: flex.ExpandStringSet(v),
+			apiObject.ColumnWildcard = &awstypes.ColumnWildcard{
+				ExcludedColumnNames: flex.ExpandStringValueSet(v),
 			}
 		}
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
 	if v, ok := tfMap["wildcard"].(bool); ok && v && apiObject.ColumnWildcard == nil {
-		apiObject.ColumnWildcard = &lakeformation.ColumnWildcard{}
+		apiObject.ColumnWildcard = &awstypes.ColumnWildcard{}
 	}
 
 	return apiObject
 }
 
-func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.TableWithColumnsResource) map[string]interface{} {
+func flattenTableColumnsResource(apiObject *awstypes.TableWithColumnsResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
-	tfMap["column_names"] = flex.FlattenStringSet(apiObject.ColumnNames)
+	tfMap["column_names"] = flex.FlattenStringValueSet(apiObject.ColumnNames)
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.StringValue(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ColumnWildcard; v != nil {
 		tfMap["wildcard"] = true
-		tfMap["excluded_column_names"] = flex.FlattenStringSet(v.ExcludedColumnNames)
+		tfMap["excluded_column_names"] = flex.FlattenStringValueSet(v.ExcludedColumnNames)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -868,31 +1224,31 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 // This only happens in very specific situations:
 // (Select) TWC + ColumnWildcard              = (Select) Table
 // (Select) TWC + ColumnWildcard + ALL_TABLES = (Select) Table + TableWildcard
-func flattenLakeFormationTableWithColumnsResourceAsTable(apiObject *lakeformation.TableWithColumnsResource) map[string]interface{} {
+func flattenTableColumnsResourceAsTable(apiObject *awstypes.TableWithColumnsResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.StringValue(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
-	if v := apiObject.Name; v != nil && aws.StringValue(v) == TableNameAllTables && apiObject.ColumnWildcard != nil {
+	if v := apiObject.Name; v != nil && aws.ToString(v) == TableNameAllTables && apiObject.ColumnWildcard != nil {
 		tfMap["wildcard"] = true
 	} else if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
+func flattenResourcePermissions(apiObjects []awstypes.PrincipalResourcePermissions) []string {
 	if apiObjects == nil {
 		return nil
 	}
@@ -901,14 +1257,16 @@ func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResour
 
 	for _, resourcePermission := range apiObjects {
 		for _, permission := range resourcePermission.Permissions {
-			tfList = append(tfList, aws.StringValue(permission))
+			tfList = append(tfList, string(permission))
 		}
 	}
+
+	slices.Sort(tfList)
 
 	return tfList
 }
 
-func flattenLakeFormationGrantPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
+func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions) []string {
 	if apiObjects == nil {
 		return nil
 	}
@@ -917,9 +1275,19 @@ func flattenLakeFormationGrantPermissions(apiObjects []*lakeformation.PrincipalR
 
 	for _, resourcePermission := range apiObjects {
 		for _, grantPermission := range resourcePermission.PermissionsWithGrantOption {
-			tfList = append(tfList, aws.StringValue(grantPermission))
+			tfList = append(tfList, string(grantPermission))
 		}
 	}
 
+	slices.Sort(tfList)
+
 	return tfList
+}
+
+func includePrincipalIdentifierInList(principalIdentifier string) bool {
+	arn, err := arn.Parse(principalIdentifier)
+	if err != nil {
+		return true
+	}
+	return !(arn.Service == "identitystore" && strings.HasPrefix(arn.Resource, "group/"))
 }

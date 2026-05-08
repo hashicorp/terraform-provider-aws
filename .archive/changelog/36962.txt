@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_applicationinsights_application: Change `resource_group_name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
+
+```release-note:enhancement
+resource/aws_ec2_traffic_mirror_session: Mark `packet_length` as Computed
+```

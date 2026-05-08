@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appsync_graphql_api: Add `introspection_config`, `query_depth_limit`, and `resolver_count_limit` arguments
+```

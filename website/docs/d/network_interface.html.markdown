@@ -1,12 +1,12 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_interface"
 description: |-
   Get information on a Network Interface resource.
 ---
 
-# aws_network_interface
+# Data Source: aws_network_interface
 
 Use this data source to get information about a Network Interface.
 
@@ -20,49 +20,65 @@ data "aws_network_interface" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `id` – (Optional) The identifier for the network interface.
-* `filter` – (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `id` - (Optional) Identifier for the network interface.
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
 
-## Attributes Reference
+## Attribute Reference
 
-See the [Network Interface](/docs/providers/aws/r/network_interface.html) for details on the returned attributes.
+This data source exports the following attributes in addition to the arguments above:
 
-Additionally, the following attributes are exported:
-
-* `arn` - The ARN of the network interface.
-* `association` - The association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.
-* `availability_zone` - The Availability Zone.
+* `arn` - ARN of the network interface.
+* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See [association](#association) below.
+* `attachment` - Attachment of the ENI. See [attachment](#attachment) below.
+* `availability_zone` - Availability Zone.
+* `ena_srd_specification` - ENA Express configuration for the network interface. See [ena_srd_specification](#ena_srd_specification) below.
 * `description` - Description of the network interface.
-* `interface_type` - The type of interface.
+* `interface_type` - Type of interface.
 * `ipv6_addresses` - List of IPv6 addresses to assign to the ENI.
-* `mac_address` - The MAC address.
-* `owner_id` - The AWS account ID of the owner of the network interface.
-* `private_dns_name` - The private DNS name.
-* `private_ip` - The private IPv4 address of the network interface within the subnet.
-* `private_ips` - The private IPv4 addresses associated with the network interface.
-* `requester_id` - The ID of the entity that launched the instance on your behalf.
-* `security_groups` - The list of security groups for the network interface.
-* `subnet_id` - The ID of the subnet.
-* `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
+* `mac_address` - MAC address.
+* `owner_id` - AWS account ID of the owner of the network interface.
+* `private_dns_name` - Private DNS name.
+* `private_ip` - Private IPv4 address of the network interface within the subnet.
+* `private_ips` - Private IPv4 addresses associated with the network interface.
+* `requester_id` - ID of the entity that launched the instance on your behalf.
+* `security_groups` - List of security groups for the network interface.
+* `subnet_id` - ID of the subnet.
+* `outpost_arn` - ARN of the Outpost.
 * `tags` - Any tags assigned to the network interface.
-* `vpc_id` - The ID of the VPC.
+* `vpc_id` - ID of the VPC.
 
 ### `association`
 
-* `allocation_id` - The allocation ID.
-* `association_id` - The association ID.
-* `carrier_ip` - The carrier IP address associated with the network interface. This attribute is only set when the network interface is in a subnet which is associated with a Wavelength Zone.
-* `customer_owned_ip` - The customer-owned IP address.
-* `ip_owner_id` - The ID of the Elastic IP address owner.
-* `public_dns_name` - The public DNS name.
-* `public_ip` - The address of the Elastic IP address bound to the network interface.
+* `allocation_id` - Allocation ID.
+* `association_id` - Association ID.
+* `carrier_ip` - Carrier IP address associated with the network interface. This attribute is only set when the network interface is in a subnet which is associated with a Wavelength Zone.
+* `customer_owned_ip` - Customer-owned IP address.
+* `ip_owner_id` - ID of the Elastic IP address owner.
+* `public_dns_name` - Public DNS name.
+* `public_ip` - Address of the Elastic IP address bound to the network interface.
 
-## Import
+### `attachment`
 
-Elastic Network Interfaces can be imported using the `id`, e.g.,
+* `attachment_id` - ID of the network interface attachment.
+* `device_index` - Device index of the network interface attachment on the instance.
+* `instance_id` - ID of the instance.
+* `instance_owner_id` - AWS account ID of the owner of the instance.
+* `network_card_index` - Index of the network card.
 
-```
-$ terraform import aws_network_interface.test eni-12345
-```
+### `ena_srd_specification`
+
+* `ena_srd_enabled` - Whether ENA Express is enabled for the network interface.
+* `ena_srd_udp_specification` - ENA Express UDP configuration. See below.
+
+#### `ena_srd_udp_specification`
+
+* `ena_srd_udp_enabled` - Whether UDP traffic uses ENA Express.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

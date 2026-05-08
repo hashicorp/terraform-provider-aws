@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWS Provider Examples
 
 This directory contains a set of examples of using various AWS services with
@@ -9,9 +12,9 @@ the example's own directory.
 
 For example:
 
-```
-$ git clone https://github.com/hashicorp/terraform-provider-aws
-$ cd terraform-provider-aws/examples/two-tier
-$ terraform apply
+```console
+% git clone https://github.com/hashicorp/terraform-provider-aws
+% cd terraform-provider-aws/examples/two-tier
+% terraform apply
 ...
 ```

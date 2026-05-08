@@ -1,0 +1,205 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+# Provider Scaffolding (skaff)
+
+`skaff` is a Terraform AWS Provider scaffolding command line tool.
+It generates resource, data source, or function source files, along with test files which adhere to the latest best practices.
+These files are heavily commented with instructions, serving as the best way to get started with provider development.
+
+## Overview workflow steps
+
+1. Figure out what you're trying to do:
+    * Resource, data source, or function?
+    * [Name it](naming.md).
+    !!! tip
+        Net-new resources should be implemented with Terraform Plugin Framework (i.e. the default `skaff` settings).
+        See [Terraform Plugin Development Packages](terraform-plugin-development-packages.md) and [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
+1. Use `skaff` to generate provider code.
+1. Go through the generated code, customizing as necessary.
+1. Run, test, refine.
+1. Remove "TIP" comments.
+1. Submit a pull request.
+
+## Running `skaff`
+
+1. Clone the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws) repository.
+1. Install `skaff`.
+
+    ```sh
+    make skaff
+    ```
+
+1. Change into the appropriate directory.
+    - For resources, data sources, ephemeral resources, and list resources this is the service directory where the new entity will reside, e.g. `internal/service/mq`.
+    - For functions, this is `internal/functions`.
+1. Generate the code scaffolding. For example,
+    - `skaff resource --name BrokerReboot`.
+    - `skaff datasource --name IAMRole`.
+    - `skaff function --name ARNParse`.
+    - `skaff list --name EBSVolume`.
+
+To get help, enter `skaff` without arguments.
+
+## Usage
+
+### Help
+
+```console
+skaff --help
+```
+
+```
+Create scaffolding for the Terraform AWS Provider
+
+Usage:
+  skaff [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  datasource  Create scaffolding for a data source
+  ephemeral   Create scaffolding for an ephemeral resource
+  function    Create scaffolding for a function
+  help        Help about any command
+  list        Create scaffolding for a list resource
+  resource    Create scaffolding for a resource
+
+Flags:
+  -h, --help   help for skaff
+```
+
+### Autocompletion
+
+Generate the autocompletion script for `skaff` for the specified shell.
+
+```console
+skaff completion --help
+```
+
+```
+Usage:
+  skaff completion [command]
+
+Available Commands:
+  bash        Generate the autocompletion script for bash
+  fish        Generate the autocompletion script for fish
+  powershell  Generate the autocompletion script for powershell
+  zsh         Generate the autocompletion script for zsh
+
+Flags:
+  -h, --help   help for completion
+```
+
+### Data Source
+
+Create scaffolding for a data source.
+
+```console
+skaff datasource --help
+```
+
+```
+Create scaffolding for a data source
+
+Usage:
+  skaff datasource [flags]
+
+Flags:
+  -c, --clear-comments     do not include instructional comments in source
+  -f, --force              force creation, overwriting existing files
+  -h, --help               help for datasource
+  -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
+  -n, --name string        name of the entity
+  -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
+```
+
+### Ephemeral Resource
+
+Create scaffolding for an ephemeral resource.
+
+```console
+% skaff ephemeral --help
+```
+
+```
+Create scaffolding for an ephemeral resource
+
+Usage:
+  skaff ephemeral [flags]
+
+Flags:
+  -c, --clear-comments     do not include instructional comments in source
+  -f, --force              force creation, overwriting existing files
+  -h, --help               help for ephemeral
+  -n, --name string        name of the entity
+  -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
+```
+
+### Function
+
+Create scaffolding for a function.
+
+```console
+skaff function --help
+```
+
+```
+Create scaffolding for a function
+
+Usage:
+  skaff function [flags]
+
+Flags:
+  -c, --clear-comments       do not include instructional comments in source
+  -d, --description string   description of the function
+  -f, --force                force creation, overwriting existing files
+  -h, --help                 help for function
+  -n, --name string          name of the function
+  -s, --snakename string     if skaff doesn't get it right, explicitly give name in snake case (e.g., arn_build)
+```
+
+### List Resource
+
+Create scaffolding for a list resource.
+
+```console
+% skaff list --help
+```
+
+```
+Create scaffolding for a list resource
+
+Usage:
+  skaff list [flags]
+
+Flags:
+  -c, --clear-comments     do not include instructional comments in source
+  -f, --force              force creation, overwriting existing files
+  -p, --framework          use scaffolding for resources written using framework
+  -h, --help               help for list
+  -n, --name string        name of the entity
+  -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
+```
+
+### Resource
+
+Create scaffolding for a resource.
+
+```console
+skaff resource --help
+```
+
+```
+Create scaffolding for a resource
+
+Usage:
+  skaff resource [flags]
+
+Flags:
+  -c, --clear-comments     do not include instructional comments in source
+  -f, --force              force creation, overwriting existing files
+  -h, --help               help for resource
+  -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
+  -n, --name string        name of the entity
+  -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
+```

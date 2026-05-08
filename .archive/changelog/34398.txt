@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_finspace_kx_cluster: Increase default create and update timeouts to 4 hours to allow for increased startup times with large volumes of cached data
+```
+```release-note:enhancement
+resource/aws_finspace_kx_environment: Increase default delete timeout to 75 minutes
+```

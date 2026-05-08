@@ -1,50 +1,118 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package guardduty
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDetector() *schema.Resource {
+// @SDKResource("aws_guardduty_detector", name="Detector")
+// @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
+// @Testing(generator=false)
+func resourceDetector() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDetectorCreate,
-		Read:   resourceDetectorRead,
-		Update: resourceDetectorUpdate,
-		Delete: resourceDetectorDelete,
+		CreateWithoutTimeout: resourceDetectorCreate,
+		ReadWithoutTimeout:   resourceDetectorRead,
+		UpdateWithoutTimeout: resourceDetectorUpdate,
+		DeleteWithoutTimeout: resourceDetectorDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"datasources": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeList,
+				MaxItems:   1,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "datasources is deprecated. Use aws_guardduty_detector_feature resources instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"kubernetes": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"audit_logs": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enable": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"malware_protection": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scan_ec2_instance_with_findings": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ebs_volumes": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"enable": {
+																Type:     schema.TypeBool,
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"s3_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -62,200 +130,191 @@ func ResourceDetector() *schema.Resource {
 					},
 				},
 			},
-
 			"enable": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			// finding_publishing_frequency is marked as Computed:true since
 			// GuardDuty member accounts inherit setting from master account
 			"finding_publishing_frequency": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FindingPublishingFrequency](),
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDetectorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
+		Tags:   getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("datasources"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DataSources = expandDataSourceConfigurations(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
-		input.FindingPublishingFrequency = aws.String(v.(string))
+		input.FindingPublishingFrequency = awstypes.FindingPublishingFrequency(v.(string))
 	}
 
-	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DataSources = expandGuardDutyDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
-	}
+	output, err := conn.CreateDetector(ctx, &input)
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
-	output, err := conn.CreateDetector(&input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty Detector failed: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Detector: %s", err)
 	}
-	d.SetId(aws.StringValue(output.DetectorId))
 
-	return resourceDetectorRead(d, meta)
+	d.SetId(aws.ToString(output.DetectorId))
+
+	return append(diags, resourceDetectorRead(ctx, d, meta)...)
 }
 
-func resourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
-	input := guardduty.GetDetectorInput{
-		DetectorId: aws.String(d.Id()),
+	gdo, err := findDetectorByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] GuardDuty Detector (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	log.Printf("[DEBUG] Reading GuardDuty Detector: %s", input)
-	gdo, err := conn.GetDetector(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Reading GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("detector/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
-
-	d.Set("account_id", meta.(*conns.AWSClient).AccountID)
-
+	d.Set(names.AttrAccountID, c.AccountID(ctx))
+	d.Set(names.AttrARN, detectorARN(ctx, c, d.Id()))
 	if gdo.DataSources != nil {
-		if err := d.Set("datasources", []interface{}{flattenGuardDutyDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
-			return fmt.Errorf("error setting datasources: %w", err)
+		if err := d.Set("datasources", []any{flattenDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting datasources: %s", err)
 		}
 	} else {
 		d.Set("datasources", nil)
 	}
-
-	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
+	d.Set("enable", gdo.Status == awstypes.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
-	tags := KeyValueTags(gdo.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, gdo.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := guardduty.UpdateDetectorInput{
 			DetectorId:                 aws.String(d.Id()),
 			Enable:                     aws.Bool(d.Get("enable").(bool)),
-			FindingPublishingFrequency: aws.String(d.Get("finding_publishing_frequency").(string)),
+			FindingPublishingFrequency: awstypes.FindingPublishingFrequency(d.Get("finding_publishing_frequency").(string)),
 		}
 
 		if d.HasChange("datasources") {
-			input.DataSources = expandGuardDutyDataSourceConfigurations(d.Get("datasources").([]interface{})[0].(map[string]interface{}))
+			input.DataSources = expandDataSourceConfigurations(d.Get("datasources").([]any)[0].(map[string]any))
 		}
 
-		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
-		_, err := conn.UpdateDetector(&input)
+		_, err := conn.UpdateDetector(ctx, &input)
+
 		if err != nil {
-			return fmt.Errorf("Updating GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating GuardDuty Detector (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceDetectorRead(d, meta)
+	return append(diags, resourceDetectorRead(ctx, d, meta)...)
 }
 
-func resourceDetectorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	input := &guardduty.DeleteDetectorInput{
+	log.Printf("[DEBUG] Deleting GuardDuty Detector: %s", d.Id())
+	input := guardduty.DeleteDetectorInput{
 		DetectorId: aws.String(d.Id()),
 	}
+	const (
+		// Maximum amount of time to wait for membership to propagate
+		// When removing Organization Admin Accounts, there is eventual
+		// consistency even after the account is no longer listed.
+		// Reference error message:
+		// BadRequestException: The request is rejected because the current account cannot delete detector while it has invited or associated members.
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.BadRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteDetector(ctx, &input)
+	}, "cannot delete detector while it has invited or associated members")
 
-	err := resource.Retry(membershipPropagationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteDetector(input)
-
-		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDetector(input)
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting GuardDuty Detector (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Detector (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandGuardDutyDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.DataSourceConfigurations {
+func expandDataSourceConfigurations(tfMap map[string]any) *awstypes.DataSourceConfigurations {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &guardduty.DataSourceConfigurations{}
+	apiObject := &awstypes.DataSourceConfigurations{}
 
-	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3Logs = expandGuardDutyS3LogsConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["kubernetes"].([]any); ok && len(v) > 0 {
+		apiObject.Kubernetes = expandKubernetesConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["malware_protection"].([]any); ok && len(v) > 0 {
+		apiObject.MalwareProtection = expandMalwareProtectionConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3_logs"].([]any); ok && len(v) > 0 {
+		apiObject.S3Logs = expandS3LogsConfiguration(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandGuardDutyS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsConfiguration {
+func expandKubernetesConfiguration(tfMap map[string]any) *awstypes.KubernetesConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &guardduty.S3LogsConfiguration{}
+	l, ok := tfMap["audit_logs"].([]any)
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	return &awstypes.KubernetesConfiguration{
+		AuditLogs: expandKubernetesAuditLogsConfiguration(m),
+	}
+}
+
+func expandKubernetesAuditLogsConfiguration(tfMap map[string]any) *awstypes.KubernetesAuditLogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.KubernetesAuditLogsConfiguration{}
 
 	if v, ok := tfMap["enable"].(bool); ok {
 		apiObject.Enable = aws.Bool(v)
@@ -264,30 +323,235 @@ func expandGuardDutyS3LogsConfiguration(tfMap map[string]interface{}) *guardduty
 	return apiObject
 }
 
-func flattenGuardDutyDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
+func expandMalwareProtectionConfiguration(tfMap map[string]any) *awstypes.MalwareProtectionConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["scan_ec2_instance_with_findings"].([]any)
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	return &awstypes.MalwareProtectionConfiguration{
+		ScanEc2InstanceWithFindings: expandScanEc2InstanceWithFindings(m),
+	}
+}
+
+func expandScanEc2InstanceWithFindings(tfMap map[string]any) *awstypes.ScanEc2InstanceWithFindings { // nosemgrep:ci.caps3-in-func-name
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["ebs_volumes"].([]any)
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.ScanEc2InstanceWithFindings{
+		EbsVolumes: expandMalwareProtectionEBSVolumesConfiguration(m),
+	}
+
+	return apiObject
+}
+
+func expandMalwareProtectionEBSVolumesConfiguration(tfMap map[string]any) *bool {
+	if tfMap == nil {
+		return nil
+	}
+
+	var apiObject *bool
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandS3LogsConfiguration(tfMap map[string]any) *awstypes.S3LogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.S3LogsConfiguration{}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenDataSourceConfigurationsResult(apiObject *awstypes.DataSourceConfigurationsResult) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
+	if v := apiObject.Kubernetes; v != nil {
+		tfMap["kubernetes"] = []any{flattenKubernetesConfiguration(v)}
+	}
+
+	if v := apiObject.MalwareProtection; v != nil {
+		tfMap["malware_protection"] = []any{flattenMalwareProtectionConfiguration(v)}
+	}
 
 	if v := apiObject.S3Logs; v != nil {
-		tfMap["s3_logs"] = []interface{}{flattenGuardDutyS3LogsConfigurationResult(v)}
+		tfMap["s3_logs"] = []any{flattenS3LogsConfigurationResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenGuardDutyS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfigurationResult) map[string]interface{} {
+func flattenKubernetesConfiguration(apiObject *awstypes.KubernetesConfigurationResult) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if v := apiObject.Status; v != nil {
-		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	if v := apiObject.AuditLogs; v != nil {
+		tfMap["audit_logs"] = []any{flattenKubernetesAuditLogsConfiguration(v)}
 	}
 
 	return tfMap
+}
+
+func flattenKubernetesAuditLogsConfiguration(apiObject *awstypes.KubernetesAuditLogsConfigurationResult) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap["enable"] = apiObject.Status == awstypes.DataSourceStatusEnabled
+
+	return tfMap
+}
+
+func flattenMalwareProtectionConfiguration(apiObject *awstypes.MalwareProtectionConfigurationResult) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
+		tfMap["scan_ec2_instance_with_findings"] = []any{flattenScanEc2InstanceWithFindingsResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenScanEc2InstanceWithFindingsResult(apiObject *awstypes.ScanEc2InstanceWithFindingsResult) map[string]any { // nosemgrep:ci.caps3-in-func-name
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EbsVolumes; v != nil {
+		tfMap["ebs_volumes"] = []any{flattenEbsVolumesResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenEbsVolumesResult(apiObject *awstypes.EbsVolumesResult) map[string]any { // nosemgrep:ci.caps3-in-func-name
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap["enable"] = apiObject.Status == awstypes.DataSourceStatusEnabled
+
+	return tfMap
+}
+
+func flattenS3LogsConfigurationResult(apiObject *awstypes.S3LogsConfigurationResult) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap["enable"] = apiObject.Status == awstypes.DataSourceStatusEnabled
+
+	return tfMap
+}
+
+func findDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.GetDetectorOutput, error) {
+	input := guardduty.GetDetectorInput{
+		DetectorId: aws.String(id),
+	}
+
+	return findDetector(ctx, conn, &input)
+}
+
+func findDetector(ctx context.Context, conn *guardduty.Client, input *guardduty.GetDetectorInput) (*guardduty.GetDetectorOutput, error) {
+	output, err := conn.GetDetector(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+// findDetectorID returns the ID of the current account's active GuardDuty detector.
+func findDetectorID(ctx context.Context, conn *guardduty.Client) (*string, error) {
+	output, err := findDetectorIDs(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDetectorIDs(ctx context.Context, conn *guardduty.Client) ([]string, error) {
+	var (
+		input  guardduty.ListDetectorsInput
+		output []string
+	)
+
+	pages := guardduty.NewListDetectorsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DetectorIds...)
+	}
+
+	return output, nil
+}
+
+func detectorARN(ctx context.Context, c *conns.AWSClient, detectorID string) string {
+	return c.RegionalARN(ctx, "guardduty", "detector/"+detectorID)
 }

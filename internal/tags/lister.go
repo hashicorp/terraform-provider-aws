@@ -1,0 +1,14 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package tags
+
+import "context"
+
+type ServiceTagLister interface {
+	ListTags(ctx context.Context, meta any, identifier string) error
+}
+
+type ResourceTypeTagLister interface {
+	ListTags(ctx context.Context, meta any, identifier, resourceType string) error
+}

@@ -1,0 +1,67 @@
+```release-note:note
+resource/aws_opsworks_application: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_custom_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_ecs_cluster_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_ganglia_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_haproxy_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_instance: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_java_app_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_memcached_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_mysql_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_nodejs_app_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_permission: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_php_app_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_rails_app_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_rds_db_instance: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_stack: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_static_web_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```
+
+```release-note:note
+resource/aws_opsworks_user_profile: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version.
+```

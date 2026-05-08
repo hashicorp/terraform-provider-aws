@@ -1,29 +1,44 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssm
 
 import (
+	"context"
+	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceResourceDataSync() *schema.Resource {
+// @SDKResource("aws_ssm_resource_data_sync", name="Resource Data Sync")
+func resourceResourceDataSync() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourceDataSyncCreate,
-		Read:   resourceResourceDataSyncRead,
-		Delete: resourceResourceDataSyncDelete,
+		CreateWithoutTimeout: resourceResourceDataSyncCreate,
+		ReadWithoutTimeout:   resourceResourceDataSyncRead,
+		DeleteWithoutTimeout: resourceResourceDataSyncDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -35,31 +50,34 @@ func ResourceResourceDataSync() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"prefix": {
+						names.AttrKMSKeyARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"region": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+						names.AttrRegion: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidRegionName,
 						},
 						"sync_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  ssm.ResourceDataSyncS3FormatJsonSerDe,
-							ForceNew: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							Default:          awstypes.ResourceDataSyncS3FormatJsonSerde,
+							ValidateDiagFunc: enum.Validate[awstypes.ResourceDataSyncS3Format](),
 						},
 						"destination_data_sharing_type": {
 							Type:     schema.TypeString,
@@ -73,105 +91,128 @@ func ResourceResourceDataSync() *schema.Resource {
 	}
 }
 
-func resourceResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+
+	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreateResourceDataSyncInput{
-		S3Destination: expandSsmResourceDataSyncS3Destination(d),
-		SyncName:      aws.String(d.Get("name").(string)),
+		S3Destination: expandResourceDataSyncS3Destination(d),
+		SyncName:      aws.String(name),
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.CreateResourceDataSync(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateResourceDataSync(input)
-	}
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceDataSyncInvalidConfigurationException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.CreateResourceDataSync(ctx, input)
+	}, "S3 write failed for bucket")
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating SSM Resource Data Sync (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
-	return resourceResourceDataSyncRead(d, meta)
+	d.SetId(name)
+
+	return append(diags, resourceResourceDataSyncRead(ctx, d, meta)...)
 }
 
-func resourceResourceDataSyncRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	syncItem, err := FindResourceDataSyncItem(conn, d.Id())
-	if err != nil {
-		return err
-	}
-	if syncItem == nil {
+	syncItem, err := findResourceDataSyncByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] SSM Resource Data Sync (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
-	}
-	d.Set("name", syncItem.SyncName)
-	d.Set("s3_destination", flattenSsmResourceDataSyncS3Destination(d, syncItem.S3Destination))
-	return nil
-}
-
-func resourceResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-
-	input := &ssm.DeleteResourceDataSyncInput{
-		SyncName: aws.String(d.Get("name").(string)),
+		return diags
 	}
 
-	_, err := conn.DeleteResourceDataSync(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncNotFoundException, "") {
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SSM Resource Data Sync (%s): %s", d.Id(), err)
 	}
-	return nil
+
+	d.Set(names.AttrName, syncItem.SyncName)
+	if err := d.Set("s3_destination", flattenResourceDataSyncS3Destination(d, syncItem.S3Destination)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting s3_destination: %s", err)
+	}
+
+	return diags
 }
 
-func FindResourceDataSyncItem(conn *ssm.SSM, name string) (*ssm.ResourceDataSyncItem, error) {
-	nextToken := ""
-	for {
-		input := &ssm.ListResourceDataSyncInput{}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
-		}
-		resp, err := conn.ListResourceDataSync(input)
+func resourceResourceDataSyncDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+
+	log.Printf("[DEBUG] Deleting SSM Resource Data Sync: %s", d.Id())
+	_, err := conn.DeleteResourceDataSync(ctx, &ssm.DeleteResourceDataSyncInput{
+		SyncName: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.ResourceDataSyncNotFoundException](err) {
+		return diags
+	}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SSM Resource Data Sync (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findResourceDataSyncByName(ctx context.Context, conn *ssm.Client, name string) (*awstypes.ResourceDataSyncItem, error) {
+	input := &ssm.ListResourceDataSyncInput{}
+
+	return findResourceDataSync(ctx, conn, input, func(v *awstypes.ResourceDataSyncItem) bool {
+		return aws.ToString(v.SyncName) == name
+	})
+}
+
+func findResourceDataSync(ctx context.Context, conn *ssm.Client, input *ssm.ListResourceDataSyncInput, filter tfslices.Predicate[*awstypes.ResourceDataSyncItem]) (*awstypes.ResourceDataSyncItem, error) {
+	output, err := findResourceDataSyncs(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findResourceDataSyncs(ctx context.Context, conn *ssm.Client, input *ssm.ListResourceDataSyncInput, filter tfslices.Predicate[*awstypes.ResourceDataSyncItem]) ([]awstypes.ResourceDataSyncItem, error) {
+	var output []awstypes.ResourceDataSyncItem
+
+	pages := ssm.NewListResourceDataSyncPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
-		for _, v := range resp.ResourceDataSyncItems {
-			if *v.SyncName == name {
-				return v, nil
+
+		for _, v := range page.ResourceDataSyncItems {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
-		if resp.NextToken == nil {
-			break
-		}
-		nextToken = *resp.NextToken
 	}
-	return nil, nil
+
+	return output, nil
 }
 
-func flattenSsmResourceDataSyncS3Destination(d *schema.ResourceData, dest *ssm.ResourceDataSyncS3Destination) []interface{} {
-	result := make(map[string]interface{})
-	result["bucket_name"] = *dest.BucketName
-	result["region"] = *dest.Region
-	result["sync_format"] = *dest.SyncFormat
-	if dest.AWSKMSKeyARN != nil {
-		result["kms_key_arn"] = *dest.AWSKMSKeyARN
+func flattenResourceDataSyncS3Destination(d *schema.ResourceData, apiObject *awstypes.ResourceDataSyncS3Destination) []any {
+	tfMap := make(map[string]any)
+
+	tfMap[names.AttrBucketName] = aws.ToString(apiObject.BucketName)
+	tfMap[names.AttrRegion] = aws.ToString(apiObject.Region)
+	tfMap["sync_format"] = apiObject.SyncFormat
+	if apiObject.AWSKMSKeyARN != nil {
+		tfMap[names.AttrKMSKeyARN] = aws.ToString(apiObject.AWSKMSKeyARN)
 	}
-	if dest.Prefix != nil {
-		result["prefix"] = *dest.Prefix
+	if apiObject.Prefix != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
 	}
-	if dest.DestinationDataSharing != nil && dest.DestinationDataSharing.DestinationDataSharingType != nil {
-		result["destination_data_sharing_type"] = *dest.DestinationDataSharing.DestinationDataSharingType
+	if apiObject.DestinationDataSharing != nil && apiObject.DestinationDataSharing.DestinationDataSharingType != nil {
+		tfMap["destination_data_sharing_type"] = *apiObject.DestinationDataSharing.DestinationDataSharingType
 	}
 
 	// Since we can't get the destination_data_sharing_type from the API response, we'll use the value from the configuration..
@@ -182,32 +223,34 @@ func flattenSsmResourceDataSyncS3Destination(d *schema.ResourceData, dest *ssm.R
 			config := s3DestConfig.(map[string]interface{})
 
 			if aws.String(config["destination_data_sharing_type"].(string)) != nil {
-				result["destination_data_sharing_type"] = aws.String(config["destination_data_sharing_type"].(string))
+				tfMap["destination_data_sharing_type"] = aws.String(config["destination_data_sharing_type"].(string))
 			}
 		}
 	}
 
-	return []interface{}{result}
+	return []interface{}{tfMap}
 }
 
-func expandSsmResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDataSyncS3Destination {
-	raw := d.Get("s3_destination").([]interface{})[0].(map[string]interface{})
-	s3dest := &ssm.ResourceDataSyncS3Destination{
-		BucketName: aws.String(raw["bucket_name"].(string)),
-		Region:     aws.String(raw["region"].(string)),
-		SyncFormat: aws.String(raw["sync_format"].(string)),
+func expandResourceDataSyncS3Destination(d *schema.ResourceData) *awstypes.ResourceDataSyncS3Destination {
+	tfMap := d.Get("s3_destination").([]any)[0].(map[string]any)
+	apiObject := &awstypes.ResourceDataSyncS3Destination{
+		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
+		Region:     aws.String(tfMap[names.AttrRegion].(string)),
+		SyncFormat: awstypes.ResourceDataSyncS3Format(tfMap["sync_format"].(string)),
 	}
-	if v, ok := raw["kms_key_arn"].(string); ok && v != "" {
-		s3dest.AWSKMSKeyARN = aws.String(v)
+
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
+		apiObject.AWSKMSKeyARN = aws.String(v)
 	}
-	if v, ok := raw["prefix"].(string); ok && v != "" {
-		s3dest.Prefix = aws.String(v)
+
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
 	}
-	if v, ok := raw["destination_data_sharing_type"].(string); ok && v != "" {
-		destinationDataSharing := ssm.ResourceDataSyncDestinationDataSharing{
+	if v, ok := tfMap["destination_data_sharing_type"].(string); ok && v != "" {
+		destinationDataSharing := awstypes.ResourceDataSyncDestinationDataSharing{
 			DestinationDataSharingType: aws.String(v),
 		}
-		s3dest.DestinationDataSharing = &destinationDataSharing
+		apiObject.DestinationDataSharing = &destinationDataSharing
 	}
-	return s3dest
+	return apiObject
 }

@@ -1,66 +1,132 @@
-//go:build sweep
-// +build sweep
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
 
 package appsync
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appsync_graphql_api", &resource.Sweeper{
-		Name: "aws_appsync_graphql_api",
-		F:    sweepGraphQLAPIs,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_appsync_api", sweepAPIs)
+	awsv2.Register("aws_appsync_graphql_api", sweepGraphQLAPIs, "aws_appsync_domain_name_api_association")
+	awsv2.Register("aws_appsync_domain_name", sweepDomainNames, "aws_appsync_domain_name_api_association")
+	awsv2.Register("aws_appsync_domain_name_api_association", sweepDomainNameAssociations)
 }
 
-func sweepGraphQLAPIs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListApisInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := listAPIsPages(ctx, conn, &input, func(page *appsync.ListApisOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Apis {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAPIResource, client,
+				framework.NewAttribute("api_id", aws.ToString(v.ApiId))))
+		}
+
+		return !lastPage
+	})
+
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AppSyncConn
-
-	input := &appsync.ListGraphqlApisInput{}
-
-	for {
-		output, err := conn.ListGraphqlApis(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping AppSync GraphQL API sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving AppSync GraphQL APIs: %s", err)
-		}
-
-		for _, graphAPI := range output.GraphqlApis {
-			id := aws.StringValue(graphAPI.ApiId)
-			input := &appsync.DeleteGraphqlApiInput{
-				ApiId: graphAPI.ApiId,
-			}
-
-			log.Printf("[INFO] Deleting AppSync GraphQL API %s", id)
-			_, err := conn.DeleteGraphqlApi(input)
-
-			if err != nil {
-				return fmt.Errorf("error deleting AppSync GraphQL API (%s): %s", id, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
+		return nil, smarterr.NewError(err)
 	}
 
-	return nil
+	return sweepResources, nil
+}
+
+func sweepGraphQLAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListGraphqlApisInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := listGraphQLAPIsPages(ctx, conn, &input, func(page *appsync.ListGraphqlApisOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.GraphqlApis {
+			r := resourceGraphQLAPI()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ApiId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	return sweepResources, nil
+}
+
+func sweepDomainNames(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListDomainNamesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := listDomainNamesPages(ctx, conn, &input, func(page *appsync.ListDomainNamesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DomainNameConfigs {
+			r := resourceDomainName()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.DomainName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	return sweepResources, nil
+}
+
+func sweepDomainNameAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListDomainNamesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := listDomainNamesPages(ctx, conn, &input, func(page *appsync.ListDomainNamesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DomainNameConfigs {
+			r := resourceDomainNameAPIAssociation()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.DomainName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	return sweepResources, nil
 }

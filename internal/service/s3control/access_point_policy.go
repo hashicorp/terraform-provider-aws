@@ -1,25 +1,37 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3control
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceAccessPointPolicy() *schema.Resource {
+// @SDKResource("aws_s3control_access_point_policy", name="Access Point Policy")
+func resourceAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccessPointPolicyCreate,
-		Read:   resourceAccessPointPolicyRead,
-		Update: resourceAccessPointPolicyUpdate,
-		Delete: resourceAccessPointPolicyDelete,
+		CreateWithoutTimeout: resourceAccessPointPolicyCreate,
+		ReadWithoutTimeout:   resourceAccessPointPolicyRead,
+		UpdateWithoutTimeout: resourceAccessPointPolicyUpdate,
+		DeleteWithoutTimeout: resourceAccessPointPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAccessPointPolicyImport,
@@ -36,129 +48,141 @@ func ResourceAccessPointPolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 		},
 	}
 }
 
-func resourceAccessPointPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	resourceID, err := AccessPointCreateResourceID(d.Get("access_point_arn").(string))
-
+	resourceID, err := accessPointCreateResourceID(d.Get("access_point_arn").(string))
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	accountID, name, err := AccessPointParseResourceID(resourceID)
-
+	accountID, name, err := accessPointParseResourceID(resourceID)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &s3control.PutAccessPointPolicyInput{
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	input := s3control.PutAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
-		Policy:    aws.String(d.Get("policy").(string)),
+		Policy:    aws.String(policy),
 	}
 
-	log.Printf("[DEBUG] Creating S3 Access Point Policy: %s", input)
-	_, err = conn.PutAccessPointPolicy(input)
+	_, err = conn.PutAccessPointPolicy(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error creating S3 Access Point (%s) Policy: %w", resourceID, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point (%s) Policy: %s", resourceID, err)
 	}
 
 	d.SetId(resourceID)
 
-	return resourceAccessPointPolicyRead(d, meta)
+	return append(diags, resourceAccessPointPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointParseResourceID(d.Id())
-
+	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, status, err := FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+	policy, status, err := findAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Access Point Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Access Point Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Access Point Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("has_public_access_policy", status.IsPublic)
-	d.Set("policy", policy)
+	if policy != "" {
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 
-	return nil
-}
-
-func resourceAccessPointPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
-
-	accountID, name, err := AccessPointParseResourceID(d.Id())
-
-	if err != nil {
-		return err
+		d.Set(names.AttrPolicy, policyToSet)
+	} else {
+		d.Set(names.AttrPolicy, "")
 	}
 
-	input := &s3control.PutAccessPointPolicyInput{
+	return diags
+}
+
+func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+
+	accountID, name, err := accessPointParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	input := s3control.PutAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
-		Policy:    aws.String(d.Get("policy").(string)),
+		Policy:    aws.String(policy),
 	}
 
-	log.Printf("[DEBUG] Updating S3 Access Point Policy: %s", input)
-	_, err = conn.PutAccessPointPolicy(input)
+	_, err = conn.PutAccessPointPolicy(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error updating S3 Access Point Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Access Point Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceAccessPointPolicyRead(d, meta)
+	return append(diags, resourceAccessPointPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointParseResourceID(d.Id())
-
+	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Access Point Policy: %s", d.Id())
-	_, err = conn.DeleteAccessPointPolicy(&s3control.DeleteAccessPointPolicyInput{
+	input := s3control.DeleteAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
-	})
+	}
+	_, err = conn.DeleteAccessPointPolicy(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Access Point Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Access Point Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAccessPointPolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	resourceID, err := AccessPointCreateResourceID(d.Id())
-
+func resourceAccessPointPolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	resourceID, err := accessPointCreateResourceID(d.Id())
 	if err != nil {
 		return nil, err
 	}
@@ -167,4 +191,60 @@ func resourceAccessPointPolicyImport(ctx context.Context, d *schema.ResourceData
 	d.SetId(resourceID)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (string, *types.PolicyStatus, error) {
+	inputGAPP := s3control.GetAccessPointPolicyInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+	outputGAPP, err := conn.GetAccessPointPolicy(ctx, &inputGAPP)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
+		return "", nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if outputGAPP == nil {
+		return "", nil, tfresource.NewEmptyResultError()
+	}
+
+	policy := aws.ToString(outputGAPP.Policy)
+
+	if policy == "" {
+		return "", nil, tfresource.NewEmptyResultError()
+	}
+
+	inputGAPPS := s3control.GetAccessPointPolicyStatusInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+	outputGAPPS, err := conn.GetAccessPointPolicyStatus(ctx, &inputGAPPS)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
+		return "", nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	// directory buckets do not support status checks
+	// these buckets can never be public so setting to false
+	if tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeUnknownError) {
+		return policy, &types.PolicyStatus{IsPublic: false}, nil
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if outputGAPPS == nil || outputGAPPS.PolicyStatus == nil {
+		return "", nil, tfresource.NewEmptyResultError()
+	}
+
+	return policy, outputGAPPS.PolicyStatus, nil
 }

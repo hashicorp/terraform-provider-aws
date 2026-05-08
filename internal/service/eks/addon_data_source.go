@@ -1,19 +1,28 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package eks
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceAddon() *schema.Resource {
+// @SDKDataSource("aws_eks_addon", name="Add-On")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceAddon() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonRead,
 		Schema: map[string]*schema.Schema{
@@ -26,16 +35,20 @@ func DataSourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validClusterName,
 			},
-			"created_at": {
+			"configuration_values": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,39 +56,58 @@ func DataSourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"pod_identity_association": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrRoleARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_account": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"service_account_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	addonName := d.Get("addon_name").(string)
-	clusterName := d.Get("cluster_name").(string)
-	id := AddonCreateResourceID(clusterName, addonName)
-
-	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
+	clusterName := d.Get(names.AttrClusterName).(string)
+	id := addonCreateResourceID(clusterName, addonName)
+	addon, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EKS Add-On (%s): %w", id, err))
+		return sdkdiag.AppendErrorf(diags, "reading EKS Add-On (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 	d.Set("addon_version", addon.AddonVersion)
-	d.Set("arn", addon.AddonArn)
-	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
-	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
+	d.Set(names.AttrARN, addon.AddonArn)
+	d.Set("configuration_values", addon.ConfigurationValues)
+	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
+	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
+	if tfList, err := flattenAddonPodIdentityAssociations(ctx, conn, addon.PodIdentityAssociations, clusterName); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	} else if err := d.Set("pod_identity_association", tfList); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting pod_identity_association: %s", err)
+	}
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	if err := d.Set("tags", KeyValueTags(addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
+	setTagsOut(ctx, addon.Tags)
 
-	return nil
+	return diags
 }

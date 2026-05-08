@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_glacier_vault: Fix erroneous diffs in `access_policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_glacier_vault_lock: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```

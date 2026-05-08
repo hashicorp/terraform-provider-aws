@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_imagebuilder_image_recipe: Fix `block_device_mapping.0.ebs.0.delete_on_termination: '' expected type 'bool', got unconvertible type 'string'` errors
+```

@@ -1,21 +1,23 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// testAccCloudfrontRegionProviderConfig is the Terraform provider configuration for CloudFront region testing
-//
-// Testing CloudFront assumes no other provider configurations
-// are necessary and overwrites the "aws" provider configuration.
-func testAccCloudfrontRegionProviderConfig() string {
-	switch acctest.Partition() {
-	case endpoints.AwsPartitionID:
-		return acctest.ConfigRegionalProvider(endpoints.UsEast1RegionID)
-	case endpoints.AwsCnPartitionID:
-		return acctest.ConfigRegionalProvider(endpoints.CnNorthwest1RegionID)
-	default:
-		return acctest.ConfigRegionalProvider(acctest.Region())
-	}
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.CloudFrontServiceID, testAccErrorCheckSkipFunction)
+}
+
+func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"InvalidParameterValueException: Unsupported source arn",
+		"no matching Route 53 Hosted Zone found",
+	)
 }

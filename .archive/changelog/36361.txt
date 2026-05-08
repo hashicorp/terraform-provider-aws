@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_finspace_kx_cluster: Prevent `command_line_arguments` and `initialization_script` updates from overwriting one another
+```

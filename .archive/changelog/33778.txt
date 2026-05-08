@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_dms_s3_endpoint: Add `glue_catalog_generation` attribute
+```
+
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `s3_settings.glue_catalog_generation` attribute
+```
+
+```release-note:enhancement
+data-source/aws_dms_endpoint: Add `s3_settings.glue_catalog_generation` attribute
+```

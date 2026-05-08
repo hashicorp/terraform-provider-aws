@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_networkfirewall_firewall_transit_gateway_attachment_accepter
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_firewall: Add `availability_zone_change_protection`, `availability_zone_mapping`, and `transit_gateway_id` arguments and `firewall_status.transit_gateway_attachment_sync_states` and `transit_gateway_owner_account_id` attributes
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_firewall: Mark `subnet_mapping` and `vpc_id` as Optional
+```
+
+```release-note:enhancement
+data-source/aws_networkfirewall_firewall: Add `availability_zone_change_protection`, `availability_zone_mapping`, `firewall_status.sync_states.attachment.status_message`, `firewall_status.transit_gateway_attachment_sync_states`, `transit_gateway_id`, and `transit_gateway_owner_account_id` attributes
+```

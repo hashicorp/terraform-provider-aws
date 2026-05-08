@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_user: `engine` is now case insensitive
+```
+
+```release-note:enhancement
+resource/aws_elasticache_user_group: `engine` is now case insensitive
+```

@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_s3control_storage_lens_configuration
+```

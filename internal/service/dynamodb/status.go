@@ -1,36 +1,22 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		result, err := FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+func statusTable(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
 
-		if err != nil {
-			return nil, "", err
-		}
-
-		if result == nil {
-			return nil, "", nil
-		}
-
-		return result, aws.StringValue(result.DestinationStatus), nil
-	}
-}
-
-func statusDynamoDBTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		table, err := FindDynamoDBTableByName(conn, tableName)
-
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -38,73 +24,99 @@ func statusDynamoDBTable(conn *dynamodb.DynamoDB, tableName string) resource.Sta
 			return nil, "", err
 		}
 
-		if table == nil {
-			return nil, "", nil
-		}
-
-		return table, aws.StringValue(table.TableStatus), nil
+		return output, string(output.TableStatus), nil
 	}
 }
 
-func statusDynamoDBReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-			TableName: aws.String(tableName),
-		})
-		if err != nil {
-			return 42, "", err
+func statusTableWarmThroughput(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
 		}
-		log.Printf("[DEBUG] DynamoDB replicas: %s", result.Table.Replicas)
 
-		var targetReplica *dynamodb.ReplicaDescription
+		if err != nil {
+			return nil, "", err
+		}
 
-		for _, replica := range result.Table.Replicas {
-			if aws.StringValue(replica.RegionName) == region {
-				targetReplica = replica
-				break
+		if output == nil || output.WarmThroughput == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.WarmThroughput.Status), nil
+	}
+}
+
+func statusImport(conn *dynamodb.Client, importARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findImportByARN(ctx, conn, importARN)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.ImportStatus), nil
+	}
+}
+
+func statusReplicaUpdate(conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName, optFns...)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, v := range output.Replicas {
+			if aws.ToString(v.RegionName) == region {
+				return output, string(v.ReplicaStatus), nil
 			}
 		}
 
-		if targetReplica == nil {
-			return result, dynamodb.ReplicaStatusCreating, nil
-		}
-
-		return result, aws.StringValue(targetReplica.ReplicaStatus), nil
+		return output, string(awstypes.ReplicaStatusCreating), nil
 	}
 }
 
-func statusDynamoDBReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-			TableName: aws.String(tableName),
-		})
-		if err != nil {
-			return 42, "", err
+func statusReplicaDelete(conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName, optFns...)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
 		}
 
-		log.Printf("[DEBUG] all replicas for waiting: %s", result.Table.Replicas)
-		var targetReplica *dynamodb.ReplicaDescription
+		if err != nil {
+			return nil, "", err
+		}
 
-		for _, replica := range result.Table.Replicas {
-			if aws.StringValue(replica.RegionName) == region {
-				targetReplica = replica
-				break
+		for _, v := range output.Replicas {
+			if aws.ToString(v.RegionName) == region {
+				return output, string(v.ReplicaStatus), nil
 			}
 		}
 
-		if targetReplica == nil {
-			return result, "", nil
-		}
-
-		return result, aws.StringValue(targetReplica.ReplicaStatus), nil
+		return nil, "", nil
 	}
 }
 
-func statusDynamoDBGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		gsi, err := FindDynamoDBGSIByTableNameIndexName(conn, tableName, indexName)
+func statusGSI(conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -112,19 +124,19 @@ func statusDynamoDBGSI(conn *dynamodb.DynamoDB, tableName, indexName string) res
 			return nil, "", err
 		}
 
-		if gsi == nil {
+		if output == nil {
 			return nil, "", nil
 		}
 
-		return gsi, aws.StringValue(gsi.IndexStatus), nil
+		return output, string(output.IndexStatus), nil
 	}
 }
 
-func statusDynamoDBPITR(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		pitr, err := FindDynamoDBPITRDescriptionByTableName(conn, tableName)
+func statusAllGSI(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -132,19 +144,25 @@ func statusDynamoDBPITR(conn *dynamodb.DynamoDB, tableName string) resource.Stat
 			return nil, "", err
 		}
 
-		if pitr == nil {
+		if output == nil {
 			return nil, "", nil
 		}
 
-		return pitr, aws.StringValue(pitr.PointInTimeRecoveryStatus), nil
+		for _, g := range output.GlobalSecondaryIndexes {
+			if g.IndexStatus != awstypes.IndexStatusActive {
+				return output, string(g.IndexStatus), nil
+			}
+		}
+
+		return output, string(awstypes.IndexStatusActive), nil
 	}
 }
 
-func statusDynamoDBTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		ttl, err := FindDynamoDBTTLRDescriptionByTableName(conn, tableName)
+func statusGSIWarmThroughput(conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -152,19 +170,19 @@ func statusDynamoDBTTL(conn *dynamodb.DynamoDB, tableName string) resource.State
 			return nil, "", err
 		}
 
-		if ttl == nil {
+		if output == nil || output.WarmThroughput == nil {
 			return nil, "", nil
 		}
 
-		return ttl, aws.StringValue(ttl.TimeToLiveStatus), nil
+		return output, string(output.WarmThroughput.Status), nil
 	}
 }
 
-func statusDynamoDBTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		table, err := FindDynamoDBTableByName(conn, tableName)
+func statusPITR(conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findPITRByTableName(ctx, conn, tableName, optFns...)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -172,15 +190,51 @@ func statusDynamoDBTableSES(conn *dynamodb.DynamoDB, tableName string) resource.
 			return nil, "", err
 		}
 
-		if table == nil {
+		if output == nil {
 			return nil, "", nil
 		}
 
-		// Disabling SSE returns null SSEDescription
-		if table.SSEDescription == nil {
-			return table, dynamodb.SSEStatusDisabled, nil
+		return output, string(output.PointInTimeRecoveryStatus), nil
+	}
+}
+
+func statusTTL(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTTLByTableName(ctx, conn, tableName)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
 		}
 
-		return table, aws.StringValue(table.SSEDescription.Status), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.TimeToLiveStatus), nil
+	}
+}
+
+func statusSSE(conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName, optFns...)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Disabling SSE returns null SSEDescription.
+		if output.SSEDescription == nil {
+			return output, string(awstypes.SSEStatusDisabled), nil
+		}
+
+		return output, string(output.SSEDescription.Status), nil
 	}
 }

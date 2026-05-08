@@ -1,66 +1,129 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.OrganizationsServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED",
+	)
+}
+
+const (
+	organizationIDRegexPattern = `o-[0-9a-z]{10}`
 )
 
 func TestAccOrganizations_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
-			"basic":                      testAccOrganization_basic,
-			"AwsServiceAccessPrincipals": testAccOrganization_AwsServiceAccessPrincipals,
-			"EnabledPolicyTypes":         testAccOrganization_EnabledPolicyTypes,
-			"FeatureSet_Basic":           testAccOrganization_FeatureSet,
-			"FeatureSet_Update":          testAccOrganization_FeatureSetUpdate,
-			"FeatureSet_ForcesNew":       testAccOrganization_FeatureSetForcesNew,
-			"DataSource":                 testAccOrganizationDataSource_basic,
+			acctest.CtBasic:                     testAccOrganization_basic,
+			acctest.CtDisappears:                testAccOrganization_disappears,
+			"AwsServiceAccessPrincipals":        testAccOrganization_serviceAccessPrincipals,
+			"EnabledPolicyTypes":                testAccOrganization_EnabledPolicyTypes,
+			"FeatureSet_Basic":                  testAccOrganization_FeatureSet,
+			"FeatureSet_Update":                 testAccOrganization_FeatureSetUpdate,
+			"FeatureSet_ForcesNew":              testAccOrganization_FeatureSetForcesNew,
+			"DataSource_basic":                  testAccOrganizationDataSource_basic,
+			"DataSource_memberAccount":          testAccOrganizationDataSource_memberAccount,
+			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
+			"Identity":                          testAccOrganizationsOrganization_identitySerial,
+			"DataSource_returnOrganizationOnly": testAccOrganizationDataSource_returnOrganizationOnly,
 		},
 		"Account": {
-			"basic":    testAccAccount_basic,
-			"ParentId": testAccAccount_ParentID,
-			"Tags":     testAccAccount_Tags,
+			acctest.CtBasic:    testAccAccount_basic,
+			"DataSource_basic": testAccAccountDataSource_basic,
+			"CloseOnDeletion":  testAccAccount_CloseOnDeletion,
+			"ParentId":         testAccAccount_ParentID,
+			"tags":             testAccAccount_Tags,
+			"GovCloud":         testAccAccount_govCloud,
+			"AccountUpdate":    testAccAccount_AccountUpdate,
+			"Identity":         testAccOrganizationsAccount_identitySerial,
 		},
 		"OrganizationalUnit": {
-			"basic":      testAccOrganizationalUnit_basic,
-			"disappears": testAccOrganizationalUnit_disappears,
-			"Name":       testAccOrganizationalUnit_Name,
-			"Tags":       testAccOrganizationalUnit_Tags,
-		},
-		"OrganizationalUnits": {
-			"DataSource": testAccOrganizationalUnitsDataSource_basic,
+			acctest.CtBasic:                      testAccOrganizationalUnit_basic,
+			acctest.CtDisappears:                 testAccOrganizationalUnit_disappears,
+			"update":                             testAccOrganizationalUnit_update,
+			"tags":                               testAccOrganizationsOrganizationalUnit_tagsSerial,
+			"DataSource_basic":                   testAccOrganizationalUnitDataSource_basic,
+			"DescendantOUsDataSource_basic":      testAccOrganizationalUnitDescendantOUsDataSource_basic,
+			"ChildAccountsDataSource_basic":      testAccOrganizationalUnitChildAccountsDataSource_basic,
+			"DescendantAccountsDataSource_basic": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
+			"PluralDataSource_basic":             testAccOrganizationalUnitsDataSource_basic,
+			"Identity":                           testAccOrganizationsOrganizationalUnit_identitySerial,
 		},
 		"Policy": {
-			"basic":                  testAccPolicy_basic,
+			acctest.CtBasic:          testAccPolicy_basic,
 			"concurrent":             testAccPolicy_concurrent,
 			"Description":            testAccPolicy_description,
-			"Tags":                   testAccPolicy_tags,
-			"disappears":             testAccPolicy_disappears,
+			"tags":                   testAccOrganizationsPolicy_tagsSerial,
+			"SkipDestroy":            testAccPolicy_skipDestroy,
+			acctest.CtDisappears:     testAccPolicy_disappears,
 			"Type_AI_OPT_OUT":        testAccPolicy_type_AI_OPT_OUT,
 			"Type_Backup":            testAccPolicy_type_Backup,
 			"Type_SCP":               testAccPolicy_type_SCP,
 			"Type_Tag":               testAccPolicy_type_Tag,
-			"ImportAwsManagedPolicy": testAccPolicy_ImportAwsManagedPolicy,
+			"Type_SecurityHub":       testAccPolicy_type_SecurityHub,
+			"Type_Inspector":         testAccPolicy_type_Inspector,
+			"Type_UpgradeRollout":    testAccPolicy_type_UpgradeRollout,
+			"Type_S3":                testAccPolicy_type_S3,
+			"Type_Bedrock":           testAccPolicy_type_Bedrock,
+			"ImportAwsManagedPolicy": testAccPolicy_importManagedPolicy,
+			"Identity":               testAccOrganizationsPolicy_identitySerial,
 		},
 		"PolicyAttachment": {
 			"Account":            testAccPolicyAttachment_Account,
 			"OrganizationalUnit": testAccPolicyAttachment_OrganizationalUnit,
 			"Root":               testAccPolicyAttachment_Root,
+			"SkipDestroy":        testAccPolicyAttachment_skipDestroy,
+			acctest.CtDisappears: testAccPolicyAttachment_disappears,
+			"Identity":           testAccOrganizationsPolicyAttachment_identitySerial,
+		},
+		"PolicyDataSource": {
+			"UnattachedPolicy": testAccPolicyDataSource_UnattachedPolicy,
+		},
+		"ResourcePolicy": {
+			acctest.CtBasic:      testAccResourcePolicy_basic,
+			acctest.CtDisappears: testAccResourcePolicy_disappears,
+			"tags":               testAccOrganizationsResourcePolicy_tagsSerial,
+			"Identity":           testAccOrganizationsResourcePolicy_identitySerial,
 		},
 		"DelegatedAdministrator": {
-			"basic":      testAccDelegatedAdministrator_basic,
-			"disappears": testAccDelegatedAdministrator_disappears,
+			acctest.CtBasic:      testAccDelegatedAdministrator_basic,
+			acctest.CtDisappears: testAccDelegatedAdministrator_disappears,
+			"Identity":           testAccOrganizationsDelegatedAdministrator_identitySerial,
+		},
+		"DelegatedAdministrators": {
+			acctest.CtBasic: testAccDelegatedAdministratorsDataSource_basic,
+		},
+		"DelegatedServices": {
+			acctest.CtBasic: testAccDelegatedServicesDataSource_basic,
+			"multiple":      testAccDelegatedServicesDataSource_multiple,
+		},
+		"ResourceTags": {
+			acctest.CtBasic: testAccResourceTagsDataSource_basic,
+		},
+		"AWSServiceAccess": {
+			acctest.CtBasic:       testAccAWSServiceAccess_basic,
+			acctest.CtDisappears:  testAccAWSServiceAccess_disappears,
+			"Identity":            testAccOrganizationsAWSServiceAccess_identitySerial,
+			"ListBasic":           testAccAWSServiceAccess_List_basic,
+			"ListIncludeResource": testAccAWSServiceAccess_List_includeResource,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

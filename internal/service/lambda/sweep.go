@@ -1,104 +1,115 @@
-//go:build sweep
-// +build sweep
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
 
 package lambda
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"strconv"
 
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_lambda_function", &resource.Sweeper{
-		Name: "aws_lambda_function",
-		F:    sweepFunctions,
-	})
-
-	resource.AddTestSweepers("aws_lambda_layer", &resource.Sweeper{
-		Name: "aws_lambda_layer",
-		F:    sweepLayerVersions,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_lambda_capacity_provider", sweepCapacityProviders, "aws_lambda_function")
+	awsv2.Register("aws_lambda_function", sweepFunctions)
+	awsv2.Register("aws_lambda_layer", sweepLayerVersions, "aws_lambda_function")
 }
 
-func sweepFunctions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepCapacityProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := lambda.ListCapacityProvidersInput{}
+	conn := client.LambdaClient(ctx)
+	var sweepResources []sweep.Sweepable
 
-	conn := client.(*conns.AWSClient).LambdaConn
-
-	resp, err := conn.ListFunctions(&lambda.ListFunctionsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Lambda Function sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Lambda functions: %s", err)
-	}
-
-	if len(resp.Functions) == 0 {
-		log.Print("[DEBUG] No aws lambda functions to sweep")
-		return nil
-	}
-
-	for _, f := range resp.Functions {
-		_, err := conn.DeleteFunction(
-			&lambda.DeleteFunctionInput{
-				FunctionName: f.FunctionName,
-			})
+	pages := lambda.NewListCapacityProvidersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return err
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.CapacityProviders {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceCapacityProvider, client,
+				sweepfw.NewAttribute(names.AttrName, aws.ToString(v.CapacityProviderArn))),
+			)
 		}
 	}
 
-	return nil
+	return sweepResources, nil
 }
 
-func sweepLayerVersions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.LambdaClient(ctx)
+	input := &lambda.ListFunctionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	conn := client.(*conns.AWSClient).LambdaConn
-	resp, err := conn.ListLayers(&lambda.ListLayersInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Lambda Layer sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Lambda layers: %s", err)
-	}
+	pages := lambda.NewListFunctionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if len(resp.Layers) == 0 {
-		log.Print("[DEBUG] No aws lambda layers to sweep")
-		return nil
-	}
-
-	for _, l := range resp.Layers {
-		versionResp, err := conn.ListLayerVersions(&lambda.ListLayerVersionsInput{
-			LayerName: l.LayerName,
-		})
 		if err != nil {
-			return fmt.Errorf("Error retrieving versions for lambda layer: %s", err)
+			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range versionResp.LayerVersions {
-			_, err := conn.DeleteLayerVersion(&lambda.DeleteLayerVersionInput{
-				LayerName:     l.LayerName,
-				VersionNumber: v.Version,
-			})
-			if err != nil {
-				return err
+		for _, v := range page.Functions {
+			r := resourceFunction()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.FunctionName))
+			d.Set("function_name", v.FunctionName)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepLayerVersions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.LambdaClient(ctx)
+	input := &lambda.ListLayersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := lambda.NewListLayersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Layers {
+			layerName := aws.ToString(v.LayerName)
+			input := &lambda.ListLayerVersionsInput{
+				LayerName: aws.String(layerName),
+			}
+
+			pages := lambda.NewListLayerVersionsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					continue
+				}
+
+				for _, v := range page.LayerVersions {
+					r := resourceLayerVersion()
+					d := r.Data(nil)
+					d.SetId(aws.ToString(v.LayerVersionArn))
+					d.Set("layer_name", layerName)
+					d.Set(names.AttrVersion, strconv.Itoa(int(v.Version)))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
 			}
 		}
 	}
 
-	return nil
+	return sweepResources, nil
 }

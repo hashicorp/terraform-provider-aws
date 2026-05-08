@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagent_agent_knowledge_base_association: Prepare agent when associating a knowledge base so it can be used
+```

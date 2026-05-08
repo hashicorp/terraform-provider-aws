@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_macie2_member: Correct type for `invitation_disable_email_notification` parameter
+```

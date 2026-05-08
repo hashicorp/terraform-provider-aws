@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_neptune_global_cluster
+```
+
+```release-note:enhancement
+resource/aws_neptune_cluster: Add `global_cluster_identifier` argument
+```

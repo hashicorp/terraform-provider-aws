@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_dms_replication_config: Prevent erroneous diffs on `replication_settings`
+```
+
+```release-note:bug
+resource/aws_dms_replication_task: Prevent erroneous diffs on `replication_task_settings`
+```

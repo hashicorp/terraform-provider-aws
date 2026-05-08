@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Add support for `price-capacity-optimized` `spot_allocation_strategy` value
+```
+
+```release-note:enhancement
+resource/aws_ec2_fleet: Add support for `price-capacity-optimized` `spot_options.allocation_strategy` value
+```
+
+```release-note:enhancement
+resource/aws_spot_fleet_request: Add support for `priceCapacityOptimized` `allocation_strategy` value
+```

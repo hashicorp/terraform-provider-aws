@@ -1,15 +1,19 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package serverlessrepo
 
 import (
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	serverlessrepo "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	serverlessrepo "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func findApplication(conn *serverlessrepo.ServerlessApplicationRepository, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
+func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
 	input := &serverlessrepo.GetApplicationInput{
 		ApplicationId: aws.String(applicationID),
 	}
@@ -17,13 +21,10 @@ func findApplication(conn *serverlessrepo.ServerlessApplicationRepository, appli
 		input.SemanticVersion = aws.String(version)
 	}
 
-	log.Printf("[DEBUG] Getting Serverless findApplication Repository Application: %s", input)
-	resp, err := conn.GetApplication(input)
-	if tfawserr.ErrCodeEquals(err, serverlessrepo.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:    err,
-			LastRequest:  input,
-			LastResponse: resp,
+	resp, err := conn.GetApplication(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -31,13 +32,10 @@ func findApplication(conn *serverlessrepo.ServerlessApplicationRepository, appli
 	}
 
 	if resp == nil {
-		return nil, &resource.NotFoundError{
-			LastRequest:  input,
-			LastResponse: resp,
-			Message:      "returned empty response",
+		return nil, &retry.NotFoundError{
+			Message: "returned empty response",
 		}
 	}
 
 	return resp, nil
-
 }

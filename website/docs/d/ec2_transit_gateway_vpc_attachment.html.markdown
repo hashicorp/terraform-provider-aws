@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpc_attachment"
 description: |-
@@ -9,6 +9,8 @@ description: |-
 # Data Source: aws_ec2_transit_gateway_vpc_attachment
 
 Get information on an EC2 Transit Gateway VPC Attachment.
+
+!> **Warning:** Using the `aws_ec2_transit_gateway_vpc_attachment` data source in combination with  `aws_ec2_transit_gateway_route_table_propagation` or `aws_ec2_transit_gateway_route_table_association` may result in lost connectivity due to unnecessary resource re-creation. To avoid this, use the `id` attribute directly from the `aws_ec2_transit_gateway_vpc_attachment` _resource_. For example, `transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.example.id`.
 
 ## Example Usage
 
@@ -33,8 +35,9 @@ data "aws_ec2_transit_gateway_vpc_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway VPC Attachment.
 
@@ -45,10 +48,12 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the attachment.
 * `appliance_mode_support` - Whether Appliance Mode support is enabled.
 * `dns_support` - Whether DNS support is enabled.
+* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled.
 * `id` - EC2 Transit Gateway VPC Attachment identifier
 * `ipv6_support` - Whether IPv6 support is enabled.
 * `subnet_ids` - Identifiers of EC2 Subnets.
@@ -56,3 +61,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - Key-value tags for the EC2 Transit Gateway VPC Attachment
 * `vpc_id` - Identifier of EC2 VPC.
 * `vpc_owner_id` - Identifier of the AWS account that owns the EC2 VPC.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

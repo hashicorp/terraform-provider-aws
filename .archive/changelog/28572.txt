@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sns_topic_subscription: Fix `filter_policy_scope` update from `MessageAttributes` to `MessageBody` with nested objects in `filter_policy`
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_instance: Add `network_interface.network_card_index` argument
+```
+
+```release-note:enhancement
+resource/aws_instance: Add `capacity_reservation_specification.capacity_reservation_target.capacity_reservation_resource_group_arn` argument
+```

@@ -1,257 +1,187 @@
-//go:build sweep
-// +build sweep
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
 
 package redshift
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_redshift_cluster_snapshot", &resource.Sweeper{
-		Name: "aws_redshift_cluster_snapshot",
-		F:    sweepClusterSnapshots,
-		Dependencies: []string{
-			"aws_redshift_cluster",
-		},
-	})
-
-	resource.AddTestSweepers("aws_redshift_cluster", &resource.Sweeper{
-		Name: "aws_redshift_cluster",
-		F:    sweepClusters,
-	})
-
-	resource.AddTestSweepers("aws_redshift_event_subscription", &resource.Sweeper{
-		Name: "aws_redshift_event_subscription",
-		F:    sweepEventSubscriptions,
-	})
-
-	resource.AddTestSweepers("aws_redshift_scheduled_action", &resource.Sweeper{
-		Name: "aws_redshift_scheduled_action",
-		F:    sweepScheduledActions,
-	})
-
-	resource.AddTestSweepers("aws_redshift_snapshot_schedule", &resource.Sweeper{
-		Name: "aws_redshift_snapshot_schedule",
-		F:    sweepSnapshotSchedules,
-	})
-
-	resource.AddTestSweepers("aws_redshift_subnet_group", &resource.Sweeper{
-		Name: "aws_redshift_subnet_group",
-		F:    sweepSubnetGroups,
-		Dependencies: []string{
-			"aws_redshift_cluster",
-		},
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_redshift_authentication_profile", sweepAuthenticationProfiles)
+	awsv2.Register("aws_redshift_cluster", sweepClusters)
+	awsv2.Register("aws_redshift_cluster_snapshot", sweepClusterSnapshots, "aws_redshift_cluster")
+	awsv2.Register("aws_redshift_event_subscription", sweepEventSubscriptions)
+	awsv2.Register("aws_redshift_hsm_client_certificate", sweepHSMClientCertificates)
+	awsv2.Register("aws_redshift_hsm_configuration", sweepHSMConfigurations)
+	awsv2.Register("aws_redshift_idc_application", sweepIDCApplications)
+	awsv2.Register("aws_redshift_integration", sweepIntegrations)
+	awsv2.Register("aws_redshift_scheduled_action", sweepScheduledActions)
+	awsv2.Register("aws_redshift_snapshot_schedule", sweepSnapshotSchedules)
+	awsv2.Register("aws_redshift_subnet_group", sweepSubnetGroups, "aws_redshift_cluster")
 }
 
-func sweepClusterSnapshots(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).RedshiftConn
+func sweepClusterSnapshots(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeClusterSnapshotsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeClusterSnapshotsPages(&redshift.DescribeClusterSnapshotsInput{}, func(resp *redshift.DescribeClusterSnapshotsOutput, lastPage bool) bool {
-		if len(resp.Snapshots) == 0 {
-			log.Print("[DEBUG] No Redshift cluster snapshots to sweep")
-			return false
+	pages := redshift.NewDescribeClusterSnapshotsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, s := range resp.Snapshots {
-			id := aws.StringValue(s.SnapshotIdentifier)
+		for _, v := range page.Snapshots {
+			id := aws.ToString(v.SnapshotIdentifier)
 
-			if !strings.EqualFold(aws.StringValue(s.SnapshotType), "manual") || !strings.EqualFold(aws.StringValue(s.Status), "available") {
-				log.Printf("[INFO] Skipping Redshift cluster snapshot: %s", id)
+			if typ := aws.ToString(v.SnapshotType); typ != "manual" {
+				log.Printf("[INFO] Skipping Redshift Cluster Snapshot %s: SnapshotType=%s", id, typ)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting Redshift cluster snapshot: %s", id)
-			_, err := conn.DeleteClusterSnapshot(&redshift.DeleteClusterSnapshotInput{
-				SnapshotIdentifier: s.SnapshotIdentifier,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed deleting Redshift cluster snapshot (%s): %s", id, err)
-			}
+			r := resourceClusterSnapshot()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Redshift Cluster Snapshot sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Redshift cluster snapshots: %w", err)
 	}
-	return nil
+
+	return sweepResources, nil
 }
 
-func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeClustersInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+	pages := redshift.NewDescribeClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	err = conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, lastPage bool) bool {
-		if len(resp.Clusters) == 0 {
-			log.Print("[DEBUG] No Redshift clusters to sweep")
-			return !lastPage
+		if err != nil {
+			return nil, err
 		}
 
-		for _, c := range resp.Clusters {
-			r := ResourceCluster()
+		for _, v := range page.Clusters {
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.Set("skip_final_snapshot", true)
-			d.SetId(aws.StringValue(c.ClusterIdentifier))
+			d.SetId(aws.ToString(v.ClusterIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Clusters: %w", err))
-		// in case work can be done, don't jump out yet
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Clusters for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepEventSubscriptions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepEventSubscriptions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeEventSubscriptionsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+	pages := redshift.NewDescribeEventSubscriptionsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	err = conn.DescribeEventSubscriptionsPages(&redshift.DescribeEventSubscriptionsInput{}, func(page *redshift.DescribeEventSubscriptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			return nil, err
 		}
 
-		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
+		for _, v := range page.EventSubscriptionsList {
+			r := resourceEventSubscription()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
+			d.SetId(aws.ToString(v.CustSubscriptionId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Event Subscriptions: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Event Subscriptions for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Event Subscriptions sweep for %s: %s", region, err)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepScheduledActions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RedshiftConn
-	input := &redshift.DescribeScheduledActionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+func sweepIntegrations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeIntegrationsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeScheduledActionsPages(input, func(page *redshift.DescribeScheduledActionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := redshift.NewDescribeIntegrationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, scheduledAction := range page.ScheduledActions {
-			r := ResourceScheduledAction()
+		for _, v := range page.Integrations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIntegrationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.IntegrationArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepScheduledActions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeScheduledActionsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := redshift.NewDescribeScheduledActionsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ScheduledActions {
+			r := resourceScheduledAction()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(scheduledAction.ScheduledActionName))
+			d.SetId(aws.ToString(v.ScheduledActionName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Redshift Scheduled Action sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing Redshift Scheduled Actions (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Redshift Scheduled Actions (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepSnapshotSchedules(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
-	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &redshift.DescribeSnapshotSchedulesInput{}
+func sweepSnapshotSchedules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeSnapshotSchedulesInput
+	sweepResources := make([]sweep.Sweepable, 0)
 	prefixesToSweep := []string{sweep.ResourcePrefix}
 
-	err = conn.DescribeSnapshotSchedulesPages(input, func(page *redshift.DescribeSnapshotSchedulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := redshift.NewDescribeSnapshotSchedulesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, snapshotSchedules := range page.SnapshotSchedules {
-			id := aws.StringValue(snapshotSchedules.ScheduleIdentifier)
+		for _, v := range page.SnapshotSchedules {
+			id := aws.ToString(v.ScheduleIdentifier)
 
 			for _, prefix := range prefixesToSweep {
-				if strings.HasPrefix(id, prefix) {
-					r := ResourceSnapshotSchedule()
+				if !strings.HasPrefix(id, prefix) {
+					r := resourceSnapshotSchedule()
 					d := r.Data(nil)
 					d.SetId(id)
 
@@ -261,77 +191,134 @@ func sweepSnapshotSchedules(region string) error {
 				}
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Snapshot Schedules: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Snapshot Schedules for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Snapshot Schedules sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepSubnetGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepSubnetGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeClusterSubnetGroupsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+	pages := redshift.NewDescribeClusterSubnetGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &redshift.DescribeClusterSubnetGroupsInput{}
-
-	err = conn.DescribeClusterSubnetGroupsPages(input, func(page *redshift.DescribeClusterSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			return nil, err
 		}
 
-		for _, clusterSubnetGroup := range page.ClusterSubnetGroups {
-			if clusterSubnetGroup == nil {
-				continue
-			}
-
-			name := aws.StringValue(clusterSubnetGroup.ClusterSubnetGroupName)
+		for _, v := range page.ClusterSubnetGroups {
+			name := aws.ToString(v.ClusterSubnetGroupName)
 
 			if name == "default" {
+				log.Printf("[INFO] Skipping Redshift Subnet Group %s", name)
 				continue
 			}
 
-			r := ResourceSubnetGroup()
+			r := resourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	return sweepResources, nil
+}
+
+func sweepHSMClientCertificates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeHsmClientCertificatesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := redshift.NewDescribeHsmClientCertificatesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.HsmClientCertificates {
+			r := resourceHSMClientCertificate()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.HsmClientCertificateIdentifier))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepHSMConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeHsmConfigurationsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := redshift.NewDescribeHsmConfigurationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.HsmConfigurations {
+			r := resourceHSMConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.HsmConfigurationIdentifier))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAuthenticationProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeAuthenticationProfilesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	output, err := conn.DescribeAuthenticationProfiles(ctx, &input)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Subnet Groups: %w", err))
+		return nil, err
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Subnet Groups for %s: %w", region, err))
+	for _, v := range output.AuthenticationProfiles {
+		r := resourceAuthenticationProfile()
+		d := r.Data(nil)
+		d.SetId(aws.ToString(v.AuthenticationProfileName))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Subnet Group sweep for %s: %s", region, errs)
-		return nil
+	return sweepResources, nil
+}
+
+func sweepIDCApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RedshiftClient(ctx)
+	var input redshift.DescribeRedshiftIdcApplicationsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := redshift.NewDescribeRedshiftIdcApplicationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.RedshiftIdcApplications {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIDCApplicationResource, client,
+				framework.NewAttribute("redshift_idc_application_arn", aws.ToString(v.RedshiftIdcApplicationArn))),
+			)
+		}
 	}
 
-	return errs.ErrorOrNil()
+	return sweepResources, nil
 }

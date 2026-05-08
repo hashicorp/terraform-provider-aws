@@ -1,0 +1,89 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+version: "2"
+linters:
+  default: none
+  enable:
+    # !! only add f-m linters here
+    - goconst
+    - gocritic
+    - govet
+    - importas
+    - ineffassign
+    - makezero
+    - misspell
+    - mnd
+  settings:
+    goconst:
+      min-occurrences: 40
+      ignore-tests: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+      disabled-tags:
+        - experimental
+        - opinionated
+        - performance
+        - style
+    importas:
+      no-unaliased: true
+      alias:
+        - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/id
+          alias: sdkid
+        - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
+          alias: sdkretry
+        - pkg: "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+          alias: sdkacctest
+        - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
+          alias: inttypes
+        - pkg: github.com/hashicorp/terraform-provider-aws/internal/retry
+          alias: ""
+    mnd:
+      checks:
+        - argument
+      ignored-functions:
+        # AWS Go SDK
+        - aws.Int32
+        - aws.Int64
+        - request.ConstantWaiterDelay
+        - request.WithWaiterMaxAttempts
+        # AWS Provider
+        - nullable.*
+        - tfresource.Retry*
+        - tfresource.With*
+        - verify.StringUTF8LenBetween
+        # Terraform Plugin SDK
+        - retry.RetryContext
+        - schema.DefaultTimeout
+        - validation.*
+        - floatBetweenSchema
+        - intBetweenSchema
+        - stringLenBetweenSchema
+        # Terraform Plugin Framework
+        - fwactions.TimeoutOr
+        - int32validator.*
+        - int64validator.*
+        - listvalidator.*
+        - mapvalidator.*
+        - setvalidator.*
+        - stringvalidator.*
+        - SetDefaultCreateTimeout
+        - SetDefaultReadTimeout
+        - SetDefaultUpdateTimeout
+        - SetDefaultDeleteTimeout
+        # Go
+        - make
+        - strconv.FormatFloat
+        - strconv.FormatInt
+        - strconv.ParseFloat
+        - strconv.ParseInt
+        - strings.SplitN
+issues:
+  max-issues-per-linter: 10000
+  max-same-issues: 10000
+formatters:
+  enable:
+    - gofmt
+run:
+  timeout: 75m

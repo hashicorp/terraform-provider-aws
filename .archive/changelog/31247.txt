@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region
+```

@@ -1,22 +1,29 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package inspector
 
 import (
-	"errors"
-	"fmt"
-	"log"
-	"sort"
+	"context"
+	"slices"
 
-	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go-v2/service/inspector"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceRulesPackages() *schema.Resource {
+// @SDKDataSource("aws_inspector_rules_packages", name="Rules Packages")
+func dataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRulesPackagesRead,
+		ReadWithoutTimeout: dataSourceRulesPackagesRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -25,33 +32,38 @@ func DataSourceRulesPackages() *schema.Resource {
 	}
 }
 
-func dataSourceRulesPackagesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	log.Printf("[DEBUG] Reading Rules Packages.")
+	output, err := findRulesPackageARNs(ctx, conn)
 
-	var arns []string
-
-	input := &inspector.ListRulesPackagesInput{}
-
-	err := conn.ListRulesPackagesPages(input, func(page *inspector.ListRulesPackagesOutput, lastPage bool) bool {
-		for _, arn := range page.RulesPackageArns {
-			arns = append(arns, *arn)
-		}
-		return !lastPage
-	})
 	if err != nil {
-		return fmt.Errorf("Error fetching Rules Packages: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Rules Packages: %s", err)
 	}
 
-	if len(arns) == 0 {
-		return errors.New("No rules packages found.")
+	slices.Sort(output)
+
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, output)
+
+	return diags
+}
+
+func findRulesPackageARNs(ctx context.Context, conn *inspector.Client) ([]string, error) {
+	var input inspector.ListRulesPackagesInput
+	var output []string
+
+	pages := inspector.NewListRulesPackagesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RulesPackageArns...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-
-	sort.Strings(arns)
-	d.Set("arns", arns)
-
-	return nil
+	return output, nil
 }

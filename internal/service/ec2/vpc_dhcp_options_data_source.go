@@ -1,30 +1,45 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
-	"errors"
-	"fmt"
-	"log"
-	"strings"
+	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceVPCDHCPOptions() *schema.Resource {
+// @SDKDataSource("aws_vpc_dhcp_options", name="DHCP Options")
+func dataSourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPCDHCPOptionsRead,
+		ReadWithoutTimeout: dataSourceVPCDHCPOptionsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"dhcp_options_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,7 +48,11 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
+			"ipv6_address_preferred_lease_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"netbios_name_servers": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -48,102 +67,57 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
 	if v, ok := d.GetOk("dhcp_options_id"); ok {
-		input.DhcpOptionsIds = []*string{aws.String(v.(string))}
+		input.DhcpOptionsIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading EC2 DHCP Options: %s", input)
-	output, err := conn.DescribeDhcpOptions(input)
+	opts, err := findDHCPOptions(ctx, conn, input)
+
 	if err != nil {
-		if isNoSuchDhcpOptionIDErr(err) {
-			return errors.New("No matching EC2 DHCP Options found")
-		}
-		return fmt.Errorf("error reading EC2 DHCP Options: %w", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 DHCP Options Set", err))
 	}
 
-	if len(output.DhcpOptions) == 0 {
-		return errors.New("No matching EC2 DHCP Options found")
+	d.SetId(aws.ToString(opts.DhcpOptionsId))
+
+	ownerID := aws.ToString(opts.OwnerId)
+	d.Set(names.AttrARN, dhcpOptionsARN(ctx, c, ownerID, d.Id()))
+	d.Set("dhcp_options_id", d.Id())
+	d.Set(names.AttrOwnerID, ownerID)
+
+	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options: %s", err)
 	}
 
-	if len(output.DhcpOptions) > 1 {
-		return errors.New("Multiple matching EC2 DHCP Options found")
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	dhcpOptionID := aws.StringValue(output.DhcpOptions[0].DhcpOptionsId)
-	d.SetId(dhcpOptionID)
-	d.Set("dhcp_options_id", dhcpOptionID)
-
-	dhcpConfigurations := output.DhcpOptions[0].DhcpConfigurations
-
-	for _, dhcpConfiguration := range dhcpConfigurations {
-		key := aws.StringValue(dhcpConfiguration.Key)
-		tfKey := strings.Replace(key, "-", "_", -1)
-
-		if len(dhcpConfiguration.Values) == 0 {
-			continue
-		}
-
-		switch key {
-		case "domain-name":
-			d.Set(tfKey, dhcpConfiguration.Values[0].Value)
-		case "domain-name-servers":
-			if err := d.Set(tfKey, flattenAttributeValues(dhcpConfiguration.Values)); err != nil {
-				return fmt.Errorf("error setting %s: %w", tfKey, err)
-			}
-		case "netbios-name-servers":
-			if err := d.Set(tfKey, flattenAttributeValues(dhcpConfiguration.Values)); err != nil {
-				return fmt.Errorf("error setting %s: %w", tfKey, err)
-			}
-		case "netbios-node-type":
-			d.Set(tfKey, dhcpConfiguration.Values[0].Value)
-		case "ntp-servers":
-			if err := d.Set(tfKey, flattenAttributeValues(dhcpConfiguration.Values)); err != nil {
-				return fmt.Errorf("error setting %s: %w", tfKey, err)
-			}
-		}
-	}
-
-	if err := d.Set("tags", KeyValueTags(output.DhcpOptions[0].Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-	d.Set("owner_id", output.DhcpOptions[0].OwnerId)
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(output.DhcpOptions[0].OwnerId),
-		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
-
-	return nil
+	return diags
 }

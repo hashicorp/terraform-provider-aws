@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb: Add `enforce_security_group_inbound_rules_on_private_link_traffic` argument
+```
+
+```release-note:enhancement
+data-source/aws_lb: Add `enforce_security_group_inbound_rules_on_private_link_traffic` attribute
+```

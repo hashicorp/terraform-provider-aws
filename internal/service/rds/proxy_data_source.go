@@ -1,18 +1,27 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package rds
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceProxy() *schema.Resource {
+// @SDKDataSource("aws_db_proxy", name="DB Proxy")
+func dataSourceProxy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceProxyRead,
+		ReadWithoutTimeout: dataSourceProxyRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -25,7 +34,11 @@ func DataSourceProxy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						"client_password_auth_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -37,6 +50,10 @@ func DataSourceProxy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						names.AttrUsername: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -44,7 +61,15 @@ func DataSourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"endpoint": {
+			"default_auth_scheme": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrEndpoint: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint_network_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +81,7 @@ func DataSourceProxy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -64,15 +89,19 @@ func DataSourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			"target_connection_network_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -86,28 +115,32 @@ func DataSourceProxy() *schema.Resource {
 	}
 }
 
-func dataSourceProxyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := d.Get("name").(string)
-	dbProxy, err := FindDBProxyByName(conn, name)
+	name := d.Get(names.AttrName).(string)
+	dbProxy, err := findDBProxyByName(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS DB Proxy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", name, err)
 	}
 
 	d.SetId(name)
-	d.Set("arn", dbProxy.DBProxyArn)
-	d.Set("auth", flattenDbProxyAuths(dbProxy.Auth))
+	d.Set(names.AttrARN, dbProxy.DBProxyArn)
+	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
-	d.Set("endpoint", dbProxy.Endpoint)
+	d.Set("default_auth_scheme", dbProxy.DefaultAuthScheme)
+	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
+	d.Set("endpoint_network_type", dbProxy.EndpointNetworkType)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
-	d.Set("role_arn", dbProxy.RoleArn)
-	d.Set("vpc_id", dbProxy.VpcId)
-	d.Set("vpc_security_group_ids", aws.StringValueSlice(dbProxy.VpcSecurityGroupIds))
-	d.Set("vpc_subnet_ids", aws.StringValueSlice(dbProxy.VpcSubnetIds))
+	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
+	d.Set("target_connection_network_type", dbProxy.TargetConnectionNetworkType)
+	d.Set(names.AttrVPCID, dbProxy.VpcId)
+	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
+	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 
-	return nil
+	return diags
 }

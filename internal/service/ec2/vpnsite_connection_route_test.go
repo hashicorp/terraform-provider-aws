@@ -1,0 +1,140 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package ec2_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	resourceName := "aws_vpn_connection_route.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionRouteExists(ctx, t, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	resourceName := "aws_vpn_connection_route.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionRouteExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNConnectionRoute(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckVPNConnectionRouteDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpn_connection_route" {
+				continue
+			}
+
+			_, err := tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_connection_id"], rs.Primary.Attributes["destination_cidr_block"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 VPN Connection Route %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccVPNConnectionRouteExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+		_, err := tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_connection_id"], rs.Primary.Attributes["destination_cidr_block"])
+
+		return err
+	}
+}
+
+func testAccVPNConnectionRouteConfig_basic(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "182.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+  static_routes_only  = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection_route" "test" {
+  destination_cidr_block = "172.168.10.0/24"
+  vpn_connection_id      = aws_vpn_connection.test.id
+}
+`, rName, rBgpAsn)
+}

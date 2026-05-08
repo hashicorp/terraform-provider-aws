@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_opensearchserverless_collection: Fix crash when error is returned
+```

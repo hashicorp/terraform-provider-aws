@@ -1,56 +1,73 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package guardduty
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceFilter() *schema.Resource {
+// @SDKResource("aws_guardduty_filter", name="Filter")
+// @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/guardduty;guardduty.GetFilterOutput")
+func resourceFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFilterCreate,
-		Read:   resourceFilterRead,
-		Update: resourceFilterUpdate,
-		Delete: resourceFilterDelete,
+		CreateWithoutTimeout: resourceFilterCreate,
+		ReadWithoutTimeout:   resourceFilterRead,
+		UpdateWithoutTimeout: resourceFilterUpdate,
+		DeleteWithoutTimeout: resourceFilterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrAction: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FilterAction](),
+			},
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"detector_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 64),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 			"finding_criteria": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -63,21 +80,15 @@ func ResourceFilter() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"equals": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+									names.AttrField: {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"greater_than": {
 										Type:         schema.TypeString,
@@ -99,235 +110,261 @@ func ResourceFilter() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
+									"matches": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+									},
+									"not_equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"not_matches": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-			"action": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					guardduty.FilterActionNoop,
-					guardduty.FilterActionArchive,
-				}, false),
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(3, 64),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
+						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+				),
 			},
 			"rank": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
+	detectorID, name := d.Get("detector_id").(string), d.Get(names.AttrName).(string)
 	input := guardduty.CreateFilterInput{
-		Action:      aws.String(d.Get("action").(string)),
-		Description: aws.String(d.Get("description").(string)),
-		DetectorId:  aws.String(d.Get("detector_id").(string)),
-		Name:        aws.String(d.Get("name").(string)),
-		Rank:        aws.Int64(int64(d.Get("rank").(int))),
+		Action:      awstypes.FilterAction(d.Get(names.AttrAction).(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		DetectorId:  aws.String(detectorID),
+		Name:        aws.String(name),
+		Rank:        aws.Int32(int32(d.Get("rank").(int))),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
-	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]any))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
-	output, err := conn.CreateFilter(&input)
+	_, err = conn.CreateFilter(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
 	}
 
-	d.SetId(guardDutyFilterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
+	d.SetId(filterCreateResourceID(detectorID, name))
 
-	return resourceFilterRead(d, meta)
+	return append(diags, resourceFilterRead(ctx, d, meta)...)
 }
 
-func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
-	var detectorID, name string
-	var err error
-
-	if _, ok := d.GetOk("detector_id"); !ok {
-		// If there is no "detector_id" passed, then it's an import.
-		detectorID, name, err = FilterParseID(d.Id())
-		if err != nil {
-			return err
-		}
-	} else {
-		detectorID = d.Get("detector_id").(string)
-		name = d.Get("name").(string)
+	detectorID, name, err := filterParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	filter, err := findFilterByTwoPartKey(ctx, conn, detectorID, name)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] GuardDuty Filter (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Filter (%s): %s", name, err)
+	}
+
+	d.Set(names.AttrAction, filter.Action)
+	d.Set(names.AttrARN, filterARN(ctx, c, detectorID, name))
+	d.Set(names.AttrDescription, filter.Description)
+	d.Set("detector_id", detectorID)
+	if err := d.Set("finding_criteria", flattenFindingCriteria(filter.FindingCriteria)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting finding_criteria: %s", err)
+	}
+	d.Set(names.AttrName, filter.Name)
+	d.Set("rank", filter.Rank)
+
+	setTagsOut(ctx, filter.Tags)
+
+	return diags
+}
+
+func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+
+	if d.HasChanges(names.AttrAction, names.AttrDescription, "finding_criteria", "rank") {
+		detectorID, name, err := filterParseResourceID(d.Id())
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input := guardduty.UpdateFilterInput{
+			Action:      awstypes.FilterAction(d.Get(names.AttrAction).(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
+			DetectorId:  aws.String(detectorID),
+			FilterName:  aws.String(name),
+			Rank:        aws.Int32(int32(d.Get("rank").(int))),
+		}
+
+		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]any))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter %s: %s", d.Id(), err)
+		}
+
+		_, err = conn.UpdateFilter(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceFilterRead(ctx, d, meta)...)
+}
+
+func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+
+	detectorID, name, err := filterParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	log.Printf("[DEBUG] Deleting GuardDuty Filter: %s", d.Id())
+	input := guardduty.DeleteFilterInput{
+		DetectorId: aws.String(detectorID),
+		FilterName: aws.String(name),
+	}
+	_, err = conn.DeleteFilter(ctx, &input)
+
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") ||
+		errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the given filter name is invalid.") {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Filter (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+const filterResourceIDSeparator = ":"
+
+func filterCreateResourceID(detectorID, filterName string) string {
+	parts := []string{detectorID, filterName}
+	id := strings.Join(parts, filterResourceIDSeparator)
+
+	return id
+}
+
+func filterParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, filterResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <Detector ID>%[2]s<Filter name>", id, filterResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findFilterByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*guardduty.GetFilterOutput, error) {
 	input := guardduty.GetFilterInput{
 		DetectorId: aws.String(detectorID),
 		FilterName: aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Reading GuardDuty Filter: %s", input)
-	filter, err := conn.GetFilter(&input)
+	return findFilter(ctx, conn, &input)
+}
+
+func findFilter(ctx context.Context, conn *guardduty.Client, input *guardduty.GetFilterInput) (*guardduty.GetFilterOutput, error) {
+	output, err := conn.GetFilter(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") ||
+		errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected since no such resource found.") {
-			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading GuardDuty Filter '%s': %w", name, err)
+		return nil, err
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("detector/%s/filter/%s", detectorID, name),
-	}.String()
-	d.Set("arn", arn)
-
-	err = d.Set("finding_criteria", flattenFindingCriteria(filter.FindingCriteria))
-	if err != nil {
-		return fmt.Errorf("Setting GuardDuty Filter FindingCriteria failed: %w", err)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	d.Set("action", filter.Action)
-	d.Set("description", filter.Description)
-	d.Set("name", filter.Name)
-	d.Set("detector_id", detectorID)
-	d.Set("rank", filter.Rank)
-
-	tags := KeyValueTags(filter.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-	d.SetId(guardDutyFilterCreateID(detectorID, name))
-
-	return nil
+	return output, nil
 }
 
-func resourceFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
-
-	if d.HasChanges("action", "description", "finding_criteria", "rank") {
-		input := guardduty.UpdateFilterInput{
-			Action:      aws.String(d.Get("action").(string)),
-			Description: aws.String(d.Get("description").(string)),
-			DetectorId:  aws.String(d.Get("detector_id").(string)),
-			FilterName:  aws.String(d.Get("name").(string)),
-			Rank:        aws.Int64(int64(d.Get("rank").(int))),
-		}
-
-		var err error
-		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
-		if err != nil {
-			return err
-		}
-
-		log.Printf("[DEBUG] Updating GuardDuty Filter: %s", input)
-
-		_, err = conn.UpdateFilter(&input)
-		if err != nil {
-			return fmt.Errorf("error updating GuardDuty Filter %s: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating GuardDuty Filter (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceFilterRead(d, meta)
-}
-
-func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
-
-	detectorId := d.Get("detector_id").(string)
-	name := d.Get("name").(string)
-
-	input := guardduty.DeleteFilterInput{
-		FilterName: aws.String(name),
-		DetectorId: aws.String(detectorId),
-	}
-
-	log.Printf("[DEBUG] Delete GuardDuty Filter: %s", input)
-
-	_, err := conn.DeleteFilter(&input)
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected since no such resource found.") {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error deleting GuardDuty Filter %s: %w", d.Id(), err)
-	}
-	return nil
-}
-
-const guardDutyFilterIDSeparator = ":"
-
-func guardDutyFilterCreateID(detectorID, filterName string) string {
-	return detectorID + guardDutyFilterIDSeparator + filterName
-}
-
-func FilterParseID(importedId string) (string, string, error) {
-	parts := strings.Split(importedId, guardDutyFilterIDSeparator)
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("GuardDuty filter ID must be of the form <Detector ID>:<Filter name>. Got %q.", importedId)
-	}
-	return parts[0], parts[1], nil
-}
-
-func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error) {
-	findingCriteria := raw[0].(map[string]interface{})
+func expandFindingCriteria(raw []any) (*awstypes.FindingCriteria, error) {
+	findingCriteria := raw[0].(map[string]any)
 	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 
-	criteria := map[string]*guardduty.Condition{}
+	criteria := map[string]awstypes.Condition{}
 	for _, criterion := range inputFindingCriteria {
-		typedCriterion := criterion.(map[string]interface{})
-		field := typedCriterion["field"].(string)
+		typedCriterion := criterion.(map[string]any)
+		field := typedCriterion[names.AttrField].(string)
 
-		condition := guardduty.Condition{}
+		condition := awstypes.Condition{}
 		if x, ok := typedCriterion["equals"]; ok {
-			if v, ok := x.([]interface{}); ok && len(v) > 0 {
-				foo := make([]*string, len(v))
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
 				for i := range v {
 					s := v[i].(string)
-					foo[i] = &s
+					foo[i] = s
 				}
 				condition.Equals = foo
 			}
 		}
 		if x, ok := typedCriterion["not_equals"]; ok {
-			if v, ok := x.([]interface{}); ok && len(v) > 0 {
-				foo := make([]*string, len(v))
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
 				for i := range v {
 					s := v[i].(string)
-					foo[i] = &s
+					foo[i] = s
 				}
 				condition.NotEquals = foo
 			}
@@ -336,7 +373,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 			if v, ok := x.(string); ok && v != "" {
 				i, err := expandConditionIntField(field, v)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "greater_than", field, err)
+					return nil, fmt.Errorf("parsing condition %q for field %q: %w", "greater_than", field, err)
 				}
 				condition.GreaterThan = aws.Int64(i)
 			}
@@ -345,7 +382,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 			if v, ok := x.(string); ok && v != "" {
 				i, err := expandConditionIntField(field, v)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "greater_than_or_equal", field, err)
+					return nil, fmt.Errorf("parsing condition %q for field %q: %w", "greater_than_or_equal", field, err)
 				}
 				condition.GreaterThanOrEqual = aws.Int64(i)
 			}
@@ -354,7 +391,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 			if v, ok := x.(string); ok && v != "" {
 				i, err := expandConditionIntField(field, v)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "less_than", field, err)
+					return nil, fmt.Errorf("parsing condition %q for field %q: %w", "less_than", field, err)
 				}
 				condition.LessThan = aws.Int64(i)
 			}
@@ -363,15 +400,35 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 			if v, ok := x.(string); ok && v != "" {
 				i, err := expandConditionIntField(field, v)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "less_than_or_equal", field, err)
+					return nil, fmt.Errorf("parsing condition %q for field %q: %w", "less_than_or_equal", field, err)
 				}
 				condition.LessThanOrEqual = aws.Int64(i)
 			}
 		}
-		criteria[field] = &condition
+		if x, ok := typedCriterion["matches"]; ok {
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = s
+				}
+				condition.Matches = foo
+			}
+		}
+		if x, ok := typedCriterion["not_matches"]; ok {
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = s
+				}
+				condition.NotMatches = foo
+			}
+		}
+		criteria[field] = condition
 	}
 
-	return &guardduty.FindingCriteria{Criterion: criteria}, nil
+	return &awstypes.FindingCriteria{Criterion: criteria}, nil
 }
 
 func expandConditionIntField(field, v string) (int64, error) {
@@ -386,36 +443,42 @@ func expandConditionIntField(field, v string) (int64, error) {
 	return strconv.ParseInt(v, 10, 64)
 }
 
-func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []interface{} {
-	var flatCriteria []interface{}
+func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []any {
+	var flatCriteria []any
 
 	for field, conditions := range findingCriteriaRemote.Criterion {
-		criterion := map[string]interface{}{
-			"field": field,
+		criterion := map[string]any{
+			names.AttrField: field,
 		}
 		if len(conditions.Equals) > 0 {
-			criterion["equals"] = aws.StringValueSlice(conditions.Equals)
+			criterion["equals"] = conditions.Equals
 		}
 		if len(conditions.NotEquals) > 0 {
-			criterion["not_equals"] = aws.StringValueSlice(conditions.NotEquals)
+			criterion["not_equals"] = conditions.NotEquals
 		}
-		if v := aws.Int64Value(conditions.GreaterThan); v > 0 {
+		if v := aws.ToInt64(conditions.GreaterThan); v > 0 {
 			criterion["greater_than"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.GreaterThanOrEqual); v > 0 {
+		if v := aws.ToInt64(conditions.GreaterThanOrEqual); v > 0 {
 			criterion["greater_than_or_equal"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.LessThan); v > 0 {
+		if v := aws.ToInt64(conditions.LessThan); v > 0 {
 			criterion["less_than"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.LessThanOrEqual); v > 0 {
+		if v := aws.ToInt64(conditions.LessThanOrEqual); v > 0 {
 			criterion["less_than_or_equal"] = flattenConditionIntField(field, v)
+		}
+		if len(conditions.Matches) > 0 {
+			criterion["matches"] = conditions.Matches
+		}
+		if len(conditions.NotMatches) > 0 {
+			criterion["not_matches"] = conditions.NotMatches
 		}
 		flatCriteria = append(flatCriteria, criterion)
 	}
 
-	return []interface{}{
-		map[string][]interface{}{
+	return []any{
+		map[string][]any{
 			"criterion": flatCriteria,
 		},
 	}
@@ -429,4 +492,8 @@ func flattenConditionIntField(field string, v int64) string {
 		return date.Format(time.RFC3339)
 	}
 	return strconv.FormatInt(v, 10)
+}
+
+func filterARN(ctx context.Context, c *conns.AWSClient, detectorID, name string) string {
+	return c.RegionalARN(ctx, "guardduty", "detector/"+detectorID+"/filter/"+name)
 }

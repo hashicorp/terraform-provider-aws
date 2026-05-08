@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_connect_routing_profile: Add `media_concurrencies.cross_channel_behavior` argument
+```
+
+```release-note:enhancement
+data-source/aws_connect_routing_profile: Add `media_concurrencies.cross_channel_behavior` attribute
+```

@@ -1,0 +1,3 @@
+```release-note:new-data-source
+aws_dx_router_configuration
+```

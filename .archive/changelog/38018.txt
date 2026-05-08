@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_elastictranscoder_pipeline: Properly handle NotFound exceptions during deletion
+```
+```release-note:bug
+resource/aws_elastictranscoder_preset: Properly handle NotFound exceptions during deletion
+```

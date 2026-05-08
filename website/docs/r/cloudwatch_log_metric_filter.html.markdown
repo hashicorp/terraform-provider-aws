@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "CloudWatch Logs"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_metric_filter"
 description: |-
@@ -32,13 +32,15 @@ resource "aws_cloudwatch_log_group" "dada" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the metric filter.
 * `pattern` - (Required) A valid [CloudWatch Logs filter pattern](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/FilterAndPatternSyntax.html)
   for extracting metric data out of ingested log events.
 * `log_group_name` - (Required) The name of the log group to associate the metric filter with.
 * `metric_transformation` - (Required) A block defining collection of information needed to define how metric data gets emitted. See below.
+* `apply_on_transformed_logs` - (Optional) Whether the metric filter will be applied on the transformed version of the log events instead of the original ingested log events. Defaults to `false`. Valid only for log groups that have an active log transformer.
 
 The `metric_transformation` block supports the following arguments:
 
@@ -49,16 +51,53 @@ The `metric_transformation` block supports the following arguments:
 * `dimensions` - (Optional) Map of fields to use as dimensions for the metric. Up to 3 dimensions are allowed. Conflicts with `default_value`.
 * `unit` - (Optional) The unit to assign to the metric. If you omit this, the unit is set as `None`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the metric filter.
 
 ## Import
 
-CloudWatch Log Metric Filter can be imported using the `log_group_name:name`, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_metric_filter.example
+  identity = {
+    log_group_name = "example-group"
+    name           = "example-filter"
+  }
+}
+
+resource "aws_cloudwatch_log_metric_filter" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_cloudwatch_log_metric_filter.test /aws/lambda/function:test
+
+### Identity Schema
+
+#### Required
+
+* `log_group_name` (String) Name of the log group.
+* `name` (String) Name of the metric filter.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Metric Filters using `log_group_name` and `name` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_metric_filter.example
+  id = "example-group:example-filter"
+}
+```
+
+Using `terraform import`, import Metric Filters using `log_group_name` and `name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_cloudwatch_log_metric_filter.example example-group:example-filter
 ```

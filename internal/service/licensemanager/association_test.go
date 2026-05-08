@@ -1,33 +1,38 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLicenseManagerAssociation_basic(t *testing.T) {
-	var licenseSpecification licensemanager.LicenseSpecification
-	resourceName := "aws_licensemanager_association.example"
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_licensemanager_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLicenseManagerAssociationDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLicenseManagerAssociationConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseManagerAssociationExists(resourceName, &licenseSpecification),
-					resource.TestCheckResourceAttrPair(resourceName, "license_configuration_arn", "aws_licensemanager_license_configuration.example", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_instance.example", "arn"),
+				Config: testAccAssociationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAssociationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "license_configuration_arn", "aws_licensemanager_license_configuration.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_instance.test", names.AttrARN),
 				),
 			},
 			{
@@ -39,87 +44,87 @@ func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpecification *licensemanager.LicenseSpecification) resource.TestCheckFunc {
+func TestAccLicenseManagerAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_licensemanager_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssociationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAssociationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflicensemanager.ResourceAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
-
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+		conn := acctest.ProviderMeta(ctx, t).LicenseManagerClient(ctx)
+
+		return tflicensemanager.FindAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["license_configuration_arn"])
+	}
+}
+
+func testAccCheckAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).LicenseManagerClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_licensemanager_association" {
+				continue
+			}
+
+			err := tflicensemanager.FindAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["license_configuration_arn"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("License Manager Association %s still exists", rs.Primary.ID)
 		}
 
-		resourceArn, licenseConfigurationArn, err := tflicensemanager.AssociationParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		specification, err := tflicensemanager.AssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
-		if err != nil {
-			return err
-		}
-
-		if specification == nil {
-			return fmt.Errorf("Error retrieving License Manager association (%s): Not found", rs.Primary.ID)
-		}
-
-		*licenseSpecification = *specification
 		return nil
 	}
 }
 
-func testAccCheckLicenseManagerAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
+func testAccAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_licensemanager_association" {
-			continue
-		}
-
-		resourceArn, licenseConfigurationArn, err := tflicensemanager.AssociationParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		specification, err := tflicensemanager.AssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
-		if err != nil {
-			return err
-		}
-
-		if specification != nil {
-			return fmt.Errorf("License Manager association %q still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-const testAccLicenseManagerAssociationConfig_basic = `
-data "aws_ami" "example" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-vpc-nat*"]
+  tags = {
+    Name = %[1]q
   }
 }
 
-resource "aws_instance" "example" {
-  ami           = data.aws_ami.example.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_licensemanager_license_configuration" "example" {
-  name                  = "Example"
+resource "aws_licensemanager_license_configuration" "test" {
+  name                  = %[1]q
   license_counting_type = "vCPU"
 }
 
-resource "aws_licensemanager_association" "example" {
-  license_configuration_arn = aws_licensemanager_license_configuration.example.id
-  resource_arn              = aws_instance.example.arn
+resource "aws_licensemanager_association" "test" {
+  license_configuration_arn = aws_licensemanager_license_configuration.test.id
+  resource_arn              = aws_instance.test.arn
 }
-`
+`, rName))
+}

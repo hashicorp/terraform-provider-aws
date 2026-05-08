@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_crawler: Add `create_native_delta_table` attribute to the `delta_target` configuration block
+```

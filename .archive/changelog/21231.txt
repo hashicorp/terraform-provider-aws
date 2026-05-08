@@ -1,0 +1,4 @@
+
+```release-note:enhancement
+resource/aws_ecr_replication_configuration: Add `repository_filter` to `replication_configuration` block
+```

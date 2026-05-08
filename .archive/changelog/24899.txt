@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_organizations_account: Fix reading account state for existing accounts
+```

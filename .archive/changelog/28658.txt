@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `desired_capacity_type` argument
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `desired_capacity_type` attribute
+```

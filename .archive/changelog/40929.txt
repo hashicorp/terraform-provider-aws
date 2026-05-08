@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_datasync_location_s3: Fix `location URI global ID and subdirectory (...) does not match pattern "..."` errors on Read when `s3_bucket_arn` is an S3 on Outposts access point
+```

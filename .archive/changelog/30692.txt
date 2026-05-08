@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_securityhub_account: Add `control_finding_generator`, `auto_enable_controls` and `arn` attributes
+```

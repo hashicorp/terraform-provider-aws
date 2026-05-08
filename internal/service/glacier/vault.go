@@ -1,63 +1,68 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package glacier
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glacier"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glacier"
+	"github.com/aws/aws-sdk-go-v2/service/glacier/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceVault() *schema.Resource {
+// @SDKResource("aws_glacier_vault", name="Vault")
+// @Tags(identifierAttribute="id")
+func resourceVault() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVaultCreate,
-		Read:   resourceVaultRead,
-		Update: resourceVaultUpdate,
-		Delete: resourceVaultDelete,
+		CreateWithoutTimeout: resourceVaultCreate,
+		ReadWithoutTimeout:   resourceVaultRead,
+		UpdateWithoutTimeout: resourceVaultUpdate,
+		DeleteWithoutTimeout: resourceVaultDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"access_policy": sdkv2.IAMPolicyDocumentSchemaOptional(),
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrLocation: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[.0-9A-Za-z-_]+$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
 						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
 				),
 			},
-
-			"location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"access_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-			},
-
 			"notification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -74,7 +79,6 @@ func ResourceVault() *schema.Resource {
 									"InventoryRetrievalCompleted",
 								}, false),
 							},
-							Set: schema.HashString,
 						},
 						"sns_topic": {
 							Type:         schema.TypeString,
@@ -84,254 +88,296 @@ func ResourceVault() *schema.Resource {
 					},
 				},
 			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
-	input := &glacier.CreateVaultInput{
-		VaultName: aws.String(d.Get("name").(string)),
+	name := d.Get(names.AttrName).(string)
+	input := glacier.CreateVaultInput{
+		VaultName: aws.String(name),
 	}
 
-	_, err := conn.CreateVault(input)
+	_, err := conn.CreateVault(ctx, &input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Glacier Vault: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glacier Vault (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
 
-	if len(tags) > 0 {
-		if err := UpdateTags(conn, d.Id(), nil, tags.Map()); err != nil {
-			return fmt.Errorf("error updating Glacier Vault (%s) tags: %w", d.Id(), err)
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Glacier Vault (%s) tags: %s", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("access_policy"); ok {
+		policy, err := structure.NormalizeJsonString(v.(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input := glacier.SetVaultAccessPolicyInput{
+			Policy: &types.VaultAccessPolicy{
+				Policy: aws.String(policy),
+			},
+			VaultName: aws.String(d.Id()),
+		}
+
+		_, err = conn.SetVaultAccessPolicy(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting Glacier Vault (%s) access policy: %s", d.Id(), err)
 		}
 	}
 
-	if _, ok := d.GetOk("access_policy"); ok {
-		if err := resourceVaultPolicyUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating Glacier Vault (%s) access policy: %w", d.Id(), err)
+	if v, ok := d.GetOk("notification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := glacier.SetVaultNotificationsInput{
+			VaultName:               aws.String(d.Id()),
+			VaultNotificationConfig: expandVaultNotificationConfig(v.([]any)[0].(map[string]any)),
+		}
+
+		_, err := conn.SetVaultNotifications(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting Glacier Vault (%s) notifications: %s", d.Id(), err)
 		}
 	}
 
-	if _, ok := d.GetOk("notification"); ok {
-		if err := resourceVaultNotificationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating Glacier Vault (%s) notification: %w", d.Id(), err)
-		}
-	}
-
-	return resourceVaultRead(d, meta)
+	return append(diags, resourceVaultRead(ctx, d, meta)...)
 }
 
-func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Glacier Vault (%s) tags: %s", d.Id(), err)
+	output, err := findVaultByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Glacier Vault (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glacier Vault (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, output.VaultARN)
+	d.Set(names.AttrLocation, fmt.Sprintf("/%s/vaults/%s", meta.(*conns.AWSClient).AccountID(ctx), d.Id()))
+	d.Set(names.AttrName, output.VaultName)
+
+	accessPolicy, err := findVaultAccessPolicyByName(ctx, conn, d.Id())
+	switch {
+	case retry.NotFound(err):
+		d.Set("access_policy", nil)
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading Glacier Vault (%s) access policy: %s", d.Id(), err)
+	default:
+		policy, err := verify.PolicyToSet(d.Get("access_policy").(string), aws.ToString(accessPolicy.Policy))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		d.Set("access_policy", policy)
+	}
+
+	notificationConfig, err := findVaultNotificationsByName(ctx, conn, d.Id())
+	switch {
+	case retry.NotFound(err):
+		d.Set("notification", nil)
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading Glacier Vault (%s) notifications: %s", d.Id(), err)
+	default:
+		tfMap := map[string]any{}
+
+		if v := notificationConfig.Events; v != nil {
+			tfMap["events"] = v
+		}
+
+		if v := notificationConfig.SNSTopic; v != nil {
+			tfMap["sns_topic"] = aws.ToString(v)
+		}
+
+		if err := d.Set("notification", []any{tfMap}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting notification: %s", err)
 		}
 	}
+
+	return diags
+}
+
+func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
 	if d.HasChange("access_policy") {
-		if err := resourceVaultPolicyUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating Glacier Vault (%s) access policy: %w", d.Id(), err)
+		if v, ok := d.GetOk("access_policy"); ok {
+			policy, err := structure.NormalizeJsonString(v.(string))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			input := glacier.SetVaultAccessPolicyInput{
+				Policy: &types.VaultAccessPolicy{
+					Policy: aws.String(policy),
+				},
+				VaultName: aws.String(d.Id()),
+			}
+
+			_, err = conn.SetVaultAccessPolicy(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting Glacier Vault (%s) access policy: %s", d.Id(), err)
+			}
+		} else {
+			input := glacier.DeleteVaultAccessPolicyInput{
+				VaultName: aws.String(d.Id()),
+			}
+
+			_, err := conn.DeleteVaultAccessPolicy(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting Glacier Vault (%s) access policy: %s", d.Id(), err)
+			}
 		}
 	}
 
 	if d.HasChange("notification") {
-		if err := resourceVaultNotificationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating Glacier Vault (%s) notification: %w", d.Id(), err)
+		if v, ok := d.GetOk("notification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input := glacier.SetVaultNotificationsInput{
+				VaultName:               aws.String(d.Id()),
+				VaultNotificationConfig: expandVaultNotificationConfig(v.([]any)[0].(map[string]any)),
+			}
+
+			_, err := conn.SetVaultNotifications(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting Glacier Vault (%s) notifications: %s", d.Id(), err)
+			}
+		} else {
+			input := glacier.DeleteVaultNotificationsInput{
+				VaultName: aws.String(d.Id()),
+			}
+
+			_, err := conn.DeleteVaultNotifications(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting Glacier Vault (%s) notifications: %s", d.Id(), err)
+			}
 		}
 	}
 
-	return resourceVaultRead(d, meta)
+	return append(diags, resourceVaultRead(ctx, d, meta)...)
 }
 
-func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
-	input := &glacier.DescribeVaultInput{
+	log.Printf("[DEBUG] Deleting Glacier Vault: %s", d.Id())
+	input := glacier.DeleteVaultInput{
 		VaultName: aws.String(d.Id()),
 	}
+	_, err := conn.DeleteVault(ctx, &input)
 
-	out, err := conn.DescribeVault(input)
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Glaier Vault (%s) not found, removing from state", d.Id())
-		d.SetId("")
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Glacier Vault (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findVaultByName(ctx context.Context, conn *glacier.Client, name string) (*glacier.DescribeVaultOutput, error) {
+	input := glacier.DescribeVaultInput{
+		VaultName: aws.String(name),
+	}
+
+	output, err := conn.DescribeVault(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func findVaultAccessPolicyByName(ctx context.Context, conn *glacier.Client, name string) (*types.VaultAccessPolicy, error) {
+	input := glacier.GetVaultAccessPolicyInput{
+		VaultName: aws.String(name),
+	}
+
+	output, err := conn.GetVaultAccessPolicy(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.Policy, nil
+}
+
+func findVaultNotificationsByName(ctx context.Context, conn *glacier.Client, name string) (*types.VaultNotificationConfig, error) {
+	input := glacier.GetVaultNotificationsInput{
+		VaultName: aws.String(name),
+	}
+
+	output, err := conn.GetVaultNotifications(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VaultNotificationConfig == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.VaultNotificationConfig, nil
+}
+
+func expandVaultNotificationConfig(tfMap map[string]any) *types.VaultNotificationConfig {
+	if tfMap == nil {
 		return nil
 	}
-	if err != nil {
-		return fmt.Errorf("Error reading Glacier Vault: %w", err)
+
+	apiObject := &types.VaultNotificationConfig{}
+
+	if v, ok := tfMap["events"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Events = flex.ExpandStringValueSet(v)
 	}
 
-	awsClient := meta.(*conns.AWSClient)
-	d.Set("name", out.VaultName)
-	d.Set("arn", out.VaultARN)
-
-	location, err := buildGlacierVaultLocation(awsClient.AccountID, d.Id())
-	if err != nil {
-		return err
-	}
-	d.Set("location", location)
-
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Glacier Vault (%s): %w", d.Id(), err)
+	if v, ok := tfMap["sns_topic"].(string); ok && v != "" {
+		apiObject.SNSTopic = aws.String(v)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	log.Printf("[DEBUG] Getting the access_policy for Vault %s", d.Id())
-	pol, err := conn.GetVaultAccessPolicy(&glacier.GetVaultAccessPolicyInput{
-		VaultName: aws.String(d.Id()),
-	})
-
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
-		d.Set("access_policy", "")
-	} else if err != nil {
-		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %w", d.Id(), err)
-	} else if pol != nil && pol.Policy != nil {
-		policy, err := structure.NormalizeJsonString(aws.StringValue(pol.Policy.Policy))
-		if err != nil {
-			return fmt.Errorf("access policy contains an invalid JSON: %w", err)
-		}
-		d.Set("access_policy", policy)
-	}
-
-	notifications, err := getGlacierVaultNotification(conn, d.Id())
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
-		d.Set("notification", []map[string]interface{}{})
-	} else if pol != nil {
-		d.Set("notification", notifications)
-	} else {
-		return fmt.Errorf("error setting notification: %w", err)
-	}
-
-	return nil
-}
-
-func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
-
-	log.Printf("[DEBUG] Glacier Delete Vault: %s", d.Id())
-	_, err := conn.DeleteVault(&glacier.DeleteVaultInput{
-		VaultName: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("Error deleting Glacier Vault: %w", err)
-	}
-	return nil
-}
-
-func resourceVaultNotificationUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
-
-	if v, ok := d.GetOk("notification"); ok {
-		settings := v.([]interface{})
-
-		s := settings[0].(map[string]interface{})
-
-		_, err := conn.SetVaultNotifications(&glacier.SetVaultNotificationsInput{
-			VaultName: aws.String(d.Id()),
-			VaultNotificationConfig: &glacier.VaultNotificationConfig{
-				SNSTopic: aws.String(s["sns_topic"].(string)),
-				Events:   flex.ExpandStringSet(s["events"].(*schema.Set)),
-			},
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error Updating Glacier Vault Notifications: %w", err)
-		}
-	} else {
-		_, err := conn.DeleteVaultNotifications(&glacier.DeleteVaultNotificationsInput{
-			VaultName: aws.String(d.Id()),
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error Removing Glacier Vault Notifications: %w", err)
-		}
-
-	}
-
-	return nil
-}
-
-func resourceVaultPolicyUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
-	vaultName := d.Id()
-	policyContents := d.Get("access_policy").(string)
-
-	policy := &glacier.VaultAccessPolicy{
-		Policy: aws.String(policyContents),
-	}
-
-	if policyContents != "" {
-		log.Printf("[DEBUG] Glacier Vault: %s, put policy", vaultName)
-
-		_, err := conn.SetVaultAccessPolicy(&glacier.SetVaultAccessPolicyInput{
-			VaultName: aws.String(d.Id()),
-			Policy:    policy,
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error putting Glacier Vault policy: %w", err)
-		}
-	} else {
-		log.Printf("[DEBUG] Glacier Vault: %s, delete policy: %s", vaultName, policy)
-		_, err := conn.DeleteVaultAccessPolicy(&glacier.DeleteVaultAccessPolicyInput{
-			VaultName: aws.String(d.Id()),
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error deleting Glacier Vault policy: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func buildGlacierVaultLocation(accountId, vaultName string) (string, error) {
-	if accountId == "" {
-		return "", errors.New("AWS account ID unavailable - failed to construct Vault location")
-	}
-	return fmt.Sprintf("/" + accountId + "/vaults/" + vaultName), nil
-}
-
-func getGlacierVaultNotification(conn *glacier.Glacier, vaultName string) ([]map[string]interface{}, error) {
-	request := &glacier.GetVaultNotificationsInput{
-		VaultName: aws.String(vaultName),
-	}
-
-	response, err := conn.GetVaultNotifications(request)
-	if err != nil {
-		return nil, fmt.Errorf("Error reading Glacier Vault Notifications: %w", err)
-	}
-
-	notifications := make(map[string]interface{})
-
-	log.Print("[DEBUG] Flattening Glacier Vault Notifications")
-
-	notifications["events"] = aws.StringValueSlice(response.VaultNotificationConfig.Events)
-	notifications["sns_topic"] = aws.StringValue(response.VaultNotificationConfig.SNSTopic)
-
-	return []map[string]interface{}{notifications}, nil
+	return apiObject
 }

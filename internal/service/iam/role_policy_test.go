@@ -1,45 +1,48 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMRolePolicy_basic(t *testing.T) {
-	var rolePolicy1, rolePolicy2, rolePolicy3 iam.GetRolePolicyOutput
-	role := sdkacctest.RandString(10)
-	policy1 := sdkacctest.RandString(10)
-	policy2 := sdkacctest.RandString(10)
+	ctx := acctest.Context(t)
+	var rolePolicy string
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy.test"
-	resourceName2 := "aws_iam_role_policy.test2"
-	roleName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMRolePolicyConfig(role, policy1),
+				Config: testAccRolePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMRolePolicyExists(
-						roleName,
-						resourceName,
-						&rolePolicy1,
-					),
+					testAccCheckRolePolicyExists(ctx, t, resourceName, &rolePolicy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
@@ -47,48 +50,27 @@ func TestAccIAMRolePolicy_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccIAMRolePolicyConfigUpdate(role, policy1, policy2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMRolePolicyExists(
-						roleName,
-						resourceName,
-						&rolePolicy2,
-					),
-					testAccCheckIAMRolePolicyExists(
-						roleName,
-						resourceName2,
-						&rolePolicy3,
-					),
-					testAccCheckRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
-					testAccCheckRolePolicyNameChanged(&rolePolicy1, &rolePolicy3),
-				),
-			},
 		},
 	})
 }
 
 func TestAccIAMRolePolicy_disappears(t *testing.T) {
-	var out iam.GetRolePolicyOutput
-	suffix := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
-	roleResourceName := fmt.Sprintf("aws_iam_role.role_%s", suffix)
-	rolePolicyResourceName := fmt.Sprintf("aws_iam_role_policy.test_%s", suffix)
+	ctx := acctest.Context(t)
+	var rolePolicy string
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyConfig(suffix),
+				Config: testAccRolePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMRolePolicyExists(
-						roleResourceName,
-						rolePolicyResourceName,
-						&out,
-					),
-					testAccCheckIAMRolePolicyDisappears(&out),
+					testAccCheckRolePolicyExists(ctx, t, resourceName, &rolePolicy),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,72 +78,24 @@ func TestAccIAMRolePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
-	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
-	role := sdkacctest.RandString(10)
+func TestAccIAMRolePolicy_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rolePolicy string
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy.test"
-	roleName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMRolePolicyConfig_namePrefix(role, "*"),
+				Config: testAccRolePolicyConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMRolePolicyExists(
-						roleName,
-						resourceName,
-						&rolePolicy1,
-					),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
-			},
-			{
-				Config: testAccIAMRolePolicyConfig_namePrefix(role, "ec2:*"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMRolePolicyExists(
-						roleName,
-						resourceName,
-						&rolePolicy2,
-					),
-					testAccCheckRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIAMRolePolicy_generatedName(t *testing.T) {
-	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
-	role := sdkacctest.RandString(10)
-	resourceName := "aws_iam_role_policy.test"
-	roleName := "aws_iam_role.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIAMRolePolicyConfig_generatedName(role, "*"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMRolePolicyExists(
-						roleName,
-						resourceName,
-						&rolePolicy1,
-					),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					testAccCheckRolePolicyExists(ctx, t, resourceName, &rolePolicy),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, sdkid.UniqueIdPrefix),
 				),
 			},
 			{
@@ -169,209 +103,259 @@ func TestAccIAMRolePolicy_generatedName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rolePolicy string
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMRolePolicyConfig_generatedName(role, "ec2:*"),
+				Config: testAccRolePolicyConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMRolePolicyExists(
-						roleName,
-						resourceName,
-						&rolePolicy2,
-					),
-					testAccCheckRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					testAccCheckRolePolicyExists(ctx, t, resourceName, &rolePolicy),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMRolePolicy_policyOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rolePolicy string
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePolicyConfig_order(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRolePolicyExists(ctx, t, resourceName, &rolePolicy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccRolePolicyConfig_newOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
 }
 
 func TestAccIAMRolePolicy_invalidJSON(t *testing.T) {
-	role := sdkacctest.RandString(10)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccIAMRolePolicyConfig_invalidJSON(role),
-				ExpectError: regexp.MustCompile("invalid JSON"),
+				Config:      testAccRolePolicyConfig_invalidJSON(rName),
+				ExpectError: regexache.MustCompile("invalid JSON"),
 			},
 		},
 	})
 }
 
 func TestAccIAMRolePolicy_Policy_invalidResource(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccIAMRolePolicyConfig_Policy_InvalidResource(rName),
-				ExpectError: regexp.MustCompile("MalformedPolicyDocument"),
+				Config:      testAccRolePolicyConfig_invalidResource(rName),
+				ExpectError: regexache.MustCompile("MalformedPolicyDocument"),
 			},
 		},
 	})
 }
 
-func testAccCheckIAMRolePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+// When there are unknowns in the policy (interpolation), TF puts a
+// random GUID (e.g., 14730d5f-efa3-5a5e-94b5-f8bad6f88282) in state
+// at first for the policy which, obviously, behaves differently than
+// a JSON policy. This test checks to make sure nothing goes wrong
+// during that step.
+func TestAccIAMRolePolicy_unknownsInPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rolePolicy string
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_role_policy" {
-			continue
-		}
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePolicyConfig_unknowns(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRolePolicyExists(ctx, t, resourceName, &rolePolicy),
+				),
+			},
+		},
+	})
+}
 
-		role, name, err := tfiam.RolePolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+// Resource Identity was added in v6.1
+func TestAccIAMRolePolicy_Identity_old(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rolePolicy string
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
 
-		request := &iam.GetRolePolicyInput{
-			PolicyName: aws.String(name),
-			RoleName:   aws.String(role),
-		}
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRolePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccRolePolicyConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRolePolicyExists(ctx, t, resourceName, &rolePolicy),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRolePolicyConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRolePolicyExists(ctx, t, resourceName, &rolePolicy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRole:      knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRole)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
+				},
+			},
+		},
+	})
+}
 
-		getResp, err := conn.GetRolePolicy(request)
-		if err != nil {
-			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-				// none found, that's good
-				return nil
+func testAccCheckRolePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_role_policy" {
+				continue
 			}
-			return fmt.Errorf("Error reading IAM policy %s from role %s: %s", name, role, err)
+
+			roleName, policyName, err := tfiam.RolePolicyParseID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tfiam.FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IAM Role Policy %s still exists", rs.Primary.ID)
 		}
 
-		if getResp != nil {
-			return fmt.Errorf("Found IAM Role, expected none: %s", getResp)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckIAMRolePolicyDisappears(out *iam.GetRolePolicyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-
-		params := &iam.DeleteRolePolicyInput{
-			PolicyName: out.PolicyName,
-			RoleName:   out.RoleName,
-		}
-
-		_, err := conn.DeleteRolePolicy(params)
-		return err
+		return nil
 	}
 }
 
-func testAccCheckIAMRolePolicyExists(
-	iamRoleResource string,
-	iamRolePolicyResource string,
-	rolePolicy *iam.GetRolePolicyOutput) resource.TestCheckFunc {
+func testAccCheckRolePolicyExists(ctx context.Context, t *testing.T, n string, v *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[iamRoleResource]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not Found: %s", iamRoleResource)
+			return fmt.Errorf("Not Found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		policy, ok := s.RootModule().Resources[iamRolePolicyResource]
-		if !ok {
-			return fmt.Errorf("Not Found: %s", iamRolePolicyResource)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		role, name, err := tfiam.RolePolicyParseID(policy.Primary.ID)
+		roleName, policyName, err := tfiam.RolePolicyParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := conn.GetRolePolicy(&iam.GetRolePolicyInput{
-			RoleName:   aws.String(role),
-			PolicyName: aws.String(name),
-		})
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
+
+		output, err := tfiam.FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+
 		if err != nil {
 			return err
 		}
 
-		*rolePolicy = *output
+		*v = output
 
 		return nil
 	}
 }
 
-func testAccCheckRolePolicyNameChanged(i, j *iam.GetRolePolicyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.PolicyName) == aws.StringValue(j.PolicyName) {
-			return errors.New("IAM Role Policy name did not change")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.PolicyName) != aws.StringValue(j.PolicyName) {
-			return errors.New("IAM Role Policy name did not match")
-		}
-
-		return nil
-	}
-}
-
-func testAccRolePolicyConfig(suffix string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "role_%[1]s" {
-  name = "tf_test_role_test_%[1]s"
-  path = "/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test_%[1]s" {
-  name = "tf_test_policy_test_%[1]s"
-  role = "${aws_iam_role.role_%[1]s.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-`, suffix)
-}
-
-func testAccIAMRolePolicyConfig(role, policy1 string) string {
+func testAccRolePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -392,7 +376,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf_test_policy_%s"
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<EOF
@@ -406,13 +390,13 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-`, role, policy1)
+`, rName)
 }
 
-func testAccIAMRolePolicyConfig_namePrefix(role, policyAction string) string {
+func testAccRolePolicyConfig_nameGenerated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -433,7 +417,47 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name_prefix = "tf_test_policy_"
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, rName)
+}
+
+func testAccRolePolicyConfig_namePrefix(rName, namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name_prefix = %[2]q
   role        = aws_iam_role.test.name
 
   policy = <<EOF
@@ -441,116 +465,19 @@ resource "aws_iam_role_policy" "test" {
   "Version": "2012-10-17",
   "Statement": {
     "Effect": "Allow",
-    "Action": "%s",
-    "Resource": "*"
-  }
-}
-EOF
-}
-`, role, policyAction)
-}
-
-func testAccIAMRolePolicyConfig_generatedName(role, policyAction string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
-  path = "/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  role = aws_iam_role.test.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "%s",
-    "Resource": "*"
-  }
-}
-EOF
-}
-`, role, policyAction)
-}
-
-func testAccIAMRolePolicyConfigUpdate(role, policy1, policy2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
-  path = "/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = "tf_test_policy_%s"
-  role = aws_iam_role.test.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
     "Action": "*",
     "Resource": "*"
   }
 }
 EOF
 }
-
-resource "aws_iam_role_policy" "test2" {
-  name = "tf_test_policy_2_%s"
-  role = aws_iam_role.test.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-`, role, policy1, policy2)
+`, rName, namePrefix)
 }
 
-func testAccIAMRolePolicyConfig_invalidJSON(role string) string {
+func testAccRolePolicyConfig_invalidJSON(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -571,7 +498,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf_test_policy_%s"
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<EOF
@@ -584,10 +511,10 @@ resource "aws_iam_role_policy" "test" {
   }
   EOF
 }
-`, role, role)
+`, rName)
 }
 
-func testAccIAMRolePolicyConfig_Policy_InvalidResource(rName string) string {
+func testAccRolePolicyConfig_invalidResource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -620,6 +547,150 @@ resource "aws_iam_role_policy" "test" {
       Resource = [["*"]]
     }]
     Version = "2012-10-17"
+  })
+}
+`, rName)
+}
+
+func testAccRolePolicyConfig_order(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": [
+      "ec2:DescribeScheduledInstances",
+      "ec2:DescribeScheduledInstanceAvailability",
+      "ec2:DescribeFastSnapshotRestores",
+      "ec2:DescribeElasticGpus"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, rName)
+}
+
+func testAccRolePolicyConfig_newOrder(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+	"Action": [
+      "ec2:DescribeFastSnapshotRestores",
+      "ec2:DescribeScheduledInstanceAvailability",
+      "ec2:DescribeScheduledInstances",
+      "ec2:DescribeElasticGpus"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, rName)
+}
+
+func testAccRolePolicyConfig_unknowns(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = ""
+      Effect = "Allow"
+      Principal = {
+        Service = "firehose.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = ""
+      Effect = "Allow"
+      Action = [
+        "s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject",
+      ]
+      Resource = [
+        aws_s3_bucket.test.arn,
+        "${aws_s3_bucket.test.arn}/*"
+      ]
+    }]
   })
 }
 `, rName)

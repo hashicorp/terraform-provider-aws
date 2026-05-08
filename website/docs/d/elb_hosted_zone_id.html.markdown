@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb_hosted_zone_id"
 description: |-
@@ -31,10 +31,12 @@ resource "aws_route53_record" "www" {
 
 ## Argument Reference
 
-* `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
-  Defaults to the region from the AWS provider configuration.
+This data source supports the following arguments:
 
+* `region` - (Optional) Name of the Region whose AWS ELB HostedZoneId is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-## Attributes Reference
+## Attribute Reference
 
-* `id` - The ID of the AWS ELB HostedZoneId in the selected region.
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - ID of the AWS ELB HostedZoneId in the selected Region.

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iot_indexing_configuration: Correct plan-time validation of `thing_indexing_configuration.filter.named_shadow_names`
+```

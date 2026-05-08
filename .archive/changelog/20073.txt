@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_acm_certificate: Correctly handle SAN entries that match `domain_name`
+```
+
+```release-note:enhancement
+resource/aws_acm_certificate_validation: Increase default resource Create (certificate issuance) timeout to 75 minutes
+```

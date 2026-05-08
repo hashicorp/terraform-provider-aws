@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Lambda Example
 
 This examples shows how to deploy an AWS Lambda function connected with an EFS file system using Terraform only.
@@ -6,13 +9,14 @@ To run, configure your AWS provider as described in https://www.terraform.io/doc
 
 ### Running the example
 
-run `terraform apply` to see it work.
+Run `terraform apply` to see it work.
 
 ### Test the lambda function
 
 ```bash
  aws lambda invoke --region us-east-1 --function-name hello_lambda response.json 
 ```
-Invoke lambda function several times, check the content of response.json. 
+
+Invoke lambda function several times, check the content of `response.json`.
 
 On each invoke, the lambda function will append one line of data to /mnt/efs/test.txt, and return all content from the file.

@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_ciphertext"
 description: |-
@@ -38,14 +38,17 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `plaintext` - (Required) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `plaintext` - (Exactly one of `plaintext` or `plaintext_wo` must be set) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.
+* `plaintext_wo` - (Write-Only, Exactly one of `plaintext` or `plaintext_wo` must be set) Data to be encrypted. Note that this may show up in logs. It will not be stored in the state file.
+* `plaintext_wo_version` - (Required when `plaintext_wo` is set) Used together with `plaintext_wo` to trigger a replacement. Modify this value when a replacement is required.
 * `key_id` - (Required) Globally unique key ID for the customer master key.
 * `context` - (Optional) An optional mapping that makes up the encryption context.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `ciphertext_blob` - Base64 encoded ciphertext

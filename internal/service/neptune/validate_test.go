@@ -1,12 +1,18 @@
-package neptune
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package neptune_test
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -24,12 +30,12 @@ func TestValidEventSubscriptionName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(256, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validEventSubscriptionName(tc.Value, "aws_neptune_event_subscription")
+		_, errors := tfneptune.ValidEventSubscriptionName(tc.Value, "aws_neptune_event_subscription")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Event Subscription Name to trigger a validation error for %q", tc.Value)
 		}
@@ -37,6 +43,8 @@ func TestValidEventSubscriptionName(t *testing.T) {
 }
 
 func TestValidEventSubscriptionNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -54,12 +62,12 @@ func TestValidEventSubscriptionNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(254, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 254, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validEventSubscriptionNamePrefix(tc.Value, "aws_neptune_event_subscription")
+		_, errors := tfneptune.ValidEventSubscriptionNamePrefix(tc.Value, "aws_neptune_event_subscription")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Event Subscription Name Prefix to trigger a validation error for %q", tc.Value)
 		}
@@ -67,6 +75,8 @@ func TestValidEventSubscriptionNamePrefix(t *testing.T) {
 }
 
 func TestValidParamGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -96,13 +106,13 @@ func TestValidParamGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(256, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 
 	for _, tc := range cases {
-		_, errors := validParamGroupName(tc.Value, "aws_neptune_cluster_parameter_group_name")
+		_, errors := tfneptune.ValidParamGroupName(tc.Value, "aws_neptune_cluster_parameter_group_name")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error for %q", tc.Value)
@@ -111,6 +121,8 @@ func TestValidParamGroupName(t *testing.T) {
 }
 
 func TestValidParamGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -136,13 +148,13 @@ func TestValidParamGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(256, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 
 	for _, tc := range cases {
-		_, errors := validParamGroupNamePrefix(tc.Value, "aws_neptune_cluster_parameter_group_name")
+		_, errors := tfneptune.ValidParamGroupNamePrefix(tc.Value, "aws_neptune_cluster_parameter_group_name")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error for %q", tc.Value)
@@ -151,6 +163,8 @@ func TestValidParamGroupNamePrefix(t *testing.T) {
 }
 
 func TestValidSubnetGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -168,13 +182,13 @@ func TestValidSubnetGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(300, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 300, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 
 	for _, tc := range cases {
-		_, errors := validSubnetGroupName(tc.Value, "aws_neptune_subnet_group")
+		_, errors := tfneptune.ValidSubnetGroupName(tc.Value, "aws_neptune_subnet_group")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Subnet Group name to trigger a validation error")
@@ -183,6 +197,8 @@ func TestValidSubnetGroupName(t *testing.T) {
 }
 
 func TestValidSubnetGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -196,13 +212,13 @@ func TestValidSubnetGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(230, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 230, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 
 	for _, tc := range cases {
-		_, errors := validSubnetGroupNamePrefix(tc.Value, "aws_neptune_subnet_group")
+		_, errors := tfneptune.ValidSubnetGroupNamePrefix(tc.Value, "aws_neptune_subnet_group")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Subnet Group name prefix to trigger a validation error")

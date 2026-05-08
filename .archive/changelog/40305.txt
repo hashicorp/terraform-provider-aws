@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrock_provisioned_model_throughput: Properly manages `tags_all` when planning.
+```

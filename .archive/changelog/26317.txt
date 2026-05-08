@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Correct S3 Object Lock error handling for third-party S3-compatible API implementations
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_object_lock_configuration: Correct error handling for third-party S3-compatible API implementations
+```

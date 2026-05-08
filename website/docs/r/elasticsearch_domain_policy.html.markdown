@@ -1,7 +1,7 @@
 ---
 subcategory: "Elasticsearch"
 layout: "aws"
-page_title: "AWS: aws_elasticsearch_domain"
+page_title: "AWS: aws_elasticsearch_domain_policy"
 description: |-
   Provides an Elasticsearch Domain Policy.
 ---
@@ -42,11 +42,12 @@ POLICIES
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Name of the domain.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

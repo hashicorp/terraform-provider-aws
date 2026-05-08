@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Allow `vpc_config.security_group_ids` and `vpc_config.subnet_ids` to be updated in-place
+```

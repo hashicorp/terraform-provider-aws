@@ -21,13 +21,16 @@ data "aws_storagegateway_local_disk" "test" {
 
 ## Argument Reference
 
-* `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
-* `disk_node` - (Optional) The device node of the local disk to retrieve. For example, `/dev/sdb`.
-* `disk_path` - (Optional) The device path of the local disk to retrieve. For example, `/dev/xvdb` or `/dev/nvme1n1`.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `gateway_arn` - (Required) ARN of the gateway.
+* `disk_node` - (Optional) Device node of the local disk to retrieve. For example, `/dev/sdb`.
+* `disk_path` - (Optional) Device path of the local disk to retrieve. For example, `/dev/xvdb` or `/dev/nvme1n1`.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
 
-* `disk_id` - The disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
-* `id` - The disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
+This data source exports the following attributes in addition to the arguments above:
+
+* `disk_id` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
+* `id` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`

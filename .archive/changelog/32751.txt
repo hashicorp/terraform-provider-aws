@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_composite_alarm: Add `actions_suppressor` configuration block
+```

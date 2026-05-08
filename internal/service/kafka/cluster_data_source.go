@@ -1,26 +1,52 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kafka
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceCluster() *schema.Resource {
+// @SDKDataSource("aws_msk_cluster", name="Cluster")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"bootstrap_brokers": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_public_sasl_iam": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_public_sasl_scram": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_public_tls": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,10 +62,140 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			"broker_node_group_info": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"az_distribution": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"client_subnets": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"connectivity_info": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"network_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"vpc_connectivity": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"client_authentication": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sasl": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"iam": {
+																			Type:     schema.TypeBool,
+																			Computed: true,
+																		},
+																		"scram": {
+																			Type:     schema.TypeBool,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"tls": {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"public_access": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrType: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						names.AttrInstanceType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrSecurityGroups: {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"storage_info": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ebs_storage_info": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"provisioned_throughput": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrEnabled: {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
+															"volume_throughput": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+														},
+													},
+												},
+												names.AttrVolumeSize: {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"kafka_version": {
 				Type:     schema.TypeString,
@@ -49,8 +205,12 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"zookeeper_connect_string": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"zookeeper_connect_string_tls": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,66 +218,85 @@ func DataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
-	input := &kafka.ListClustersInput{
-		ClusterNameFilter: aws.String(clusterName),
+	clusterName := d.Get(names.AttrClusterName).(string)
+	cluster, err := findClusterByName(ctx, conn, clusterName)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): %s", clusterName, err)
 	}
-	var cluster *kafka.ClusterInfo
 
-	err := conn.ListClustersPages(input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	clusterARN := aws.ToString(cluster.ClusterArn)
+	bootstrapBrokersOutput, err := findBootstrapBrokersByARN(ctx, conn, clusterARN)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", clusterARN, err)
+	}
+
+	d.SetId(clusterARN)
+	d.Set(names.AttrARN, clusterARN)
+	d.Set("bootstrap_brokers", sortEndpointsString(aws.ToString(bootstrapBrokersOutput.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_public_sasl_iam", sortEndpointsString(aws.ToString(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslIam)))
+	d.Set("bootstrap_brokers_public_sasl_scram", sortEndpointsString(aws.ToString(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslScram)))
+	d.Set("bootstrap_brokers_public_tls", sortEndpointsString(aws.ToString(bootstrapBrokersOutput.BootstrapBrokerStringPublicTls)))
+	d.Set("bootstrap_brokers_sasl_iam", sortEndpointsString(aws.ToString(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", sortEndpointsString(aws.ToString(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", sortEndpointsString(aws.ToString(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
+	if cluster.BrokerNodeGroupInfo != nil {
+		if err := d.Set("broker_node_group_info", []any{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting broker_node_group_info: %s", err)
 		}
+	} else {
+		d.Set("broker_node_group_info", nil)
+	}
+	d.Set(names.AttrClusterName, cluster.ClusterName)
+	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
+	d.Set("cluster_uuid", clusterUUID)
+	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
+	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
+	d.Set("zookeeper_connect_string", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string_tls", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
 
-		for _, clusterInfo := range page.ClusterInfoList {
-			if aws.StringValue(clusterInfo.ClusterName) == clusterName {
-				cluster = clusterInfo
+	setTagsOut(ctx, cluster.Tags)
 
-				return false
-			}
-		}
+	return diags
+}
 
-		return !lastPage
+func findClusterByName(ctx context.Context, conn *kafka.Client, name string) (*types.ClusterInfo, error) {
+	input := kafka.ListClustersInput{
+		ClusterNameFilter: aws.String(name),
+	}
+	output, err := findClusters(ctx, conn, &input, func(v *types.ClusterInfo) bool {
+		return aws.ToString(v.ClusterName) == name
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing MSK Clusters: %w", err)
+		return nil, err
 	}
 
-	if cluster == nil {
-		return fmt.Errorf("error reading MSK Cluster (%s): no results found", clusterName)
+	return tfresource.AssertFirstValueResult(output)
+}
+
+func findClusters(ctx context.Context, conn *kafka.Client, input *kafka.ListClustersInput, filter tfslices.Predicate[*types.ClusterInfo]) ([]types.ClusterInfo, error) {
+	var output []types.ClusterInfo
+
+	pages := kafka.NewListClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ClusterInfoList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	bootstrapBrokersInput := &kafka.GetBootstrapBrokersInput{
-		ClusterArn: cluster.ClusterArn,
-	}
-
-	bootstrapBrokersOutput, err := conn.GetBootstrapBrokers(bootstrapBrokersInput)
-
-	if err != nil {
-		return fmt.Errorf("error reading MSK Cluster (%s) bootstrap brokers: %w", aws.StringValue(cluster.ClusterArn), err)
-	}
-
-	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
-	d.Set("cluster_name", cluster.ClusterName)
-	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
-	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
-
-	if err := d.Set("tags", KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
-
-	d.SetId(aws.StringValue(cluster.ClusterArn))
-
-	return nil
+	return output, nil
 }

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # ASG example
 
 This example shows how to launch instances using Auto Scaling Groups.
@@ -12,7 +15,7 @@ To run, configure your AWS provider as described in https://www.terraform.io/doc
 
 Running the example
 
-For planning phase 
+For planning phase
 
 ```
 terraform plan -var 'key_name={your_key_name}'

@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 # Uncomment the resources in this file to create the IAM resources required by the AWS WorkSpaces service.
 # Also uncomment the `depends_on` meta-arguments on `aws_workspaces_directory.example` and `aws_workspaces_workspace.example`.
 #

@@ -1,61 +1,42 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2EBSDefaultKMSKeyDataSource_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+func testAccEBSDefaultKMSKeyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSDefaultKMSKeyDataSourceConfig,
+				Config: testAccEBSDefaultKMSKeyDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSDefaultKMSKey("data.aws_ebs_default_kms_key.current"),
+					testAccCheckEBSDefaultKMSKey(ctx, t, "data.aws_ebs_default_kms_key.current"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckEBSDefaultKMSKey(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		actual, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
-		if err != nil {
-			return fmt.Errorf("Error reading EBS default KMS key: %q", err)
-		}
-
-		attr := rs.Primary.Attributes["key_arn"]
-
-		if attr != aws.StringValue(actual.KmsKeyId) {
-			return fmt.Errorf("EBS default KMS key is not the expected value (%s)", aws.StringValue(actual.KmsKeyId))
-		}
-
-		return nil
-	}
+const testAccEBSDefaultKMSKeyDataSourceConfig_basic = `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
-const testAccEBSDefaultKMSKeyDataSourceConfig = `
+resource "aws_ebs_default_kms_key" "test" {
+  key_arn = aws_kms_key.test.arn
+}
+
 data "aws_ebs_default_kms_key" "current" {}
 `

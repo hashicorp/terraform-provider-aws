@@ -1,138 +1,118 @@
-//go:build sweep
-// +build sweep
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
 
 package sns
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sns_platform_application", &resource.Sweeper{
-		Name: "aws_sns_platform_application",
-		F:    sweepPlatformApplications,
-	})
-
-	resource.AddTestSweepers("aws_sns_topic", &resource.Sweeper{
-		Name: "aws_sns_topic",
-		F:    sweepTopics,
-		Dependencies: []string{
-			"aws_autoscaling_group",
-			"aws_backup_vault_notifications",
-			"aws_budgets_budget",
-			"aws_config_delivery_channel",
-			"aws_dax_cluster",
-			"aws_db_event_subscription",
-			"aws_elasticache_cluster",
-			"aws_elasticache_replication_group",
-			"aws_glacier_vault",
-			"aws_iot_topic_rule",
-			"aws_neptune_event_subscription",
-			"aws_redshift_event_subscription",
-			"aws_s3_bucket",
-			"aws_ses_configuration_set",
-			"aws_ses_domain_identity",
-			"aws_ses_email_identity",
-			"aws_ses_receipt_rule_set",
-			"aws_sns_platform_application",
-		},
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_sns_platform_application", sweepPlatformApplications)
+	awsv2.Register("aws_sns_topic", sweepTopics,
+		"aws_autoscaling_group",
+		"aws_backup_vault_notifications",
+		"aws_budgets_budget",
+		"aws_config_delivery_channel",
+		"aws_dax_cluster",
+		"aws_db_event_subscription",
+		"aws_elasticache_cluster",
+		"aws_elasticache_replication_group",
+		"aws_glacier_vault",
+		"aws_iot_topic_rule",
+		"aws_redshift_event_subscription",
+		"aws_s3_bucket",
+		"aws_ses_configuration_set",
+		"aws_ses_domain_identity",
+		"aws_ses_email_identity",
+		"aws_ses_receipt_rule_set",
+		"aws_sns_platform_application",
+	)
+	awsv2.Register("aws_sns_topic_subscription", sweepTopicSubscriptions)
 }
 
-func sweepPlatformApplications(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SNSConn
-	var sweeperErrs *multierror.Error
+func sweepPlatformApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.SNSClient(ctx)
 
-	err = conn.ListPlatformApplicationsPages(&sns.ListPlatformApplicationsInput{}, func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	input := &sns.ListPlatformApplicationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := sns.NewListPlatformApplicationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		for _, platformApplication := range page.PlatformApplications {
-			arn := aws.StringValue(platformApplication.PlatformApplicationArn)
+		for _, v := range page.PlatformApplications {
+			r := resourcePlatformApplication()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.PlatformApplicationArn))
 
-			log.Printf("[INFO] Deleting SNS Platform Application: %s", arn)
-			_, err := conn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
-				PlatformApplicationArn: aws.String(arn),
-			})
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SNS Platform Application (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SNS Platform Applications: %w", err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepTopics(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SNSConn
-	var sweeperErrs *multierror.Error
+func sweepTopics(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.SNSClient(ctx)
 
-	err = conn.ListTopicsPages(&sns.ListTopicsInput{}, func(page *sns.ListTopicsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	input := &sns.ListTopicsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := sns.NewListTopicsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		for _, topic := range page.Topics {
-			arn := aws.StringValue(topic.TopicArn)
+		for _, v := range page.Topics {
+			r := resourceTopic()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.TopicArn))
 
-			log.Printf("[INFO] Deleting SNS Topic: %s", arn)
-			_, err := conn.DeleteTopic(&sns.DeleteTopicInput{
-				TopicArn: aws.String(arn),
-			})
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SNS Topic (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepTopicSubscriptions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.SNSClient(ctx)
+
+	input := &sns.ListSubscriptionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := sns.NewListSubscriptionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SNS Topics sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SNS Topics: %w", err))
+		for _, v := range page.Subscriptions {
+			arn := aws.ToString(v.SubscriptionArn)
+
+			if arn == "PendingConfirmation" {
+				continue
+			}
+
+			r := resourceTopicSubscription()
+			d := r.Data(nil)
+			d.SetId(arn)
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }

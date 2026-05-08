@@ -27,13 +27,18 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "example" {
 
 ## Argument Reference
 
-* `application_id` - (Required) The ARN of the application.
-* `semantic_version` - (Optional) The requested version of the application. By default, retrieves the latest version.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `application_id` - (Required) ARN of the application.
+* `semantic_version` - (Optional) Requested version of the application. By default, retrieves the latest version.
 
-* `application_id` - The ARN of the application.
-* `name` - The name of the application.
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `application_id` - ARN of the application.
+* `name` - Name of the application.
 * `required_capabilities` - A list of capabilities describing the permissions needed to deploy the application.
-* `source_code_url` - A URL pointing to the source code of the application version.
-* `template_url` - A URL pointing to the Cloud Formation template for the application version.
+* `source_code_url` - URL pointing to the source code of the application version.
+* `template_url` - URL pointing to the Cloud Formation template for the application version.

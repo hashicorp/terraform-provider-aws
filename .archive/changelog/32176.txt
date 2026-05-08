@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_sfn_alias
+```
+
+```release-note:new-data-source
+aws_sfn_alias
+```
+
+```release-note:new-data-source
+aws_sfn_state_machine_versions
+```
+
+```release-note:enhancement
+resource/aws_sfn_state_machine: Add `description`, `publish`, `revision_id`, `state_machine_version_arn` and `version_description` attributes
+```

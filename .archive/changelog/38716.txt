@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_batch_job_definition: Fix panic when checking `eks_properties` for job updates
+```
+```release-note:bug
+resource/aws_batch_job_definition: Fix panic when checking `retry_strategy` for job updates
+```
+```release-note:bug
+resource/aws_batch_job_definition: Fix panic when checking `timeout` for job updates
+```

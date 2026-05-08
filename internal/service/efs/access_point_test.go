@@ -1,41 +1,44 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSAccessPoint_basic(t *testing.T) {
-	var ap efs.AccessPointDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var ap awstypes.AccessPointDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_access_point.test"
 	fsResourceName := "aws_efs_file_system.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointConfig(rName),
+				Config: testAccAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
-					resource.TestCheckResourceAttrPair(resourceName, "file_system_arn", fsResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "file_system_id", fsResourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`access-point/fsap-.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
+					resource.TestCheckResourceAttrPair(resourceName, "file_system_arn", fsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrFileSystemID, fsResourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`access-point/fsap-.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
@@ -52,20 +55,21 @@ func TestAccEFSAccessPoint_basic(t *testing.T) {
 }
 
 func TestAccEFSAccessPoint_Root_directory(t *testing.T) {
-	var ap efs.AccessPointDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var ap awstypes.AccessPointDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_access_point.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointRootDirectoryConfig(rName, "/home/test"),
+				Config: testAccAccessPointConfig_rootDirectory(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", "0"),
@@ -81,20 +85,21 @@ func TestAccEFSAccessPoint_Root_directory(t *testing.T) {
 }
 
 func TestAccEFSAccessPoint_RootDirectoryCreation_info(t *testing.T) {
-	var ap efs.AccessPointDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var ap awstypes.AccessPointDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_access_point.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointRootDirectoryCreationInfoConfig(rName, "/home/test"),
+				Config: testAccAccessPointConfig_rootDirectoryCreationInfo(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", "1"),
@@ -113,20 +118,21 @@ func TestAccEFSAccessPoint_RootDirectoryCreation_info(t *testing.T) {
 }
 
 func TestAccEFSAccessPoint_POSIX_user(t *testing.T) {
-	var ap efs.AccessPointDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var ap awstypes.AccessPointDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_access_point.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointPOSIXUserConfig(rName),
+				Config: testAccAccessPointConfig_posixUser(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
@@ -143,20 +149,21 @@ func TestAccEFSAccessPoint_POSIX_user(t *testing.T) {
 }
 
 func TestAccEFSAccessPoint_POSIXUserSecondary_gids(t *testing.T) {
-	var ap efs.AccessPointDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var ap awstypes.AccessPointDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_access_point.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointPOSIXUserSecondaryGidsConfig(rName),
+				Config: testAccAccessPointConfig_posixUserSecondaryGids(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
@@ -172,22 +179,23 @@ func TestAccEFSAccessPoint_POSIXUserSecondary_gids(t *testing.T) {
 }
 
 func TestAccEFSAccessPoint_tags(t *testing.T) {
-	var ap efs.AccessPointDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var ap awstypes.AccessPointDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_access_point.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointTags1Config(rName, "key1", "value1"),
+				Config: testAccAccessPointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -196,20 +204,20 @@ func TestAccEFSAccessPoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccessPointTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAccessPointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAccessPointTags1Config(rName, "key2", "value2"),
+				Config: testAccAccessPointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -217,21 +225,22 @@ func TestAccEFSAccessPoint_tags(t *testing.T) {
 }
 
 func TestAccEFSAccessPoint_disappears(t *testing.T) {
-	var ap efs.AccessPointDescription
+	ctx := acctest.Context(t)
+	var ap awstypes.AccessPointDescription
 	resourceName := "aws_efs_access_point.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointConfig(rName),
+				Config: testAccAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
-					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceAccessPoint(), resourceName),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -239,69 +248,60 @@ func TestAccEFSAccessPoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_efs_access_point" {
-			continue
-		}
-
-		resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
-			AccessPointId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
+func testAccCheckAccessPointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EFSClient(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_efs_access_point" {
 				continue
 			}
-			return fmt.Errorf("Error describing EFS access point in tests: %s", err)
-		}
-		if len(resp.AccessPoints) > 0 {
-			return fmt.Errorf("EFS access point %q still exists", rs.Primary.ID)
-		}
-	}
 
-	return nil
-}
+			_, err := tfefs.FindAccessPointByID(ctx, conn, rs.Primary.ID)
 
-func testAccCheckEfsAccessPointExists(resourceID string, mount *efs.AccessPointDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EFS Access Point %s still exists", rs.Primary.ID)
 		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		fs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
-		mt, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
-			AccessPointId: aws.String(fs.Primary.ID),
-		})
-		if err != nil {
-			return err
-		}
-
-		apId := aws.StringValue(mt.AccessPoints[0].AccessPointId)
-		if apId != fs.Primary.ID {
-			return fmt.Errorf("access point ID mismatch: %q != %q", apId, fs.Primary.ID)
-		}
-
-		*mount = *mt.AccessPoints[0]
 
 		return nil
 	}
 }
 
-func testAccAccessPointConfig(rName string) string {
+func testAccCheckAccessPointExists(ctx context.Context, t *testing.T, n string, v *awstypes.AccessPointDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).EFSClient(ctx)
+
+		output, err := tfefs.FindAccessPointByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccAccessPointConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
+  creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -310,10 +310,14 @@ resource "aws_efs_access_point" "test" {
 `, rName)
 }
 
-func testAccAccessPointRootDirectoryConfig(rName, dir string) string {
+func testAccAccessPointConfig_rootDirectory(rName, dir string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -325,10 +329,14 @@ resource "aws_efs_access_point" "test" {
 `, rName, dir)
 }
 
-func testAccAccessPointRootDirectoryCreationInfoConfig(rName, dir string) string {
+func testAccAccessPointConfig_rootDirectoryCreationInfo(rName, dir string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -345,10 +353,14 @@ resource "aws_efs_access_point" "test" {
 `, rName, dir)
 }
 
-func testAccAccessPointPOSIXUserConfig(rName string) string {
+func testAccAccessPointConfig_posixUser(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
+  creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -361,10 +373,14 @@ resource "aws_efs_access_point" "test" {
 `, rName)
 }
 
-func testAccAccessPointPOSIXUserSecondaryGidsConfig(rName string) string {
+func testAccAccessPointConfig_posixUserSecondaryGids(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
+  creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -378,10 +394,14 @@ resource "aws_efs_access_point" "test" {
 `, rName)
 }
 
-func testAccAccessPointTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAccessPointConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -394,10 +414,14 @@ resource "aws_efs_access_point" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAccessPointTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAccessPointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {

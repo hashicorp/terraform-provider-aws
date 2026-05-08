@@ -1,36 +1,44 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/inspector"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
-	var assessmentTarget1 inspector.AssessmentTarget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var v awstypes.AssessmentTarget
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetAssessmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssessmentTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetAssessmentConfig(rName),
+				Config: testAccAssessmentTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &assessmentTarget1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector", regexache.MustCompile(`target/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_arn", ""),
 				),
 			},
@@ -44,21 +52,25 @@ func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
 }
 
 func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
-	var assessmentTarget1 inspector.AssessmentTarget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var v awstypes.AssessmentTarget
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetAssessmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssessmentTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetAssessmentConfig(rName),
+				Config: testAccAssessmentTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &assessmentTarget1),
-					testAccCheckTargetDisappears(&assessmentTarget1),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector.ResourceAssessmentTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,22 +79,26 @@ func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 }
 
 func TestAccInspectorAssessmentTarget_name(t *testing.T) {
-	var assessmentTarget1, assessmentTarget2 inspector.AssessmentTarget
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var v awstypes.AssessmentTarget
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetAssessmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssessmentTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetAssessmentConfig(rName1),
+				Config: testAccAssessmentTargetConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &assessmentTarget1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -91,10 +107,10 @@ func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTargetAssessmentConfig(rName2),
+				Config: testAccAssessmentTargetConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &assessmentTarget2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -102,23 +118,27 @@ func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 }
 
 func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
-	var assessmentTarget1, assessmentTarget2, assessmentTarget3, assessmentTarget4 inspector.AssessmentTarget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	var v awstypes.AssessmentTarget
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	inspectorResourceGroupResourceName1 := "aws_inspector_resource_group.test1"
 	inspectorResourceGroupResourceName2 := "aws_inspector_resource_group.test2"
 	resourceName := "aws_inspector_assessment_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetAssessmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssessmentTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName1),
+				Config: testAccAssessmentTargetConfig_resourceGroupARN(rName, inspectorResourceGroupResourceName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &assessmentTarget1),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName1, "arn"),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName1, names.AttrARN),
 				),
 			},
 			{
@@ -127,92 +147,78 @@ func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName2),
+				Config: testAccAssessmentTargetConfig_resourceGroupARN(rName, inspectorResourceGroupResourceName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &assessmentTarget2),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName2, "arn"),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName2, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccTargetAssessmentConfig(rName),
+				Config: testAccAssessmentTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &assessmentTarget3),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_arn", ""),
 				),
 			},
 			{
-				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName1),
+				Config: testAccAssessmentTargetConfig_resourceGroupARN(rName, inspectorResourceGroupResourceName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &assessmentTarget4),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName1, "arn"),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName1, names.AttrARN),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTargetAssessmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_inspector_assessment_target" {
-			continue
-		}
-
-		assessmentTarget, err := tfinspector.DescribeAssessmentTarget(conn, rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("Error finding Inspector Assessment Target: %s", err)
-		}
-
-		if assessmentTarget != nil {
-			return fmt.Errorf("Inspector Assessment Target (%s) still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckTargetExists(name string, target *inspector.AssessmentTarget) resource.TestCheckFunc {
+func testAccCheckAssessmentTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+		conn := acctest.ProviderMeta(ctx, t).InspectorClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_inspector_assessment_target" {
+				continue
+			}
+
+			_, err := tfinspector.FindAssessmentTargetByARN(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Inspector Classic Assessment Target %s still exists", rs.Primary.ID)
 		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
-
-		assessmentTarget, err := tfinspector.DescribeAssessmentTarget(conn, rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("Error finding Inspector Assessment Target: %s", err)
-		}
-
-		if assessmentTarget == nil {
-			return fmt.Errorf("Inspector Assessment Target (%s) not found", rs.Primary.ID)
-		}
-
-		*target = *assessmentTarget
 
 		return nil
 	}
 }
 
-func testAccCheckTargetDisappears(assessmentTarget *inspector.AssessmentTarget) resource.TestCheckFunc {
+func testAccCheckAssessmentTargetExists(ctx context.Context, t *testing.T, n string, v *awstypes.AssessmentTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
-
-		input := &inspector.DeleteAssessmentTargetInput{
-			AssessmentTargetArn: assessmentTarget.Arn,
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		_, err := conn.DeleteAssessmentTarget(input)
+		conn := acctest.ProviderMeta(ctx, t).InspectorClient(ctx)
 
-		return err
+		output, err := tfinspector.FindAssessmentTargetByARN(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
 	}
 }
 
-func testAccTargetAssessmentConfig(rName string) string {
+func testAccAssessmentTargetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector_assessment_target" "test" {
   name = %q
@@ -220,7 +226,7 @@ resource "aws_inspector_assessment_target" "test" {
 `, rName)
 }
 
-func testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName string) string {
+func testAccAssessmentTargetConfig_resourceGroupARN(rName, inspectorResourceGroupResourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector_resource_group" "test1" {
   tags = {

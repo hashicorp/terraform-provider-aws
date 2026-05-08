@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   backend "remote" {
     organization = "hashicorp-v2"
@@ -10,7 +13,7 @@ terraform {
   required_providers {
     github = {
       source  = "integrations/github"
-      version = "4.18.0"
+      version = "6.12.1"
     }
   }
 

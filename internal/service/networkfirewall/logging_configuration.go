@@ -1,49 +1,66 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkfirewall
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceLoggingConfiguration() *schema.Resource {
+// @SDKResource("aws_networkfirewall_logging_configuration", name="Logging Configuration")
+func resourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceLoggingConfigurationCreate,
-		ReadContext:   resourceLoggingConfigurationRead,
-		UpdateContext: resourceLoggingConfigurationUpdate,
-		DeleteContext: resourceLoggingConfigurationDelete,
+		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
+		ReadWithoutTimeout:   resourceLoggingConfigurationRead,
+		UpdateWithoutTimeout: resourceLoggingConfigurationUpdate,
+		DeleteWithoutTimeout: resourceLoggingConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"firewall_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"enable_monitoring_dashboard": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
-			"logging_configuration": {
+			"firewall_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"log_destination_config": {
-							// At most 2 configurations can exist,
-							// with 1 destination for FLOW logs and 1 for ALERT logs
 							Type:     schema.TypeSet,
 							Required: true,
-							MaxItems: 2,
+							MaxItems: len(enum.Values[awstypes.LogType]()),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"log_destination": {
@@ -52,14 +69,14 @@ func ResourceLoggingConfiguration() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"log_destination_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(networkfirewall.LogDestinationType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
 									},
 									"log_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(networkfirewall.LogType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.LogType](),
 									},
 								},
 							},
@@ -68,259 +85,294 @@ func ResourceLoggingConfiguration() *schema.Resource {
 				},
 			},
 		},
-	}
-}
 
-func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-	firewallArn := d.Get("firewall_arn").(string)
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			// Ensure distinct logging_configuration.log_destination_config.log_type values.
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
 
-	log.Printf("[DEBUG] Adding Logging Configuration to NetworkFirewall Firewall: %s", firewallArn)
+				if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
+					logTypes := make(map[string]struct{})
 
-	loggingConfigs := expandNetworkFirewallLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
-	// cumulatively add the configured "log_destination_config" in "logging_configuration"
-	err := putNetworkFirewallLoggingConfiguration(ctx, conn, firewallArn, loggingConfigs)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+					for _, tfMapRaw := range v.List() {
+						tfMap, ok := tfMapRaw.(map[string]any)
+						if !ok {
+							continue
+						}
 
-	d.SetId(firewallArn)
-
-	return resourceLoggingConfigurationRead(ctx, d, meta)
-}
-
-func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-
-	log.Printf("[DEBUG] Reading Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
-
-	output, err := FindLoggingConfiguration(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Logging Configuration for NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Logging Configuration for NetworkFirewall Firewall: %s: %w", d.Id(), err))
-	}
-
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading Logging Configuration for NetworkFirewall Firewall: %s: empty output", d.Id()))
-	}
-
-	d.Set("firewall_arn", output.FirewallArn)
-
-	if err := d.Set("logging_configuration", flattenNetworkFirewallLoggingConfiguration(output.LoggingConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting logging_configuration: %w", err))
-	}
-
-	return nil
-}
-
-func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-
-	log.Printf("[DEBUG] Updating Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
-
-	o, n := d.GetChange("logging_configuration")
-	// Remove destination configs one by one, if any
-	if oldConfig := o.([]interface{}); len(oldConfig) != 0 && oldConfig[0] != nil {
-		loggingConfig := expandNetworkFirewallLoggingConfigurationOnUpdate(oldConfig)
-		if loggingConfig != nil {
-			err := removeNetworkFirewallLoggingConfiguration(ctx, conn, d.Id(), loggingConfig)
-			if err != nil {
-				return diag.FromErr(err)
+						if v, ok := tfMap["log_type"].(string); ok && v != "" {
+							if _, ok := logTypes[v]; ok {
+								return fmt.Errorf("duplicate logging_configuration.log_destination_config.log_type value: %s", v)
+							}
+							logTypes[v] = struct{}{}
+						}
+					}
+				}
 			}
-		}
-	}
-	// Only send new LoggingConfiguration with content
-	if newConfig := n.([]interface{}); len(newConfig) != 0 && newConfig[0] != nil {
-		loggingConfigs := expandNetworkFirewallLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
-		// cumulatively add the configured "log_destination_config" in "logging_configuration"
-		err := putNetworkFirewallLoggingConfiguration(ctx, conn, d.Id(), loggingConfigs)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
 
-	return resourceLoggingConfigurationRead(ctx, d, meta)
-}
-
-func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-
-	log.Printf("[DEBUG] Deleting Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
-
-	output, err := FindLoggingConfiguration(ctx, conn, d.Id())
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			return nil
+		},
+	}
+}
+
+func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
+
+	firewallARN := d.Get("firewall_arn").(string)
+
+	if v := d.Get("enable_monitoring_dashboard"); v != nil {
+		input := &networkfirewall.UpdateLoggingConfigurationInput{
+			FirewallArn:               aws.String(firewallARN),
+			EnableMonitoringDashboard: aws.Bool(v.(bool)),
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Logging Configuration for NetworkFirewall Firewall: %s: %w", d.Id(), err))
+
+		_, err := conn.UpdateLoggingConfiguration(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 	}
 
-	if output != nil && output.LoggingConfiguration != nil {
-		err := removeNetworkFirewallLoggingConfiguration(ctx, conn, aws.StringValue(output.FirewallArn), output.LoggingConfiguration)
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
+
+		if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
+			if err := addLogDestinationConfigs(ctx, conn, firewallARN, &awstypes.LoggingConfiguration{}, expandLogDestinationConfigs(v.List())); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
+	d.SetId(firewallARN)
+
+	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
+}
+
+func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
+
+	output, err := findLoggingConfigurationByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] NetworkFirewall Logging Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Logging Configuration (%s): %s", d.Id(), err)
+	}
+
+	d.Set("enable_monitoring_dashboard", output.EnableMonitoringDashboard)
+	d.Set("firewall_arn", output.FirewallArn)
+	if err := d.Set(names.AttrLoggingConfiguration, flattenLoggingConfiguration(output.LoggingConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+	}
+
+	return diags
+}
+
+func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
+
+	output, err := findLoggingConfigurationByARN(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Logging Configuration (%s): %s", d.Id(), err)
+	}
+
+	o, n := d.GetChange("logging_configuration.0.log_destination_config")
+	os, ns := o.(*schema.Set), n.(*schema.Set)
+
+	var add, del *schema.Set
+	// To change enable_monitoring_dashboard, all log_destination_config must first be removed.
+	// Then enable_monitoring_dashboard can be changed, followed by adding log_destination_config back.
+	if d.HasChanges("enable_monitoring_dashboard") {
+		add, del = ns, os
+	} else {
+		add, del = ns.Difference(os), os.Difference(ns)
+	}
+
+	if err := deleteLogDestinationConfigs(ctx, conn, d.Id(), output.LoggingConfiguration, expandLogDestinationConfigs(del.List())); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if d.HasChanges("enable_monitoring_dashboard") {
+		input := &networkfirewall.UpdateLoggingConfigurationInput{
+			FirewallArn:               output.FirewallArn,
+			EnableMonitoringDashboard: aws.Bool(d.Get("enable_monitoring_dashboard").(bool)),
+		}
+		_, err := conn.UpdateLoggingConfiguration(ctx, input)
+
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if err := addLogDestinationConfigs(ctx, conn, d.Id(), output.LoggingConfiguration, expandLogDestinationConfigs(add.List())); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
+}
+
+func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
+
+	output, err := findLoggingConfigurationByARN(ctx, conn, d.Id())
+
+	if retry.NotFound(err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Logging Configuration (%s): %s", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Deleting NetworkFirewall Logging Configuration: %s", d.Id())
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
+
+		if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
+			if err := deleteLogDestinationConfigs(ctx, conn, d.Id(), output.LoggingConfiguration, expandLogDestinationConfigs(v.List())); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
+	return diags
+}
+
+// See https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_UpdateLoggingConfiguration.html.
+// The logging configuration is changed one LogDestinationConfig at a time.
+
+func addLogDestinationConfigs(ctx context.Context, conn *networkfirewall.Client, firewallARN string, loggingConfiguration *awstypes.LoggingConfiguration, logDestinationConfigs []awstypes.LogDestinationConfig) error {
+	for _, logDestinationConfig := range logDestinationConfigs {
+		loggingConfiguration.LogDestinationConfigs = append(loggingConfiguration.LogDestinationConfigs, logDestinationConfig)
+
+		input := &networkfirewall.UpdateLoggingConfigurationInput{
+			FirewallArn:          aws.String(firewallARN),
+			LoggingConfiguration: loggingConfiguration,
+		}
+
+		_, err := conn.UpdateLoggingConfiguration(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("adding NetworkFirewall Logging Configuration (%s): %w", firewallARN, err)
 		}
 	}
 
 	return nil
 }
 
-func putNetworkFirewallLoggingConfiguration(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, l []*networkfirewall.LoggingConfiguration) error {
-	var errors *multierror.Error
-	for _, config := range l {
+func deleteLogDestinationConfigs(ctx context.Context, conn *networkfirewall.Client, firewallARN string, loggingConfiguration *awstypes.LoggingConfiguration, logDestinationConfigs []awstypes.LogDestinationConfig) error {
+	for _, logDestinationConfig := range logDestinationConfigs {
+		loggingConfiguration.LogDestinationConfigs = slices.DeleteFunc(loggingConfiguration.LogDestinationConfigs, func(v awstypes.LogDestinationConfig) bool {
+			return v.LogType == logDestinationConfig.LogType
+		})
+
 		input := &networkfirewall.UpdateLoggingConfigurationInput{
-			FirewallArn:          aws.String(arn),
-			LoggingConfiguration: config,
+			FirewallArn:          aws.String(firewallARN),
+			LoggingConfiguration: loggingConfiguration,
 		}
-		_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
+
+		_, err := conn.UpdateLoggingConfiguration(ctx, input)
+
 		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("error adding Logging Configuration to NetworkFirewall Firewall (%s): %w", arn, err))
+			return fmt.Errorf("deleting NetworkFirewall Logging Configuration (%s): %w", firewallARN, err)
 		}
 	}
-	return errors.ErrorOrNil()
+
+	return nil
 }
 
-func removeNetworkFirewallLoggingConfiguration(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, l *networkfirewall.LoggingConfiguration) error {
-	if l == nil {
-		return nil
+func findLoggingConfigurationByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeLoggingConfigurationOutput, error) {
+	input := &networkfirewall.DescribeLoggingConfigurationInput{
+		FirewallArn: aws.String(arn),
 	}
-	var errors *multierror.Error
-	// Must delete destination configs one at a time
-	for i, config := range l.LogDestinationConfigs {
-		input := &networkfirewall.UpdateLoggingConfigurationInput{
-			FirewallArn: aws.String(arn),
-		}
-		if i == 0 && len(l.LogDestinationConfigs) == 2 {
-			loggingConfig := &networkfirewall.LoggingConfiguration{
-				LogDestinationConfigs: []*networkfirewall.LogDestinationConfig{config},
-			}
-			input.LoggingConfiguration = loggingConfig
-		}
-		_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
-		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("error removing Logging Configuration LogDestinationConfig (%v) from NetworkFirewall Firewall: %s: %w", config, arn, err))
+
+	output, err := conn.DescribeLoggingConfiguration(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
-	return errors.ErrorOrNil()
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.LoggingConfiguration == nil || len(output.LoggingConfiguration.LogDestinationConfigs) == 0 {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }
 
-func expandNetworkFirewallLoggingConfiguration(l []interface{}) []*networkfirewall.LoggingConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
+func expandLogDestinationConfigs(tfList []any) []awstypes.LogDestinationConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	loggingConfigs := make([]*networkfirewall.LoggingConfiguration, 0)
-	if tfSet, ok := tfMap["log_destination_config"].(*schema.Set); ok && tfSet.Len() > 0 {
-		tfList := tfSet.List()
-		for _, tfMapRaw := range tfList {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
-			if !ok {
-				continue
-			}
-			config := &networkfirewall.LogDestinationConfig{}
-			if v, ok := tfMap["log_destination"].(map[string]interface{}); ok && len(v) > 0 {
-				config.LogDestination = aws.StringMap(expandNetworkFirewallLogDestinationConfigLogDestination(v))
-			}
-			if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
-				config.LogDestinationType = aws.String(v)
-			}
-			if v, ok := tfMap["log_type"].(string); ok && v != "" {
-				config.LogType = aws.String(v)
-			}
-			// exclude empty LogDestinationConfig due to TypeMap in TypeSet behavior
-			// Related: https://github.com/hashicorp/terraform-plugin-sdk/issues/588
-			if config.LogDestination == nil && config.LogDestinationType == nil && config.LogType == nil {
-				continue
-			}
-			loggingConfig := &networkfirewall.LoggingConfiguration{}
-			// include all (max 2) "log_destination_config" i.e. prepend the already-expanded loggingConfig
-			if len(loggingConfigs) == 1 && len(loggingConfigs[0].LogDestinationConfigs) == 1 {
-				loggingConfig.LogDestinationConfigs = append(loggingConfig.LogDestinationConfigs, loggingConfigs[0].LogDestinationConfigs[0])
-			}
-			loggingConfig.LogDestinationConfigs = append(loggingConfig.LogDestinationConfigs, config)
-			loggingConfigs = append(loggingConfigs, loggingConfig)
+	var apiObjects []awstypes.LogDestinationConfig
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
 		}
-	}
-	return loggingConfigs
-}
 
-func expandNetworkFirewallLoggingConfigurationOnUpdate(l []interface{}) *networkfirewall.LoggingConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
+		apiObject := awstypes.LogDestinationConfig{}
 
-	loggingConfig := &networkfirewall.LoggingConfiguration{}
-	if tfSet, ok := tfMap["log_destination_config"].(*schema.Set); ok && tfSet.Len() > 0 {
-		tfList := tfSet.List()
-		destConfigs := make([]*networkfirewall.LogDestinationConfig, 0, len(tfList))
-		for _, tfMapRaw := range tfList {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
-			if !ok {
-				continue
-			}
-			config := &networkfirewall.LogDestinationConfig{}
-			if v, ok := tfMap["log_destination"].(map[string]interface{}); ok && len(v) > 0 {
-				config.LogDestination = aws.StringMap(expandNetworkFirewallLogDestinationConfigLogDestination(v))
-			}
-			if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
-				config.LogDestinationType = aws.String(v)
-			}
-			if v, ok := tfMap["log_type"].(string); ok && v != "" {
-				config.LogType = aws.String(v)
-			}
-			// exclude empty LogDestinationConfig due to TypeMap in TypeSet behavior
-			// Related: https://github.com/hashicorp/terraform-plugin-sdk/issues/588
-			if config.LogDestination == nil && config.LogDestinationType == nil && config.LogType == nil {
-				continue
-			}
-			destConfigs = append(destConfigs, config)
+		if v, ok := tfMap["log_destination"].(map[string]any); ok && len(v) > 0 {
+			apiObject.LogDestination = flex.ExpandStringValueMap(v)
 		}
-		loggingConfig.LogDestinationConfigs = destConfigs
-	}
-	return loggingConfig
-}
 
-func expandNetworkFirewallLogDestinationConfigLogDestination(dst map[string]interface{}) map[string]string {
-	m := map[string]string{}
-	for k, v := range dst {
-		m[k] = v.(string)
-	}
-	return m
-}
-
-func flattenNetworkFirewallLoggingConfiguration(lc *networkfirewall.LoggingConfiguration) []interface{} {
-	if lc == nil || lc.LogDestinationConfigs == nil {
-		return []interface{}{}
-	}
-	m := map[string]interface{}{
-		"log_destination_config": flattenNetworkFirewallLoggingConfigurationLogDestinationConfigs(lc.LogDestinationConfigs),
-	}
-	return []interface{}{m}
-}
-
-func flattenNetworkFirewallLoggingConfigurationLogDestinationConfigs(configs []*networkfirewall.LogDestinationConfig) []interface{} {
-	l := make([]interface{}, 0, len(configs))
-	for _, config := range configs {
-		m := map[string]interface{}{
-			"log_destination":      aws.StringValueMap(config.LogDestination),
-			"log_destination_type": aws.StringValue(config.LogDestinationType),
-			"log_type":             aws.StringValue(config.LogType),
+		if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
+			apiObject.LogDestinationType = awstypes.LogDestinationType(v)
 		}
-		l = append(l, m)
+
+		if v, ok := tfMap["log_type"].(string); ok && v != "" {
+			apiObject.LogType = awstypes.LogType(v)
+		} else {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return l
+
+	return apiObjects
+}
+
+func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) []any {
+	if apiObject == nil || apiObject.LogDestinationConfigs == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"log_destination_config": flattenLogDestinationConfigs(apiObject.LogDestinationConfigs),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenLogDestinationConfigs(apiObjects []awstypes.LogDestinationConfig) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"log_destination":      apiObject.LogDestination,
+			"log_destination_type": apiObject.LogDestinationType,
+			"log_type":             apiObject.LogType,
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

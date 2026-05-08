@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_delegation_set"
 description: |-
@@ -24,11 +24,14 @@ data "aws_route53_delegation_set" "dset" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
 
-* `id` - (Required) The Hosted Zone id of the desired delegation set.
+* `id` - (Required) Delegation set ID.
 
-The following attribute is additionally exported:
+## Attribute Reference
 
-* `arn` - The Amazon Resource Name (ARN) of the Delegation Set.
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the Delegation Set.
 * `caller_reference` - Caller Reference of the delegation set.
-* `name_servers` - The list of DNS name servers for the delegation set.
+* `name_servers` - List of DNS name servers for the delegation set.

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appmesh_virtual_node: Add `logging.access_log.file.format` configuration block
+```
+
+```release-note:enhancement
+resource/aws_appmesh_virtual_gateway: Add `logging.access_log.file.format` configuration block
+```

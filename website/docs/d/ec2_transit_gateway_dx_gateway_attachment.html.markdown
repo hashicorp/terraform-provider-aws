@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_dx_gateway_attachment"
 description: |-
@@ -9,6 +9,8 @@ description: |-
 # Data Source: aws_ec2_transit_gateway_dx_gateway_attachment
 
 Get information on an EC2 Transit Gateway's attachment to a Direct Connect Gateway.
+
+!> **Warning:** Using the `aws_ec2_transit_gateway_dx_gateway_attachment` data source in combination with  `aws_ec2_transit_gateway_route_table_propagation` or `aws_ec2_transit_gateway_route_table_association` may result in lost connectivity due to unnecessary resource re-creation. To avoid this, use the `transit_gateway_attachment_id` attribute directly from the `aws_dx_gateway_association` resource. For example, `transit_gateway_attachment_id  = aws_dx_gateway_association.example.transit_gateway_attachment_id`.
 
 ## Example Usage
 
@@ -23,23 +25,31 @@ data "aws_ec2_transit_gateway_dx_gateway_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_id` - (Optional) Identifier of the EC2 Transit Gateway.
 * `dx_gateway_id` - (Optional) Identifier of the Direct Connect Gateway.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Transit Gateway Direct Connect Gateway Attachment.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Transit Gateway Direct Connect Gateway Attachment.
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
-* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribeTransitGatewayAttachments API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html).
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeTransitGatewayAttachments API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
-* `tags` - Key-value tags for the EC2 Transit Gateway Attachment
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier,
+* `tags` - Key-value tags for the EC2 Transit Gateway Attachment.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

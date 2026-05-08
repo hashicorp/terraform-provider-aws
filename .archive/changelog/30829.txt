@@ -1,0 +1,7 @@
+```release-note:breaking-change
+    data-source/aws_iam_policy_document: `source_json` and `override_json` have been removed -- use `source_policy_documents` and `override_policy_documents`, respectively, instead
+ ```
+
+ ```release-note:note
+ data-source/aws_iam_policy_document: Update configurations to use `source_policy_documents` and `override_policy_documents` instead of `source_json` and `override_json`, respectively, which have been removed
+ ```

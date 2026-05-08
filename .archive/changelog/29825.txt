@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_channel: Removed `Computed` flag from `aac_settings`, ´ac3_settings`, `eac3_atmos_settings`, `eac3_settings`, `mp2_settings`, `pass_through_settings` and `wav_settings` in `codec_settings`.
+```

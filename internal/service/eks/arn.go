@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 /*
 This file is a hard copy of:
 https://github.com/kubernetes-sigs/aws-iam-authenticator/blob/7547c74e660f8d34d9980f2c69aa008eed1f48d0/pkg/arn/arn.go
@@ -13,19 +16,19 @@ import (
 	"fmt"
 	"strings"
 
-	awsarn "github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
 
 // Canonicalize validates IAM resources are appropriate for the authenticator
 // and converts STS assumed roles into the IAM role resource.
 //
 // Supported IAM resources are:
-//   * AWS account: arn:aws:iam::123456789012:root
-//   * IAM user: arn:aws:iam::123456789012:user/Bob
-//   * IAM role: arn:aws:iam::123456789012:role/S3Access
-//   * IAM Assumed role: arn:aws:sts::123456789012:assumed-role/Accounting-Role/Mary (converted to IAM role)
-//   * Federated user: arn:aws:sts::123456789012:federated-user/Bob
+//   - AWS account: arn:aws:iam::123456789012:root
+//   - IAM user: arn:aws:iam::123456789012:user/Bob
+//   - IAM role: arn:aws:iam::123456789012:role/S3Access
+//   - IAM Assumed role: arn:aws:sts::123456789012:assumed-role/Accounting-Role/Mary (converted to IAM role)
+//   - Federated user: arn:aws:sts::123456789012:federated-user/Bob
 func Canonicalize(arn string) (string, error) {
 	parsed, err := awsarn.Parse(arn)
 	if err != nil {
@@ -50,7 +53,12 @@ func Canonicalize(arn string) (string, error) {
 			}
 			// IAM ARNs can contain paths, part[0] is resource, parts[len(parts)] is the SessionName.
 			role := strings.Join(parts[1:len(parts)-1], "/")
-			return fmt.Sprintf("arn:%s:iam::%s:role/%s", parsed.Partition, parsed.AccountID, role), nil
+			return awsarn.ARN{
+				Partition: parsed.Partition,
+				Service:   "iam",
+				AccountID: parsed.AccountID,
+				Resource:  "role/" + role,
+			}.String(), nil
 		default:
 			return "", fmt.Errorf("unrecognized resource %q for service sts", parsed.Resource)
 		}

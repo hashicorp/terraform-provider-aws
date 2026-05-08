@@ -1,39 +1,130 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMGroup_basic(t *testing.T) {
-	var conf iam.GetGroupOutput
+	ctx := acctest.Context(t)
+	var conf awstypes.Group
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group.test"
-	resourceName2 := "aws_iam_group.test2"
-	rString := sdkacctest.RandString(8)
-	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
-	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(groupName),
+				Config: testAccGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &conf),
+					// arn:${Partition}:iam::${Account}:group/${GroupNameWithPath}
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Group
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &conf),
-					testAccCheckGroupAttributes(&conf, groupName, "/"),
+					testAccCheckGroupExists(ctx, t, resourceName, &conf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMGroup_nameChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Group
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_basic(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName1)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
+				),
+			},
+			{
+				Config: testAccGroupConfig_basic(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName2)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMGroup_path(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Group
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_path(rName, "/path1/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/path1/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/path1/"),
 				),
 			},
 			{
@@ -42,130 +133,78 @@ func TestAccIAMGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroup2Config(groupName2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName2, &conf),
-					testAccCheckGroupAttributes(&conf, groupName2, "/funnypath/"),
+				Config: testAccGroupConfig_path(rName, "/path2/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("group/path2/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/path2/"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccIAMGroup_nameChange(t *testing.T) {
-	var conf iam.GetGroupOutput
-	resourceName := "aws_iam_group.test"
-	rString := sdkacctest.RandString(8)
-	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
-	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
+func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig(groupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &conf),
-					testAccCheckGroupAttributes(&conf, groupName, "/"),
-				),
-			},
-			{
-				Config: testAccGroupConfig(groupName2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &conf),
-					testAccCheckGroupAttributes(&conf, groupName2, "/"),
-				),
-			},
-		},
-	})
-}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_group" {
+				continue
+			}
 
-func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+			_, err := tfiam.FindGroupByName(ctx, conn, rs.Primary.ID)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_group" {
-			continue
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IAM Group %s still exists", rs.Primary.ID)
 		}
 
-		// Try to get group
-		_, err := conn.GetGroup(&iam.GetGroupInput{
-			GroupName: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			return errors.New("still exist.")
-		}
-
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "NoSuchEntity" {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckGroupExists(n string, res *iam.GetGroupOutput) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Group name is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		output, err := tfiam.FindGroupByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-		resp, err := conn.GetGroup(&iam.GetGroupInput{
-			GroupName: aws.String(rs.Primary.ID),
-		})
 		if err != nil {
 			return err
 		}
 
-		*res = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckGroupAttributes(group *iam.GetGroupOutput, name string, path string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *group.Group.GroupName != name {
-			return fmt.Errorf("Bad name: %s when %s was expected", *group.Group.GroupName, name)
-		}
-
-		if *group.Group.Path != path {
-			return fmt.Errorf("Bad path: %s when %s was expected", *group.Group.Path, path)
-		}
-
-		return nil
-	}
-}
-
-func testAccGroupConfig(groupName string) string {
+func testAccGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "test" {
-  name = "%s"
-  path = "/"
+  name = %[1]q
 }
-`, groupName)
+`, rName)
 }
 
-func testAccGroup2Config(groupName string) string {
+func testAccGroupConfig_path(rName, path string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_group" "test2" {
-  name = "%s"
-  path = "/funnypath/"
+resource "aws_iam_group" "test" {
+  name = %[1]q
+  path = %[2]q
 }
-`, groupName)
+`, rName, path)
 }

@@ -1,114 +1,163 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package inspector
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/inspector"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceResourceGroup() *schema.Resource {
+// @SDKResource("aws_inspector_resource_group", name="Resource Group")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.ResourceGroup")
+// @Testing(preIdentityVersion="v6.4.0")
+// @Testing(checkDestroyNoop=true)
+// @Testing(preCheck="testAccPreCheck")
+func resourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourceGroupCreate,
-		Read:   resourceResourceGroupRead,
-		Delete: resourceResourceGroupDelete,
+		CreateWithoutTimeout: resourceResourceGroupCreate,
+		ReadWithoutTimeout:   resourceResourceGroupRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Schema: map[string]*schema.Schema{
-			"tags": {
-				ForceNew: true,
-				Required: true,
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrTags: {
+				Type:     schema.TypeMap,
+				Required: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
 }
 
-func resourceResourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	req := &inspector.CreateResourceGroupInput{
-		ResourceGroupTags: expandInspectorResourceGroupTags(d.Get("tags").(map[string]interface{})),
+	input := inspector.CreateResourceGroupInput{
+		ResourceGroupTags: expandResourceGroupTags(d.Get(names.AttrTags).(map[string]any)),
 	}
-	log.Printf("[DEBUG] Creating Inspector resource group: %#v", req)
-	resp, err := conn.CreateResourceGroup(req)
+	output, err := conn.CreateResourceGroup(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Inspector resource group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Inspector Classic Resource Group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.ResourceGroupArn))
+	d.SetId(aws.ToString(output.ResourceGroupArn))
 
-	return resourceResourceGroupRead(d, meta)
+	return append(diags, resourceResourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	resp, err := conn.DescribeResourceGroups(&inspector.DescribeResourceGroupsInput{
-		ResourceGroupArns: aws.StringSlice([]string{d.Id()}),
-	})
+	resourceGroup, err := findResourceGroupByARN(ctx, conn, d.Id())
 
-	if err != nil {
-		return fmt.Errorf("error reading Inspector resource group (%s): %s", d.Id(), err)
+	if retry.NotFound(err) {
+		log.Printf("[WARN] Inspector Classic Resource Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	if len(resp.ResourceGroups) == 0 {
-		if failedItem, ok := resp.FailedItems[d.Id()]; ok {
-			failureCode := aws.StringValue(failedItem.FailureCode)
-			if failureCode == inspector.FailedItemErrorCodeItemDoesNotExist {
-				log.Printf("[WARN] Inspector resource group (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %s", d.Id(), err)
+	}
 
-			return fmt.Errorf("error reading Inspector resource group (%s): %s", d.Id(), failureCode)
+	d.Set(names.AttrARN, resourceGroup.Arn)
+	if err := d.Set(names.AttrTags, flattenResourceGroupTags(resourceGroup.Tags)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	return diags
+}
+
+func findResourceGroups(ctx context.Context, conn *inspector.Client, input *inspector.DescribeResourceGroupsInput) ([]awstypes.ResourceGroup, error) {
+	output, err := conn.DescribeResourceGroups(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	if err := failedItemsError(output.FailedItems); err != nil {
+		return nil, err
+	}
+
+	return output.ResourceGroups, nil
+}
+
+func findResourceGroup(ctx context.Context, conn *inspector.Client, input *inspector.DescribeResourceGroupsInput) (*awstypes.ResourceGroup, error) {
+	output, err := findResourceGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findResourceGroupByARN(ctx context.Context, conn *inspector.Client, arn string) (*awstypes.ResourceGroup, error) {
+	input := inspector.DescribeResourceGroupsInput{
+		ResourceGroupArns: []string{arn},
+	}
+
+	output, err := findResourceGroup(ctx, conn, &input)
+
+	if tfawserr.ErrMessageContains(err, string(awstypes.FailedItemErrorCodeItemDoesNotExist), arn) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
-
-		return fmt.Errorf("error reading Inspector resource group (%s): %v", d.Id(), resp.FailedItems)
 	}
 
-	resourceGroup := resp.ResourceGroups[0]
-	d.Set("arn", resourceGroup.Arn)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", flattenInspectorResourceGroupTags(resourceGroup.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return output, nil
 }
 
-func resourceResourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
+func expandResourceGroupTags(tfMap map[string]any) []awstypes.ResourceGroupTag {
+	var apiObjects []awstypes.ResourceGroupTag
 
-func expandInspectorResourceGroupTags(m map[string]interface{}) []*inspector.ResourceGroupTag {
-	var result []*inspector.ResourceGroupTag
-
-	for k, v := range m {
-		result = append(result, &inspector.ResourceGroupTag{
+	for k, v := range tfMap {
+		apiObjects = append(apiObjects, awstypes.ResourceGroupTag{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		})
 	}
 
-	return result
+	return apiObjects
 }
 
-func flattenInspectorResourceGroupTags(tags []*inspector.ResourceGroupTag) map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenResourceGroupTags(apiObjects []awstypes.ResourceGroupTag) map[string]any {
+	tfMap := map[string]any{}
 
-	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+	for _, apiObject := range apiObjects {
+		tfMap[aws.ToString(apiObject.Key)] = aws.ToString(apiObject.Value)
 	}
 
-	return m
+	return tfMap
 }

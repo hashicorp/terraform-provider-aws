@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_vpclattice_listener_rule: Requires `match.http_match`.
+```
+
+```release-note:bug
+resource/aws_vpclattice_listener_rule: Requires exactly one of `action.fixed_response` or `action.forward`.
+```
+
+```release-note:bug
+resource/aws_vpclattice_listener_rule: Prevents error when setting `listener_identifier` to ARN.
+```
+
+```release-note:bug
+resource/aws_vpclattice_listener_rule: Prevents error when setting `service_identifier` to ARN.
+```

@@ -1,12 +1,19 @@
-package events
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package events_test
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestValidCustomEventBusEventSourceName(t *testing.T) {
+func TestValidCustomEventBusSourceName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value   string
 		IsValid bool
@@ -20,11 +27,11 @@ func TestValidCustomEventBusEventSourceName(t *testing.T) {
 			IsValid: false,
 		},
 		{
-			Value:   "aws.partner/example.com/test/" + sdkacctest.RandStringFromCharSet(227, sdkacctest.CharSetAlpha),
+			Value:   "aws.partner/example.com/test/" + acctest.RandStringFromCharSet(t, 227, acctest.CharSetAlpha),
 			IsValid: true,
 		},
 		{
-			Value:   "aws.partner/example.com/test/" + sdkacctest.RandStringFromCharSet(228, sdkacctest.CharSetAlpha),
+			Value:   "aws.partner/example.com/test/" + acctest.RandStringFromCharSet(t, 228, acctest.CharSetAlpha),
 			IsValid: false,
 		},
 		{
@@ -41,7 +48,7 @@ func TestValidCustomEventBusEventSourceName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validCustomEventBusEventSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
+		_, errors := tfevents.ValidSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)
@@ -52,6 +59,8 @@ func TestValidCustomEventBusEventSourceName(t *testing.T) {
 }
 
 func TestValidCustomEventBusName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value   string
 		IsValid bool
@@ -65,11 +74,11 @@ func TestValidCustomEventBusName(t *testing.T) {
 			IsValid: false,
 		},
 		{
-			Value:   sdkacctest.RandStringFromCharSet(256, sdkacctest.CharSetAlpha),
+			Value:   acctest.RandStringFromCharSet(t, 256, acctest.CharSetAlpha),
 			IsValid: true,
 		},
 		{
-			Value:   sdkacctest.RandStringFromCharSet(257, sdkacctest.CharSetAlpha),
+			Value:   acctest.RandStringFromCharSet(t, 257, acctest.CharSetAlpha),
 			IsValid: false,
 		},
 		{
@@ -86,7 +95,7 @@ func TestValidCustomEventBusName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		_, errors := tfevents.ValidCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)
@@ -97,17 +106,20 @@ func TestValidCustomEventBusName(t *testing.T) {
 }
 
 func TestValidBusNameOrARN(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",
 		"hello.World0125",
-		"aws.partner/mongodb.com/stitch.trigger/something",        // nosemgrep: domain-names
-		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
+		"aws.partner/mongodb.com/stitch.trigger/something",                   // nosemgrep:ci.domain-names
+		"arn:aws:events:us-east-1:123456789012:event-bus/default",            // lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/test-bus", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {
-		_, errors := validBusNameOrARN(v, "name")
+		_, errors := tfevents.ValidBusNameOrARN(v, names.AttrName)
 		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
+			t.Fatalf("%q should be a valid CW event bus name: %q", v, errors)
 		}
 	}
 
@@ -116,21 +128,81 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"arn:aw:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range invalidNames {
-		_, errors := validBusNameOrARN(v, "name")
+		_, errors := tfevents.ValidBusNameOrARN(v, names.AttrName)
 		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid CW event rule name", v)
+			t.Fatalf("%q should be an invalid CW event bus name", v)
+		}
+	}
+}
+
+func TestEventBusARNPattern(t *testing.T) {
+	t.Parallel()
+
+	validARNs := []string{
+		"arn:aws:events:us-east-1:123456789012:event-bus/default",            //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/test-bus", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:events:us-gov-west-1:123456789012:event-bus/my-bus",  //lintignore:AWSAT003,AWSAT005
+		"arn:aws:events:eu-west-1:123456789012:event-bus/custom_bus-123",     //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range validARNs {
+		if !tfevents.EventBusARNPattern.MatchString(arn) {
+			t.Errorf("Expected %q to match EventBusARNPattern", arn)
+		}
+	}
+
+	invalidARNs := []string{
+		"arn:aws:events:invalid-region:123456789012:event-bus/default", //lintignore:AWSAT003,AWSAT005
+		"arn:aws:events:us-east-1:123456789012:event-bus/",             //lintignore:AWSAT003,AWSAT005
+		"not-an-arn",
+		"arn:aws:s3:::bucket", //lintignore:AWSAT005
+	}
+
+	for _, arn := range invalidARNs {
+		if tfevents.EventBusARNPattern.MatchString(arn) {
+			t.Errorf("Expected %q to NOT match EventBusARNPattern", arn)
+		}
+	}
+}
+
+func TestPartnerEventBusPattern(t *testing.T) {
+	t.Parallel()
+
+	validPatterns := []string{
+		"aws.partner/mongodb.com/stitch.trigger/something",
+		"arn:aws:events:us-east-1:123456789012:event-bus/aws.partner/genesys.com/cloud/test",                 //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/aws.partner/example.com/service/instance", //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, pattern := range validPatterns {
+		if !tfevents.PartnerEventBusPattern.MatchString(pattern) {
+			t.Errorf("Expected %q to match PartnerEventBusPattern", pattern)
+		}
+	}
+
+	invalidPatterns := []string{
+		"aws.partner", // too short
+		"not.partner/something/else",
+		"arn:aws:events:invalid-region:123456789012:event-bus/aws.partner/test/service", //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, pattern := range invalidPatterns {
+		if tfevents.PartnerEventBusPattern.MatchString(pattern) {
+			t.Errorf("Expected %q to NOT match PartnerEventBusPattern", pattern)
 		}
 	}
 }
 
 func TestValidRuleName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",
 		"hello.World0125",
 	}
 	for _, v := range validNames {
-		_, errors := validateRuleName(v, "name")
+		_, errors := tfevents.ValidateRuleName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
 		}
@@ -143,7 +215,7 @@ func TestValidRuleName(t *testing.T) {
 		"TooLooooooooooooooooooooooooooooooooooooooooooooooooooooooongName",
 	}
 	for _, v := range invalidNames {
-		_, errors := validateRuleName(v, "name")
+		_, errors := tfevents.ValidateRuleName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event rule name", v)
 		}

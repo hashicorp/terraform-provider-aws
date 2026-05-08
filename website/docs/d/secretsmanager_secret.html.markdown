@@ -30,17 +30,21 @@ data "aws_secretsmanager_secret" "by-name" {
 
 ## Argument Reference
 
-* `arn` - (Optional) The Amazon Resource Name (ARN) of the secret to retrieve.
-* `name` - (Optional) The name of the secret to retrieve.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `arn` - (Optional) ARN of the secret to retrieve.
+* `name` - (Optional) Name of the secret to retrieve.
 
-* `arn` - The Amazon Resource Name (ARN) of the secret.
-* `description` - A description of the secret.
-* `kms_key_id` - The Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
-* `id` - The Amazon Resource Name (ARN) of the secret.
-* `rotation_enabled` - Whether rotation is enabled or not.
-* `rotation_lambda_arn` - Rotation Lambda function Amazon Resource Name (ARN) if rotation is enabled.
-* `rotation_rules` - Rotation rules if rotation is enabled.
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the secret.
+* `created_date` - Created date of the secret in UTC.
+* `description` - Description of the secret.
+* `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
+* `id` - ARN of the secret.
+* `last_changed_date` - Last updated date of the secret in UTC.
+* `policy` - Resource-based policy document that's attached to the secret.
 * `tags` - Tags of the secret.
-* `policy` - The resource-based policy document that's attached to the secret.

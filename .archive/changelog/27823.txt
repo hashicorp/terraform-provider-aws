@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_medialive_channel: Add support for more `output`, `output_groups`, `audio_descriptions` and `video_descriptions` in `encoder_settings`. Add support for `input_settings` in `input_attachments`
+```

@@ -1,26 +1,35 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_iam_user", name="User")
+// @Tags
+// @Testing(tagsIdentifierAttribute="user_name", tagsResourceType="User")
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserRead,
+		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,42 +41,36 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	userName := d.Get("user_name").(string)
-	req := &iam.GetUserInput{
-		UserName: aws.String(userName),
-	}
+	userName := d.Get(names.AttrUserName).(string)
+	user, err := findUserByName(ctx, conn, userName)
 
-	log.Printf("[DEBUG] Reading IAM User: %s", req)
-	resp, err := conn.GetUser(req)
 	if err != nil {
-		return fmt.Errorf("error getting user: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", userName, err)
 	}
 
-	user := resp.User
-	d.SetId(aws.StringValue(user.UserId))
-	d.Set("arn", user.Arn)
-	d.Set("path", user.Path)
+	d.SetId(aws.ToString(user.UserId))
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrPath, user.Path)
 	d.Set("permissions_boundary", "")
 	if user.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("user_id", user.UserId)
-	if err := d.Set("tags", KeyValueTags(user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
 
-	return nil
+	setTagsOut(ctx, user.Tags)
+
+	return diags
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_group: Fix `invalid new value for .skip_destroy: was cty.False, but now null` errors 
+```

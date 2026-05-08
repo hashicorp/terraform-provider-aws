@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_timestreaminfluxdb_db_instance: Add `network_type` and `port` attributes. The following can now be updated in place: `allocated_storage`, `db_instance_type`, `db_storage_type` and `deployment_type`
+```

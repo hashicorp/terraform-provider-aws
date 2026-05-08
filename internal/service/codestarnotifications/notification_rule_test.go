@@ -1,39 +1,46 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package codestarnotifications_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codestarnotifications"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
+	"github.com/aws/aws-sdk-go-v2/service/codestarnotifications/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfcodestarnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarNotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationRuleBasicConfig(rName),
+				Config: testAccNotificationRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-notifications", regexp.MustCompile("notificationrule/.+")),
-					resource.TestCheckResourceAttr(resourceName, "detail_type", codestarnotifications.DetailTypeBasic),
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codestar-notifications", regexache.MustCompile("notificationrule/.+")),
+					resource.TestCheckResourceAttr(resourceName, "detail_type", string(types.DetailTypeBasic)),
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", codestarnotifications.NotificationRuleStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.NotificationRuleStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 				),
 			},
@@ -46,20 +53,45 @@ func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarNotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationRuleStatusConfig(rName, codestarnotifications.NotificationRuleStatusDisabled),
+				Config: testAccNotificationRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "status", codestarnotifications.NotificationRuleStatusDisabled),
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodestarnotifications.ResourceNotificationRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_codestarnotifications_notification_rule.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarNotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNotificationRuleConfig_status(rName, string(types.NotificationRuleStatusDisabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.NotificationRuleStatusDisabled)),
 				),
 			},
 			{
@@ -68,15 +100,17 @@ func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotificationRuleStatusConfig(rName, codestarnotifications.NotificationRuleStatusEnabled),
+				Config: testAccNotificationRuleConfig_status(rName, string(types.NotificationRuleStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "status", codestarnotifications.NotificationRuleStatusEnabled),
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.NotificationRuleStatusEnabled)),
 				),
 			},
 			{
-				Config: testAccNotificationRuleStatusConfig(rName, codestarnotifications.NotificationRuleStatusDisabled),
+				Config: testAccNotificationRuleConfig_status(rName, string(types.NotificationRuleStatusDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "status", codestarnotifications.NotificationRuleStatusDisabled),
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.NotificationRuleStatusDisabled)),
 				),
 			},
 		},
@@ -84,18 +118,20 @@ func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
 }
 
 func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarNotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationRuleTargets1Config(rName),
+				Config: testAccNotificationRuleConfig_targets1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 				),
 			},
@@ -105,14 +141,16 @@ func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotificationRuleTargets2Config(rName),
+				Config: testAccNotificationRuleConfig_targets2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "2"),
 				),
 			},
 			{
-				Config: testAccNotificationRuleTargets1Config(rName),
+				Config: testAccNotificationRuleConfig_targets1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 				),
 			},
@@ -121,21 +159,22 @@ func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
 }
 
 func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarNotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationRuleTags1Config(rName),
+				Config: testAccNotificationRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestTag1", "123456"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestTag2", "654321"),
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -144,19 +183,20 @@ func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotificationRuleTags2Config(rName),
+				Config: testAccNotificationRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestTag2", "654321"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestTag3", "asdfgh"),
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccNotificationRuleTags1Config(rName),
+				Config: testAccNotificationRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestTag1", "123456"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestTag2", "654321"),
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
@@ -164,18 +204,20 @@ func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
 }
 
 func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarNotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationRuleEventTypeIds1Config(rName),
+				Config: testAccNotificationRuleConfig_eventTypeIDs1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
 				),
 			},
@@ -185,14 +227,16 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotificationRuleEventTypeIds2Config(rName),
+				Config: testAccNotificationRuleConfig_eventTypeIDs2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "2"),
 				),
 			},
 			{
-				Config: testAccNotificationRuleEventTypeIds3Config(rName),
+				Config: testAccNotificationRuleConfig_eventTypeIDs3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNotificationRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
 				),
 			},
@@ -200,46 +244,66 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 	})
 }
 
-func testAccCheckNotificationRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn
+func testAccCheckNotificationRuleExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-	for _, rs := range s.RootModule().Resources {
-		switch rs.Type {
-		case "aws_codestarnotifications_notification_rule":
-			_, err := conn.DescribeNotificationRule(&codestarnotifications.DescribeNotificationRuleInput{
-				Arn: aws.String(rs.Primary.ID),
-			})
+		conn := acctest.ProviderMeta(ctx, t).CodeStarNotificationsClient(ctx)
 
-			if err != nil && !tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeResourceNotFoundException, "") {
-				return err
+		_, err := tfcodestarnotifications.FindNotificationRuleByARN(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+func testAccCheckNotificationRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).CodeStarNotificationsClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codestarnotifications_notification_rule" {
+				continue
 			}
-		case "aws_sns_topic":
-			res, err := conn.ListTargets(&codestarnotifications.ListTargetsInput{
-				Filters: []*codestarnotifications.ListTargetsFilter{
-					{
-						Name:  aws.String("TARGET_ADDRESS"),
-						Value: aws.String(rs.Primary.ID),
-					},
-					{
-						Name:  aws.String("TARGET_TYPE"),
-						Value: aws.String("SNS"),
-					},
-				},
-				MaxResults: aws.Int64(1),
-			})
+
+			_, err := tfcodestarnotifications.FindNotificationRuleByARN(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
-			if len(res.Targets) > 0 {
-				return fmt.Errorf("codestar notification target (%s) is not removed", rs.Primary.ID)
-			}
-		}
-	}
 
-	return nil
+			return fmt.Errorf("CodeStar Notification Rule %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
-func testAccNotificationRuleBaseConfig(rName string) string {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).CodeStarNotificationsClient(ctx)
+
+	input := &codestarnotifications.ListTargetsInput{
+		MaxResults: aws.Int32(1),
+	}
+
+	_, err := conn.ListTargets(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccNotificationRuleConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = %[1]q
@@ -251,8 +315,8 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccNotificationRuleBasicConfig(rName string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type    = "BASIC"
   event_type_ids = ["codecommit-repository-comments-on-commits"]
@@ -260,19 +324,15 @@ resource "aws_codestarnotifications_notification_rule" "test" {
   resource       = aws_codecommit_repository.test.arn
   status         = "ENABLED"
 
-  tags = {
-    TestTag = "123456"
-  }
-
   target {
     address = aws_sns_topic.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccNotificationRuleStatusConfig(rName, status string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_status(rName, status string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type    = "BASIC"
   event_type_ids = ["codecommit-repository-comments-on-commits"]
@@ -284,11 +344,11 @@ resource "aws_codestarnotifications_notification_rule" "test" {
     address = aws_sns_topic.test.arn
   }
 }
-`, rName, status)
+`, rName, status))
 }
 
-func testAccNotificationRuleTargets1Config(rName string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_targets1(rName string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type    = "BASIC"
   event_type_ids = ["codecommit-repository-comments-on-commits"]
@@ -299,13 +359,13 @@ resource "aws_codestarnotifications_notification_rule" "test" {
     address = aws_sns_topic.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccNotificationRuleTargets2Config(rName string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_targets2(rName string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test2" {
-  name = "%[1]s2"
+  name = "%[1]s-2"
 }
 
 resource "aws_codestarnotifications_notification_rule" "test" {
@@ -322,11 +382,11 @@ resource "aws_codestarnotifications_notification_rule" "test" {
     address = aws_sns_topic.test2.arn
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccNotificationRuleTags1Config(rName string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type    = "BASIC"
   event_type_ids = ["codecommit-repository-comments-on-commits"]
@@ -335,19 +395,18 @@ resource "aws_codestarnotifications_notification_rule" "test" {
   status         = "ENABLED"
 
   tags = {
-    TestTag1 = "123456"
-    TestTag2 = "654321"
+    %[2]q = %[3]q
   }
 
   target {
     address = aws_sns_topic.test.arn
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccNotificationRuleTags2Config(rName string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type    = "BASIC"
   event_type_ids = ["codecommit-repository-comments-on-commits"]
@@ -356,19 +415,19 @@ resource "aws_codestarnotifications_notification_rule" "test" {
   status         = "ENABLED"
 
   tags = {
-    TestTag2 = "654321"
-    TestTag3 = "asdfgh"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 
   target {
     address = aws_sns_topic.test.arn
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccNotificationRuleEventTypeIds1Config(rName string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_eventTypeIDs1(rName string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type = "BASIC"
   event_type_ids = [
@@ -382,11 +441,11 @@ resource "aws_codestarnotifications_notification_rule" "test" {
     address = aws_sns_topic.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccNotificationRuleEventTypeIds2Config(rName string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_eventTypeIDs2(rName string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type = "BASIC"
   event_type_ids = [
@@ -401,11 +460,11 @@ resource "aws_codestarnotifications_notification_rule" "test" {
     address = aws_sns_topic.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccNotificationRuleEventTypeIds3Config(rName string) string {
-	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
+func testAccNotificationRuleConfig_eventTypeIDs3(rName string) string {
+	return acctest.ConfigCompose(testAccNotificationRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type = "BASIC"
   event_type_ids = [
@@ -419,5 +478,5 @@ resource "aws_codestarnotifications_notification_rule" "test" {
     address = aws_sns_topic.test.arn
   }
 }
-`, rName)
+`, rName))
 }

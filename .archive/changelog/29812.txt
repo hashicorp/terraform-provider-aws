@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_function: Prevent `Provider produced inconsistent final plan` errors produced by null `skip_destroy` attribute value. NOTE: Because the maintainers have been unable to reproduce the reported problem, the fix is best effort and we ask for community support in verifying the fix.
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `instance_maintenance_policy` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `instance_maintenance_policy` attribute
+```

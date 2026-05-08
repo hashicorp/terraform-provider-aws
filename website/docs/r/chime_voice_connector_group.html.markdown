@@ -44,8 +44,9 @@ resource "aws_chime_voice_connector_group" "group" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Amazon Chime Voice Connector group.
 * `connector` - (Optional) The Amazon Chime Voice Connectors to route inbound calls to.
 
@@ -56,16 +57,25 @@ For Amazon Chime Voice Connector groups, the Amazon Chime Voice Connectors to wh
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `priority` - (Required) The priority associated with the Amazon Chime Voice Connector, with 1 being the highest priority. Higher priority Amazon Chime Voice Connectors are attempted first.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Chime Voice Connector group ID.
 
 ## Import
 
-Configuration Recorder can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Configuration Recorder using the name. For example:
 
+```terraform
+import {
+  to = aws_chime_voice_connector_group.default
+  id = "example"
+}
 ```
-$ terraform import aws_chime_voice_connector_group.default example
+
+Using `terraform import`, import Configuration Recorder using the name. For example:
+
+```console
+% terraform import aws_chime_voice_connector_group.default example
 ```

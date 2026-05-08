@@ -1,0 +1,331 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package ec2_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccVPCInternetGateway_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.InternetGateway
+	resourceName := "aws_internet_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCInternetGatewayConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`internet-gateway/igw-.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCInternetGateway_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.InternetGateway
+	resourceName := "aws_internet_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCInternetGatewayConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGateway(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCInternetGateway_Disappears_attachment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.InternetGateway
+	resourceName := "aws_internet_gateway.test"
+	attachmentResourceName := "aws_internet_gateway_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCInternetGatewayConfig_attachmentStandalone(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGatewayAttachment(), attachmentResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCInternetGateway_attachment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.InternetGateway
+	resourceName := "aws_internet_gateway.test"
+	vpc1ResourceName := "aws_vpc.test1"
+	vpc2ResourceName := "aws_vpc.test2"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCInternetGatewayConfig_attachment(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpc1ResourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCInternetGatewayConfig_attachmentUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpc2ResourceName, names.AttrID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCInternetGateway_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.InternetGateway
+	resourceName := "aws_internet_gateway.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCInternetGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCInternetGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccVPCInternetGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckInternetGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_internet_gateway" {
+				continue
+			}
+
+			_, err := tfec2.FindInternetGatewayByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Internet Gateway %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckInternetGatewayExists(ctx context.Context, t *testing.T, n string, v *awstypes.InternetGateway) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+		output, err := tfec2.FindInternetGatewayByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+const testAccVPCInternetGatewayConfig_basic = `
+resource "aws_internet_gateway" "test" {}
+`
+
+func testAccVPCInternetGatewayConfig_attachment(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test1" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "%[1]s-1"
+  }
+}
+
+resource "aws_vpc" "test2" {
+  cidr_block = "10.2.0.0/16"
+
+  tags = {
+    Name = "%[1]s-2"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test1.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVPCInternetGatewayConfig_attachmentUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test1" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "%[1]s-1"
+  }
+}
+
+resource "aws_vpc" "test2" {
+  cidr_block = "10.2.0.0/16"
+
+  tags = {
+    Name = "%[1]s-2"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test2.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVPCInternetGatewayConfig_attachmentStandalone(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway_attachment" "test" {
+  internet_gateway_id = aws_internet_gateway.test.id
+  vpc_id              = aws_vpc.test.id
+}
+`, rName)
+}
+
+func testAccVPCInternetGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccVPCInternetGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}

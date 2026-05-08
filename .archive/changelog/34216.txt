@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `postgres` as a valid `engine` value for blue/green deployments
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codebuild_project: Allow `file_system_locations` to be removed on Update
+```

@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_db_parameter_group: Group names containing periods (`.`) no longer fail validation
+```
+```release-note:bug
+resource/aws_rds_cluster_parameter_group: Group names containing periods (`.`) no longer fail validation
+```

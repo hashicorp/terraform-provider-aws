@@ -1,27 +1,27 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkipAppStream)
-
+	acctest.RegisterServiceErrorCheckFunc(names.AppStreamServiceID, testAccErrorCheckSkip)
 }
 
-// testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
-func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"ResourceNotFoundException: The image",
 		"InvalidParameterValueException: The AppStream 2.0 user pool feature",
@@ -29,28 +29,32 @@ func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccAppStreamFleet_basic(t *testing.T) {
-	var fleetOutput appstream.Fleet
+	ctx := acctest.Context(t)
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(rName, instanceType),
+				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -63,25 +67,26 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 }
 
 func TestAccAppStreamFleet_disappears(t *testing.T) {
-	var fleetOutput appstream.Fleet
+	ctx := acctest.Context(t)
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(rName, instanceType),
+				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleetOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceFleet(), resourceName),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,44 +95,47 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 }
 
 func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
-	var fleetOutput appstream.Fleet
+	ctx := acctest.Context(t)
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
 	instanceTypeUpdate := "stream.standard.medium"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetCompleteConfig(rName, description, fleetType, instanceType),
+				Config: testAccFleetConfig_complete(rName, description, fleetType, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewDesktop)),
 				),
 			},
 			{
-				Config: testAccFleetCompleteConfig(rName, descriptionUpdated, fleetType, instanceTypeUpdate),
+				Config: testAccFleetConfig_complete(rName, descriptionUpdated, fleetType, instanceTypeUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceTypeUpdate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewDesktop)),
 				),
 			},
 			{
@@ -140,47 +148,48 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 }
 
 func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
-	var fleetOutput appstream.Fleet
+	ctx := acctest.Context(t)
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
 	displayName := "display name of a test"
 	displayNameUpdated := "display name of a test updated"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetCompleteWithoutStoppingConfig(rName, description, fleetType, instanceType, displayName),
+				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName),
 				),
 			},
 			{
-				Config: testAccFleetCompleteWithoutStoppingConfig(rName, description, fleetType, instanceType, displayNameUpdated),
+				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayNameUpdated),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayNameUpdated),
 				),
 			},
 			{
@@ -192,53 +201,96 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 	})
 }
 
-func TestAccAppStreamFleet_withTags(t *testing.T) {
-	var fleetOutput appstream.Fleet
+func TestAccAppStreamFleet_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
 	displayName := "display name of a test"
 	displayNameUpdated := "display name of a test updated"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetWithTagsConfig(rName, description, fleetType, instanceType, displayName),
+				Config: testAccFleetConfig_tags1(rName, description, fleetType, instanceType, displayName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccFleetWithTagsConfig(rName, description, fleetType, instanceType, displayNameUpdated),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_tags2(rName, description, fleetType, instanceType, displayNameUpdated, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccFleetConfig_tags1(rName, description, fleetType, instanceType, displayName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleetOutput awstypes.Fleet
+	resourceName := "aws_appstream_fleet.test"
+	instanceType := "stream.standard.small"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, `""`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+				),
+			},
+			{
+				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -250,92 +302,130 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 	})
 }
 
-func testAccCheckFleetExists(resourceName string, appStreamFleet *appstream.Fleet) resource.TestCheckFunc {
+func TestAccAppStreamFleet_multiSession(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleetOutput awstypes.Fleet
+	resourceName := "aws_appstream_fleet.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	instanceType := "stream.standard.small"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_multiSession(rName, instanceType, 1, 5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "5"),
+					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_multiSession(rName, instanceType, 2, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "10"),
+					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFleetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appstream_fleet" {
+				continue
+			}
+
+			_, err := tfappstream.FindFleetByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("AppStream Fleet %s still exists", rs.Primary.ID)
 		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
-		resp, err := conn.DescribeFleets(&appstream.DescribeFleetsInput{Names: []*string{aws.String(rs.Primary.ID)}})
-
-		if err != nil {
-			return err
-		}
-
-		if resp == nil && len(resp.Fleets) == 0 {
-			return fmt.Errorf("appstream fleet %q does not exist", rs.Primary.ID)
-		}
-
-		*appStreamFleet = *resp.Fleets[0]
 
 		return nil
 	}
 }
 
-func testAccCheckFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appstream_fleet" {
-			continue
+func testAccCheckFleetExists(ctx context.Context, t *testing.T, n string, v *awstypes.Fleet) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		resp, err := conn.DescribeFleets(&appstream.DescribeFleetsInput{Names: []*string{aws.String(rs.Primary.ID)}})
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
 
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			continue
-		}
+		output, err := tfappstream.FindFleetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp != nil && len(resp.Fleets) > 0 {
-			return fmt.Errorf("appstream fleet %q still exists", rs.Primary.ID)
-		}
-	}
+		*v = *output
 
-	return nil
+		return nil
+	}
 }
 
-func testAccFleetConfig(name, instanceType string) string {
-	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
-	return fmt.Sprintf(`
+const testAccFleetConfig_base = `
+data "aws_appstream_image" "test" {
+  name_regex  = "^Amazon-AppStream2-Sample-Image.*$"
+  type        = "PUBLIC"
+  most_recent = true
+}
+`
+
+func testAccFleetConfig_basic(name, instanceType string) string {
+	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
+	return acctest.ConfigCompose(testAccFleetConfig_base, fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name    = data.aws_appstream_image.test.name
   instance_type = %[2]q
 
   compute_capacity {
     desired_instances = 1
   }
 }
-`, name, instanceType)
+`, name, instanceType))
 }
 
-func testAccFleetCompleteConfig(name, description, fleetType, instanceType string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
+func testAccFleetConfig_complete(name, description, fleetType, instanceType string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_base, acctest.ConfigVPCWithSubnets(name, 2), fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name      = %[1]q
-  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_arn = data.aws_appstream_image.test.arn
 
   compute_capacity {
     desired_instances = 1
@@ -347,32 +437,20 @@ resource "aws_appstream_fleet" "test" {
   fleet_type                         = %[3]q
   instance_type                      = %[4]q
   max_user_duration_in_seconds       = 1000
+  stream_view                        = "DESKTOP"
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `, name, description, fleetType, instanceType))
 }
 
-func testAccFleetCompleteWithoutStoppingConfig(name, description, fleetType, instanceType, displayName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
+func testAccFleetConfig_completeNoStopping(name, description, fleetType, instanceType, displayName string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_base, acctest.ConfigVPCWithSubnets(name, 2), fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name = data.aws_appstream_image.test.name
 
   compute_capacity {
     desired_instances = 1
@@ -387,30 +465,17 @@ resource "aws_appstream_fleet" "test" {
   max_user_duration_in_seconds       = 1000
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `, name, description, fleetType, instanceType, displayName))
 }
 
-func testAccFleetWithTagsConfig(name, description, fleetType, instanceType, displayName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
+func testAccFleetConfig_tags1(name, description, fleetType, instanceType, displayName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_base, acctest.ConfigVPCWithSubnets(name, 2), fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name = data.aws_appstream_image.test.name
 
   compute_capacity {
     desired_instances = 1
@@ -425,12 +490,94 @@ resource "aws_appstream_fleet" "test" {
   max_user_duration_in_seconds       = 1000
 
   tags = {
-    Key = "value"
+    %[6]q = %[7]q
   }
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`, name, description, fleetType, instanceType, displayName))
+`, name, description, fleetType, instanceType, displayName, tagKey1, tagValue1))
+}
+
+func testAccFleetConfig_tags2(name, description, fleetType, instanceType, displayName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_base, acctest.ConfigVPCWithSubnets(name, 2), fmt.Sprintf(`
+resource "aws_appstream_fleet" "test" {
+  name       = %[1]q
+  image_name = data.aws_appstream_image.test.name
+
+  compute_capacity {
+    desired_instances = 1
+  }
+
+  description                        = %[2]q
+  display_name                       = %[5]q
+  idle_disconnect_timeout_in_seconds = 70
+  enable_default_internet_access     = false
+  fleet_type                         = %[3]q
+  instance_type                      = %[4]q
+  max_user_duration_in_seconds       = 1000
+
+  tags = {
+    %[6]q = %[7]q
+    %[8]q = %[9]q
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+`, name, description, fleetType, instanceType, displayName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccFleetConfig_emptyDomainJoin(name, instanceType, empty string) string {
+	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
+	return acctest.ConfigCompose(testAccFleetConfig_base, fmt.Sprintf(`
+resource "aws_appstream_fleet" "test" {
+  name          = %[1]q
+  image_name    = data.aws_appstream_image.test.name
+  instance_type = %[2]q
+
+  compute_capacity {
+    desired_instances = 1
+  }
+
+  domain_join_info {
+    directory_name                         = %[3]s
+    organizational_unit_distinguished_name = %[3]s
+  }
+}
+`, name, instanceType, empty))
+}
+
+func testAccFleetConfig_multiSession(name, instanceType string, desiredSessions, maxSessionsPerInstance int) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(name, 2), fmt.Sprintf(`
+data "aws_appstream_image" "test" {
+  name_regex  = "^AppStream-WinServer2022.*$"
+  type        = "PUBLIC"
+  most_recent = true
+}
+
+resource "aws_appstream_fleet" "test" {
+  name      = %[1]q
+  image_arn = data.aws_appstream_image.test.arn
+
+  compute_capacity {
+    desired_sessions = %[3]d
+  }
+
+  description                        = "Description for a multi-session fleet"
+  idle_disconnect_timeout_in_seconds = 70
+  enable_default_internet_access     = false
+  fleet_type                         = "ON_DEMAND"
+  instance_type                      = %[2]q
+  max_sessions_per_instance          = %[4]d
+  max_user_duration_in_seconds       = 1000
+  stream_view                        = "DESKTOP"
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+`, name, instanceType, desiredSessions, maxSessionsPerInstance))
 }

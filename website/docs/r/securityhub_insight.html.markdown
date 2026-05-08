@@ -125,8 +125,9 @@ resource "aws_securityhub_insight" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filters` - (Required) A configuration block including one or more (up to 10 distinct) attributes used to filter the findings included in the insight. The insight only includes findings that match criteria defined in the filters. See [filters](#filters) below for more details.
 * `group_by_attribute` - (Required) The attribute used to group the findings for the insight e.g., if an insight is grouped by `ResourceId`, then the insight produces a list of resource identifiers.
 * `name` - (Required) The name of the custom insight.
@@ -138,7 +139,12 @@ The `filters` configuration block supports the following arguments:
 ~> **NOTE:** For each argument below, up to 20 can be provided.
 
 * `aws_account_id` - (Optional) AWS account ID that a finding is generated in. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `aws_account_name` - (Optional) The name of the AWS account in which a finding is generated. See [String_Filter](#string-filter-argument-reference) below for more details.
 * `company_name` - (Optional) The name of the findings provider (company) that owns the solution (product) that generates findings. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `compliance_associated_standards_id` - (Optional) The unique identifier of a standard in which a control is enabled. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `compliance_security_control_id` - (Optional) The unique identifier of a control across standards. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `compliance_security_control_parameters_name` - (Optional) The unique identifier of a control across standards. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `compliance_security_control_parameters_value` - (Optional) The current value of a security control parameter. See [String_Filter](#string-filter-argument-reference) below for more details.
 * `compliance_status` - (Optional) Exclusive to findings that are generated as the result of a check run against a specific rule in a supported standard, such as CIS AWS Foundations. Contains security standard-related finding details. See [String Filter](#string-filter-argument-reference) below for more details.
 * `confidence` - (Optional) A finding's confidence. Confidence is defined as the likelihood that a finding accurately identifies the behavior or issue that it was intended to identify. Confidence is scored on a 0-100 basis using a ratio scale, where 0 means zero percent confidence and 100 means 100 percent confidence. See [Number Filter](#number-filter-argument-reference) below for more details.
 * `created_at` - (Optional) An ISO8601-formatted timestamp that indicates when the security-findings provider captured the potential security issue that a finding captured. See [Date Filter](#date-filter-argument-reference) below for more details.
@@ -275,27 +281,57 @@ The number filter configuration block supports the following arguments:
 
 The string filter configuration block supports the following arguments:
 
-* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`.
+* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`, `CONTAINS`, and `NOT_CONTAINS`.
 * `value` - (Required) The string filter value. Filter values are case sensitive.
 
 ### Workflow Status Filter Argument reference
 
 The workflow status filter configuration block supports the following arguments:
 
-* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`.
+* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`, `CONTAINS`, and `NOT_CONTAINS`.
 * `value` - (Required) The string filter value. Valid values include: `NEW`, `NOTIFIED`, `SUPPRESSED`, and `RESOLVED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the insight.
 * `arn` - ARN of the insight.
 
 ## Import
 
-Security Hub insights can be imported using the ARN, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_securityhub_insight.example
+  identity = {
+    arn = "arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a"
+  }
+}
+
+resource "aws_securityhub_insight" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Security Hub custom insight ARN.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub custom insights using `arn`. For example:
+
+```terraform
+import {
+  to = aws_securityhub_insight.example
+  id = "arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a"
+}
+```
+
+Using `terraform import`, import Security Hub custom insights using `arn`. For example:
+
+```console
+% terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
 ```

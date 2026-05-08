@@ -1,34 +1,50 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
-	"errors"
+	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupAttachmentTargetIdInstanceConfig(targetGroupName),
+				Config: testAccTargetGroupAttachmentConfig_idInstance(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -36,18 +52,21 @@ func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupAttachmentTargetIdInstanceConfig(targetGroupName),
+				Config: testAccTargetGroupAttachmentConfig_idInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
-					testAccCheckTargetGroupAttachmentDisappears("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceTargetGroupAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -56,18 +75,20 @@ func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroupAttachment_backwardsCompatibility(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_alb_target_group_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupAttachmentBackwardsCompatibilityConfig(targetGroupName),
+				Config: testAccTargetGroupAttachmentConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_alb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -75,18 +96,66 @@ func TestAccELBV2TargetGroupAttachment_backwardsCompatibility(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupAttachmentPortConfig(targetGroupName),
+				Config: testAccTargetGroupAttachmentConfig_port(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroupAttachment_quic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
+	quicServerID := testAccTargetGroupAttachment_generateQUICServerID()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupAttachmentConfig_quicServerID(rName, awstypes.ProtocolEnumQuic, quicServerID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "quic_server_id", quicServerID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroupAttachment_quicServerId_tcpQuic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
+	quicServerID := testAccTargetGroupAttachment_generateQUICServerID()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupAttachmentConfig_quicServerID(rName, awstypes.ProtocolEnumTcpQuic, quicServerID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "quic_server_id", quicServerID),
 				),
 			},
 		},
@@ -94,18 +163,20 @@ func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroupAttachment_ipAddress(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupAttachmentTargetIdIPAddressConfig(targetGroupName),
+				Config: testAccTargetGroupAttachmentConfig_idIPAddress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -113,195 +184,417 @@ func TestAccELBV2TargetGroupAttachment_ipAddress(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroupAttachment_lambda(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupAttachmentTargetIdLambdaConfig(targetGroupName),
+				Config: testAccTargetGroupAttachmentConfig_idLambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTargetGroupAttachmentDisappears(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Attachment not found: %s", n)
-		}
+func TestAccELBV2TargetGroupAttachment_Identity_noPort(t *testing.T) {
+	ctx := acctest.Context(t)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
-		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
+	resourceName := "aws_lb_target_group_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-		target := &elbv2.TargetDescription{
-			Id: aws.String(rs.Primary.Attributes["target_id"]),
-		}
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/no_port/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:        tfknownvalue.AccountID(),
+						names.AttrRegion:           knownvalue.StringExact(acctest.Region()),
+						"target_group_arn":         knownvalue.NotNull(),
+						"target_id":                knownvalue.NotNull(),
+						names.AttrPort:             knownvalue.Null(),
+						names.AttrAvailabilityZone: knownvalue.Null(),
+						"quic_server_id":           knownvalue.Null(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("target_group_arn")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("target_id")),
+				},
+			},
 
-		_, hasPort := rs.Primary.Attributes["port"]
-		if hasPort {
-			port, _ := strconv.Atoi(rs.Primary.Attributes["port"])
-			target.Port = aws.Int64(int64(port))
-		}
+			// Step 2: Import command
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/no_port/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 
-		params := &elbv2.DeregisterTargetsInput{
-			TargetGroupArn: aws.String(targetGroupArn),
-			Targets:        []*elbv2.TargetDescription{target},
-		}
+			// Step 3: Import block with Import ID
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/no_port/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_group_arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
 
-		_, err := conn.DeregisterTargets(params)
-		if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
-			return fmt.Errorf("Error deregistering Targets: %s", err)
-		}
-
-		return err
-	}
+			// Step 4: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/no_port/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_group_arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
 }
 
-func testAccCheckTargetGroupAttachmentExists(n string) resource.TestCheckFunc {
+func TestAccELBV2TargetGroupAttachment_Identity_quic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_lb_target_group_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	quicServerID := testAccTargetGroupAttachment_generateQUICServerID()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/quic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"quic_server_id": config.StringVariable(quicServerID),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:        tfknownvalue.AccountID(),
+						names.AttrRegion:           knownvalue.StringExact(acctest.Region()),
+						"target_group_arn":         knownvalue.NotNull(),
+						"target_id":                knownvalue.NotNull(),
+						names.AttrPort:             knownvalue.NotNull(),
+						names.AttrAvailabilityZone: knownvalue.Null(),
+						"quic_server_id":           knownvalue.StringExact(quicServerID),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("target_group_arn")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("target_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrPort)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("quic_server_id")),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/quic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"quic_server_id": config.StringVariable(quicServerID),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/quic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"quic_server_id": config.StringVariable(quicServerID),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_group_arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPort), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("quic_server_id"), knownvalue.StringExact(quicServerID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/quic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"quic_server_id": config.StringVariable(quicServerID),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_group_arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPort), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("quic_server_id"), knownvalue.StringExact(quicServerID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroupAttachment_Identity_quicNoPort(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_lb_target_group_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	quicServerID := testAccTargetGroupAttachment_generateQUICServerID()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/quic_no_port/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"quic_server_id": config.StringVariable(quicServerID),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:        tfknownvalue.AccountID(),
+						names.AttrRegion:           knownvalue.StringExact(acctest.Region()),
+						"target_group_arn":         knownvalue.NotNull(),
+						"target_id":                knownvalue.NotNull(),
+						names.AttrPort:             knownvalue.Null(),
+						names.AttrAvailabilityZone: knownvalue.Null(),
+						"quic_server_id":           knownvalue.StringExact(quicServerID),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("target_group_arn")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("target_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("quic_server_id")),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/quic_no_port/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"quic_server_id": config.StringVariable(quicServerID),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/quic_no_port/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"quic_server_id": config.StringVariable(quicServerID),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_group_arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPort), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("quic_server_id"), knownvalue.StringExact(quicServerID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TargetGroupAttachment/quic_no_port/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"quic_server_id": config.StringVariable(quicServerID),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_group_arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPort), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("quic_server_id"), knownvalue.StringExact(quicServerID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckTargetGroupAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Target Group Attachment ID is set")
+		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
+
+		input := &elasticloadbalancingv2.DescribeTargetHealthInput{
+			TargetGroupArn: aws.String(rs.Primary.Attributes["target_group_arn"]),
+			Targets: []awstypes.TargetDescription{{
+				Id: aws.String(rs.Primary.Attributes["target_id"]),
+			}},
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
-
-		_, hasPort := rs.Primary.Attributes["port"]
-		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
-
-		target := &elbv2.TargetDescription{
-			Id: aws.String(rs.Primary.Attributes["target_id"]),
-		}
-		if hasPort {
-			port, _ := strconv.Atoi(rs.Primary.Attributes["port"])
-			target.Port = aws.Int64(int64(port))
+		if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
+			input.Targets[0].AvailabilityZone = aws.String(v)
 		}
 
-		describe, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
-			TargetGroupArn: aws.String(targetGroupArn),
-			Targets:        []*elbv2.TargetDescription{target},
-		})
-
-		if err != nil {
-			return err
+		if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
+			input.Targets[0].Port = flex.StringValueToInt32(v)
 		}
 
-		if len(describe.TargetHealthDescriptions) != 1 {
-			return errors.New("Target Group Attachment not found")
+		_, err := tfelbv2.FindTargetHealthDescription(ctx, conn, input)
+
+		return err
+	}
+}
+
+func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {
+				continue
+			}
+
+			// To support region override testing
+			ctx := conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
+
+			input := &elasticloadbalancingv2.DescribeTargetHealthInput{
+				TargetGroupArn: aws.String(rs.Primary.Attributes["target_group_arn"]),
+				Targets: []awstypes.TargetDescription{{
+					Id: aws.String(rs.Primary.Attributes["target_id"]),
+				}},
+			}
+
+			if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
+				input.Targets[0].AvailabilityZone = aws.String(v)
+			}
+
+			if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
+				input.Targets[0].Port = flex.StringValueToInt32(v)
+			}
+
+			_, err := tfelbv2.FindTargetHealthDescription(ctx, conn, input)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ELBv2 Target Group Attachment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTargetGroupAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {
-			continue
-		}
-
-		_, hasPort := rs.Primary.Attributes["port"]
-		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
-
-		target := &elbv2.TargetDescription{
-			Id: aws.String(rs.Primary.Attributes["target_id"]),
-		}
-		if hasPort {
-			port, _ := strconv.Atoi(rs.Primary.Attributes["port"])
-			target.Port = aws.Int64(int64(port))
-		}
-
-		describe, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
-			TargetGroupArn: aws.String(targetGroupArn),
-			Targets:        []*elbv2.TargetDescription{target},
-		})
-		if err == nil {
-			if len(describe.TargetHealthDescriptions) != 0 {
-				return fmt.Errorf("Target Group Attachment %q still exists", rs.Primary.ID)
-			}
-		}
-
-		// Verify the error
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") || tfawserr.ErrMessageContains(err, elbv2.ErrCodeInvalidTargetException, "") {
-			return nil
-		} else {
-			return fmt.Errorf("Unexpected error checking LB destroyed: %s", err)
-		}
+func testAccTargetGroupAttachment_generateQUICServerID() string {
+	s := make([]byte, 8)
+	if _, err := rand.Read(s); err != nil {
+		return ""
 	}
-
-	return nil
+	return "0x" + hex.EncodeToString(s)
 }
 
-func testAccTargetGroupAttachmentInstanceBaseConfig() string {
-	return `
-data "aws_availability_zones" "available" {
-  # t2.micro instance type is not available in these Availability Zones
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+func testAccTargetGroupAttachmentCongig_baseEC2Instance(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
-  subnet_id     = aws_subnet.test.id
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
+  subnet_id     = aws_subnet.test[0].id
 
   tags = {
-    Name = "tf-acc-test-lb-target-group-attachment"
+    Name = %[1]q
   }
 }
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-lb-target-group-attachment"
-  }
-}
-`
+`, rName))
 }
 
-func testAccTargetGroupAttachmentTargetIdInstanceConfig(rName string) string {
-	return testAccTargetGroupAttachmentInstanceBaseConfig() + fmt.Sprintf(`
+func testAccTargetGroupAttachmentConfig_idInstance(rName string) string {
+	return acctest.ConfigCompose(testAccTargetGroupAttachmentCongig_baseEC2Instance(rName), fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
@@ -313,11 +606,11 @@ resource "aws_lb_target_group_attachment" "test" {
   target_group_arn = aws_lb_target_group.test.arn
   target_id        = aws_instance.test.id
 }
-`, rName)
+`, rName))
 }
 
-func testAccTargetGroupAttachmentPortConfig(rName string) string {
-	return testAccTargetGroupAttachmentInstanceBaseConfig() + fmt.Sprintf(`
+func testAccTargetGroupAttachmentConfig_port(rName string) string {
+	return acctest.ConfigCompose(testAccTargetGroupAttachmentCongig_baseEC2Instance(rName), fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
@@ -330,11 +623,29 @@ resource "aws_lb_target_group_attachment" "test" {
   target_id        = aws_instance.test.id
   port             = 80
 }
-`, rName)
+`, rName))
 }
 
-func testAccTargetGroupAttachmentBackwardsCompatibilityConfig(rName string) string {
-	return testAccTargetGroupAttachmentInstanceBaseConfig() + fmt.Sprintf(`
+func testAccTargetGroupAttachmentConfig_quicServerID(rName string, protocol awstypes.ProtocolEnum, quicServerID string) string {
+	return acctest.ConfigCompose(testAccTargetGroupAttachmentCongig_baseEC2Instance(rName), fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = %[2]q
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_target_group_attachment" "test" {
+  target_group_arn = aws_lb_target_group.test.arn
+  target_id        = aws_instance.test.id
+  port             = 443
+  quic_server_id   = %[3]q
+}
+`, rName, protocol, quicServerID))
+}
+
+func testAccTargetGroupAttachmentConfig_backwardsCompatibility(rName string) string {
+	return acctest.ConfigCompose(testAccTargetGroupAttachmentCongig_baseEC2Instance(rName), fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
@@ -347,11 +658,11 @@ resource "aws_alb_target_group_attachment" "test" {
   target_id        = aws_instance.test.id
   port             = 80
 }
-`, rName)
+`, rName))
 }
 
-func testAccTargetGroupAttachmentTargetIdIPAddressConfig(rName string) string {
-	return testAccTargetGroupAttachmentInstanceBaseConfig() + fmt.Sprintf(`
+func testAccTargetGroupAttachmentConfig_idIPAddress(rName string) string {
+	return acctest.ConfigCompose(testAccTargetGroupAttachmentCongig_baseEC2Instance(rName), fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name        = %[1]q
   port        = 443
@@ -365,10 +676,10 @@ resource "aws_lb_target_group_attachment" "test" {
   target_group_arn  = aws_lb_target_group.test.arn
   target_id         = aws_instance.test.private_ip
 }
-`, rName)
+`, rName))
 }
 
-func testAccTargetGroupAttachmentTargetIdLambdaConfig(rName string) string {
+func testAccTargetGroupAttachmentConfig_idLambda(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -391,7 +702,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambda_elb.lambda_handler"
-  runtime       = "python3.7"
+  runtime       = "python3.12"
 }
 
 resource "aws_lambda_alias" "test" {

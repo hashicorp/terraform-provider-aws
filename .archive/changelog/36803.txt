@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_sagemaker_prebuilt_ecr_image: Add `registry_id` for `af-south-1` AWS Region
+```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_msk_cluster: Support multiple attribute updates by refreshing `current_version` after each update
+```

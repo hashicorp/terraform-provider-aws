@@ -1,0 +1,27 @@
+```release-note:bug
+resource/aws_iam_instance_profile: Improve tag handling in ISO regions
+```
+
+```release-note:bug
+resource/aws_iam_openid_connect_provider: Improve tag handling in ISO regions
+```
+
+```release-note:bug
+resource/aws_iam_policy: Improve tag handling in ISO regions
+```
+
+```release-note:bug
+resource/aws_iam_saml_provider: Improve tag handling in ISO regions
+```
+
+```release-note:bug
+resource/aws_iam_server_certificate: Improve tag handling in ISO regions
+```
+
+```release-note:bug
+resource/aws_iam_service_linked_role: Improve tag handling in ISO regions
+```
+
+```release-note:bug
+resource/aws_iam_virtual_mfa_device: Improve tag handling in ISO regions
+```

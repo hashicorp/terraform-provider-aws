@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # ECS with ALB example
 
 This example shows how to launch an ECS service fronted with Application Load Balancer.
@@ -28,6 +31,7 @@ Alternatively to using `-var` with each command, the `terraform.template.tfvars`
 
 Once the stack is created, wait for a few minutes and test the stack by launching a browser with the ALB url.
 
+<!-- markdownlint-disable-next-line no-trailing-punctuation -->
 ## Destroy :boom:
 
 ```

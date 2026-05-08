@@ -1,50 +1,47 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusPermissions(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		var permissions []*lakeformation.PrincipalResourcePermissions
+func statusPermissions(conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		var permissions []awstypes.PrincipalResourcePermissions
 
-		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
-			for _, permission := range resp.PrincipalResourcePermissions {
-				if permission == nil {
-					continue
-				}
+		pages := lakeformation.NewListPermissionsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 
-				if aws.StringValue(input.Principal.DataLakePrincipalIdentifier) != aws.StringValue(permission.Principal.DataLakePrincipalIdentifier) {
-					continue
-				}
-
-				permissions = append(permissions, permission)
+			if errs.IsA[*awstypes.EntityNotFoundException](err) {
+				return nil, "", nil
 			}
-			return !lastPage
-		})
 
-		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
-			return nil, statusNotFound, err
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
+				return nil, statusIAMDelay, nil
+			}
+
+			if err != nil {
+				return nil, "", fmt.Errorf("listing permissions: %w", err)
+			}
+
+			for _, permission := range page.PrincipalResourcePermissions {
+				if filter(permission) {
+					permissions = append(permissions, permission)
+				}
+			}
 		}
 
-		if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
-			return nil, statusIAMDelay, nil
-		}
-
-		if err != nil {
-			return nil, statusFailed, fmt.Errorf("error listing permissions: %w", err)
-		}
-
-		// clean permissions = filter out permissions that do not pertain to this specific resource
-		cleanPermissions := FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
-
-		if len(cleanPermissions) == 0 {
-			return nil, statusNotFound, nil
+		if len(permissions) == 0 {
+			return nil, "", nil
 		}
 
 		return permissions, statusAvailable, nil

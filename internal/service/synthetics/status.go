@@ -1,17 +1,20 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/synthetics"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusCanaryState(conn *synthetics.Synthetics, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindCanaryByName(conn, name)
+func statusCanaryState(conn *synthetics.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := FindCanaryByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -19,6 +22,6 @@ func statusCanaryState(conn *synthetics.Synthetics, name string) resource.StateR
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.State), nil
+		return output, string(output.Status.State), nil
 	}
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "Step Function (SFN)"
+subcategory: "SFN (Step Functions)"
 layout: "aws"
 page_title: "AWS: aws_sfn_activity"
 description: |-
@@ -20,14 +20,15 @@ data "aws_sfn_activity" "sfn_activity" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Optional) The name that identifies the activity.
-* `arn` - (Optional) The Amazon Resource Name (ARN) that identifies the activity.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Optional) Name that identifies the activity.
+* `arn` - (Optional) ARN that identifies the activity.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the activity.
-* `creation_date` - The date the activity was created.
+* `id` - ARN that identifies the activity.
+* `creation_date` - Date the activity was created.

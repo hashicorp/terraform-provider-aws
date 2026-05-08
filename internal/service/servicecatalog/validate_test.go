@@ -1,25 +1,38 @@
-package servicecatalog
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package servicecatalog_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsc "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidSharePrincipal(t *testing.T) {
+	t.Parallel()
+
 	v := ""
-	_, errors := validSharePrincipal(v, "arn")
+	_, errors := tfsc.ValidSharePrincipal(v, names.AttrARN)
 	if len(errors) == 0 {
 		t.Fatalf("%q should not be validated as a principal %d: %q", v, len(errors), errors)
 	}
 
 	validNames := []string{
-		"123456789012", // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
-		"111122223333", // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
+		acctest.Ct12Digit, // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
+		"111122223333",    // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
 		"arn:aws:organizations::111122223333:organization/o-abcdefghijkl",             // lintignore:AWSAT005    // organization
 		"arn:aws:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh",        // lintignore:AWSAT005    // ou
 		"arn:aws-us-gov:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh", // lintignore:AWSAT005    // GovCloud ou
+		"o-abcdefghijkl",     // organization ID
+		"ou-ab00-cdefgh",     // OU ID
+		"o-1234567890abcdef", // organization ID (different format)
+		"ou-1234-abcdefgh",   // OU ID (different format)
 	}
 	for _, v := range validNames {
-		_, errors := validSharePrincipal(v, "arn")
+		_, errors := tfsc.ValidSharePrincipal(v, names.AttrARN)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid principal: %q", v, errors)
 		}
@@ -28,7 +41,7 @@ func TestValidSharePrincipal(t *testing.T) {
 	invalidNames := []string{
 		"IAM_ALLOWED_PRINCIPALS",     // Special principal
 		"IAM_NOT_ALLOWED_PRINCIPALS", // doesn't exist
-		"arn",
+		names.AttrARN,
 		"1234567890125", //not an account id
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
@@ -47,9 +60,17 @@ func TestValidSharePrincipal(t *testing.T) {
 		"arn:aws:iam::111122223333:saml-provider/idp1:group/data-scientists",               // lintignore:AWSAT005          // SAML group
 		"arn:aws:iam::111122223333:saml-provider/idp1:user/Paul",                           // lintignore:AWSAT005          // SAML user
 		"arn:aws:quicksight:us-east-1:111122223333:group/default/data_scientists",          // lintignore:AWSAT003,AWSAT005 // quicksight group
+		"o-",           // too short
+		"ou-",          // too short
+		"o-abc",        // too short
+		"ou-abc",       // missing second part
+		"o-UPPERCASE",  // uppercase not allowed
+		"ou-ABCD-efgh", // uppercase not allowed
+		"o-!!!invalid", // invalid characters
+		"ou-1234-!!!",  // invalid characters
 	}
 	for _, v := range invalidNames {
-		_, errors := validSharePrincipal(v, "arn")
+		_, errors := tfsc.ValidSharePrincipal(v, names.AttrARN)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid principal", v)
 		}

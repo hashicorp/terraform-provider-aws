@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_route_table"
 description: |-
@@ -32,10 +32,9 @@ resource "aws_route" "route" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available Route Table in the current region. The given filters must match exactly one Route Table whose data will be exported as attributes.
+This data source supports the following arguments:
 
-The following arguments are optional:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block. Detailed below.
 * `gateway_id` - (Optional) ID of an Internet Gateway or Virtual Private Gateway which is connected to the Route Table (not exported if not passed as a parameter).
 * `route_table_id` - (Optional) ID of the specific Route Table to retrieve.
@@ -52,10 +51,11 @@ The following arguments are required:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeRouteTables.html).
 * `values` - (Required) Set of values that are accepted for the given field. A Route Table will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
+* `id` – The ID of the route table.
 * `arn` - ARN of the route table.
 * `associations` - List of associations with attributes detailed below.
 * `owner_id` - ID of the AWS account that owns the route table.
@@ -74,6 +74,7 @@ For destinations:
 For targets:
 
 * `carrier_gateway_id` - ID of the Carrier Gateway.
+* `core_network_arn` - ARN of the core network.
 * `egress_only_gateway_id` - ID of the Egress Only Internet Gateway.
 * `gateway_id` - Internet Gateway ID.
 * `instance_id` - EC2 instance ID.
@@ -93,3 +94,9 @@ Associations are also exported with the following attributes:
 * `route_table_association_id` - Association ID.
 * `route_table_id` - Route Table ID.
 * `subnet_id` - Subnet ID. Only set when associated with a subnet.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

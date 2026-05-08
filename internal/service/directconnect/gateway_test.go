@@ -1,36 +1,43 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDirectConnectGateway_basic(t *testing.T) {
-	var v directconnect.Gateway
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	ctx := acctest.Context(t)
+	var v awstypes.DirectConnectGateway
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayConfig(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "directconnect", "dx-gateway/{id}"),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, gateway_CheckID(&v)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 				),
 			},
 			{
@@ -43,22 +50,23 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 }
 
 func TestAccDirectConnectGateway_disappears(t *testing.T) {
-	var v directconnect.Gateway
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	ctx := acctest.Context(t)
+	var v awstypes.DirectConnectGateway
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayConfig(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
+				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,22 +75,23 @@ func TestAccDirectConnectGateway_disappears(t *testing.T) {
 }
 
 func TestAccDirectConnectGateway_complex(t *testing.T) {
-	var v directconnect.Gateway
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	ctx := acctest.Context(t)
+	var v awstypes.DirectConnectGateway
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+				Config: testAccGatewayConfig_associationMultiVPNSingleAccount(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 				),
 			},
 			{
@@ -94,43 +103,139 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 	})
 }
 
-func testAccCheckGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+func TestAccDirectConnectGateway_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DirectConnectGateway
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	resourceName := "aws_dx_gateway.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_gateway" {
-			continue
-		}
-
-		_, err := tfdirectconnect.FindGatewayByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Direct Connect Gateway %s still exists", rs.Primary.ID)
-	}
-	return nil
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_basic(rName1, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
+				),
+			},
+			{
+				Config: testAccGatewayConfig_basic(rName2, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckGatewayExists(name string, v *directconnect.Gateway) resource.TestCheckFunc {
+func TestAccDirectConnectGateway_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DirectConnectGateway
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	resourceName := "aws_dx_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_tags1(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "directconnect", "dx-gateway/{id}"),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, gateway_CheckID(&v)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGatewayConfig_tags2(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "directconnect", "dx-gateway/{id}"),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, gateway_CheckID(&v)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccGatewayConfig_tags1(rName, rBgpAsn, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "directconnect", "dx-gateway/{id}"),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, gateway_CheckID(&v)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "directconnect", "dx-gateway/{id}"),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, gateway_CheckID(&v)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dx_gateway" {
+				continue
+			}
+
+			_, err := tfdirectconnect.FindGatewayByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Direct Connect Gateway %s still exists", rs.Primary.ID)
+		}
+		return nil
+	}
+}
+
+func testAccCheckGatewayExists(ctx context.Context, t *testing.T, n string, v *awstypes.DirectConnectGateway) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
-
-		output, err := tfdirectconnect.FindGatewayByID(conn, rs.Primary.ID)
+		output, err := tfdirectconnect.FindGatewayByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -142,11 +247,48 @@ func testAccCheckGatewayExists(name string, v *directconnect.Gateway) resource.T
 	}
 }
 
-func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
+func gateway_CheckID(v *awstypes.DirectConnectGateway) func(string) error {
+	return func(s string) error {
+		expected := aws.ToString(v.DirectConnectGatewayId)
+		if s != expected {
+			return fmt.Errorf("expected value %q for String check, got: %q", expected, s)
+		}
+		return nil
+	}
+}
+
+func testAccGatewayConfig_basic(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
   amazon_side_asn = "%[2]d"
 }
 `, rName, rBgpAsn)
+}
+
+func testAccGatewayConfig_tags1(rName string, rBgpAsn int, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  name            = %[1]q
+  amazon_side_asn = "%[2]d"
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, rBgpAsn, tagKey1, tagValue1)
+}
+
+func testAccGatewayConfig_tags2(rName string, rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  name            = %[1]q
+  amazon_side_asn = "%[2]d"
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, rBgpAsn, tagKey1, tagValue1, tagKey2, tagValue2)
 }

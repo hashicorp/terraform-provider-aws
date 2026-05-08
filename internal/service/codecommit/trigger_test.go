@@ -1,93 +1,140 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/codecommit"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfcodecommit "github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeCommitTrigger_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecommit_trigger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codecommit.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeCommitTriggerDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodeCommitTrigger_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodeCommitTriggerExists(resourceName),
+				Config: testAccTriggerConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "all"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCodeCommitTriggerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
+func TestAccCodeCommitTrigger_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_codecommit_trigger.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codecommit_trigger" {
-			continue
-		}
-
-		_, err := conn.GetRepositoryTriggers(&codecommit.GetRepositoryTriggersInput{
-			RepositoryName: aws.String(rs.Primary.ID),
-		})
-
-		if ae, ok := err.(awserr.Error); ok && ae.Code() == "RepositoryDoesNotExistException" {
-			continue
-		}
-		if err == nil {
-			return fmt.Errorf("Trigger still exists: %s", rs.Primary.ID)
-		}
-		return err
-	}
-
-	return nil
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceTrigger(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckCodeCommitTriggerExists(name string) resource.TestCheckFunc {
+func TestAccCodeCommitTrigger_branches(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_codecommit_trigger.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfig_branches(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.0", "main"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.1", "develop"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "updateReference"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.1", "createReference"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckTriggerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
+		conn := acctest.ProviderMeta(ctx, t).CodeCommitClient(ctx)
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codecommit_trigger" {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
-		out, err := conn.GetRepositoryTriggers(&codecommit.GetRepositoryTriggersInput{
-			RepositoryName: aws.String(rs.Primary.ID),
-		})
+			_, err := tfcodecommit.FindRepositoryTriggersByName(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
+			if retry.NotFound(err) {
+				continue
+			}
 
-		if len(out.Triggers) == 0 {
-			return fmt.Errorf("CodeCommit Trigger Failed: %q", out)
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CodeCommit Trigger (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCodeCommitTrigger_basic(rName string) string {
+func testAccCheckTriggerExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).CodeCommitClient(ctx)
+
+		_, err := tfcodecommit.FindRepositoryTriggersByName(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+func testAccTriggerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -104,6 +151,29 @@ resource "aws_codecommit_trigger" "test" {
     name            = %[1]q
     events          = ["all"]
     destination_arn = aws_sns_topic.test.arn
+  }
+}
+`, rName)
+}
+
+func testAccTriggerConfig_branches(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_codecommit_repository" "test" {
+  repository_name = %[1]q
+}
+
+resource "aws_codecommit_trigger" "test" {
+  repository_name = aws_codecommit_repository.test.id
+
+  trigger {
+    name            = %[1]q
+    events          = ["updateReference", "createReference"]
+    destination_arn = aws_sns_topic.test.arn
+    branches        = ["main", "develop"]
   }
 }
 `, rName)

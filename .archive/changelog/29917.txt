@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_channel: Fix spelling for attribute `audio_only_timecode_control` and correct type for `event_id` in `ms_smooth_group_settings`
+```

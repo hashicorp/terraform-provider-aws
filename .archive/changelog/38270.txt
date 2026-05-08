@@ -1,0 +1,31 @@
+```release-note:enhancement
+resource/aws_mskconnect_connector: Add `tags` argument and `tags_all` attribute
+```
+
+```release-note:enhancement
+resource/aws_mskconnect_custom_plugin: Add `tags` argument and `tags_all` attribute
+```
+
+```release-note:enhancement
+resource/aws_mskconnect_worker_configuration: Add `tags` argument and `tags_all` attribute
+```
+
+```release-note:enhancement
+resource/aws_mskconnect_worker_configuration: Add resource deletion logic
+```
+
+```release-note:enhancement
+data-source/aws_mskconnect_connector: Add `tags` attribute
+```
+
+```release-note:enhancement
+data-source/aws_mskconnect_custom_plugin: Add `tags` attribute
+```
+
+```release-note:enhancement
+data-source/aws_mskconnect_worker_configuration: Add `tags` attribute
+```
+
+```release-note:bug
+resource/aws_mskconnect_connector: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `log_delivery.worker_log_delivery` is empty (`{}`)
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute
+```

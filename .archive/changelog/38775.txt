@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_grafana_workspace: Fix crash when empty `network_access_control` block is configured
+```
+```release-note:bug
+resource/aws_grafana_workspace: Fix crash when empty `vpc_configuration` block is configured
+```

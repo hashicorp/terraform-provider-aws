@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_route53_traffic_policy
+```
+
+```release-note:new-data-source
+aws_route53_traffic_policy_document
+```
+
+```release-note:new-resource
+aws_route53_traffic_policy_instance
+```

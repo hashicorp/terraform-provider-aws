@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `ja3_fingerprint` and `ja4_fingerprint` to `custom_key` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `ja3_fingerprint` and `ja4_fingerprint` to `custom_key` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `ja4_fingerprint` to `field_to_match` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `ja4_fingerprint` to `field_to_match` configuration blocks
+```

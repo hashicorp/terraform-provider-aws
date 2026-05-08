@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshiftserverless_namespace: Fix perpetual `iam_roles` diffs when the namespace contains a workgroup
+```

@@ -1,80 +1,127 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package guardduty
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceDetector() *schema.Resource {
+// @SDKDataSource("aws_guardduty_detector", name="Detector")
+// @Tags
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceDetector() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDetectorRead,
+		ReadWithoutTimeout: dataSourceDetectorRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"status": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_role_arn": {
-				Type:     schema.TypeString,
+			"features": {
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"additional_configuration": {
+							Computed: true,
+							Type:     schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									names.AttrStatus: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"finding_publishing_frequency": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrID: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrServiceRoleARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
-	detectorId := d.Get("id").(string)
+	detectorID := d.Get(names.AttrID).(string)
 
-	if detectorId == "" {
-		input := &guardduty.ListDetectorsInput{}
+	if detectorID == "" {
+		output, err := findDetectorID(ctx, conn)
 
-		resp, err := conn.ListDetectors(input)
 		if err != nil {
-			return fmt.Errorf("error listing GuardDuty Detectors: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading this account's single GuardDuty Detector: %s", err)
 		}
 
-		if resp == nil || len(resp.DetectorIds) == 0 {
-			return fmt.Errorf("no GuardDuty Detectors found")
-		}
-		if len(resp.DetectorIds) > 1 {
-			return fmt.Errorf("multiple GuardDuty Detectors found; please use the `id` argument to look up a single detector")
-		}
-
-		detectorId = aws.StringValue(resp.DetectorIds[0])
+		detectorID = aws.ToString(output)
 	}
 
-	getInput := &guardduty.GetDetectorInput{
-		DetectorId: aws.String(detectorId),
-	}
+	gdo, err := findDetectorByID(ctx, conn, detectorID)
 
-	getResp, err := conn.GetDetector(getInput)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", detectorID, err)
 	}
 
-	if getResp == nil {
-		return fmt.Errorf("cannot receive GuardDuty Detector details")
+	d.SetId(detectorID)
+	d.Set(names.AttrARN, detectorARN(ctx, c, d.Id()))
+	if gdo.Features != nil {
+		if err := d.Set("features", flattenDetectorFeatureConfigurationResults(gdo.Features)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting features: %s", err)
+		}
+	} else {
+		d.Set("features", nil)
 	}
+	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
+	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
+	d.Set(names.AttrStatus, gdo.Status)
 
-	d.SetId(detectorId)
-	d.Set("status", getResp.Status)
-	d.Set("service_role_arn", getResp.ServiceRole)
-	d.Set("finding_publishing_frequency", getResp.FindingPublishingFrequency)
+	setTagsOut(ctx, gdo.Tags)
 
-	return nil
+	return diags
 }

@@ -1,77 +1,81 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"context"
+
+	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusRoute53RecoveryControlConfigCluster(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &r53rcc.DescribeClusterInput{
-			ClusterArn: aws.String(clusterArn),
-		}
+func statusCluster(conn *r53rcc.Client, clusterArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findClusterByARN(ctx, conn, clusterArn)
 
-		output, err := conn.DescribeCluster(input)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return output, "", err
 		}
 
-		return output, aws.StringValue(output.Cluster.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func statusRoute53RecoveryControlConfigRoutingControl(conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &r53rcc.DescribeRoutingControlInput{
-			RoutingControlArn: aws.String(routingControlArn),
-		}
+func statusRoutingControl(conn *r53rcc.Client, routingControlArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findRoutingControlByARN(ctx, conn, routingControlArn)
 
-		output, err := conn.DescribeRoutingControl(input)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return output, "", err
 		}
 
-		return output, aws.StringValue(output.RoutingControl.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func statusRoute53RecoveryControlConfigControlPanel(conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &r53rcc.DescribeControlPanelInput{
-			ControlPanelArn: aws.String(controlPanelArn),
-		}
+func statusControlPanel(conn *r53rcc.Client, controlPanelArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findControlPanelByARN(ctx, conn, controlPanelArn)
 
-		output, err := conn.DescribeControlPanel(input)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return output, "", err
 		}
 
-		return output, aws.StringValue(output.ControlPanel.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func statusRoute53RecoveryControlConfigSafetyRule(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &r53rcc.DescribeSafetyRuleInput{
-			SafetyRuleArn: aws.String(safetyRuleArn),
-		}
+func statusSafetyRule(conn *r53rcc.Client, safetyRuleArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findSafetyRuleByARN(ctx, conn, safetyRuleArn)
 
-		output, err := conn.DescribeSafetyRule(input)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return output, "", err
 		}
 
 		if output.AssertionRule != nil {
-			return output, aws.StringValue(output.AssertionRule.Status), nil
+			return output, string(output.AssertionRule.Status), nil
 		}
 
 		if output.GatingRule != nil {
-			return output, aws.StringValue(output.GatingRule.Status), nil
+			return output, string(output.GatingRule.Status), nil
 		}
 
 		return output, "", nil

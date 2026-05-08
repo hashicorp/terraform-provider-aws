@@ -1,38 +1,36 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccImageBuilderImageRecipesDataSource_owner(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceNameOwnerAmazon := "data.aws_imagebuilder_image_recipes.amazon"
 	dataSourceNameOwnerSelf := "data.aws_imagebuilder_image_recipes.self"
-	resourceName := "aws_imagebuilder_image_recipe.test"
 
-	// Not a good test since it is susceptible to fail with parallel tests or if anything else
-	// ImageBuilder is going on in the account
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImageRecipeDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRecipesOwnerDataSourceConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccImageRecipesDataSourceConfig_owner(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceNameOwnerAmazon, "arns.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceNameOwnerAmazon, "names.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceNameOwnerSelf, "arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceNameOwnerSelf, "names.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceNameOwnerSelf, "arns.0", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceNameOwnerSelf, "names.0", resourceName, "name"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceNameOwnerSelf, "arns.#", 1),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceNameOwnerSelf, "names.#", 1),
 				),
 			},
 		},
@@ -40,28 +38,54 @@ func TestAccImageBuilderImageRecipesDataSource_owner(t *testing.T) {
 }
 
 func TestAccImageBuilderImageRecipesDataSource_filter(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image_recipes.test"
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImageRecipeDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRecipesFilterDataSourceConfig(rName),
+				Config: testAccImageRecipesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),
 			},
 		},
 	})
 }
 
-func testAccImageRecipeDataSourceBaseConfig(rName string) string {
+func TestAccImageBuilderImageRecipesDataSource_amiTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_imagebuilder_image_recipe.test"
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipeDataSourceConfig_amiTags(rName, "tags_key1", acctest.CtValue1, "tags_key2", acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "ami_tags.%", "2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ami_tags.tags_key1", resourceName, "ami_tags.tags_key1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ami_tags.tags_key2", resourceName, "ami_tags.tags_key2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ami_tags.tags_key2", resourceName, "ami_tags.tags_key2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccImageRecipeDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -89,17 +113,15 @@ resource "aws_imagebuilder_component" "test" {
 `, rName)
 }
 
-func testAccImageRecipesOwnerDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImageRecipeDataSourceBaseConfig(rName),
-		fmt.Sprintf(`
+func testAccImageRecipesDataSourceConfig_owner(rName string) string {
+	return acctest.ConfigCompose(testAccImageRecipeDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_recipe" "test" {
   component {
     component_arn = aws_imagebuilder_component.test.arn
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -121,17 +143,15 @@ data "aws_imagebuilder_image_recipes" "self" {
 `, rName))
 }
 
-func testAccImageRecipesFilterDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImageRecipeDataSourceBaseConfig(rName),
-		fmt.Sprintf(`
+func testAccImageRecipesDataSourceConfig_filter(rName string) string {
+	return acctest.ConfigCompose(testAccImageRecipeDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_recipe" "test" {
   component {
     component_arn = aws_imagebuilder_component.test.arn
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -142,4 +162,26 @@ data "aws_imagebuilder_image_recipes" "test" {
   }
 }
 `, rName))
+}
+
+func testAccImageRecipeDataSourceConfig_amiTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccImageRecipeDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+  ami_tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+
+data "aws_imagebuilder_image_recipe" "test" {
+  arn = aws_imagebuilder_image_recipe.test.arn
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

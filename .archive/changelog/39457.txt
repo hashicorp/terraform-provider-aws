@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_rds_cluster_role_association: Fix intermittent failure when cluster is not in an available state
+```
+
+```release-note:bug
+resource/aws_db_instance_role_association: Fix intermittent failure when instance is not in an available state
+```

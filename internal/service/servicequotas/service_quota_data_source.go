@@ -1,28 +1,42 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package servicequotas
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicequotas"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceServiceQuota() *schema.Resource {
+// @SDKDataSource("aws_servicequotas_service_quota", name="Service Quota")
+func dataSourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceServiceQuotaRead,
+		ReadWithoutTimeout: dataSourceServiceQuotaRead,
 
 		Schema: map[string]*schema.Schema{
 			"adjustable": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_value": {
+			names.AttrDefaultValue: {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
@@ -31,26 +45,70 @@ func DataSourceServiceQuota() *schema.Resource {
 				Computed: true,
 			},
 			"quota_code": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"quota_name"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"quota_code", "quota_name"},
 			},
 			"quota_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"quota_code"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"quota_code", "quota_name"},
 			},
 			"service_code": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"value": {
+			"usage_metric": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metric_dimensions": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"class": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"resource": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"service": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									names.AttrType: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						names.AttrMetricName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_namespace": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_statistic_recommendation": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			names.AttrValue: {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
@@ -58,96 +116,104 @@ func DataSourceServiceQuota() *schema.Resource {
 	}
 }
 
-func dataSourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn
+func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	quotaCode := d.Get("quota_code").(string)
 	quotaName := d.Get("quota_name").(string)
 	serviceCode := d.Get("service_code").(string)
 
-	if quotaCode == "" && quotaName == "" {
-		return fmt.Errorf("either quota_code or quota_name must be configured")
-	}
+	var err error
+	var defaultQuota *awstypes.ServiceQuota
 
-	var serviceQuota *servicequotas.ServiceQuota
-
-	if quotaCode == "" {
-		input := &servicequotas.ListServiceQuotasInput{
-			ServiceCode: aws.String(serviceCode),
-		}
-
-		err := conn.ListServiceQuotasPages(input, func(page *servicequotas.ListServiceQuotasOutput, lastPage bool) bool {
-			for _, q := range page.Quotas {
-				if aws.StringValue(q.QuotaName) == quotaName {
-					serviceQuota = q
-					break
-				}
-			}
-
-			return !lastPage
-		})
-
-		if err != nil {
-			return fmt.Errorf("error listing Service (%s) Quotas: %w", serviceCode, err)
-		}
-
-		if serviceQuota == nil {
-			return fmt.Errorf("error finding Service (%s) Quota (%s): no results found", serviceCode, quotaName)
-		}
+	// A Service Quota will always have a default value, but will only have a current value if it has been set.
+	if quotaName != "" {
+		defaultQuota, err = findDefaultServiceQuotaByServiceCodeAndQuotaName(ctx, conn, serviceCode, quotaName)
 	} else {
-		input := &servicequotas.GetServiceQuotaInput{
-			QuotaCode:   aws.String(quotaCode),
-			ServiceCode: aws.String(serviceCode),
-		}
-
-		output, err := conn.GetServiceQuota(input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Service (%s) Quota (%s): %w", serviceCode, quotaCode, err)
-		}
-
-		if output == nil || output.Quota == nil {
-			return fmt.Errorf("error getting Service (%s) Quota (%s): empty result", serviceCode, quotaCode)
-		}
-
-		serviceQuota = output.Quota
+		defaultQuota, err = findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 	}
-
-	if serviceQuota.ErrorReason != nil {
-		return fmt.Errorf("error getting Service (%s) Quota (%s): %s: %s", serviceCode, quotaCode, aws.StringValue(serviceQuota.ErrorReason.ErrorCode), aws.StringValue(serviceQuota.ErrorReason.ErrorMessage))
-	}
-
-	if serviceQuota.Value == nil {
-		return fmt.Errorf("error getting Service (%s) Quota (%s): empty value", serviceCode, quotaCode)
-	}
-
-	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
-		QuotaCode:   serviceQuota.QuotaCode,
-		ServiceCode: serviceQuota.ServiceCode,
-	}
-
-	output, err := conn.GetAWSDefaultServiceQuota(input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Service (%s) Default Quota (%s): %w", serviceCode, aws.StringValue(serviceQuota.QuotaCode), err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Service Quotas Service Quota", err))
 	}
 
-	if output == nil {
-		return fmt.Errorf("error getting Service (%s) Default Quota (%s): empty result", serviceCode, aws.StringValue(serviceQuota.QuotaCode))
+	if quotaName != "" {
+		quotaCode = aws.ToString(defaultQuota.QuotaCode)
 	}
 
-	defaultQuota := output.Quota
+	arn := aws.ToString(defaultQuota.QuotaArn)
+	d.SetId(arn)
+	d.Set("adjustable", defaultQuota.Adjustable)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDefaultValue, defaultQuota.Value)
+	d.Set("global_quota", defaultQuota.GlobalQuota)
+	d.Set("quota_code", defaultQuota.QuotaCode)
+	d.Set("quota_name", defaultQuota.QuotaName)
+	d.Set("service_code", defaultQuota.ServiceCode)
+	d.Set(names.AttrServiceName, defaultQuota.ServiceName)
+	if err := d.Set("usage_metric", flattenMetricInfo(defaultQuota.UsageMetric)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting usage_metric: %s", err)
+	}
+	d.Set(names.AttrValue, defaultQuota.Value)
 
-	d.Set("adjustable", serviceQuota.Adjustable)
-	d.Set("arn", serviceQuota.QuotaArn)
-	d.Set("default_value", defaultQuota.Value)
-	d.Set("global_quota", serviceQuota.GlobalQuota)
-	d.Set("quota_code", serviceQuota.QuotaCode)
-	d.Set("quota_name", serviceQuota.QuotaName)
-	d.Set("service_code", serviceQuota.ServiceCode)
-	d.Set("service_name", serviceQuota.ServiceName)
-	d.Set("value", serviceQuota.Value)
-	d.SetId(aws.StringValue(serviceQuota.QuotaArn))
+	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
-	return nil
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading Service Quotas Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
+	default:
+		d.Set(names.AttrARN, serviceQuota.QuotaArn)
+		d.Set(names.AttrValue, serviceQuota.Value)
+	}
+
+	return diags
+}
+
+func findDefaultServiceQuotaByServiceCodeAndQuotaName(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaName string) (*awstypes.ServiceQuota, error) {
+	input := servicequotas.ListAWSDefaultServiceQuotasInput{
+		ServiceCode: aws.String(serviceCode),
+	}
+
+	return findDefaultServiceQuota(ctx, conn, &input, func(v *awstypes.ServiceQuota) bool {
+		return aws.ToString(v.QuotaName) == quotaName
+	})
+}
+
+func findDefaultServiceQuota(ctx context.Context, conn *servicequotas.Client, input *servicequotas.ListAWSDefaultServiceQuotasInput, filter tfslices.Predicate[*awstypes.ServiceQuota]) (*awstypes.ServiceQuota, error) {
+	output, err := findDefaultServiceQuotas(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDefaultServiceQuotas(ctx context.Context, conn *servicequotas.Client, input *servicequotas.ListAWSDefaultServiceQuotasInput, filter tfslices.Predicate[*awstypes.ServiceQuota]) ([]awstypes.ServiceQuota, error) { // nosemgrep:ci.servicequotas-in-func-name
+	var output []awstypes.ServiceQuota
+
+	pages := servicequotas.NewListAWSDefaultServiceQuotasPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NoSuchResourceException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Quotas {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

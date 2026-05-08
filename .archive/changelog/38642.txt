@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_networkmanager_core_network: Fix `$.network-function-groups: null found, array expected` errors when creating resource with `create_base_policy` argument
+```

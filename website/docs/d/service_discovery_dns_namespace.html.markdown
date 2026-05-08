@@ -1,5 +1,5 @@
 ---
-subcategory: "Service Discovery"
+subcategory: "Cloud Map"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_dns_namespace"
 description: |-
@@ -12,7 +12,7 @@ Retrieves information about a Service Discovery private or public DNS namespace.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_service_discovery_dns_namespace" "test" {
   name = "example.terraform.local"
   type = "DNS_PRIVATE"
@@ -21,12 +21,18 @@ data "aws_service_discovery_dns_namespace" "test" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the namespace.
-* `type` - (Required) The type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the namespace.
+* `type` - (Required) Type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
 
-* `arn` - The Amazon Resource Name (ARN) of the namespace.
-* `description` - A description of the namespace.
-* `id` - The namespace ID.
-* `hosted_zone` - The ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the namespace.
+* `description` - Description of the namespace.
+* `id` - Namespace ID.
+* `hosted_zone` - ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
+* `tags` - Map of tags for the resource.

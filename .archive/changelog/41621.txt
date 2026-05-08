@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ec2_client_vpn_endpoint: Add `disconnect_on_session_timeout` attribute
+```

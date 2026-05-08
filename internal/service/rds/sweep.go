@@ -1,631 +1,576 @@
-//go:build sweep
-// +build sweep
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
 
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_rds_cluster_parameter_group", &resource.Sweeper{
-		Name: "aws_rds_cluster_parameter_group",
-		F:    sweepClusterParameterGroups,
-		Dependencies: []string{
-			"aws_rds_cluster",
-		},
-	})
-
-	resource.AddTestSweepers("aws_db_cluster_snapshot", &resource.Sweeper{
-		Name: "aws_db_cluster_snapshot",
-		F:    sweepClusterSnapshots,
-	})
-
-	resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
-		Name: "aws_rds_cluster",
-		F:    sweepClusters,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
-
-	resource.AddTestSweepers("aws_db_event_subscription", &resource.Sweeper{
-		Name: "aws_db_event_subscription",
-		F:    sweepEventSubscriptions,
-	})
-
-	resource.AddTestSweepers("aws_rds_global_cluster", &resource.Sweeper{
-		Name: "aws_rds_global_cluster",
-		F:    sweepGlobalClusters,
-		Dependencies: []string{
-			"aws_rds_cluster",
-		},
-	})
-
-	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
-		Name: "aws_db_instance",
-		F:    sweepInstances,
-	})
-
-	resource.AddTestSweepers("aws_db_option_group", &resource.Sweeper{
-		Name: "aws_db_option_group",
-		F:    sweepOptionGroups,
-	})
-
-	resource.AddTestSweepers("aws_db_parameter_group", &resource.Sweeper{
-		Name: "aws_db_parameter_group",
-		F:    sweepParameterGroups,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
-
-	resource.AddTestSweepers("aws_db_proxy", &resource.Sweeper{
-		Name: "aws_db_proxy",
-		F:    sweepProxies,
-	})
-
-	resource.AddTestSweepers("aws_db_snapshot", &resource.Sweeper{
-		Name: "aws_db_snapshot",
-		F:    sweepSnapshots,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
-
-	resource.AddTestSweepers("aws_db_subnet_group", &resource.Sweeper{
-		Name: "aws_db_subnet_group",
-		F:    sweepSubnetGroups,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_rds_cluster_parameter_group", sweepClusterParameterGroups, "aws_rds_cluster", "aws_docdb_cluster", "aws_neptune_cluster")
+	awsv2.Register("aws_db_cluster_snapshot", sweepClusterSnapshots, "aws_rds_cluster")
+	awsv2.Register("aws_rds_cluster", sweepClusters, "aws_db_instance", "aws_rds_shard_group", "aws_rds_integration")
+	awsv2.Register("aws_db_event_subscription", sweepEventSubscriptions)
+	awsv2.Register("aws_rds_global_cluster", sweepGlobalClusters)
+	awsv2.Register("aws_db_instance", sweepInstances, "aws_rds_global_cluster")
+	awsv2.Register("aws_db_option_group", sweepOptionGroups, "aws_rds_cluster", "aws_db_snapshot")
+	awsv2.Register("aws_db_parameter_group", sweepParameterGroups, "aws_db_instance", "aws_neptune_cluster_instance")
+	awsv2.Register("aws_db_proxy", sweepProxies)
+	awsv2.Register("aws_db_snapshot", sweepSnapshots, "aws_db_instance")
+	awsv2.Register("aws_db_subnet_group", sweepSubnetGroups, "aws_rds_cluster", "aws_docdb_cluster", "aws_neptune_cluster")
+	awsv2.Register("aws_db_instance_automated_backups_replication", sweepInstanceAutomatedBackups, "aws_db_instance")
+	awsv2.Register("aws_rds_shard_group", sweepShardGroups)
+	awsv2.Register("aws_rds_blue_green_deployment", sweepBlueGreenDeployments, "aws_db_instance") // Pseudo resource.
+	awsv2.Register("aws_rds_integration", sweepIntegrations)
 }
 
-func sweepClusterParameterGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
+func sweepClusterParameterGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBClusterParameterGroupsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &rds.DescribeDBClusterParameterGroupsInput{}
-
-	for {
-		output, err := conn.DescribeDBClusterParameterGroups(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Cluster Parameter Group sweep for %s: %s", region, err)
-			return nil
-		}
+	pages := rds.NewDescribeDBClusterParameterGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return fmt.Errorf("error retrieving DB Cluster Parameter Groups: %s", err)
+			return nil, err
 		}
 
-		for _, dbcpg := range output.DBClusterParameterGroups {
-			if dbcpg == nil {
-				continue
-			}
-
-			input := &rds.DeleteDBClusterParameterGroupInput{
-				DBClusterParameterGroupName: dbcpg.DBClusterParameterGroupName,
-			}
-			name := aws.StringValue(dbcpg.DBClusterParameterGroupName)
+		for _, v := range page.DBClusterParameterGroups {
+			name := aws.ToString(v.DBClusterParameterGroupName)
 
 			if strings.HasPrefix(name, "default.") {
-				log.Printf("[INFO] Skipping DB Cluster Parameter Group: %s", name)
+				log.Printf("[INFO] Skipping RDS Cluster Parameter Group %s", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting DB Cluster Parameter Group: %s", name)
+			r := resourceClusterParameterGroup()
+			d := r.Data(nil)
+			d.SetId(name)
 
-			_, err := conn.DeleteDBClusterParameterGroup(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DB Cluster Parameter Group %s: %s", name, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		if aws.StringValue(output.Marker) == "" {
-			break
-		}
-
-		input.Marker = output.Marker
 	}
 
-	return nil
+	return sweepResources, nil
 }
 
-func sweepClusterSnapshots(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeDBClusterSnapshotsInput{
-		// "InvalidDBClusterSnapshotStateFault: Only manual snapshots may be deleted."
-		Filters: []*rds.Filter{{
-			Name:   aws.String("snapshot-type"),
-			Values: aws.StringSlice([]string{"manual"}),
-		}},
-	}
-	var sweeperErrs *multierror.Error
+func sweepClusterSnapshots(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBClusterSnapshotsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.DescribeDBClusterSnapshots(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Cluster Snapshots sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
+	pages := rds.NewDescribeDBClusterSnapshotsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving RDS DB Cluster Snapshots: %w", err))
-			return sweeperErrs
+			return nil, err
 		}
 
-		for _, dbClusterSnapshot := range output.DBClusterSnapshots {
-			id := aws.StringValue(dbClusterSnapshot.DBClusterSnapshotIdentifier)
-
-			log.Printf("[INFO] Deleting RDS DB Cluster Snapshot: %s", id)
-			_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
-				DBClusterSnapshotIdentifier: aws.String(id),
-			})
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		for _, v := range page.DBClusterSnapshots {
+			if engine := aws.ToString(v.Engine); engine == clusterEngineDocDB || engine == clusterEngineNeptune {
+				// DocDB and Neptune cluster snapshots are handled by their respective services' sweepers.
 				continue
 			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting RDS DB Cluster Snapshot (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+
+			id := aws.ToString(v.DBClusterSnapshotIdentifier)
+
+			if typ := aws.ToString(v.SnapshotType); typ != "manual" {
+				log.Printf("[INFO] Skipping RDS Cluster Snapshot %s: SnapshotType=%s", id, typ)
 				continue
 			}
-		}
 
-		if aws.StringValue(output.Marker) == "" {
-			break
+			r := resourceClusterSnapshot()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		input.Marker = output.Marker
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBClustersInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+	pages := rds.NewDescribeDBClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeDBClustersInput{}
+		if err != nil {
+			return nil, err
+		}
 
-	err = conn.DescribeDBClustersPages(input, func(out *rds.DescribeDBClustersOutput, lastPage bool) bool {
-		for _, cluster := range out.DBClusters {
-			id := aws.StringValue(cluster.DBClusterIdentifier)
-
-			// Automatically remove from global cluster to bypass this error on deletion:
-			// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
-			if aws.StringValue(cluster.EngineMode) == "global" {
-				globalCluster, err := DescribeGlobalClusterFromClusterARN(conn, aws.StringValue(cluster.DBClusterArn))
-
-				if err != nil {
-					log.Printf("[ERROR] Failure reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
-				}
-
-				if globalCluster != nil {
-					globalClusterID := aws.StringValue(globalCluster.GlobalClusterIdentifier)
-					input := &rds.RemoveFromGlobalClusterInput{
-						DbClusterIdentifier:     cluster.DBClusterArn,
-						GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
-					}
-
-					log.Printf("[INFO] Removing RDS Cluster (%s) from RDS Global Cluster: %s", id, globalClusterID)
-					_, err = conn.RemoveFromGlobalCluster(input)
-
-					if err != nil {
-						log.Printf("[ERROR] Failure removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", id, globalClusterID, err)
-					}
-				}
-			}
-
-			input := &rds.DeleteDBClusterInput{
-				DBClusterIdentifier: cluster.DBClusterIdentifier,
-				SkipFinalSnapshot:   aws.Bool(true),
-			}
-
-			log.Printf("[INFO] Deleting RDS DB Cluster: %s", id)
-
-			_, err := conn.DeleteDBCluster(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete RDS DB Cluster (%s): %s", id, err)
+		for _, v := range page.DBClusters {
+			// DocDB and Neptune clusters are handled by their respective services' sweepers.
+			if engine := aws.ToString(v.Engine); engine == clusterEngineDocDB || engine == clusterEngineNeptune {
 				continue
 			}
 
-			if err := WaitForClusterDeletion(conn, id, 40*time.Minute); err != nil { //nolint:gomnd
-				log.Printf("[ERROR] Failure while waiting for RDS DB Cluster (%s) to be deleted: %s", id, err)
+			arn := aws.ToString(v.DBClusterArn)
+			id := aws.ToString(v.DBClusterIdentifier)
+			r := resourceCluster()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set(names.AttrApplyImmediately, true)
+			d.Set(names.AttrARN, arn)
+			d.Set("delete_automated_backups", true)
+			d.Set(names.AttrDeletionProtection, false)
+			d.Set("skip_final_snapshot", true)
+
+			if engineMode := aws.ToString(v.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
+				globalCluster, err := findGlobalClusterByDBClusterARN(ctx, conn, arn)
+
+				if err != nil && !retry.NotFound(err) {
+					log.Printf("[WARN] Reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
+					continue
+				}
+
+				if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
+					d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+				}
 			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		return !lastPage
+	}
+
+	return sweepResources, nil
+}
+
+func sweepEventSubscriptions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeEventSubscriptionsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeEventSubscriptionsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.EventSubscriptionsList {
+			r := resourceEventSubscription()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.CustSubscriptionId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepGlobalClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeGlobalClustersInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeGlobalClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.GlobalClusters {
+			if engine := aws.ToString(v.Engine); engine == globalClusterEngineDocDB || engine == globalClusterEngineNeptune {
+				// DocDB and Neptune global clusters are handled by their respective services' sweepers.
+				continue
+			}
+
+			r := resourceGlobalCluster()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.GlobalClusterIdentifier))
+			d.Set(names.AttrForceDestroy, true)
+			d.Set("global_cluster_members", flattenGlobalClusterMembers(v.GlobalClusterMembers))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepInstances(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBInstancesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeDBInstancesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBInstances {
+			id := aws.ToString(v.DbiResourceId)
+
+			switch engine := aws.ToString(v.Engine); engine {
+			case instanceEngineDocDB, instanceEngineNeptune:
+				// These engines are handled by their respective services' sweepers.
+				continue
+			case instanceEngineMySQL:
+				// "InvalidParameterValue: Deleting cluster instances isn't supported for DB engine mysql".
+				if clusterID := aws.ToString(v.DBClusterIdentifier); clusterID != "" {
+					log.Printf("[INFO] Skipping RDS DB Instance %s: DBClusterIdentifier=%s", id, clusterID)
+					continue
+				}
+			}
+
+			r := resourceInstance()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set(names.AttrApplyImmediately, true)
+			d.Set("delete_automated_backups", true)
+			d.Set(names.AttrDeletionProtection, false)
+			d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
+			d.Set("skip_final_snapshot", true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepOptionGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeOptionGroupsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeOptionGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.OptionGroupsList {
+			name := aws.ToString(v.OptionGroupName)
+
+			if strings.HasPrefix(name, "default:") {
+				log.Printf("[INFO] Skipping RDS Option Group %s", name)
+				continue
+			}
+
+			r := resourceOptionGroup()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepParameterGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBParameterGroupsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeDBParameterGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBParameterGroups {
+			name := aws.ToString(v.DBParameterGroupName)
+
+			if strings.HasPrefix(name, "default.") {
+				log.Printf("[INFO] Skipping RDS DB Parameter Group %s", name)
+				continue
+			}
+
+			r := resourceParameterGroup()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepProxies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBProxiesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeDBProxiesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBProxies {
+			r := resourceProxy()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.DBProxyName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepSnapshots(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBSnapshotsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeDBSnapshotsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBSnapshots {
+			id := aws.ToString(v.DBSnapshotIdentifier)
+
+			if strings.HasPrefix(id, "rds:") {
+				log.Printf("[INFO] Skipping RDS DB Snapshot %s", id)
+				continue
+			}
+
+			r := resourceSnapshot()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepSubnetGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBSubnetGroupsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeDBSubnetGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBSubnetGroups {
+			r := resourceSubnetGroup()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.DBSubnetGroupName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepInstanceAutomatedBackups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBInstanceAutomatedBackupsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeDBInstanceAutomatedBackupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBInstanceAutomatedBackups {
+			r := resourceInstanceAutomatedBackupsReplication()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.DBInstanceAutomatedBackupsArn))
+			d.Set("source_db_instance_arn", v.DBInstanceArn)
+
+			sweepResources = append(sweepResources, newInstanceAutomatedBackupSweeper(ctx, r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+type instanceAutomatedBackupSweeper struct {
+	conn      *rds.Client
+	sweepable sweep.Sweepable
+	backupARN string
+}
+
+func newInstanceAutomatedBackupSweeper(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, client *conns.AWSClient) sweep.Sweepable {
+	return &instanceAutomatedBackupSweeper{
+		conn:      client.RDSClient(ctx),
+		sweepable: sdk.NewSweepResource(resource, d, client),
+		backupARN: d.Id(),
+	}
+}
+
+func (s instanceAutomatedBackupSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	if err := s.sweepable.Delete(ctx, optFns...); err != nil {
+		return err
+	}
+
+	// Since there is no resource for automated backups themselves, they are swept here.
+	tflog.Info(ctx, "Deleting RDS Instance Automated Backup", map[string]any{
+		"backup ARN": s.backupARN,
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Cluster sweep for %s: %s", region, err)
-		return nil
+	_, err := s.conn.DeleteDBInstanceAutomatedBackup(ctx, &rds.DeleteDBInstanceAutomatedBackupInput{
+		DBInstanceAutomatedBackupsArn: aws.String(s.backupARN),
+	})
+
+	if errs.IsA[*types.DBInstanceAutomatedBackupNotFoundFault](err) || errs.IsA[*types.InvalidDBInstanceAutomatedBackupStateFault](err) {
+		err = nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving RDS DB Clusters: %s", err)
+		return fmt.Errorf("deleting RDS Instance Automated Backup (%s): %w", s.backupARN, err)
 	}
 
 	return nil
 }
 
-func sweepEventSubscriptions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeEventSubscriptionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+func sweepShardGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeDBShardGroupsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeEventSubscriptionsPages(input, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+	err := describeDBShardGroupsPages(ctx, conn, &input, func(page *rds.DescribeDBShardGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		for _, v := range page.DBShardGroups {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newShardGroupResource, client,
+				framework.NewAttribute("db_shard_group_identifier", aws.ToString(v.DBShardGroupIdentifier))))
 		}
 
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS Event Subscription sweep for %s: %s", region, err)
-		return nil
+	if err != nil {
+		return nil, err
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing RDS Event Subscriptions (%s): %w", region, err)
+	return sweepResources, nil
+}
+
+func sweepBlueGreenDeployments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeBlueGreenDeploymentsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeBlueGreenDeploymentsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.BlueGreenDeployments {
+			sweepResources = append(sweepResources, newBlueGreenDeploymentSweeper(ctx, aws.ToString(v.BlueGreenDeploymentIdentifier), client))
+		}
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	return sweepResources, nil
+}
+
+type blueGreenDeploymentSweeper struct {
+	conn *rds.Client
+	id   string
+}
+
+func newBlueGreenDeploymentSweeper(ctx context.Context, id string, client *conns.AWSClient) sweep.Sweepable {
+	return &blueGreenDeploymentSweeper{
+		conn: client.RDSClient(ctx),
+		id:   id,
+	}
+}
+
+func (s blueGreenDeploymentSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	input := rds.DeleteBlueGreenDeploymentInput{
+		BlueGreenDeploymentIdentifier: aws.String(s.id),
+	}
+	_, err := s.conn.DeleteBlueGreenDeployment(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping RDS Event Subscriptions (%s): %w", region, err)
+		return fmt.Errorf("deleting RDS Blue/Green Deployment (%s): %w", s.id, err)
+	}
+
+	const (
+		timeout = 10 * time.Minute
+	)
+	if _, err := waitBlueGreenDeploymentDeleted(ctx, s.conn, s.id, timeout); err != nil {
+		return fmt.Errorf("waiting for RDS Blue/Green Deployment (%s) delete: %w", s.id, err)
 	}
 
 	return nil
 }
 
-func sweepGlobalClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepIntegrations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeIntegrationsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+	pages := rds.NewDescribeIntegrationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeGlobalClustersInput{}
-
-	err = conn.DescribeGlobalClustersPages(input, func(out *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
-		for _, globalCluster := range out.GlobalClusters {
-			id := aws.StringValue(globalCluster.GlobalClusterIdentifier)
-			input := &rds.DeleteGlobalClusterInput{
-				GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
-			}
-
-			log.Printf("[INFO] Deleting RDS Global Cluster: %s", id)
-
-			_, err := conn.DeleteGlobalCluster(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete RDS Global Cluster (%s): %s", id, err)
-				continue
-			}
-
-			if err := WaitForGlobalClusterDeletion(conn, id); err != nil {
-				log.Printf("[ERROR] Failure while waiting for RDS Global Cluster (%s) to be deleted: %s", id, err)
-			}
-		}
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS Global Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving RDS Global Clusters: %s", err)
-	}
-
-	return nil
-}
-
-func sweepInstances(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
-	conn := client.(*conns.AWSClient).RDSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-
-	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
-		for _, dbi := range out.DBInstances {
-			r := ResourceInstance()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
-			d.Set("skip_final_snapshot", true)
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Instance sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving DB instances: %s", err)
-	}
-
-	return sweep.SweepOrchestrator(sweepResources)
-}
-
-func sweepOptionGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
-	conn := client.(*conns.AWSClient).RDSConn
-
-	opts := rds.DescribeOptionGroupsInput{}
-	resp, err := conn.DescribeOptionGroups(&opts)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Option Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error describing DB Option Groups in Sweeper: %s", err)
-	}
-
-	for _, og := range resp.OptionGroupsList {
-		if strings.HasPrefix(aws.StringValue(og.OptionGroupName), "default") {
-			continue
+		if err != nil {
+			return nil, err
 		}
 
-		log.Printf("[INFO] Deleting RDS Option Group: %s", aws.StringValue(og.OptionGroupName))
-
-		deleteOpts := &rds.DeleteOptionGroupInput{
-			OptionGroupName: og.OptionGroupName,
-		}
-
-		ret := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteOptionGroup(deleteOpts)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
-					log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if ret != nil {
-			return fmt.Errorf("Error Deleting DB Option Group (%s) in Sweeper: %s", *og.OptionGroupName, ret)
+		for _, v := range page.Integrations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIntegrationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.IntegrationArn))))
 		}
 	}
 
-	return nil
-}
-
-func sweepParameterGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
-
-	err = conn.DescribeDBParameterGroupsPages(&rds.DescribeDBParameterGroupsInput{}, func(out *rds.DescribeDBParameterGroupsOutput, lastPage bool) bool {
-		for _, dbpg := range out.DBParameterGroups {
-			if dbpg == nil {
-				continue
-			}
-
-			input := &rds.DeleteDBParameterGroupInput{
-				DBParameterGroupName: dbpg.DBParameterGroupName,
-			}
-			name := aws.StringValue(dbpg.DBParameterGroupName)
-
-			if strings.HasPrefix(name, "default.") {
-				log.Printf("[INFO] Skipping DB Parameter Group: %s", name)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting DB Parameter Group: %s", name)
-
-			_, err := conn.DeleteDBParameterGroup(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DB Parameter Group %s: %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Parameter Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving DB Parameter Groups: %s", err)
-	}
-
-	return nil
-}
-
-func sweepProxies(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
-
-	err = conn.DescribeDBProxiesPages(&rds.DescribeDBProxiesInput{}, func(out *rds.DescribeDBProxiesOutput, lastPage bool) bool {
-		for _, dbpg := range out.DBProxies {
-			if dbpg == nil {
-				continue
-			}
-
-			input := &rds.DeleteDBProxyInput{
-				DBProxyName: dbpg.DBProxyName,
-			}
-			name := aws.StringValue(dbpg.DBProxyName)
-
-			log.Printf("[INFO] Deleting DB Proxy: %s", name)
-
-			_, err := conn.DeleteDBProxy(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DB Proxy %s: %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Proxy sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving DB Proxies: %s", err)
-	}
-
-	return nil
-}
-
-func sweepSnapshots(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeDBSnapshotsInput{}
-	var sweeperErrs error
-
-	err = conn.DescribeDBSnapshotsPages(input, func(out *rds.DescribeDBSnapshotsOutput, lastPage bool) bool {
-		if out == nil {
-			return !lastPage
-		}
-
-		for _, dbSnapshot := range out.DBSnapshots {
-			if dbSnapshot == nil {
-				continue
-			}
-
-			id := aws.StringValue(dbSnapshot.DBSnapshotIdentifier)
-			input := &rds.DeleteDBSnapshotInput{
-				DBSnapshotIdentifier: dbSnapshot.DBSnapshotIdentifier,
-			}
-
-			if strings.HasPrefix(id, "rds:") {
-				log.Printf("[INFO] Skipping RDS Automated DB Snapshot: %s", id)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting RDS DB Snapshot: %s", id)
-			_, err := conn.DeleteDBSnapshot(input)
-
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
-				continue
-			}
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting RDS DB Snapshot (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			}
-		}
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Snapshot sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error describing RDS DB Snapshots: %s", err)
-	}
-
-	return sweeperErrs
-}
-
-func sweepSubnetGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeDBSubnetGroupsInput{}
-
-	err = conn.DescribeDBSubnetGroupsPages(input, func(out *rds.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		for _, dbSubnetGroup := range out.DBSubnetGroups {
-			name := aws.StringValue(dbSubnetGroup.DBSubnetGroupName)
-			input := &rds.DeleteDBSubnetGroupInput{
-				DBSubnetGroupName: dbSubnetGroup.DBSubnetGroupName,
-			}
-
-			log.Printf("[INFO] Deleting RDS DB Subnet Group: %s", name)
-
-			_, err := conn.DeleteDBSubnetGroup(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete RDS DB Subnet Group (%s): %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Subnet Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving RDS DB Subnet Groups: %s", err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

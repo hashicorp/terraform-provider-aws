@@ -1,44 +1,49 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package dax_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/dax"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfdax "github.com/hashicorp/terraform-provider-aws/internal/service/dax"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDAXSubnetGroup_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dax_subnet_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaxSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists("aws_dax_subnet_group.test"),
+					testAccCheckSubnetGroupExists(ctx, t, "aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},
 			{
-				Config: testAccDaxSubnetGroupConfig_update(rName),
+				Config: testAccSubnetGroupConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists("aws_dax_subnet_group.test"),
-					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "description", "update"),
+					testAccCheckSubnetGroupExists(ctx, t, "aws_dax_subnet_group.test"),
+					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", names.AttrDescription, "update"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "3"),
-					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},
 			{
@@ -50,45 +55,72 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+func TestAccDAXSubnetGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_dax_subnet_group.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dax_subnet_group" {
-			continue
-		}
-
-		_, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
-			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
-				return nil
-			}
-			return err
-		}
-	}
-	return nil
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdax.ResourceSubnetGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckSubnetGroupExists(name string) resource.TestCheckFunc {
+func testAccCheckSubnetGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).DAXClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dax_subnet_group" {
+				continue
+			}
+
+			input := dax.DescribeSubnetGroupsInput{
+				SubnetGroupNames: []string{rs.Primary.ID},
+			}
+			_, err := conn.DescribeSubnetGroups(ctx, &input)
+			if err != nil {
+				if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
+					return nil
+				}
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func testAccCheckSubnetGroupExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+		conn := acctest.ProviderMeta(ctx, t).DAXClient(ctx)
 
-		_, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
-			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},
-		})
+		input := dax.DescribeSubnetGroupsInput{
+			SubnetGroupNames: []string{rs.Primary.ID},
+		}
+		_, err := conn.DescribeSubnetGroups(ctx, &input)
 
 		return err
 	}
 }
 
-func testAccDaxSubnetGroupConfig(rName string) string {
+func testAccSubnetGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -115,7 +147,7 @@ resource "aws_dax_subnet_group" "test" {
 `, rName)
 }
 
-func testAccDaxSubnetGroupConfig_update(rName string) string {
+func testAccSubnetGroupConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

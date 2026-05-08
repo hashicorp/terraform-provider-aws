@@ -1,18 +1,20 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesisanalytics
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-// statusApplication fetches the ApplicationDetail and its Status
-func statusApplication(conn *kinesisanalytics.KinesisAnalytics, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		applicationDetail, err := FindApplicationDetailByName(conn, name)
+func statusApplication(conn *kinesisanalytics.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		applicationDetail, err := findApplicationDetailByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -20,6 +22,6 @@ func statusApplication(conn *kinesisanalytics.KinesisAnalytics, name string) res
 			return nil, "", err
 		}
 
-		return applicationDetail, aws.StringValue(applicationDetail.ApplicationStatus), nil
+		return applicationDetail, string(applicationDetail.ApplicationStatus), nil
 	}
 }

@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_volume: Add `copy_tags_to_backups` and `snapshot_policy` arguments
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_volume: Add `bypass_snaplock_enterprise_retention` argument and `snaplock_configuration` configuration block to support [SnapLock](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/snaplock.html)
+```
+
+```release-note:enhancement
+resource/aws_fsx_openzfs_volume: Add `delete_volume_options` argument
+```

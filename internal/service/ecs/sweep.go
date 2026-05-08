@@ -1,22 +1,24 @@
-//go:build sweep
-// +build sweep
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
 
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ecs_capacity_provider", &resource.Sweeper{
 		Name: "aws_ecs_capacity_provider",
 		F:    sweepCapacityProviders,
@@ -30,9 +32,12 @@ func init() {
 		Name: "aws_ecs_cluster",
 		F:    sweepClusters,
 		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
 			"aws_ecs_service",
 		},
 	})
+
+	awsv2.Register("aws_ecs_express_gateway_service", sweepExpressGatewayServices)
 
 	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
 		Name: "aws_ecs_service",
@@ -43,35 +48,36 @@ func init() {
 		Name: "aws_ecs_task_definition",
 		F:    sweepTaskDefinitions,
 		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
 			"aws_ecs_service",
 		},
 	})
 }
 
 func sweepCapacityProviders(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ECSConn
+	conn := client.ECSClient(ctx)
 	input := &ecs.DescribeCapacityProvidersInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeCapacityProvidersPages(conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
+	err = describeCapacityProvidersPages(ctx, conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, capacityProvider := range page.CapacityProviders {
-			arn := aws.StringValue(capacityProvider.CapacityProviderArn)
+		for _, v := range page.CapacityProviders {
+			arn := aws.ToString(v.CapacityProviderArn)
 
-			if name := aws.StringValue(capacityProvider.Name); name == "FARGATE" || name == "FARGATE_SPOT" {
+			if name := aws.ToString(v.Name); name == "FARGATE" || name == "FARGATE_SPOT" {
 				log.Printf("[INFO] Skipping AWS managed ECS Capacity Provider: %s", arn)
 				continue
 			}
 
-			r := ResourceCapacityProvider()
+			r := resourceCapacityProvider()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -81,179 +87,196 @@ func sweepCapacityProviders(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping ECS Capacity Providers sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ECS Capacity Provider sweep for %s: %s", region, err)
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ECS Capacity Providers for %s: %w", region, err))
+		return fmt.Errorf("error listing ECS Capacity Providers (%s): %w", region, err)
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping ECS Capacity Providers for %s: %w", region, err))
-	}
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
-	return sweeperErrs.ErrorOrNil()
-}
-
-func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ECSConn
-
-	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, clusterARNPtr := range page.ClusterArns {
-			clusterARN := aws.StringValue(clusterARNPtr)
-
-			log.Printf("[INFO] Deleting ECS Cluster: %s", clusterARN)
-			r := ResourceCluster()
-			d := r.Data(nil)
-			d.SetId(clusterARN)
-			err = r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Error deleting ECS Cluster (%s): %s", clusterARN, err)
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ECS Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving ECS Clusters: %w", err)
+		return fmt.Errorf("error sweeping ECS Capacity Providers (%s): %w", region, err)
 	}
 
 	return nil
 }
 
-func sweepServices(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ECSConn
+	conn := client.ECSClient(ctx)
+	input := &ecs.ListClustersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ecs.NewListClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ECS Cluster sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, clusterARNPtr := range page.ClusterArns {
-			input := &ecs.ListServicesInput{
-				Cluster: clusterARNPtr,
-			}
-
-			err = conn.ListServicesPages(input, func(page *ecs.ListServicesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, serviceARNPtr := range page.ServiceArns {
-					describeServicesInput := &ecs.DescribeServicesInput{
-						Cluster:  clusterARNPtr,
-						Services: []*string{serviceARNPtr},
-					}
-					serviceARN := aws.StringValue(serviceARNPtr)
-
-					log.Printf("[DEBUG] Describing ECS Service: %s", serviceARN)
-					describeServicesOutput, err := conn.DescribeServices(describeServicesInput)
-
-					if tfawserr.ErrMessageContains(err, ecs.ErrCodeServiceNotFoundException, "") {
-						continue
-					}
-
-					if err != nil {
-						log.Printf("[ERROR] Error describing ECS Service (%s): %s", serviceARN, err)
-						continue
-					}
-
-					if describeServicesOutput == nil || len(describeServicesOutput.Services) == 0 {
-						continue
-					}
-
-					service := describeServicesOutput.Services[0]
-
-					if aws.StringValue(service.Status) == "INACTIVE" {
-						continue
-					}
-
-					deleteServiceInput := &ecs.DeleteServiceInput{
-						Cluster: service.ClusterArn,
-						Force:   aws.Bool(true),
-						Service: service.ServiceArn,
-					}
-
-					log.Printf("[INFO] Deleting ECS Service: %s", serviceARN)
-					_, err = conn.DeleteService(deleteServiceInput)
-
-					if err != nil {
-						log.Printf("[ERROR] Error deleting ECS Service (%s): %s", serviceARN, err)
-					}
-				}
-
-				return !lastPage
-			})
+		if err != nil {
+			return fmt.Errorf("error listing ECS Clusters (%s): %w", region, err)
 		}
 
-		return !lastPage
-	})
+		for _, v := range page.ClusterArns {
+			r := resourceCluster()
+			d := r.Data(nil)
+			d.SetId(v)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		return fmt.Errorf("error sweeping ECS Clusters (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepExpressGatewayServices(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECSClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input ecs.ListClustersInput
+	pages := ecs.NewListClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, clusterARN := range page.ClusterArns {
+			input := ecs.ListServicesInput{
+				Cluster: aws.String(clusterARN),
+			}
+			pages := newListExpressGatewayServicesPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, v := range page.ServiceArns {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newExpressGatewayServiceResource, client,
+						framework.NewAttribute("service_arn", v)),
+					)
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepServices(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.ECSClient(ctx)
+	input := &ecs.ListClustersInput{}
+	var sweepResources []sweep.Sweepable
+
+	pages := ecs.NewListClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("error retrieving ECS Services: %s", err)
+
+		if err != nil {
+			return fmt.Errorf("error listing ECS Clusters (%s): %w", region, err)
+		}
+
+		for _, clusterARN := range page.ClusterArns {
+			input := &ecs.ListServicesInput{
+				Cluster: aws.String(clusterARN),
+			}
+
+			pages := newListRegularServicesPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					continue
+				}
+
+				for _, v := range page.ServiceArns {
+					r := resourceService()
+					d := r.Data(nil)
+					d.SetId(v)
+					d.Set("cluster", clusterARN)
+					d.Set(names.AttrForceDelete, true)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ECS Services (%s): %w", region, err)
 	}
 
 	return nil
 }
 
 func sweepTaskDefinitions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ECSConn
-	var sweeperErrs *multierror.Error
+	conn := client.ECSClient(ctx)
+	input := &ecs.ListTaskDefinitionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTaskDefinitionsPages(&ecs.ListTaskDefinitionsInput{}, func(page *ecs.ListTaskDefinitionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ecs.NewListTaskDefinitionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ECS Task Definition sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, taskDefinitionArn := range page.TaskDefinitionArns {
-			arn := aws.StringValue(taskDefinitionArn)
-
-			log.Printf("[INFO] Deleting ECS Task Definition: %s", arn)
-			_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
-				TaskDefinition: aws.String(arn),
-			})
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting ECS Task Definition (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+		if err != nil {
+			return fmt.Errorf("error listing ECS Task Definitions (%s): %w", region, err)
 		}
 
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping ECS Task Definitions sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving ECS Task Definitions: %w", err))
+		for _, v := range page.TaskDefinitionArns {
+			r := resourceTaskDefinition()
+			d := r.Data(nil)
+			d.SetId(v)
+			d.Set(names.AttrARN, v)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ECS Task Definitions (%s): %w", region, err)
+	}
+
+	return nil
 }

@@ -1,0 +1,9 @@
+```release-note:note
+resource/aws_resourcegroups_resource: The format of the read-only `id` attribute has changed to prevent inconsistent parsing which resulted in provider crashes under certain conditions. The new format is a comma-delimited string combining `group_arn` and `resource_arn` in their entirety. Configuarations relying on the previous format may need to be updated to continue functioning correctly.
+```
+```release-note:bug
+resource/aws_resourcegroups_resource: Fix crash when parsing certain ARN formats
+```
+```release-note:enhancement
+resource/aws_resourcegroups_resource: Add import support
+```

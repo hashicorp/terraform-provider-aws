@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Extend `deployment_targets` argument.
+```
+
+```release-note:bug
+resource/aws_cloudformation_stack_set_instance: Add `ForceNew` to deployment_targets attributes to ensure a new resource is recreated when the deployment_targets argument is changed, which was not the case previously.
+```

@@ -1,33 +1,50 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package xray_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/xray"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/xray/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccXRayEncryptionConfig_basic(t *testing.T) {
-	var EncryptionConfig xray.EncryptionConfig
+func TestAccXRayEncryptionConfig_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccXRayEncryptionConfig_basic,
+		"Identity":      testAccXRayEncryptionConfig_identitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccXRayEncryptionConfig_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.EncryptionConfig
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_xray_encryption_config.test"
 	keyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptionBasicConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayEncryptionConfigExists(resourceName, &EncryptionConfig),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+				Config: testAccEncryptionConfigConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEncryptionConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 			{
@@ -36,25 +53,25 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEncryptionWithKeyConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayEncryptionConfigExists(resourceName, &EncryptionConfig),
-					resource.TestCheckResourceAttr(resourceName, "type", "KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", keyResourceName, "arn"),
+				Config: testAccEncryptionConfigConfig_key(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEncryptionConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, keyResourceName, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccEncryptionBasicConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayEncryptionConfigExists(resourceName, &EncryptionConfig),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+				Config: testAccEncryptionConfigConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEncryptionConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckXrayEncryptionConfigExists(n string, EncryptionConfig *xray.EncryptionConfig) resource.TestCheckFunc {
+func testAccCheckEncryptionConfigExists(ctx context.Context, t *testing.T, n string, v *types.EncryptionConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -64,21 +81,22 @@ func testAccCheckXrayEncryptionConfigExists(n string, EncryptionConfig *xray.Enc
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
-		config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
+		conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
+
+		output, err := tfxray.FindEncryptionConfig(ctx, conn)
 
 		if err != nil {
 			return err
 		}
 
-		*EncryptionConfig = *config.EncryptionConfig
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccEncryptionBasicConfig() string {
+func testAccEncryptionConfigConfig_basic() string {
 	return `
 resource "aws_xray_encryption_config" "test" {
   type = "NONE"
@@ -86,11 +104,12 @@ resource "aws_xray_encryption_config" "test" {
 `
 }
 
-func testAccEncryptionWithKeyConfig() string {
+func testAccEncryptionConfigConfig_key(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test %s"
+  description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -115,5 +134,5 @@ resource "aws_xray_encryption_config" "test" {
   type   = "KMS"
   key_id = aws_kms_key.test.arn
 }
-`, sdkacctest.RandString(8))
+`, rName)
 }

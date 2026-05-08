@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_resourcegroups_group: `resource_query` no longer conflicts with `configuration`
+```
+
+```release-note:bug
+resource/aws_resourcegroups_resource: Fix crash when resource Create fails
+```

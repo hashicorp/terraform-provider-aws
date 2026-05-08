@@ -1,0 +1,51 @@
+```release-note:bug
+resource/aws_opsworks_stack: Correctly apply `tags` during create if `region` is not equal to the configured AWS Region
+```
+
+```release-note:enhancement
+resource/aws_opsworks_stack: Add plan-time validation for `custom_cookbooks_source.type`
+```
+
+```release-note:bug
+resource/aws_opsworks_custom_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_ecs_cluster_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_ganglia_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_haproxy_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_java_app_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_memcached_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_mysql_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_nodejs_app_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_php_app_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_rails_app_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```
+
+```release-note:bug
+resource/aws_opsworks_static_web_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region
+```

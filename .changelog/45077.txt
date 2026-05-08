@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elastic_beanstalk_configuration_template: Fix updates not applying by including `ResourceName` for option settings and preventing duplicate add/remove operations
+```

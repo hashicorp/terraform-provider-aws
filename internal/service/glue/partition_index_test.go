@@ -1,38 +1,41 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGluePartitionIndex_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_partition_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGluePartitionIndex_basic(rName),
+				Config:  testAccPartitionIndexConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGluePartitionIndexExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "table_name", "aws_glue_catalog_table.test", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "database_name", "aws_glue_catalog_database.test", "name"),
+					testAccCheckPartitionIndexExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTableName, "aws_glue_catalog_table.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, "aws_glue_catalog_database.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName+"i"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.keys.#", "2"),
 				),
 			},
@@ -46,22 +49,23 @@ func TestAccGluePartitionIndex_basic(t *testing.T) {
 }
 
 func TestAccGluePartitionIndex_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_partition_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGluePartitionIndex_basic(rName),
+				Config:  testAccPartitionIndexConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					testAccCheckPartitionIndexExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,22 +74,23 @@ func TestAccGluePartitionIndex_disappears(t *testing.T) {
 }
 
 func TestAccGluePartitionIndex_Disappears_table(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_partition_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGluePartitionIndex_basic(rName),
+				Config:  testAccPartitionIndexConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					testAccCheckPartitionIndexExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,22 +99,23 @@ func TestAccGluePartitionIndex_Disappears_table(t *testing.T) {
 }
 
 func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_partition_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGluePartitionIndex_basic(rName),
+				Config:  testAccPartitionIndexConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					testAccCheckPartitionIndexExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,14 +123,14 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 	})
 }
 
-func testAccGluePartitionIndex_basic(rName string) string {
+func testAccPartitionIndexConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %[1]q
+  name = "%[1]sd"
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name               = %[1]q
+  name               = "%[1]st"
   database_name      = aws_glue_catalog_database.test.name
   owner              = "my_owner"
   retention          = 1
@@ -209,55 +215,50 @@ resource "aws_glue_partition_index" "test" {
   table_name    = aws_glue_catalog_table.test.name
 
   partition_index {
-    index_name = %[1]q
+    index_name = "%[1]si"
     keys       = ["my_column_1", "my_column_2"]
   }
 }
 `, rName)
 }
 
-func testAccCheckGluePartitionIndexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+func testAccCheckPartitionIndexDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_partition_index" {
-			continue
-		}
-
-		if _, err := tfglue.FindPartitionIndexByName(conn, rs.Primary.ID); err != nil {
-			//Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_partition_index" {
 				continue
 			}
 
-			return err
-		}
-		return fmt.Errorf("still exists")
-	}
-	return nil
-}
+			_, err := tfglue.FindPartitionIndexByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes["partition_index.0.index_name"])
 
-func testAccCheckGluePartitionIndexExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
+			if retry.NotFound(err) {
+				continue
+			}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+			if err != nil {
+				return err
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := tfglue.FindPartitionIndexByName(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		if out == nil {
-			return fmt.Errorf("No Glue Partition Index Found")
+			return fmt.Errorf("Glue Partition Index %s still exists", rs.Primary.ID)
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckPartitionIndexExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
+
+		_, err := tfglue.FindPartitionIndexByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes["partition_index.0.index_name"])
+
+		return err
 	}
 }

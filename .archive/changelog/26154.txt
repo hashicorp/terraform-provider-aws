@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_emr_instance_group: Handle deleted instance groups during resource read
+```
+
+```release-note:bug
+resource/aws_emr_instance_group: Mark `instance_count` as Computed to prevent diff when autoscaling is active
+```

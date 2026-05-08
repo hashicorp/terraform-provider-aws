@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_mq_broker: Add `data_replication_mode` and `data_replication_primary_broker_arn` arguments, enabling support for cross-region data replication
+```

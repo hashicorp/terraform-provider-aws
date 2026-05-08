@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Reduce `rate_based_statement.limit` minimum from `100` to `10`
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Reduce `rate_based_statement.limit` minimum from `100` to `10`
+```

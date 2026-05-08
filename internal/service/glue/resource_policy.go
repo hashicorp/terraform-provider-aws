@@ -1,98 +1,148 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package glue
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceResourcePolicy() *schema.Resource {
+// @SDKResource("aws_glue_resource_policy", name="Resource Policy")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(hasExistsFunction=false)
+// @Testing(generator=false)
+func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourcePolicyPut(glue.ExistConditionNotExist),
-		Read:   resourceResourcePolicyRead,
-		Update: resourceResourcePolicyPut(glue.ExistConditionMustExist),
-		Delete: resourceResourcePolicyDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+		CreateWithoutTimeout: resourceResourcePolicyPut(awstypes.ExistConditionNotExist),
+		ReadWithoutTimeout:   resourceResourcePolicyRead,
+		UpdateWithoutTimeout: resourceResourcePolicyPut(awstypes.ExistConditionMustExist),
+		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-			},
 			"enable_hybrid": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(glue.EnableHybridValues_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EnableHybridValues](),
 			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 		},
 	}
 }
 
-func resourceResourcePolicyPut(condition string) func(d *schema.ResourceData, meta interface{}) error {
-	return func(d *schema.ResourceData, meta interface{}) error {
-		conn := meta.(*conns.AWSClient).GlueConn
+func resourceResourcePolicyPut(condition awstypes.ExistCondition) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		var diags diag.Diagnostics
+		conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-		input := &glue.PutResourcePolicyInput{
-			PolicyInJson:          aws.String(d.Get("policy").(string)),
-			PolicyExistsCondition: aws.String(condition),
+		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input := glue.PutResourcePolicyInput{
+			PolicyExistsCondition: condition,
+			PolicyInJson:          aws.String(policy),
 		}
 
 		if v, ok := d.GetOk("enable_hybrid"); ok {
-			input.EnableHybrid = aws.String(v.(string))
+			input.EnableHybrid = awstypes.EnableHybridValues(v.(string))
 		}
 
-		_, err := conn.PutResourcePolicy(input)
+		_, err = conn.PutResourcePolicy(ctx, &input)
+
 		if err != nil {
-			return fmt.Errorf("error putting policy request: %s", err)
+			return sdkdiag.AppendErrorf(diags, "putting Glue Resource Policy: %s", err)
 		}
-		d.SetId(meta.(*conns.AWSClient).Region)
-		return resourceResourcePolicyRead(d, meta)
+
+		if d.IsNewResource() {
+			d.SetId(meta.(*conns.AWSClient).Region(ctx))
+		}
+
+		return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 	}
 }
 
-func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	resourcePolicy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
-	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
-		log.Printf("[WARN] Glue Resource (%s) not found, removing from state", d.Id())
+	output, err := findResourcePolicy(ctx, conn)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Glue Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading policy request: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	if *resourcePolicy.PolicyInJson == "" {
-		//Since the glue resource policy is global we expect it to be deleted when the policy is empty
-		d.SetId("")
-	} else {
-		d.Set("policy", resourcePolicy.PolicyInJson)
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.PolicyInJson))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	return nil
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return diags
 }
 
-func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	_, err := conn.DeleteResourcePolicy(&glue.DeleteResourcePolicyInput{})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting policy request: %w", err)
+	input := glue.DeleteResourcePolicyInput{}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Resource Policy (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findResourcePolicy(ctx context.Context, conn *glue.Client) (*glue.GetResourcePolicyOutput, error) {
+	input := &glue.GetResourcePolicyInput{}
+	output, err := conn.GetResourcePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || aws.ToString(output.PolicyInJson) == "" {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }

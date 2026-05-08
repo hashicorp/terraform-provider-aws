@@ -18,10 +18,12 @@ data "aws_elastic_beanstalk_hosted_zone" "current" {}
 
 ## Argument Reference
 
-* `region` - (Optional) The region you'd like the zone for. By default, fetches the current region.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Name of the Region whose hosted zone is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-* `id` - The ID of the hosted zone.
+## Attribute Reference
 
-* `region` - The region of the hosted zone.
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - ID of the hosted zone.

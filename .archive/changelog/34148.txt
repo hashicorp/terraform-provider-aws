@@ -1,0 +1,6 @@
+```release-note:new-data-source
+aws_bedrock_foundation_model
+```
+```release-note:new-data-source
+aws_bedrock_foundation_models
+```

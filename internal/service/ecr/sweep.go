@@ -1,70 +1,45 @@
-//go:build sweep
-// +build sweep
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
 
 package ecr
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ecr_repository", &resource.Sweeper{
-		Name: "aws_ecr_repository",
-		F:    sweepRepositories,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_ecr_repository", sweepRepositories)
 }
 
-func sweepRepositories(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).ECRConn
+func sweepRepositories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECRClient(ctx)
+	var input ecr.DescribeRepositoriesInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	var errors error
-	err = conn.DescribeRepositoriesPages(&ecr.DescribeRepositoriesInput{}, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ecr.NewDescribeRepositoriesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		for _, repository := range page.Repositories {
-			repositoryName := aws.StringValue(repository.RepositoryName)
-			log.Printf("[INFO] Deleting ECR repository: %s", repositoryName)
+		for _, v := range page.Repositories {
+			r := resourceRepository()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.RepositoryName))
+			d.Set(names.AttrForceDelete, true)
+			d.Set("registry_id", v.RegistryId)
 
-			_, err = conn.DeleteRepository(&ecr.DeleteRepositoryInput{
-				// We should probably sweep repositories even if there are images.
-				Force:          aws.Bool(true),
-				RegistryId:     repository.RegistryId,
-				RepositoryName: repository.RepositoryName,
-			})
-			if err != nil {
-				if !tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
-					sweeperErr := fmt.Errorf("Error deleting ECR repository (%s): %w", repositoryName, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					errors = multierror.Append(errors, sweeperErr)
-				}
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ECR repository sweep for %s: %s", region, err)
-			return nil
-		}
-		errors = multierror.Append(errors, fmt.Errorf("Error retreiving ECR repositories: %w", err))
 	}
 
-	return errors
+	return sweepResources, nil
 }

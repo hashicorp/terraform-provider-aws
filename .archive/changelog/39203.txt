@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_iam_role_policies_exclusive
+```
+```release-note:note
+resource/aws_iam_role: The `inline_policy` argument is deprecated. Use the `aws_iam_role_policy` resource instead. If Terraform should exclusively manage all inline policy associations (the current behavior of this argument), use the `aws_iam_role_policies_exclusive` resource as well.
+```

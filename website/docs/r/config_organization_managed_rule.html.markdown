@@ -32,8 +32,9 @@ resource "aws_config_organization_managed_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule
 * `rule_identifier` - (Required) Identifier of an available AWS Config Managed Rule to call. For available values, see the [List of AWS Config Managed Rules](https://docs.aws.amazon.com/config/latest/developerguide/managed-rules-by-aws-config.html) documentation
 * `description` - (Optional) Description of the rule
@@ -45,25 +46,59 @@ The following arguments are supported:
 * `tag_key_scope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate
 * `tag_value_scope` - (Optional) Tag value of AWS resources to evaluate
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the rule
 
 ## Timeouts
 
-`aws_config_organization_managed_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5m`) How long to wait for the rule to be created.
-* `delete` - (Default `5m`) How long to wait for the rule to be deleted.
-* `update` - (Default `5m`) How long to wait for the rule to be updated.
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 
-Config Organization Managed Rules can be imported using the name, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_config_organization_managed_rule.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_organization_managed_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_config_organization_managed_rule.example example
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Managed Rules using the `name`. For example:
+
+```terraform
+import {
+  to = aws_config_organization_managed_rule.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import Config Organization Managed Rules using the `name`. For example:
+
+```console
+% terraform import aws_config_organization_managed_rule.example example
 ```

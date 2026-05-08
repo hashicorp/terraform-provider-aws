@@ -1,0 +1,31 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package pinpoint
+
+// Exports for use in tests only.
+var (
+	ResourceApp           = resourceApp
+	ResourceEmailChannel  = resourceEmailChannel
+	ResourceEmailTemplate = newEmailTemplateResource
+	ResourceEventStream   = resourceEventStream
+	ResourceSMSChannel    = resourceSMSChannel
+
+	FindADMChannelByApplicationId             = findADMChannelByApplicationId
+	FindAPNSChannelByApplicationId            = findAPNSChannelByApplicationId
+	FindAPNSSandboxChannelByApplicationId     = findAPNSSandboxChannelByApplicationId
+	FindAPNSVoIPChannelByApplicationId        = findAPNSVoIPChannelByApplicationId
+	FindAPNSVoIPSandboxChannelByApplicationId = findAPNSVoIPSandboxChannelByApplicationId
+	FindAppByID                               = findAppByID
+	FindBaiduChannelByApplicationId           = findBaiduChannelByApplicationId
+	FindEmailChannelByApplicationId           = findEmailChannelByApplicationId
+	FindEventStreamByApplicationId            = findEventStreamByApplicationId
+	FindGCMChannelByApplicationId             = findGCMChannelByApplicationId
+	FindSMSChannelByApplicationId             = findSMSChannelByApplicationId
+	FindEmailTemplateByName                   = findEmailTemplateByName
+)
+
+const (
+	DefaultAuthenticationMethodKey   = defaultAuthenticationMethodKey
+	DefaultAuthenticationMethodToken = defaultAuthenticationMethodToken
+)

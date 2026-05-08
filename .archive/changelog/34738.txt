@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ram_principal_association: Fix `reading RAM Resource Share (...) Principal Association (...): couldn't find resource (21 retries)` errors when a high number of principals are associated with a resource share
+```

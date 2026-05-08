@@ -1,99 +1,78 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccInspectorResourceGroup_basic(t *testing.T) {
-	var v1, v2 inspector.ResourceGroup
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceGroup
 	resourceName := "aws_inspector_resource_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceGroup,
+				Config: testAccResourceGroupConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGroupExists(resourceName, &v1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
+					testAccCheckResourceGroupExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector", regexache.MustCompile(`resourcegroup/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "foo"),
-				),
-			},
-			{
-				Config: testAccCheckResourceGroupModified,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGroupExists(resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "bar"),
-					testAccCheckResourceGroupRecreated(&v1, &v2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckResourceGroupExists(name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
+func testAccCheckResourceGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
-
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		output, err := conn.DescribeResourceGroups(&inspector.DescribeResourceGroupsInput{
-			ResourceGroupArns: aws.StringSlice([]string{rs.Primary.ID}),
-		})
+		conn := acctest.ProviderMeta(ctx, t).InspectorClient(ctx)
+
+		output, err := tfinspector.FindResourceGroupByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(output.ResourceGroups) == 0 {
-			return fmt.Errorf("No matching Inspector resource groups")
-		}
 
-		*rg = *output.ResourceGroups[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckResourceGroupRecreated(v1, v2 *inspector.ResourceGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if v2.CreatedAt.Equal(*v1.CreatedAt) {
-			return fmt.Errorf("Inspector resource group not recreated when changing tags")
-		}
-
-		return nil
-	}
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/inspector.amazonaws.com")
 }
 
-var testAccResourceGroup = `
+var testAccResourceGroupConfig_basic = `
 resource "aws_inspector_resource_group" "test" {
   tags = {
     Name = "foo"
-  }
-}
-`
-
-var testAccCheckResourceGroupModified = `
-resource "aws_inspector_resource_group" "test" {
-  tags = {
-    Name = "bar"
   }
 }
 `

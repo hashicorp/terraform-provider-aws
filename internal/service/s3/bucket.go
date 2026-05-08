@@ -1,136 +1,164 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
-	"regexp"
+	"slices"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceBucket() *schema.Resource {
+const (
+	// General timeout for S3 bucket changes to propagate.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
+	bucketPropagationTimeout = 2 * time.Minute
+)
+
+var (
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
+	// e.g. example-123456789012-us-west-2-an.
+	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
+)
+
+func isGeneralPurposeBucket(bucket string) bool {
+	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket
+}
+
+// @SDKResource("aws_s3_bucket", name="Bucket")
+// @Tags(identifierAttribute="bucket", resourceType="Bucket")
+// @IdentityAttribute("bucket")
+// @CustomImport
+// @V60SDKv2Fix
+// @Testing(idAttrDuplicates="bucket")
+func resourceBucket() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketCreate,
-		Read:   resourceBucketRead,
-		Update: resourceBucketUpdate,
-		Delete: resourceBucketDelete,
+		CreateWithoutTimeout: resourceBucketCreate,
+		ReadWithoutTimeout:   resourceBucketRead,
+		UpdateWithoutTimeout: resourceBucketUpdate,
+		DeleteWithoutTimeout: resourceBucketDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, rd, meta); err != nil {
+					return nil, err
+				}
+
+				rd.Set(names.AttrForceDestroy, false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Read:   schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			"acceleration_status": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       "acceleration_status is deprecated. Use the aws_s3_bucket_accelerate_configuration resource instead.",
+				ValidateDiagFunc: enum.Validate[types.BucketAccelerateStatus](),
+			},
+			"acl": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"grant"},
+				ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
+				Deprecated:    "acl is deprecated. Use the aws_s3_bucket_acl resource instead.",
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrBucket: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"bucket_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 63),
+				ConflictsWith: []string{names.AttrBucketPrefix},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63),
+					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
+				),
 			},
-			"bucket_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"bucket"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-resource.UniqueIDSuffixLength),
-			},
-
 			"bucket_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"bucket_namespace": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.BucketNamespace](),
+			},
+			names.AttrBucketPrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrBucket},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
+				),
+			},
+			"bucket_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"acl": {
-				Type:          schema.TypeString,
-				Default:       "private",
-				Optional:      true,
-				ConflictsWith: []string{"grant"},
-				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
-			},
-
-			"grant": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Set:           grantHash,
-				ConflictsWith: []string{"acl"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							// TypeAmazonCustomerByEmail is not currently supported
-							ValidateFunc: validation.StringInSlice([]string{
-								s3.TypeCanonicalUser,
-								s3.TypeGroup,
-							}, false),
-						},
-						"uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"permissions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(s3.Permission_Values(), false),
-							},
-						},
-					},
-				},
-			},
-
-			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-			},
-
 			"cors_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "cors_rule is deprecated. Use the aws_s3_bucket_cors_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_headers": {
@@ -160,135 +188,66 @@ func ResourceBucket() *schema.Resource {
 					},
 				},
 			},
-
-			"website": {
-				Type:     schema.TypeList,
+			names.AttrForceDestroy: {
+				Type:     schema.TypeBool,
 				Optional: true,
-				MaxItems: 1,
+				Default:  false,
+			},
+			"grant": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"acl"},
+				Deprecated:    "grant is deprecated. Use the aws_s3_bucket_acl resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"index_document": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
-						"error_document": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"redirect_all_requests_to": {
-							Type: schema.TypeString,
-							ConflictsWith: []string{
-								"website.0.index_document",
-								"website.0.error_document",
-								"website.0.routing_rules",
-							},
-							Optional: true,
-						},
-
-						"routing_rules": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringIsJSON,
-							StateFunc: func(v interface{}) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
+						names.AttrPermissions: {
+							Type:     schema.TypeSet,
+							Required: true,
+							Set:      schema.HashString,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[types.Permission](),
 							},
 						},
-					},
-				},
-			},
-
-			"hosted_zone_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"website_domain": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"versioning": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"mfa_delete": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-
-			"logging": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"target_bucket": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
+							// TypeAmazonCustomerByEmail is not currently supported
+							ValidateFunc: validation.StringInSlice(enum.Slice(
+								types.TypeCanonicalUser,
+								types.TypeGroup,
+							), false),
 						},
-						"target_prefix": {
+						names.AttrURI: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["target_bucket"]))
-					buf.WriteString(fmt.Sprintf("%s-", m["target_prefix"]))
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			names.AttrHostedZoneID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"lifecycle_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "lifecycle_rule is deprecated. Use the aws_s3_bucket_lifecycle_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"tags": tftags.TagsSchema(),
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 						"abort_incomplete_multipart_upload_days": {
 							Type:     schema.TypeInt,
 							Optional: true,
+						},
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Required: true,
 						},
 						"expiration": {
 							Type:     schema.TypeList,
@@ -313,6 +272,12 @@ func ResourceBucket() *schema.Resource {
 								},
 							},
 						},
+						names.AttrID: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
+						},
 						"noncurrent_version_expiration": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
@@ -327,10 +292,32 @@ func ResourceBucket() *schema.Resource {
 								},
 							},
 						},
+						"noncurrent_version_transition": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"days": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(0),
+									},
+									names.AttrStorageClass: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
+									},
+								},
+							},
+						},
+						names.AttrPrefix: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrTags: tftags.TagsSchema(),
 						"transition": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      transitionHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"date": {
@@ -343,29 +330,10 @@ func ResourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
-									},
-								},
-							},
-						},
-						"noncurrent_version_transition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Set:      transitionHash,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									"storage_class": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+									names.AttrStorageClass: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
 									},
 								},
 							},
@@ -373,74 +341,128 @@ func ResourceBucket() *schema.Resource {
 					},
 				},
 			},
-
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"acceleration_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.BucketAccelerateStatus_Values(), false),
-			},
-
-			"request_payer": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.Payer_Values(), false),
-			},
-
-			"replication_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+			"logging": {
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				MaxItems:   1,
+				Deprecated: "logging is deprecated. Use the aws_s3_bucket_logging resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role": {
+						"target_bucket": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"target_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"object_lock_configuration": {
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				MaxItems:   1,
+				Deprecated: "object_lock_configuration is deprecated. Use the top-level parameter object_lock_enabled and the aws_s3_bucket_object_lock_configuration resource instead.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"object_lock_enabled": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ConflictsWith:    []string{"object_lock_enabled"},
+							ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
+							Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
+						},
+						names.AttrRule: {
+							Type:       schema.TypeList,
+							Optional:   true,
+							Deprecated: "rule is deprecated. Use the aws_s3_bucket_object_lock_configuration resource instead.",
+							MaxItems:   1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_retention": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"days": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												names.AttrMode: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
+												},
+												"years": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"object_lock_enabled": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
+				ForceNew:      true,
+				ConflictsWith: []string{"object_lock_configuration"},
+			},
+			names.AttrPolicy: {
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				Deprecated:            "policy is deprecated. Use the aws_s3_bucket_policy resource instead.",
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v any) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
+			"replication_configuration": {
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				MaxItems:   1,
+				Deprecated: "replication_configuration is deprecated. Use the aws_s3_bucket_replication_configuration resource instead.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrRole: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"rules": {
 							Type:     schema.TypeSet,
 							Required: true,
-							Set:      rulesHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": {
+									"delete_marker_replication_status": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 255),
+										ValidateFunc: validation.StringInSlice(enum.Slice(types.DeleteMarkerReplicationStatusEnabled), false),
 									},
-									"destination": {
+									names.AttrDestination: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										MinItems: 1,
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"account_id": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidAccountID,
-												},
-												"bucket": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"storage_class": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
-												},
-												"replica_kms_key_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
 												"access_control_translation": {
 													Type:     schema.TypeList,
 													Optional: true,
@@ -448,34 +470,23 @@ func ResourceBucket() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"owner": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(s3.OwnerOverride_Values(), false),
+															names.AttrOwner: {
+																Type:             schema.TypeString,
+																Required:         true,
+																ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
 															},
 														},
 													},
 												},
-												"replication_time": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Default:      15,
-																ValidateFunc: validation.IntBetween(15, 15),
-															},
-															"status": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Default:      s3.ReplicationTimeStatusEnabled,
-																ValidateFunc: validation.StringInSlice(s3.ReplicationTimeStatus_Values(), false),
-															},
-														},
-													},
+												names.AttrAccountID: {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidAccountID,
+												},
+												names.AttrBucket: {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
 												},
 												"metrics": {
 													Type:     schema.TypeList,
@@ -489,17 +500,77 @@ func ResourceBucket() *schema.Resource {
 																Default:      15,
 																ValidateFunc: validation.IntBetween(10, 15),
 															},
-															"status": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Default:      s3.MetricsStatusEnabled,
-																ValidateFunc: validation.StringInSlice(s3.MetricsStatus_Values(), false),
+															names.AttrStatus: {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Default:          types.MetricsStatusEnabled,
+																ValidateDiagFunc: enum.Validate[types.MetricsStatus](),
 															},
 														},
 													},
 												},
+												"replica_kms_key_id": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"replication_time": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      15,
+																ValidateFunc: validation.IntBetween(15, 15),
+															},
+															names.AttrStatus: {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Default:          types.ReplicationTimeStatusEnabled,
+																ValidateDiagFunc: enum.Validate[types.ReplicationTimeStatus](),
+															},
+														},
+													},
+												},
+												names.AttrStorageClass: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.StorageClass](),
+												},
 											},
 										},
+									},
+									names.AttrFilter: {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrPrefix: {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 1024),
+												},
+												names.AttrTags: tftags.TagsSchema(),
+											},
+										},
+									},
+									names.AttrID: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 255),
+									},
+									names.AttrPrefix: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 1024),
+									},
+									names.AttrPriority: {
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 									"source_selection_criteria": {
 										Type:     schema.TypeList,
@@ -515,7 +586,7 @@ func ResourceBucket() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"enabled": {
+															names.AttrEnabled: {
 																Type:     schema.TypeBool,
 																Required: true,
 															},
@@ -525,40 +596,10 @@ func ResourceBucket() *schema.Resource {
 											},
 										},
 									},
-									"prefix": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									"status": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(s3.ReplicationRuleStatus_Values(), false),
-									},
-									"priority": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"filter": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"prefix": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(0, 1024),
-												},
-												"tags": tftags.TagsSchema(),
-											},
-										},
-									},
-									"delete_marker_replication_status": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice([]string{s3.DeleteMarkerReplicationStatusEnabled}, false),
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.ReplicationRuleStatus](),
 									},
 								},
 							},
@@ -566,14 +607,22 @@ func ResourceBucket() *schema.Resource {
 					},
 				},
 			},
-
+			"request_payer": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       "request_payer is deprecated. Use the aws_s3_bucket_request_payment_configuration resource instead.",
+				ValidateDiagFunc: enum.Validate[types.Payer](),
+			},
 			"server_side_encryption_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
+				Type:       schema.TypeList,
+				MaxItems:   1,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "server_side_encryption_configuration is deprecated. Use the aws_s3_bucket_server_side_encryption_configuration resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"rule": {
+						names.AttrRule: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
@@ -590,9 +639,9 @@ func ResourceBucket() *schema.Resource {
 													Optional: true,
 												},
 												"sse_algorithm": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 												},
 											},
 										},
@@ -607,1190 +656,1119 @@ func ResourceBucket() *schema.Resource {
 					},
 				},
 			},
-
-			"object_lock_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"versioning": {
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				MaxItems:   1,
+				Deprecated: "versioning is deprecated. Use the aws_s3_bucket_versioning resource instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"object_lock_enabled": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(s3.ObjectLockEnabled_Values(), false),
-						},
-
-						"rule": {
-							Type:     schema.TypeList,
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
 							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_retention": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mode": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3.ObjectLockRetentionMode_Values(), false),
-												},
-
-												"days": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-
-												"years": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-											},
-										},
-									},
-								},
+							Default:  false,
+						},
+						"mfa_delete": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
+			"website": {
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				MaxItems:   1,
+				Deprecated: "website is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"error_document": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"index_document": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ExactlyOneOf: []string{
+								"website.0.index_document",
+								"website.0.redirect_all_requests_to",
+							},
+						},
+						"redirect_all_requests_to": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ExactlyOneOf: []string{
+								"website.0.index_document",
+								"website.0.redirect_all_requests_to",
+							},
+							ConflictsWith: []string{
+								"website.0.error_document",
+								"website.0.routing_rules",
+							},
+						},
+						"routing_rules": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringIsJSON,
+							StateFunc: func(v any) string {
+								json, _ := structure.NormalizeJsonString(v)
+								return json
 							},
 						},
 					},
 				},
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"website_domain": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "website_domain is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+			},
+			"website_endpoint": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "website_endpoint is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
-	// Get the bucket and acl
-	var bucket string
-	if v, ok := d.GetOk("bucket"); ok {
-		bucket = v.(string)
-	} else if v, ok := d.GetOk("bucket_prefix"); ok {
-		bucket = resource.PrefixedUniqueId(v.(string))
-	} else {
-		bucket = resource.UniqueId()
+	ns := types.BucketNamespace(d.Get("bucket_namespace").(string))
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrBucket).(string)), create.WithConfiguredPrefix(d.Get(names.AttrBucketPrefix).(string))}
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		optFns = append(optFns, create.WithSuffix(fmt.Sprintf("-%s-%s-an", c.AccountID(ctx), c.Region(ctx))))
 	}
-	d.Set("bucket", bucket)
-
-	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
-
-	req := &s3.CreateBucketInput{
-		Bucket: aws.String(bucket),
+	bucket := create.NewNameGenerator(optFns...).Generate(ctx)
+	region := c.Region(ctx)
+	if err := validBucketName(bucket, region, ns); err != nil {
+		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
 	}
 
-	if acl, ok := d.GetOk("acl"); ok {
-		acl := acl.(string)
-		req.ACL = aws.String(acl)
-		log.Printf("[DEBUG] S3 bucket %s has canned ACL %s", bucket, acl)
-	}
-
-	awsRegion := meta.(*conns.AWSClient).Region
-	log.Printf("[DEBUG] S3 bucket create: %s, using region: %s", bucket, awsRegion)
-
-	// Special case us-east-1 region and do not set the LocationConstraint.
-	// See "Request Elements: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
-	if awsRegion != endpoints.UsEast1RegionID {
-		req.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
-			LocationConstraint: aws.String(awsRegion),
+	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
+	// current account. It also resets the Bucket ACLs.
+	if region == endpoints.UsEast1RegionID {
+		if _, err := findBucket(ctx, conn, bucket); err == nil {
+			return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s): %s", bucket, errors.New(errCodeBucketAlreadyExists))
 		}
 	}
 
-	if err := ValidBucketName(bucket, awsRegion); err != nil {
-		return fmt.Errorf("Error validating S3 bucket name: %s", err)
+	input := &s3.CreateBucketInput{
+		Bucket: aws.String(bucket),
+		// NOTE: Please, do not add any other fields here unless the field is
+		// supported in *all* AWS partitions (including ISO partitions) and by
+		// third-party S3 API implementations.
+	}
+
+	if v, ok := d.GetOk("acl"); ok {
+		input.ACL = types.BucketCannedACL(v.(string))
+	} else {
+		// Use default value previously available in v3.x of the provider.
+		input.ACL = types.BucketCannedACLPrivate
+	}
+
+	if v, ok := d.GetOk("bucket_namespace"); ok {
+		input.BucketNamespace = types.BucketNamespace(v.(string))
+	}
+
+	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
+	if region != endpoints.UsEast1RegionID {
+		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+			LocationConstraint: types.BucketLocationConstraint(region),
+		}
+	}
+
+	// S3 Object Lock is not supported on all partitions.
+	if v, ok := d.GetOk("object_lock_enabled"); ok {
+		input.ObjectLockEnabledForBucket = aws.Bool(v.(bool))
 	}
 
 	// S3 Object Lock can only be enabled on bucket creation.
-	objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
-	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
-		req.ObjectLockEnabledForBucket = aws.Bool(true)
+	if v := expandBucketObjectLockConfiguration(d.Get("object_lock_configuration").([]any)); v != nil && v.ObjectLockEnabled == types.ObjectLockEnabledEnabled {
+		input.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.CreateBucket(req)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "OperationAborted" {
-				return resource.RetryableError(
-					fmt.Errorf("Error creating S3 bucket %s, retrying: %s", bucket, err))
-			}
+	// Tag on create requires the s3:TagResource IAM permission
+	tagOnCreate := true
+	if input.CreateBucketConfiguration == nil {
+		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+			Tags: getTagsIn(ctx),
 		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateBucket(req)
+	} else {
+		input.CreateBucketConfiguration.Tags = getTagsIn(ctx)
 	}
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return conn.CreateBucket(ctx, input)
+	}, errCodeOperationAborted)
+
+	if errs.Contains(err, "is not authorized to perform: s3:TagResource") ||
+		tfawserr.ErrCodeEquals(err, errCodeUnsupportedArgument, errCodeMalformedXML) {
+		// Remove tags and try again.
+		input.CreateBucketConfiguration.Tags = nil
+		tagOnCreate = false
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			return conn.CreateBucket(ctx, input)
+		}, errCodeOperationAborted)
+	}
+
+	// If still MalformedXML after removing tags, the S3-compatible API does not
+	// support the CreateBucketConfiguration body at all. Remove it entirely and retry.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/47061.
+	if tfawserr.ErrCodeEquals(err, errCodeMalformedXML) {
+		input.CreateBucketConfiguration = nil
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			return conn.CreateBucket(ctx, input)
+		}, errCodeOperationAborted)
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error creating S3 bucket: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s): %s", bucket, err)
 	}
 
-	// Assign the bucket name as the resource ID
 	d.SetId(bucket)
-	return resourceBucketUpdate(d, meta)
-}
 
-func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		// Retry due to S3 eventual consistency
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			terr := BucketUpdateTags(conn, d.Id(), o, n)
-			return nil, terr
-		})
-		if err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("policy") {
-		if err := resourceBucketPolicyUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("cors_rule") {
-		if err := resourceBucketCorsUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("website") {
-		if err := resourceBucketWebsiteUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("versioning") {
-		if err := resourceBucketVersioningUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("acl") && !d.IsNewResource() {
-		if err := resourceBucketACLUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("grant") {
-		if err := resourceBucketGrantsUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("logging") {
-		if err := resourceBucketLoggingUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("lifecycle_rule") {
-		if err := resourceBucketLifecycleUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("acceleration_status") {
-		if err := resourceBucketAccelerationUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("request_payer") {
-		if err := resourceBucketRequestPayerUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("replication_configuration") {
-		if err := resourceBucketInternalReplicationConfigurationUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("server_side_encryption_configuration") {
-		if err := resourceBucketServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("object_lock_configuration") {
-		if err := resourceBucketObjectLockConfigurationUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	return resourceBucketRead(d, meta)
-}
-
-func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	input := &s3.HeadBucketInput{
-		Bucket: aws.String(d.Id()),
-	}
-
-	err := resource.Retry(bucketCreatedTimeout, func() *resource.RetryError {
-		_, err := conn.HeadBucket(input)
-
-		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
-			return resource.RetryableError(err)
-		}
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return findBucket(ctx, conn, d.Id())
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.HeadBucket(input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket (%s) create: %s", d.Id(), err)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
-		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if !tagOnCreate {
+		if err := bucketCreateTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting S3 Bucket (%s) tags: %s", d.Id(), err)
+		}
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+	return append(diags, resourceBucketUpdate(ctx, d, meta)...)
+}
+
+func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
+
+	_, err := findBucket(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Bucket (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	// In the import case, we won't have this
-	if _, ok := d.GetOk("bucket"); !ok {
-		d.Set("bucket", d.Id())
+	resourceBucketFlatten(ctx, c, d.Id(), d)
+
+	//
+	// Bucket Policy.
+	//
+	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource.
+	policy, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (string, error) {
+		return findBucketPolicy(ctx, conn, d.Id())
+	})
+
+	// The call to HeadBucket above can occasionally return no error (i.e. NoSuchBucket)
+	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
+	// such as GetBucketPolicy, the error should be caught for non-new buckets as follows.
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
-
-	// Read the policy
-	if _, ok := d.GetOk("policy"); ok {
-
-		pol, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			return conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
-				Bucket: aws.String(d.Id()),
-			})
-		})
-		log.Printf("[DEBUG] S3 bucket: %s, read policy: %v", d.Id(), pol)
+	switch {
+	case err == nil:
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 		if err != nil {
-			if err := d.Set("policy", ""); err != nil {
-				return err
-			}
-		} else {
-			if v := pol.(*s3.GetBucketPolicyOutput).Policy; v == nil {
-				if err := d.Set("policy", ""); err != nil {
-					return err
-				}
-			} else {
-				policy, err := structure.NormalizeJsonString(aws.StringValue(v))
-				if err != nil {
-					return fmt.Errorf("policy contains an invalid JSON: %s", err)
-				}
-				d.Set("policy", policy)
-			}
+			return sdkdiag.AppendFromErr(diags, err)
 		}
+
+		d.Set(names.AttrPolicy, policyToSet)
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set(names.AttrPolicy, nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) policy: %s", d.Id(), err)
 	}
 
-	//Read the Grant ACL. Reset if `acl` (canned ACL) is set.
-	if acl, ok := d.GetOk("acl"); ok && acl.(string) != "private" {
-		if err := d.Set("grant", nil); err != nil {
-			return fmt.Errorf("error resetting grant %s", err)
+	//
+	// Bucket ACL.
+	//
+	bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
+		return findBucketACL(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		if err := d.Set("grant", flattenBucketGrants(bucketACL)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting grant: %s", err)
 		}
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("grant", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) ACL: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket CORS Configuration.
+	//
+	corsRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) ([]types.CORSRule, error) {
+		return findCORSRules(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		if err := d.Set("cors_rule", flattenBucketCORSRules(corsRules)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting cors_rule: %s", err)
+		}
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeNoSuchCORSConfiguration, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("cors_rule", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) CORS configuration: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Website Configuration.
+	//
+	bucketWebsite, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketWebsiteOutput, error) {
+		return findBucketWebsite(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		website, err := flattenBucketWebsite(bucketWebsite)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		if err := d.Set("website", website); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting website: %s", err)
+		}
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("website", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) website configuration: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Versioning.
+	//
+	bucketVersioning, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketVersioningOutput, error) {
+		return findBucketVersioning(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		if err := d.Set("versioning", flattenBucketVersioning(bucketVersioning)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting versioning: %s", err)
+		}
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("versioning", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) versioning: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Accelerate Configuration.
+	//
+	bucketAccelerate, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+		return findBucketAccelerateConfiguration(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		d.Set("acceleration_status", bucketAccelerate.Status)
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedArgument, errCodeUnsupportedOperation):
+		d.Set("acceleration_status", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) accelerate configuration: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Request Payment Configuration.
+	//
+	bucketRequestPayment, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketRequestPaymentOutput, error) {
+		return findBucketRequestPayment(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		d.Set("request_payer", bucketRequestPayment.Payer)
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("request_payer", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) request payment configuration: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Logging.
+	//
+	loggingEnabled, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.LoggingEnabled, error) {
+		return findLoggingEnabled(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		if err := d.Set("logging", flattenBucketLoggingEnabled(loggingEnabled)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
+		}
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("logging", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) logging: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Lifecycle Configuration.
+	//
+	lifecycleRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) ([]types.LifecycleRule, error) {
+		output, err := findBucketLifecycleConfiguration(ctx, conn, d.Id(), "")
+
+		if err != nil {
+			return nil, err
+		}
+
+		return output.Rules, nil
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		if err := d.Set("lifecycle_rule", flattenBucketLifecycleRules(ctx, lifecycleRules)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting lifecycle_rule: %s", err)
+		}
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("lifecycle_rule", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) lifecycle configuration: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Replication Configuration.
+	//
+	replicationConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ReplicationConfiguration, error) {
+		return findReplicationConfiguration(ctx, conn, d.Id())
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		if err := d.Set("replication_configuration", flattenBucketReplicationConfiguration(ctx, replicationConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting replication_configuration: %s", err)
+		}
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("replication_configuration", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) replication configuration: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Server-side Encryption Configuration.
+	//
+	encryptionConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ServerSideEncryptionConfiguration, error) {
+		return findServerSideEncryptionConfiguration(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		if err := d.Set("server_side_encryption_configuration", flattenBucketServerSideEncryptionConfiguration(encryptionConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting server_side_encryption_configuration: %s", err)
+		}
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedOperation):
+		d.Set("server_side_encryption_configuration", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) server-side encryption configuration: %s", d.Id(), err)
+	}
+
+	//
+	// Bucket Object Lock Configuration.
+	//
+	objLockConfig, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ObjectLockConfiguration, error) {
+		return findObjectLockConfiguration(ctx, conn, d.Id(), "")
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	switch {
+	case err == nil:
+		if err := d.Set("object_lock_configuration", flattenObjectLockConfiguration(objLockConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting object_lock_configuration: %s", err)
+		}
+		d.Set("object_lock_enabled", objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled)
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+		d.Set("object_lock_configuration", nil)
+		d.Set("object_lock_enabled", nil)
+	default:
+		if partition := c.Partition(ctx); partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID {
+			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
+		}
+		log.Printf("[WARN] Unable to read S3 Bucket (%s) Object Lock Configuration: %s", d.Id(), err)
+		d.Set("object_lock_configuration", nil)
+		d.Set("object_lock_enabled", nil)
+	}
+
+	//
+	// Bucket Region etc.
+	//
+	region, err := findBucketRegion(ctx, c, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) location: %s", d.Id(), err)
+	}
+
+	d.Set("bucket_region", region)
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(d.Id(), region))
+
+	hostedZoneID, err := hostedZoneIDForRegion(region)
+	if err != nil {
+		log.Printf("[WARN] %s", err)
 	} else {
-		apResponse, err := verify.RetryOnAWSCode("NoSuchBucket", func() (interface{}, error) {
-			return conn.GetBucketAcl(&s3.GetBucketAclInput{
-				Bucket: aws.String(d.Id()),
-			})
-		})
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
+	}
+
+	//
+	// Bucket Website
+	//
+	if _, ok := d.GetOk("website"); ok {
+		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
+		d.Set("website_domain", domain)
+		d.Set("website_endpoint", endpoint)
+	}
+
+	return diags
+}
+
+func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
+	// Note: Order of argument updates below is important.
+
+	//
+	// Bucket Policy.
+	//
+	if d.HasChange(names.AttrPolicy) {
+		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
-		}
-		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), apResponse)
-		grants := flattenGrants(apResponse.(*s3.GetBucketAclOutput))
-		if err := d.Set("grant", schema.NewSet(grantHash, grants)); err != nil {
-			return fmt.Errorf("error setting grant %s", err)
-		}
-	}
-
-	// Read the CORS
-	corsResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketCors(&s3.GetBucketCorsInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchCORSConfiguration", "") {
-		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
-	}
-
-	corsRules := make([]map[string]interface{}, 0)
-	if cors, ok := corsResponse.(*s3.GetBucketCorsOutput); ok && len(cors.CORSRules) > 0 {
-		corsRules = make([]map[string]interface{}, 0, len(cors.CORSRules))
-		for _, ruleObject := range cors.CORSRules {
-			rule := make(map[string]interface{})
-			rule["allowed_headers"] = flex.FlattenStringList(ruleObject.AllowedHeaders)
-			rule["allowed_methods"] = flex.FlattenStringList(ruleObject.AllowedMethods)
-			rule["allowed_origins"] = flex.FlattenStringList(ruleObject.AllowedOrigins)
-			// Both the "ExposeHeaders" and "MaxAgeSeconds" might not be set.
-			if ruleObject.AllowedOrigins != nil {
-				rule["expose_headers"] = flex.FlattenStringList(ruleObject.ExposeHeaders)
-			}
-			if ruleObject.MaxAgeSeconds != nil {
-				rule["max_age_seconds"] = int(aws.Int64Value(ruleObject.MaxAgeSeconds))
-			}
-			corsRules = append(corsRules, rule)
-		}
-	}
-	if err := d.Set("cors_rule", corsRules); err != nil {
-		return fmt.Errorf("error setting cors_rule: %s", err)
-	}
-
-	// Read the website configuration
-	wsResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NotImplemented", "") && !tfawserr.ErrMessageContains(err, "NoSuchWebsiteConfiguration", "") {
-		return fmt.Errorf("error getting S3 Bucket website configuration: %s", err)
-	}
-
-	websites := make([]map[string]interface{}, 0, 1)
-	if ws, ok := wsResponse.(*s3.GetBucketWebsiteOutput); ok {
-		w := make(map[string]interface{})
-
-		if v := ws.IndexDocument; v != nil {
-			w["index_document"] = aws.StringValue(v.Suffix)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		if v := ws.ErrorDocument; v != nil {
-			w["error_document"] = aws.StringValue(v.Key)
-		}
+		if policy == "" {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.DeleteBucketPolicy(ctx, &s3.DeleteBucketPolicyInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
 
-		if v := ws.RedirectAllRequestsTo; v != nil {
-			if v.Protocol == nil {
-				w["redirect_all_requests_to"] = aws.StringValue(v.HostName)
-			} else {
-				var host string
-				var path string
-				var query string
-				parsedHostName, err := url.Parse(aws.StringValue(v.HostName))
-				if err == nil {
-					host = parsedHostName.Host
-					path = parsedHostName.Path
-					query = parsedHostName.RawQuery
-				} else {
-					host = aws.StringValue(v.HostName)
-					path = ""
-				}
-
-				w["redirect_all_requests_to"] = (&url.URL{
-					Host:     host,
-					Path:     path,
-					Scheme:   aws.StringValue(v.Protocol),
-					RawQuery: query,
-				}).String()
-			}
-		}
-
-		if v := ws.RoutingRules; v != nil {
-			rr, err := normalizeRoutingRules(v)
 			if err != nil {
-				return fmt.Errorf("Error while marshaling routing rules: %s", err)
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) policy: %s", d.Id(), err)
 			}
-			w["routing_rules"] = rr
-		}
-
-		// We have special handling for the website configuration,
-		// so only add the configuration if there is any
-		if len(w) > 0 {
-			websites = append(websites, w)
-		}
-	}
-	if err := d.Set("website", websites); err != nil {
-		return fmt.Errorf("error setting website: %s", err)
-	}
-
-	// Read the versioning configuration
-
-	versioningResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-	if err != nil {
-		return err
-	}
-
-	vcl := make([]map[string]interface{}, 0, 1)
-	if versioning, ok := versioningResponse.(*s3.GetBucketVersioningOutput); ok {
-		vc := make(map[string]interface{})
-		if versioning.Status != nil && aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
-			vc["enabled"] = true
 		} else {
-			vc["enabled"] = false
-		}
-
-		if versioning.MFADelete != nil && aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
-			vc["mfa_delete"] = true
-		} else {
-			vc["mfa_delete"] = false
-		}
-		vcl = append(vcl, vc)
-	}
-	if err := d.Set("versioning", vcl); err != nil {
-		return fmt.Errorf("error setting versioning: %s", err)
-	}
-
-	// Read the acceleration status
-
-	accelerateResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketAccelerateConfiguration(&s3.GetBucketAccelerateConfigurationInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-
-	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !tfawserr.ErrMessageContains(err, "MethodNotAllowed", "") && !tfawserr.ErrMessageContains(err, "UnsupportedArgument", "") {
-		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %s", err)
-	}
-	if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {
-		d.Set("acceleration_status", accelerate.Status)
-	}
-
-	// Read the request payer configuration.
-
-	payerResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-
-	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket request payment: %s", err)
-	}
-
-	if payer, ok := payerResponse.(*s3.GetBucketRequestPaymentOutput); ok {
-		d.Set("request_payer", payer.Payer)
-	}
-
-	// Read the logging configuration
-	loggingResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketLogging(&s3.GetBucketLoggingInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-
-	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket logging: %s", err)
-	}
-
-	lcl := make([]map[string]interface{}, 0, 1)
-	if logging, ok := loggingResponse.(*s3.GetBucketLoggingOutput); ok && logging.LoggingEnabled != nil {
-		v := logging.LoggingEnabled
-		lc := make(map[string]interface{})
-		if aws.StringValue(v.TargetBucket) != "" {
-			lc["target_bucket"] = aws.StringValue(v.TargetBucket)
-		}
-		if aws.StringValue(v.TargetPrefix) != "" {
-			lc["target_prefix"] = aws.StringValue(v.TargetPrefix)
-		}
-		lcl = append(lcl, lc)
-	}
-	if err := d.Set("logging", lcl); err != nil {
-		return fmt.Errorf("error setting logging: %s", err)
-	}
-
-	// Read the lifecycle configuration
-
-	lifecycleResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchLifecycleConfiguration", "") {
-		return err
-	}
-
-	lifecycleRules := make([]map[string]interface{}, 0)
-	if lifecycle, ok := lifecycleResponse.(*s3.GetBucketLifecycleConfigurationOutput); ok && len(lifecycle.Rules) > 0 {
-		lifecycleRules = make([]map[string]interface{}, 0, len(lifecycle.Rules))
-
-		for _, lifecycleRule := range lifecycle.Rules {
-			log.Printf("[DEBUG] S3 bucket: %s, read lifecycle rule: %v", d.Id(), lifecycleRule)
-			rule := make(map[string]interface{})
-
-			// ID
-			if lifecycleRule.ID != nil && aws.StringValue(lifecycleRule.ID) != "" {
-				rule["id"] = aws.StringValue(lifecycleRule.ID)
+			input := &s3.PutBucketPolicyInput{
+				Bucket: aws.String(d.Id()),
+				Policy: aws.String(policy),
 			}
-			filter := lifecycleRule.Filter
-			if filter != nil {
-				if filter.And != nil {
-					// Prefix
-					if filter.And.Prefix != nil && aws.StringValue(filter.And.Prefix) != "" {
-						rule["prefix"] = aws.StringValue(filter.And.Prefix)
-					}
-					// Tag
-					if len(filter.And.Tags) > 0 {
-						rule["tags"] = KeyValueTags(filter.And.Tags).IgnoreAWS().Map()
-					}
-				} else {
-					// Prefix
-					if filter.Prefix != nil && aws.StringValue(filter.Prefix) != "" {
-						rule["prefix"] = aws.StringValue(filter.Prefix)
-					}
-					// Tag
-					if filter.Tag != nil {
-						rule["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAWS().Map()
-					}
+
+			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.PutBucketPolicy(ctx, input)
+			}, errCodeMalformedPolicy, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) policy: %s", d.Id(), err)
+			}
+		}
+	}
+
+	//
+	// Bucket CORS Configuration.
+	//
+	if d.HasChange("cors_rule") {
+		if v, ok := d.GetOk("cors_rule"); !ok || len(v.([]any)) == 0 {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.DeleteBucketCors(ctx, &s3.DeleteBucketCorsInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) CORS configuration: %s", d.Id(), err)
+			}
+		} else {
+			input := &s3.PutBucketCorsInput{
+				Bucket: aws.String(d.Id()),
+				CORSConfiguration: &types.CORSConfiguration{
+					CORSRules: expandBucketCORSRules(d.Get("cors_rule").([]any)),
+				},
+			}
+
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.PutBucketCors(ctx, input)
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) CORS configuration: %s", d.Id(), err)
+			}
+		}
+	}
+
+	//
+	// Bucket Website Configuration.
+	//
+	if d.HasChange("website") {
+		if v, ok := d.GetOk("website"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.DeleteBucketWebsite(ctx, &s3.DeleteBucketWebsiteInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) website configuration: %s", d.Id(), err)
+			}
+		} else {
+			websiteConfig, err := expandBucketWebsiteConfiguration(v.([]any))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			input := &s3.PutBucketWebsiteInput{
+				Bucket:               aws.String(d.Id()),
+				WebsiteConfiguration: websiteConfig,
+			}
+
+			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.PutBucketWebsite(ctx, input)
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) website configuration: %s", d.Id(), err)
+			}
+		}
+	}
+
+	//
+	// Bucket Versioning.
+	//
+	if d.HasChange("versioning") {
+		v := d.Get("versioning").([]any)
+		var versioningConfig *types.VersioningConfiguration
+
+		if d.IsNewResource() {
+			versioningConfig = expandBucketVersioningConfigurationCreate(v)
+		} else {
+			versioningConfig = expandBucketVersioningConfigurationUpdate(v)
+		}
+
+		if versioningConfig != nil {
+			input := &s3.PutBucketVersioningInput{
+				Bucket:                  aws.String(d.Id()),
+				VersioningConfiguration: versioningConfig,
+			}
+
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.PutBucketVersioning(ctx, input)
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) versioning: %s", d.Id(), err)
+			}
+		}
+	}
+
+	//
+	// Bucket ACL.
+	//
+	if (d.HasChange("acl") && !d.IsNewResource()) || (d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() == 0) {
+		acl := types.BucketCannedACL(d.Get("acl").(string))
+		if acl == "" {
+			// Use default value previously available in v3.x of the provider.
+			acl = types.BucketCannedACLPrivate
+		}
+		input := &s3.PutBucketAclInput{
+			ACL:    acl,
+			Bucket: aws.String(d.Id()),
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutBucketAcl(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) ACL: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() > 0 {
+		bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
+			return findBucketACL(ctx, conn, d.Id(), "")
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) ACL: %s", d.Id(), err)
+		}
+
+		input := &s3.PutBucketAclInput{
+			AccessControlPolicy: &types.AccessControlPolicy{
+				Grants: expandBucketGrants(d.Get("grant").(*schema.Set).List()),
+				Owner:  bucketACL.Owner,
+			},
+			Bucket: aws.String(d.Id()),
+		}
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutBucketAcl(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) ACL: %s", d.Id(), err)
+		}
+	}
+
+	//
+	// Bucket Logging.
+	//
+	if d.HasChange("logging") {
+		input := &s3.PutBucketLoggingInput{
+			Bucket:              aws.String(d.Id()),
+			BucketLoggingStatus: &types.BucketLoggingStatus{},
+		}
+
+		if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			tfMap := v.([]any)[0].(map[string]any)
+
+			input.BucketLoggingStatus.LoggingEnabled = &types.LoggingEnabled{}
+
+			if v, ok := tfMap["target_bucket"].(string); ok && v != "" {
+				input.BucketLoggingStatus.LoggingEnabled.TargetBucket = aws.String(v)
+			}
+
+			if v, ok := tfMap["target_prefix"].(string); ok && v != "" {
+				input.BucketLoggingStatus.LoggingEnabled.TargetPrefix = aws.String(v)
+			}
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutBucketLogging(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) logging: %s", d.Id(), err)
+		}
+	}
+
+	//
+	// Bucket Lifecycle Configuration.
+	//
+	if d.HasChange("lifecycle_rule") {
+		if v, ok := d.GetOk("lifecycle_rule"); !ok || len(v.([]any)) == 0 {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.DeleteBucketLifecycle(ctx, &s3.DeleteBucketLifecycleInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) lifecycle configuration: %s", d.Id(), err)
+			}
+		} else {
+			input := &s3.PutBucketLifecycleConfigurationInput{
+				Bucket: aws.String(d.Id()),
+				LifecycleConfiguration: &types.BucketLifecycleConfiguration{
+					Rules: expandBucketLifecycleRules(ctx, v.([]any)),
+				},
+			}
+
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.PutBucketLifecycleConfiguration(ctx, input)
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) lifecycle configuration: %s", d.Id(), err)
+			}
+		}
+	}
+
+	//
+	// Bucket Accelerate Configuration.
+	//
+	if d.HasChange("acceleration_status") {
+		input := &s3.PutBucketAccelerateConfigurationInput{
+			AccelerateConfiguration: &types.AccelerateConfiguration{
+				Status: types.BucketAccelerateStatus(d.Get("acceleration_status").(string)),
+			},
+			Bucket: aws.String(d.Id()),
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutBucketAccelerateConfiguration(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) accelerate configuration: %s", d.Id(), err)
+		}
+	}
+
+	//
+	// Bucket Request Payment Configuration.
+	//
+	if d.HasChange("request_payer") {
+		input := &s3.PutBucketRequestPaymentInput{
+			Bucket: aws.String(d.Id()),
+			RequestPaymentConfiguration: &types.RequestPaymentConfiguration{
+				Payer: types.Payer(d.Get("request_payer").(string)),
+			},
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutBucketRequestPayment(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) request payment configuration: %s", d.Id(), err)
+		}
+	}
+
+	//
+	// Bucket Replication Configuration.
+	//
+	if d.HasChange("replication_configuration") {
+		if v, ok := d.GetOk("replication_configuration"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.DeleteBucketReplication(ctx, &s3.DeleteBucketReplicationInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) replication configuration: %s", d.Id(), err)
+			}
+		} else {
+			hasVersioning := false
+
+			// Validate that bucket versioning is enabled.
+			if v, ok := d.GetOk("versioning"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				if tfMap[names.AttrEnabled].(bool) {
+					hasVersioning = true
 				}
+			}
+
+			if !hasVersioning {
+				return sdkdiag.AppendErrorf(diags, "versioning must be enabled on S3 Bucket (%s) to allow replication", d.Id())
+			}
+
+			input := &s3.PutBucketReplicationInput{
+				Bucket:                   aws.String(d.Id()),
+				ReplicationConfiguration: expandBucketReplicationConfiguration(ctx, v.([]any)),
+			}
+
+			_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
+				func(ctx context.Context) (any, error) {
+					return conn.PutBucketReplication(ctx, input)
+				},
+				func(err error) (bool, error) {
+					if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, errCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) replication configuration: %s", d.Id(), err)
+			}
+		}
+	}
+
+	//
+	// Bucket Server-side Encryption Configuration.
+	//
+	if d.HasChange("server_side_encryption_configuration") {
+		if v, ok := d.GetOk("server_side_encryption_configuration"); !ok || len(v.([]any)) == 0 {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.DeleteBucketEncryption(ctx, &s3.DeleteBucketEncryptionInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) server-side encryption configuration: %s", d.Id(), err)
+			}
+		} else {
+			input := &s3.PutBucketEncryptionInput{
+				Bucket: aws.String(d.Id()),
+				ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
+					Rules: expandBucketServerSideEncryptionRules(v.([]any)),
+				},
+			}
+
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+				return conn.PutBucketEncryption(ctx, input)
+			}, errCodeNoSuchBucket, errCodeOperationAborted)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) server-side encryption configuration: %s", d.Id(), err)
+			}
+		}
+	}
+
+	//
+	// Bucket Object Lock Configuration.
+	//
+	if d.HasChange("object_lock_configuration") {
+		// S3 Object Lock configuration cannot be deleted, only updated.
+		input := &s3.PutObjectLockConfigurationInput{
+			Bucket:                  aws.String(d.Id()),
+			ObjectLockConfiguration: expandBucketObjectLockConfiguration(d.Get("object_lock_configuration").([]any)),
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutObjectLockConfiguration(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceBucketRead(ctx, d, meta)...)
+}
+
+func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
+	log.Printf("[INFO] Deleting S3 Bucket: %s", d.Id())
+	_, err := conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
+		Bucket: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		return diags
+	}
+
+	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
+		if d.Get(names.AttrForceDestroy).(bool) {
+			// Delete everything including locked objects.
+			// Don't ignore any object errors or we could recurse infinitely.
+			var objectLockEnabled bool
+			if v := expandBucketObjectLockConfiguration(d.Get("object_lock_configuration").([]any)); v != nil {
+				objectLockEnabled = v.ObjectLockEnabled == types.ObjectLockEnabledEnabled
+			}
+
+			if n, err := emptyBucket(ctx, conn, d.Id(), objectLockEnabled); err != nil {
+				return sdkdiag.AppendErrorf(diags, "emptying S3 Bucket (%s): %s", d.Id(), err)
 			} else {
-				if lifecycleRule.Prefix != nil {
-					rule["prefix"] = aws.StringValue(lifecycleRule.Prefix)
-				}
+				log.Printf("[DEBUG] Deleted %d S3 objects", n)
 			}
 
-			// Enabled
-			if lifecycleRule.Status != nil {
-				if aws.StringValue(lifecycleRule.Status) == s3.ExpirationStatusEnabled {
-					rule["enabled"] = true
-				} else {
-					rule["enabled"] = false
-				}
-			}
-
-			// AbortIncompleteMultipartUploadDays
-			if lifecycleRule.AbortIncompleteMultipartUpload != nil {
-				if lifecycleRule.AbortIncompleteMultipartUpload.DaysAfterInitiation != nil {
-					rule["abort_incomplete_multipart_upload_days"] = int(aws.Int64Value(lifecycleRule.AbortIncompleteMultipartUpload.DaysAfterInitiation))
-				}
-			}
-
-			// expiration
-			if lifecycleRule.Expiration != nil {
-				e := make(map[string]interface{})
-				if lifecycleRule.Expiration.Date != nil {
-					e["date"] = (aws.TimeValue(lifecycleRule.Expiration.Date)).Format("2006-01-02")
-				}
-				if lifecycleRule.Expiration.Days != nil {
-					e["days"] = int(aws.Int64Value(lifecycleRule.Expiration.Days))
-				}
-				if lifecycleRule.Expiration.ExpiredObjectDeleteMarker != nil {
-					e["expired_object_delete_marker"] = aws.BoolValue(lifecycleRule.Expiration.ExpiredObjectDeleteMarker)
-				}
-				rule["expiration"] = []interface{}{e}
-			}
-			// noncurrent_version_expiration
-			if lifecycleRule.NoncurrentVersionExpiration != nil {
-				e := make(map[string]interface{})
-				if lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays != nil {
-					e["days"] = int(aws.Int64Value(lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays))
-				}
-				rule["noncurrent_version_expiration"] = []interface{}{e}
-			}
-			//// transition
-			if len(lifecycleRule.Transitions) > 0 {
-				transitions := make([]interface{}, 0, len(lifecycleRule.Transitions))
-				for _, v := range lifecycleRule.Transitions {
-					t := make(map[string]interface{})
-					if v.Date != nil {
-						t["date"] = (aws.TimeValue(v.Date)).Format("2006-01-02")
-					}
-					if v.Days != nil {
-						t["days"] = int(aws.Int64Value(v.Days))
-					}
-					if v.StorageClass != nil {
-						t["storage_class"] = aws.StringValue(v.StorageClass)
-					}
-					transitions = append(transitions, t)
-				}
-				rule["transition"] = schema.NewSet(transitionHash, transitions)
-			}
-			// noncurrent_version_transition
-			if len(lifecycleRule.NoncurrentVersionTransitions) > 0 {
-				transitions := make([]interface{}, 0, len(lifecycleRule.NoncurrentVersionTransitions))
-				for _, v := range lifecycleRule.NoncurrentVersionTransitions {
-					t := make(map[string]interface{})
-					if v.NoncurrentDays != nil {
-						t["days"] = int(aws.Int64Value(v.NoncurrentDays))
-					}
-					if v.StorageClass != nil {
-						t["storage_class"] = aws.StringValue(v.StorageClass)
-					}
-					transitions = append(transitions, t)
-				}
-				rule["noncurrent_version_transition"] = schema.NewSet(transitionHash, transitions)
-			}
-
-			lifecycleRules = append(lifecycleRules, rule)
+			// Recurse until all objects are deleted or an error is returned.
+			return resourceBucketDelete(ctx, d, meta)
 		}
 	}
-	if err := d.Set("lifecycle_rule", lifecycleRules); err != nil {
-		return fmt.Errorf("error setting lifecycle_rule: %s", err)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	// Read the bucket replication configuration
-
-	replicationResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketReplication(&s3.GetBucketReplicationInput{
-			Bucket: aws.String(d.Id()),
-		})
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+		return findBucket(ctx, conn, d.Id())
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "ReplicationConfigurationNotFoundError", "") {
-		return fmt.Errorf("error getting S3 Bucket replication: %s", err)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket (%s) delete: %s", d.Id(), err)
 	}
 
-	replicationConfiguration := make([]map[string]interface{}, 0)
-	if replication, ok := replicationResponse.(*s3.GetBucketReplicationOutput); ok {
-		replicationConfiguration = flattenBucketReplicationConfiguration(replication.ReplicationConfiguration)
-	}
-	if err := d.Set("replication_configuration", replicationConfiguration); err != nil {
-		return fmt.Errorf("error setting replication_configuration: %s", err)
-	}
+	return diags
+}
 
-	// Read the bucket server side encryption configuration
+func resourceBucketFlatten(ctx context.Context, awsClient *conns.AWSClient, bucketName string, d *schema.ResourceData) {
+	d.Set(names.AttrARN, bucketARN(ctx, awsClient, bucketName))
+	d.Set(names.AttrBucket, bucketName)
+	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucketName+".s3"))
 
-	encryptionResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketEncryption(&s3.GetBucketEncryptionInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
-		return fmt.Errorf("error getting S3 Bucket encryption: %s", err)
-	}
-
-	serverSideEncryptionConfiguration := make([]map[string]interface{}, 0)
-	if encryption, ok := encryptionResponse.(*s3.GetBucketEncryptionOutput); ok && encryption.ServerSideEncryptionConfiguration != nil {
-		serverSideEncryptionConfiguration = flattenServerSideEncryptionConfiguration(encryption.ServerSideEncryptionConfiguration)
-	}
-	if err := d.Set("server_side_encryption_configuration", serverSideEncryptionConfiguration); err != nil {
-		return fmt.Errorf("error setting server_side_encryption_configuration: %s", err)
-	}
-
-	// Object Lock configuration.
-	if conf, err := readS3ObjectLockConfiguration(conn, d.Id()); err != nil {
-		return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
+	bucketNamespace := bucketNamespace(bucketName)
+	d.Set("bucket_namespace", bucketNamespace)
+	if bucketNamespace == types.BucketNamespaceAccountRegional {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromNameWithSuffix(bucketName, fmt.Sprintf("-%s-%s-an", awsClient.AccountID(ctx), awsClient.Region(ctx))))
 	} else {
-		if err := d.Set("object_lock_configuration", conf); err != nil {
-			return fmt.Errorf("error setting object_lock_configuration: %s", err)
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(bucketName))
+	}
+
+	region := awsClient.Region(ctx)
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucketName, region))
+	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
+	}
+}
+
+func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
+	input := s3.HeadBucketInput{
+		Bucket: aws.String(bucket),
+	}
+
+	output, err := conn.HeadBucket(ctx, &input, optFns...)
+
+	// For directory buckets that no longer exist it's the CreateSession call invoked by HeadBucket that returns "NoSuchBucket",
+	// and that error code is flattend into HeadBucket's error message -- hence the 'errs.Contains' call.
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
-	// Add the region as an attribute
-	discoveredRegion, err := verify.RetryOnAWSCode("NotFound", func() (interface{}, error) {
-		return s3manager.GetBucketRegionWithClient(context.Background(), conn, d.Id(), func(r *request.Request) {
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, optFns ...func(*s3.Options)) (string, error) {
+	optFns = append(slices.Clone(optFns),
+		func(o *s3.Options) {
 			// By default, GetBucketRegion forces virtual host addressing, which
 			// is not compatible with many non-AWS implementations. Instead, pass
 			// the provider s3_force_path_style configuration, which defaults to
 			// false, but allows override.
-			r.Config.S3ForcePathStyle = conn.Config.S3ForcePathStyle
-
+			o.UsePathStyle = c.S3UsePathStyle(ctx)
+		},
+		func(o *s3.Options) {
 			// By default, GetBucketRegion uses anonymous credentials when doing
 			// a HEAD request to get the bucket region. This breaks in aws-cn regions
 			// when the account doesn't have an ICP license to host public content.
 			// Use the current credentials when getting the bucket region.
-			r.Config.Credentials = conn.Config.Credentials
-		})
-	})
-	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket location: %s", err)
-	}
-
-	region := discoveredRegion.(string)
-	if err := d.Set("region", region); err != nil {
-		return err
-	}
-
-	// Add the bucket_regional_domain_name as an attribute
-	regionalEndpoint, err := BucketRegionalDomainName(d.Get("bucket").(string), region)
-	if err != nil {
-		return err
-	}
-	d.Set("bucket_regional_domain_name", regionalEndpoint)
-
-	// Add the hosted zone ID for this bucket's region as an attribute
-	hostedZoneID, err := HostedZoneIDForRegion(region)
-	if err != nil {
-		log.Printf("[WARN] %s", err)
-	} else {
-		d.Set("hosted_zone_id", hostedZoneID)
-	}
-
-	// Add website_endpoint as an attribute
-	websiteEndpoint, err := websiteEndpoint(meta.(*conns.AWSClient), d)
-	if err != nil {
-		return err
-	}
-	if websiteEndpoint != nil {
-		if err := d.Set("website_endpoint", websiteEndpoint.Endpoint); err != nil {
-			return err
-		}
-		if err := d.Set("website_domain", websiteEndpoint.Domain); err != nil {
-			return err
-		}
-	}
-
-	// Retry due to S3 eventual consistency
-	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return BucketListTags(conn, d.Id())
-	})
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s): %s", d.Id(), err)
-	}
-
-	tags, ok := tagsRaw.(tftags.KeyValueTags)
-
-	if !ok {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "s3",
-		Resource:  d.Id(),
-	}.String()
-	d.Set("arn", arn)
-
-	return nil
-}
-
-func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
-
-	log.Printf("[DEBUG] S3 Delete Bucket: %s", d.Id())
-	_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
-		Bucket: aws.String(d.Id()),
-	})
-
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
-		return nil
-	}
-
-	if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
-		if d.Get("force_destroy").(bool) {
-			// Use a S3 service client that can handle multiple slashes in URIs.
-			// While aws_s3_bucket_object resources cannot create these object
-			// keys, other AWS services and applications using the S3 Bucket can.
-			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled
-
-			// bucket may have things delete them
-			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %+v", err)
-
-			// Delete everything including locked objects.
-			// Don't ignore any object errors or we could recurse infinitely.
-			var objectLockEnabled bool
-			objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
-			if objectLockConfiguration != nil {
-				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
-			}
-			err = DeleteAllObjectVersions(conn, d.Id(), "", objectLockEnabled, false)
-
-			if err != nil {
-				return fmt.Errorf("error S3 Bucket force_destroy: %s", err)
-			}
-
-			// this line recurses until all objects are deleted or an error is returned
-			return resourceBucketDelete(d, meta)
-		}
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket (%s): %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func resourceBucketPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	policy := d.Get("policy").(string)
-
-	if policy != "" {
-		log.Printf("[DEBUG] S3 bucket: %s, put policy: %s", bucket, policy)
-
-		params := &s3.PutBucketPolicyInput{
-			Bucket: aws.String(bucket),
-			Policy: aws.String(policy),
-		}
-
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.PutBucketPolicy(params)
-			if tfawserr.ErrMessageContains(err, "MalformedPolicy", "") || tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
-				return resource.RetryableError(err)
-			}
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.PutBucketPolicy(params)
-		}
-		if err != nil {
-			return fmt.Errorf("Error putting S3 policy: %s", err)
-		}
-	} else {
-		log.Printf("[DEBUG] S3 bucket: %s, delete policy: %s", bucket, policy)
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			return conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
-				Bucket: aws.String(bucket),
-			})
+			o.Credentials = c.CredentialsProvider(ctx)
 		})
 
-		if err != nil {
-			return fmt.Errorf("Error deleting S3 policy: %s", err)
+	region, err := manager.GetBucketRegion(ctx, c.S3Client(ctx), bucket, optFns...)
+
+	if errs.IsA[manager.BucketNotFound](err) {
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
-	return nil
-}
-
-func resourceBucketGrantsUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	rawGrants := d.Get("grant").(*schema.Set).List()
-
-	if len(rawGrants) == 0 {
-		log.Printf("[DEBUG] S3 bucket: %s, Grants fallback to canned ACL", bucket)
-		if err := resourceBucketACLUpdate(conn, d); err != nil {
-			return fmt.Errorf("Error fallback to canned ACL, %s", err)
-		}
-	} else {
-		apResponse, err := verify.RetryOnAWSCode("NoSuchBucket", func() (interface{}, error) {
-			return conn.GetBucketAcl(&s3.GetBucketAclInput{
-				Bucket: aws.String(d.Id()),
-			})
-		})
-
-		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
-		}
-
-		ap := apResponse.(*s3.GetBucketAclOutput)
-		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), ap)
-
-		grants := make([]*s3.Grant, 0, len(rawGrants))
-		for _, rawGrant := range rawGrants {
-			log.Printf("[DEBUG] S3 bucket: %s, put grant: %#v", bucket, rawGrant)
-			grantMap := rawGrant.(map[string]interface{})
-			for _, rawPermission := range grantMap["permissions"].(*schema.Set).List() {
-				ge := &s3.Grantee{}
-				if i, ok := grantMap["id"].(string); ok && i != "" {
-					ge.SetID(i)
-				}
-				if t, ok := grantMap["type"].(string); ok && t != "" {
-					ge.SetType(t)
-				}
-				if u, ok := grantMap["uri"].(string); ok && u != "" {
-					ge.SetURI(u)
-				}
-
-				g := &s3.Grant{
-					Grantee:    ge,
-					Permission: aws.String(rawPermission.(string)),
-				}
-				grants = append(grants, g)
-			}
-		}
-
-		grantsInput := &s3.PutBucketAclInput{
-			Bucket: aws.String(bucket),
-			AccessControlPolicy: &s3.AccessControlPolicy{
-				Grants: grants,
-				Owner:  ap.Owner,
-			},
-		}
-
-		log.Printf("[DEBUG] S3 bucket: %s, put Grants: %#v", bucket, grantsInput)
-
-		_, err = verify.RetryOnAWSCode("NoSuchBucket", func() (interface{}, error) {
-			return conn.PutBucketAcl(grantsInput)
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error putting S3 Grants: %s", err)
-		}
-	}
-	return nil
-}
-
-func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	rawCors := d.Get("cors_rule").([]interface{})
-
-	if len(rawCors) == 0 {
-		// Delete CORS
-		log.Printf("[DEBUG] S3 bucket: %s, delete CORS", bucket)
-
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			return conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
-				Bucket: aws.String(bucket),
-			})
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting S3 CORS: %s", err)
-		}
-	} else {
-		// Put CORS
-		rules := make([]*s3.CORSRule, 0, len(rawCors))
-		for _, cors := range rawCors {
-			corsMap := cors.(map[string]interface{})
-			r := &s3.CORSRule{}
-			for k, v := range corsMap {
-				log.Printf("[DEBUG] S3 bucket: %s, put CORS: %#v, %#v", bucket, k, v)
-				if k == "max_age_seconds" {
-					r.MaxAgeSeconds = aws.Int64(int64(v.(int)))
-				} else {
-					vMap := make([]*string, len(v.([]interface{})))
-					for i, vv := range v.([]interface{}) {
-						if str, ok := vv.(string); ok {
-							vMap[i] = aws.String(str)
-						}
-					}
-					switch k {
-					case "allowed_headers":
-						r.AllowedHeaders = vMap
-					case "allowed_methods":
-						r.AllowedMethods = vMap
-					case "allowed_origins":
-						r.AllowedOrigins = vMap
-					case "expose_headers":
-						r.ExposeHeaders = vMap
-					}
-				}
-			}
-			rules = append(rules, r)
-		}
-		corsInput := &s3.PutBucketCorsInput{
-			Bucket: aws.String(bucket),
-			CORSConfiguration: &s3.CORSConfiguration{
-				CORSRules: rules,
-			},
-		}
-		log.Printf("[DEBUG] S3 bucket: %s, put CORS: %#v", bucket, corsInput)
-
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			return conn.PutBucketCors(corsInput)
-		})
-		if err != nil {
-			return fmt.Errorf("Error putting S3 CORS: %s", err)
-		}
-	}
-
-	return nil
-}
-
-func resourceBucketWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	ws := d.Get("website").([]interface{})
-
-	if len(ws) == 0 {
-		return resourceBucketWebsiteDelete(conn, d)
-	}
-
-	var w map[string]interface{}
-	if ws[0] != nil {
-		w = ws[0].(map[string]interface{})
-	} else {
-		w = make(map[string]interface{})
-	}
-	return resourceBucketWebsitePut(conn, d, w)
-}
-
-func resourceBucketWebsitePut(conn *s3.S3, d *schema.ResourceData, website map[string]interface{}) error {
-	bucket := d.Get("bucket").(string)
-
-	var indexDocument, errorDocument, redirectAllRequestsTo, routingRules string
-	if v, ok := website["index_document"]; ok {
-		indexDocument = v.(string)
-	}
-	if v, ok := website["error_document"]; ok {
-		errorDocument = v.(string)
-	}
-	if v, ok := website["redirect_all_requests_to"]; ok {
-		redirectAllRequestsTo = v.(string)
-	}
-	if v, ok := website["routing_rules"]; ok {
-		routingRules = v.(string)
-	}
-
-	if indexDocument == "" && redirectAllRequestsTo == "" {
-		return fmt.Errorf("Must specify either index_document or redirect_all_requests_to.")
-	}
-
-	websiteConfiguration := &s3.WebsiteConfiguration{}
-
-	if indexDocument != "" {
-		websiteConfiguration.IndexDocument = &s3.IndexDocument{Suffix: aws.String(indexDocument)}
-	}
-
-	if errorDocument != "" {
-		websiteConfiguration.ErrorDocument = &s3.ErrorDocument{Key: aws.String(errorDocument)}
-	}
-
-	if redirectAllRequestsTo != "" {
-		redirect, err := url.Parse(redirectAllRequestsTo)
-		if err == nil && redirect.Scheme != "" {
-			var redirectHostBuf bytes.Buffer
-			redirectHostBuf.WriteString(redirect.Host)
-			if redirect.Path != "" {
-				redirectHostBuf.WriteString(redirect.Path)
-			}
-			if redirect.RawQuery != "" {
-				redirectHostBuf.WriteString("?")
-				redirectHostBuf.WriteString(redirect.RawQuery)
-			}
-			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{HostName: aws.String(redirectHostBuf.String()), Protocol: aws.String(redirect.Scheme)}
-		} else {
-			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{HostName: aws.String(redirectAllRequestsTo)}
-		}
-	}
-
-	if routingRules != "" {
-		var unmarshaledRules []*s3.RoutingRule
-		if err := json.Unmarshal([]byte(routingRules), &unmarshaledRules); err != nil {
-			return err
-		}
-		websiteConfiguration.RoutingRules = unmarshaledRules
-	}
-
-	putInput := &s3.PutBucketWebsiteInput{
-		Bucket:               aws.String(bucket),
-		WebsiteConfiguration: websiteConfiguration,
-	}
-
-	log.Printf("[DEBUG] S3 put bucket website: %#v", putInput)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketWebsite(putInput)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 website: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketWebsiteDelete(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	deleteInput := &s3.DeleteBucketWebsiteInput{Bucket: aws.String(bucket)}
-
-	log.Printf("[DEBUG] S3 delete bucket website: %#v", deleteInput)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.DeleteBucketWebsite(deleteInput)
-	})
-	if err != nil {
-		return fmt.Errorf("Error deleting S3 website: %s", err)
-	}
-
-	d.Set("website_endpoint", "")
-	d.Set("website_domain", "")
-
-	return nil
-}
-
-func websiteEndpoint(client *conns.AWSClient, d *schema.ResourceData) (*S3Website, error) {
-	// If the bucket doesn't have a website configuration, return an empty
-	// endpoint
-	if _, ok := d.GetOk("website"); !ok {
-		return nil, nil
-	}
-
-	bucket := d.Get("bucket").(string)
-
-	// Lookup the region for this bucket
-
-	locationResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return client.S3Conn.GetBucketLocation(
-			&s3.GetBucketLocationInput{
-				Bucket: aws.String(bucket),
-			},
-		)
-	})
-	if err != nil {
-		return nil, err
-	}
-	location := locationResponse.(*s3.GetBucketLocationOutput)
-	var region string
-	if location.LocationConstraint != nil {
-		region = aws.StringValue(location.LocationConstraint)
-	}
-
-	return WebsiteEndpoint(client, bucket, region), nil
-}
-
-// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
-func BucketRegionalDomainName(bucket string, region string) (string, error) {
-	// Return a default AWS Commercial domain name if no region is provided
-	// Otherwise EndpointFor() will return BUCKET.s3..amazonaws.com
-	if region == "" {
-		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil //lintignore:AWSR001
-	}
-	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s.%s", bucket, strings.TrimPrefix(endpoint.URL, "https://")), nil
+
+	return region, nil
 }
 
-func WebsiteEndpoint(client *conns.AWSClient, bucket string, region string) *S3Website {
-	domain := WebsiteDomainUrl(client, region)
-	return &S3Website{Endpoint: fmt.Sprintf("%s.%s", bucket, domain), Domain: domain}
+func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, f, errCodeNoSuchBucket)
 }
 
-func WebsiteDomainUrl(client *conns.AWSClient, region string) string {
-	region = normalizeRegion(region)
+func bucketARN(ctx context.Context, c *conns.AWSClient, bucket string) string {
+	return c.GlobalARNNoAccount(ctx, "s3", bucket)
+}
 
-	// Different regions have different syntax for website endpoints
+// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+func bucketRegionalDomainName(bucket, region string) string {
+	// Return a default AWS Commercial domain name if no Region is provided.
+	if region == "" {
+		return fmt.Sprintf("%s.s3.amazonaws.com", bucket) //lintignore:AWSR001
+	}
+	return fmt.Sprintf("%s.s3.%s.%s", bucket, region, names.PartitionForRegion(region).DNSSuffix())
+}
+
+func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
+	var domain string
+
+	// Default to us-east-1 if the bucket doesn't have a region:
+	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html
+	if region == "" {
+		region = endpoints.UsEast1RegionID
+	}
+
+	// Different regions have different syntax for website endpoints:
 	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
 	// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
-	if isOldRegion(region) {
-		return fmt.Sprintf("s3-website-%s.amazonaws.com", region) //lintignore:AWSR001
-	}
-	return client.RegionalHostname("s3-website")
-}
-
-func isOldRegion(region string) bool {
 	oldRegions := []string{
 		endpoints.ApNortheast1RegionID,
 		endpoints.ApSoutheast1RegionID,
@@ -1802,1127 +1780,1330 @@ func isOldRegion(region string) bool {
 		endpoints.UsWest1RegionID,
 		endpoints.UsWest2RegionID,
 	}
-	for _, r := range oldRegions {
-		if region == r {
-			return true
-		}
-	}
-	return false
-}
-
-func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	acl := d.Get("acl").(string)
-	bucket := d.Get("bucket").(string)
-
-	i := &s3.PutBucketAclInput{
-		Bucket: aws.String(bucket),
-		ACL:    aws.String(acl),
-	}
-	log.Printf("[DEBUG] S3 put bucket ACL: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketAcl(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 ACL: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketVersioningUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	v := d.Get("versioning").([]interface{})
-	bucket := d.Get("bucket").(string)
-	vc := &s3.VersioningConfiguration{}
-
-	if len(v) > 0 {
-		c := v[0].(map[string]interface{})
-
-		if c["enabled"].(bool) {
-			vc.Status = aws.String(s3.BucketVersioningStatusEnabled)
-		} else {
-			vc.Status = aws.String(s3.BucketVersioningStatusSuspended)
-		}
-
-		if c["mfa_delete"].(bool) {
-			vc.MFADelete = aws.String(s3.MFADeleteEnabled)
-		} else {
-			vc.MFADelete = aws.String(s3.MFADeleteDisabled)
-		}
-
+	if slices.Contains(oldRegions, region) {
+		domain = fmt.Sprintf("s3-website-%s.amazonaws.com", region) //lintignore:AWSR001
 	} else {
-		vc.Status = aws.String(s3.BucketVersioningStatusSuspended)
+		domain = fmt.Sprintf("s3-website.%s.%s", region, names.PartitionForRegion(region).DNSSuffix())
 	}
 
-	i := &s3.PutBucketVersioningInput{
-		Bucket:                  aws.String(bucket),
-		VersioningConfiguration: vc,
-	}
-	log.Printf("[DEBUG] S3 put bucket versioning: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketVersioning(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 versioning: %s", err)
-	}
-
-	return nil
+	return fmt.Sprintf("%s.%s", bucket, domain), domain
 }
 
-func resourceBucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	logging := d.Get("logging").(*schema.Set).List()
-	bucket := d.Get("bucket").(string)
-	loggingStatus := &s3.BucketLoggingStatus{}
-
-	if len(logging) > 0 {
-		c := logging[0].(map[string]interface{})
-
-		loggingEnabled := &s3.LoggingEnabled{}
-		if val, ok := c["target_bucket"]; ok {
-			loggingEnabled.TargetBucket = aws.String(val.(string))
-		}
-		if val, ok := c["target_prefix"]; ok {
-			loggingEnabled.TargetPrefix = aws.String(val.(string))
-		}
-
-		loggingStatus.LoggingEnabled = loggingEnabled
+func bucketNamespace(bucket string) types.BucketNamespace {
+	if accountRegionalBucketNameRegex.MatchString(bucket) {
+		return types.BucketNamespaceAccountRegional
 	}
-
-	i := &s3.PutBucketLoggingInput{
-		Bucket:              aws.String(bucket),
-		BucketLoggingStatus: loggingStatus,
-	}
-	log.Printf("[DEBUG] S3 put bucket logging: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketLogging(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 logging: %s", err)
-	}
-
-	return nil
+	return types.BucketNamespaceGlobal
 }
 
-func resourceBucketAccelerationUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	enableAcceleration := d.Get("acceleration_status").(string)
+//
+// Bucket CORS Configuration.
+//
 
-	i := &s3.PutBucketAccelerateConfigurationInput{
-		Bucket: aws.String(bucket),
-		AccelerateConfiguration: &s3.AccelerateConfiguration{
-			Status: aws.String(enableAcceleration),
-		},
-	}
-	log.Printf("[DEBUG] S3 put bucket acceleration: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketAccelerateConfiguration(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 acceleration: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	payer := d.Get("request_payer").(string)
-
-	i := &s3.PutBucketRequestPaymentInput{
-		Bucket: aws.String(bucket),
-		RequestPaymentConfiguration: &s3.RequestPaymentConfiguration{
-			Payer: aws.String(payer),
-		},
-	}
-	log.Printf("[DEBUG] S3 put bucket request payer: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketRequestPayment(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 request payer: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
-	if len(serverSideEncryptionConfiguration) == 0 {
-		log.Printf("[DEBUG] Delete server side encryption configuration: %#v", serverSideEncryptionConfiguration)
-		i := &s3.DeleteBucketEncryptionInput{
-			Bucket: aws.String(bucket),
-		}
-
-		_, err := conn.DeleteBucketEncryption(i)
-		if err != nil {
-			return fmt.Errorf("error removing S3 bucket server side encryption: %s", err)
-		}
+func expandBucketCORSRules(l []any) []types.CORSRule {
+	if len(l) == 0 {
 		return nil
 	}
 
-	c := serverSideEncryptionConfiguration[0].(map[string]interface{})
+	var rules []types.CORSRule
 
-	rc := &s3.ServerSideEncryptionConfiguration{}
-
-	rcRules := c["rule"].([]interface{})
-	var rules []*s3.ServerSideEncryptionRule
-	for _, v := range rcRules {
-		rr := v.(map[string]interface{})
-		rrDefault := rr["apply_server_side_encryption_by_default"].([]interface{})
-		sseAlgorithm := rrDefault[0].(map[string]interface{})["sse_algorithm"].(string)
-		kmsMasterKeyId := rrDefault[0].(map[string]interface{})["kms_master_key_id"].(string)
-		rcDefaultRule := &s3.ServerSideEncryptionByDefault{
-			SSEAlgorithm: aws.String(sseAlgorithm),
-		}
-		if kmsMasterKeyId != "" {
-			rcDefaultRule.KMSMasterKeyID = aws.String(kmsMasterKeyId)
-		}
-		rcRule := &s3.ServerSideEncryptionRule{
-			ApplyServerSideEncryptionByDefault: rcDefaultRule,
-		}
-
-		if val, ok := rr["bucket_key_enabled"].(bool); ok {
-			rcRule.BucketKeyEnabled = aws.Bool(val)
-		}
-
-		rules = append(rules, rcRule)
-	}
-
-	rc.Rules = rules
-	i := &s3.PutBucketEncryptionInput{
-		Bucket:                            aws.String(bucket),
-		ServerSideEncryptionConfiguration: rc,
-	}
-	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
-
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		propagationTimeout,
-		func() (interface{}, error) {
-			return conn.PutBucketEncryption(i)
-		},
-		s3.ErrCodeNoSuchBucket,
-		ErrCodeOperationAborted,
-	)
-
-	if err != nil {
-		return fmt.Errorf("error putting S3 server side encryption configuration: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	// S3 Object Lock configuration cannot be deleted, only updated.
-	req := &s3.PutObjectLockConfigurationInput{
-		Bucket:                  aws.String(d.Get("bucket").(string)),
-		ObjectLockConfiguration: expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{})),
-	}
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutObjectLockConfiguration(req)
-	})
-	if err != nil {
-		return fmt.Errorf("error putting S3 object lock configuration: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	replicationConfiguration := d.Get("replication_configuration").([]interface{})
-
-	if len(replicationConfiguration) == 0 {
-		i := &s3.DeleteBucketReplicationInput{
-			Bucket: aws.String(bucket),
-		}
-
-		_, err := conn.DeleteBucketReplication(i)
-		if err != nil {
-			return fmt.Errorf("Error removing S3 bucket replication: %s", err)
-		}
-		return nil
-	}
-
-	hasVersioning := false
-	// Validate that bucket versioning is enabled
-	if versioning, ok := d.GetOk("versioning"); ok {
-		v := versioning.([]interface{})
-
-		if v[0].(map[string]interface{})["enabled"].(bool) {
-			hasVersioning = true
-		}
-	}
-
-	if !hasVersioning {
-		return fmt.Errorf("versioning must be enabled to allow S3 bucket replication")
-	}
-
-	c := replicationConfiguration[0].(map[string]interface{})
-
-	rc := &s3.ReplicationConfiguration{}
-	if val, ok := c["role"]; ok {
-		rc.Role = aws.String(val.(string))
-	}
-
-	rcRules := c["rules"].(*schema.Set).List()
-	rules := []*s3.ReplicationRule{}
-	for _, v := range rcRules {
-		rr := v.(map[string]interface{})
-		rcRule := &s3.ReplicationRule{}
-		if status, ok := rr["status"]; ok && status != "" {
-			rcRule.Status = aws.String(status.(string))
-		} else {
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
 			continue
 		}
 
-		if rrid, ok := rr["id"]; ok && rrid != "" {
-			rcRule.ID = aws.String(rrid.(string))
+		rule := types.CORSRule{}
+
+		if v, ok := tfMap["allowed_headers"].([]any); ok && len(v) > 0 {
+			rule.AllowedHeaders = flex.ExpandStringValueListEmpty(v)
 		}
 
-		ruleDestination := &s3.Destination{}
-		if dest, ok := rr["destination"].([]interface{}); ok && len(dest) > 0 {
-			if dest[0] != nil {
-				bd := dest[0].(map[string]interface{})
-				ruleDestination.Bucket = aws.String(bd["bucket"].(string))
-
-				if storageClass, ok := bd["storage_class"]; ok && storageClass != "" {
-					ruleDestination.StorageClass = aws.String(storageClass.(string))
-				}
-
-				if replicaKmsKeyId, ok := bd["replica_kms_key_id"]; ok && replicaKmsKeyId != "" {
-					ruleDestination.EncryptionConfiguration = &s3.EncryptionConfiguration{
-						ReplicaKmsKeyID: aws.String(replicaKmsKeyId.(string)),
-					}
-				}
-
-				if account, ok := bd["account_id"]; ok && account != "" {
-					ruleDestination.Account = aws.String(account.(string))
-				}
-
-				if aclTranslation, ok := bd["access_control_translation"].([]interface{}); ok && len(aclTranslation) > 0 {
-					aclTranslationValues := aclTranslation[0].(map[string]interface{})
-					ruleAclTranslation := &s3.AccessControlTranslation{}
-					ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
-					ruleDestination.AccessControlTranslation = ruleAclTranslation
-				}
-
-				// replication metrics (required for RTC)
-				if metrics, ok := bd["metrics"].([]interface{}); ok && len(metrics) > 0 {
-					metricsConfig := &s3.Metrics{}
-					metricsValues := metrics[0].(map[string]interface{})
-					metricsConfig.EventThreshold = &s3.ReplicationTimeValue{}
-					metricsConfig.Status = aws.String(metricsValues["status"].(string))
-					metricsConfig.EventThreshold.Minutes = aws.Int64(int64(metricsValues["minutes"].(int)))
-					ruleDestination.Metrics = metricsConfig
-				}
-
-				// replication time control (RTC)
-				if rtc, ok := bd["replication_time"].([]interface{}); ok && len(rtc) > 0 {
-					rtcValues := rtc[0].(map[string]interface{})
-					rtcConfig := &s3.ReplicationTime{}
-					rtcConfig.Status = aws.String(rtcValues["status"].(string))
-					rtcConfig.Time = &s3.ReplicationTimeValue{}
-					rtcConfig.Time.Minutes = aws.Int64(int64(rtcValues["minutes"].(int)))
-					ruleDestination.ReplicationTime = rtcConfig
-				}
-			}
-		}
-		rcRule.Destination = ruleDestination
-
-		if ssc, ok := rr["source_selection_criteria"].([]interface{}); ok && len(ssc) > 0 {
-			if ssc[0] != nil {
-				sscValues := ssc[0].(map[string]interface{})
-				ruleSsc := &s3.SourceSelectionCriteria{}
-				if sseKms, ok := sscValues["sse_kms_encrypted_objects"].([]interface{}); ok && len(sseKms) > 0 {
-					if sseKms[0] != nil {
-						sseKmsValues := sseKms[0].(map[string]interface{})
-						sseKmsEncryptedObjects := &s3.SseKmsEncryptedObjects{}
-						if sseKmsValues["enabled"].(bool) {
-							sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusEnabled)
-						} else {
-							sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusDisabled)
-						}
-						ruleSsc.SseKmsEncryptedObjects = sseKmsEncryptedObjects
-					}
-				}
-				rcRule.SourceSelectionCriteria = ruleSsc
-			}
+		if v, ok := tfMap["allowed_methods"].([]any); ok && len(v) > 0 {
+			rule.AllowedMethods = flex.ExpandStringValueListEmpty(v)
 		}
 
-		if f, ok := rr["filter"].([]interface{}); ok && len(f) > 0 && f[0] != nil {
-			// XML schema V2.
-			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
-			rcRule.Filter = &s3.ReplicationRuleFilter{}
-			filter := f[0].(map[string]interface{})
-			tags := Tags(tftags.New(filter["tags"]).IgnoreAWS())
-			if len(tags) > 0 {
-				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
-					Prefix: aws.String(filter["prefix"].(string)),
-					Tags:   tags,
-				}
-			} else {
-				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
-			}
-
-			if dmr, ok := rr["delete_marker_replication_status"].(string); ok && dmr != "" {
-				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-					Status: aws.String(dmr),
-				}
-			} else {
-				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-					Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
-				}
-			}
-		} else {
-			// XML schema V1.
-			rcRule.Prefix = aws.String(rr["prefix"].(string))
+		if v, ok := tfMap["allowed_origins"].([]any); ok && len(v) > 0 {
+			rule.AllowedOrigins = flex.ExpandStringValueListEmpty(v)
 		}
 
-		rules = append(rules, rcRule)
-	}
-
-	rc.Rules = rules
-	i := &s3.PutBucketReplicationInput{
-		Bucket:                   aws.String(bucket),
-		ReplicationConfiguration: rc,
-	}
-	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
-
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutBucketReplication(i)
-		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketReplication(i)
-	}
-	if err != nil {
-		return fmt.Errorf("Error putting S3 replication configuration: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-
-	lifecycleRules := d.Get("lifecycle_rule").([]interface{})
-
-	if len(lifecycleRules) == 0 || lifecycleRules[0] == nil {
-		i := &s3.DeleteBucketLifecycleInput{
-			Bucket: aws.String(bucket),
+		if v, ok := tfMap["expose_headers"].([]any); ok && len(v) > 0 {
+			rule.ExposeHeaders = flex.ExpandStringValueListEmpty(v)
 		}
 
-		_, err := conn.DeleteBucketLifecycle(i)
-		if err != nil {
-			return fmt.Errorf("Error removing S3 lifecycle: %s", err)
-		}
-		return nil
-	}
-
-	rules := make([]*s3.LifecycleRule, 0, len(lifecycleRules))
-
-	for i, lifecycleRule := range lifecycleRules {
-		r := lifecycleRule.(map[string]interface{})
-
-		rule := &s3.LifecycleRule{}
-
-		// Filter
-		tags := Tags(tftags.New(r["tags"]).IgnoreAWS())
-		filter := &s3.LifecycleRuleFilter{}
-		if len(tags) > 0 {
-			lifecycleRuleAndOp := &s3.LifecycleRuleAndOperator{}
-			lifecycleRuleAndOp.SetPrefix(r["prefix"].(string))
-			lifecycleRuleAndOp.SetTags(tags)
-			filter.SetAnd(lifecycleRuleAndOp)
-		} else {
-			filter.SetPrefix(r["prefix"].(string))
-		}
-		rule.SetFilter(filter)
-
-		// ID
-		if val, ok := r["id"].(string); ok && val != "" {
-			rule.ID = aws.String(val)
-		} else {
-			rule.ID = aws.String(resource.PrefixedUniqueId("tf-s3-lifecycle-"))
-		}
-
-		// Enabled
-		if val, ok := r["enabled"].(bool); ok && val {
-			rule.Status = aws.String(s3.ExpirationStatusEnabled)
-		} else {
-			rule.Status = aws.String(s3.ExpirationStatusDisabled)
-		}
-
-		// AbortIncompleteMultipartUpload
-		if val, ok := r["abort_incomplete_multipart_upload_days"].(int); ok && val > 0 {
-			rule.AbortIncompleteMultipartUpload = &s3.AbortIncompleteMultipartUpload{
-				DaysAfterInitiation: aws.Int64(int64(val)),
-			}
-		}
-
-		// Expiration
-		expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.expiration", i)).([]interface{})
-		if len(expiration) > 0 && expiration[0] != nil {
-			e := expiration[0].(map[string]interface{})
-			i := &s3.LifecycleExpiration{}
-			if val, ok := e["date"].(string); ok && val != "" {
-				t, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", val))
-				if err != nil {
-					return fmt.Errorf("Error Parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
-				}
-				i.Date = aws.Time(t)
-			} else if val, ok := e["days"].(int); ok && val > 0 {
-				i.Days = aws.Int64(int64(val))
-			} else if val, ok := e["expired_object_delete_marker"].(bool); ok {
-				i.ExpiredObjectDeleteMarker = aws.Bool(val)
-			}
-			rule.Expiration = i
-		}
-
-		// NoncurrentVersionExpiration
-		nc_expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.noncurrent_version_expiration", i)).([]interface{})
-		if len(nc_expiration) > 0 && nc_expiration[0] != nil {
-			e := nc_expiration[0].(map[string]interface{})
-
-			if val, ok := e["days"].(int); ok && val > 0 {
-				rule.NoncurrentVersionExpiration = &s3.NoncurrentVersionExpiration{
-					NoncurrentDays: aws.Int64(int64(val)),
-				}
-			}
-		}
-
-		// Transitions
-		transitions := d.Get(fmt.Sprintf("lifecycle_rule.%d.transition", i)).(*schema.Set).List()
-		if len(transitions) > 0 {
-			rule.Transitions = make([]*s3.Transition, 0, len(transitions))
-			for _, transition := range transitions {
-				transition := transition.(map[string]interface{})
-				i := &s3.Transition{}
-				if val, ok := transition["date"].(string); ok && val != "" {
-					t, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", val))
-					if err != nil {
-						return fmt.Errorf("Error Parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
-					}
-					i.Date = aws.Time(t)
-				} else if val, ok := transition["days"].(int); ok && val >= 0 {
-					i.Days = aws.Int64(int64(val))
-				}
-				if val, ok := transition["storage_class"].(string); ok && val != "" {
-					i.StorageClass = aws.String(val)
-				}
-
-				rule.Transitions = append(rule.Transitions, i)
-			}
-		}
-		// NoncurrentVersionTransitions
-		nc_transitions := d.Get(fmt.Sprintf("lifecycle_rule.%d.noncurrent_version_transition", i)).(*schema.Set).List()
-		if len(nc_transitions) > 0 {
-			rule.NoncurrentVersionTransitions = make([]*s3.NoncurrentVersionTransition, 0, len(nc_transitions))
-			for _, transition := range nc_transitions {
-				transition := transition.(map[string]interface{})
-				i := &s3.NoncurrentVersionTransition{}
-				if val, ok := transition["days"].(int); ok && val >= 0 {
-					i.NoncurrentDays = aws.Int64(int64(val))
-				}
-				if val, ok := transition["storage_class"].(string); ok && val != "" {
-					i.StorageClass = aws.String(val)
-				}
-
-				rule.NoncurrentVersionTransitions = append(rule.NoncurrentVersionTransitions, i)
-			}
-		}
-
-		// As a lifecycle rule requires 1 or more transition/expiration actions,
-		// we explicitly pass a default ExpiredObjectDeleteMarker value to be able to create
-		// the rule while keeping the policy unaffected if the conditions are not met.
-		if rule.Expiration == nil && rule.NoncurrentVersionExpiration == nil &&
-			rule.Transitions == nil && rule.NoncurrentVersionTransitions == nil &&
-			rule.AbortIncompleteMultipartUpload == nil {
-			rule.Expiration = &s3.LifecycleExpiration{ExpiredObjectDeleteMarker: aws.Bool(false)}
+		if v, ok := tfMap["max_age_seconds"].(int); ok {
+			rule.MaxAgeSeconds = aws.Int32(int32(v))
 		}
 
 		rules = append(rules, rule)
 	}
 
-	i := &s3.PutBucketLifecycleConfigurationInput{
-		Bucket: aws.String(bucket),
-		LifecycleConfiguration: &s3.BucketLifecycleConfiguration{
-			Rules: rules,
-		},
-	}
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketLifecycleConfiguration(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 lifecycle: %s", err)
-	}
-
-	return nil
+	return rules
 }
 
-func flattenServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []map[string]interface{} {
-	var encryptionConfiguration []map[string]interface{}
-	rules := make([]interface{}, 0, len(c.Rules))
-	for _, v := range c.Rules {
-		if v.ApplyServerSideEncryptionByDefault != nil {
-			r := make(map[string]interface{})
-			d := make(map[string]interface{})
-			d["kms_master_key_id"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.KMSMasterKeyID)
-			d["sse_algorithm"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.SSEAlgorithm)
-			r["apply_server_side_encryption_by_default"] = []map[string]interface{}{d}
-			r["bucket_key_enabled"] = aws.BoolValue(v.BucketKeyEnabled)
-			rules = append(rules, r)
-		}
-	}
-	encryptionConfiguration = append(encryptionConfiguration, map[string]interface{}{
-		"rule": rules,
-	})
-	return encryptionConfiguration
-}
+func flattenBucketCORSRules(rules []types.CORSRule) []any {
+	var results []any
 
-func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map[string]interface{} {
-	replication_configuration := make([]map[string]interface{}, 0, 1)
-
-	if r == nil {
-		return replication_configuration
-	}
-
-	m := make(map[string]interface{})
-
-	if r.Role != nil && aws.StringValue(r.Role) != "" {
-		m["role"] = aws.StringValue(r.Role)
-	}
-
-	rules := make([]interface{}, 0, len(r.Rules))
-	for _, v := range r.Rules {
-		t := make(map[string]interface{})
-		if v.Destination != nil {
-			rd := make(map[string]interface{})
-			if v.Destination.Bucket != nil {
-				rd["bucket"] = aws.StringValue(v.Destination.Bucket)
-			}
-			if v.Destination.StorageClass != nil {
-				rd["storage_class"] = aws.StringValue(v.Destination.StorageClass)
-			}
-			if v.Destination.ReplicationTime != nil {
-				rtc := map[string]interface{}{
-					"minutes": int(aws.Int64Value(v.Destination.ReplicationTime.Time.Minutes)),
-					"status":  aws.StringValue(v.Destination.ReplicationTime.Status),
-				}
-				rd["replication_time"] = []interface{}{rtc}
-			}
-			if v.Destination.Metrics != nil {
-				metrics := map[string]interface{}{
-					"minutes": int(aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes)),
-					"status":  aws.StringValue(v.Destination.Metrics.Status),
-				}
-				rd["metrics"] = []interface{}{metrics}
-			}
-			if v.Destination.EncryptionConfiguration != nil {
-				if v.Destination.EncryptionConfiguration.ReplicaKmsKeyID != nil {
-					rd["replica_kms_key_id"] = aws.StringValue(v.Destination.EncryptionConfiguration.ReplicaKmsKeyID)
-				}
-			}
-			if v.Destination.Account != nil {
-				rd["account_id"] = aws.StringValue(v.Destination.Account)
-			}
-			if v.Destination.AccessControlTranslation != nil {
-				rdt := map[string]interface{}{
-					"owner": aws.StringValue(v.Destination.AccessControlTranslation.Owner),
-				}
-				rd["access_control_translation"] = []interface{}{rdt}
-			}
-			t["destination"] = []interface{}{rd}
-		}
-
-		if v.ID != nil {
-			t["id"] = aws.StringValue(v.ID)
-		}
-		if v.Prefix != nil {
-			t["prefix"] = aws.StringValue(v.Prefix)
-		}
-		if v.Status != nil {
-			t["status"] = aws.StringValue(v.Status)
-		}
-		if vssc := v.SourceSelectionCriteria; vssc != nil {
-			tssc := make(map[string]interface{})
-			if vssc.SseKmsEncryptedObjects != nil {
-				tSseKms := make(map[string]interface{})
-				if aws.StringValue(vssc.SseKmsEncryptedObjects.Status) == s3.SseKmsEncryptedObjectsStatusEnabled {
-					tSseKms["enabled"] = true
-				} else if aws.StringValue(vssc.SseKmsEncryptedObjects.Status) == s3.SseKmsEncryptedObjectsStatusDisabled {
-					tSseKms["enabled"] = false
-				}
-				tssc["sse_kms_encrypted_objects"] = []interface{}{tSseKms}
-			}
-			t["source_selection_criteria"] = []interface{}{tssc}
-		}
-
-		if v.Priority != nil {
-			t["priority"] = int(aws.Int64Value(v.Priority))
-		}
-
-		if f := v.Filter; f != nil {
-			m := map[string]interface{}{}
-			if f.Prefix != nil {
-				m["prefix"] = aws.StringValue(f.Prefix)
-			}
-			if t := f.Tag; t != nil {
-				m["tags"] = KeyValueTags([]*s3.Tag{t}).IgnoreAWS().Map()
-			}
-			if a := f.And; a != nil {
-				m["prefix"] = aws.StringValue(a.Prefix)
-				m["tags"] = KeyValueTags(a.Tags).IgnoreAWS().Map()
-			}
-			t["filter"] = []interface{}{m}
-
-			if v.DeleteMarkerReplication != nil && v.DeleteMarkerReplication.Status != nil && aws.StringValue(v.DeleteMarkerReplication.Status) == s3.DeleteMarkerReplicationStatusEnabled {
-				t["delete_marker_replication_status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
-			}
-		}
-
-		rules = append(rules, t)
-	}
-	m["rules"] = schema.NewSet(rulesHash, rules)
-
-	replication_configuration = append(replication_configuration, m)
-
-	return replication_configuration
-}
-
-func normalizeRoutingRules(w []*s3.RoutingRule) (string, error) {
-	withNulls, err := json.Marshal(w)
-	if err != nil {
-		return "", err
-	}
-
-	var rules []map[string]interface{}
-	if err := json.Unmarshal(withNulls, &rules); err != nil {
-		return "", err
-	}
-
-	var cleanRules []map[string]interface{}
 	for _, rule := range rules {
-		cleanRules = append(cleanRules, removeNil(rule))
+		m := map[string]any{
+			"max_age_seconds": rule.MaxAgeSeconds,
+		}
+
+		if len(rule.AllowedHeaders) > 0 {
+			m["allowed_headers"] = rule.AllowedHeaders
+		}
+
+		if len(rule.AllowedMethods) > 0 {
+			m["allowed_methods"] = rule.AllowedMethods
+		}
+
+		if len(rule.AllowedOrigins) > 0 {
+			m["allowed_origins"] = rule.AllowedOrigins
+		}
+
+		if len(rule.ExposeHeaders) > 0 {
+			m["expose_headers"] = rule.ExposeHeaders
+		}
+
+		results = append(results, m)
 	}
 
-	withoutNulls, err := json.Marshal(cleanRules)
-	if err != nil {
-		return "", err
-	}
-
-	return string(withoutNulls), nil
+	return results
 }
 
-func removeNil(data map[string]interface{}) map[string]interface{} {
-	withoutNil := make(map[string]interface{})
+//
+// Bucket Website Configuration.
+//
 
-	for k, v := range data {
-		if v == nil {
+func expandBucketWebsiteConfiguration(l []any) (*types.WebsiteConfiguration, error) {
+	if len(l) == 0 || l[0] == nil {
+		return nil, nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+
+	websiteConfig := &types.WebsiteConfiguration{}
+
+	if v, ok := tfMap["index_document"].(string); ok && v != "" {
+		websiteConfig.IndexDocument = &types.IndexDocument{
+			Suffix: aws.String(v),
+		}
+	}
+
+	if v, ok := tfMap["error_document"].(string); ok && v != "" {
+		websiteConfig.ErrorDocument = &types.ErrorDocument{
+			Key: aws.String(v),
+		}
+	}
+
+	if v, ok := tfMap["redirect_all_requests_to"].(string); ok && v != "" {
+		redirect, err := url.Parse(v)
+		if err == nil && redirect.Scheme != "" {
+			var buf bytes.Buffer
+
+			buf.WriteString(redirect.Host)
+			if redirect.Path != "" {
+				buf.WriteString(redirect.Path)
+			}
+			if redirect.RawQuery != "" {
+				buf.WriteString("?")
+				buf.WriteString(redirect.RawQuery)
+			}
+			websiteConfig.RedirectAllRequestsTo = &types.RedirectAllRequestsTo{
+				HostName: aws.String(buf.String()),
+				Protocol: types.Protocol(redirect.Scheme),
+			}
+		} else {
+			websiteConfig.RedirectAllRequestsTo = &types.RedirectAllRequestsTo{
+				HostName: aws.String(v),
+			}
+		}
+	}
+
+	if v, ok := tfMap["routing_rules"].(string); ok && v != "" {
+		var routingRules []types.RoutingRule
+		if err := json.Unmarshal([]byte(v), &routingRules); err != nil {
+			return nil, err
+		}
+		websiteConfig.RoutingRules = routingRules
+	}
+
+	return websiteConfig, nil
+}
+
+func flattenBucketWebsite(apiObject *s3.GetBucketWebsiteOutput) ([]any, error) {
+	if apiObject == nil {
+		return []any{}, nil
+	}
+
+	m := make(map[string]any)
+
+	if v := apiObject.IndexDocument; v != nil {
+		m["index_document"] = aws.ToString(v.Suffix)
+	}
+
+	if v := apiObject.ErrorDocument; v != nil {
+		m["error_document"] = aws.ToString(v.Key)
+	}
+
+	if apiObject := apiObject.RedirectAllRequestsTo; apiObject != nil {
+		hostName := aws.ToString(apiObject.HostName)
+
+		if apiObject.Protocol == "" {
+			m["redirect_all_requests_to"] = hostName
+		} else {
+			var host string
+			var path string
+			var query string
+
+			parsedHostName, err := url.Parse(hostName)
+			if err == nil {
+				host = parsedHostName.Host
+				path = parsedHostName.Path
+				query = parsedHostName.RawQuery
+			} else {
+				host = hostName
+			}
+
+			m["redirect_all_requests_to"] = (&url.URL{
+				Scheme:   string(apiObject.Protocol),
+				Host:     host,
+				Path:     path,
+				RawQuery: query,
+			}).String()
+		}
+	}
+
+	if apiObject := apiObject.RoutingRules; apiObject != nil {
+		rr, err := normalizeRoutingRules(apiObject)
+		if err != nil {
+			return nil, err
+		}
+		m["routing_rules"] = rr
+	}
+
+	// We have special handling for the website configuration,
+	// so only return the configuration if there is one.
+	if len(m) == 0 {
+		return []any{}, nil
+	}
+
+	return []any{m}, nil
+}
+
+//
+// Bucket Versioning.
+//
+
+func expandBucketVersioningConfigurationCreate(l []any) *types.VersioningConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.VersioningConfiguration{}
+
+	// Only set and return a non-nil VersioningConfiguration with at least one of
+	// MFADelete or Status enabled as the PutBucketVersioning API request
+	// does not need to be made for new buckets that don't require versioning.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4494.
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok && v {
+		apiObject.Status = types.BucketVersioningStatusEnabled
+	}
+
+	if v, ok := tfMap["mfa_delete"].(bool); ok && v {
+		apiObject.MFADelete = types.MFADeleteEnabled
+	}
+
+	if apiObject.MFADelete == "" && apiObject.Status == "" {
+		return nil
+	}
+
+	return apiObject
+}
+
+func expandBucketVersioningConfigurationUpdate(l []any) *types.VersioningConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.VersioningConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		if v {
+			apiObject.Status = types.BucketVersioningStatusEnabled
+		} else {
+			apiObject.Status = types.BucketVersioningStatusSuspended
+		}
+	}
+
+	if v, ok := tfMap["mfa_delete"].(bool); ok {
+		if v {
+			apiObject.MFADelete = types.MFADeleteEnabled
+		} else {
+			apiObject.MFADelete = types.MFADeleteDisabled
+		}
+	}
+
+	return apiObject
+}
+
+func flattenBucketVersioning(config *s3.GetBucketVersioningOutput) []any {
+	if config == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrEnabled: config.Status == types.BucketVersioningStatusEnabled,
+		"mfa_delete":      config.MFADelete == types.MFADeleteStatusEnabled,
+	}
+
+	return []any{m}
+}
+
+//
+// Bucket ACL.
+//
+
+func expandBucketGrants(l []any) []types.Grant {
+	var grants []types.Grant
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
 			continue
 		}
 
-		switch v := v.(type) {
-		case map[string]interface{}:
-			withoutNil[k] = removeNil(v)
-		default:
-			withoutNil[k] = v
-		}
-	}
+		if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok {
+			for _, rawPermission := range v.List() {
+				permission, ok := rawPermission.(string)
+				if !ok {
+					continue
+				}
 
-	return withoutNil
-}
+				grantee := &types.Grantee{}
 
-func normalizeRegion(region string) string {
-	// Default to us-east-1 if the bucket doesn't have a region:
-	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html
-	if region == "" {
-		region = endpoints.UsEast1RegionID
-	}
+				if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
+					grantee.ID = aws.String(v)
+				}
 
-	return region
-}
+				if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+					grantee.Type = types.Type(v)
+				}
 
-// ValidBucketName validates any S3 bucket name that is not inside the us-east-1 region.
-// Buckets outside of this region have to be DNS-compliant. After the same restrictions are
-// applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
-func ValidBucketName(value string, region string) error {
-	if region != endpoints.UsEast1RegionID {
-		if (len(value) < 3) || (len(value) > 63) {
-			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
-		}
-		if !regexp.MustCompile(`^[0-9a-z-.]+$`).MatchString(value) {
-			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", value)
-		}
-		if regexp.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(value) {
-			return fmt.Errorf("%q must not be formatted as an IP address", value)
-		}
-		if strings.HasPrefix(value, `.`) {
-			return fmt.Errorf("%q cannot start with a period", value)
-		}
-		if strings.HasSuffix(value, `.`) {
-			return fmt.Errorf("%q cannot end with a period", value)
-		}
-		if strings.Contains(value, `..`) {
-			return fmt.Errorf("%q can be only one period between labels", value)
-		}
-	} else {
-		if len(value) > 255 {
-			return fmt.Errorf("%q must contain less than 256 characters", value)
-		}
-		if !regexp.MustCompile(`^[0-9a-zA-Z-._]+$`).MatchString(value) {
-			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", value)
-		}
-	}
-	return nil
-}
+				if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
+					grantee.URI = aws.String(v)
+				}
 
-func grantHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
+				grant := types.Grant{
+					Grantee:    grantee,
+					Permission: types.Permission(permission),
+				}
 
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["type"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["uri"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if p, ok := m["permissions"]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func transitionHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["date"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["days"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["storage_class"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func rulesHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["prefix"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["status"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", destinationHash(v[0])))
-	}
-	if v, ok := m["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", sourceSelectionCriteriaHash(v[0])))
-	}
-	if v, ok := m["priority"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
-
-		if v, ok := m["delete_marker_replication_status"]; ok && v.(string) == s3.DeleteMarkerReplicationStatusEnabled {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func replicationRuleFilterHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["prefix"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["tags"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", tftags.New(v).Hash()))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func destinationHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["bucket"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["storage_class"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["replica_kms_key_id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["account"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", accessControlTranslationHash(v[0])))
-	}
-	if v, ok := m["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", replicationTimeHash(v[0])))
-	}
-	if v, ok := m["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", metricsHash(v[0])))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func accessControlTranslationHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["owner"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func metricsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["minutes"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["status"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func replicationTimeHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["minutes"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["status"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func sourceSelectionCriteriaHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", sourceSseKmsObjectsHash(v[0])))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func sourceSseKmsObjectsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["enabled"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-type S3Website struct {
-	Endpoint, Domain string
-}
-
-//
-// S3 Object Lock functions.
-//
-
-func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) ([]interface{}, error) {
-	resp, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetObjectLockConfiguration(&s3.GetObjectLockConfigurationInput{
-			Bucket: aws.String(bucket),
-		})
-	})
-	if err != nil {
-		// Certain S3 implementations do not include this API
-		if tfawserr.ErrMessageContains(err, "MethodNotAllowed", "") {
-			return nil, nil
-		}
-
-		if tfawserr.ErrMessageContains(err, "ObjectLockConfigurationNotFoundError", "") {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return flattenS3ObjectLockConfiguration(resp.(*s3.GetObjectLockConfigurationOutput).ObjectLockConfiguration), nil
-}
-
-func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfiguration {
-	if len(vConf) == 0 || vConf[0] == nil {
-		return nil
-	}
-
-	mConf := vConf[0].(map[string]interface{})
-
-	conf := &s3.ObjectLockConfiguration{}
-
-	if vObjectLockEnabled, ok := mConf["object_lock_enabled"].(string); ok && vObjectLockEnabled != "" {
-		conf.ObjectLockEnabled = aws.String(vObjectLockEnabled)
-	}
-
-	if vRule, ok := mConf["rule"].([]interface{}); ok && len(vRule) > 0 {
-		mRule := vRule[0].(map[string]interface{})
-
-		if vDefaultRetention, ok := mRule["default_retention"].([]interface{}); ok && len(vDefaultRetention) > 0 && vDefaultRetention[0] != nil {
-			mDefaultRetention := vDefaultRetention[0].(map[string]interface{})
-
-			conf.Rule = &s3.ObjectLockRule{
-				DefaultRetention: &s3.DefaultRetention{},
-			}
-
-			if vMode, ok := mDefaultRetention["mode"].(string); ok && vMode != "" {
-				conf.Rule.DefaultRetention.Mode = aws.String(vMode)
-			}
-			if vDays, ok := mDefaultRetention["days"].(int); ok && vDays > 0 {
-				conf.Rule.DefaultRetention.Days = aws.Int64(int64(vDays))
-			}
-			if vYears, ok := mDefaultRetention["years"].(int); ok && vYears > 0 {
-				conf.Rule.DefaultRetention.Years = aws.Int64(int64(vYears))
+				grants = append(grants, grant)
 			}
 		}
 	}
 
-	return conf
+	return grants
 }
 
-func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {
-	if conf == nil {
-		return []interface{}{}
+func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []any {
+	if len(apiObject.Grants) == 0 {
+		return []any{}
 	}
 
-	mConf := map[string]interface{}{
-		"object_lock_enabled": aws.StringValue(conf.ObjectLockEnabled),
-	}
-
-	if conf.Rule != nil && conf.Rule.DefaultRetention != nil {
-		mRule := map[string]interface{}{
-			"default_retention": []interface{}{
-				map[string]interface{}{
-					"mode":  aws.StringValue(conf.Rule.DefaultRetention.Mode),
-					"days":  int(aws.Int64Value(conf.Rule.DefaultRetention.Days)),
-					"years": int(aws.Int64Value(conf.Rule.DefaultRetention.Years)),
-				},
-			},
-		}
-
-		mConf["rule"] = []interface{}{mRule}
-	}
-
-	return []interface{}{mConf}
-}
-
-func flattenGrants(ap *s3.GetBucketAclOutput) []interface{} {
-	//if ACL grants contains bucket owner FULL_CONTROL only - it is default "private" acl
-	if len(ap.Grants) == 1 && aws.StringValue(ap.Grants[0].Grantee.ID) == aws.StringValue(ap.Owner.ID) &&
-		aws.StringValue(ap.Grants[0].Permission) == s3.PermissionFullControl {
-		return nil
-	}
-
-	getGrant := func(grants []interface{}, grantee map[string]interface{}) (interface{}, bool) {
-		for _, pg := range grants {
-			pgt := pg.(map[string]interface{})
-			if pgt["type"] == grantee["type"] && pgt["id"] == grantee["id"] && pgt["uri"] == grantee["uri"] &&
-				pgt["permissions"].(*schema.Set).Len() > 0 {
-				return pg, true
+	getGrant := func(grants []any, grantee map[string]any) (any, bool) {
+		for _, grant := range grants {
+			tfMap := grant.(map[string]any)
+			if tfMap[names.AttrType] == grantee[names.AttrType] && tfMap[names.AttrID] == grantee[names.AttrID] && tfMap[names.AttrURI] == grantee[names.AttrURI] && tfMap[names.AttrPermissions].(*schema.Set).Len() > 0 {
+				return grant, true
 			}
 		}
 		return nil, false
 	}
 
-	grants := make([]interface{}, 0, len(ap.Grants))
-	for _, granteeObject := range ap.Grants {
-		grantee := make(map[string]interface{})
-		grantee["type"] = aws.StringValue(granteeObject.Grantee.Type)
+	results := make([]any, 0, len(apiObject.Grants))
 
-		if granteeObject.Grantee.ID != nil {
-			grantee["id"] = aws.StringValue(granteeObject.Grantee.ID)
+	for _, apiObject := range apiObject.Grants {
+		grantee := apiObject.Grantee
+
+		m := map[string]any{
+			names.AttrType: grantee.Type,
 		}
-		if granteeObject.Grantee.URI != nil {
-			grantee["uri"] = aws.StringValue(granteeObject.Grantee.URI)
+
+		if grantee.ID != nil {
+			m[names.AttrID] = aws.ToString(grantee.ID)
 		}
-		if pg, ok := getGrant(grants, grantee); ok {
-			pg.(map[string]interface{})["permissions"].(*schema.Set).Add(aws.StringValue(granteeObject.Permission))
+
+		if grantee.URI != nil {
+			m[names.AttrURI] = aws.ToString(grantee.URI)
+		}
+
+		if v, ok := getGrant(results, m); ok {
+			v.(map[string]any)[names.AttrPermissions].(*schema.Set).Add(string(apiObject.Permission))
 		} else {
-			grantee["permissions"] = schema.NewSet(schema.HashString, []interface{}{aws.StringValue(granteeObject.Permission)})
-			grants = append(grants, grantee)
+			m[names.AttrPermissions] = schema.NewSet(schema.HashString, []any{string(apiObject.Permission)})
+			results = append(results, m)
 		}
 	}
 
-	return grants
+	return results
+}
+
+//
+// Bucket Logging.
+//
+
+func flattenBucketLoggingEnabled(apiObject *types.LoggingEnabled) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := make(map[string]any)
+
+	if apiObject.TargetBucket != nil {
+		m["target_bucket"] = aws.ToString(apiObject.TargetBucket)
+	}
+
+	if apiObject.TargetPrefix != nil {
+		m["target_prefix"] = aws.ToString(apiObject.TargetPrefix)
+	}
+
+	return []any{m}
+}
+
+//
+// Bucket Lifecycle Configuration.
+//
+
+func expandBucketLifecycleRules(ctx context.Context, tfList []any) []types.LifecycleRule {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	var apiObjects []types.LifecycleRule
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.LifecycleRule{}
+
+		if v, ok := tfMap["abort_incomplete_multipart_upload_days"].(int); ok && v > 0 {
+			apiObject.AbortIncompleteMultipartUpload = &types.AbortIncompleteMultipartUpload{
+				DaysAfterInitiation: aws.Int32(int32(v)),
+			}
+		}
+
+		if v, ok := tfMap["expiration"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Expiration = expandBucketLifecycleExpiration(v)
+		}
+
+		var filter *types.LifecycleRuleFilter
+		prefix := tfMap[names.AttrPrefix].(string)
+		if tags := svcTags(tftags.New(ctx, tfMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
+			filter = &types.LifecycleRuleFilter{
+				And: &types.LifecycleRuleAndOperator{
+					Prefix: aws.String(prefix),
+					Tags:   tags,
+				},
+			}
+		} else {
+			filter = &types.LifecycleRuleFilter{
+				Prefix: aws.String(prefix),
+			}
+		}
+		apiObject.Filter = filter
+
+		if v, ok := tfMap[names.AttrID].(string); ok {
+			apiObject.ID = aws.String(v)
+		} else {
+			apiObject.ID = aws.String(sdkid.PrefixedUniqueId("tf-s3-lifecycle-"))
+		}
+
+		if v, ok := tfMap["noncurrent_version_expiration"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.NoncurrentVersionExpiration = expandBucketNoncurrentVersionExpiration(v[0].(map[string]any))
+		}
+
+		if v, ok := tfMap["noncurrent_version_transition"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.NoncurrentVersionTransitions = expandBucketNoncurrentVersionTransition(v.List())
+		}
+
+		if v, ok := tfMap[names.AttrEnabled].(bool); ok && v {
+			apiObject.Status = types.ExpirationStatusEnabled
+		} else {
+			apiObject.Status = types.ExpirationStatusDisabled
+		}
+
+		if v, ok := tfMap["transition"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.Transitions = expandBucketTransitions(v.List())
+		}
+
+		// As a lifecycle rule requires 1 or more transition/expiration actions,
+		// we explicitly pass a default ExpiredObjectDeleteMarker value to be able to create
+		// the rule while keeping the policy unaffected if the conditions are not met.
+		if apiObject.AbortIncompleteMultipartUpload == nil && apiObject.Expiration == nil && apiObject.NoncurrentVersionExpiration == nil && apiObject.NoncurrentVersionTransitions == nil && apiObject.Transitions == nil {
+			apiObject.Expiration = &types.LifecycleExpiration{ExpiredObjectDeleteMarker: aws.Bool(false)}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandBucketLifecycleExpiration(tfList []any) *types.LifecycleExpiration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObject := &types.LifecycleExpiration{}
+
+	if tfList[0] == nil {
+		return apiObject
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap["date"].(string); ok && v != "" {
+		t, _ := time.Parse(time.RFC3339, v+"T00:00:00Z")
+		apiObject.Date = aws.Time(t)
+	} else if v, ok := tfMap["days"].(int); ok && v > 0 {
+		apiObject.Days = aws.Int32(int32(v))
+	} else if v, ok := tfMap["expired_object_delete_marker"].(bool); ok {
+		apiObject.ExpiredObjectDeleteMarker = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandBucketNoncurrentVersionExpiration(tfMap map[string]any) *types.NoncurrentVersionExpiration {
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	var apiObject *types.NoncurrentVersionExpiration
+
+	if v, ok := tfMap["days"].(int); ok {
+		apiObject = &types.NoncurrentVersionExpiration{
+			NoncurrentDays: aws.Int32(int32(v)),
+		}
+	}
+
+	return apiObject
+}
+
+func expandBucketNoncurrentVersionTransition(tfList []any) []types.NoncurrentVersionTransition {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	var apiObjects []types.NoncurrentVersionTransition
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.NoncurrentVersionTransition{}
+
+		if v, ok := tfMap["days"].(int); ok {
+			apiObject.NoncurrentDays = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
+			apiObject.StorageClass = types.TransitionStorageClass(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandBucketTransitions(tfList []any) []types.Transition {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	var apiObjects []types.Transition
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.Transition{}
+
+		if v, ok := tfMap["date"].(string); ok && v != "" {
+			t, _ := time.Parse(time.RFC3339, v+"T00:00:00Z")
+			apiObject.Date = aws.Time(t)
+		} else if v, ok := tfMap["days"].(int); ok && v >= 0 {
+			apiObject.Days = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
+			apiObject.StorageClass = types.TransitionStorageClass(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenBucketLifecycleRules(ctx context.Context, apiObjects []types.LifecycleRule) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+
+		if apiObject := apiObject.AbortIncompleteMultipartUpload; apiObject != nil {
+			if v := apiObject.DaysAfterInitiation; v != nil {
+				tfMap["abort_incomplete_multipart_upload_days"] = aws.ToInt32(v)
+			}
+		}
+
+		if v := apiObject.Expiration; v != nil {
+			tfMap["expiration"] = flattenBucketLifecycleExpiration(v)
+		}
+
+		if apiObject := apiObject.Filter; apiObject != nil {
+			if v := apiObject.And; v != nil {
+				if v := v.Prefix; v != nil {
+					tfMap[names.AttrPrefix] = aws.ToString(v)
+				}
+
+				if v := v.Tags; v != nil {
+					tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
+				}
+			}
+
+			if v := apiObject.Prefix; v != nil {
+				tfMap[names.AttrPrefix] = aws.ToString(v)
+			}
+
+			if v := apiObject.Tag; v != nil {
+				tfMap[names.AttrTags] = keyValueTags(ctx, []types.Tag{*v}).IgnoreAWS().Map()
+			}
+		}
+
+		if v := apiObject.ID; v != nil {
+			tfMap[names.AttrID] = aws.ToString(v)
+		}
+
+		if v := apiObject.Prefix; v != nil {
+			tfMap[names.AttrPrefix] = aws.ToString(v)
+		}
+
+		tfMap[names.AttrEnabled] = apiObject.Status == types.ExpirationStatusEnabled
+
+		if apiObject := apiObject.NoncurrentVersionExpiration; apiObject != nil {
+			m := make(map[string]any)
+
+			if v := apiObject.NoncurrentDays; v != nil {
+				m["days"] = aws.ToInt32(v)
+			}
+
+			tfMap["noncurrent_version_expiration"] = []any{m}
+		}
+
+		if v := apiObject.NoncurrentVersionTransitions; v != nil {
+			tfMap["noncurrent_version_transition"] = flattenBucketNoncurrentVersionTransitions(v)
+		}
+
+		if v := apiObject.Transitions; v != nil {
+			tfMap["transition"] = flattenBucketTransitions(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenBucketLifecycleExpiration(apiObject *types.LifecycleExpiration) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.Date; v != nil {
+		tfMap["date"] = v.Format("2006-01-02")
+	}
+
+	if v := apiObject.Days; v != nil {
+		tfMap["days"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.ExpiredObjectDeleteMarker; v != nil {
+		tfMap["expired_object_delete_marker"] = aws.ToBool(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenBucketNoncurrentVersionTransitions(apiObjects []types.NoncurrentVersionTransition) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrStorageClass: apiObject.StorageClass,
+		}
+
+		if v := apiObject.NoncurrentDays; v != nil {
+			tfMap["days"] = aws.ToInt32(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenBucketTransitions(apiObjects []types.Transition) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrStorageClass: apiObject.StorageClass,
+		}
+
+		if v := apiObject.Date; v != nil {
+			tfMap["date"] = v.Format("2006-01-02")
+		}
+
+		if v := apiObject.Days; v != nil {
+			tfMap["days"] = aws.ToInt32(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+//
+// Bucket Replication Configuration.
+//
+
+func expandBucketReplicationConfiguration(ctx context.Context, tfList []any) *types.ReplicationConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicationConfiguration{}
+
+	if v, ok := tfMap[names.AttrRole].(string); ok {
+		apiObject.Role = aws.String(v)
+	}
+
+	if v, ok := tfMap["rules"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Rules = expandBucketReplicationRules(ctx, v.List())
+	}
+
+	return apiObject
+}
+
+func expandBucketReplicationRules(ctx context.Context, tfList []any) []types.ReplicationRule {
+	var rules []types.ReplicationRule
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.ReplicationRule{}
+
+		if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+			apiObject.Status = types.ReplicationRuleStatus(v)
+		} else {
+			continue
+		}
+
+		if v, ok := tfMap[names.AttrDestination].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Destination = expandBucketDestination(v)
+		} else {
+			apiObject.Destination = &types.Destination{}
+		}
+
+		if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
+			apiObject.ID = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_selection_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.SourceSelectionCriteria = expandBucketSourceSelectionCriteria(v)
+		}
+
+		if v, ok := tfMap[names.AttrFilter].([]any); ok && len(v) > 0 && v[0] != nil {
+			// XML schema V2.
+			tfFilterMap := v[0].(map[string]any)
+			var filter *types.ReplicationRuleFilter
+
+			if tags := svcTags(tftags.New(ctx, tfFilterMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
+				filter = &types.ReplicationRuleFilter{
+					And: &types.ReplicationRuleAndOperator{
+						Prefix: aws.String(tfFilterMap[names.AttrPrefix].(string)),
+						Tags:   tags,
+					},
+				}
+			} else {
+				filter = &types.ReplicationRuleFilter{
+					Prefix: aws.String(tfFilterMap[names.AttrPrefix].(string)),
+				}
+			}
+
+			apiObject.Filter = filter
+			apiObject.Priority = aws.Int32(int32(tfMap[names.AttrPriority].(int)))
+
+			if v, ok := tfMap["delete_marker_replication_status"].(string); ok && v != "" {
+				apiObject.DeleteMarkerReplication = &types.DeleteMarkerReplication{
+					Status: types.DeleteMarkerReplicationStatus(v),
+				}
+			} else {
+				apiObject.DeleteMarkerReplication = &types.DeleteMarkerReplication{
+					Status: types.DeleteMarkerReplicationStatusDisabled,
+				}
+			}
+		} else {
+			// XML schema V1.
+			apiObject.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
+		}
+
+		rules = append(rules, apiObject)
+	}
+
+	return rules
+}
+
+func expandBucketDestination(tfList []any) *types.Destination {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.Destination{}
+
+	if v, ok := tfMap[names.AttrBucket].(string); ok {
+		apiObject.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
+		apiObject.StorageClass = types.StorageClass(v)
+	}
+
+	if v, ok := tfMap["replica_kms_key_id"].(string); ok && v != "" {
+		apiObject.EncryptionConfiguration = &types.EncryptionConfiguration{
+			ReplicaKmsKeyID: aws.String(v),
+		}
+	}
+
+	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
+		apiObject.Account = aws.String(v)
+	}
+
+	if v, ok := tfMap["access_control_translation"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		apiObject.AccessControlTranslation = &types.AccessControlTranslation{
+			Owner: types.OwnerOverride(tfMap[names.AttrOwner].(string)),
+		}
+	}
+
+	if v, ok := tfMap["metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		apiObject.Metrics = &types.Metrics{
+			EventThreshold: &types.ReplicationTimeValue{
+				Minutes: aws.Int32(int32(tfMap["minutes"].(int))),
+			},
+			Status: types.MetricsStatus(tfMap[names.AttrStatus].(string)),
+		}
+	}
+
+	if v, ok := tfMap["replication_time"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		apiObject.ReplicationTime = &types.ReplicationTime{
+			Status: types.ReplicationTimeStatus(tfMap[names.AttrStatus].(string)),
+			Time: &types.ReplicationTimeValue{
+				Minutes: aws.Int32(int32(tfMap["minutes"].(int))),
+			},
+		}
+	}
+
+	return apiObject
+}
+
+func expandBucketSourceSelectionCriteria(tfList []any) *types.SourceSelectionCriteria {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.SourceSelectionCriteria{}
+
+	if v, ok := tfMap["sse_kms_encrypted_objects"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+		kmsEncryptedObjects := &types.SseKmsEncryptedObjects{}
+
+		if tfMap[names.AttrEnabled].(bool) {
+			kmsEncryptedObjects.Status = types.SseKmsEncryptedObjectsStatusEnabled
+		} else {
+			kmsEncryptedObjects.Status = types.SseKmsEncryptedObjectsStatusDisabled
+		}
+
+		apiObject.SseKmsEncryptedObjects = kmsEncryptedObjects
+	}
+
+	return apiObject
+}
+
+func flattenBucketReplicationConfiguration(ctx context.Context, apiObject *types.ReplicationConfiguration) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.Role; v != nil {
+		tfMap[names.AttrRole] = aws.ToString(v)
+	}
+
+	if v := apiObject.Rules; len(v) > 0 {
+		tfMap["rules"] = flattenBucketReplicationRules(ctx, v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenBucketReplicationRules(ctx context.Context, apiObjects []types.ReplicationRule) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrStatus: apiObject.Status,
+		}
+
+		if apiObject := apiObject.DeleteMarkerReplication; apiObject != nil {
+			if apiObject.Status == types.DeleteMarkerReplicationStatusEnabled {
+				tfMap["delete_marker_replication_status"] = apiObject.Status
+			}
+		}
+
+		if apiObject.Destination != nil {
+			tfMap[names.AttrDestination] = flattenBucketDestination(apiObject.Destination)
+		}
+
+		if apiObject.Filter != nil {
+			tfMap[names.AttrFilter] = flattenBucketReplicationRuleFilter(ctx, apiObject.Filter)
+		}
+
+		if apiObject.ID != nil {
+			tfMap[names.AttrID] = aws.ToString(apiObject.ID)
+		}
+
+		if apiObject.Prefix != nil {
+			tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
+		}
+
+		if apiObject.Priority != nil {
+			tfMap[names.AttrPriority] = aws.ToInt32(apiObject.Priority)
+		}
+
+		if apiObject.SourceSelectionCriteria != nil {
+			tfMap["source_selection_criteria"] = flattenBucketSourceSelectionCriteria(apiObject.SourceSelectionCriteria)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenBucketDestination(apiObject *types.Destination) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStorageClass: apiObject.StorageClass,
+	}
+
+	if apiObject := apiObject.AccessControlTranslation; apiObject != nil {
+		m := map[string]any{
+			names.AttrOwner: apiObject.Owner,
+		}
+
+		tfMap["access_control_translation"] = []any{m}
+	}
+
+	if apiObject.Account != nil {
+		tfMap[names.AttrAccountID] = aws.ToString(apiObject.Account)
+	}
+
+	if apiObject.Bucket != nil {
+		tfMap[names.AttrBucket] = aws.ToString(apiObject.Bucket)
+	}
+
+	if apiObject := apiObject.EncryptionConfiguration; apiObject != nil {
+		if apiObject.ReplicaKmsKeyID != nil {
+			tfMap["replica_kms_key_id"] = aws.ToString(apiObject.ReplicaKmsKeyID)
+		}
+	}
+
+	if apiObject := apiObject.Metrics; apiObject != nil {
+		m := map[string]any{
+			names.AttrStatus: apiObject.Status,
+		}
+
+		if apiObject.EventThreshold != nil {
+			m["minutes"] = aws.ToInt32(apiObject.EventThreshold.Minutes)
+		}
+
+		tfMap["metrics"] = []any{m}
+	}
+
+	if apiObject := apiObject.ReplicationTime; apiObject != nil {
+		m := map[string]any{
+			"minutes":        aws.ToInt32(apiObject.Time.Minutes),
+			names.AttrStatus: apiObject.Status,
+		}
+
+		tfMap["replication_time"] = []any{m}
+	}
+
+	return []any{tfMap}
+}
+
+func flattenBucketReplicationRuleFilter(ctx context.Context, apiObject *types.ReplicationRuleFilter) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.And; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v.Prefix)
+		tfMap[names.AttrTags] = keyValueTags(ctx, v.Tags).IgnoreAWS().Map()
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	if v := apiObject.Tag; v != nil {
+		tfMap[names.AttrTags] = keyValueTags(ctx, []types.Tag{*v}).IgnoreAWS().Map()
+	}
+
+	return []any{tfMap}
+}
+
+func flattenBucketSourceSelectionCriteria(apiObject *types.SourceSelectionCriteria) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.SseKmsEncryptedObjects; v != nil {
+		tfMap["sse_kms_encrypted_objects"] = flattenBucketSSEKMSEncryptedObjects(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenBucketSSEKMSEncryptedObjects(apiObject *types.SseKmsEncryptedObjects) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	switch apiObject.Status {
+	case types.SseKmsEncryptedObjectsStatusEnabled:
+		tfMap[names.AttrEnabled] = true
+	case types.SseKmsEncryptedObjectsStatusDisabled:
+		tfMap[names.AttrEnabled] = false
+	}
+
+	return []any{tfMap}
+}
+
+//
+// Bucket Server-side Encryption Configuration.
+//
+
+func expandBucketServerSideEncryptionRules(l []any) []types.ServerSideEncryptionRule {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	var rules []types.ServerSideEncryptionRule
+
+	if l, ok := tfMap[names.AttrRule].([]any); ok && len(l) > 0 {
+		for _, tfMapRaw := range l {
+			tfMap, ok := tfMapRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			rule := types.ServerSideEncryptionRule{}
+
+			if v, ok := tfMap["apply_server_side_encryption_by_default"].([]any); ok && len(v) > 0 && v[0] != nil {
+				rule.ApplyServerSideEncryptionByDefault = expandBucketServerSideEncryptionByDefault(v)
+			}
+
+			if v, ok := tfMap["bucket_key_enabled"].(bool); ok {
+				rule.BucketKeyEnabled = aws.Bool(v)
+			}
+
+			rules = append(rules, rule)
+		}
+	}
+
+	return rules
+}
+
+func expandBucketServerSideEncryptionByDefault(l []any) *types.ServerSideEncryptionByDefault {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	sse := &types.ServerSideEncryptionByDefault{}
+
+	if v, ok := tfMap["kms_master_key_id"].(string); ok && v != "" {
+		sse.KMSMasterKeyID = aws.String(v)
+	}
+
+	if v, ok := tfMap["sse_algorithm"].(string); ok && v != "" {
+		sse.SSEAlgorithm = types.ServerSideEncryption(v)
+	}
+
+	return sse
+}
+
+func flattenBucketServerSideEncryptionConfiguration(apiObject *types.ServerSideEncryptionConfiguration) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrRule: flattenBucketServerSideEncryptionRules(apiObject.Rules),
+	}
+
+	return []any{m}
+}
+
+func flattenBucketServerSideEncryptionRules(rules []types.ServerSideEncryptionRule) []any {
+	var results []any
+
+	for _, rule := range rules {
+		m := make(map[string]any)
+
+		if apiObject := rule.ApplyServerSideEncryptionByDefault; apiObject != nil {
+			m["apply_server_side_encryption_by_default"] = []any{
+				map[string]any{
+					"kms_master_key_id": aws.ToString(apiObject.KMSMasterKeyID),
+					"sse_algorithm":     apiObject.SSEAlgorithm,
+				},
+			}
+		}
+
+		if rule.BucketKeyEnabled != nil {
+			m["bucket_key_enabled"] = aws.ToBool(rule.BucketKeyEnabled)
+		}
+
+		results = append(results, m)
+	}
+
+	return results
+}
+
+//
+// Bucket Object Lock Configuration.
+//
+
+func expandBucketObjectLockConfiguration(l []any) *types.ObjectLockConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ObjectLockConfiguration{}
+
+	if v, ok := tfMap["object_lock_enabled"].(string); ok && v != "" {
+		apiObject.ObjectLockEnabled = types.ObjectLockEnabled(v)
+	}
+
+	if v, ok := tfMap[names.AttrRule].([]any); ok && len(v) > 0 {
+		tfMap := v[0].(map[string]any)
+
+		if v, ok := tfMap["default_retention"].([]any); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]any)
+
+			apiObject.Rule = &types.ObjectLockRule{
+				DefaultRetention: &types.DefaultRetention{},
+			}
+
+			if v, ok := tfMap["days"].(int); ok && v > 0 {
+				apiObject.Rule.DefaultRetention.Days = aws.Int32(int32(v))
+			}
+			if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
+				apiObject.Rule.DefaultRetention.Mode = types.ObjectLockRetentionMode(v)
+			}
+			if v, ok := tfMap["years"].(int); ok && v > 0 {
+				apiObject.Rule.DefaultRetention.Years = aws.Int32(int32(v))
+			}
+		}
+	}
+
+	return apiObject
+}
+
+func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"object_lock_enabled": apiObject.ObjectLockEnabled,
+	}
+
+	if apiObject.Rule != nil && apiObject.Rule.DefaultRetention != nil {
+		apiObject := apiObject.Rule.DefaultRetention
+		tfMap := map[string]any{
+			"default_retention": []any{
+				map[string]any{
+					"days":         aws.ToInt32(apiObject.Days),
+					names.AttrMode: apiObject.Mode,
+					"years":        aws.ToInt32(apiObject.Years),
+				},
+			},
+		}
+
+		m[names.AttrRule] = []any{tfMap}
+	}
+
+	return []any{m}
+}
+
+// validBucketName validates any S3 bucket name that is not inside the us-east-1 region.
+// Buckets outside of this region have to be DNS-compliant. After the same restrictions are
+// applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
+func validBucketName(bucket, region string, ns types.BucketNamespace) error {
+	if region != endpoints.UsEast1RegionID {
+		if (len(bucket) < 3) || (len(bucket) > 63) {
+			return fmt.Errorf("%q must contain from 3 to 63 characters", bucket)
+		}
+		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(bucket) {
+			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", bucket)
+		}
+		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(bucket) {
+			return fmt.Errorf("%q must not be formatted as an IP address", bucket)
+		}
+		if strings.HasPrefix(bucket, `.`) {
+			return fmt.Errorf("%q cannot start with a period", bucket)
+		}
+		if strings.HasSuffix(bucket, `.`) {
+			return fmt.Errorf("%q cannot end with a period", bucket)
+		}
+		if strings.Contains(bucket, `..`) {
+			return fmt.Errorf("%q can be only one period between labels", bucket)
+		}
+	} else {
+		if len(bucket) > 255 {
+			return fmt.Errorf("%q must contain less than 256 characters", bucket)
+		}
+		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(bucket) {
+			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", bucket)
+		}
+	}
+
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		if !accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is not an account-regional namespace bucket", bucket)
+		}
+	default:
+		if accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is an account-regional namespace bucket", bucket)
+		}
+	}
+
+	return nil
+}
+
+func validBucketLifecycleTimestamp(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+	_, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", value))
+	if err != nil {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be parsed as RFC3339 Timestamp Format", value))
+	}
+
+	return
 }

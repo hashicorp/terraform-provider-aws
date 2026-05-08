@@ -28,17 +28,22 @@ output "description" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the application
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the application
 
-* `id` - The name of the application
-* `arn` - The Amazon Resource Name (ARN) of the application.
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - Name of the application
+* `arn` - ARN of the application.
 * `description` - Short description of the application
 
 Application version lifecycle (`appversion_lifecycle`) supports the nested attribute containing.
 
-* `service_role` - The ARN of an IAM service role under which the application version is deleted.  Elastic Beanstalk must have permission to assume this role.
-* `max_count` - The maximum number of application versions to retain.
-* `max_age_in_days` - The number of days to retain an application version.
+* `service_role` - ARN of an IAM service role under which the application version is deleted.  Elastic Beanstalk must have permission to assume this role.
+* `max_count` - Maximum number of application versions to retain.
+* `max_age_in_days` - Number of days to retain an application version.
 * `delete_source_from_s3` - Specifies whether delete a version's source bundle from S3 when the application version is deleted.

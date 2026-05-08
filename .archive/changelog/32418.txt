@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sagemaker_endpoint: Make `deployment_config.blue_green_update_policy` optional
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_endpoint: Add `deployment_config.rolling_update_policy` argument
+```

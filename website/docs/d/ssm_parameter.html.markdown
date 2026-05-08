@@ -1,9 +1,9 @@
 ---
-subcategory: "SSM"
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_parameter"
 description: |-
-  Provides a SSM Parameter datasource
+  Provides a SSM Parameter Data Source
 ---
 
 # Data Source: aws_ssm_parameter
@@ -12,31 +12,42 @@ Provides an SSM Parameter data source.
 
 ## Example Usage
 
+### Default
+
 ```terraform
 data "aws_ssm_parameter" "foo" {
   name = "foo"
 }
 ```
 
+### With version
+
+```terraform
+data "aws_ssm_parameter" "foo" {
+  name = "foo:3"
+}
+```
+
 ~> **Note:** The unencrypted value of a SecureString will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-
 ~> **Note:** The data source is currently following the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For type `StringList`, we can use the built-in [split()](https://www.terraform.io/docs/configuration/functions/split.html) function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
-
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Required) The name of the parameter.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the parameter. To query by parameter version use `name:version` (e.g., `foo:3`).
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the parameter.
-* `name` - The name of the parameter.
-* `type` - The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
-* `value` - The value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
-* `version` - The version of the parameter.
+* `arn` - ARN of the parameter.
+* `name` - Name of the parameter.
+* `type` - Type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
+* `value` - Value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
+* `insecure_value` - Value of the parameter. **Use caution:** This value is never marked as sensitive.
+* `version` - Version of the parameter.

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Support `upgrade` as a valid value in `enabled_cloudwatch_logs_exports`
+```

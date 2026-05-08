@@ -1,47 +1,52 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package securityhub
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	// Associated is the member status naming for regions that do not support Organizations
-	SecurityHubMemberStatusAssociated = "Associated"
-	SecurityHubMemberStatusCreated    = "Created"
-	SecurityHubMemberStatusInvited    = "Invited"
-	SecurityHubMemberStatusEnabled    = "Enabled"
-	SecurityHubMemberStatusRemoved    = "Removed"
-	SecurityHubMemberStatusResigned   = "Resigned"
-	SecurityHubMemberStatusDeleted    = "Deleted"
-)
-
-func ResourceMember() *schema.Resource {
+// @SDKResource("aws_securityhub_member", name="Member")
+// @IdentityAttribute("member_account_id", resourceAttributeName="account_id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.Member")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
+func resourceMember() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMemberCreate,
-		Read:   resourceMemberRead,
-		Delete: resourceMemberDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		CreateWithoutTimeout: resourceMemberCreate,
+		ReadWithoutTimeout:   resourceMemberRead,
+		DeleteWithoutTimeout: resourceMemberDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"invite": {
@@ -61,112 +66,180 @@ func ResourceMember() *schema.Resource {
 	}
 }
 
-func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
-	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
+func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	resp, err := conn.CreateMembers(&securityhub.CreateMembersInput{
-		AccountDetails: []*securityhub.AccountDetails{
-			{
-				AccountId: aws.String(d.Get("account_id").(string)),
-				Email:     aws.String(d.Get("email").(string)),
-			},
-		},
-	})
+	accountID := d.Get(names.AttrAccountID).(string)
+	input := securityhub.CreateMembersInput{
+		AccountDetails: []types.AccountDetails{{
+			AccountId: aws.String(accountID),
+		}},
+	}
+
+	if v, ok := d.GetOk(names.AttrEmail); ok {
+		input.AccountDetails[0].Email = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateMembers(ctx, &input)
+
+	if err == nil && output != nil {
+		err = unprocessedAccountsError(output.UnprocessedAccounts)
+	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating Security Hub member %s: %s", d.Get("account_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub Member (%s): %s", accountID, err)
 	}
 
-	if len(resp.UnprocessedAccounts) > 0 {
-		return fmt.Errorf("Error creating Security Hub member %s: UnprocessedAccounts is not empty", d.Get("account_id").(string))
-	}
-
-	d.SetId(d.Get("account_id").(string))
+	d.SetId(accountID)
 
 	if d.Get("invite").(bool) {
-		log.Printf("[INFO] Inviting Security Hub member %s", d.Id())
-		iresp, err := conn.InviteMembers(&securityhub.InviteMembersInput{
-			AccountIds: []*string{aws.String(d.Get("account_id").(string))},
-		})
+		input := securityhub.InviteMembersInput{
+			AccountIds: []string{d.Id()},
+		}
+
+		output, err := conn.InviteMembers(ctx, &input)
+
+		if err == nil && output != nil {
+			err = unprocessedAccountsError(output.UnprocessedAccounts)
+		}
 
 		if err != nil {
-			return fmt.Errorf("Error inviting Security Hub member %s: %s", d.Id(), err)
-		}
-
-		if len(iresp.UnprocessedAccounts) > 0 {
-			return fmt.Errorf("Error inviting Security Hub member %s: UnprocessedAccounts is not empty", d.Id())
+			return sdkdiag.AppendErrorf(diags, "inviting Security Hub Member (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceMemberRead(d, meta)
+	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
-func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	log.Printf("[DEBUG] Reading Security Hub member %s", d.Id())
-	resp, err := conn.GetMembers(&securityhub.GetMembersInput{
-		AccountIds: []*string{aws.String(d.Id())},
-	})
+	member, err := findMemberByAccountID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Security Hub Member (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Member (%s): %s", d.Id(), err)
 	}
 
-	if len(resp.Members) == 0 {
-		log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	d.Set(names.AttrAccountID, member.AccountId)
+	// Only set email if returned by AWS API.
+	// For organization members, email is optional and not returned.
+	if member.Email != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrEmail, member.Email)
 	}
-
-	member := resp.Members[0]
-
-	d.Set("account_id", member.AccountId)
-	d.Set("email", member.Email)
+	status := aws.ToString(member.MemberStatus)
+	// Don't recompute invite from member_status. The invite attribute is a create-time
+	// input parameter (ForceNew: true) that controls whether to send an invitation.
+	// It should not be derived from the API response, as this causes drift for
+	// organization members (status="Enabled" but invite=false).
+	// The invite value from the configuration is already in state and should be preserved.
+	d.Set("invite", d.Get("invite"))
 	d.Set("master_id", member.MasterId)
-
-	status := aws.StringValue(member.MemberStatus)
 	d.Set("member_status", status)
 
-	invited := status == SecurityHubMemberStatusInvited || status == SecurityHubMemberStatusEnabled || status == SecurityHubMemberStatusAssociated || status == SecurityHubMemberStatusResigned
-	d.Set("invite", invited)
-
-	return nil
+	return diags
 }
 
-func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
-		AccountIds: []*string{aws.String(d.Id())},
-	})
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	inputDis := securityhub.DisassociateMembersInput{
+		AccountIds: []string{d.Id()},
+	}
+	_, err := conn.DisassociateMembers(ctx, &inputDis)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "disassociating Security Hub Member (%s): %s", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Deleting Security Hub Member: %s", d.Id())
+	inputDel := securityhub.DeleteMembersInput{
+		AccountIds: []string{d.Id()},
+	}
+	output, err := conn.DeleteMembers(ctx, &inputDel)
+
+	if err == nil && output != nil {
+		err = unprocessedAccountsError(output.UnprocessedAccounts)
+	}
+
+	if retry.NotFound(err) {
+		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Member (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findMemberByAccountID(ctx context.Context, conn *securityhub.Client, accountID string) (*types.Member, error) {
+	input := securityhub.GetMembersInput{
+		AccountIds: []string{accountID},
+	}
+
+	return findMember(ctx, conn, &input)
+}
+
+func findMember(ctx context.Context, conn *securityhub.Client, input *securityhub.GetMembersInput) (*types.Member, error) {
+	output, err := findMembers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findMembers(ctx context.Context, conn *securityhub.Client, input *securityhub.GetMembersInput) ([]types.Member, error) {
+	output, err := conn.GetMembers(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") || tfawserr.ErrMessageContains(err, errCodeBadRequestException, "The request is rejected since no such resource found") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.Members, nil
+}
+
+func unprocessedAccountError(apiObject types.Result) error {
+	if apiObject.ProcessingResult == nil {
 		return nil
 	}
-	if err != nil {
-		return fmt.Errorf("Error disassociating Security Hub member %s: %w", d.Id(), err)
+
+	return errors.New(aws.ToString(apiObject.ProcessingResult))
+}
+
+func unprocessedAccountsError(apiObjects []types.Result) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		if err := unprocessedAccountError(apiObject); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.AccountId), err))
+		}
 	}
 
-	resp, err := conn.DeleteMembers(&securityhub.DeleteMembersInput{
-		AccountIds: []*string{aws.String(d.Id())},
-	})
-
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting Security Hub member %s: %w", d.Id(), err)
-	}
-
-	if len(resp.UnprocessedAccounts) > 0 {
-		return fmt.Errorf("Error deleting Security Hub member %s: UnprocessedAccounts is not empty", d.Get("account_id").(string))
-	}
-
-	return nil
+	return errors.Join(errs...)
 }

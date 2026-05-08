@@ -1,43 +1,48 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
-	"encoding/json"
+	"context"
+	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEventsBusPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
-	rstring := sdkacctest.RandString(5)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBusDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPolicyConfig(rstring),
+				Config: testAccBusPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(resourceName),
-					testAccBusPolicyDocument(resourceName),
+					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 			},
 			{
-				Config: testAccBusPolicyUpdateConfig(rstring),
+				Config: testAccBusPolicyConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(resourceName),
-					testAccBusPolicyDocument(resourceName),
+					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 			},
 			{
@@ -49,21 +54,60 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccEventsBusPolicy_disappears(t *testing.T) {
+func TestAccEventsBusPolicy_ignoreEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
-	rstring := sdkacctest.RandString(5)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBusDestroy,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPolicyConfig(rstring),
+				Config: testAccBusPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceBusPolicy(), resourceName),
+					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccBusPolicyDocument(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccBusPolicyConfig_newOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEventsBusPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusPolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,85 +115,95 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBusPolicyExists(pr string) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		eventBusResource, ok := state.RootModule().Resources[pr]
-		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
-		}
+func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	parentResourceName := "aws_cloudwatch_event_bus.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-		if eventBusResource.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusPolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBus(), parentResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-		eventBusName := eventBusResource.Primary.ID
+func testAccCheckBusPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
-		input := &eventbridge.DescribeEventBusInput{
-			Name: aws.String(eventBusName),
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_event_bus_policy" {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
-		describedEventBus, err := conn.DescribeEventBus(input)
+			_, err := tfevents.FindEventBusPolicyByName(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
-		}
-		if describedEventBus.Policy == nil || len(*describedEventBus.Policy) == 0 {
-			return fmt.Errorf("Not found: %s", pr)
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Event Bus Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccBusPolicyDocument(pr string) resource.TestCheckFunc {
+func testAccCheckBusPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		eventBusPolicyResource, ok := state.RootModule().Resources[pr]
+		rs, ok := state.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if eventBusPolicyResource.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
+
+		_, err := tfevents.FindEventBusPolicyByName(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+func testAccBusPolicyDocument(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		rs, ok := state.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		var eventBusPolicyResourcePolicyDocument map[string]interface{}
-		err := json.Unmarshal([]byte(eventBusPolicyResource.Primary.Attributes["policy"]), &eventBusPolicyResourcePolicyDocument)
-		if err != nil {
-			return fmt.Errorf("Parsing EventBridge bus policy for '%s' failed: %w", pr, err)
-		}
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
-		eventBusName := eventBusPolicyResource.Primary.ID
-
-		input := &eventbridge.DescribeEventBusInput{
-			Name: aws.String(eventBusName),
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
-		describedEventBus, err := conn.DescribeEventBus(input)
-		if err != nil {
-			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
-		}
-
-		var describedEventBusPolicy map[string]interface{}
-		err = json.Unmarshal([]byte(*describedEventBus.Policy), &describedEventBusPolicy)
+		policy, err := tfevents.FindEventBusPolicyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
-		}
-		if describedEventBus.Policy == nil || len(*describedEventBus.Policy) == 0 {
-			return fmt.Errorf("Not found: %s", pr)
+			return err
 		}
 
-		if !reflect.DeepEqual(describedEventBusPolicy, eventBusPolicyResourcePolicyDocument) {
-			return fmt.Errorf("EventBridge bus policy mismatch for '%s'", pr)
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(rs.Primary.Attributes[names.AttrPolicy], aws.ToString(policy)); err != nil || !equivalent {
+			return errors.New(`EventBridge Event Bus Policies not equivalent`)
 		}
 
 		return nil
 	}
 }
 
-func testAccBusPolicyConfig(name string) string {
+func testAccBusPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -177,10 +231,10 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.access.json
   event_bus_name = aws_cloudwatch_event_bus.test.name
 }
-`, name)
+`, rName)
 }
 
-func testAccBusPolicyUpdateConfig(name string) string {
+func testAccBusPolicyConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -221,5 +275,73 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.access.json
   event_bus_name = aws_cloudwatch_event_bus.test.name
 }
-`, name)
+`, rName)
+}
+
+func testAccBusPolicyConfig_order(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_bus_policy" "test" {
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+
+  policy = jsonencode({
+    Statement = [{
+      Sid = %[1]q
+      Action = [
+        "events:PutEvents",
+        "events:PutRule",
+        "events:ListRules",
+        "events:DescribeRule",
+      ]
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "ecs.amazonaws.com",
+        ]
+      }
+      Resource = [
+        aws_cloudwatch_event_bus.test.arn,
+      ]
+    }]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
+}
+
+func testAccBusPolicyConfig_newOrder(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_bus_policy" "test" {
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+
+  policy = jsonencode({
+    Statement = [{
+      Sid = %[1]q
+      Action = [
+        "events:PutRule",
+        "events:DescribeRule",
+        "events:PutEvents",
+        "events:ListRules",
+      ]
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "ecs.amazonaws.com",
+        ]
+      }
+      Resource = [
+        aws_cloudwatch_event_bus.test.arn,
+      ]
+    }]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
 }

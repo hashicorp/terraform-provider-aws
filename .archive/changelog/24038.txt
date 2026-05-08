@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_storagegateway_nfs_file_share: Add `bucket_region` and `vpc_endpoint_dns_name` arguments to support PrivateLink endpoints
+```

@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_securitylake_subscriber_notification: Deprecates `endpoint_id` in favor of `subscriber_endpoint`
+```
+
+```release-note:bug
+resource/aws_securitylake_subscriber_notification: Requires value for `configuration.https_notification_configuration.endpoint`
+```
+
+```release-note:enhancement
+resource/aws_securitylake_subscriber_notification: Better handles importing resource
+```
+
+```release-note:enhancement
+resource/aws_securitylake_subscriber_notification: Handles `configuration.https_notification_configuration.authorization_api_key_value` as sensitive value
+```
+
+```release-note:bug
+resource/aws_securitylake_subscriber_notification: No longer recreates resource when not needed
+```

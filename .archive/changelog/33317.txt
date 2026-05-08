@@ -1,0 +1,3 @@
+```release-note:note
+provider: Performance regression introduced in v5.14.0 should be largely mitigated
+```

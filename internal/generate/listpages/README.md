@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # listpages
 
 The `listpages` generator creates paginated variants of AWS Go SDK functions that return collections of objects where the SDK does not define them. It should typically be called using [`go generate`](https://golang.org/cmd/go/#hdr-Generate_Go_files_by_processing_source).
@@ -7,15 +10,17 @@ For example, the EC2 API defines both [`DescribeInstancesPages`](https://docs.aw
 The `listpages` executable is called as follows:
 
 ```console
-$ go run main.go -ListOps <function-name>[,<function-name>]
+$ go run main.go -ListOps <function-name>[,<function-name>] [<generated-lister-file>]
 ```
 
 * `<function-name>`: Name of a function to wrap
+* `<generated-lister-file>`: Name of the generated lister source file, defaults to `list_pages_gen.go`
 
 Optional Flags:
 
 * `-Paginator`: Name of the pagination token field (default `NextToken`)
 * `-Export`: Whether to export the generated functions
+* `-V2Suffix`: Whether to append a V2 suffix to the list functions
 
 To use with `go generate`, add the following directive to a Go file
 
@@ -26,7 +31,7 @@ To use with `go generate`, add the following directive to a Go file
 For example, in the file `internal/service/events/generate.go`
 
 ```go
-//go:generate go run -tags generate ../../generate/listpages/main.go -ListOps=ListEventBuses,ListRules,ListTargetsByRule
+//go:generate go run ../../generate/listpages/main.go -ListOps=ListEventBuses,ListRules,ListTargetsByRule
 
 package events
 ```

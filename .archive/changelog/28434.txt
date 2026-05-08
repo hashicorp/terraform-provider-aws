@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `listener_endpoint` attribute
+```
+
+```release-note:enhancement
+resource/aws_db_instance: Add plan time validations for `backup_retention_period`, `monitoring_interval`, and `monitoring_role_arn`
+```

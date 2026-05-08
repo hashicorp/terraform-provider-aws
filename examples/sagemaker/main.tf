@@ -1,5 +1,14 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
+
+  required_providers {
+    random = {
+      version = "~> 3.6"
+    }
+  }
 }
 
 provider "aws" {
@@ -28,7 +37,7 @@ data "aws_iam_policy_document" "assume_role" {
 
 resource "aws_iam_policy" "foo" {
   name        = "terraform-sagemaker-example"
-  description = "Allow Sagemaker to create model"
+  description = "Allow SageMaker to create model"
   policy      = data.aws_iam_policy_document.foo.json
 }
 
@@ -82,11 +91,15 @@ resource "random_integer" "bucket_suffix" {
 
 resource "aws_s3_bucket" "foo" {
   bucket        = "terraform-sagemaker-example-${random_integer.bucket_suffix.result}"
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_bucket_acl" "foo_bucket_acl" {
+  bucket = aws_s3_bucket.foo.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "object" {
   bucket = aws_s3_bucket.foo.bucket
   key    = "model.tar.gz"
   source = "model.tar.gz"
@@ -97,7 +110,7 @@ resource "aws_sagemaker_model" "foo" {
   execution_role_arn = aws_iam_role.foo.arn
 
   primary_container {
-    image          = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/foo:latest"
+    image          = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.region}.amazonaws.com/foo:latest"
     model_data_url = "https://s3-us-west-2.amazonaws.com/${aws_s3_bucket.foo.bucket}/model.tar.gz"
   }
 

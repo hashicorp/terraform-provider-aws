@@ -1,0 +1,15 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package signer
+
+// Exports for use in tests only.
+var (
+	ResourceSigningJob               = resourceSigningJob
+	ResourceSigningProfile           = resourceSigningProfile
+	ResourceSigningProfilePermission = resourceSigningProfilePermission
+
+	FindPermissionByTwoPartKey = findPermissionByTwoPartKey
+	FindSigningJobByID         = findSigningJobByID
+	FindSigningProfileByName   = findSigningProfileByName
+)

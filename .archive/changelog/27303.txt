@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_outposts_assets: Add `host_id_filter` and `status_id_filter` arguments
+```

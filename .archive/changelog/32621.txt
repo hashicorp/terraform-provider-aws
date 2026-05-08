@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_fsx_ontap_storage_virtual_machine
+```
+
+```release-note:bug
+resource/aws_fsx_ontap_storage_virtual_machine: Change `file_system_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```

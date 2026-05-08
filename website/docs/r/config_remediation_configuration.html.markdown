@@ -69,6 +69,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `automatic` - (Optional) Remediation is triggered automatically if `true`.
 * `execution_controls` - (Optional) Configuration block for execution controls. See below.
 * `maximum_automatic_attempts` - (Optional) Maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
@@ -95,17 +96,53 @@ The value is either a dynamic (resource) value or a static value. You must selec
 * `name` - (Required) Name of the attribute.
 * `resource_value` - (Optional) Value is dynamic and changes at run-time.
 * `static_value` - (Optional) Value is static and does not change at run-time.
+* `static_values` - (Optional) List of static values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Config Remediation Configuration.
 
 ## Import
 
-Remediation Configurations can be imported using the name config_rule_name, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_config_remediation_configuration.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_remediation_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_config_remediation_configuration.this example
+
+### Identity Schema
+
+#### Required
+
+* `config_rule_name` (String) Name of the AWS Config rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Remediation Configurations using the `config_rule_name`. For example:
+
+```terraform
+import {
+  to = aws_config_remediation_configuration.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import Remediation Configurations using the `config_rule_name`. For example:
+
+```console
+% terraform import aws_config_remediation_configuration.example example
 ```

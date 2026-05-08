@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_gamelift_script
+```
+
+```release-note:enhancement
+resource/aws_gamelift_fleet: Adds `script_id` argument.
+```
+
+```release-note:enhancement
+resource/aws_gamelift_fleet: Adds `script_arn` attribute.
+```

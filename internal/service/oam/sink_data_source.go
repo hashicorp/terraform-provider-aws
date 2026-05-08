@@ -1,0 +1,66 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
+package oam
+
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @SDKDataSource("aws_oam_sink", name="Sink")
+// @Tags(identifierAttribute="arn")
+func dataSourceSink() *schema.Resource {
+	return &schema.Resource{
+		ReadWithoutTimeout: dataSourceSinkRead,
+
+		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sink_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sink_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
+		},
+	}
+}
+
+func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
+
+	sinkIdentifier := d.Get("sink_identifier").(string)
+	out, err := findSinkByID(ctx, conn, sinkIdentifier)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ObservabilityAccessManager Sink (%s): %s", sinkIdentifier, err)
+	}
+
+	arn := aws.ToString(out.Arn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, out.Name)
+	d.Set("sink_id", out.Id)
+
+	return diags
+}

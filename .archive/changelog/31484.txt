@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_connect_hours_of_operation: The `hours_of_operation_arn` attribute has been removed
+```
+
+```release-note:breaking-change
+data-source/aws_connect_hours_of_operation: The `hours_of_operation_arn` attribute has been removed
+```

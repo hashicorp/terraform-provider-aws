@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dynamodb_table_replica: Add `deletion_protection_enabled` argument
+```

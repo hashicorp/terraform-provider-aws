@@ -1,188 +1,226 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceGroupPolicy() *schema.Resource {
+// @SDKResource("aws_iam_group_policy", name="Group Policy")
+func resourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
-		// PutGroupPolicy API is idempotent, so these can be the same.
-		Create: resourceGroupPolicyPut,
-		Update: resourceGroupPolicyPut,
-
-		Read:   resourceGroupPolicyRead,
-		Delete: resourceGroupPolicyDelete,
+		CreateWithoutTimeout: resourceGroupPolicyPut,
+		ReadWithoutTimeout:   resourceGroupPolicyRead,
+		UpdateWithoutTimeout: resourceGroupPolicyPut,
+		DeleteWithoutTimeout: resourceGroupPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-			},
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-			},
 			"group": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrNamePrefix},
+			},
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrName},
+			},
+			names.AttrPolicy: {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v any) string {
+					json, _ := verify.LegacyPolicyNormalize(v)
+					return json
+				},
+			},
 		},
 	}
 }
 
-func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	request := &iam.PutGroupPolicyInput{
-		GroupName:      aws.String(d.Get("group").(string)),
-		PolicyDocument: aws.String(d.Get("policy").(string)),
-	}
-
-	var policyName string
-	if v, ok := d.GetOk("name"); ok {
-		policyName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		policyName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		policyName = resource.UniqueId()
-	}
-	request.PolicyName = aws.String(policyName)
-
-	if _, err := conn.PutGroupPolicy(request); err != nil {
-		return fmt.Errorf("Error putting IAM group policy %s: %s", *request.PolicyName, err)
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", *request.GroupName, *request.PolicyName))
-	return nil
-}
-
-func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-
-	group, name, err := GroupPolicyParseID(d.Id())
+	policyDoc, err := verify.LegacyPolicyNormalize(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.GetGroupPolicyInput{
-		PolicyName: aws.String(name),
-		GroupName:  aws.String(group),
+	groupName, policyName := d.Get("group").(string), create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := iam.PutGroupPolicyInput{
+		GroupName:      aws.String(groupName),
+		PolicyDocument: aws.String(policyDoc),
+		PolicyName:     aws.String(policyName),
 	}
 
-	var getResp *iam.GetGroupPolicyOutput
+	_, err = conn.PutGroupPolicy(ctx, &input)
 
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
-		var err error
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "putting IAM Group (%s) Policy (%s): %s", groupName, policyName, err)
+	}
 
-		getResp, err = conn.GetGroupPolicy(request)
+	if d.IsNewResource() {
+		d.SetId(groupPolicyCreateResourceID(groupName, policyName))
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
-		}
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return findGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+		})
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return sdkdiag.AppendErrorf(diags, "waiting for IAM Group Policy (%s) create: %s", d.Id(), err)
 		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetGroupPolicy(request)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Group Policy (%s) not found, removing from state", d.Id())
+	return append(diags, resourceGroupPolicyRead(ctx, d, meta)...)
+}
+
+func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+
+	groupName, policyName, err := groupPolicyParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	policyDocument, err := findGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] IAM Group Policy %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Group Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Group Policy (%s): %s", d.Id(), err)
 	}
 
-	if getResp == nil || getResp.PolicyDocument == nil {
-		return fmt.Errorf("error reading IAM Group Policy (%s): empty response", d.Id())
-	}
-
-	policy, err := url.QueryUnescape(*getResp.PolicyDocument)
+	policy, err := url.QueryUnescape(policyDocument)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := d.Set("policy", policy); err != nil {
-		return fmt.Errorf("error setting policy: %s", err)
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get(names.AttrPolicy).(string), policy)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := d.Set("name", name); err != nil {
-		return fmt.Errorf("error setting name: %s", err)
-	}
+	d.Set("group", groupName)
+	d.Set(names.AttrName, policyName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
+	d.Set(names.AttrPolicy, policyToSet)
 
-	if err := d.Set("group", group); err != nil {
-		return fmt.Errorf("error setting group: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	group, name, err := GroupPolicyParseID(d.Id())
+	groupName, policyName, err := groupPolicyParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.DeleteGroupPolicyInput{
-		PolicyName: aws.String(name),
-		GroupName:  aws.String(group),
+	log.Printf("[INFO] Deleting IAM Group Policy: %s", d.Id())
+	input := iam.DeleteGroupPolicyInput{
+		GroupName:  aws.String(groupName),
+		PolicyName: aws.String(policyName),
+	}
+	_, err = conn.DeleteGroupPolicy(ctx, &input)
+
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return diags
 	}
 
-	if _, err := conn.DeleteGroupPolicy(request); err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
-			return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Group Policy (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupName, policyName string) (string, error) {
+	input := iam.GetGroupPolicyInput{
+		GroupName:  aws.String(groupName),
+		PolicyName: aws.String(policyName),
+	}
+
+	return findGroupPolicy(ctx, conn, &input)
+}
+
+func findGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.GetGroupPolicyInput) (string, error) {
+	output, err := conn.GetGroupPolicy(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
-		return fmt.Errorf("Error deleting IAM group policy %s: %s", d.Id(), err)
 	}
-	return nil
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.PolicyDocument == nil {
+		return "", tfresource.NewEmptyResultError()
+	}
+
+	return aws.ToString(output.PolicyDocument), nil
 }
 
-func GroupPolicyParseID(id string) (groupName, policyName string, err error) {
-	parts := strings.SplitN(id, ":", 2)
+const groupPolicyResourceIDSeparator = ":"
+
+func groupPolicyCreateResourceID(groupName, policyName string) string {
+	parts := []string{groupName, policyName}
+	id := strings.Join(parts, groupPolicyResourceIDSeparator)
+
+	return id
+}
+
+func groupPolicyParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, groupPolicyResourceIDSeparator, 2)
+
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err = fmt.Errorf("group_policy id must be of the form <group name>:<policy name>")
-		return
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected GROUP-NAME%[2]sPOLICY-NAME", id, groupPolicyResourceIDSeparator)
 	}
 
-	groupName = parts[0]
-	policyName = parts[1]
-	return
+	return parts[0], parts[1], nil
 }
