@@ -273,7 +273,7 @@ func resourceContainerRecipe() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
+							ValidateFunc: validation.StringInSlice([]string{names.ECRServiceID}, false),
 						},
 					},
 				},

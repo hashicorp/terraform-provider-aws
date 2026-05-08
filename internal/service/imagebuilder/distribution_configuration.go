@@ -173,7 +173,7 @@ func resourceDistributionConfiguration() *schema.Resource {
 												"service": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
+													ValidateFunc: validation.StringInSlice([]string{names.ECRServiceID}, false),
 												},
 											},
 										},
