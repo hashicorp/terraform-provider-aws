@@ -14,7 +14,7 @@ import (
 func validPrincipal(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if value == "IAM_ALLOWED_PRINCIPALS" {
+	if value == IAMAllowedPrincipals {
 		return ws, errors
 	}
 

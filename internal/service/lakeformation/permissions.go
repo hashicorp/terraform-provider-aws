@@ -1289,5 +1289,5 @@ func includePrincipalIdentifierInList(principalIdentifier string) bool {
 	if err != nil {
 		return true
 	}
-	return !(arn.Service == "identitystore" && strings.HasPrefix(arn.Resource, "group/"))
+	return !(arn.Service == names.IdentityStore && strings.HasPrefix(arn.Resource, "group/"))
 }
