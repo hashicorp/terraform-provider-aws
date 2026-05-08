@@ -104,8 +104,13 @@ func sweepIdentities(region, identityType string) error {
 
 	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(ctx)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping SES Identities sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
 		if err != nil {
-			log.Printf("[ERROR] %s", sweeperErrs)
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SES Identities: %w", err))
+			return sweeperErrs.ErrorOrNil()
 		}
 
 		for _, identity := range output.Identities {
@@ -120,14 +125,6 @@ func sweepIdentities(region, identityType string) error {
 				continue
 			}
 		}
-	}
-
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SES Identities sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SES Identities: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
