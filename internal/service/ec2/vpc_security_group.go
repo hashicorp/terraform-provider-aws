@@ -73,8 +73,8 @@ func resourceSecurityGroup() *schema.Resource {
 				Default:      "Managed by Terraform",
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
-			securityGroupRuleTypeEgress:  securityGroupRuleSetNestedBlock,
-			securityGroupRuleTypeIngress: securityGroupRuleSetNestedBlock,
+			attrEgress:  securityGroupRuleSetNestedBlock,
+			attrIngress: securityGroupRuleSetNestedBlock,
 			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -285,13 +285,13 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	remoteIngressRules := securityGroupIPPermGather(d.Id(), sg.IpPermissions, sg.OwnerId)
 	remoteEgressRules := securityGroupIPPermGather(d.Id(), sg.IpPermissionsEgress, sg.OwnerId)
 
-	localIngressRules := d.Get(securityGroupRuleTypeIngress).(*schema.Set).List()
-	localEgressRules := d.Get(securityGroupRuleTypeEgress).(*schema.Set).List()
+	localIngressRules := d.Get(attrIngress).(*schema.Set).List()
+	localEgressRules := d.Get(attrEgress).(*schema.Set).List()
 
 	// Loop through the local state of rules, doing a match against the remote
 	// ruleSet we built above.
-	ingressRules := matchRules(securityGroupRuleTypeIngress, localIngressRules, remoteIngressRules)
-	egressRules := matchRules(securityGroupRuleTypeEgress, localEgressRules, remoteEgressRules)
+	ingressRules := matchRules(attrIngress, localIngressRules, remoteIngressRules)
+	egressRules := matchRules(attrEgress, localEgressRules, remoteEgressRules)
 
 	ownerID := aws.ToString(sg.OwnerId)
 	d.Set(names.AttrARN, securityGroupARN(ctx, c, ownerID, d.Id()))
@@ -301,11 +301,11 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set(names.AttrVPCID, sg.VpcId)
 
-	if err := d.Set(securityGroupRuleTypeIngress, ingressRules); err != nil {
+	if err := d.Set(attrIngress, ingressRules); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
 	}
 
-	if err := d.Set(securityGroupRuleTypeEgress, egressRules); err != nil {
+	if err := d.Set(attrEgress, egressRules); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting egress: %s", err)
 	}
 
@@ -324,13 +324,13 @@ func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
-	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeIngress, group)
+	err = updateSecurityGroupRules(ctx, conn, d, attrIngress, group)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) ingress rules: %s", d.Id(), err)
 	}
 
-	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeEgress, group)
+	err = updateSecurityGroupRules(ctx, conn, d, attrEgress, group)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) egress rules: %s", d.Id(), err)
@@ -767,7 +767,7 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.Client, d *schema.R
 	// not have service issues.
 
 	if len(del) > 0 {
-		if ruleType == securityGroupRuleTypeEgress {
+		if ruleType == attrEgress {
 			input := &ec2.RevokeSecurityGroupEgressInput{
 				GroupId:       group.GroupId,
 				IpPermissions: del,
@@ -789,7 +789,7 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.Client, d *schema.R
 	}
 
 	if len(add) > 0 {
-		if ruleType == securityGroupRuleTypeEgress {
+		if ruleType == attrEgress {
 			input := &ec2.AuthorizeSecurityGroupEgressInput{
 				GroupId:       group.GroupId,
 				IpPermissions: add,

@@ -125,7 +125,7 @@ func networkInsightsAnalysisPathComponentsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							securityGroupRuleTypeEgress: {
+							attrEgress: {
 								Type:     schema.TypeBool,
 								Computed: true,
 							},
@@ -612,7 +612,7 @@ func networkInsightsAnalysisExplanationsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							securityGroupRuleTypeEgress: {
+							attrEgress: {
 								Type:     schema.TypeBool,
 								Computed: true,
 							},
@@ -1586,7 +1586,7 @@ func flattenAnalysisAclRule(apiObject *awstypes.AnalysisAclRule) map[string]any 
 	}
 
 	if v := apiObject.Egress; v != nil {
-		tfMap[securityGroupRuleTypeEgress] = aws.ToBool(v)
+		tfMap[attrEgress] = aws.ToBool(v)
 	}
 
 	if v := apiObject.PortRange; v != nil {
