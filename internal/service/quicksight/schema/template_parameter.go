@@ -556,7 +556,7 @@ var parameterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idDataSourceSchema(),
 							"source_parameter_name": parameterNameDataSourceSchema(),
-							"title":                 stringComputedOnly(),
+							attrTitle:               stringComputedOnly(),
 							"display_options":       dateTimePickerControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
 						},
 					},
@@ -568,7 +568,7 @@ var parameterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":            idDataSourceSchema(),
 							"source_parameter_name":           parameterNameDataSourceSchema(),
-							"title":                           stringComputedOnly(),
+							attrTitle:                         stringComputedOnly(),
 							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               parameterSelectableValuesDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
@@ -583,7 +583,7 @@ var parameterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":            idDataSourceSchema(),
 							"source_parameter_name":           parameterNameDataSourceSchema(),
-							"title":                           stringComputedOnly(),
+							attrTitle:                         stringComputedOnly(),
 							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               parameterSelectableValuesDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterSelectableValues.html
@@ -598,7 +598,7 @@ var parameterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idDataSourceSchema(),
 							"source_parameter_name": parameterNameDataSourceSchema(),
-							"title":                 stringComputedOnly(),
+							attrTitle:               stringComputedOnly(),
 							"display_options":       sliderControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
 							"maximum_value":         floatComputedOnly(),
 							"minimum_value":         floatComputedOnly(),
@@ -613,7 +613,7 @@ var parameterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idDataSourceSchema(),
 							"source_parameter_name": parameterNameDataSourceSchema(),
-							"title":                 stringComputedOnly(),
+							attrTitle:               stringComputedOnly(),
 							"display_options":       textAreaControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
 							"delimiter":             stringComputedOnly(),
 						},
@@ -626,7 +626,7 @@ var parameterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"parameter_control_id":  idDataSourceSchema(),
 							"source_parameter_name": parameterNameDataSourceSchema(),
-							"title":                 stringComputedOnly(),
+							attrTitle:               stringComputedOnly(),
 							"display_options":       textFieldControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 						},
 					},

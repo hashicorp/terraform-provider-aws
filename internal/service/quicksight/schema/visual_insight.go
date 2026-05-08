@@ -420,7 +420,7 @@ func insightVisualDataSourceSchema() *schema.Schema {
 					},
 				},
 				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":      visualTitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}

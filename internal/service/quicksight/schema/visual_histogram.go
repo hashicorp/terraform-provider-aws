@@ -180,7 +180,7 @@ func histogramVisualDataSourceSchema() *schema.Schema {
 					},
 				},
 				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":      visualTitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}

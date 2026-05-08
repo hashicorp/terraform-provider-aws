@@ -4,6 +4,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -11,6 +12,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
+	"io/fs"
 	"log"
 	"math"
 	"os"
@@ -582,38 +584,63 @@ func writeConstantsFile(fset *token.FileSet, f *ast.File, path string) error {
 	return nil
 }
 
-// replacementVisitor replaces string literals with constant identifiers
+// replacementVisitor replaces string literals with constant identifiers,
+// skipping literals that are values of const declarations.
 type replacementVisitor struct {
 	literal      string
 	constantName string
 	replacements int
-	fset         *token.FileSet
+	parents      []ast.Node
 }
 
 func (v *replacementVisitor) Visit(n ast.Node) ast.Visitor {
 	if n == nil {
+		v.parents = v.parents[:len(v.parents)-1]
 		return v
 	}
 
-	// Only process basic literals
+	v.parents = append(v.parents, n)
+
 	lit, ok := n.(*ast.BasicLit)
 	if !ok || lit.Kind != token.STRING {
 		return v
 	}
 
-	// Unquote and check if it matches our target literal
 	str, err := strconv.Unquote(lit.Value)
 	if err != nil || str != v.literal {
 		return v
 	}
 
-	// Replace the literal with an identifier
-	// We can't directly replace in the AST walk, so we'll modify the node in place
-	lit.Kind = token.ILLEGAL // Mark for replacement
+	// Skip if this literal is the value of a const declaration
+	if v.isConstValue(n) {
+		return v
+	}
+
+	lit.Kind = token.IDENT
 	lit.Value = v.constantName
 	v.replacements++
 
 	return v
+}
+
+func (v *replacementVisitor) isConstValue(n ast.Node) bool {
+	if len(v.parents) < 3 {
+		return false
+	}
+	valueSpec, ok := v.parents[len(v.parents)-2].(*ast.ValueSpec)
+	if !ok {
+		return false
+	}
+	genDecl, ok := v.parents[len(v.parents)-3].(*ast.GenDecl)
+	if !ok || genDecl.Tok != token.CONST {
+		return false
+	}
+	for _, val := range valueSpec.Values {
+		if val == n {
+			return true
+		}
+	}
+	return false
 }
 
 // replaceInFile replaces string literals in a single file
@@ -624,47 +651,16 @@ func replaceInFile(path string, literal, constantName string) (int, error) {
 		return 0, fmt.Errorf("parsing file: %w", err)
 	}
 
-	// First pass: mark replacements
-	visitor := &replacementVisitor{
+	v := &replacementVisitor{
 		literal:      literal,
 		constantName: constantName,
-		fset:         fset,
 	}
-	ast.Walk(visitor, f)
+	ast.Walk(v, f)
 
-	if visitor.replacements == 0 {
+	if v.replacements == 0 {
 		return 0, nil
 	}
 
-	// Second pass: actually replace by transforming the tree
-	ast.Inspect(f, func(n ast.Node) bool {
-		lit, ok := n.(*ast.BasicLit)
-		if !ok {
-			return true
-		}
-
-		// Check if this was marked for replacement
-		if lit.Kind == token.ILLEGAL && lit.Value == constantName {
-			// We need to replace this node with an identifier
-			// Since we can't replace nodes directly, we'll use a different approach
-			return true
-		}
-
-		// Check if it's a string literal matching our target
-		if lit.Kind == token.STRING {
-			str, err := strconv.Unquote(lit.Value)
-			if err == nil && str == literal {
-				// Transform it to look like an identifier by changing the value
-				// This is a hack but works for our purposes
-				lit.Kind = token.IDENT
-				lit.Value = constantName
-			}
-		}
-
-		return true
-	})
-
-	// Write back
 	if !opts.DryRun {
 		file, err := os.Create(path)
 		if err != nil {
@@ -677,7 +673,7 @@ func replaceInFile(path string, literal, constantName string) (int, error) {
 		}
 	}
 
-	return visitor.replacements, nil
+	return v.replacements, nil
 }
 
 // runReplace executes the replacement operation
@@ -713,8 +709,7 @@ func runReplace() error {
 			return filepath.SkipDir // Don't recurse
 		}
 		if !info.IsDir() && strings.HasSuffix(path, ".go") &&
-			!strings.HasSuffix(path, "_test.go") &&
-			path != opts.ConstantsFile {
+			!strings.HasSuffix(path, "_test.go") {
 			files = append(files, path)
 		}
 		return nil

@@ -135,7 +135,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
@@ -157,7 +157,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"category":       dimensionFieldDataSourceSchema(),
-													"color":          dimensionFieldDataSourceSchema(),
+													attrColor:        dimensionFieldDataSourceSchema(),
 													names.AttrValues: measureFieldDataSourceSchema(),
 												},
 											},
@@ -167,7 +167,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 							},
 							"legend": legendOptionsDataSourceSchema(),
 							"shape":  stringEnumDataSourceSchema[awstypes.RadarChartShape](),
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -184,9 +184,9 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),
-				attrSubtitle:         visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":              visualTitleLabelOptionsDataSourceSchema(),
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}

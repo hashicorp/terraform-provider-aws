@@ -172,7 +172,7 @@ func AnalysisDefinitionDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"title":   stringComputedOnly(),
+							attrTitle: stringComputedOnly(),
 							"visuals": visualsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},

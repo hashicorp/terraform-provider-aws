@@ -426,8 +426,8 @@ func tableVisualDataSourceSchema() *schema.Schema {
 															},
 														},
 													},
-													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
-													"width":      stringComputedOnly(),
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+													"width":        stringComputedOnly(),
 												},
 											},
 										},
@@ -481,7 +481,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -584,7 +584,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 					},
 				},
 				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":      visualTitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}

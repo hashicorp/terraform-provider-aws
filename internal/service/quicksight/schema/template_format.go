@@ -348,8 +348,8 @@ var separatorConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"symbol":     stringEnumDataSourceSchema[awstypes.NumericSeparatorSymbol](),
-							"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+							"symbol":       stringEnumDataSourceSchema[awstypes.NumericSeparatorSymbol](),
+							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -385,7 +385,7 @@ var labelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"custom_label":       stringComputedOnly(),
 				"font_configuration": fontConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"visibility":         stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility:       stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}

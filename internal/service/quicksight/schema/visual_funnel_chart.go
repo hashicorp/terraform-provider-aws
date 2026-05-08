@@ -120,7 +120,7 @@ func funnelChartVisualDataSourceSchema() *schema.Schema {
 										"measure_data_label_style":  stringEnumDataSourceSchema[awstypes.FunnelChartMeasureDataLabelStyle](),
 										"measure_label_visibility":  stringEnumDataSourceSchema[awstypes.Visibility](),
 										"position":                  stringEnumDataSourceSchema[awstypes.DataLabelPosition](),
-										"visibility":                stringEnumDataSourceSchema[awstypes.Visibility](),
+										attrVisibility:              stringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -142,7 +142,7 @@ func funnelChartVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -158,9 +158,9 @@ func funnelChartVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),
-				attrSubtitle:         visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":              visualTitleLabelOptionsDataSourceSchema(),
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}

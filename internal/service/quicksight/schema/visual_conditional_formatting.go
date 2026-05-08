@@ -88,7 +88,7 @@ var conditionalFormattingColorDataSourceSchema = sync.OnceValue(func() *schema.S
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GradientColor.html
+							attrColor: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GradientColor.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -99,7 +99,7 @@ var conditionalFormattingColorDataSourceSchema = sync.OnceValue(func() *schema.S
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"gradient_offset": floatComputedOnly(),
-													"color":           stringComputedOnly(),
+													attrColor:         stringComputedOnly(),
 													"data_value":      floatComputedOnly(),
 												},
 											},
@@ -116,7 +116,7 @@ var conditionalFormattingColorDataSourceSchema = sync.OnceValue(func() *schema.S
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              stringComputedOnly(),
+							attrColor:            stringComputedOnly(),
 							names.AttrExpression: stringComputedOnly(),
 						},
 					},
@@ -196,7 +196,7 @@ var conditionalFormattingIconDataSourceSchema = sync.OnceValue(func() *schema.Sc
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              stringComputedOnly(),
+							attrColor:            stringComputedOnly(),
 							names.AttrExpression: stringComputedOnly(),
 							"icon_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconOptions.html
 								Type:     schema.TypeList,

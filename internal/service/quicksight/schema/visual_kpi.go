@@ -250,7 +250,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
@@ -259,7 +259,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
@@ -269,10 +269,10 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"color":              stringComputedOnly(),
+													attrColor:            stringComputedOnly(),
 													"tooltip_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
 													names.AttrType:       stringEnumDataSourceSchema[awstypes.KPISparklineType](),
-													"visibility":         stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrVisibility:       stringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
@@ -281,7 +281,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
@@ -305,7 +305,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -317,7 +317,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
 				"conditional_formatting": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConditionalFormatting.html
 					Type:     schema.TypeList,
 					Computed: true,
@@ -374,7 +374,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 					},
 				},
 				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":      visualTitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}

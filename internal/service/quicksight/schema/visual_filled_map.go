@@ -152,7 +152,7 @@ func filledMapVisualDataSourceSchema() *schema.Schema {
 							},
 							"legend":            legendOptionsDataSourceSchema(),
 							"map_style_options": geospatialMapStyleOptionsDataSourceSchema(),
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -166,7 +166,7 @@ func filledMapVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
 				"conditional_formatting": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapConditionalFormatting.html
 					Type:     schema.TypeList,
 					Computed: true,
@@ -202,7 +202,7 @@ func filledMapVisualDataSourceSchema() *schema.Schema {
 					},
 				},
 				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":      visualTitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}

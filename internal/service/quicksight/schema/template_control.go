@@ -169,7 +169,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idDataSourceSchema(),
 							"source_filter_id":  idDataSourceSchema(),
-							"title":             stringComputedOnly(),
+							attrTitle:           stringComputedOnly(),
 							"display_options":   dateTimePickerControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
 							names.AttrType:      stringEnumDataSourceSchema[awstypes.SheetControlDateTimePickerType](),
 						},
@@ -182,7 +182,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id":               idDataSourceSchema(),
 							"source_filter_id":                idDataSourceSchema(),
-							"title":                           stringComputedOnly(),
+							attrTitle:                         stringComputedOnly(),
 							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
@@ -197,7 +197,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id":               idDataSourceSchema(),
 							"source_filter_id":                idDataSourceSchema(),
-							"title":                           stringComputedOnly(),
+							attrTitle:                         stringComputedOnly(),
 							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
@@ -212,7 +212,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idDataSourceSchema(),
 							"source_filter_id":  idDataSourceSchema(),
-							"title":             stringComputedOnly(),
+							attrTitle:           stringComputedOnly(),
 							"display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -233,7 +233,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idDataSourceSchema(),
 							"source_filter_id":  idDataSourceSchema(),
-							"title":             stringComputedOnly(),
+							attrTitle:           stringComputedOnly(),
 							"maximum_value":     floatComputedOnly(),
 							"minimum_value":     floatComputedOnly(),
 							"step_size":         floatComputedOnly(),
@@ -249,7 +249,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idDataSourceSchema(),
 							"source_filter_id":  idDataSourceSchema(),
-							"title":             stringComputedOnly(),
+							attrTitle:           stringComputedOnly(),
 							"delimiter":         stringComputedOnly(),
 							"display_options":   textAreaControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
 						},
@@ -262,7 +262,7 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idDataSourceSchema(),
 							"source_filter_id":  idDataSourceSchema(),
-							"title":             stringComputedOnly(),
+							attrTitle:           stringComputedOnly(),
 							"display_options":   textFieldControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 						},
 					},
@@ -419,7 +419,7 @@ var listControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Sc
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -499,7 +499,7 @@ var selectAllOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -553,7 +553,7 @@ var placeholderOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}

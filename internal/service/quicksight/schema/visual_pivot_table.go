@@ -285,7 +285,7 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													attrFieldID:    stringComputedOnly(),
 													"custom_label": stringComputedOnly(),
-													"visibility":   stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
@@ -321,7 +321,7 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -427,7 +427,7 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 					},
 				},
 				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":      visualTitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -455,7 +455,7 @@ var tableBorderOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color":     stringComputedOnly(),
+				attrColor:   stringComputedOnly(),
 				"style":     stringEnumDataSourceSchema[awstypes.TableBorderStyle](),
 				"thickness": intComputedOnly(),
 			},
@@ -545,7 +545,7 @@ var tableCellStyleDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 				"horizontal_text_alignment": stringEnumDataSourceSchema[awstypes.HorizontalTextAlignment](),
 				"text_wrap":                 stringEnumDataSourceSchema[awstypes.TextWrap](),
 				"vertical_text_alignment":   stringEnumDataSourceSchema[awstypes.VerticalTextAlignment](),
-				"visibility":                stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility:              stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}

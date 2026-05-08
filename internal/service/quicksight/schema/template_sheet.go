@@ -861,8 +861,8 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringComputedOnly(),
-							"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrColor:      stringComputedOnly(),
+							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -871,8 +871,8 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringComputedOnly(),
-							"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrColor:      stringComputedOnly(),
+							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -881,7 +881,7 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -895,7 +895,7 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+										attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -908,12 +908,12 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringComputedOnly(),
-							"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrColor:      stringComputedOnly(),
+							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
-				"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}

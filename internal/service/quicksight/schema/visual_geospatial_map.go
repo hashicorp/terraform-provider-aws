@@ -162,7 +162,7 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 																	Computed: true,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"color": stringComputedOnly(),
+																			attrColor: stringComputedOnly(),
 																		},
 																	},
 																},
@@ -182,9 +182,9 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),
-				attrSubtitle:         visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":              visualTitleLabelOptionsDataSourceSchema(),
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
