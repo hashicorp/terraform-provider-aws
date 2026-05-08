@@ -98,7 +98,7 @@ func expandClientPolicy(vClientPolicy []any) *awstypes.ClientPolicy {
 			if vTrust, ok := mValidation["trust"].([]any); ok && len(vTrust) > 0 && vTrust[0] != nil {
 				mTrust := vTrust[0].(map[string]any)
 
-				if vAcm, ok := mTrust["acm"].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
+				if vAcm, ok := mTrust[names.ACM].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
 					trust := &awstypes.TlsValidationContextTrustMemberAcm{}
 
 					acm := awstypes.TlsValidationContextAcmTrust{}
@@ -911,7 +911,7 @@ func expandVirtualNodeSpec(vSpec []any) *awstypes.VirtualNodeSpec {
 				if vCertificate, ok := mTls[names.AttrCertificate].([]any); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 					mCertificate := vCertificate[0].(map[string]any)
 
-					if vAcm, ok := mCertificate["acm"].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
+					if vAcm, ok := mCertificate[names.ACM].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
 						certificate := &awstypes.ListenerTlsCertificateMemberAcm{}
 						acm := awstypes.ListenerTlsAcmCertificate{}
 
@@ -1283,7 +1283,7 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []any {
 						"certificate_authority_arns": v.Value.CertificateAuthorityArns,
 					}
 
-					mTrust["acm"] = []any{mAcm}
+					mTrust[names.ACM] = []any{mAcm}
 				case *awstypes.TlsValidationContextTrustMemberFile:
 					mFile := map[string]any{
 						names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
@@ -1804,7 +1804,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []any {
 							names.AttrCertificateARN: aws.ToString(v.Value.CertificateArn),
 						}
 
-						mCertificate["acm"] = []any{mAcm}
+						mCertificate[names.ACM] = []any{mAcm}
 					case *awstypes.ListenerTlsCertificateMemberFile:
 						mFile := map[string]any{
 							names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),

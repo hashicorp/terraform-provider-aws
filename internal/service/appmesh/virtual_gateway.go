@@ -224,7 +224,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"acm": {
+																			names.ACM: {
 																				Type:     schema.TypeList,
 																				Optional: true,
 																				MinItems: 0,
@@ -447,7 +447,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"acm": {
+													names.ACM: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -972,7 +972,7 @@ func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 				if vCertificate, ok := mTls[names.AttrCertificate].([]any); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 					mCertificate := vCertificate[0].(map[string]any)
 
-					if vAcm, ok := mCertificate["acm"].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
+					if vAcm, ok := mCertificate[names.ACM].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
 						certificate := &awstypes.VirtualGatewayListenerTlsCertificateMemberAcm{}
 						acm := awstypes.VirtualGatewayListenerTlsAcmCertificate{}
 
@@ -1225,7 +1225,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGate
 			if vTrust, ok := mValidation["trust"].([]any); ok && len(vTrust) > 0 && vTrust[0] != nil {
 				mTrust := vTrust[0].(map[string]any)
 
-				if vAcm, ok := mTrust["acm"].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
+				if vAcm, ok := mTrust[names.ACM].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
 					trust := &awstypes.VirtualGatewayTlsValidationContextTrustMemberAcm{}
 					acm := awstypes.VirtualGatewayTlsValidationContextAcmTrust{}
 
@@ -1357,7 +1357,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 							names.AttrCertificateARN: aws.ToString(v.Value.CertificateArn),
 						}
 
-						mCertificate["acm"] = []any{mAcm}
+						mCertificate[names.ACM] = []any{mAcm}
 					case *awstypes.VirtualGatewayListenerTlsCertificateMemberFile:
 						mFile := map[string]any{
 							names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
@@ -1533,7 +1533,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 						"certificate_authority_arns": v.Value.CertificateAuthorityArns,
 					}
 
-					mTrust["acm"] = []any{mAcm}
+					mTrust[names.ACM] = []any{mAcm}
 				case *awstypes.VirtualGatewayTlsValidationContextTrustMemberFile:
 					mFile := map[string]any{
 						names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),

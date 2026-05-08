@@ -203,7 +203,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 												MaxItems: 1,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"acm": {
+														names.ACM: {
 															Type:     schema.TypeList,
 															Optional: true,
 															MinItems: 0,
@@ -702,7 +702,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"acm": {
+													names.ACM: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
