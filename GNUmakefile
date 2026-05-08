@@ -329,6 +329,23 @@ examples-tflint: tflint-init ## [CI] Examples Checks / tflint
 
 fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
+literally-check: ## Check package-local constants with literally
+	@echo "make: Running literally constant checks..."
+	@cd tools/literally && $(GO_VER) install .
+	@failed=0; \
+	while IFS= read -r svc; do \
+		[ -z "$$svc" ] && continue; \
+		case "$$svc" in \#*) continue;; esac; \
+		literally -check \
+			-minlen=2 \
+			-ignore-tests \
+			-ignore-file=service_package_gen.go \
+			-ignore-file=tags_gen.go \
+			-known-constants=./names \
+			-package=./internal/service/$$svc || failed=1; \
+	done < .ci/literally-services.txt; \
+	[ $$failed -eq 0 ] || exit 1
+
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
 	@if [ -d "./$(PKG_NAME)" ] && ls ./$(PKG_NAME)/*.go >/dev/null 2>&1; then \
