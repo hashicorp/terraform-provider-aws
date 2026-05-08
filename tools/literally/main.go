@@ -774,7 +774,10 @@ func runReplace() error {
 			return err
 		}
 		if info.IsDir() && path != opts.PackagePath {
-			return filepath.SkipDir // Don't recurse
+			if filepath.Base(path) == "testdata" {
+				return filepath.SkipDir
+			}
+			return nil
 		}
 		if !info.IsDir() && strings.HasSuffix(path, ".go") &&
 			!(opts.IgnoreTests && strings.HasSuffix(path, "_test.go")) &&
@@ -817,52 +820,68 @@ type constantRef struct {
 	PkgName string // Go package name (e.g. "names", "cloudfront")
 }
 
-// collectConstants parses a package directory and returns a map of
-// string value → []constantRef for all string constants found.
-func collectConstants(dir string) (map[string][]constantRef, error) {
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, dir, nil, 0)
-	if err != nil {
-		return nil, fmt.Errorf("parsing %s: %w", dir, err)
-	}
-
+// collectConstants parses a package directory (and subdirectories, skipping
+// testdata) and returns a map of string value → []constantRef for all string
+// constants found.
+func collectConstants(root string) (map[string][]constantRef, error) {
 	constants := make(map[string][]constantRef)
-	for _, pkg := range pkgs {
-		if strings.HasSuffix(pkg.Name, "_test") {
-			continue
+
+	err := filepath.Walk(root, func(dir string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
-		for _, f := range pkg.Files {
-			for _, decl := range f.Decls {
-				genDecl, ok := decl.(*ast.GenDecl)
-				if !ok || genDecl.Tok != token.CONST {
-					continue
-				}
-				for _, spec := range genDecl.Specs {
-					vs, ok := spec.(*ast.ValueSpec)
-					if !ok || len(vs.Values) == 0 {
+		if !info.IsDir() {
+			return nil
+		}
+		if filepath.Base(dir) == "testdata" {
+			return filepath.SkipDir
+		}
+
+		fset := token.NewFileSet()
+		pkgs, err := parser.ParseDir(fset, dir, nil, 0)
+		if err != nil {
+			return fmt.Errorf("parsing %s: %w", dir, err)
+		}
+
+		for _, pkg := range pkgs {
+			if strings.HasSuffix(pkg.Name, "_test") {
+				continue
+			}
+			for _, f := range pkg.Files {
+				for _, decl := range f.Decls {
+					genDecl, ok := decl.(*ast.GenDecl)
+					if !ok || genDecl.Tok != token.CONST {
 						continue
 					}
-					for i, val := range vs.Values {
-						lit, ok := val.(*ast.BasicLit)
-						if !ok || lit.Kind != token.STRING {
+					for _, spec := range genDecl.Specs {
+						vs, ok := spec.(*ast.ValueSpec)
+						if !ok || len(vs.Values) == 0 {
 							continue
 						}
-						str, err := strconv.Unquote(lit.Value)
-						if err != nil {
-							continue
+						for i, val := range vs.Values {
+							lit, ok := val.(*ast.BasicLit)
+							if !ok || lit.Kind != token.STRING {
+								continue
+							}
+							str, err := strconv.Unquote(lit.Value)
+							if err != nil {
+								continue
+							}
+							ref := constantRef{
+								Name:    vs.Names[i].Name,
+								PkgDir:  dir,
+								PkgName: pkg.Name,
+							}
+							constants[str] = append(constants[str], ref)
 						}
-						ref := constantRef{
-							Name:    vs.Names[i].Name,
-							PkgDir:  dir,
-							PkgName: pkg.Name,
-						}
-						constants[str] = append(constants[str], ref)
 					}
 				}
 			}
 		}
-	}
-	return constants, nil
+		return nil
+	})
+
+	return constants, err
 }
 
 // violation records a single check-mode finding.
@@ -929,6 +948,18 @@ func (v *checkVisitor) Visit(n ast.Node) ast.Visitor {
 		return v
 	}
 
+	// Filter to constants accessible from this file's package
+	fileDir := filepath.Dir(v.file)
+	var accessible []constantRef
+	for _, ref := range refs {
+		if ref.PkgDir == fileDir || ast.IsExported(ref.Name) {
+			accessible = append(accessible, ref)
+		}
+	}
+	if len(accessible) == 0 {
+		return v
+	}
+
 	pos := v.fset.Position(lit.Pos())
 	if v.ignoreLines[pos.Line] {
 		return v
@@ -937,7 +968,7 @@ func (v *checkVisitor) Visit(n ast.Node) ast.Visitor {
 		File:      v.file,
 		Line:      pos.Line,
 		Literal:   str,
-		Constants: refs,
+		Constants: accessible,
 	})
 
 	return v
@@ -1002,31 +1033,46 @@ func runCheck() int {
 		return 0
 	}
 
-	// Walk target package files and check for violations
+	// Walk target package and subpackages, check for violations
 	var allViolations []violation
 	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, opts.PackagePath, nil, parser.ParseComments)
-	if err != nil {
-		log.Fatalf("parsing package %s: %v", opts.PackagePath, err)
-	}
 
-	for _, pkg := range pkgs {
-		for filename, f := range pkg.Files {
-			if opts.IgnoreTests && strings.HasSuffix(filename, "_test.go") {
-				continue
-			}
-			if slices.Contains([]string(opts.IgnoreFiles), filepath.Base(filename)) {
-				continue
-			}
-			cv := &checkVisitor{
-				constants:   constants,
-				fset:        fset,
-				file:        filename,
-				ignoreLines: lintIgnoreLines(fset, f),
-			}
-			ast.Walk(cv, f)
-			allViolations = append(allViolations, cv.violations...)
+	err = filepath.Walk(opts.PackagePath, func(dir string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
+		if !info.IsDir() {
+			return nil
+		}
+		if filepath.Base(dir) == "testdata" {
+			return filepath.SkipDir
+		}
+		pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments)
+		if err != nil {
+			return fmt.Errorf("parsing %s: %w", dir, err)
+		}
+		for _, pkg := range pkgs {
+			for filename, f := range pkg.Files {
+				if opts.IgnoreTests && strings.HasSuffix(filename, "_test.go") {
+					continue
+				}
+				if slices.Contains([]string(opts.IgnoreFiles), filepath.Base(filename)) {
+					continue
+				}
+				cv := &checkVisitor{
+					constants:   constants,
+					fset:        fset,
+					file:        filename,
+					ignoreLines: lintIgnoreLines(fset, f),
+				}
+				ast.Walk(cv, f)
+				allViolations = append(allViolations, cv.violations...)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatalf("walking package %s: %v", opts.PackagePath, err)
 	}
 
 	if len(allViolations) == 0 {
@@ -1042,10 +1088,11 @@ func runCheck() int {
 	})
 
 	for _, v := range allViolations {
+		fileDir := filepath.Dir(v.File)
 		names := make([]string, 0, len(v.Constants))
 		for _, ref := range v.Constants {
 			name := ref.Name
-			if ref.PkgDir != opts.PackagePath {
+			if ref.PkgDir != fileDir {
 				name = ref.PkgName + "." + name
 			}
 			names = append(names, name)
@@ -1080,38 +1127,60 @@ func runFix() int {
 		return 0
 	}
 
-	// Collect files to process
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, opts.PackagePath, nil, parser.ParseComments)
-	if err != nil {
-		log.Fatalf("parsing package %s: %v", opts.PackagePath, err)
-	}
-
+	// Collect files to process (recursive, skipping testdata)
 	var files []string
-	for _, pkg := range pkgs {
-		for filename := range pkg.Files {
-			if opts.IgnoreTests && strings.HasSuffix(filename, "_test.go") {
-				continue
-			}
-			if slices.Contains([]string(opts.IgnoreFiles), filepath.Base(filename)) {
-				continue
-			}
-			files = append(files, filename)
+	err = filepath.Walk(opts.PackagePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
+		if info.IsDir() {
+			if filepath.Base(path) == "testdata" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(path, ".go") {
+			return nil
+		}
+		if opts.IgnoreTests && strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		if slices.Contains([]string(opts.IgnoreFiles), filepath.Base(path)) {
+			return nil
+		}
+		files = append(files, path)
+		return nil
+	})
+	if err != nil {
+		log.Fatalf("walking package %s: %v", opts.PackagePath, err)
 	}
 
-	// For each constant value, replace in all files
+	// For each file, replace literals with accessible constants
 	totalReplacements := 0
-	for value, refs := range constants {
-		if len(value) < opts.MinStringLen {
-			continue
-		}
-		// Use the first ref's name; for cross-package constants, use qualified name
-		name := refs[0].Name
-		if refs[0].PkgDir != opts.PackagePath {
-			name = refs[0].PkgName + "." + name
-		}
-		for _, file := range files {
+	for _, file := range files {
+		fileDir := filepath.Dir(file)
+		for value, refs := range constants {
+			if len(value) < opts.MinStringLen {
+				continue
+			}
+			// Find shortest-named accessible constant for this file
+			var ref constantRef
+			found := false
+			for _, r := range refs {
+				if r.PkgDir == fileDir || ast.IsExported(r.Name) {
+					if !found || len(r.Name) < len(ref.Name) {
+						ref = r
+						found = true
+					}
+				}
+			}
+			if !found {
+				continue
+			}
+			name := ref.Name
+			if ref.PkgDir != fileDir {
+				name = ref.PkgName + "." + name
+			}
 			count, err := replaceInFile(file, value, name)
 			if err != nil {
 				log.Printf("error replacing in %s: %v", file, err)
