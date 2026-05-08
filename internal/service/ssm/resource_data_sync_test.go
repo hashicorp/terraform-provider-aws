@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -19,6 +20,8 @@ import (
 func TestAccSSMResourceDataSync_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssm_resource_data_sync.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -27,7 +30,7 @@ func TestAccSSMResourceDataSync_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
+				Config: testAccResourceDataSyncConfig_basic(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
@@ -44,6 +47,8 @@ func TestAccSSMResourceDataSync_basic(t *testing.T) {
 func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssm_resource_data_sync.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -52,7 +57,7 @@ func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
+				Config: testAccResourceDataSyncConfig_basic(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceResourceDataSync(), resourceName),
@@ -63,10 +68,11 @@ func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSSMResourceDataSync_update(t *testing.T) {
+func TestAccSSMResourceDataSync_Update_s3DestinationPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandString(t, 5)
 	resourceName := "aws_ssm_resource_data_sync.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -75,21 +81,21 @@ func TestAccSSMResourceDataSync_update(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), rName),
+				Config: testAccResourceDataSyncConfig_basic(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccResourceDataSyncConfig_update(acctest.RandInt(t), rName),
+				Config: testAccResourceDataSyncConfig_update_s3DestinationPrefix(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -136,10 +142,10 @@ func testAccCheckResourceDataSyncExists(ctx context.Context, t *testing.T, n str
 	}
 }
 
-func testAccResourceDataSyncConfig_basic(rInt int, rName string) string {
+func testAccResourceDataSyncConfig_basic(rName, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-bucket-%[1]d"
+  bucket        = %[2]q
   force_destroy = true
 }
 
@@ -159,7 +165,7 @@ resource "aws_s3_bucket_policy" "test" {
         "Service": "ssm.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "s3:GetBucketAcl",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::tf-test-bucket-%[1]d"
+      "Resource": "${aws_s3_bucket.test.arn}"
     },
     {
       "Sid": " SSMBucketDelivery",
@@ -169,7 +175,7 @@ resource "aws_s3_bucket_policy" "test" {
       },
       "Action": "s3:PutObject",
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:s3:::tf-test-bucket-%[1]d/*"
+        "${aws_s3_bucket.test.arn}/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -180,24 +186,23 @@ resource "aws_s3_bucket_policy" "test" {
   ]
 }
       EOF
-
 }
 
 resource "aws_ssm_resource_data_sync" "test" {
-  name = "tf-test-ssm-%[2]s"
+  name = %[1]q
 
   s3_destination {
     bucket_name = aws_s3_bucket.test.bucket
     region      = aws_s3_bucket.test.region
   }
 }
-`, rInt, rName)
+`, rName, bucketName)
 }
 
-func testAccResourceDataSyncConfig_update(rInt int, rName string) string {
+func testAccResourceDataSyncConfig_update_s3DestinationPrefix(rName, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-bucket-%[1]d"
+  bucket        = %[2]q
   force_destroy = true
 }
 
@@ -217,7 +222,7 @@ resource "aws_s3_bucket_policy" "test" {
         "Service": "ssm.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "s3:GetBucketAcl",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::tf-test-bucket-%[1]d"
+      "Resource": "${aws_s3_bucket.test.arn}"
     },
     {
       "Sid": " SSMBucketDelivery",
@@ -227,7 +232,7 @@ resource "aws_s3_bucket_policy" "test" {
       },
       "Action": "s3:PutObject",
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:s3:::tf-test-bucket-%[1]d/*"
+        "${aws_s3_bucket.test.arn}/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -238,11 +243,10 @@ resource "aws_s3_bucket_policy" "test" {
   ]
 }
       EOF
-
 }
 
 resource "aws_ssm_resource_data_sync" "test" {
-  name = "tf-test-ssm-%[2]s"
+  name = %[1]q
 
   s3_destination {
     bucket_name = aws_s3_bucket.test.bucket
@@ -250,5 +254,5 @@ resource "aws_ssm_resource_data_sync" "test" {
     prefix      = "test-"
   }
 }
-`, rInt, rName)
+`, rName, bucketName)
 }
