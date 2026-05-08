@@ -53,6 +53,23 @@ type Options struct {
 	ConstantsFile string
 	PackagePath   string
 	DryRun        bool
+	// Check mode options
+	Check          bool
+	Fix            bool
+	KnownConstants stringSlice
+	// Shared options
+	IgnoreTests bool
+	IgnoreFiles stringSlice
+	Scan        bool
+}
+
+// stringSlice implements flag.Value for repeatable string flags.
+type stringSlice []string
+
+func (s *stringSlice) String() string { return strings.Join(*s, ",") }
+func (s *stringSlice) Set(v string) error {
+	*s = append(*s, v)
+	return nil
 }
 
 var opts Options
@@ -74,19 +91,45 @@ func parseFlags() {
 	flag.StringVar(&opts.Literal, "literal", "", "the string literal to replace (replace mode)")
 	flag.StringVar(&opts.ConstantName, "constant", "", "the constant name to use (replace mode)")
 	flag.StringVar(&opts.ConstantsFile, "constants-file", "", "the constants file to update (replace mode)")
-	flag.StringVar(&opts.PackagePath, "package", ".", "the package path to process (replace mode)")
+	flag.StringVar(&opts.PackagePath, "package", ".", "the package path to process (replace/check mode)")
 	flag.BoolVar(&opts.DryRun, "dry-run", false, "show what would be changed without modifying files (replace mode)")
+
+	// Check mode flags
+	flag.BoolVar(&opts.Check, "check", false, "check mode: report literals that have an in-scope constant")
+	flag.BoolVar(&opts.Fix, "fix", false, "fix mode: replace literals that have an in-scope constant")
+	flag.Var(&opts.KnownConstants, "known-constants", "additional package directory to scan for constants (repeatable)")
+
+	// Shared flags
+	flag.BoolVar(&opts.IgnoreTests, "ignore-tests", false, "skip _test.go files")
+	flag.BoolVar(&opts.Scan, "scan", false, "scan mode: analyze string literals across packages")
+	flag.Var(&opts.IgnoreFiles, "ignore-file", "file name to skip (repeatable, matches basename)")
 
 	var scoringStrategy string
 	flag.StringVar(&scoringStrategy, "scoringstrategy", "STANDARD", "the scoring strategy to use (STANDARD, MULT, GMEAN, TEST, TEST_MULT, RT_MEAN_SQ)")
 
 	flag.Parse() // must be after flag declarations and before flag uses
 
+	if opts.Check || opts.Fix {
+		return
+	}
+
 	if opts.Replace {
 		if opts.Literal == "" || opts.ConstantName == "" || opts.ConstantsFile == "" {
 			log.Fatal("Replace mode requires --literal, --constant, and --constants-file flags")
 		}
 		return
+	}
+
+	if !opts.Scan {
+		fmt.Fprintf(os.Stderr, "literally: a tool for analyzing, replacing, and enforcing string literal constants\n\n")
+		fmt.Fprintf(os.Stderr, "Modes:\n")
+		fmt.Fprintf(os.Stderr, "  -scan      Analyze string literals across packages\n")
+		fmt.Fprintf(os.Stderr, "  -replace   Replace string literals with constants\n")
+		fmt.Fprintf(os.Stderr, "  -check     Report literals that should use existing constants\n")
+		fmt.Fprintf(os.Stderr, "  -fix       Automatically fix literals that should use existing constants\n")
+		fmt.Fprintf(os.Stderr, "\nFlags:\n")
+		flag.PrintDefaults()
+		os.Exit(1)
 	}
 
 	fmt.Printf("Scoring strategy: %s\n", scoringStrategy)
@@ -423,6 +466,16 @@ func main() {
 	// Parse the command line flags
 	parseFlags()
 
+	// Handle check mode
+	if opts.Check {
+		os.Exit(runCheck())
+	}
+
+	// Handle fix mode
+	if opts.Fix {
+		os.Exit(runFix())
+	}
+
 	// Handle replace mode
 	if opts.Replace {
 		if err := runReplace(); err != nil {
@@ -454,6 +507,9 @@ func main() {
 		for _, pkg := range pkgs {
 			v.isTest = false
 			if strings.HasSuffix(pkg.Name, "_test") {
+				if opts.IgnoreTests {
+					continue
+				}
 				v.isTest = true
 			}
 			ast.Walk(v, pkg)
@@ -591,6 +647,8 @@ type replacementVisitor struct {
 	constantName string
 	replacements int
 	parents      []ast.Node
+	fset         *token.FileSet
+	ignoreLines  map[int]bool
 }
 
 func (v *replacementVisitor) Visit(n ast.Node) ast.Visitor {
@@ -614,6 +672,14 @@ func (v *replacementVisitor) Visit(n ast.Node) ast.Visitor {
 	// Skip if this literal is the value of a const declaration
 	if v.isConstValue(n) {
 		return v
+	}
+
+	// Skip if line has lintignore directive
+	if v.ignoreLines != nil {
+		line := v.fset.Position(lit.Pos()).Line
+		if v.ignoreLines[line] {
+			return v
+		}
 	}
 
 	lit.Kind = token.IDENT
@@ -654,6 +720,8 @@ func replaceInFile(path string, literal, constantName string) (int, error) {
 	v := &replacementVisitor{
 		literal:      literal,
 		constantName: constantName,
+		fset:         fset,
+		ignoreLines:  lintIgnoreLines(fset, f),
 	}
 	ast.Walk(v, f)
 
@@ -699,7 +767,7 @@ func runReplace() error {
 		fmt.Printf("Constant %s already exists in %s\n", opts.ConstantName, opts.ConstantsFile)
 	}
 
-	// Find all .go files in package (excluding _test.go and the constants file itself)
+	// Find all .go files in package
 	var files []string
 	err = filepath.Walk(opts.PackagePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -709,7 +777,8 @@ func runReplace() error {
 			return filepath.SkipDir // Don't recurse
 		}
 		if !info.IsDir() && strings.HasSuffix(path, ".go") &&
-			!strings.HasSuffix(path, "_test.go") {
+			!(opts.IgnoreTests && strings.HasSuffix(path, "_test.go")) &&
+			!slices.Contains([]string(opts.IgnoreFiles), filepath.Base(path)) {
 			files = append(files, path)
 		}
 		return nil
@@ -738,4 +807,323 @@ func runReplace() error {
 	}
 
 	return nil
+}
+
+// constantRef records where a constant is defined, supporting future
+// per-import resolution by tracking the source package.
+type constantRef struct {
+	Name    string // constant identifier (e.g. "AttrARN" or "attrItems")
+	PkgDir  string // directory the constant was parsed from
+	PkgName string // Go package name (e.g. "names", "cloudfront")
+}
+
+// collectConstants parses a package directory and returns a map of
+// string value → []constantRef for all string constants found.
+func collectConstants(dir string) (map[string][]constantRef, error) {
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, dir, nil, 0)
+	if err != nil {
+		return nil, fmt.Errorf("parsing %s: %w", dir, err)
+	}
+
+	constants := make(map[string][]constantRef)
+	for _, pkg := range pkgs {
+		if strings.HasSuffix(pkg.Name, "_test") {
+			continue
+		}
+		for _, f := range pkg.Files {
+			for _, decl := range f.Decls {
+				genDecl, ok := decl.(*ast.GenDecl)
+				if !ok || genDecl.Tok != token.CONST {
+					continue
+				}
+				for _, spec := range genDecl.Specs {
+					vs, ok := spec.(*ast.ValueSpec)
+					if !ok || len(vs.Values) == 0 {
+						continue
+					}
+					for i, val := range vs.Values {
+						lit, ok := val.(*ast.BasicLit)
+						if !ok || lit.Kind != token.STRING {
+							continue
+						}
+						str, err := strconv.Unquote(lit.Value)
+						if err != nil {
+							continue
+						}
+						ref := constantRef{
+							Name:    vs.Names[i].Name,
+							PkgDir:  dir,
+							PkgName: pkg.Name,
+						}
+						constants[str] = append(constants[str], ref)
+					}
+				}
+			}
+		}
+	}
+	return constants, nil
+}
+
+// violation records a single check-mode finding.
+type violation struct {
+	File      string
+	Line      int
+	Literal   string
+	Constants []constantRef
+}
+
+// checkVisitor walks a file's AST and reports literals that match known constants.
+type checkVisitor struct {
+	constants   map[string][]constantRef
+	fset        *token.FileSet
+	file        string
+	parents     []ast.Node
+	violations  []violation
+	ignoreLines map[int]bool
+}
+
+func (v *checkVisitor) Visit(n ast.Node) ast.Visitor {
+	if n == nil {
+		v.parents = v.parents[:len(v.parents)-1]
+		return v
+	}
+
+	v.parents = append(v.parents, n)
+
+	lit, ok := n.(*ast.BasicLit)
+	if !ok || lit.Kind != token.STRING {
+		return v
+	}
+
+	// Skip import paths
+	if len(v.parents) >= 2 {
+		if _, ok := v.parents[len(v.parents)-2].(*ast.ImportSpec); ok {
+			return v
+		}
+	}
+
+	// Skip struct tags
+	if len(v.parents) >= 2 {
+		if field, ok := v.parents[len(v.parents)-2].(*ast.Field); ok && field.Tag != nil && field.Tag.Value == lit.Value {
+			return v
+		}
+	}
+
+	// Skip const values themselves
+	if v.isConstValue(n) {
+		return v
+	}
+
+	str, err := strconv.Unquote(lit.Value)
+	if err != nil {
+		return v
+	}
+
+	if len(str) < opts.MinStringLen {
+		return v
+	}
+
+	refs, ok := v.constants[str]
+	if !ok {
+		return v
+	}
+
+	pos := v.fset.Position(lit.Pos())
+	if v.ignoreLines[pos.Line] {
+		return v
+	}
+	v.violations = append(v.violations, violation{
+		File:      v.file,
+		Line:      pos.Line,
+		Literal:   str,
+		Constants: refs,
+	})
+
+	return v
+}
+
+func (v *checkVisitor) isConstValue(n ast.Node) bool {
+	if len(v.parents) < 3 {
+		return false
+	}
+	valueSpec, ok := v.parents[len(v.parents)-2].(*ast.ValueSpec)
+	if !ok {
+		return false
+	}
+	genDecl, ok := v.parents[len(v.parents)-3].(*ast.GenDecl)
+	if !ok || genDecl.Tok != token.CONST {
+		return false
+	}
+	for _, val := range valueSpec.Values {
+		if val == n {
+			return true
+		}
+	}
+	return false
+}
+
+// lintIgnoreLines returns a set of line numbers that have a "lintignore:literally" comment.
+func lintIgnoreLines(fset *token.FileSet, f *ast.File) map[int]bool {
+	lines := make(map[int]bool)
+	for _, cg := range f.Comments {
+		for _, c := range cg.List {
+			if strings.Contains(c.Text, "lintignore:literally") {
+				lines[fset.Position(c.Pos()).Line] = true
+			}
+		}
+	}
+	return lines
+}
+
+// runCheck collects constants from the target package and any known-constants
+// packages, then scans the target package for literals that should use those
+// constants. Returns 0 if clean, 1 if violations found.
+func runCheck() int {
+	// Collect constants from the target package itself
+	constants, err := collectConstants(opts.PackagePath)
+	if err != nil {
+		log.Fatalf("collecting constants from %s: %v", opts.PackagePath, err)
+	}
+
+	// Collect constants from additional known-constants packages
+	for _, dir := range opts.KnownConstants {
+		extra, err := collectConstants(dir)
+		if err != nil {
+			log.Fatalf("collecting constants from %s: %v", dir, err)
+		}
+		for val, refs := range extra {
+			constants[val] = append(constants[val], refs...)
+		}
+	}
+
+	if len(constants) == 0 {
+		fmt.Println("No constants found.")
+		return 0
+	}
+
+	// Walk target package files and check for violations
+	var allViolations []violation
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, opts.PackagePath, nil, parser.ParseComments)
+	if err != nil {
+		log.Fatalf("parsing package %s: %v", opts.PackagePath, err)
+	}
+
+	for _, pkg := range pkgs {
+		for filename, f := range pkg.Files {
+			if opts.IgnoreTests && strings.HasSuffix(filename, "_test.go") {
+				continue
+			}
+			if slices.Contains([]string(opts.IgnoreFiles), filepath.Base(filename)) {
+				continue
+			}
+			cv := &checkVisitor{
+				constants:   constants,
+				fset:        fset,
+				file:        filename,
+				ignoreLines: lintIgnoreLines(fset, f),
+			}
+			ast.Walk(cv, f)
+			allViolations = append(allViolations, cv.violations...)
+		}
+	}
+
+	if len(allViolations) == 0 {
+		return 0
+	}
+
+	// Sort by file then line for stable output
+	slices.SortFunc(allViolations, func(a, b violation) int {
+		if a.File != b.File {
+			return strings.Compare(a.File, b.File)
+		}
+		return a.Line - b.Line
+	})
+
+	for _, v := range allViolations {
+		names := make([]string, 0, len(v.Constants))
+		for _, ref := range v.Constants {
+			name := ref.Name
+			if ref.PkgDir != opts.PackagePath {
+				name = ref.PkgName + "." + name
+			}
+			names = append(names, name)
+		}
+		fmt.Printf("%s:%d: use %s instead of %q\n", v.File, v.Line, strings.Join(names, ", "), v.Literal)
+	}
+
+	fmt.Printf("\n%d violation(s) found\n", len(allViolations))
+	return 1
+}
+
+// runFix collects constants (same as check mode) and replaces matching
+// literals in the target package. Returns 0 on success, 1 on error.
+func runFix() int {
+	constants, err := collectConstants(opts.PackagePath)
+	if err != nil {
+		log.Fatalf("collecting constants from %s: %v", opts.PackagePath, err)
+	}
+
+	for _, dir := range opts.KnownConstants {
+		extra, err := collectConstants(dir)
+		if err != nil {
+			log.Fatalf("collecting constants from %s: %v", dir, err)
+		}
+		for val, refs := range extra {
+			constants[val] = append(constants[val], refs...)
+		}
+	}
+
+	if len(constants) == 0 {
+		fmt.Println("No constants found.")
+		return 0
+	}
+
+	// Collect files to process
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, opts.PackagePath, nil, parser.ParseComments)
+	if err != nil {
+		log.Fatalf("parsing package %s: %v", opts.PackagePath, err)
+	}
+
+	var files []string
+	for _, pkg := range pkgs {
+		for filename := range pkg.Files {
+			if opts.IgnoreTests && strings.HasSuffix(filename, "_test.go") {
+				continue
+			}
+			if slices.Contains([]string(opts.IgnoreFiles), filepath.Base(filename)) {
+				continue
+			}
+			files = append(files, filename)
+		}
+	}
+
+	// For each constant value, replace in all files
+	totalReplacements := 0
+	for value, refs := range constants {
+		if len(value) < opts.MinStringLen {
+			continue
+		}
+		// Use the first ref's name; for cross-package constants, use qualified name
+		name := refs[0].Name
+		if refs[0].PkgDir != opts.PackagePath {
+			name = refs[0].PkgName + "." + name
+		}
+		for _, file := range files {
+			count, err := replaceInFile(file, value, name)
+			if err != nil {
+				log.Printf("error replacing in %s: %v", file, err)
+				continue
+			}
+			if count > 0 {
+				fmt.Printf("  %s: %d replacement(s) (%q → %s)\n", file, count, value, name)
+				totalReplacements += count
+			}
+		}
+	}
+
+	fmt.Printf("\nFixed %d literal(s)\n", totalReplacements)
+	return 0
 }
