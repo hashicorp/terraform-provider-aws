@@ -314,6 +314,88 @@ resource "aws_bedrockagentcore_gateway_target" "mcp_with_headers" {
 }
 ```
 
+### Self-hosted MCP server in a VPC (managed Lattice)
+
+```terraform
+resource "aws_bedrockagentcore_gateway_target" "example" {
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+  name               = "my-private-mcp-target"
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        # The MCP server endpoint as seen from inside the VPC.
+        endpoint = "https://mcp.internal.example.com/mcp"
+      }
+    }
+  }
+
+  # AgentCore Gateway will provision VPC Lattice ENIs in the specified subnets
+  # and route traffic to the MCP server without exposing it to the internet.
+  private_endpoint {
+    managed_vpc_resource {
+      vpc_id                   = aws_vpc.example.id
+      subnet_ids               = aws_subnet.example[*].id
+      endpoint_ip_address_type = "IPV4"
+      security_group_ids       = [aws_security_group.mcp_lattice.id]
+    }
+  }
+}
+```
+
+### Self-hosted MCP server with routing through an internal ALB
+
+Use `routing_domain` when the MCP server has a private TLS certificate. Place an internal ALB with a public ACM certificate in front of the server and set `routing_domain` to the ALB DNS name.
+
+```terraform
+resource "aws_bedrockagentcore_gateway_target" "example" {
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+  name               = "my-private-mcp-via-alb"
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        # Must match the domain on the ALB's ACM certificate.
+        endpoint = "https://mcp.example.com/mcp"
+      }
+    }
+  }
+
+  private_endpoint {
+    managed_vpc_resource {
+      vpc_id                   = aws_vpc.example.id
+      subnet_ids               = aws_subnet.example[*].id
+      endpoint_ip_address_type = "IPV4"
+      # Route through the internal ALB instead of the actual MCP server domain.
+      routing_domain           = aws_lb.mcp_alb.dns_name
+    }
+  }
+}
+```
+
+### Self-managed VPC Lattice resource configuration
+
+```terraform
+resource "aws_bedrockagentcore_gateway_target" "example" {
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+  name               = "my-private-mcp-self-managed"
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://mcp.internal.example.com/mcp"
+      }
+    }
+  }
+
+  private_endpoint {
+    self_managed_lattice_resource {
+      resource_configuration_identifier = aws_vpclattice_resource_configuration.mcp.arn
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -327,6 +409,7 @@ The following arguments are optional:
 * `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `description` - (Optional) Description of the gateway target.
 * `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration`](#metadata_configuration) below.
+* `private_endpoint` - (Optional) Configuration for private connectivity from AgentCore Gateway to a resource inside your VPC. Traffic is routed through Amazon VPC Lattice and never traverses the public internet. See [`private_endpoint`](#private_endpoint) below.
 * `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
 
 ### `credential_provider_configuration`
@@ -365,6 +448,34 @@ The `metadata_configuration` block supports the following:
 * `allowed_response_headers` - (Optional) A set of HTTP headers that are allowed to be propagated from the target response back to the client. Maximum of 10 headers.
 
 ~> **Note:** Header names must contain only alphanumeric characters, hyphens, and underscores. A large number of standard HTTP headers are restricted and cannot be configured for propagation, including authentication, content negotiation, caching, security, CORS, and connection management headers. Headers starting with `X-Amzn-` are prohibited except for `X-Amzn-Bedrock-AgentCore-Runtime-Custom-*` headers. These restrictions are enforced by schema validation. For the full list of restricted headers, see the [AWS documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-headers.html).
+
+### `private_endpoint`
+
+The optional `private_endpoint` block configures private connectivity from AgentCore Gateway to a resource inside your VPC. Traffic is routed through [Amazon VPC Lattice](https://docs.aws.amazon.com/vpc-lattice/latest/ug/what-is-vpc-lattice.html) and never traverses the public internet.
+
+Exactly one of `managed_vpc_resource` or `self_managed_lattice_resource` must be specified.
+
+~> **Note:** Gateway targets configured with `private_endpoint` cannot use `NO_AUTH` as the inbound authorizer type on the parent gateway unless an interceptor Lambda is also configured.
+
+* `managed_vpc_resource` - (Optional) AWS creates and manages the VPC Lattice resource gateway and resource configuration on your behalf using a service-linked role. See [`managed_vpc_resource`](#managed_vpc_resource) below.
+* `self_managed_lattice_resource` - (Optional) Use an existing VPC Lattice resource configuration that you manage yourself. Useful for cross-account setups or advanced Lattice configurations. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+
+### `managed_vpc_resource`
+
+The `managed_vpc_resource` block supports the following:
+
+* `vpc_id` - (Required) ID of the VPC that contains the private resource.
+* `subnet_ids` - (Required) Set of subnet IDs inside the VPC where Lattice ENIs are placed.
+* `endpoint_ip_address_type` - (Required) IP address type for the resource configuration endpoint. Valid values: `IPV4`, `IPV6`.
+* `security_group_ids` - (Optional) Set of security group IDs (up to 5) to associate with the Lattice resource gateway. Defaults to the VPC default security group.
+* `routing_domain` - (Optional) Intermediate domain (e.g. a VPCE or ALB DNS name) to use instead of the actual target domain. Useful when the MCP server uses a private TLS certificate — place an ALB with a public ACM cert in front and set this to the ALB DNS name.
+* `tags` - (Optional) Map of tags to apply to the managed Lattice resource gateway.
+
+### `self_managed_lattice_resource`
+
+The `self_managed_lattice_resource` block supports the following:
+
+* `resource_configuration_identifier` - (Required) ARN or ID of the VPC Lattice resource configuration.
 
 ### `target_configuration`
 

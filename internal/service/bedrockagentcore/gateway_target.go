@@ -46,6 +46,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// vpcIDRegex matches vpc-xxxxxxxx (8 hex chars) or vpc-xxxxxxxxxxxxxxxxx (17 hex chars).
+// Shared with gateway_target_private_endpoint.go.
+var vpcIDRegex = regexache.MustCompile(`^vpc-[0-9a-f]{8}([0-9a-f]{9})?$`)
+
 // @FrameworkResource("aws_bedrockagentcore_gateway_target", name="Gateway Target")
 func newGatewayTargetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &gatewayTargetResource{}
@@ -742,6 +746,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
+			"private_endpoint": privateEndpointSchema(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -946,7 +951,7 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TargetStatusCreating),
-		Target:                    enum.Slice(awstypes.TargetStatusReady),
+		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusFailed),
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -981,7 +986,7 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 
 func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady),
+		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady, awstypes.TargetStatusFailed),
 		Target:  []string{},
 		Refresh: statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout: timeout,
@@ -1047,6 +1052,7 @@ type gatewayTargetResourceModel struct {
 	GatewayIdentifier               types.String                                                          `tfsdk:"gateway_identifier"`
 	MetadataConfiguration           fwtypes.ListNestedObjectValueOf[metadataConfigurationModel]           `tfsdk:"metadata_configuration"`
 	Name                            types.String                                                          `tfsdk:"name"`
+	PrivateEndpoint                 fwtypes.ListNestedObjectValueOf[privateEndpointModel]                 `tfsdk:"private_endpoint"`
 	TargetConfiguration             fwtypes.ListNestedObjectValueOf[targetConfigurationModel]             `tfsdk:"target_configuration"`
 	TargetID                        types.String                                                          `tfsdk:"target_id"`
 	Timeouts                        timeouts.Value                                                        `tfsdk:"timeouts"`
