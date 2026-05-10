@@ -1554,6 +1554,47 @@ func TestAccSiteVPNConnection_largeBandwidthTunnel_withoutTGWorVGW(t *testing.T)
 	})
 }
 
+func TestAccSiteVPNConnection_tunnelBandwidth(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpn awstypes.VpnConnection
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionConfig_tunnelBandwidth(rName, rBgpAsn, string(awstypes.VpnTunnelBandwidthStandard)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(ctx, t, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", string(awstypes.VpnTunnelBandwidthStandard)),
+				),
+			},
+			{
+				Config: testAccVPNConnectionConfig_tunnelBandwidth(rName, rBgpAsn, string(awstypes.VpnTunnelBandwidthLarge)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(ctx, t, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", string(awstypes.VpnTunnelBandwidthLarge)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSiteVPNConnection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -3155,6 +3196,26 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
 }
 `, rName, rBgpAsn)
+}
+
+func testAccVPNConnectionConfig_tunnelBandwidth(rName string, rBgpAsn int, tunnelBandwidth string) string {
+	return fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "198.51.100.2"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  tunnel_bandwidth    = %[3]q
+  type                = "ipsec.1"
+}
+`, rName, rBgpAsn, tunnelBandwidth)
 }
 
 func testAccVPNConnectionConfig_vpnConcentrator(rName string, rBgpAsn int) string {
