@@ -84,13 +84,9 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 					return
 				}
 
-				if len(daemon.CurrentRevisions) > 0 && daemon.CurrentRevisions[0].Arn != nil {
-					revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(daemon.CurrentRevisions[0].Arn))
-					if err != nil {
-						result.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(daemon.CurrentRevisions[0].Arn)), err.Error())
-						return
-					}
-					flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], &data)
+				flattenDaemonCurrentRevision(ctx, conn, daemon, &result.Diagnostics, &data)
+				if result.Diagnostics.HasError() {
+					return
 				}
 
 				setTagsOut(ctx, nil)

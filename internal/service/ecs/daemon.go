@@ -17,13 +17,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -36,6 +38,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const maxDrainPercent = 100.0
 
 // @FrameworkResource("aws_ecs_daemon", name="Daemon")
 // @Tags(identifierAttribute="arn")
@@ -126,7 +130,7 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 						"drain_percent": schema.Float64Attribute{
 							Optional: true,
 							Validators: []validator.Float64{
-								float64validator.Between(0.0, 100.0),
+								float64validator.Between(0.0, maxDrainPercent),
 							},
 						},
 					},
@@ -158,7 +162,6 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 			}),
 		},
 	}
-
 }
 
 func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -177,20 +180,19 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Fields AutoFlex can't handle
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	// Write-only fields — read from config
-	var config daemonResourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	managedTags, execCmd := expandDaemonWriteOnlyFields(ctx, request.Config, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if !config.EnableECSManagedTags.IsNull() {
-		input.EnableECSManagedTags = config.EnableECSManagedTags.ValueBool()
+	if !managedTags.IsNull() {
+		input.EnableECSManagedTags = managedTags.ValueBool()
 	}
-	if !config.EnableExecuteCommand.IsNull() {
-		input.EnableExecuteCommand = config.EnableExecuteCommand.ValueBool()
+	if !execCmd.IsNull() {
+		input.EnableExecuteCommand = execCmd.ValueBool()
 	}
 
 	output, err := conn.CreateDaemon(ctx, &input)
@@ -202,7 +204,7 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	plan.DaemonArn = types.StringValue(aws.ToString(output.DaemonArn))
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	if _, err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), createTimeout); err != nil {
+	if err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) create", plan.DaemonArn.ValueString()), err.Error())
 		return
 	}
@@ -219,13 +221,9 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	if len(daemon.CurrentRevisions) > 0 && daemon.CurrentRevisions[0].Arn != nil {
-		revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(daemon.CurrentRevisions[0].Arn))
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(daemon.CurrentRevisions[0].Arn)), err.Error())
-			return
-		}
-		flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], &plan)
+	flattenDaemonCurrentRevision(ctx, conn, daemon, &response.Diagnostics, &plan)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
@@ -257,13 +255,9 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	if len(daemon.CurrentRevisions) > 0 && daemon.CurrentRevisions[0].Arn != nil {
-		revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(daemon.CurrentRevisions[0].Arn))
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(daemon.CurrentRevisions[0].Arn)), err.Error())
-			return
-		}
-		flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], &state)
+	flattenDaemonCurrentRevision(ctx, conn, daemon, &response.Diagnostics, &state)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
@@ -286,7 +280,6 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 	}
 
 	if diff.HasChanges() {
-
 		var input ecs.UpdateDaemonInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if response.Diagnostics.HasError() {
@@ -294,16 +287,15 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Write-only fields — read from config, always send
-		var config daemonResourceModel
-		response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+		managedTags, execCmd := expandDaemonWriteOnlyFields(ctx, request.Config, &response.Diagnostics)
 		if response.Diagnostics.HasError() {
 			return
 		}
-		if !config.EnableECSManagedTags.IsNull() {
-			input.EnableECSManagedTags = config.EnableECSManagedTags.ValueBool()
+		if !managedTags.IsNull() {
+			input.EnableECSManagedTags = managedTags.ValueBool()
 		}
-		if !config.EnableExecuteCommand.IsNull() {
-			input.EnableExecuteCommand = config.EnableExecuteCommand.ValueBool()
+		if !execCmd.IsNull() {
+			input.EnableExecuteCommand = execCmd.ValueBool()
 		}
 
 		_, err := conn.UpdateDaemon(ctx, &input)
@@ -313,7 +305,7 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		if _, err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), updateTimeout); err != nil {
+		if err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), updateTimeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) update", plan.DaemonArn.ValueString()), err.Error())
 			return
 		}
@@ -331,13 +323,9 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		return
 	}
 
-	if len(daemon.CurrentRevisions) > 0 && daemon.CurrentRevisions[0].Arn != nil {
-		revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(daemon.CurrentRevisions[0].Arn))
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(daemon.CurrentRevisions[0].Arn)), err.Error())
-			return
-		}
-		flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], &plan)
+	flattenDaemonCurrentRevision(ctx, conn, daemon, &response.Diagnostics, &plan)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
@@ -370,7 +358,7 @@ func (r *daemonResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	if _, err := waitDaemonDeleted(ctx, conn, state.DaemonArn.ValueString(), deleteTimeout); err != nil {
+	if err := waitDaemonDeleted(ctx, conn, state.DaemonArn.ValueString(), deleteTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) delete", state.DaemonArn.ValueString()), err.Error())
 	}
 }
@@ -403,6 +391,21 @@ func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevisio
 	}
 }
 
+// flattenDaemonCurrentRevision fetches the current revision for a daemon and
+// flattens its fields into the model. This is shared across Create, Read,
+// Update, and the list resource.
+func flattenDaemonCurrentRevision(ctx context.Context, conn *ecs.Client, daemon *awstypes.DaemonDetail, diags *diag.Diagnostics, model *daemonResourceModel) {
+	if len(daemon.CurrentRevisions) == 0 || daemon.CurrentRevisions[0].Arn == nil {
+		return
+	}
+	revision, err := findDaemonRevisionByARN(ctx, conn, aws.ToString(daemon.CurrentRevisions[0].Arn))
+	if err != nil {
+		diags.AddError(fmt.Sprintf("reading ECS Daemon Revision (%s)", aws.ToString(daemon.CurrentRevisions[0].Arn)), err.Error())
+		return
+	}
+	flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], model)
+}
+
 type daemonResourceModel struct {
 	framework.WithRegionModel
 	DaemonArn               types.String                                                  `tfsdk:"arn"`
@@ -431,6 +434,17 @@ type alarmConfigurationModel struct {
 	Enable     types.Bool          `tfsdk:"enable"`
 }
 
+// expandDaemonWriteOnlyFields reads write-only fields from the Terraform config.
+// These fields are not returned by the API, so they must always be read from config.
+func expandDaemonWriteOnlyFields(ctx context.Context, cfg tfsdk.Config, diags *diag.Diagnostics) (enableManagedTags, enableExecCmd types.Bool) {
+	var data daemonResourceModel
+	diags.Append(cfg.Get(ctx, &data)...)
+	if diags.HasError() {
+		return
+	}
+	return data.EnableECSManagedTags, data.EnableExecuteCommand
+}
+
 // Finder, status, and waiter functions.
 
 func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonDetail, error) {
@@ -455,9 +469,9 @@ func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstyp
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	if output.Daemon.Status == "DELETE_IN_PROGRESS" {
+	if output.Daemon.Status == awstypes.DaemonStatusDeleteInProgress {
 		return nil, &sdkretry.NotFoundError{
-			Message:     "DELETE_IN_PROGRESS",
+			Message:     string(awstypes.DaemonStatusDeleteInProgress),
 			LastRequest: input,
 		}
 	}
@@ -499,7 +513,7 @@ func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) sdkretry.St
 	}
 }
 
-func waitDaemonActive(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.DaemonDetail, error) {
+func waitDaemonActive(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) error {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.DaemonStatusActive),
@@ -507,30 +521,22 @@ func waitDaemonActive(ctx context.Context, conn *ecs.Client, arn string, timeout
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.DaemonDetail); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
-func waitDaemonDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.DaemonDetail, error) {
+func waitDaemonDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) error {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DaemonStatusActive, "DELETE_IN_PROGRESS"),
+		Pending: enum.Slice(awstypes.DaemonStatusActive, awstypes.DaemonStatusDeleteInProgress),
 		Target:  []string{},
 		Refresh: statusDaemon(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.DaemonDetail); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func findDaemonRevisionByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonRevision, error) {

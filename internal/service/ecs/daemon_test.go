@@ -6,14 +6,13 @@ package ecs_test
 import (
 	"context"
 	"fmt"
-
-	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,17 +28,17 @@ func TestDaemonNameFromARN(t *testing.T) {
 	}{
 		{
 			name:     "valid daemon ARN",
-			input:    "arn:aws:ecs:us-west-2:123456789012:daemon/my-cluster/my-daemon",
+			input:    "arn:aws:ecs:us-west-2:123456789012:daemon/my-cluster/my-daemon", // lintignore:AWSAT003,AWSAT005
 			expected: "my-daemon",
 		},
 		{
 			name:   "too few parts",
-			input:  "arn:aws:ecs:us-west-2:123456789012:daemon/my-cluster",
+			input:  "arn:aws:ecs:us-west-2:123456789012:daemon/my-cluster", // lintignore:AWSAT003,AWSAT005
 			isNull: true,
 		},
 		{
 			name:   "too many parts",
-			input:  "arn:aws:ecs:us-west-2:123456789012:daemon/a/b/c",
+			input:  "arn:aws:ecs:us-west-2:123456789012:daemon/a/b/c", // lintignore:AWSAT003,AWSAT005
 			isNull: true,
 		},
 		{

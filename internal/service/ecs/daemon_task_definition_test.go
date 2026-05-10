@@ -6,15 +6,14 @@ package ecs_test
 import (
 	"context"
 	"fmt"
-
-	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -374,6 +373,29 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testi
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-group", "/ecs/daemon"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-stream-prefix", "ecs"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfigurationSecretOption(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_logConfigurationSecretOption(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.secret_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.secret_option.0.name", "LOG_SECRET"),
 				),
 			},
 		},
@@ -843,6 +865,59 @@ resource "aws_ecs_daemon_task_definition" "test" {
         "awslogs-group"         = "/ecs/daemon"
         "awslogs-region"        = data.aws_region.current.name
         "awslogs-stream-prefix" = "ecs"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_logConfigurationSecretOption(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "execution" {
+  name = "%[1]s-execution"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = "SecureString"
+  value = "secret-value"
+}
+
+resource "aws_ecs_daemon_task_definition" "test" {
+  family             = %[1]q
+  cpu                = "512"
+  memory             = "1024"
+  execution_role_arn = aws_iam_role.execution.arn
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+
+    log_configuration {
+      log_driver = "awslogs"
+      options = {
+        "awslogs-group"         = "/ecs/daemon"
+        "awslogs-region"        = data.aws_region.current.name
+        "awslogs-stream-prefix" = "ecs"
+      }
+      secret_option {
+        name       = "LOG_SECRET"
+        value_from = aws_ssm_parameter.test.arn
       }
     }
   }

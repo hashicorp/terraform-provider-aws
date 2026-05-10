@@ -72,6 +72,7 @@ This resource supports the following arguments:
 * `enable_execute_command` - (Optional, Write-only) Whether to enable Amazon ECS Exec for the tasks within the daemon.
 * `name` - (Required, Forces new resource) Name of the daemon.
 * `propagate_tags` - (Optional) Whether to propagate tags from the daemon to tasks. Valid values are `DAEMON` or `NONE`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Deployment Configuration

@@ -24,6 +24,7 @@ This data source supports the following arguments:
 
 * `capacity_provider_arns` - (Optional) List of capacity provider ARNs to filter the daemons by.
 * `cluster_arn` - (Required) ARN of the ECS cluster to list daemons for.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

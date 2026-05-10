@@ -49,6 +49,7 @@ This data source supports the following arguments:
 
 * `family` - (Optional) Exact family name to filter daemon task definitions.
 * `family_prefix` - (Optional) Prefix to filter daemon task definitions by family name.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `revision` - (Optional) Revision filter. Valid values are `ALL` or `LAST_REGISTERED`.
 * `sort` - (Optional) Sort order. Valid values are `ASC` or `DESC`.
 * `status` - (Optional) Status to filter daemon task definitions. Valid values are `ACTIVE`, `DELETE_IN_PROGRESS`, or `ALL`.
