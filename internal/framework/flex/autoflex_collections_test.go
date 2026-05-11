@@ -1112,8 +1112,8 @@ func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {
 
 		"omitempty": {
 			"values": {
-				Source:     &awsSimpleStringValueSlice{Field1: []string{"a", "b"}},
-				Target:     &tfSimpleSetOmitEmpty{},
+				Source: &awsSimpleStringValueSlice{Field1: []string{"a", "b"}},
+				Target: &tfSimpleSetOmitEmpty{},
 				WantTarget: &tfSimpleSetOmitEmpty{
 					Field1: types.SetValueMust(types.StringType, []attr.Value{
 						types.StringValue("a"),

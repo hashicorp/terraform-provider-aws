@@ -985,3 +985,133 @@ func generateLegacyTFToAWSPointerStructs(fieldType reflect.Type) (tf, aws any) {
 
 	return tfStruct, awsStruct
 }
+
+type tfBoolField struct {
+	Field1 types.Bool `tfsdk:"field1"`
+}
+
+type tfFloat64Field struct {
+	Field1 types.Float64 `tfsdk:"field1"`
+}
+
+type tfFloat32Field struct {
+	Field1 types.Float32 `tfsdk:"field1"`
+}
+
+type tfInt64Field struct {
+	Field1 types.Int64 `tfsdk:"field1"`
+}
+
+type tfInt32Field struct {
+	Field1 types.Int32 `tfsdk:"field1"`
+}
+
+type awsSingleStructField struct {
+	Field1 struct{ X int }
+}
+
+func TestExpandPrimitiveIncompatibleTypes(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"bool to incompatible": {
+			Source:     &tfBoolField{Field1: types.BoolValue(true)},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+		"float64 to incompatible": {
+			Source:     &tfFloat64Field{Field1: types.Float64Value(1.1)},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+		"float32 to incompatible": {
+			Source:        &tfFloat32Field{Field1: types.Float32Value(1.1)},
+			Target:        &awsSingleStringValue{},
+			WantTarget:    &awsSingleStringValue{},
+			ExpectedDiags: diag.Diagnostics{diagExpandingIncompatibleTypes(reflect.TypeFor[types.Float32](), reflect.TypeFor[string]())},
+		},
+		"int64 to incompatible": {
+			Source:     &tfInt64Field{Field1: types.Int64Value(1)},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+		"int32 to incompatible": {
+			Source:        &tfInt32Field{Field1: types.Int32Value(1)},
+			Target:        &awsSingleStringValue{},
+			WantTarget:    &awsSingleStringValue{},
+			ExpectedDiags: diag.Diagnostics{diagExpandingIncompatibleTypes(reflect.TypeFor[types.Int32](), reflect.TypeFor[string]())},
+		},
+		"string to incompatible": {
+			Source:     &tfSingleStringField{Field1: types.StringValue("hello")},
+			Target:     &awsSingleStructField{},
+			WantTarget: &awsSingleStructField{},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
+type awsSingleBoolField struct {
+	Field1 bool
+}
+
+type awsSingleFloat64Field struct {
+	Field1 float64
+}
+
+type awsSingleFloat32Field struct {
+	Field1 float32
+}
+
+type awsSingleInt64Field struct {
+	Field1 int64
+}
+
+type awsSingleInt32Field struct {
+	Field1 int32
+}
+
+func TestFlattenPrimitiveIncompatibleTypes(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"bool to string": {
+			Source:     &awsSingleBoolField{Field1: true},
+			Target:     &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{},
+			WantDiff:   true,
+		},
+		"float64 to string": {
+			Source:     &awsSingleFloat64Field{Field1: 1.1},
+			Target:     &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{},
+			WantDiff:   true,
+		},
+		"float32 to string": {
+			Source:     &awsSingleFloat32Field{Field1: 1.1},
+			Target:     &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{},
+			WantDiff:   true,
+		},
+		"int64 to string": {
+			Source:     &awsSingleInt64Field{Field1: 1},
+			Target:     &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{},
+			WantDiff:   true,
+		},
+		"int32 to string": {
+			Source:     &awsSingleInt32Field{Field1: 1},
+			Target:     &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{},
+			WantDiff:   true,
+		},
+		"string to bool": {
+			Source:     &awsSingleStringValue{Field1: "hello"},
+			Target:     &tfBoolField{},
+			WantTarget: &tfBoolField{},
+			WantDiff:   true,
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
