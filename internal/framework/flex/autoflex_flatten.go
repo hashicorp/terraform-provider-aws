@@ -567,21 +567,22 @@ func flattenTime(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, isN
 		return diags
 	}
 
-	if !vFrom.Elem().CanInterface() {
-		diags.AddError("AutoFlEx", fmt.Sprintf("cannot create an interface for: %T", vFrom.Elem()))
-		return diags
+	// Only dereference if the value is a pointer or interface
+	if vFrom.Kind() == reflect.Pointer || vFrom.Kind() == reflect.Interface {
+		if !vFrom.Elem().CanInterface() {
+			diags.AddError("AutoFlEx", fmt.Sprintf("cannot create an interface for: %T", vFrom.Elem()))
+			return diags
+		}
+
+		// *time.Time --> timetypes.RFC3339
+		if from, ok := vFrom.Elem().Interface().(time.Time); ok {
+			vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
+			return diags
+		}
 	}
 
-	// *time.Time --> timetypes.RFC3339
-	if from, ok := vFrom.Elem().Interface().(time.Time); ok {
-		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
-		return diags
-	}
-
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
-		logAttrKeyFrom: vFrom.Kind(),
-		logAttrKeyTo:   vTo,
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+	diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), vTo.Type()))
 
 	return diags
 }
