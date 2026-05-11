@@ -797,10 +797,7 @@ func expandListOrSetOfInt64(ctx context.Context, expander *autoExpander, vFrom v
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		logAttrKeyFrom: vFrom.Type(ctx),
-		logAttrKeyTo:   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }
@@ -951,10 +948,7 @@ func expandListOrSetOfInt32(ctx context.Context, expander *autoExpander, vFrom v
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		logAttrKeyFrom: "Set[Int32]",
-		logAttrKeyTo:   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }
