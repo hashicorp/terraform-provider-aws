@@ -678,6 +678,81 @@ func TestFlattenSimpleListOfPrimitiveValues(t *testing.T) {
 	}
 }
 
+type awsInt64PointerSlice struct {
+	Field1 []*int64
+}
+
+type awsInt32PointerSlice struct {
+	Field1 []*int32
+}
+
+func TestFlattenSliceOfIntPointer(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]*int64 to list": {
+			Source: &awsInt64PointerSlice{
+				Field1: []*int64{aws.Int64(1), aws.Int64(-1)},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]*int64 nil to null list": {
+			Source:     &awsInt64PointerSlice{},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{Field1: types.ListNull(types.Int64Type)},
+		},
+		"[]*int32 to list": {
+			Source: &awsInt32PointerSlice{
+				Field1: []*int32{aws.Int32(1), aws.Int32(-1)},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]*int32 nil to null list": {
+			Source:     &awsInt32PointerSlice{},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{Field1: types.ListNull(types.Int64Type)},
+		},
+		"[]*int64 to set": {
+			Source: &awsInt64PointerSlice{
+				Field1: []*int64{aws.Int64(1), aws.Int64(-1)},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]*int32 to set": {
+			Source: &awsInt32PointerSlice{
+				Field1: []*int32{aws.Int32(1), aws.Int32(-1)},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
 type tfSimpleSet struct {
 	Field1 types.Set `tfsdk:"field1"`
 }
