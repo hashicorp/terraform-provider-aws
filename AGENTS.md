@@ -125,7 +125,7 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 
 ### Copyright headers
 - All applicable files must have a copyright header
-- TODO `copyplop` etc.
+- Run `make copyright-fix` to ensure headers are correct
 
 ### Commit messages
 - TODO
