@@ -688,6 +688,10 @@ func expandList(ctx context.Context, expander *autoExpander, sourcePath path.Pat
 		diags.Append(expandListOrSetOfInt64(ctx, expander, v, vTo, fieldOpts)...)
 		return diags
 
+	case basetypes.Int32Typable:
+		diags.Append(expandListOrSetOfInt32(ctx, expander, v, vTo, fieldOpts)...)
+		return diags
+
 	case basetypes.StringTypable:
 		diags.Append(expandListOrSetOfString(ctx, expander, v, vTo, fieldOpts)...)
 		return diags

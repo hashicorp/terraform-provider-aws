@@ -243,6 +243,104 @@ func TestExpandSetOfInt64(t *testing.T) {
 	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
+func TestExpandListOfInt32(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"valid value []int32": {
+			Source: types.ListValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(1),
+				types.Int32Value(-1),
+			}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{1, -1},
+		},
+		"empty value []int32": {
+			Source:     types.ListValueMust(types.Int32Type, []attr.Value{}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		"null value []int32": {
+			Source:     types.ListNull(types.Int32Type),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		"valid value []*int32": {
+			Source: types.ListValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(1),
+				types.Int32Value(-1),
+			}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{aws.Int32(1), aws.Int32(-1)},
+		},
+		"empty value []*int32": {
+			Source:     types.ListValueMust(types.Int32Type, []attr.Value{}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		"null value []*int32": {
+			Source:     types.ListNull(types.Int32Type),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		"incompatible target": {
+			Source:     types.ListValueMust(types.Int32Type, []attr.Value{types.Int32Value(1)}),
+			Target:     &map[string]string{},
+			WantTarget: &map[string]string{},
+		},
+	}
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
+func TestExpandSetOfInt32(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"valid value []int32": {
+			Source: types.SetValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(1),
+				types.Int32Value(-1),
+			}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{1, -1},
+		},
+		"empty value []int32": {
+			Source:     types.SetValueMust(types.Int32Type, []attr.Value{}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		"null value []int32": {
+			Source:     types.SetNull(types.Int32Type),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		"valid value []*int32": {
+			Source: types.SetValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(1),
+				types.Int32Value(-1),
+			}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{aws.Int32(1), aws.Int32(-1)},
+		},
+		"empty value []*int32": {
+			Source:     types.SetValueMust(types.Int32Type, []attr.Value{}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		"null value []*int32": {
+			Source:     types.SetNull(types.Int32Type),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		"incompatible target": {
+			Source:     types.SetValueMust(types.Int32Type, []attr.Value{types.Int32Value(1)}),
+			Target:     &map[string]string{},
+			WantTarget: &map[string]string{},
+		},
+	}
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
 func TestExpandListOfStringEnum(t *testing.T) {
 	t.Parallel()
 
