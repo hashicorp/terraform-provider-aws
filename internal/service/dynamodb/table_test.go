@@ -861,7 +861,7 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 				tc.New[i] = normalizeGSIMapValue(v.(map[string]any))
 			}
 
-			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModeProvisioned)
+			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModeProvisioned, nil, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1756,7 +1756,7 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 				tc.New[i] = normalizeGSIMapValue(v.(map[string]any))
 			}
 
-			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModePayPerRequest)
+			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModePayPerRequest, nil, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1800,9 +1800,11 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		Old      map[string]any
-		New      map[string]any
-		Expected bool
+		Old          map[string]any
+		New          map[string]any
+		OldAttrTypes map[string]string
+		NewAttrTypes map[string]string
+		Expected     bool
 	}{
 		"key_schema syntax unchanged": {
 			// State has hash_key/range_key, config only has key_schema
@@ -1888,13 +1890,70 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 			},
 			Expected: true,
 		},
+		"hash_key attribute type changed S to N": {
+			Old: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "alternate_id",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema":      nil,
+			},
+			New: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "alternate_id",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema":      nil,
+			},
+			OldAttrTypes: map[string]string{"alternate_id": "S"},
+			NewAttrTypes: map[string]string{"alternate_id": "N"},
+			Expected:     true,
+		},
+		"hash_key attribute type unchanged": {
+			Old: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "alternate_id",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema":      nil,
+			},
+			New: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "alternate_id",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema":      nil,
+			},
+			OldAttrTypes: map[string]string{"alternate_id": "S"},
+			NewAttrTypes: map[string]string{"alternate_id": "S"},
+			Expected:     false,
+		},
+		"range_key attribute type changed S to N": {
+			Old: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "pk",
+				"range_key":       "sk",
+				"projection_type": "ALL",
+				"key_schema":      nil,
+			},
+			New: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "pk",
+				"range_key":       "sk",
+				"projection_type": "ALL",
+				"key_schema":      nil,
+			},
+			OldAttrTypes: map[string]string{"pk": "S", "sk": "S"},
+			NewAttrTypes: map[string]string{"pk": "S", "sk": "N"},
+			Expected:     true,
+		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := tfdynamodb.CheckIfGSIRecreateAttributesChanged(tc.Old, tc.New)
+			got := tfdynamodb.CheckIfGSIRecreateAttributesChanged(tc.Old, tc.New, tc.OldAttrTypes, tc.NewAttrTypes)
 			if got != tc.Expected {
 				t.Errorf("expected %v, got %v", tc.Expected, got)
 			}
