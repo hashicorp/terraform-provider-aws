@@ -80,7 +80,7 @@ Per `docs/ai-usage.md`:
 ## Guiding Principles
 
 ### Follow existing conventions
-Consistency is key to maintaining a readable and maintainable codebase
+Consistency is key to maintaining a readable and maintainable codebase.
 Before writing any code, analyze the existing codebase to understand and adopt its naming conventions, coding style, and language usage.
 
 ### Avoid code duplication and minimize dependencies
