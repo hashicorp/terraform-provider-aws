@@ -80,7 +80,7 @@ Per `docs/ai-usage.md`:
 ## Guiding Principles
 
 ### Follow existing conventions
-Consistency is key to maintaining a readable and maintainable codebase
+Consistency is key to maintaining a readable and maintainable codebase.
 Before writing any code, analyze the existing codebase to understand and adopt its naming conventions, coding style, and language usage.
 
 ### Avoid code duplication and minimize dependencies
@@ -125,7 +125,7 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 
 ### Copyright headers
 - All applicable files must have a copyright header
-- TODO `copyplop` etc.
+- Run `make copyright-fix` to ensure headers are correct
 
 ### Commit messages
 - TODO
