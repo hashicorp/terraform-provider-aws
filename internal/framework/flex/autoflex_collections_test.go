@@ -1032,6 +1032,10 @@ type tfSimpleSetLegacy struct {
 	Field1 types.Set `tfsdk:"field1" autoflex:",legacy"`
 }
 
+type tfSimpleSetOmitEmpty struct {
+	Field1 types.Set `tfsdk:"field1" autoflex:",omitempty"`
+}
+
 func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {
 	t.Parallel()
 
@@ -1103,6 +1107,29 @@ func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {
 				WantTarget: &tfSimpleSetLegacy{
 					Field1: types.SetValueMust(types.StringType, []attr.Value{}),
 				},
+			},
+		},
+
+		"omitempty": {
+			"values": {
+				Source:     &awsSimpleStringValueSlice{Field1: []string{"a", "b"}},
+				Target:     &tfSimpleSetOmitEmpty{},
+				WantTarget: &tfSimpleSetOmitEmpty{
+					Field1: types.SetValueMust(types.StringType, []attr.Value{
+						types.StringValue("a"),
+						types.StringValue("b"),
+					}),
+				},
+			},
+			"empty": {
+				Source:     &awsSimpleStringValueSlice{Field1: []string{}},
+				Target:     &tfSimpleSetOmitEmpty{},
+				WantTarget: &tfSimpleSetOmitEmpty{Field1: types.SetNull(types.StringType)},
+			},
+			"null": {
+				Source:     &awsSimpleStringValueSlice{Field1: nil},
+				Target:     &tfSimpleSetOmitEmpty{},
+				WantTarget: &tfSimpleSetOmitEmpty{Field1: types.SetNull(types.StringType)},
 			},
 		},
 	}
