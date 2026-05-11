@@ -1529,24 +1529,6 @@ func flattenSliceOfPrimitiveToSet(ctx context.Context, _ *autoFlattener, vFrom r
 				return diags
 			}
 
-			// If legacy mode, return empty set
-			if fieldOpts.legacy {
-				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetValue (empty for nil in legacy mode)")
-				set, d := types.SetValue(elementType, []attr.Value{})
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				to, d := tTo.ValueFromSet(ctx, set)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
-			}
-
 			// Default: return null set
 			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetNull")
 			to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
