@@ -45,6 +45,14 @@ type awsNonTimeStructPointer struct {
 	CreationDateTime *struct{ X int }
 }
 
+type awsStructField struct {
+	Field1 struct{ X int }
+}
+
+type tfStringField struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
 type tfSingleARNField struct {
 	Field1 fwtypes.ARN `tfsdk:"field1"`
 }
@@ -245,6 +253,14 @@ func TestFlattenSpecialTypes(t *testing.T) {
 				Target:        &tfRFC3339Time{},
 				WantTarget:    &tfRFC3339Time{},
 				ExpectedDiags: diag.Diagnostics{DiagFlatteningIncompatibleTypes(reflect.TypeFor[struct{ X int }](), reflect.TypeFor[timetypes.RFC3339]())},
+			},
+		},
+
+		"struct to incompatible target": {
+			"struct to string field": {
+				Source:     &awsStructField{Field1: struct{ X int }{X: 42}},
+				Target:     &tfStringField{},
+				WantTarget: &tfStringField{},
 			},
 		},
 	}
