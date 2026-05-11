@@ -7,10 +7,14 @@ All practitioner-focused documentation is found in the `/website` folder of the 
 
 ```
 ├── website/docs
-    ├── r/                     # Documentation for resources
-    ├── d/                     # Documentation for data sources
-    ├── guides/                # Long format guides for provider level configuration or provider upgrades.
-    └── index.html.markdown    # Home page and all provider level documentation.
+│   ├── actions/               # Documentation for actions
+│   ├── d/                     # Documentation for data sources
+│   ├── ephemeral-resources/   # Documentation for ephemeral resources
+│   ├── function/              # Documentation for provider functions
+│   ├── guides/                # Long format guides for provider level configuration or provider upgrades
+│   ├── index.html.markdown    # Home page and all provider level documentation, including provder configuration
+│   ├── list-resources/        # Documentation for list resources
+│   └── r/                     # Documentation for resources
 └── examples/                  # Large example configurations
 ```
 
