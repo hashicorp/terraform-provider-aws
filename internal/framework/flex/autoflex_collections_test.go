@@ -794,6 +794,10 @@ type awsInt32PointerSlice struct {
 	Field1 []*int32
 }
 
+type awsStringPointerSlice struct {
+	Field1 []*string
+}
+
 func TestFlattenSliceOfIntPointer(t *testing.T) {
 	t.Parallel()
 
@@ -855,6 +859,165 @@ func TestFlattenSliceOfIntPointer(t *testing.T) {
 					types.Int64Value(-1),
 				}),
 			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenSliceOfStringPointer(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]*string to list": {
+			Source: &awsStringPointerSlice{
+				Field1: []*string{aws.String("a"), aws.String("b")},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+			},
+		},
+		"[]*string nil to null list": {
+			Source:     &awsStringPointerSlice{},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{Field1: types.ListNull(types.StringType)},
+		},
+		"[]*string with nil element to list": {
+			Source: &awsStringPointerSlice{
+				Field1: []*string{aws.String("a"), nil, aws.String("b")},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringNull(),
+					types.StringValue("b"),
+				}),
+			},
+		},
+		"[]*string to set": {
+			Source: &awsStringPointerSlice{
+				Field1: []*string{aws.String("a"), aws.String("b")},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+			},
+		},
+		"[]*string nil to null set": {
+			Source:     &awsStringPointerSlice{},
+			Target:     &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{Field1: types.SetNull(types.StringType)},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+type awsInt32ValueSlice struct {
+	Field1 []int32
+}
+
+type awsEnumSlice struct {
+	Field1 []testEnum
+}
+
+type awsFloat64Slice struct {
+	Field1 []float64
+}
+
+func TestFlattenSliceOfInt32(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]int32 to list": {
+			Source: &awsInt32ValueSlice{
+				Field1: []int32{1, -1},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]int32 to set": {
+			Source: &awsInt32ValueSlice{
+				Field1: []int32{1, -1},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]int32 nil to null set": {
+			Source:     &awsInt32ValueSlice{},
+			Target:     &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{Field1: types.SetNull(types.Int64Type)},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenSliceOfCustomStringType(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]enum to list": {
+			Source: &awsEnumSlice{
+				Field1: []testEnum{testEnumScalar, testEnumList},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("Scalar"),
+					types.StringValue("List"),
+				}),
+			},
+		},
+		"[]enum to set": {
+			Source: &awsEnumSlice{
+				Field1: []testEnum{testEnumScalar, testEnumList},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("Scalar"),
+					types.StringValue("List"),
+				}),
+			},
+		},
+		"[]enum nil to null list": {
+			Source:     &awsEnumSlice{},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{Field1: types.ListNull(types.StringType)},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenSliceIncompatibleType(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]float64 to list": {
+			Source:     &awsFloat64Slice{Field1: []float64{1.1, 2.2}},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{},
+			WantDiff:   true,
 		},
 	}
 

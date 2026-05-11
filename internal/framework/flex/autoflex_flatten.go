@@ -897,10 +897,7 @@ func flattenSlice(ctx context.Context, flattener *autoFlattener, sourcePath path
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
-		logAttrKeyFrom: vFrom.Kind(),
-		logAttrKeyTo:   tTo,
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
 
 	return diags
 }
