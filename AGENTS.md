@@ -49,7 +49,7 @@ terraform-provider-aws/
 │   ├── provider/          # Provider initialization and configuration
 │   │   ├── framework/     # Terraform Plugin Framework-specific initialization and configuration plus interceptors
 │   │   ├── interceptors/  # Common interceptor utilities
-│   │   └──sdkv2/          # Terraform Plugin SDKv2-specific initialization and configuration plus interceptors
+│   │   └── sdkv2/         # Terraform Plugin SDKv2-specific initialization and configuration plus interceptors
 │   ├── ...                # ...
 │   ├── service/*/         # Per-service resource implementations
 │   │   ├── generate.go    # Code generation instructions
@@ -58,7 +58,7 @@ terraform-provider-aws/
 │   └── verify/            # Terraform Plugin SDKv2-specific attribute validation
 ├── go.mod
 ├── go.sum
-├── Makefile               # Build and test commands
+├── GNUmakefile            # Build and test commands
 └── main.go                # Entry point
 ```
 
@@ -131,4 +131,9 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 - TODO
 
 ### CHANGELOG entries
+- CHANGELOG entries are required for
+  - New resources, data sources, ephemeral resources, action, list resources and functions
+  - Bug fixes
+  - Enhancements
+- Do edit `CHANGELOG.md` directly
 - TODO
