@@ -159,5 +159,5 @@ This repository contains a comprehensive set of utility packages. Look for oppor
   - New resources, data sources, ephemeral resources, action, list resources and functions
   - Bug fixes
   - Enhancements
-- Do edit `CHANGELOG.md` directly
+- Do not edit `CHANGELOG.md` directly
 - TODO
