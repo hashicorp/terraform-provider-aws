@@ -41,25 +41,49 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 
 ```
 terraform-provider-aws/
-├── .changelog/            # CHANGELOG entries
+├── .changelog/             # CHANGELOG entries
 ├── internal/
-│   ├── acctest/           # Acceptance test helpers
-│   ├── backoff/           # Low-level backoff loop implementatoion
-│   ├── ...                # ...
-│   ├── provider/          # Provider initialization and configuration
-│   │   ├── framework/     # Terraform Plugin Framework-specific initialization and configuration plus interceptors
-│   │   ├── interceptors/  # Common interceptor utilities
-│   │   └── sdkv2/         # Terraform Plugin SDKv2-specific initialization and configuration plus interceptors
-│   ├── ...                # ...
-│   ├── service/*/         # Per-service resource implementations
-│   │   ├── generate.go    # Code generation instructions
-│   │   └── ...            # ...
-│   ├── ...                # ...
-│   └── verify/            # Terraform Plugin SDKv2-specific attribute validation
+│   ├── acctest/            # Acceptance test helpers
+│   ├── backoff/            # Low-level backoff loop implementation
+│   ├── conns/              # Provider-level global state, including provider configuration
+│   ├── enum/               # AWS SDK for Go v2 enumeration utilities
+│   ├── errs/               # Go `error` utilities
+│   │   ├── fwdiag/         # Terraform Plugin Framework `Diagnostic` utilities
+│   │   └── sdkdiag/        # Terraform Plugin SDKv2 `Diagnostic` utilities
+│   ├── flex/               # General and Terraform Plugin SDKv2-specific flatteners and expanders
+│   ├── framework/          # Terraform Plugin Framework utilities
+│   │   ├── flex/           # Flatteners and expanders, including AutoFlex
+│   │   ├── types/          # Custom type implementations
+│   │   └── validators/     # Validator implementations
+│   ├── function/           # Provider functions
+│   ├── generate/           # Code generators
+│   ├── iter/               # Go iterator utilities
+│   ├── json/               # JSON utilities
+│   ├── maps/               # Go `map` utilities
+│   ├── provider/           # Provider initialization and configuration
+│   │   ├── framework/      # Terraform Plugin Framework-specific initialization and configuration plus interceptors
+│   │   ├── interceptors/   # Common interceptor utilities
+│   │   └── sdkv2/          # Terraform Plugin SDKv2-specific initialization and configuration plus interceptors
+│   ├── reflect/            # Go reflection utilities
+│   ├── retry/              # Generic operation retry functionality
+│   │   └── state.go        # Resource wait-for-state functionality
+│   ├── sdkv2/              # Terraform Plugin SDKv2 utilities
+│   ├── service/*/          # Per-service resource implementations
+│   │   ├── exports.go      # Functions and variables used by other Go packages
+│   │   ├── exports_test.go # Functions and variables used by acceptance tests for this Go package
+│   │   ├── generate.go     # Code generation instructions
+│   │   └── sweep.go        # This service's resource sweepers
+│   ├── slices/             # Go slice utilities
+│   ├── smerr/              # Smart error utilities
+│   ├── sweep/              # Resource sweeper utilities
+│   ├── tags/               # Resource tagging utilities
+│   ├── types/              # Go types
+│   ├── vcr/                # VCR testing utilities
+│   └── verify/             # Terraform Plugin SDKv2-specific attribute validation
 ├── go.mod
 ├── go.sum
-├── GNUmakefile            # Build and test commands
-└── main.go                # Entry point
+├── GNUmakefile             # Build and test commands
+└── main.go                 # Entry point
 ```
 
 ## Global Rules
