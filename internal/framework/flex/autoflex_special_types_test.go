@@ -41,6 +41,10 @@ type awsNonTimeStruct struct {
 	CreationDateTime struct{ X int }
 }
 
+type awsNonTimeStructPointer struct {
+	CreationDateTime *struct{ X int }
+}
+
 type tfSingleARNField struct {
 	Field1 fwtypes.ARN `tfsdk:"field1"`
 }
@@ -120,6 +124,22 @@ func TestExpandSpecialTypes(t *testing.T) {
 				WantTarget: &awsRFC3339TimeValue{
 					CreationDateTime: testTimeTime,
 				},
+			},
+			"incompatible struct target": {
+				Source: &tfRFC3339Time{
+					CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
+				},
+				Target:        &awsNonTimeStruct{},
+				WantTarget:    &awsNonTimeStruct{},
+				ExpectedDiags: diag.Diagnostics{diagExpandingIncompatibleTypes(reflect.TypeFor[timetypes.RFC3339](), reflect.TypeFor[struct{ X int }]())},
+			},
+			"incompatible pointer to struct target": {
+				Source: &tfRFC3339Time{
+					CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
+				},
+				Target:        &awsNonTimeStructPointer{},
+				WantTarget:    &awsNonTimeStructPointer{},
+				ExpectedDiags: diag.Diagnostics{diagExpandingIncompatibleTypes(reflect.TypeFor[timetypes.RFC3339](), reflect.TypeFor[*struct{ X int }]())},
 			},
 		},
 
