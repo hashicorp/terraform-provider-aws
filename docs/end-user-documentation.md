@@ -5,7 +5,7 @@
 
 ## Code Structure
 
-All end user-focused documentation is found in the `/website` folder of the repository.
+All end user documentation is found in the `/website` folder of the repository.
 
 ```
 ├── website/docs
@@ -33,7 +33,7 @@ Follow these guidelines to keep [provider documentation](https://registry.terraf
 ### Notes
 
 Note blocks provide information beyond the basic description of a resource, argument or attribute.
-Notes follow the format (`(->|~>|!>) **Note:**`). Level of importance is documented below
+Notes follow the format (`(->|~>|!>) **Note:**`). Level of importance is documented below.
 
 #### Informational Note
 
