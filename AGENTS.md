@@ -145,7 +145,7 @@ This repository contains a comprehensive set of utility packages. Look for oppor
   - PRs with failing tests do not merge.
 
 ### Documentation Checklist
-- See `./docs/documentation-changes.md`
+- See `./docs/end-user-documentation.md`
 - New features require new documentation
 - Run `make tfproviderdocs`
 
