@@ -159,6 +159,11 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
 		},
+		"incompatible target": {
+			Source:     types.ListValueMust(types.Int64Type, []attr.Value{types.Int64Value(1)}),
+			Target:     &map[string]string{},
+			WantTarget: &map[string]string{},
+		},
 	}
 	runAutoExpandTestCases(t, testCases, runChecks{})
 }
@@ -238,6 +243,11 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Source:     types.SetNull(types.Int64Type),
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
+		},
+		"incompatible target": {
+			Source:     types.SetValueMust(types.Int64Type, []attr.Value{types.Int64Value(1)}),
+			Target:     &map[string]string{},
+			WantTarget: &map[string]string{},
 		},
 	}
 	runAutoExpandTestCases(t, testCases, runChecks{})
