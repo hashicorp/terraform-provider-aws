@@ -1434,23 +1434,6 @@ func flattenSliceOfPrimitiveToList(ctx context.Context, _ *autoFlattener, vFrom 
 		}
 	} else {
 		if vFrom.IsNil() {
-			if fieldOpts.legacy {
-				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListValue (empty for nil in legacy mode)")
-				list, d := types.ListValue(elementType, []attr.Value{})
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				to, d := tTo.ValueFromList(ctx, list)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
-			}
-
 			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListNull")
 			to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
 			diags.Append(d...)
