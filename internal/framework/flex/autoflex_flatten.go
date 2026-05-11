@@ -1079,6 +1079,9 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 		case reflect.Pointer:
 			switch tMapElem.Elem().Kind() {
 			case reflect.Struct:
+				//
+				// map[string]*struct -> fwtypes.ListNestedObjectOf[Object]
+				//
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 					diags.Append(flattenStructMapToObjectList(ctx, flattener, sourcePath, vFrom, targetPath, tTo, vTo)...)
 					return diags
@@ -1088,10 +1091,13 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 				switch tTo := tTo.(type) {
 				case basetypes.ListTypable:
 					//
-					// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
+					// map[string]*string -> fwtypes.ListNestedObjectOf[Object]
 					//
-					if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
-						diags.Append(flattenStructMapToObjectList(ctx, flattener, sourcePath, vFrom, targetPath, tTo, vTo)...)
+					// Previously caused a panic when structMapToObjectList attempted
+					// to call flattenStruct on a dereferenced *string value.
+					if _, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+						tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+						diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), vTo.Type()))
 						return diags
 					}
 
