@@ -629,7 +629,7 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_defaultBehavior(t *testing.T)
 	resourceName := "aws_lambda_invocation.test"
 	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
 	fName := "lambda_invocation_crud_update_failure"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	extraArgs := `lifecycle_scope = "CRUD"`
 	inputJSON1 := `{"key1":"value1","key2":"value2"}`
@@ -637,7 +637,7 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_defaultBehavior(t *testing.T)
 
 	resultJSON1 := `{"key1":"value1","key2":"value2","tf":{"action":"create","prev_input":null}}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -858,14 +858,14 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateFalse(t *testing.T)
 	resourceName := "aws_lambda_invocation.test"
 	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
 	fName := "lambda_invocation_crud_update_failure"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	inputJSON1 := `{"key1":"value1","key2":"value2"}`
 	inputJSON2 := `{"key1":"value1","key2":"value22"}`
 
 	resultJSON1 := `{"key1":"value1","key2":"value2","tf":{"action":"create","prev_input":null}}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -939,14 +939,14 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateTrue(t *testing.T) 
 	resourceName := "aws_lambda_invocation.test"
 	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
 	fName := "lambda_invocation_crud_update_failure"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	inputJSON1 := `{"key1":"value1","key2":"value2"}`
 	inputJSON2 := `{"key1":"value1","key2":"value22"}`
 
 	resultJSON1 := `{"key1":"value1","key2":"value2","tf":{"action":"create","prev_input":null}}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
