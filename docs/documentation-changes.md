@@ -3,7 +3,9 @@
 
 # End User Documentation Changes
 
-All practitioner-focused documentation is found in the `/website` folder of the repository.
+## Code Structure
+
+All end user-focused documentation is found in the `/website` folder of the repository.
 
 ```
 ├── website/docs
@@ -16,6 +18,54 @@ All practitioner-focused documentation is found in the `/website` folder of the 
 │   ├── list-resources/        # Documentation for list resources
 │   └── r/                     # Documentation for resources
 └── examples/                  # Large example configurations
+```
+
+## Guidelines
+
+Follow these guidelines to keep [provider documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) consistent.
+
+### Examples
+
+### Arguments
+
+### Attributes
+
+### Notes
+
+Note blocks provide information beyond the basic description of a resource, argument or attribute.
+Notes follow the format (`(->|~>|!>) **Note:**`). Level of importance is documented below
+
+#### Informational Note
+
+Provides additional useful information, recommendations and/or tips to the user.
+
+Use the `-> **Note:**` format. The Terraform registry will template this note as a block with an info icon.
+
+For example:
+```markdown
+-> **Note:** The `activation_code` argument cannot be imported.
+```
+
+#### Warning Note
+
+Provides information that the user will need to avoid certain errors. These errors are non-breaking and do not cause irreversable changes.
+
+Use the `~> **Note:**` format. The Terraform registry will template this note as a block with a warning icon.
+
+For example:
+```markdown
+~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
+```
+
+#### Caution Note
+
+Provides critical information on potential irreversible changes, including data loss and other negative effects.
+
+Use the `!> **Note:**` format. The Terraform registry will template this note as a block with a caution icon.
+
+For example:
+```markdown
+!> **Note:** This will destroy and recreate the table, possibly resulting in data loss.
 ```
 
 For any documentation change please raise a pull request including and adhering to the following:
