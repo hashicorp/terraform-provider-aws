@@ -510,10 +510,23 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDetach, hasInline, hasManaged bool) error {
+
 	if err := deleteRoleInstanceProfiles(ctx, conn, roleName); err != nil {
 		return err
-	}
-
+	}		
+	  if !forceDetach {
+        // When force_detach_policies = false, skip all detaching
+        // Let AWS return DeleteConflictException naturally
+        input := iam.DeleteRoleInput{
+            RoleName: aws.String(roleName),
+        }
+        _, err := conn.DeleteRole(ctx, &input)
+        if errs.IsA[*awstypes.NoSuchEntityException](err) {
+            return nil
+        }
+        return err
+    }
+	
 	if forceDetach || hasManaged {
 		policyARNs, err := findRoleAttachedPolicies(ctx, conn, roleName)
 
@@ -546,9 +559,9 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 		RoleName: aws.String(roleName),
 	}
 
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.DeleteConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteRole(ctx, &input)
-	})
+   _, err := tfresource.RetryWhenIsA[any, *awstypes.DeleteConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+    return conn.DeleteRole(ctx, &input)
+})
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil
