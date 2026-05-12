@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_imagebuilder_image_recipe: Made component optional to align with AWS API specification
+```
