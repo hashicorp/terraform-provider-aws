@@ -26,16 +26,63 @@ Follow these guidelines to keep [provider documentation](https://registry.terraf
 
 ### Examples
 
-Each resource must include a at least one example.
+Each resource must include a at least one example Terraform configuration.
 
-- Examples must be functional; if a user run `terraform plan` on the example, no errors should be returned.
+- Examples must be functional.
+- Examples that includes several resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained; if a user run `terraform plan` on the example, no errors should be returned.
 - Terraform configuration should use `hcl` code fences. Do not use `terraform` code fences.
 - Examples should not define `terraform` or `provider` blocks.
+- Examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
 - Generally the resource instance name should simply be `example`, e.g. `resource "aws_instance" "example"`.
 - All name arguments within the example configuration should use simple example values that match the resource being defined. Where attribute validation allows, prefer values prefixed with `example-`, e.g. `name = "example-instance"`. Avoid overly complex naming.
 - Examples do not need to include every argument. A basic example should use the same configuration as the resource's basic acceptance test.
 
 ### Arguments
+
+Every argument must be documented.
+
+#### Ordering
+
+In documentation, the order of arguments is:
+
+1. Any arguments that make up the resource's identity.
+1. Required arguments, sorted alphabetically.
+1. Optional arguments, sorted alphabetically.
+
+#### Description
+
+Every argument must have a description.
+
+- Descriptions are concise.
+- Information about AWS service features and valid argument values that are likely to update over time should link to AWS service user guides and API references where possible.
+- If an argument has validation allowing only specific inputs, these must be documented. For example:
+  - `` Allowed values are: `value1`, `value2`, and `value3`. ``.
+  - `` Valid value is between `0` and `100`. ``
+- If the argument has a default value, this must be documented, e.g. `` Default value: `ENABLED`. ``.
+
+#### Blocks
+
+Each block argument must have two entries in the documentation:
+
+1. The initial entry, with a link to the subsection describing the block's arguments. e.g. `` `ip_rule` - (Optional) IP rules. See [ip_rule](#ip-rule) below. ``.
+1. A subsection, added after all top-level arguments. If the resource has multiple blocks, these subsections should be ordered alphabetically.
+1. Within the subsection, arguments follow the ordering rules above.
+
+For example:
+
+```
+## Argument Reference
+
+* `name` - (Required) Name of the thing.
+* `ip_rule` - (Optional) IP rules. See [ip_rule](#ip-rule) below.
+
+### `ip_rule`
+
+`ip_rule` supports the following:
+
+* `ip_range` - (Required) IP range of the rule.
+* `description` - (Optional) Description of the rule.
+```
 
 ### Attributes
 
@@ -79,10 +126,3 @@ For example:
 ```markdown
 !> **Note:** This will destroy and recreate the table, possibly resulting in data loss.
 ```
-
-For any documentation change please raise a pull request including and adhering to the following:
-
-- __Reasoning for Change__: Documentation updates should include an explanation for why the update is needed. If the change is a correction that aligns with AWS behavior, please include a link to the AWS Documentation in the PR.
-- __Prefer AWS Documentation__: Documentation about AWS service features and valid argument values that are likely to update over time should link to AWS service user guides and API references where possible.
-- __Large Example Configurations__: Example Terraform configuration that includes multiple resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained to call `terraform apply` without special configuration.
-- __Avoid Terraform Configuration Language Features__: Individual resource documentation pages and examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
