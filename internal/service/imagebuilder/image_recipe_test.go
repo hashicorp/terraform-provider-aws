@@ -512,6 +512,33 @@ func TestAccImageBuilderImageRecipe_component(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImageRecipe_noComponent(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipeConfig_noComponent(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "component.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderImageRecipe_componentParameter(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1169,6 +1196,18 @@ resource "aws_imagebuilder_image_recipe" "test" {
     component_arn = aws_imagebuilder_component.test.arn
   }
 
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+}
+`, rName))
+}
+
+func testAccImageRecipeConfig_noComponent(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
   name         = %[1]q
   parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
