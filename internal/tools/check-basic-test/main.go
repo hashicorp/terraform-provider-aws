@@ -22,6 +22,7 @@ type Result struct {
 	TestFile     string   `json:"test_file"`
 	TestFunc     string   `json:"test_func"`
 	Missing      []string `json:"missing"`
+	Warnings     []string `json:"warnings,omitempty"`
 	Extra        []string `json:"extra,omitempty"`
 	Pass         bool     `json:"pass"`
 }
@@ -54,6 +55,12 @@ func main() {
 		if err := attrnames.LoadConsts(constsFile); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: could not load constants from %s: %v\n", constsFile, err)
 		}
+		// Also load acctest constants (sibling path: internal/acctest/consts_gen.go)
+		acctestConsts := filepath.Join(filepath.Dir(filepath.Dir(constsFile)), "internal", "acctest", "consts_gen.go")
+		if err := attrnames.LoadConsts(acctestConsts); err != nil {
+			// Not fatal — acctest constants are optional
+			_ = err
+		}
 	}
 
 	// Parse schema
@@ -77,21 +84,45 @@ func main() {
 	}
 
 	checkedSet := make(map[string]bool)
+	countOnlySet := make(map[string]bool)
 	for _, a := range checkedAttrs {
-		checkedSet[a.Path] = true
+		if a.CountOnly {
+			if a.Value == "0" {
+				// Count of 0 means the block is empty — that's a full check
+				checkedSet[a.Path] = true
+			} else {
+				countOnlySet[a.Path] = true
+			}
+		} else {
+			checkedSet[a.Path] = true
+		}
 	}
 
 	// Find missing: in schema but not checked
 	var missing []string
+	var warnings []string
 	for _, a := range schemaAttrs {
-		if !checkedSet[a.Path] {
-			// If a parent block is checked with an empty list (e.g., knownvalue.ListExact([]knownvalue.Check{})),
-			// the sub-attributes are implicitly covered (the block is asserted to be empty).
-			if isSubAttrCoveredByParent(a.Path, checkedSet) {
-				continue
-			}
-			missing = append(missing, a.Path)
+		if checkedSet[a.Path] {
+			continue
 		}
+		// If a parent block is fully checked, sub-attributes are covered
+		if isSubAttrCoveredByParent(a.Path, checkedSet) {
+			continue
+		}
+		// If a parent block has a count-only check, sub-attributes are implicitly covered
+		// (the count check asserts the block's presence/absence)
+		if isSubAttrCoveredByParent(a.Path, countOnlySet) {
+			continue
+		}
+		// Top-level count-only check is a warning, BUT only if no sub-attributes
+		// of this path are value-checked (if they are, the block is effectively checked)
+		if countOnlySet[a.Path] {
+			if !hasCheckedSubAttrs(a.Path, checkedSet) {
+				warnings = append(warnings, a.Path+" (only count checked, not values)")
+			}
+			continue
+		}
+		missing = append(missing, a.Path)
 	}
 
 	// Find extra: checked but not in schema (informational)
@@ -103,6 +134,7 @@ func main() {
 	}
 
 	slices.Sort(missing)
+	slices.Sort(warnings)
 	slices.Sort(extra)
 
 	result := Result{
@@ -110,6 +142,7 @@ func main() {
 		TestFile:     filepath.Base(testFile),
 		TestFunc:     testFunc,
 		Missing:      missing,
+		Warnings:     warnings,
 		Extra:        extra,
 		Pass:         len(missing) == 0,
 	}
@@ -132,13 +165,23 @@ func printHuman(result Result, schemaAttrs []schema.Attribute, checkedAttrs []te
 	fmt.Printf("Test:     %s :: %s\n", result.TestFile, result.TestFunc)
 	fmt.Println()
 
-	if result.Pass {
+	if result.Pass && len(result.Warnings) == 0 {
 		fmt.Printf("✓ All %d schema attributes are checked in the basic test.\n", len(schemaAttrs))
+	} else if result.Pass {
+		fmt.Printf("✓ All %d schema attributes are checked (with warnings).\n", len(schemaAttrs))
 	} else {
 		fmt.Printf("✗ %d attribute(s) missing from basic test:\n", len(result.Missing))
 		fmt.Println()
 		for _, m := range result.Missing {
 			fmt.Printf("  - %s\n", m)
+		}
+	}
+
+	if len(result.Warnings) > 0 {
+		fmt.Println()
+		fmt.Printf("⚠ %d warning(s):\n", len(result.Warnings))
+		for _, w := range result.Warnings {
+			fmt.Printf("  ~ %s\n", w)
 		}
 	}
 
@@ -152,7 +195,7 @@ func printHuman(result Result, schemaAttrs []schema.Attribute, checkedAttrs []te
 
 	fmt.Println()
 	fmt.Println("Coverage:")
-	checked := len(schemaAttrs) - len(result.Missing)
+	checked := len(schemaAttrs) - len(result.Missing) - len(result.Warnings)
 	fmt.Printf("  %d/%d attributes checked\n", checked, len(schemaAttrs))
 
 	// Show breakdown by source
@@ -177,6 +220,17 @@ func isSubAttrCoveredByParent(path string, checkedSet map[string]bool) bool {
 	for i := 1; i < len(parts); i++ {
 		parent := strings.Join(parts[:i], ".")
 		if checkedSet[parent] {
+			return true
+		}
+	}
+	return false
+}
+
+// hasCheckedSubAttrs returns true if any sub-attribute of path is value-checked.
+func hasCheckedSubAttrs(path string, checkedSet map[string]bool) bool {
+	prefix := path + "."
+	for p := range checkedSet {
+		if strings.HasPrefix(p, prefix) {
 			return true
 		}
 	}

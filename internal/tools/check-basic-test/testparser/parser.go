@@ -14,8 +14,10 @@ import (
 
 // CheckedAttribute represents an attribute that is checked in a test.
 type CheckedAttribute struct {
-	Path   string // dot-separated path
-	Source string // "Check" or "ConfigStateChecks"
+	Path      string // dot-separated path
+	Source    string // "Check" or "ConfigStateChecks"
+	CountOnly bool   // true if only the count (# or %) is checked, not values
+	Value     string // the asserted value (only populated for count-only checks)
 }
 
 // ParseBasicTest parses a test file and extracts checked attributes from the _basic test function.
@@ -139,7 +141,12 @@ func parseCheckCall(call *ast.CallExpr, resourceName string) []CheckedAttribute 
 		// Pattern: func(resourceName, attrName, ...)
 		if len(call.Args) >= 2 && matchesResource(call.Args[0], resourceName) {
 			if name := resolveStringArg(call.Args[1]); name != "" {
-				return []CheckedAttribute{{Path: normalizePath(name), Source: "Check"}}
+				path, countOnly := normalizePath(name)
+				var value string
+				if countOnly && len(call.Args) >= 3 {
+					value = resolveStringArg(call.Args[2])
+				}
+				return []CheckedAttribute{{Path: path, Source: "Check", CountOnly: countOnly, Value: value}}
 			}
 		}
 	case "acctest.CheckResourceAttrRegionalARN",
@@ -154,8 +161,18 @@ func parseCheckCall(call *ast.CallExpr, resourceName string) []CheckedAttribute 
 		for i, arg := range call.Args {
 			if matchesResource(arg, resourceName) && i+1 < len(call.Args) {
 				if name := resolveStringArg(call.Args[i+1]); name != "" {
-					return []CheckedAttribute{{Path: normalizePath(name), Source: "Check"}}
+					path, countOnly := normalizePath(name)
+					return []CheckedAttribute{{Path: path, Source: "Check", CountOnly: countOnly}}
 				}
+			}
+		}
+	case "acctest.CheckResourceAttrRFC3339",
+		"acctest.CheckResourceAttrEquivalentJSON":
+		// Pattern: func(resourceName, attrName)
+		if len(call.Args) >= 2 && matchesResource(call.Args[0], resourceName) {
+			if name := resolveStringArg(call.Args[1]); name != "" {
+				path, countOnly := normalizePath(name)
+				return []CheckedAttribute{{Path: path, Source: "Check", CountOnly: countOnly}}
 			}
 		}
 	}
@@ -338,12 +355,28 @@ func resolveStringArg(expr ast.Expr) string {
 			return strings.Trim(e.Value, `"`)
 		}
 	case *ast.SelectorExpr:
-		// names.AttrARN -> "arn"
-		if id, ok := e.X.(*ast.Ident); ok && id.Name == "names" {
-			return resolveNameConstant(e.Sel.Name)
+		if id, ok := e.X.(*ast.Ident); ok {
+			switch id.Name {
+			case "names":
+				// names.AttrARN -> "arn"
+				return resolveNameConstant(e.Sel.Name)
+			case "acctest":
+				// acctest.CtTagsAllPercent -> "tags_all.%"
+				return resolveAcctestConstant(e.Sel.Name)
+			}
 		}
 	}
 	return ""
+}
+
+// resolveAcctestConstant resolves acctest.Ct* constants to their string values.
+// e.g., CtTagsAllPercent -> "tags_all.%"
+func resolveAcctestConstant(name string) string {
+	if !strings.HasPrefix(name, "Ct") {
+		return ""
+	}
+	// Load from the attrnames lookup if available
+	return attrnames.Resolve(name)
 }
 
 // resolveNameConstant converts names.AttrXxx to the snake_case value.
@@ -380,12 +413,14 @@ func joinPath(prefix, name string) string {
 // normalizePath converts SDKv2-style dot-indexed paths to schema paths.
 // e.g., "destination.0.cloudwatch_logs.0.log_group_arn" → "destination.cloudwatch_logs.log_group_arn"
 // e.g., "destination.#" → "destination"
-func normalizePath(path string) string {
+// Returns the normalized path and whether it's a count-only check (ends in # or %).
+func normalizePath(path string) (string, bool) {
 	parts := strings.Split(path, ".")
+	countOnly := false
 	var result []string
 	for _, p := range parts {
-		// Skip numeric indices and # (count marker)
 		if p == "#" || p == "%" {
+			countOnly = true
 			continue
 		}
 		if len(p) > 0 && p[0] >= '0' && p[0] <= '9' {
@@ -393,5 +428,5 @@ func normalizePath(path string) string {
 		}
 		result = append(result, p)
 	}
-	return strings.Join(result, ".")
+	return strings.Join(result, "."), countOnly
 }

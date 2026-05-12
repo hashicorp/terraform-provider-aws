@@ -13,7 +13,7 @@ import (
 // consts is a lookup table of constant name → value from attr_consts_gen.go.
 var consts map[string]string
 
-// LoadConsts parses the attr_consts_gen.go file to build a map of constant name → value.
+// LoadConsts parses a Go file with const declarations and adds them to the lookup table.
 func LoadConsts(filename string) error {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
@@ -21,7 +21,9 @@ func LoadConsts(filename string) error {
 		return err
 	}
 
-	consts = make(map[string]string)
+	if consts == nil {
+		consts = make(map[string]string)
+	}
 	for _, decl := range f.Decls {
 		gd, ok := decl.(*ast.GenDecl)
 		if !ok || gd.Tok != token.CONST {
