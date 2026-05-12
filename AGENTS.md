@@ -34,6 +34,7 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 
 | Skill | Task |
 |---|---|
+| [Review PR documentation update](./.agents/skills/pr-documentation-update/SKILL.md) | Review a PR's end user documentation updates. |
 
 ---
 
