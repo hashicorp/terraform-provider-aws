@@ -24,6 +24,8 @@ type Result struct {
 	Missing      []string `json:"missing"`
 	Warnings     []string `json:"warnings,omitempty"`
 	Extra        []string `json:"extra,omitempty"`
+	Checked      int      `json:"checked"`
+	Total        int      `json:"total"`
 	Pass         bool     `json:"pass"`
 }
 
@@ -101,24 +103,23 @@ func main() {
 	// Find missing: in schema but not checked
 	var missing []string
 	var warnings []string
+	var checked int
 	for _, a := range schemaAttrs {
 		if checkedSet[a.Path] {
+			checked++
 			continue
 		}
-		// If a parent block is fully checked, sub-attributes are covered
 		if isSubAttrCoveredByParent(a.Path, checkedSet) {
 			continue
 		}
-		// If a parent block has a count-only check, sub-attributes are implicitly covered
-		// (the count check asserts the block's presence/absence)
 		if isSubAttrCoveredByParent(a.Path, countOnlySet) {
 			continue
 		}
-		// Top-level count-only check is a warning, BUT only if no sub-attributes
-		// of this path are value-checked (if they are, the block is effectively checked)
 		if countOnlySet[a.Path] {
 			if !hasCheckedSubAttrs(a.Path, checkedSet) {
 				warnings = append(warnings, a.Path+" (only count checked, not values)")
+			} else {
+				checked++
 			}
 			continue
 		}
@@ -137,6 +138,9 @@ func main() {
 	slices.Sort(warnings)
 	slices.Sort(extra)
 
+	// Remove sub-attributes whose parent is already missing
+	missing = filterRedundantChildren(missing)
+
 	result := Result{
 		ResourceFile: filepath.Base(resourceFile),
 		TestFile:     filepath.Base(testFile),
@@ -144,6 +148,8 @@ func main() {
 		Missing:      missing,
 		Warnings:     warnings,
 		Extra:        extra,
+		Checked:      checked,
+		Total:        checked + len(missing) + len(warnings),
 		Pass:         len(missing) == 0,
 	}
 
@@ -152,7 +158,7 @@ func main() {
 		enc.SetIndent("", "  ")
 		enc.Encode(result)
 	} else {
-		printHuman(result, schemaAttrs, checkedAttrs)
+		printHuman(result)
 	}
 
 	if !result.Pass {
@@ -160,15 +166,15 @@ func main() {
 	}
 }
 
-func printHuman(result Result, schemaAttrs []schema.Attribute, checkedAttrs []testparser.CheckedAttribute) {
+func printHuman(result Result) {
 	fmt.Printf("Resource: %s\n", result.ResourceFile)
 	fmt.Printf("Test:     %s :: %s\n", result.TestFile, result.TestFunc)
 	fmt.Println()
 
 	if result.Pass && len(result.Warnings) == 0 {
-		fmt.Printf("✓ All %d schema attributes are checked in the basic test.\n", len(schemaAttrs))
+		fmt.Printf("✓ All %d schema attributes are checked in the basic test.\n", result.Total)
 	} else if result.Pass {
-		fmt.Printf("✓ All %d schema attributes are checked (with warnings).\n", len(schemaAttrs))
+		fmt.Printf("✓ All %d schema attributes are checked (with warnings).\n", result.Total)
 	} else {
 		fmt.Printf("✗ %d attribute(s) missing from basic test:\n", len(result.Missing))
 		fmt.Println()
@@ -194,22 +200,7 @@ func printHuman(result Result, schemaAttrs []schema.Attribute, checkedAttrs []te
 	}
 
 	fmt.Println()
-	fmt.Println("Coverage:")
-	checked := len(schemaAttrs) - len(result.Missing) - len(result.Warnings)
-	fmt.Printf("  %d/%d attributes checked (%d missing, %d warnings)\n", checked, len(schemaAttrs), len(result.Missing), len(result.Warnings))
-
-	// Show breakdown by source (unique attributes per source)
-	checkPaths := make(map[string]bool)
-	statePaths := make(map[string]bool)
-	for _, a := range checkedAttrs {
-		switch a.Source {
-		case "Check":
-			checkPaths[a.Path] = true
-		case "ConfigStateChecks":
-			statePaths[a.Path] = true
-		}
-	}
-	fmt.Printf("  %d via Check, %d via ConfigStateChecks\n", len(checkPaths), len(statePaths))
+	fmt.Printf("Coverage: %d/%d\n", result.Checked, result.Total)
 }
 
 // isSubAttrCoveredByParent checks if a sub-attribute's parent block is checked.
@@ -247,4 +238,23 @@ func isSubAttrOf(path string, schemaSet map[string]bool) bool {
 		}
 	}
 	return false
+}
+
+// filterRedundantChildren removes paths whose parent is already in the list.
+// Input must be sorted.
+func filterRedundantChildren(paths []string) []string {
+	var result []string
+	for _, p := range paths {
+		redundant := false
+		for _, r := range result {
+			if strings.HasPrefix(p, r+".") {
+				redundant = true
+				break
+			}
+		}
+		if !redundant {
+			result = append(result, p)
+		}
+	}
+	return result
 }
