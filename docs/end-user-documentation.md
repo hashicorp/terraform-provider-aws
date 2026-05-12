@@ -56,8 +56,8 @@ Every argument must have a description.
 - Descriptions are concise.
 - Information about AWS service features and valid argument values that are likely to update over time should link to AWS service user guides and API references where possible.
 - If an argument has validation allowing only specific inputs, these must be documented. For example:
-  - `` Allowed values are: `value1`, `value2`, and `value3`. ``.
-  - `` Valid value is between `0` and `100`. ``
+    - `` Allowed values are: `value1`, `value2`, and `value3`. ``.
+    - `` Valid value is between `0` and `100`. ``
 - If the argument has a default value, this must be documented, e.g. `` Default value: `ENABLED`. ``.
 
 #### Blocks
