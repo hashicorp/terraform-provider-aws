@@ -1171,7 +1171,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// will signal the problems.
 	var gsiUpdates []awstypes.GlobalSecondaryIndexUpdate
 
-	if d.HasChange("global_secondary_index") || d.HasChange("attribute") {
+	if d.HasChanges("global_secondary_index", "attribute") {
 		oldGSI, newGSI := d.GetChange("global_secondary_index")
 		oldAttr, newAttr := d.GetChange("attribute")
 
