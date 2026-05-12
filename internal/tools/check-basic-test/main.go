@@ -35,7 +35,6 @@ func main() {
 		testFile     string
 		testFunc     string
 		resourceName string
-		constsFile   string
 		jsonOutput   bool
 	)
 
@@ -43,26 +42,18 @@ func main() {
 	flag.StringVar(&testFile, "test", "", "Path to the test file containing the _basic test")
 	flag.StringVar(&testFunc, "func", "", "Name of the test function (e.g., TestAccDynamoDBGlobalSecondaryIndex_basic)")
 	flag.StringVar(&resourceName, "name", "resourceName", "Variable name or literal for the resource under test")
-	flag.StringVar(&constsFile, "consts", "", "Path to names/attr_consts_gen.go for accurate constant resolution")
 	flag.BoolVar(&jsonOutput, "json", false, "Output in JSON format for CI")
 	flag.Parse()
 
 	if resourceFile == "" || testFile == "" || testFunc == "" {
-		fmt.Fprintf(os.Stderr, "Usage: check-basic-test -resource <file> -test <file> -func <name> [-name <resourceName>] [-consts <file>] [-json]\n")
+		fmt.Fprintf(os.Stderr, "Usage: check-basic-test -resource <file> -test <file> -func <name> [-name <resourceName>] [-json]\n")
 		os.Exit(2)
 	}
 
-	// Load attr constants if provided
-	if constsFile != "" {
-		if err := attrnames.LoadConsts(constsFile); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: could not load constants from %s: %v\n", constsFile, err)
-		}
-		// Also load acctest constants (sibling path: internal/acctest/consts_gen.go)
-		acctestConsts := filepath.Join(filepath.Dir(filepath.Dir(constsFile)), "internal", "acctest", "consts_gen.go")
-		if err := attrnames.LoadConsts(acctestConsts); err != nil {
-			// Not fatal — acctest constants are optional
-			_ = err
-		}
+	// Auto-detect and load constants from repo root
+	if root := findRepoRoot(resourceFile); root != "" {
+		attrnames.LoadConsts(filepath.Join(root, "names", "attr_consts_gen.go"))
+		attrnames.LoadConsts(filepath.Join(root, "internal", "acctest", "consts_gen.go"))
 	}
 
 	// Parse schema
@@ -257,4 +248,23 @@ func filterRedundantChildren(paths []string) []string {
 		}
 	}
 	return result
+}
+
+// findRepoRoot walks up from the given file path looking for names/attr_consts_gen.go.
+func findRepoRoot(fromFile string) string {
+	abs, err := filepath.Abs(fromFile)
+	if err != nil {
+		return ""
+	}
+	dir := filepath.Dir(abs)
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "names", "attr_consts_gen.go")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+		dir = parent
+	}
 }
