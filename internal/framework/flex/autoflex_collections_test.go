@@ -819,6 +819,19 @@ func TestFlattenSliceOfIntPointer(t *testing.T) {
 			Target:     &tfSimpleList{},
 			WantTarget: &tfSimpleList{Field1: types.ListNull(types.Int64Type)},
 		},
+		"[]*int64 with nil element to list": {
+			Source: &awsInt64PointerSlice{
+				Field1: []*int64{aws.Int64(1), nil, aws.Int64(2)},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Null(),
+					types.Int64Value(2),
+				}),
+			},
+		},
 		"[]*int32 to list": {
 			Source: &awsInt32PointerSlice{
 				Field1: []*int32{aws.Int32(1), aws.Int32(-1)},
@@ -835,6 +848,19 @@ func TestFlattenSliceOfIntPointer(t *testing.T) {
 			Source:     &awsInt32PointerSlice{},
 			Target:     &tfSimpleList{},
 			WantTarget: &tfSimpleList{Field1: types.ListNull(types.Int64Type)},
+		},
+		"[]*int32 with nil element to list": {
+			Source: &awsInt32PointerSlice{
+				Field1: []*int32{aws.Int32(1), nil, aws.Int32(2)},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Null(),
+					types.Int64Value(2),
+				}),
+			},
 		},
 		"[]*int64 to set": {
 			Source: &awsInt64PointerSlice{
