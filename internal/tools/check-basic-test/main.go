@@ -4,11 +4,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -18,6 +20,7 @@ import (
 )
 
 type Result struct {
+	ResourceType string   `json:"resource_type"`
 	ResourceFile string   `json:"resource_file"`
 	TestFile     string   `json:"test_file"`
 	TestFunc     string   `json:"test_func"`
@@ -30,30 +33,40 @@ type Result struct {
 }
 
 func main() {
-	var (
-		resourceFile string
-		testFile     string
-		testFunc     string
-		resourceName string
-		jsonOutput   bool
-	)
-
-	flag.StringVar(&resourceFile, "resource", "", "Path to the resource source file containing the schema")
-	flag.StringVar(&testFile, "test", "", "Path to the test file containing the _basic test")
-	flag.StringVar(&testFunc, "func", "", "Name of the test function (e.g., TestAccDynamoDBGlobalSecondaryIndex_basic)")
-	flag.StringVar(&resourceName, "name", "resourceName", "Variable name or literal for the resource under test")
-	flag.BoolVar(&jsonOutput, "json", false, "Output in JSON format for CI")
+	jsonOutput := flag.Bool("json", false, "Output in JSON format for CI")
 	flag.Parse()
 
-	if resourceFile == "" || testFile == "" || testFunc == "" {
-		fmt.Fprintf(os.Stderr, "Usage: check-basic-test -resource <file> -test <file> -func <name> [-name <resourceName>] [-json]\n")
+	if flag.NArg() != 1 {
+		fmt.Fprintf(os.Stderr, "Usage: check-basic-test [-json] <resource-type>\n")
+		fmt.Fprintf(os.Stderr, "  e.g.: check-basic-test aws_prometheus_workspace_configuration\n")
 		os.Exit(2)
 	}
+	resourceType := flag.Arg(0)
 
-	// Auto-detect and load constants from repo root
-	if root := findRepoRoot(resourceFile); root != "" {
-		attrnames.LoadConsts(filepath.Join(root, "names", "attr_consts_gen.go"))
-		attrnames.LoadConsts(filepath.Join(root, "internal", "acctest", "consts_gen.go"))
+	// Find repo root from cwd
+	cwd, _ := os.Getwd()
+	root := findRepoRoot(cwd)
+	if root == "" {
+		fmt.Fprintf(os.Stderr, "Error: could not find repository root (looking for names/attr_consts_gen.go)\n")
+		os.Exit(1)
+	}
+
+	// Load constants
+	attrnames.LoadConsts(filepath.Join(root, "names", "attr_consts_gen.go"))
+	attrnames.LoadConsts(filepath.Join(root, "internal", "acctest", "consts_gen.go"))
+
+	// Find the resource source file
+	resourceFile, err := findResourceFile(root, resourceType)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Find the test file and function
+	testFile, testFunc, err := findBasicTest(resourceFile, resourceType)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
 
 	// Parse schema
@@ -62,9 +75,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error parsing schema from %s: %v\n", resourceFile, err)
 		os.Exit(1)
 	}
+	if len(schemaAttrs) == 0 {
+		fmt.Fprintf(os.Stderr, "Error: no schema attributes found in %s (is this a Framework resource?)\n", resourceFile)
+		os.Exit(1)
+	}
 
 	// Parse test
-	checkedAttrs, err := testparser.ParseBasicTest(testFile, testFunc, resourceName)
+	checkedAttrs, err := testparser.ParseBasicTest(testFile, testFunc, "resourceName")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing test from %s: %v\n", testFile, err)
 		os.Exit(1)
@@ -81,7 +98,6 @@ func main() {
 	for _, a := range checkedAttrs {
 		if a.CountOnly {
 			if a.Value == "0" {
-				// Count of 0 means the block is empty — that's a full check
 				checkedSet[a.Path] = true
 			} else {
 				countOnlySet[a.Path] = true
@@ -91,7 +107,7 @@ func main() {
 		}
 	}
 
-	// Find missing: in schema but not checked
+	// Find missing
 	var missing []string
 	var warnings []string
 	var checked int
@@ -117,7 +133,7 @@ func main() {
 		missing = append(missing, a.Path)
 	}
 
-	// Find extra: checked but not in schema (informational)
+	// Find extra
 	var extra []string
 	for _, a := range checkedAttrs {
 		if !schemaSet[a.Path] && !isSubAttrOf(a.Path, schemaSet) {
@@ -128,11 +144,10 @@ func main() {
 	slices.Sort(missing)
 	slices.Sort(warnings)
 	slices.Sort(extra)
-
-	// Remove sub-attributes whose parent is already missing
 	missing = filterRedundantChildren(missing)
 
 	result := Result{
+		ResourceType: resourceType,
 		ResourceFile: filepath.Base(resourceFile),
 		TestFile:     filepath.Base(testFile),
 		TestFunc:     testFunc,
@@ -144,7 +159,7 @@ func main() {
 		Pass:         len(missing) == 0,
 	}
 
-	if jsonOutput {
+	if *jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		enc.Encode(result)
@@ -157,8 +172,81 @@ func main() {
 	}
 }
 
+// findResourceFile finds the Go source file containing @FrameworkResource("resourceType").
+func findResourceFile(root, resourceType string) (string, error) {
+	serviceDir := filepath.Join(root, "internal", "service")
+	var found string
+
+	// Search service_package_gen.go files for the TypeName
+	err := filepath.Walk(serviceDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() || info.Name() != "service_package_gen.go" {
+			return nil
+		}
+		if fileContains(path, `"`+resourceType+`"`) {
+			// Found the service directory, now find the source file with @FrameworkResource
+			dir := filepath.Dir(path)
+			annotation := `@FrameworkResource("` + resourceType + `"`
+			entries, _ := os.ReadDir(dir)
+			for _, e := range entries {
+				if e.IsDir() || strings.HasSuffix(e.Name(), "_test.go") || !strings.HasSuffix(e.Name(), ".go") {
+					continue
+				}
+				candidate := filepath.Join(dir, e.Name())
+				if fileContains(candidate, annotation) {
+					found = candidate
+					return filepath.SkipAll
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+	if found == "" {
+		return "", fmt.Errorf("resource %q not found (is it a Framework resource?)", resourceType)
+	}
+	return found, nil
+}
+
+// findBasicTest finds the _basic test function in the test file for the resource.
+func findBasicTest(resourceFile, resourceType string) (string, string, error) {
+	dir := filepath.Dir(resourceFile)
+	base := strings.TrimSuffix(filepath.Base(resourceFile), ".go")
+	testFile := filepath.Join(dir, base+"_test.go")
+
+	if _, err := os.Stat(testFile); err != nil {
+		return "", "", fmt.Errorf("test file not found: %s", testFile)
+	}
+
+	// Look for a function ending in _basic
+	basicRe := regexp.MustCompile(`^func\s+((?:Test|test)\w+_basic)\(`)
+	f, err := os.Open(testFile)
+	if err != nil {
+		return "", "", err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if m := basicRe.FindStringSubmatch(scanner.Text()); m != nil {
+			return testFile, m[1], nil
+		}
+	}
+	return "", "", fmt.Errorf("no _basic test function found in %s", testFile)
+}
+
+func fileContains(path, substr string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(data), substr)
+}
+
 func printHuman(result Result) {
-	fmt.Printf("Resource: %s\n", result.ResourceFile)
+	fmt.Printf("Resource: %s\n", result.ResourceType)
+	fmt.Printf("File:     %s\n", result.ResourceFile)
 	fmt.Printf("Test:     %s :: %s\n", result.TestFile, result.TestFunc)
 	fmt.Println()
 
@@ -194,9 +282,6 @@ func printHuman(result Result) {
 	fmt.Printf("Coverage: %d/%d\n", result.Checked, result.Total)
 }
 
-// isSubAttrCoveredByParent checks if a sub-attribute's parent block is checked.
-// If the parent is checked (meaning the block itself is asserted), sub-attributes
-// are considered covered.
 func isSubAttrCoveredByParent(path string, checkedSet map[string]bool) bool {
 	parts := strings.Split(path, ".")
 	for i := 1; i < len(parts); i++ {
@@ -208,7 +293,6 @@ func isSubAttrCoveredByParent(path string, checkedSet map[string]bool) bool {
 	return false
 }
 
-// hasCheckedSubAttrs returns true if any sub-attribute of path is value-checked.
 func hasCheckedSubAttrs(path string, checkedSet map[string]bool) bool {
 	prefix := path + "."
 	for p := range checkedSet {
@@ -219,7 +303,6 @@ func hasCheckedSubAttrs(path string, checkedSet map[string]bool) bool {
 	return false
 }
 
-// isSubAttrOf checks if a path is a sub-attribute of any schema attribute.
 func isSubAttrOf(path string, schemaSet map[string]bool) bool {
 	parts := strings.Split(path, ".")
 	for i := 1; i < len(parts); i++ {
@@ -231,8 +314,6 @@ func isSubAttrOf(path string, schemaSet map[string]bool) bool {
 	return false
 }
 
-// filterRedundantChildren removes paths whose parent is already in the list.
-// Input must be sorted.
 func filterRedundantChildren(paths []string) []string {
 	var result []string
 	for _, p := range paths {
@@ -250,13 +331,12 @@ func filterRedundantChildren(paths []string) []string {
 	return result
 }
 
-// findRepoRoot walks up from the given file path looking for names/attr_consts_gen.go.
-func findRepoRoot(fromFile string) string {
-	abs, err := filepath.Abs(fromFile)
+func findRepoRoot(from string) string {
+	abs, err := filepath.Abs(from)
 	if err != nil {
 		return ""
 	}
-	dir := filepath.Dir(abs)
+	dir := abs
 	for {
 		if _, err := os.Stat(filepath.Join(dir, "names", "attr_consts_gen.go")); err == nil {
 			return dir
