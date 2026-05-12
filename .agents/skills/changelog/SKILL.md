@@ -1,3 +1,7 @@
+---
+name: changelog
+description: "Add a `.changelog/<PR_NUMBER>.txt` entry from a GitHub Pull Request URL, commit, and push (with confirmation)."
+---
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
