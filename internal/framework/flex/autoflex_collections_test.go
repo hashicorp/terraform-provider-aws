@@ -933,6 +933,10 @@ type awsFloat64Slice struct {
 	Field1 []float64
 }
 
+type awsPointerToSlice struct {
+	Field1 *[]string
+}
+
 func TestFlattenSliceOfInt32(t *testing.T) {
 	t.Parallel()
 
@@ -1015,6 +1019,12 @@ func TestFlattenSliceIncompatibleType(t *testing.T) {
 	testCases := autoFlexTestCases{
 		"[]float64 to list": {
 			Source:     &awsFloat64Slice{Field1: []float64{1.1, 2.2}},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{},
+			WantDiff:   true,
+		},
+		"*[]string to list": {
+			Source:     &awsPointerToSlice{Field1: &[]string{"a"}},
 			Target:     &tfSimpleList{},
 			WantTarget: &tfSimpleList{},
 			WantDiff:   true,
