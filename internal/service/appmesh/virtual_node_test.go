@@ -95,7 +95,7 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 
 	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
@@ -913,7 +913,7 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 
 	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },

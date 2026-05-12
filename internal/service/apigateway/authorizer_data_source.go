@@ -58,7 +58,7 @@ func dataSourceAuthorizer() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -76,7 +76,7 @@ func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := c.APIGatewayClient(ctx)
 
 	authorizerID := d.Get("authorizer_id").(string)
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	authorizer, err := findAuthorizerByTwoPartKey(ctx, conn, authorizerID, apiID)
 
 	if err != nil {

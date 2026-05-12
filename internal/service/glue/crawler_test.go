@@ -188,7 +188,7 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -289,7 +289,7 @@ func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -332,7 +332,7 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 	var crawler awstypes.Crawler
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -393,7 +393,7 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 	var crawler awstypes.Crawler
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(t), "27017") + "/testdatabase"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -435,7 +435,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 	var crawler awstypes.Crawler
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(t), "27017") + "/testdatabase"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -487,7 +487,7 @@ func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 	var crawler awstypes.Crawler
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(t), "27017") + "/testdatabase"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -545,7 +545,7 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 	var crawler awstypes.Crawler
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(t), "27017") + "/testdatabase"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -591,7 +591,7 @@ func TestAccGlueCrawler_hudiTarget(t *testing.T) {
 	var crawler awstypes.Crawler
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(t), "27017") + "/testdatabase"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -635,7 +635,7 @@ func TestAccGlueCrawler_icebergTarget(t *testing.T) {
 	var crawler awstypes.Crawler
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(t), "27017") + "/testdatabase"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

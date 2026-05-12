@@ -28,6 +28,19 @@ var fieldSortOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var fieldSortOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_sort": columnSortDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+				"field_sort":  fieldSortDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+			},
+		},
+	}
+})
+
 var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
 		Type:     schema.TypeList,
@@ -44,6 +57,20 @@ var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var columnSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"direction":            stringEnumDataSourceSchema[awstypes.SortDirection](),
+				"sort_by":              columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"aggregation_function": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+			},
+		},
+	}
+})
+
 var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
 		Type:     schema.TypeList,
@@ -53,7 +80,20 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"direction": stringEnumSchema[awstypes.SortDirection](attrRequired),
-				"field_id":  stringLenBetweenSchema(attrRequired, 1, 512),
+				attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
+			},
+		},
+	}
+})
+
+var fieldSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"direction": stringEnumDataSourceSchema[awstypes.SortDirection](),
+				attrFieldID: stringComputedOnly(),
 			},
 		},
 	}

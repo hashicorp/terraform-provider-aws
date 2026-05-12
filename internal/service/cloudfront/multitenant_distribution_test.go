@@ -1135,7 +1135,7 @@ resource "aws_lambda_function" "viewer_request" {
   function_name = "viewer-request-%[1]s"
   role          = aws_iam_role.lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
   skip_destroy  = true
 }
@@ -1146,7 +1146,7 @@ resource "aws_lambda_function" "viewer_response" {
   function_name = "viewer-response-%[1]s"
   role          = aws_iam_role.lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
   skip_destroy  = true
 }

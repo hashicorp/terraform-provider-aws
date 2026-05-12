@@ -98,7 +98,7 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
 										Required:   true,
 									},

@@ -27,7 +27,7 @@ var conditionalFormattingColorSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GradientColor.html
+							attrColor: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GradientColor.html
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -45,7 +45,7 @@ var conditionalFormattingColorSchema = sync.OnceValue(func() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Required: true,
 													},
-													"color": hexColorSchema(attrOptional),
+													attrColor: hexColorSchema(attrOptional),
 													"data_value": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -67,8 +67,57 @@ var conditionalFormattingColorSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              hexColorSchema(attrOptional),
+							attrColor:            hexColorSchema(attrOptional),
 							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var conditionalFormattingColorDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"gradient": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingGradientColor.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrColor: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GradientColor.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"stops": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GradientStop.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"gradient_offset": floatComputedOnly(),
+													attrColor:         stringComputedOnly(),
+													"data_value":      floatComputedOnly(),
+												},
+											},
+										},
+									},
+								},
+							},
+							names.AttrExpression: stringComputedOnly(),
+						},
+					},
+				},
+				"solid": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingSolidColor.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrColor:            stringComputedOnly(),
+							names.AttrExpression: stringComputedOnly(),
 						},
 					},
 				},
@@ -92,7 +141,7 @@ var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":              hexColorSchema(attrOptional),
+							attrColor:            hexColorSchema(attrOptional),
 							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 							"icon_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconOptions.html
 								Type:     schema.TypeList,
@@ -128,6 +177,56 @@ var conditionalFormattingIconSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 							"icon_set_type":      stringEnumSchema[awstypes.ConditionalFormattingIconSetType](attrOptional),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var conditionalFormattingIconDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_condition": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconCondition.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrColor:            stringComputedOnly(),
+							names.AttrExpression: stringComputedOnly(),
+							"icon_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingCustomIconOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"icon":         stringEnumDataSourceSchema[awstypes.Icon](),
+										"unicode_icon": stringComputedOnly(),
+									},
+								},
+							},
+							"display_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIconDisplayConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"icon_display_option": stringEnumDataSourceSchema[awstypes.ConditionalFormattingIconDisplayOption](),
+									},
+								},
+							},
+						},
+					},
+				},
+				"icon_set": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIconSet.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrExpression: stringComputedOnly(),
+							"icon_set_type":      stringEnumDataSourceSchema[awstypes.ConditionalFormattingIconSetType](),
 						},
 					},
 				},
@@ -173,7 +272,7 @@ func expandConditionalFormattingGradientColor(tfList []any) *awstypes.Conditiona
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		apiObject.Expression = aws.String(v)
 	}
-	if v, ok := tfMap["color"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColor].([]any); ok && len(v) > 0 {
 		apiObject.Color = expandGradientColor(v)
 	}
 
@@ -233,7 +332,7 @@ func expandGradientStop(tfMap map[string]any) *awstypes.GradientStop {
 	if v, ok := tfMap["gradient_offset"].(float64); ok {
 		apiObject.GradientOffset = v
 	}
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["data_value"].(float64); ok {
@@ -255,7 +354,7 @@ func expandConditionalFormattingSolidColor(tfList []any) *awstypes.ConditionalFo
 
 	apiObject := &awstypes.ConditionalFormattingSolidColor{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
@@ -299,7 +398,7 @@ func expandConditionalFormattingCustomIconCondition(tfList []any) *awstypes.Cond
 
 	apiObject := &awstypes.ConditionalFormattingCustomIconCondition{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
@@ -428,7 +527,7 @@ func flattenConditionalFormattingGradientColor(apiObject *awstypes.ConditionalFo
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = flattenGradientColor(apiObject.Color)
+		tfMap[attrColor] = flattenGradientColor(apiObject.Color)
 	}
 	if apiObject.Expression != nil {
 		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
@@ -463,7 +562,7 @@ func flattenGradientStop(apiObjects []awstypes.GradientStop) []any {
 
 		tfMap["gradient_offset"] = apiObject.GradientOffset
 		if apiObject.Color != nil {
-			tfMap["color"] = aws.ToString(apiObject.Color)
+			tfMap[attrColor] = aws.ToString(apiObject.Color)
 		}
 		if apiObject.DataValue != nil {
 			tfMap["data_value"] = aws.ToFloat64(apiObject.DataValue)
@@ -483,7 +582,7 @@ func flattenConditionalFormattingSolidColor(apiObject *awstypes.ConditionalForma
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	if apiObject.Expression != nil {
 		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
@@ -517,7 +616,7 @@ func flattenConditionalFormattingCustomIconCondition(apiObject *awstypes.Conditi
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	if apiObject.Expression != nil {
 		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)

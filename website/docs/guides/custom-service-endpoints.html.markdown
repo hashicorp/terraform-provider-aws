@@ -163,6 +163,7 @@ provider "aws" {
 |CodeDeploy|`deploy`(or `codedeploy`)|`AWS_ENDPOINT_URL_CODEDEPLOY`|`codedeploy`|
 |Detective|`detective`|`AWS_ENDPOINT_URL_DETECTIVE`|`detective`|
 |Device Farm|`devicefarm`|`AWS_ENDPOINT_URL_DEVICE_FARM`|`device_farm`|
+|DevOps Agent|`devopsagent`|`AWS_ENDPOINT_URL_DEVOPS_AGENT`|`devops_agent`|
 |DevOps Guru|`devopsguru`|`AWS_ENDPOINT_URL_DEVOPS_GURU`|`devops_guru`|
 |Direct Connect|`directconnect`|`AWS_ENDPOINT_URL_DIRECT_CONNECT`|`direct_connect`|
 |DLM (Data Lifecycle Manager)|`dlm`|`AWS_ENDPOINT_URL_DLM`|`dlm`|

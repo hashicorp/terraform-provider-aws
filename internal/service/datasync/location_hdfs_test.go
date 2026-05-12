@@ -140,7 +140,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 	var v datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	principal := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	principal := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

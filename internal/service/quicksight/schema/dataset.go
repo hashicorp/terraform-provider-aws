@@ -27,6 +27,19 @@ var dataSetIdentifierDeclarationsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var dataSetIdentifierDeclarationsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_arn":       arnStringDataSourceSchema(),
+				names.AttrIdentifier: stringComputedOnly(),
+			},
+		},
+	}
+})
+
 var dataSetReferencesSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 		Type:     schema.TypeList,

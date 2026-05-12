@@ -25,7 +25,7 @@ func TestAccRoute53ResolverRuleAssociation_List_basic(t *testing.T) {
 	resourceName1 := "aws_route53_resolver_rule_association.test[0]"
 	resourceName2 := "aws_route53_resolver_rule_association.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	id1 := tfstatecheck.StateValue()
 	id2 := tfstatecheck.StateValue()

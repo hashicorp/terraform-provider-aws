@@ -22,7 +22,7 @@ func TestAccDSRegion_basic(t *testing.T) {
 	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -57,7 +57,7 @@ func TestAccDSRegion_disappears(t *testing.T) {
 	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -86,7 +86,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -137,7 +137,7 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

@@ -94,7 +94,7 @@ func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Resul
 }
 
 func dereferencePointer(value reflect.Value) reflect.Value {
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
 		return value.Elem()
 	}
 	return value

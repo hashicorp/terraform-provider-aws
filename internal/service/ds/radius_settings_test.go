@@ -29,7 +29,7 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 	var v awstypes.RadiusSettings
 	resourceName := "aws_directory_service_region.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -77,7 +77,7 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 	var v awstypes.RadiusSettings
 	resourceName := "aws_directory_service_region.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

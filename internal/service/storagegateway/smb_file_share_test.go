@@ -26,7 +26,7 @@ func TestAccStorageGatewaySMBFileShare_Authentication_activeDirectory(t *testing
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 	bucketResourceName := "aws_s3_bucket.test"
 	iamResourceName := "aws_iam_role.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -445,7 +445,7 @@ func TestAccStorageGatewaySMBFileShare_invalidUserList(t *testing.T) {
 	var smbFileShare awstypes.SMBFileShareInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_smb_file_share.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -671,7 +671,7 @@ func TestAccStorageGatewaySMBFileShare_validUserList(t *testing.T) {
 	var smbFileShare awstypes.SMBFileShareInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_smb_file_share.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -714,7 +714,7 @@ func TestAccStorageGatewaySMBFileShare_SMB_acl(t *testing.T) {
 	var smbFileShare awstypes.SMBFileShareInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_smb_file_share.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -905,7 +905,7 @@ func TestAccStorageGatewaySMBFileShare_adminUserList(t *testing.T) {
 	var smbFileShare awstypes.SMBFileShareInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_smb_file_share.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

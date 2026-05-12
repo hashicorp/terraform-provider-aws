@@ -26,7 +26,7 @@ func testAccLoadBalancerCertificate_basic(t *testing.T) {
 	resourceName := "aws_lightsail_lb_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -62,8 +62,8 @@ func testAccLoadBalancerCertificate_subjectAlternativeNames(t *testing.T) {
 	resourceName := "aws_lightsail_lb_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
-	subjectAlternativeName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
+	subjectAlternativeName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -131,7 +131,7 @@ func testAccLoadBalancerCertificate_disappears(t *testing.T) {
 	resourceName := "aws_lightsail_lb_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {

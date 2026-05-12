@@ -22,7 +22,7 @@ func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 	resourceName := "aws_appstream_user_stack_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -56,7 +56,7 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 	resourceName := "aws_appstream_user_stack_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -84,7 +84,7 @@ func TestAccAppStreamUserStackAssociation_Disappears_user(t *testing.T) {
 	resourceName := "aws_appstream_user_stack_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -112,7 +112,7 @@ func TestAccAppStreamUserStackAssociation_Disappears_stack(t *testing.T) {
 	resourceName := "aws_appstream_user_stack_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -140,7 +140,7 @@ func TestAccAppStreamUserStackAssociation_complete(t *testing.T) {
 	resourceName := "aws_appstream_user_stack_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 	rEmailUpdated := acctest.RandomEmailAddress(domain)
 

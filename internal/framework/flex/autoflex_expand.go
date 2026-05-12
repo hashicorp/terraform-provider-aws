@@ -188,7 +188,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	// No need to set the target value if there's no source value.
 	if vFrom.IsNull() {
 		// Special case: if target is XML wrapper struct and no omitempty, create zero-value
-		if vTo.Kind() == reflect.Ptr && !fieldOpts.omitempty {
+		if vTo.Kind() == reflect.Ptr && !fieldOpts.omitempty { //nolint:govet // wants us to inline constant which would be less readable
 			targetType := vTo.Type().Elem()
 			if targetType.Kind() == reflect.Struct && potentialXMLWrapperStruct(targetType) {
 				tflog.SubsystemDebug(ctx, subsystemName, "Source is null but target is XML wrapper without omitempty - creating zero-value struct")
@@ -200,7 +200,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 					itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 				}
 				quantityField := zeroStruct.Elem().FieldByName(xmlWrapperFieldQuantity)
-				if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr {
+				if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
 					zero := int32(0)
 					quantityField.Set(reflect.ValueOf(&zero))
 				}
@@ -211,7 +211,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 					if fieldType.Name == wrapperFieldName || fieldType.Name == xmlWrapperFieldQuantity {
 						continue
 					}
-					if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() {
+					if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() { //nolint:govet // wants us to inline constant which would be less readable
 						switch fieldType.Type.Elem().Kind() {
 						case reflect.Bool:
 							falseVal := false
@@ -279,8 +279,8 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -322,8 +322,8 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -379,8 +379,8 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -476,8 +476,8 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -659,8 +659,8 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -694,7 +694,7 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from list[%s]": v.ElementType(ctx),
-		"to":            vTo.Kind(),
+		logAttrKeyTo:    vTo.Kind(),
 	})
 
 	return diags
@@ -787,8 +787,8 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -867,8 +867,8 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -941,8 +941,8 @@ func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWi
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": "Set[Int32]",
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: "Set[Int32]",
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -1013,8 +1013,8 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": fmt.Sprintf("map[string, %s]", v.ElementType(ctx)),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: fmt.Sprintf("map[string, %s]", v.ElementType(ctx)),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -1068,8 +1068,8 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -1107,7 +1107,7 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from set[%s]": v.ElementType(ctx),
-		"to":           vTo.Kind(),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
@@ -1993,14 +1993,14 @@ func (expander *autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Con
 		})
 
 		// Handle pointer to struct (which is what NestedObjectCollection contains)
-		if nestedObj.Kind() == reflect.Ptr && !nestedObj.IsNil() {
+		if nestedObj.Kind() == reflect.Ptr && !nestedObj.IsNil() { //nolint:govet // wants us to inline constant which would be less readable
 			structObj := nestedObj.Elem()
 			if structObj.Kind() == reflect.Struct {
 				// Check if the struct has a wrapper field - indicates Rule 2
 				itemsField := structObj.FieldByName(wrapperField)
 				if itemsField.IsValid() {
 					tflog.SubsystemTrace(ctx, subsystemName, "TRACE: Detected Rule 2 - delegating to expandRule2XMLWrapper", map[string]any{
-						"wrapper_field": wrapperField,
+						logAttrKeyWrapperField: wrapperField,
 					})
 					return expander.expandRule2XMLWrapper(ctx, nestedObj, vTo, wrapperField)
 				}
@@ -2252,7 +2252,7 @@ func (expander autoExpander) convertCollectionToItemsQuantity(ctx context.Contex
 		}
 	default:
 		tflog.SubsystemError(ctx, subsystemName, "Unsupported source type for Items/Quantity conversion", map[string]any{
-			"source_type": fmt.Sprintf("%T", vFrom),
+			logAttrKeySourceTypeLiteral: fmt.Sprintf("%T", vFrom),
 		})
 	}
 
@@ -2379,7 +2379,7 @@ func (expander autoExpander) convertToXMLWrapper(ctx context.Context, sourceFiel
 	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source field is not an attr.Value", map[string]any{
-			"source_type": sourceFieldVal.Type().String(),
+			logAttrKeySourceTypeLiteral: sourceFieldVal.Type().String(),
 		})
 		return diags
 	}
@@ -2402,7 +2402,7 @@ func (expander autoExpander) convertToXMLWrapper(ctx context.Context, sourceFiel
 		}
 	default:
 		tflog.SubsystemError(ctx, subsystemName, "Unsupported source type for XML wrapper conversion", map[string]any{
-			"source_type": fmt.Sprintf("%T", vFrom),
+			logAttrKeySourceTypeLiteral: fmt.Sprintf("%T", vFrom),
 		})
 	}
 
@@ -2548,7 +2548,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 					if itemsField.IsValid() && itemsField.Kind() == reflect.Slice {
 						itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 					}
-					if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 {
+					if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 { //nolint:govet // wants us to inline constant which would be less readable
 						zero := int32(0)
 						quantityField.Set(reflect.ValueOf(&zero))
 					}
@@ -2562,7 +2562,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 							continue
 						}
 						// Set zero value for pointer fields
-						if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() {
+						if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() { //nolint:govet // wants us to inline constant which would be less readable
 							switch fieldType.Type.Elem().Kind() {
 							case reflect.Bool:
 								falseVal := false
@@ -2617,7 +2617,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 						if itemsField.Kind() == reflect.Slice {
 							itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 						}
-						if quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 {
+						if quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 { //nolint:govet // wants us to inline constant which would be less readable
 							zero := int32(0)
 							quantityField.Set(reflect.ValueOf(&zero))
 						}

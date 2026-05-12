@@ -856,7 +856,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -888,7 +888,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -2950,7 +2950,7 @@ func flattenActiveTrustedKeyGroups(apiObject *awstypes.ActiveTrustedKeyGroups) [
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenKGKeyPairIDs(apiObject.Items),
+		attrItems:         flattenKGKeyPairIDs(apiObject.Items),
 	}
 
 	return []any{tfMap}
@@ -2978,7 +2978,7 @@ func flattenActiveTrustedSigners(apiObject *awstypes.ActiveTrustedSigners) []any
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenSigners(apiObject.Items),
+		attrItems:         flattenSigners(apiObject.Items),
 	}
 
 	return []any{tfMap}

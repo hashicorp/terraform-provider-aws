@@ -202,8 +202,8 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := acctest.RandString(t, 10)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
-	secondaryIdpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
+	secondaryIdpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -138,6 +138,14 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceStandardsControlFlatten(ctx, control, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceStandardsControlFlatten(_ context.Context, control *types.StandardsControl, d *schema.ResourceData) error { //nolint:unparam
 	d.Set("control_id", control.ControlId)
 	d.Set("control_status", control.ControlStatus)
 	d.Set("control_status_updated_at", control.ControlStatusUpdatedAt.Format(time.RFC3339))
@@ -149,7 +157,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("standards_control_arn", control.StandardsControlArn)
 	d.Set("title", control.Title)
 
-	return diags
+	return nil
 }
 
 // standardsControlARNToStandardsSubscriptionARN converts a security standard control ARN to a subscription ARN.

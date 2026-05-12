@@ -20,7 +20,7 @@ import (
 func testAccAlternateContact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_alternate_contact.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -68,7 +68,7 @@ func testAccAlternateContact_basic(t *testing.T) {
 func testAccAlternateContact_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_alternate_contact.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -93,7 +93,7 @@ func testAccAlternateContact_disappears(t *testing.T) {
 func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_alternate_contact.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

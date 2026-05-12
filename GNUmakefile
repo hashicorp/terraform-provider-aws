@@ -527,8 +527,10 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 		-v "$(PWD):/markdown" \
 		avtodev/markdown-lint:v1.5.0 \
 		--config markdown/.markdownlint.yml \
+		--ignore markdown/.agents \
 		--ignore markdown/docs \
 		--ignore markdown/website/docs \
+		--ignore markdown/AGENTS.md \
 		--ignore markdown/CHANGELOG.md \
 		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
 		/markdown/**/*.md
@@ -603,6 +605,13 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		exit 1; \
 	fi
 
+schema-validate: ## Validate schemas
+	@echo "make: Validating schemas"
+	@$(GO_VER) test -vet=off -buildvcs=false \
+		./internal/provider/sdkv2 -run=TestProviderInit
+	@$(GO_VER) test -vet=off -buildvcs=false \
+		./internal/provider/framework -run=TestProviderInit
+
 semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
 
 semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
@@ -612,7 +621,7 @@ semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -688,7 +697,7 @@ semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -710,7 +719,7 @@ semgrep-fix-core: semgrep-validate ## Fix Semgrep issues in core directories
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -736,12 +745,14 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config .ci/.semgrep-caps-aws-ec2.yml
+		--config .ci/semgrep-caps-aws-ec2.yml
 
 semgrep-test: semgrep-validate ## Test Semgrep configuration files
 	@echo "make: Running Semgrep rule tests..."
 	@semgrep --quiet \
 		--test .ci/semgrep/
+	@semgrep --quiet \
+		--test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
@@ -759,7 +770,7 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -912,7 +923,7 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 test-naming: ## Check test naming conventions
 	@.ci/scripts/check-test-naming.sh
 
-testacc: prereq-go fmt-check ## Run acceptance tests
+testacc: prereq-go fmt-check schema-validate ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -925,7 +936,7 @@ testacc: prereq-go fmt-check ## Run acceptance tests
 		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
 		exit 1; \
 	fi
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false
 
 testacc-lint: ## [CI] Acceptance Test Linting / terrafmt
 	@echo "make: Acceptance Test Linting / terrafmt..."

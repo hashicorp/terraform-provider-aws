@@ -19,4 +19,6 @@ var (
 
 	ValidSecretName       = validSecretName
 	ValidSecretNamePrefix = validSecretNamePrefix
+
+	SecretVersionForceNewCustomDiffInner = secretVersionForceNewCustomDiffInner
 )

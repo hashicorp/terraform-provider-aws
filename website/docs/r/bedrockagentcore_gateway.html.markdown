@@ -124,7 +124,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `description` - (Optional) Description of the gateway.
-* `exception_level` - (Optional) Exception level for the gateway. Valid values: `INFO`, `WARN`, `ERROR`.
+* `exception_level` - (Optional) Exception level for the gateway. Valid values: `DEBUG`.
 * `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
 * `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.

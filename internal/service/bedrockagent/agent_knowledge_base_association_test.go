@@ -18,6 +18,8 @@ import (
 )
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -49,6 +51,8 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 }
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -88,6 +92,8 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 }
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

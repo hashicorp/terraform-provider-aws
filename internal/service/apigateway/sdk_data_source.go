@@ -42,7 +42,7 @@ func dataSourceSDK() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,7 +63,7 @@ func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	stageName := d.Get("stage_name").(string)
 	sdkType := d.Get("sdk_type").(string)
 	input := apigateway.GetSdkInput{

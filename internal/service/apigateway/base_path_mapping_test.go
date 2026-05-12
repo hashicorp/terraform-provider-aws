@@ -23,7 +23,7 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetBasePathMappingOutput
 	resourceName := "aws_api_gateway_base_path_mapping.test"
-	name := acctest.RandomSubdomain()
+	name := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
@@ -52,7 +52,7 @@ func TestAccAPIGatewayBasePathMapping_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetBasePathMappingOutput
 	resourceName := "aws_api_gateway_base_path_mapping.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -82,7 +82,7 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetBasePathMappingOutput
 	resourceName := "aws_api_gateway_base_path_mapping.test"
-	name := acctest.RandomSubdomain()
+	name := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
@@ -111,7 +111,7 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var confFirst, conf apigateway.GetBasePathMappingOutput
 	resourceName := "aws_api_gateway_base_path_mapping.test"
-	name := acctest.RandomSubdomain()
+	name := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
@@ -160,7 +160,7 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetBasePathMappingOutput
-	name := acctest.RandomSubdomain()
+	name := acctest.RandomSubdomain(t)
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
@@ -186,7 +186,7 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 func TestAccAPIGatewayBasePathMapping_updateIDFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetBasePathMappingOutput
-	name := acctest.RandomSubdomain()
+	name := acctest.RandomSubdomain(t)
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)

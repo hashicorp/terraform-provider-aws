@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,7 +32,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrColumn:             columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
@@ -95,7 +94,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 									},
 								},
 							},
-							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
+							attrTitle: stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -106,7 +105,81 @@ func AnalysisDefinitionSchema() *schema.Schema {
 }
 
 func AnalysisDefinitionDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(AnalysisDefinitionSchema())
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefinition.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifiers_declarations": dataSetIdentifierDeclarationsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
+				"analysis_defaults":                 analysisDefaultDataSourceSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html
+				"calculated_fields":                 calculatedFieldsDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
+				"column_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrColumn:             columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"format_configuration": formatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
+							names.AttrRole:         stringEnumDataSourceSchema[awstypes.ColumnRole](),
+						},
+					},
+				},
+				"filter_groups": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterGroup.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cross_dataset":       stringEnumDataSourceSchema[awstypes.CrossDatasetTypes](),
+							"filter_group_id":     idDataSourceSchema(),
+							"filters":             filtersDataSourceSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
+							"scope_configuration": filterScopeConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
+							names.AttrStatus:      stringEnumDataSourceSchema[awstypes.Status](),
+						},
+					},
+				},
+				"parameter_declarations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"date_time_parameter_declaration": dateTimeParameterDeclarationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeParameterDeclaration.html
+							"decimal_parameter_declaration":   decimalParameterDeclarationDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalParameterDeclaration.html
+							"integer_parameter_declaration":   integerParameterDeclarationDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerParameterDeclaration.html
+							"string_parameter_declaration":    stringParameterDeclarationDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringParameterDeclaration.html
+						},
+					},
+				},
+				"sheets": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetDefinition.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"sheet_id":              idDataSourceSchema(),
+							names.AttrContentType:   stringEnumDataSourceSchema[awstypes.SheetContentType](),
+							names.AttrDescription:   stringComputedOnly(),
+							"filter_controls":       filterControlsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
+							"layouts":               layoutDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
+							names.AttrName:          stringComputedOnly(),
+							"parameter_controls":    parameterControlsDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
+							"sheet_control_layouts": sheetControlLayoutsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
+							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"sheet_text_box_id": idDataSourceSchema(),
+										names.AttrContent:   stringComputedOnly(),
+									},
+								},
+							},
+							attrTitle: stringComputedOnly(),
+							"visuals": visualsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func AnalysisSourceEntitySchema() *schema.Schema {

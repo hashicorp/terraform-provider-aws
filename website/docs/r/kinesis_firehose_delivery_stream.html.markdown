@@ -90,7 +90,7 @@ resource "aws_lambda_function" "lambda_processor" {
   function_name = "firehose_lambda_processor"
   role          = aws_iam_role.lambda_iam.arn
   handler       = "exports.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 ```
 

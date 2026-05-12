@@ -101,6 +101,7 @@ variable "service_labels" {
     "deploy",
     "detective",
     "devicefarm",
+    "devopsagent",
     "devopsguru",
     "directconnect",
     "discovery",

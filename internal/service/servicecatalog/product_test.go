@@ -30,7 +30,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -84,7 +84,7 @@ func TestAccServiceCatalogProduct_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -109,7 +109,7 @@ func TestAccServiceCatalogProduct_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -148,7 +148,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -192,7 +192,7 @@ func TestAccServiceCatalogProduct_regionOverride(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },

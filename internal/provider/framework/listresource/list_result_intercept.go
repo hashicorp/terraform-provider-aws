@@ -240,7 +240,7 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 	var diags diag.Diagnostics
 	switch params.When {
 	case Before:
-		if reflect.ValueOf(params.Data).Kind() != reflect.Ptr {
+		if reflect.ValueOf(params.Data).Kind() != reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
 			diags.AddError(
 				"Internal Error",
 				"data object must be a pointer")
@@ -298,7 +298,7 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 }
 
 func dereferencePointer(value reflect.Value) reflect.Value {
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
 		return value.Elem()
 	}
 	return value

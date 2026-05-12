@@ -453,7 +453,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test2.arn
   handler          = "lambda-preprovisioninghook.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
 }
 `, rName)
 }

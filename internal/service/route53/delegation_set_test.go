@@ -56,7 +56,7 @@ func TestAccRoute53DelegationSet_withZones(t *testing.T) {
 	primaryZoneResourceName := "aws_route53_zone.primary"
 	secondaryZoneResourceName := "aws_route53_zone.secondary"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	zoneName1 := fmt.Sprintf("primary.%s", domain)
 	zoneName2 := fmt.Sprintf("secondary.%s", domain)
 

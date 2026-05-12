@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 	"time"
 
@@ -144,7 +145,7 @@ func resourceTopicSubscription() *schema.Resource {
 
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
 
-		Schema: subscriptionSchema,
+		Schema: maps.Clone(subscriptionSchema),
 	}
 }
 

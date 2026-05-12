@@ -22,8 +22,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -78,8 +78,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -104,8 +104,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -153,8 +153,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_encryptionConfiguration(t 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
@@ -215,8 +215,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"tls": {

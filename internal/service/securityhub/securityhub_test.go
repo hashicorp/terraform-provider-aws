@@ -27,6 +27,13 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"tags":               testAccAccountV2_tags,
 			"Identity":           testAccSecurityHubAccountV2_identitySerial,
 		},
+		"AggregatorV2": {
+			acctest.CtBasic:      testAccAggregatorV2_basic,
+			acctest.CtDisappears: testAccAggregatorV2_disappears,
+			"specifiedRegions":   testAccAggregatorV2_specifiedRegions,
+			"tags":               testAccAggregatorV2_tags,
+			"Identity":           testAccSecurityHubAggregatorV2_identitySerial,
+		},
 		"AutomationRule": {
 			acctest.CtBasic:      testAccAutomationRule_basic,
 			"full":               testAccAutomationRule_full,
@@ -55,6 +62,18 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtBasic:          testAccConfigurationPolicyAssociation_basic,
 			acctest.CtDisappears:     testAccConfigurationPolicyAssociation_disappears,
 			"SelfManagedSecurityHub": testAccConfigurationPolicyAssociation_selfManagedSecurityHub,
+		},
+		"ConnectorV2": {
+			acctest.CtBasic:           testAccConnectorV2_basic,
+			acctest.CtDisappears:      testAccConnectorV2_disappears,
+			"description":             testAccConnectorV2_description,
+			"tags":                    testAccConnectorV2_tags,
+			"KMSKeyARN":               testAccConnectorV2_kmsKeyARN,
+			"ConnectorProviderUpdate": testAccConnectorV2_connectorProviderUpdate,
+			"Identity":                testAccSecurityHubConnectorV2_identitySerial,
+			"ListBasic":               testAccConnectorV2_List_basic,
+			"ListIncludeResource":     testAccConnectorV2_List_includeResource,
+			"ListRegionOverride":      testAccConnectorV2_List_regionOverride,
 		},
 		"EnabledStandards": {
 			acctest.CtBasic:            testAccEnabledStandardsDataSource_basic,
@@ -115,6 +134,9 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"DisabledControlStatus":                 testAccStandardsControl_disabledControlStatus,
 			"EnabledControlStatusAndDisabledReason": testAccStandardsControl_enabledControlStatusAndDisabledReason,
 			"Identity":                              testAccSecurityHubStandardsControl_identitySerial,
+			"ListBasic":                             testAccStandardsControl_List_basic,
+			"ListIncludeResource":                   testAccStandardsControl_List_includeResource,
+			"ListRegionOverride":                    testAccStandardsControl_List_regionOverride,
 		},
 		"StandardsControlAssociation": {
 			acctest.CtBasic: testAccStandardsControlAssociation_basic,

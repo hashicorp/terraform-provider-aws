@@ -586,21 +586,19 @@ func expandNetworkAccessControl(tfList []any) *awstypes.NetworkAccessConfigurati
 	}
 
 	tfMap := tfList[0].(map[string]any)
-	apiObject := awstypes.NetworkAccessConfiguration{}
 
-	if v, ok := tfMap["prefix_list_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.PrefixListIds = flex.ExpandStringValueSet(v)
-	}
+	// See: https://github.com/aws/aws-sdk-go-v2/issues/2123
+	prefixListIDs := flex.ExpandStringValueSet(tfMap["prefix_list_ids"].(*schema.Set))
+	vpceIDs := flex.ExpandStringValueSet(tfMap["vpce_ids"].(*schema.Set))
 
-	if v, ok := tfMap["vpce_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.VpceIds = flex.ExpandStringValueSet(v)
-	}
-
-	if len(apiObject.PrefixListIds) == 0 && len(apiObject.VpceIds) == 0 {
+	if len(prefixListIDs) == 0 && len(vpceIDs) == 0 {
 		return nil
 	}
 
-	return &apiObject
+	return &awstypes.NetworkAccessConfiguration{
+		PrefixListIds: prefixListIDs,
+		VpceIds:       vpceIDs,
+	}
 }
 
 func flattenNetworkAccessControl(apiObject *awstypes.NetworkAccessConfiguration) []any {
