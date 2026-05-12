@@ -42,6 +42,7 @@ Provides additional useful information, recommendations and/or tips to the user.
 Use the `-> **Note:**` format. The Terraform registry will template this note as a block with an info icon.
 
 For example:
+
 ```markdown
 -> **Note:** The `activation_code` argument cannot be imported.
 ```
@@ -53,6 +54,7 @@ Provides information that the user will need to avoid certain errors. These erro
 Use the `~> **Note:**` format. The Terraform registry will template this note as a block with a warning icon.
 
 For example:
+
 ```markdown
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 ```
@@ -64,6 +66,7 @@ Provides critical information on potential irreversible changes, including data 
 Use the `!> **Note:**` format. The Terraform registry will template this note as a block with a caution icon.
 
 For example:
+
 ```markdown
 !> **Note:** This will destroy and recreate the table, possibly resulting in data loss.
 ```
