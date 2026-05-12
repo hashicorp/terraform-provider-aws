@@ -21,7 +21,7 @@ type Attribute struct {
 }
 
 // ParseFrameworkSchema parses a Go source file and extracts the Framework schema attributes.
-// It looks for the Schema method pattern: response.Schema = schema.Schema{...}
+// It finds the Schema method by signature and extracts the response parameter name dynamically.
 func ParseFrameworkSchema(filename string) ([]Attribute, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
@@ -29,47 +29,69 @@ func ParseFrameworkSchema(filename string) ([]Attribute, error) {
 		return nil, err
 	}
 
-	var attrs []Attribute
-	ast.Inspect(f, func(n ast.Node) bool {
-		// Look for: response.Schema = s (where s was assigned schema.Schema{...})
-		// or: response.Schema = schema.Schema{...}
-		assign, ok := n.(*ast.AssignStmt)
-		if !ok {
+	// Find the Schema method and determine the response parameter name
+	for _, decl := range f.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Recv == nil || fn.Name.Name != "Schema" {
+			continue
+		}
+		respParamName := schemaResponseParamName(fn)
+		if respParamName == "" {
+			continue
+		}
+
+		var attrs []Attribute
+		ast.Inspect(fn.Body, func(n ast.Node) bool {
+			assign, ok := n.(*ast.AssignStmt)
+			if !ok || len(assign.Lhs) != 1 || len(assign.Rhs) != 1 {
+				return true
+			}
+			sel, ok := assign.Lhs[0].(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			ident, ok := sel.X.(*ast.Ident)
+			if !ok || ident.Name != respParamName || sel.Sel.Name != "Schema" {
+				return true
+			}
+			switch rhs := assign.Rhs[0].(type) {
+			case *ast.CompositeLit:
+				attrs = parseSchemaLiteral(rhs, "")
+			case *ast.Ident:
+				attrs = findSchemaVar(f, rhs.Name)
+			}
 			return true
+		})
+		if len(attrs) > 0 {
+			return attrs, nil
 		}
+	}
 
-		// Check if LHS is "response.Schema"
-		if !isResponseSchema(assign) {
-			return true
-		}
-
-		// RHS could be a composite literal or an identifier
-		switch rhs := assign.Rhs[0].(type) {
-		case *ast.CompositeLit:
-			attrs = parseSchemaLiteral(rhs, "")
-		case *ast.Ident:
-			// Find the variable assignment in the same function
-			attrs = findSchemaVar(f, rhs.Name)
-		}
-		return true
-	})
-
-	return attrs, nil
+	return nil, nil
 }
 
-func isResponseSchema(assign *ast.AssignStmt) bool {
-	if len(assign.Lhs) != 1 || len(assign.Rhs) != 1 {
-		return false
+// schemaResponseParamName returns the name of the *resource.SchemaResponse parameter,
+// or "" if the function doesn't match the expected signature.
+func schemaResponseParamName(fn *ast.FuncDecl) string {
+	if fn.Type.Params == nil {
+		return ""
 	}
-	sel, ok := assign.Lhs[0].(*ast.SelectorExpr)
-	if !ok {
-		return false
+	for _, field := range fn.Type.Params.List {
+		star, ok := field.Type.(*ast.StarExpr)
+		if !ok {
+			continue
+		}
+		sel, ok := star.X.(*ast.SelectorExpr)
+		if !ok {
+			continue
+		}
+		if sel.Sel.Name == "SchemaResponse" {
+			if len(field.Names) > 0 {
+				return field.Names[0].Name
+			}
+		}
 	}
-	ident, ok := sel.X.(*ast.Ident)
-	if !ok {
-		return false
-	}
-	return ident.Name == "response" && sel.Sel.Name == "Schema"
+	return ""
 }
 
 // findSchemaVar finds a variable assignment like `s := schema.Schema{...}` in the file.
