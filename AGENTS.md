@@ -154,7 +154,8 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 - Run `make copyright-fix` to ensure headers are correct
 
 ### Commit messages
-- TODO
+- Each commit should be small and address a single change
+- The commit message describes the change
 
 ### CHANGELOG entries
 - CHANGELOG entries are required for
