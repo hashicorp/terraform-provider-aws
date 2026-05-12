@@ -36,24 +36,7 @@ If `fetch_webpage` fails or returns non-PR content, **stop** and ask the user to
 
 ### 2. Decide the category (silent inference)
 
-Apply rules in this order; the first match wins. Multiple categories may apply — emit one fenced block per applicable entry in the same file.
-
-| Signal | Header | Body format |
-|---|---|---|
-| New file in `internal/service/<svc>/` with `@FrameworkResource("aws_x", ...)` or `@SDKResource("aws_x", ...)` | `release-note:new-resource` | `aws_x` (name only, one per block) |
-| New file with `@FrameworkDataSource(...)` or `@SDKDataSource(...)` | `release-note:new-data-source` | `aws_x` |
-| New file with `@FrameworkListResource(...)` | `release-note:new-list-resource` | `aws_x` |
-| New file added under `website/docs/guides/` | `release-note:new-guide` | Title of the guide |
-| PR title/body/labels mention "resource identity" or diff adds an identity schema | `release-note:enhancement` | `resource/aws_x: Add resource identity support` |
-| Label `bug`, or title prefix `fix:` / `bug:` | `release-note:bug` | `resource/aws_x: <short summary>` |
-| Title/body says "deprecate" / "deprecation" | `release-note:note` | `resource/aws_x: The <attr> attribute has been deprecated...` |
-| Label `breaking-change` | `release-note:breaking-change` | `resource/aws_x: <short summary>` |
-| Anything else operator-visible (new attribute, new arg, new validation, perf, etc.) | `release-note:enhancement` | `resource/aws_x: Add <attr> argument` (or similar) |
-
-Prefix selection:
-- One service / one resource dominates the diff → `resource/aws_x:` or `data-source/aws_x:`.
-- Provider-wide change (e.g., `internal/provider/`, `internal/conns/`, region handling) → `provider:`.
-- Mixed → emit multiple blocks, one per affected resource.
+Read [docs/changelog-process.md](../../../docs/changelog-process.md)
 
 ### 3. Skip rules
 
@@ -68,42 +51,6 @@ If unsure, prefer creating an `enhancement` entry and let the reviewer decide.
 ### 4. Write the file
 
 Write `.changelog/<PR_NUMBER>.txt` containing one or more fenced blocks. Use **literal** triple-backtick fences. No surrounding prose, no trailing newlines beyond one.
-
-Example — new resource:
-
-``````
-```release-note:new-resource
-aws_observabilityadmin_telemetry_evaluation_for_organization
-```
-``````
-
-Example — bug:
-
-``````
-```release-note:bug
-resource/aws_glue_classifier: Fix `quote_symbol` being optional
-```
-``````
-
-Example — enhancement:
-
-``````
-```release-note:enhancement
-resource/aws_timestreaminfluxdb_db_instance: Add `maintenance_schedule` configuration block
-```
-``````
-
-Example — multiple entries (deprecation + replacement):
-
-``````
-```release-note:note
-resource/aws_example_thing: The `broken` attribute has been deprecated. All configurations using `broken` should be updated to use the new `not_broken` attribute instead.
-```
-
-```release-note:enhancement
-resource/aws_example_thing: Add `not_broken` attribute
-```
-``````
 
 Style rules (mimic existing `.changelog/*.txt`):
 - Entry text starts with a capital letter.
