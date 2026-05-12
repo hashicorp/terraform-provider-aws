@@ -196,20 +196,20 @@ func printHuman(result Result, schemaAttrs []schema.Attribute, checkedAttrs []te
 	fmt.Println()
 	fmt.Println("Coverage:")
 	checked := len(schemaAttrs) - len(result.Missing) - len(result.Warnings)
-	fmt.Printf("  %d/%d attributes checked\n", checked, len(schemaAttrs))
+	fmt.Printf("  %d/%d attributes checked (%d missing, %d warnings)\n", checked, len(schemaAttrs), len(result.Missing), len(result.Warnings))
 
-	// Show breakdown by source
-	checkCount := 0
-	stateCount := 0
+	// Show breakdown by source (unique attributes per source)
+	checkPaths := make(map[string]bool)
+	statePaths := make(map[string]bool)
 	for _, a := range checkedAttrs {
 		switch a.Source {
 		case "Check":
-			checkCount++
+			checkPaths[a.Path] = true
 		case "ConfigStateChecks":
-			stateCount++
+			statePaths[a.Path] = true
 		}
 	}
-	fmt.Printf("  %d via Check, %d via ConfigStateChecks\n", checkCount, stateCount)
+	fmt.Printf("  %d via Check, %d via ConfigStateChecks\n", len(checkPaths), len(statePaths))
 }
 
 // isSubAttrCoveredByParent checks if a sub-attribute's parent block is checked.
