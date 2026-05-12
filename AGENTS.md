@@ -129,10 +129,10 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 #### Running commands
 - Confirm that any commands you intend to run are safe before running them.
 - Commands that are safe to run in the repository are:
-  - Any command that invokes `make`
-  - Any command that invokes `go`
-- Do not prompt for confirmation before running any of the safe commands above
-  - Any other commands may be unsafe and should not be run without confirmation
+  - Any command that invokes `make`.
+  - Any command that invokes `go`.
+- Do not prompt for confirmation before running any of the safe commands above.
+  - Any other commands may be unsafe and should not be run without confirmation.
 
 #### Running tests
 - Every PR must leave tests in a passing state. This is non-negotiable.
@@ -140,27 +140,27 @@ This repository contains a comprehensive set of utility packages. Look for oppor
   - Use `make test` to run unit tests.
   - If your change breaks an existing test, fix it.
 - TODO acceptance tests?
-  - New features require new tests
+  - New features require new tests.
 - CI is the gate. Run `make ci`.
   - PRs with failing tests do not merge.
 
 ### Documentation Checklist
-- See `./docs/end-user-documentation.md`
-- New features require new documentation
-- Run `make tfproviderdocs`
+- Authoritative reference: `./docs/end-user-documentation.md`.
+- New features require new documentation.
+- Run `make tfproviderdocs`.
 
 ### Copyright headers
-- All applicable files must have a copyright header
-- Run `make copyright-fix` to ensure headers are correct
+- All applicable files must have a copyright header.
+- Run `make copyright-fix` to ensure headers are correct.
 
 ### Commit messages
-- Each commit should be small and address a single change
-- The commit message describes the change
+- Each commit should be small and address a single change.
+- The commit message describes the change.
 
 ### CHANGELOG entries
-- CHANGELOG entries are required for
-  - New resources, data sources, ephemeral resources, action, list resources and functions
-  - Bug fixes
-  - Enhancements
-- Do not edit `CHANGELOG.md` directly
+- CHANGELOG entries are required for:
+  - New resources, data sources, ephemeral resources, action, list resources and functions.
+  - Bug fixes.
+  - Enhancements.
+- Do not edit `CHANGELOG.md` directly.
 - TODO

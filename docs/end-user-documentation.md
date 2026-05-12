@@ -22,9 +22,18 @@ All end user documentation is found in the `/website` folder of the repository.
 
 ## Guidelines
 
-Follow these guidelines to keep [provider documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) consistent.
+Follow these guidelines to keep [provider documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) consistent. Unless noted otherwise, _resource_ refers to resources, data sources, list resources, ephemeral resources and provider functions.
 
 ### Examples
+
+Each resource must include a at least one example.
+
+- Examples must be functional; if a user run `terraform plan` on the example, no errors should be returned.
+- Terraform configuration should use `hcl` code fences. Do not use `terraform` code fences.
+- Examples should not define `terraform` or `provider` blocks.
+- Generally the resource instance name should simply be `example`, e.g. `resource "aws_instance" "example"`.
+- All name arguments within the example configuration should use simple example values that match the resource being defined. Where attribute validation allows, prefer values prefixed with `example-`, e.g. `name = "example-instance"`. Avoid overly complex naming.
+- Examples do not need to include every argument. A basic example should use the same configuration as the resource's basic acceptance test.
 
 ### Arguments
 
