@@ -535,6 +535,10 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 		}); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
+
+		if _, err := waitGlobalReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Global Replication Group (%s) failover: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceGlobalReplicationGroupRead(ctx, d, meta)...)
