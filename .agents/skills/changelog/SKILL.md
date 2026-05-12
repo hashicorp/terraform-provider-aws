@@ -48,7 +48,7 @@ Do not create a file (and tell the user why) when the diff is **only**:
 - Documentation under `website/docs/**` or `docs/**`.
 - Tests (`*_test.go`) with no behavior change.
 - Internal refactors / renames with no operator-visible effect.
-- CI / tooling / `.github/**` / `Makefile` only.
+- CI / framework / flex / skaff / tooling / `.github/**` / `Makefile` only.
 
 If unsure, prefer creating an `enhancement` entry and let the reviewer decide.
 
