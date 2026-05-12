@@ -154,6 +154,7 @@ func parseCheckCall(call *ast.CallExpr, resourceName string) []CheckedAttribute 
 		"acctest.CheckResourceAttrGlobalARN",
 		"acctest.CheckResourceAttrGlobalARNFormat",
 		"acctest.MatchResourceAttrRegionalARN",
+		"acctest.MatchResourceAttrRegionalARNRegion",
 		"acctest.MatchResourceAttrGlobalARN",
 		"acctest.CheckResourceAttrAccountID":
 		// Pattern: func(ctx, resourceName, attrName, ...) or func(resourceName, attrName, ...)

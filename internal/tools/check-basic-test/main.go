@@ -119,14 +119,13 @@ func main() {
 		if isSubAttrCoveredByParent(a.Path, checkedSet) {
 			continue
 		}
-		if isSubAttrCoveredByParent(a.Path, countOnlySet) {
-			continue
-		}
 		if countOnlySet[a.Path] {
-			if !hasCheckedSubAttrs(a.Path, checkedSet) {
-				warnings = append(warnings, a.Path+" (only count checked, not values)")
-			} else {
+			if hasCheckedSubAttrs(a.Path, checkedSet) {
+				// Block has sub-attrs checked — the block itself is fine, but
+				// don't mark it as covering ALL sub-attrs
 				checked++
+			} else {
+				warnings = append(warnings, a.Path+" (only count checked, not values)")
 			}
 			continue
 		}
