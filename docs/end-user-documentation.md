@@ -64,7 +64,7 @@ Every argument must have a description.
 
 Each block argument must have two entries in the documentation:
 
-1. The initial entry, with a link to the subsection describing the block's arguments. e.g. `` `ip_rule` - (Optional) IP rules. See [ip_rule](#ip-rule) below. ``.
+1. The initial entry, with a link to the subsection describing the block's arguments. e.g. `` `ip_rule` - (Optional) IP rules. See [`ip_rule`](#ip_rule) below. ``.
 1. A subsection, added after all top-level arguments. If the resource has multiple blocks, these subsections should be ordered alphabetically.
 1. Within the subsection, arguments follow the ordering rules above.
 
@@ -85,6 +85,48 @@ For example:
 ```
 
 ### Attributes
+
+Every attribute must be documented.
+
+#### Ordering
+
+In documentation, the order of attributes is:
+
+1. Any `id` attribute
+1. The remaining attributes, sorted alphabetically.
+
+#### Description
+
+Every attribute must have a description.
+
+- Descriptions are concise.
+- Valid values and default values are not documented.
+
+#### Blocks
+
+Each block attribute must have two entries in the documentation:
+
+1. The initial entry, with a link to the subsection describing the block's attributes. e.g. `` `health` - Health status. See [`health`](#health) below. ``.
+1. A subsection, added after all top-level arguments. If the resource has multiple blocks, these subsections should be ordered alphabetically.
+1. Within the subsection, arguments follow the ordering rules above.
+
+For example:
+
+```
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - ID of the thing.
+* `health` - Health status. See [`health`](#health) below.
+
+### `health`
+
+`health` supports the following:
+
+* `status_code` - Health status code.
+* `status_message` - Health status message.
+```
 
 ### Notes
 
