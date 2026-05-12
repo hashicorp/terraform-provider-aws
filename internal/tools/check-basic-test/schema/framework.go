@@ -29,6 +29,8 @@ func ParseFrameworkSchema(filename string) ([]Attribute, error) {
 		return nil, err
 	}
 
+	p := &fwParser{file: f}
+
 	// Find the Schema method and determine the response parameter name
 	for _, decl := range f.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
@@ -56,9 +58,9 @@ func ParseFrameworkSchema(filename string) ([]Attribute, error) {
 			}
 			switch rhs := assign.Rhs[0].(type) {
 			case *ast.CompositeLit:
-				attrs = parseSchemaLiteral(rhs, "")
+				attrs = p.parseSchemaLiteral(rhs, "")
 			case *ast.Ident:
-				attrs = findSchemaVar(f, rhs.Name)
+				attrs = p.findSchemaVar(rhs.Name)
 			}
 			return true
 		})
@@ -68,6 +70,11 @@ func ParseFrameworkSchema(filename string) ([]Attribute, error) {
 	}
 
 	return nil, nil
+}
+
+// fwParser holds file context for resolving function calls during schema parsing.
+type fwParser struct {
+	file *ast.File
 }
 
 // schemaResponseParamName returns the name of the *resource.SchemaResponse parameter,
@@ -95,9 +102,9 @@ func schemaResponseParamName(fn *ast.FuncDecl) string {
 }
 
 // findSchemaVar finds a variable assignment like `s := schema.Schema{...}` in the file.
-func findSchemaVar(f *ast.File, varName string) []Attribute {
+func (p *fwParser) findSchemaVar(varName string) []Attribute {
 	var attrs []Attribute
-	ast.Inspect(f, func(n ast.Node) bool {
+	ast.Inspect(p.file, func(n ast.Node) bool {
 		assign, ok := n.(*ast.AssignStmt)
 		if !ok {
 			return true
@@ -113,14 +120,14 @@ func findSchemaVar(f *ast.File, varName string) []Attribute {
 		if !ok {
 			return true
 		}
-		attrs = parseSchemaLiteral(lit, "")
+		attrs = p.parseSchemaLiteral(lit, "")
 		return false
 	})
 	return attrs
 }
 
 // parseSchemaLiteral parses a schema.Schema{} composite literal.
-func parseSchemaLiteral(lit *ast.CompositeLit, prefix string) []Attribute {
+func (p *fwParser) parseSchemaLiteral(lit *ast.CompositeLit, prefix string) []Attribute {
 	var attrs []Attribute
 	for _, elt := range lit.Elts {
 		kv, ok := elt.(*ast.KeyValueExpr)
@@ -129,16 +136,16 @@ func parseSchemaLiteral(lit *ast.CompositeLit, prefix string) []Attribute {
 		}
 		key := identName(kv.Key)
 		if key == "Attributes" {
-			attrs = append(attrs, parseAttributesMap(kv.Value, prefix)...)
+			attrs = append(attrs, p.parseAttributesMap(kv.Value, prefix)...)
 		} else if key == "Blocks" {
-			attrs = append(attrs, parseBlocksMap(kv.Value, prefix)...)
+			attrs = append(attrs, p.parseBlocksMap(kv.Value, prefix)...)
 		}
 	}
 	return attrs
 }
 
 // parseAttributesMap parses map[string]schema.Attribute{...}
-func parseAttributesMap(expr ast.Expr, prefix string) []Attribute {
+func (p *fwParser) parseAttributesMap(expr ast.Expr, prefix string) []Attribute {
 	lit, ok := expr.(*ast.CompositeLit)
 	if !ok {
 		return nil
@@ -155,13 +162,11 @@ func parseAttributesMap(expr ast.Expr, prefix string) []Attribute {
 		}
 		path := joinPath(prefix, name)
 
-		// Skip timeouts block - it's handled by the framework
 		if name == "timeouts" {
 			continue
 		}
 
 		attr := Attribute{Path: path}
-		// Parse the attribute literal to get Required/Optional/Computed
 		if attrLit, ok := kv.Value.(*ast.CompositeLit); ok {
 			attr.Required, attr.Optional, attr.Computed = parseAttrProperties(attrLit)
 		}
@@ -171,7 +176,7 @@ func parseAttributesMap(expr ast.Expr, prefix string) []Attribute {
 }
 
 // parseBlocksMap parses map[string]schema.Block{...}
-func parseBlocksMap(expr ast.Expr, prefix string) []Attribute {
+func (p *fwParser) parseBlocksMap(expr ast.Expr, prefix string) []Attribute {
 	lit, ok := expr.(*ast.CompositeLit)
 	if !ok {
 		return nil
@@ -188,25 +193,64 @@ func parseBlocksMap(expr ast.Expr, prefix string) []Attribute {
 		}
 		path := joinPath(prefix, name)
 
-		// Skip timeouts block
 		if name == "timeouts" {
 			continue
 		}
 
-		// The block itself is an attribute that should be checked
 		attrs = append(attrs, Attribute{Path: path})
 
-		// Parse nested attributes within the block
-		if blockLit, ok := kv.Value.(*ast.CompositeLit); ok {
-			attrs = append(attrs, parseBlockLiteral(blockLit, path)...)
+		// Parse nested attributes — handle both inline literals and function calls
+		switch v := kv.Value.(type) {
+		case *ast.CompositeLit:
+			attrs = append(attrs, p.parseBlockLiteral(v, path)...)
+		case *ast.CallExpr:
+			if blockLit := p.resolveBlockFunc(v); blockLit != nil {
+				attrs = append(attrs, p.parseBlockLiteral(blockLit, path)...)
+			}
 		}
 	}
 	return attrs
 }
 
+// resolveBlockFunc resolves a function call like exportDataQuerySchema(ctx) to its
+// returned composite literal by finding the function in the file.
+func (p *fwParser) resolveBlockFunc(call *ast.CallExpr) *ast.CompositeLit {
+	funcName := ""
+	switch fn := call.Fun.(type) {
+	case *ast.Ident:
+		funcName = fn.Name
+	case *ast.SelectorExpr:
+		return nil // external package call, can't resolve
+	}
+	if funcName == "" {
+		return nil
+	}
+
+	for _, decl := range p.file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Name.Name != funcName || fn.Body == nil {
+			continue
+		}
+		// Find the return statement with a composite literal
+		var result *ast.CompositeLit
+		ast.Inspect(fn.Body, func(n ast.Node) bool {
+			ret, ok := n.(*ast.ReturnStmt)
+			if !ok || len(ret.Results) == 0 {
+				return true
+			}
+			if lit, ok := ret.Results[0].(*ast.CompositeLit); ok {
+				result = lit
+				return false
+			}
+			return true
+		})
+		return result
+	}
+	return nil
+}
+
 // parseBlockLiteral parses a block composite literal (e.g., schema.ListNestedBlock{...})
-// to extract nested attributes from NestedObject.
-func parseBlockLiteral(lit *ast.CompositeLit, prefix string) []Attribute {
+func (p *fwParser) parseBlockLiteral(lit *ast.CompositeLit, prefix string) []Attribute {
 	for _, elt := range lit.Elts {
 		kv, ok := elt.(*ast.KeyValueExpr)
 		if !ok {
@@ -215,15 +259,15 @@ func parseBlockLiteral(lit *ast.CompositeLit, prefix string) []Attribute {
 		key := identName(kv.Key)
 		if key == "NestedObject" {
 			if nestedLit, ok := kv.Value.(*ast.CompositeLit); ok {
-				return parseNestedBlockObject(nestedLit, prefix)
+				return p.parseNestedBlockObject(nestedLit, prefix)
 			}
 		}
 	}
 	return nil
 }
 
-// parseNestedBlockObject parses schema.NestedBlockObject{Attributes: ...}
-func parseNestedBlockObject(lit *ast.CompositeLit, prefix string) []Attribute {
+// parseNestedBlockObject parses schema.NestedBlockObject{Attributes: ..., Blocks: ...}
+func (p *fwParser) parseNestedBlockObject(lit *ast.CompositeLit, prefix string) []Attribute {
 	var attrs []Attribute
 	for _, elt := range lit.Elts {
 		kv, ok := elt.(*ast.KeyValueExpr)
@@ -232,9 +276,9 @@ func parseNestedBlockObject(lit *ast.CompositeLit, prefix string) []Attribute {
 		}
 		key := identName(kv.Key)
 		if key == "Attributes" {
-			attrs = append(attrs, parseAttributesMap(kv.Value, prefix)...)
+			attrs = append(attrs, p.parseAttributesMap(kv.Value, prefix)...)
 		} else if key == "Blocks" {
-			attrs = append(attrs, parseBlocksMap(kv.Value, prefix)...)
+			attrs = append(attrs, p.parseBlocksMap(kv.Value, prefix)...)
 		}
 	}
 	return attrs
