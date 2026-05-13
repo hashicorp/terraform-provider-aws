@@ -36,6 +36,7 @@ func TestAccACMCertificateValidation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, certificateResourceName, names.AttrARN),
+					acctest.CheckResourceAttrRFC3339(resourceName, "issued_at"),
 				),
 			},
 		},
