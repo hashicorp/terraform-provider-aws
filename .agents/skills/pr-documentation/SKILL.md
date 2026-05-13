@@ -20,6 +20,8 @@ Do not review any unchanged documentation.
 
 Authoritative reference: [docs/end-user-documentation.md](../../../docs/end-user-documentation.md). When this skill and that document disagree, the document wins.
 
+Do not review any CHANGELOG updates.
+
 ## When to use
 
 Trigger this skill when the user:
