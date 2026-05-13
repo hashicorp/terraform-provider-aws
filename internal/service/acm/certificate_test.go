@@ -45,9 +45,11 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "issued_at", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -1770,6 +1772,38 @@ func TestAccACMCertificate_optionExport(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccACMCertificate_nonEmptyIssuedAt(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	var v types.CertificateDetail
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, types.ValidationMethodDns, "DISABLED"),
+				Check:  testAccCheckCertificateExists(ctx, t, resourceName, &v),
+			},
+			// Check the certificate's attributes once the validation has been applied.
+			{
+				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, types.ValidationMethodDns, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					acctest.CheckResourceAttrRFC3339(resourceName, "issued_at"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
+				),
 			},
 		},
 	})
