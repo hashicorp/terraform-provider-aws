@@ -72,12 +72,12 @@ func wordCloudVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          sdkschema.StringEnumSchema[awstypes.WordCloudCloudLayout](attrOptional),
-										"maximum_string_length": intBetweenSchema(attrOptional, 1, 100),
-										"word_casing":           sdkschema.StringEnumSchema[awstypes.WordCloudWordCasing](attrOptional),
-										"word_orientation":      sdkschema.StringEnumSchema[awstypes.WordCloudWordOrientation](attrOptional),
-										"word_padding":          sdkschema.StringEnumSchema[awstypes.WordCloudWordPadding](attrOptional),
-										"word_scaling":          sdkschema.StringEnumSchema[awstypes.WordCloudWordScaling](attrOptional),
+										"cloud_layout":          sdkschema.StringEnumSchema[awstypes.WordCloudCloudLayout](sdkschema.AttrOptional),
+										"maximum_string_length": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 100),
+										"word_casing":           sdkschema.StringEnumSchema[awstypes.WordCloudWordCasing](sdkschema.AttrOptional),
+										"word_orientation":      sdkschema.StringEnumSchema[awstypes.WordCloudWordOrientation](sdkschema.AttrOptional),
+										"word_padding":          sdkschema.StringEnumSchema[awstypes.WordCloudWordPadding](sdkschema.AttrOptional),
+										"word_scaling":          sdkschema.StringEnumSchema[awstypes.WordCloudWordScaling](sdkschema.AttrOptional),
 									},
 								},
 							},

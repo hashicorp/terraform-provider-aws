@@ -29,9 +29,9 @@ func radarChartVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"alternate_band_colors_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
-							"alternate_band_even_color":        hexColorSchema(attrOptional),
-							"alternate_band_odd_color":         hexColorSchema(attrOptional),
+							"alternate_band_colors_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+							"alternate_band_even_color":        hexColorSchema(sdkschema.AttrOptional),
+							"alternate_band_odd_color":         hexColorSchema(sdkschema.AttrOptional),
 							"base_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSeriesSettings.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -46,7 +46,7 @@ func radarChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -81,7 +81,7 @@ func radarChartVisualSchema() *schema.Schema {
 								},
 							},
 							"legend": legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"shape":  sdkschema.StringEnumSchema[awstypes.RadarChartShape](attrOptional),
+							"shape":  sdkschema.StringEnumSchema[awstypes.RadarChartShape](sdkschema.AttrOptional),
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
@@ -97,7 +97,7 @@ func radarChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"start_angle":    floatBetweenSchema(attrOptional, -360, 360),
+							"start_angle":    sdkschema.FloatBetweenSchema(sdkschema.AttrOptional, -360, 360),
 							"visual_palette": visualPaletteSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},

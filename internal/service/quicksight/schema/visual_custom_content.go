@@ -20,7 +20,7 @@ func customContentVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
@@ -31,9 +31,9 @@ func customContentVisualSchema() *schema.Schema {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrContentType: sdkschema.StringEnumSchema[awstypes.CustomContentType](attrOptional),
-							"content_url":         stringLenBetweenSchema(attrOptional, 1, 2048),
-							"image_scaling":       sdkschema.StringEnumSchema[awstypes.CustomContentImageScalingConfiguration](attrOptional),
+							names.AttrContentType: sdkschema.StringEnumSchema[awstypes.CustomContentType](sdkschema.AttrOptional),
+							"content_url":         sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
+							"image_scaling":       sdkschema.StringEnumSchema[awstypes.CustomContentImageScalingConfiguration](sdkschema.AttrOptional),
 						},
 					},
 				},

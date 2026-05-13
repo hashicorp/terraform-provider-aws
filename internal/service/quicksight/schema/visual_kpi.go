@@ -50,7 +50,7 @@ func kpiVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"comparison":                       comparisonConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComparisonConfiguration.html
-										"primary_value_display_type":       sdkschema.StringEnumSchema[awstypes.PrimaryValueDisplayType](attrOptional),
+										"primary_value_display_type":       sdkschema.StringEnumSchema[awstypes.PrimaryValueDisplayType](sdkschema.AttrOptional),
 										"primary_value_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 										"progress_bar": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ProgressBarOptions.html
 											Type:     schema.TypeList,
@@ -59,7 +59,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -70,7 +70,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -82,10 +82,10 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrColor:            hexColorSchema(attrOptional),
-													"tooltip_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
-													names.AttrType:       sdkschema.StringEnumSchema[awstypes.KPISparklineType](attrRequired),
-													attrVisibility:       sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
+													attrColor:            hexColorSchema(sdkschema.AttrOptional),
+													"tooltip_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+													names.AttrType:       sdkschema.StringEnumSchema[awstypes.KPISparklineType](sdkschema.AttrRequired),
+													attrVisibility:       sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -96,7 +96,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -114,7 +114,7 @@ func kpiVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																names.AttrType: sdkschema.StringEnumSchema[awstypes.KPIVisualStandardLayoutType](attrRequired),
+																names.AttrType: sdkschema.StringEnumSchema[awstypes.KPIVisualStandardLayoutType](sdkschema.AttrRequired),
 															},
 														},
 													},

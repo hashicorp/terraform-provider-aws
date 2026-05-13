@@ -50,7 +50,7 @@ var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            sdkschema.StringEnumSchema[awstypes.SortDirection](attrRequired),
+				"direction":            sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
@@ -80,8 +80,8 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": sdkschema.StringEnumSchema[awstypes.SortDirection](attrRequired),
-				attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
+				"direction": sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
+				attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 			},
 		},
 	}

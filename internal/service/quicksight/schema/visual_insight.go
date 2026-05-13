@@ -19,7 +19,7 @@ func insightVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"insight_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightConfiguration.html
@@ -45,7 +45,7 @@ func insightVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"computation_id":           idSchema(),
 													"time":                     dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"custom_seasonality_value": intBetweenSchema(attrOptional, 1, 180),
+													"custom_seasonality_value": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 180),
 													"lower_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -54,10 +54,10 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"periods_backward":    intBetweenSchema(attrOptional, 0, 1000),
-													"periods_forward":     intBetweenSchema(attrOptional, 1, 1000),
-													"prediction_interval": intBetweenSchema(attrOptional, 50, 95),
-													"seasonality":         sdkschema.StringEnumSchema[awstypes.ForecastComputationSeasonality](attrRequired),
+													"periods_backward":    sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 0, 1000),
+													"periods_forward":     sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 1000),
+													"prediction_interval": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 50, 95),
+													"seasonality":         sdkschema.StringEnumSchema[awstypes.ForecastComputationSeasonality](sdkschema.AttrRequired),
 													"upper_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -79,7 +79,7 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"period_size":   intBetweenSchema(attrOptional, 2, 52),
+													"period_size":   sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 2, 52),
 													names.AttrValue: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -93,7 +93,7 @@ func insightVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"computation_id": idSchema(),
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   sdkschema.StringEnumSchema[awstypes.MaximumMinimumComputationType](attrRequired),
+													names.AttrType:   sdkschema.StringEnumSchema[awstypes.MaximumMinimumComputationType](sdkschema.AttrRequired),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -150,7 +150,7 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"period_time_granularity": sdkschema.StringEnumSchema[awstypes.TimeGranularity](attrRequired),
+													"period_time_granularity": sdkschema.StringEnumSchema[awstypes.TimeGranularity](sdkschema.AttrRequired),
 													names.AttrValue:           measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -165,9 +165,9 @@ func insightVisualSchema() *schema.Schema {
 													"computation_id": idSchema(),
 													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   sdkschema.StringEnumSchema[awstypes.TopBottomComputationType](attrRequired),
-													"mover_size":     intBetweenSchema(attrOptional, 1, 20),
-													"sort_order":     sdkschema.StringEnumSchema[awstypes.TopBottomSortOrder](attrRequired),
+													names.AttrType:   sdkschema.StringEnumSchema[awstypes.TopBottomComputationType](sdkschema.AttrRequired),
+													"mover_size":     sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 20),
+													"sort_order":     sdkschema.StringEnumSchema[awstypes.TopBottomSortOrder](sdkschema.AttrRequired),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -189,8 +189,8 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"result_size":   intBetweenSchema(attrOptional, 1, 20),
-													names.AttrType:  sdkschema.StringEnumSchema[awstypes.TopBottomComputationType](attrRequired),
+													"result_size":   sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 20),
+													names.AttrType:  sdkschema.StringEnumSchema[awstypes.TopBottomComputationType](sdkschema.AttrRequired),
 													names.AttrValue: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -237,7 +237,7 @@ func insightVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"narrative": stringLenBetweenSchema(attrRequired, 1, 150000),
+										"narrative": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 150000),
 									},
 								},
 							},

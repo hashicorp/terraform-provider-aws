@@ -20,7 +20,7 @@ var geospatialMapStyleOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"base_map_style": sdkschema.StringEnumSchema[awstypes.BaseMapStyleType](attrOptional),
+				"base_map_style": sdkschema.StringEnumSchema[awstypes.BaseMapStyleType](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -53,14 +53,14 @@ var geospatialWindowOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"east":  floatBetweenSchema(attrRequired, -1800, 1800),
-							"north": floatBetweenSchema(attrRequired, -90, 90),
-							"south": floatBetweenSchema(attrRequired, -90, 90),
-							"west":  floatBetweenSchema(attrRequired, -1800, 1800),
+							"east":  sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, -1800, 1800),
+							"north": sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, -90, 90),
+							"south": sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, -90, 90),
+							"west":  sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, -1800, 1800),
 						},
 					},
 				},
-				"map_zoom_mode": sdkschema.StringEnumSchema[awstypes.MapZoomMode](attrOptional),
+				"map_zoom_mode": sdkschema.StringEnumSchema[awstypes.MapZoomMode](sdkschema.AttrOptional),
 			},
 		},
 	}

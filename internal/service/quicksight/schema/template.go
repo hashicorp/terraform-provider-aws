@@ -40,7 +40,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							attrColumn:             columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         sdkschema.StringEnumSchema[awstypes.ColumnRole](attrOptional),
+							names.AttrRole:         sdkschema.StringEnumSchema[awstypes.ColumnRole](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -51,11 +51,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       sdkschema.StringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
+							"cross_dataset":       sdkschema.StringEnumSchema[awstypes.CrossDatasetTypes](sdkschema.AttrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      sdkschema.StringEnumSchema[awstypes.Status](attrOptional),
+							names.AttrStatus:      sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -81,11 +81,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id":              idSchema(),
-							names.AttrContentType:   sdkschema.StringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
-							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
+							names.AttrContentType:   sdkschema.StringEnumSchema[awstypes.SheetContentType](sdkschema.AttrOptionalComputed),
+							names.AttrDescription:   sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringLenBetweenSchema(attrOptional, 1, 2048),
+							names.AttrName:          sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -96,11 +96,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringLenBetweenSchema(attrOptional, 1, 150000),
+										names.AttrContent:   sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 150000),
 									},
 								},
 							},
-							attrTitle: stringLenBetweenSchema(attrOptional, 1, 1024),
+							attrTitle: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -108,46 +108,6 @@ func TemplateDefinitionSchema() *schema.Schema {
 			},
 		},
 	}
-}
-
-type attrHandling = sdkschema.AttrHandling
-
-const (
-	//go:fix inline
-	attrElem = sdkschema.AttrElem
-	//go:fix inline
-	attrRequired = sdkschema.AttrRequired
-	//go:fix inline
-	attrOptional = sdkschema.AttrOptional
-	//go:fix inline
-	attrComputed = sdkschema.AttrComputed
-	//go:fix inline
-	attrOptionalComputed = sdkschema.AttrOptionalComputed
-)
-
-//go:fix inline
-func arnStringSchema(handling attrHandling) *schema.Schema {
-	return sdkschema.ARNStringSchema(handling)
-}
-
-//go:fix inline
-func arnStringDataSourceSchema() *schema.Schema {
-	return sdkschema.ArnStringDataSourceSchema()
-}
-
-//go:fix inline
-func utcTimestampStringSchema(handling attrHandling) *schema.Schema {
-	return sdkschema.UTCTimestampStringSchema(handling)
-}
-
-//go:fix inline
-func stringLenBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
-	return sdkschema.StringLenBetweenSchema(handling, min, max)
-}
-
-//go:fix inline
-func stringMatchSchema(handling attrHandling, re, message string) *schema.Schema {
-	return sdkschema.StringMatchSchema(handling, re, message)
 }
 
 //go:fix inline
@@ -161,21 +121,6 @@ var intComputedOnly = sdkschema.IntComputedOnly
 
 //go:fix inline
 var floatComputedOnly = sdkschema.FloatComputedOnly
-
-//go:fix inline
-func intBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
-	return sdkschema.IntBetweenSchema(handling, min, max)
-}
-
-//go:fix inline
-func intAtLeastSchema(handling attrHandling, min int) *schema.Schema {
-	return sdkschema.IntAtLeastSchema(handling, min)
-}
-
-//go:fix inline
-func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema {
-	return sdkschema.FloatBetweenSchema(handling, min, max)
-}
 
 var aggregationFunctionSchemaCache tfsync.Map[bool, *schema.Schema]
 
@@ -197,8 +142,8 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"categorical_aggregation_function": sdkschema.StringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
-					"date_aggregation_function":        sdkschema.StringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
+					"categorical_aggregation_function": sdkschema.StringEnumSchema[awstypes.CategoricalAggregationFunction](sdkschema.AttrOptional),
+					"date_aggregation_function":        sdkschema.StringEnumSchema[awstypes.DateAggregationFunction](sdkschema.AttrOptional),
 					"numerical_aggregation_function":   numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
 				},
 			},
@@ -229,9 +174,9 @@ var calculatedFieldsSchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
-				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 32000),
-				names.AttrName:        stringLenBetweenSchema(attrRequired, 1, 128),
+				"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
+				names.AttrExpression:  sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 32000),
+				names.AttrName:        sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
 			},
 		},
 	}
@@ -278,11 +223,11 @@ func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"percentile_value": floatBetweenSchema(attrOptional, 0, 100),
+								"percentile_value": sdkschema.FloatBetweenSchema(sdkschema.AttrOptional, 0, 100),
 							},
 						},
 					},
-					"simple_numerical_aggregation": sdkschema.StringEnumSchema[awstypes.SimpleNumericalAggregationFunction](attrOptional),
+					"simple_numerical_aggregation": sdkschema.StringEnumSchema[awstypes.SimpleNumericalAggregationFunction](sdkschema.AttrOptional),
 				},
 			},
 		},
@@ -349,8 +294,8 @@ func columnSchema(required bool) *schema.Schema {
 			Optional: !required,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-					"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+					"column_name":         sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+					"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 				},
 			},
 		},
@@ -455,8 +400,8 @@ var rollingDateConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrOptional, 1, 2048),
-				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 4096),
+				"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
+				names.AttrExpression:  sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 4096),
 			},
 		},
 	}
@@ -493,7 +438,7 @@ func TemplateSourceEntitySchema() *schema.Schema {
 					ExactlyOneOf: []string{"source_entity.0.source_analysis", "source_entity.0.source_template"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN:         arnStringSchema(attrRequired),
+							names.AttrARN:         sdkschema.ARNStringSchema(sdkschema.AttrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
@@ -505,7 +450,7 @@ func TemplateSourceEntitySchema() *schema.Schema {
 					ExactlyOneOf: []string{"source_entity.0.source_analysis", "source_entity.0.source_template"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: arnStringSchema(attrRequired),
+							names.AttrARN: sdkschema.ARNStringSchema(sdkschema.AttrRequired),
 						},
 					},
 				},

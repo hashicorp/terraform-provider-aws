@@ -35,7 +35,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							attrColumn:             columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         sdkschema.StringEnumSchema[awstypes.ColumnRole](attrOptional),
+							names.AttrRole:         sdkschema.StringEnumSchema[awstypes.ColumnRole](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -46,11 +46,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       sdkschema.StringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
+							"cross_dataset":       sdkschema.StringEnumSchema[awstypes.CrossDatasetTypes](sdkschema.AttrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      sdkschema.StringEnumSchema[awstypes.Status](attrOptional),
+							names.AttrStatus:      sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -76,11 +76,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id":              idSchema(),
-							names.AttrContentType:   sdkschema.StringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
-							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
+							names.AttrContentType:   sdkschema.StringEnumSchema[awstypes.SheetContentType](sdkschema.AttrOptionalComputed),
+							names.AttrDescription:   sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringLenBetweenSchema(attrOptional, 1, 2048),
+							names.AttrName:          sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -91,11 +91,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringLenBetweenSchema(attrOptional, 1, 150000),
+										names.AttrContent:   sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 150000),
 									},
 								},
 							},
-							attrTitle: stringLenBetweenSchema(attrOptional, 1, 1024),
+							attrTitle: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -200,7 +200,7 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN:         arnStringSchema(attrRequired),
+							names.AttrARN:         sdkschema.ARNStringSchema(sdkschema.AttrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},

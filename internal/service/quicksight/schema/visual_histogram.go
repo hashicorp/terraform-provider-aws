@@ -58,7 +58,7 @@ func histogramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bin_count_limit": intBetweenSchema(attrOptional, 0, 1000),
+													"bin_count_limit": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 0, 1000),
 													names.AttrValue: {
 														Type:         schema.TypeFloat,
 														Optional:     true,
@@ -67,7 +67,7 @@ func histogramVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_bin_type": sdkschema.StringEnumSchema[awstypes.HistogramBinType](attrOptional),
+										"selected_bin_type": sdkschema.StringEnumSchema[awstypes.HistogramBinType](sdkschema.AttrOptional),
 										"start_value": {
 											Type:     schema.TypeFloat,
 											Optional: true,

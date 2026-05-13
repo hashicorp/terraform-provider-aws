@@ -59,7 +59,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Optional: true,
 													},
-													"arc_thickness": sdkschema.StringEnumSchema[awstypes.ArcThicknessOptions](attrOptional),
+													"arc_thickness": sdkschema.StringEnumSchema[awstypes.ArcThicknessOptions](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -96,7 +96,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 											},
 										},
 										"comparison":                       comparisonConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComparisonConfiguration.html
-										"primary_value_display_type":       sdkschema.StringEnumSchema[awstypes.PrimaryValueDisplayType](attrOptional),
+										"primary_value_display_type":       sdkschema.StringEnumSchema[awstypes.PrimaryValueDisplayType](sdkschema.AttrOptional),
 										"primary_value_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 									},
 								},

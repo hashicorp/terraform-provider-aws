@@ -37,13 +37,13 @@ func funnelChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_label_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
-										"label_color":               hexColorSchema(attrOptional),
+										"category_label_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"label_color":               hexColorSchema(sdkschema.AttrOptional),
 										"label_font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"measure_data_label_style":  sdkschema.StringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](attrOptional),
-										"measure_label_visibility":  sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
-										"position":                  sdkschema.StringEnumSchema[awstypes.DataLabelPosition](attrOptional),
-										attrVisibility:              sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
+										"measure_data_label_style":  sdkschema.StringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](sdkschema.AttrOptional),
+										"measure_label_visibility":  sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"position":                  sdkschema.StringEnumSchema[awstypes.DataLabelPosition](sdkschema.AttrOptional),
+										attrVisibility:              sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
