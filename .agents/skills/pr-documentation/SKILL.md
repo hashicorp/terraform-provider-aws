@@ -1,5 +1,5 @@
 ---
-name: pr-documentation-update
+name: pr-documentation
 description: "Review a PR's end user documentation updates."
 ---
 
@@ -7,6 +7,8 @@ description: "Review a PR's end user documentation updates."
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 # Skill: Review PR Documentation Update
+
+Assume the @maintainer persona.
 
 Determine whether a GitHub Pull Request should include documentation updates. If so, review the documentation updates for accuracy, completeness, and adherence to style guidelines. Provide feedback on necessary changes.
 If the PR should include documentation updates but does not, provide feedback on what documentation should be added.

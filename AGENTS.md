@@ -35,7 +35,7 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 | Skill | Task |
 |---|---|
 | [changelog](./.agents/skills/changelog/SKILL.md) | Add a `.changelog/<PR_NUMBER>.txt` entry from a PR URL, commit, and push (with confirmation). |
-| [Review PR documentation update](./.agents/skills/pr-documentation-update/SKILL.md) | Review a PR's end user documentation updates. |
+| [Review PR documentation](./.agents/skills/pr-documentation/SKILL.md) | Review a PR's end user documentation updates. |
 
 ---
 
@@ -149,6 +149,7 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 ### Documentation Checklist
 - Authoritative reference: `./docs/end-user-documentation.md`.
 - New features require new documentation.
+- Correct spelling and grammar are important.
 - Run `make tfproviderdocs`.
 
 ### Copyright headers
