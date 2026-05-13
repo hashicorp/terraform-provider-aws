@@ -703,6 +703,38 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 								},
 							},
 						},
+						"http": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[httpConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("mcp"),
+									path.MatchRelative().AtParent().AtName("http"),
+								),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"agentcore_runtime": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[httpAgentcoreRuntimeConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrARN: schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.ARNType,
+												},
+												"qualifier": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -1164,22 +1196,34 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, 
 }
 
 type targetConfigurationModel struct {
-	MCP fwtypes.ListNestedObjectValueOf[mcpConfigurationModel] `tfsdk:"mcp"`
+	MCP  fwtypes.ListNestedObjectValueOf[mcpConfigurationModel]  `tfsdk:"mcp"`
+	HTTP fwtypes.ListNestedObjectValueOf[httpConfigurationModel] `tfsdk:"http"`
 }
 
 func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) string {
-	switch mcpData, _ := m.MCP.ToPtr(ctx); {
-	case !mcpData.Lambda.IsNull():
-		return "lambda"
-	case !mcpData.MCPServer.IsNull():
-		return "mcp_server"
-	case !mcpData.OpenApiSchema.IsNull():
-		return "open_api_schema"
-	case !mcpData.SmithyModel.IsNull():
-		return "smithy_model"
-	default:
-		return "unknown"
+	if !m.HTTP.IsNull() {
+		httpData, _ := m.HTTP.ToPtr(ctx)
+		switch {
+		case !httpData.AgentcoreRuntime.IsNull():
+			return "http_agentcore_runtime"
+		default:
+			return "unknown"
+		}
 	}
+	if !m.MCP.IsNull() {
+		mcpData, _ := m.MCP.ToPtr(ctx)
+		switch {
+		case !mcpData.Lambda.IsNull():
+			return "lambda"
+		case !mcpData.MCPServer.IsNull():
+			return "mcp_server"
+		case !mcpData.OpenApiSchema.IsNull():
+			return "open_api_schema"
+		case !mcpData.SmithyModel.IsNull():
+			return "smithy_model"
+		}
+	}
+	return "unknown"
 }
 
 var (
@@ -1198,6 +1242,15 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 		}
 
 		m.MCP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.TargetConfigurationMemberHttp:
+		var model httpConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.HTTP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -1223,6 +1276,19 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 			return nil, diags
 		}
 
+		return &r, diags
+
+	case !m.HTTP.IsNull():
+		httpData, d := m.HTTP.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.TargetConfigurationMemberHttp
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, httpData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	}
 
@@ -1367,6 +1433,59 @@ func (m mcpConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostic
 		return &r, diags
 	}
 	return nil, diags
+}
+
+type httpConfigurationModel struct {
+	AgentcoreRuntime fwtypes.ListNestedObjectValueOf[httpAgentcoreRuntimeConfigurationModel] `tfsdk:"agentcore_runtime"`
+}
+
+var (
+	_ fwflex.Expander  = httpConfigurationModel{}
+	_ fwflex.Flattener = &httpConfigurationModel{}
+)
+
+func (m *httpConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.HttpTargetConfigurationMemberAgentcoreRuntime:
+		var model httpAgentcoreRuntimeConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.AgentcoreRuntime = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	default:
+		diags.AddError(
+			"Unsupported HTTP Target Configuration Type",
+			fmt.Sprintf("http configuration flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m httpConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.AgentcoreRuntime.IsNull():
+		runtimeData, d := m.AgentcoreRuntime.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HttpTargetConfigurationMemberAgentcoreRuntime
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, runtimeData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
+}
+
+type httpAgentcoreRuntimeConfigurationModel struct {
+	ARN       fwtypes.ARN  `tfsdk:"arn"`
+	Qualifier types.String `tfsdk:"qualifier"`
 }
 
 type apiKeyCredentialProviderModel struct {

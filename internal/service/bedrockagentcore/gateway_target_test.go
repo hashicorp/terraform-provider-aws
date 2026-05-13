@@ -6,6 +6,7 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -377,6 +378,51 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationAPIGateway(t *testi
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := strings.ReplaceAll(rName, "-", "_")
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.arn", "aws_bedrockagentcore_agent_runtime.test", "agent_runtime_arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.qualifier", "DEFAULT"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
 		},
 	})
@@ -1375,4 +1421,57 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, toolOverrideSuffix))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri string) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"),
+		fmt.Sprintf(`
+data "aws_iam_policy_document" "gateway_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "gateway" {
+  name               = "%[1]s-gateway"
+  assume_role_policy = data.aws_iam_policy_document.gateway_assume.json
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.gateway.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test"]
+    }
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    http {
+      agentcore_runtime {
+        arn       = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+        qualifier = "DEFAULT"
+      }
+    }
+  }
+}
+`, rName))
 }
