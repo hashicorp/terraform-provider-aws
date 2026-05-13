@@ -2837,6 +2837,48 @@ func TestAccS3Bucket_Namespace_AccountRegional_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_selectionCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.source"
+	rgResourceName := "aws_s3_bucket_replication_configuration.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_sourceSelectionCriteria(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(rgResourceName, "rule.0.source_selection_criteria.#", "1"),
+					resource.TestCheckResourceAttr(rgResourceName, "rule.0.source_selection_criteria.0.replica_modifications.0.status", "Disabled"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccBucketConfig_sourceSelectionCriteria(rName, rName+"-updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(rgResourceName, "rule.0.source_selection_criteria.#", "1"),
+					resource.TestCheckResourceAttr(rgResourceName, "rule.0.source_selection_criteria.0.replica_modifications.0.status", "Disabled"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestValidBucketName(t *testing.T) {
 	t.Parallel()
 
@@ -4976,4 +5018,89 @@ resource "aws_s3_bucket" "duplicate" {
 }
   `, bucketName),
 	)
+}
+
+func testAccBucketConfig_sourceSelectionCriteria(rName, tag string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "${data.aws_service_principal.current.name}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "destination" {
+  region = %[2]q
+
+  bucket = "%[1]s-destination"
+}
+
+resource "aws_s3_bucket_versioning" "destination" {
+  region = %[2]q
+
+  bucket = aws_s3_bucket.destination.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket" "source" {
+  bucket = "%[1]s-source"
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
+resource "aws_s3_bucket_versioning" "source" {
+  bucket = aws_s3_bucket.source.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+  ]
+  bucket = aws_s3_bucket.source.bucket
+  role   = aws_iam_role.test.arn
+  rule {
+    status = "Enabled"
+    filter {
+      prefix = ""
+    }
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+    }
+
+    delete_marker_replication {
+      status = "Enabled"
+    }
+
+    source_selection_criteria {
+      replica_modifications {
+        status = "Disabled"
+      }
+    }
+  }
+}`, rName, acctest.AlternateRegion(), tag)
 }
