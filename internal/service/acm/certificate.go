@@ -93,6 +93,10 @@ func resourceCertificate() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
 			},
+			names.AttrCreatedAt: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrDomainName: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -132,6 +136,10 @@ func resourceCertificate() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: validateHybridDuration,
 				ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey, "validation_method"},
+			},
+			"issued_at": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"key_algorithm": {
 				Type:             schema.TypeString,
@@ -436,6 +444,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.Set(names.AttrARN, certificate.CertificateArn)
 	d.Set("certificate_authority_arn", certificate.CertificateAuthorityArn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(certificate.CreatedAt).Format(time.RFC3339))
 	d.Set(names.AttrDomainName, certificate.DomainName)
 	d.Set("early_renewal_duration", d.Get("early_renewal_duration"))
 	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
@@ -449,6 +458,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 			keyAlgorithmValue = v
 			break
 		}
+	}
+	if certificate.IssuedAt != nil {
+		d.Set("issued_at", aws.ToTime(certificate.IssuedAt).Format(time.RFC3339))
+	} else {
+		d.Set("issued_at", nil)
 	}
 	d.Set("key_algorithm", keyAlgorithmValue)
 	if certificate.NotAfter != nil {
