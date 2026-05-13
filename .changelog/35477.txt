@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_sagemaker_domain: Fix drift `default_user_settings.r_studio_server_pro_domain_settings` by removing default value for `user_group` when block is not defined
+resource/aws_sagemaker_user_profile: Fix drift `default_user_settings.r_studio_server_pro_domain_settings` by removing default value for `user_group` when block is not defined
+```
