@@ -47,11 +47,19 @@ func dataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrCreatedAt: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
+			},
+			"issued_at": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"key_types": {
 				Type:     schema.TypeSet,
@@ -221,7 +229,13 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(matchedCertificate.CertificateArn))
 	d.Set(names.AttrARN, matchedCertificate.CertificateArn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(matchedCertificate.CreatedAt).Format(time.RFC3339))
 	d.Set(names.AttrDomain, matchedCertificate.DomainName)
+	if matchedCertificate.IssuedAt != nil {
+		d.Set("issued_at", aws.ToTime(matchedCertificate.IssuedAt).Format(time.RFC3339))
+	} else {
+		d.Set("issued_at", nil)
+	}
 	d.Set(names.AttrStatus, matchedCertificate.Status)
 
 	return diags
