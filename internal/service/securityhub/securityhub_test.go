@@ -63,6 +63,18 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtDisappears:     testAccConfigurationPolicyAssociation_disappears,
 			"SelfManagedSecurityHub": testAccConfigurationPolicyAssociation_selfManagedSecurityHub,
 		},
+		"ConnectorV2": {
+			acctest.CtBasic:           testAccConnectorV2_basic,
+			acctest.CtDisappears:      testAccConnectorV2_disappears,
+			"description":             testAccConnectorV2_description,
+			"tags":                    testAccConnectorV2_tags,
+			"KMSKeyARN":               testAccConnectorV2_kmsKeyARN,
+			"ConnectorProviderUpdate": testAccConnectorV2_connectorProviderUpdate,
+			"Identity":                testAccSecurityHubConnectorV2_identitySerial,
+			"ListBasic":               testAccConnectorV2_List_basic,
+			"ListIncludeResource":     testAccConnectorV2_List_includeResource,
+			"ListRegionOverride":      testAccConnectorV2_List_regionOverride,
+		},
 		"EnabledStandards": {
 			acctest.CtBasic:            testAccEnabledStandardsDataSource_basic,
 			"StandardsSubscriptionARN": testAccEnabledStandardsDataSource_standardsSubscriptionARN,

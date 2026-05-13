@@ -227,6 +227,7 @@ The following arguments are optional:
 * `db_storage_type` - (Default `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT3"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400. This argument is updatable. For a single instance, after this argument has been updated once, it can only be updated again after 6 hours have passed.
 * `deployment_type` - (Default `"SINGLE_AZ"`) Specifies whether the DB instance will be deployed as a standalone instance or with a Multi-AZ standby for high availability. Valid options are: `"SINGLE_AZ"`, `"WITH_MULTIAZ_STANDBY"`. This argument is updatable.
 * `log_delivery_configuration` - (Optional) Configuration for sending InfluxDB engine logs to a specified S3 bucket. This argument is updatable.
+* `maintenance_schedule` - (Optional) Maintenance schedule for the DB instance, including the preferred maintenance window and timezone. This argument is updatable.
 * `network_type` - (Optional) Specifies whether the networkType of the Timestream for InfluxDB instance is IPV4, which can communicate over IPv4 protocol only, or DUAL, which can communicate over both IPv4 and IPv6 protocols.
 * `port` - (Default `8086`) The port on which the instance accepts connections. Valid values: `1024`-`65535`. Cannot be `2375`-`2376`, `7788`-`7799`, `8090`, or `51678`-`51680`. This argument is updatable.
 * `publicly_accessible` - (Default `false`) Configures the DB instance with a public IP to facilitate access. Other resources, such as a VPC, a subnet, an internet gateway, and a route table with routes, are also required to enabled public access, in addition to this argument. See "[Usage with Public Internet Access Enabled](#usage-with-public-internet-access-enabled)" for an example configuration with all required resources for public internet access.
@@ -238,12 +239,17 @@ The following arguments are optional:
 
 * `s3_configuration` - (Required) Configuration for S3 bucket log delivery.
 
+#### `maintenance_schedule`
+
+* `preferred_maintenance_window` - (Required) Preferred maintenance window in the format `ddd:HH:MM-ddd:HH:MM`. Day must be one of `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, or `Sun`. Provide an empty string to let the system choose a window.
+* `timezone` - (Required) IANA timezone identifier for the maintenance window. For example, `America/New_York` or `UTC`.
+
 #### `s3_configuration`
 
 * `bucket_name` - (Required) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Indicates whether log delivery to the S3 bucket is enabled.
 
-**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `port`, `deployment_type`, `db_instance_type`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
+**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `deployment_type`, `db_instance_type`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
 
 ## Attribute Reference
 

@@ -2,13 +2,19 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_securityhub_connector_v2` ([#47678](https://github.com/hashicorp/terraform-provider-aws/issues/47678))
 * **New Resource:** `aws_observabilityadmin_telemetry_evaluation` ([#47799](https://github.com/hashicorp/terraform-provider-aws/issues/47799))
 * **New Resource:** `aws_observabilityadmin_telemetry_evaluation_for_organization` ([#47808](https://github.com/hashicorp/terraform-provider-aws/issues/47808))
 * **New Resource:** `aws_securityhub_aggregator_v2` ([#47651](https://github.com/hashicorp/terraform-provider-aws/issues/47651))
+* **New Resource:** `aws_securityhub_connector_v2` ([#47678](https://github.com/hashicorp/terraform-provider-aws/issues/47678))
 
 ENHANCEMENTS:
 
+* resource/aws_lambda_function: Add support for `ruby4.0` as a `runtime` value ([#47841](https://github.com/hashicorp/terraform-provider-aws/issues/47841))
+* resource/aws_lambda_function: Support mounting Amazon S3 buckets as file systems with S3 Files ([#47838](https://github.com/hashicorp/terraform-provider-aws/issues/47838))
+* resource/aws_lambda_layer_version: Add support for `ruby4.0` as a `compatible_runtimes` value ([#47841](https://github.com/hashicorp/terraform-provider-aws/issues/47841))
 * resource/aws_secretsmanager_secret_version: Allow switching from `secret_string` to `secret_string_wo` without re-creating the resource. ([#47815](https://github.com/hashicorp/terraform-provider-aws/issues/47815))
+* resource/aws_timestreaminfluxdb_db_instance: Add `maintenance_schedule` configuration block ([#47853](https://github.com/hashicorp/terraform-provider-aws/issues/47853))
 
 BUG FIXES:
 

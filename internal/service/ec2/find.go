@@ -5365,6 +5365,7 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 
 func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
 	return func(yield func(awstypes.TransitGatewayMeteringPolicy, error) bool) {
+		var stopped bool
 		err := describeTransitGatewayMeteringPoliciesPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayMeteringPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
@@ -5372,6 +5373,7 @@ func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 
 			for _, v := range page.TransitGatewayMeteringPolicies {
 				if !yield(v, nil) {
+					stopped = true
 					return false
 				}
 			}
@@ -5379,7 +5381,7 @@ func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 			return !lastPage
 		})
 
-		if err != nil {
+		if !stopped && err != nil {
 			yield(inttypes.Zero[awstypes.TransitGatewayMeteringPolicy](), fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
 			return
 		}

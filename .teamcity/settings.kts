@@ -1,3 +1,7 @@
+/*
+ * Copyright IBM Corp. 2014, 2026
+ */
+
 import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-imports
 import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications

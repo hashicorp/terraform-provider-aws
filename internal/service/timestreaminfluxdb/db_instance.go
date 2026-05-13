@@ -329,6 +329,31 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
+			"maintenance_schedule": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[maintenanceScheduleModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				Description: `The maintenance schedule for the DB instance.`,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 64),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`), ""),
+							},
+						},
+						"timezone": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(0, 19),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^(UTC|[A-Za-z_]+/[A-Za-z0-9_]+(/[A-Za-z0-9_]+)?)$`), ""),
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -622,6 +647,7 @@ type dbInstanceResourceModel struct {
 	ID                            types.String                                                   `tfsdk:"id"`
 	InfluxAuthParametersSecretARN types.String                                                   `tfsdk:"influx_auth_parameters_secret_arn"`
 	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationModel] `tfsdk:"log_delivery_configuration"`
+	MaintenanceSchedule           fwtypes.ListNestedObjectValueOf[maintenanceScheduleModel]      `tfsdk:"maintenance_schedule"`
 	Name                          types.String                                                   `tfsdk:"name"`
 	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                       `tfsdk:"network_type"`
 	Organization                  types.String                                                   `tfsdk:"organization"`
