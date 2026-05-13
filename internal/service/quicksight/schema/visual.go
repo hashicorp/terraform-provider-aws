@@ -232,7 +232,7 @@ var tooltipOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID:     stringComputedOnly(),
+													attrFieldID:    stringComputedOnly(),
 													"label":        stringComputedOnly(),
 													attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 												},
@@ -738,7 +738,7 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrFieldID:     stringLenBetweenSchema(attrOptional, 1, 512),
+										attrFieldID:    stringLenBetweenSchema(attrOptional, 1, 512),
 										attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
@@ -808,7 +808,7 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrFieldID:     stringComputedOnly(),
+										attrFieldID:    stringComputedOnly(),
 										"field_value":  stringComputedOnly(),
 										attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
@@ -819,7 +819,7 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrFieldID:     stringComputedOnly(),
+										attrFieldID:    stringComputedOnly(),
 										attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},

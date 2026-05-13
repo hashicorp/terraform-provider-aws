@@ -81,7 +81,7 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"direction": sdkschema.StringEnumSchema[awstypes.SortDirection](attrRequired),
-				attrFieldID:  stringLenBetweenSchema(attrRequired, 1, 512),
+				attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
 			},
 		},
 	}
@@ -94,7 +94,7 @@ var fieldSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"direction": sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
-				attrFieldID:  stringComputedOnly(),
+				attrFieldID: stringComputedOnly(),
 			},
 		},
 	}

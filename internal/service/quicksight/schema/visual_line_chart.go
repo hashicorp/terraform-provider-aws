@@ -207,7 +207,7 @@ func lineChartVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"axis_binding": sdkschema.StringEnumSchema[awstypes.AxisBinding](attrRequired),
-													attrFieldID:     stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID:    stringLenBetweenSchema(attrRequired, 1, 512),
 													"field_value": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -235,7 +235,7 @@ func lineChartVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"axis_binding": sdkschema.StringEnumSchema[awstypes.AxisBinding](attrRequired),
-													attrFieldID:     stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID:    stringLenBetweenSchema(attrRequired, 1, 512),
 													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -293,7 +293,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				attrVisualID:       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
 					Type:     schema.TypeList,
@@ -435,7 +435,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"axis_binding": sdkschema.StringEnumDataSourceSchema[awstypes.AxisBinding](),
-													attrFieldID:     stringComputedOnly(),
+													attrFieldID:    stringComputedOnly(),
 													"field_value":  stringComputedOnly(),
 													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
 														Type:     schema.TypeList,
@@ -456,7 +456,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"axis_binding": sdkschema.StringEnumDataSourceSchema[awstypes.AxisBinding](),
-													attrFieldID:     stringComputedOnly(),
+													attrFieldID:    stringComputedOnly(),
 													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
 														Type:     schema.TypeList,
 														Computed: true,

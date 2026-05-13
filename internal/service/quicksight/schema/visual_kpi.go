@@ -82,7 +82,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrColor:              hexColorSchema(attrOptional),
+													attrColor:            hexColorSchema(attrOptional),
 													"tooltip_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
 													names.AttrType:       sdkschema.StringEnumSchema[awstypes.KPISparklineType](attrRequired),
 													attrVisibility:       sdkschema.StringEnumSchema[awstypes.Visibility](attrOptional),
@@ -220,7 +220,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				attrVisualID:       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConfiguration.html
 					Type:     schema.TypeList,
@@ -270,7 +270,7 @@ func kpiVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrColor:              stringComputedOnly(),
+													attrColor:            stringComputedOnly(),
 													"tooltip_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 													names.AttrType:       sdkschema.StringEnumDataSourceSchema[awstypes.KPISparklineType](),
 													attrVisibility:       sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
