@@ -1,4 +1,4 @@
-name: Ready for Review Changelog
+name: Changelog automation
 
 on:
   pull_request_target:
@@ -6,22 +6,35 @@ on:
       - ready_for_review
 
 permissions:
-  contents: read
-  pull-requests: write
+  contents: write
+  pull-requests: read
 
 jobs:
-  changelog-comment:
-    name: Add Changelog Comment
+  add-changelog:
+    name: Add Changelog Entry
     runs-on: ubuntu-latest
     steps:
-      - name: Build comment body
-        shell: bash
-        run: |
-          echo '@copilot Add the changelog for this PR' > note.md
-
-      - name: Add Comment for copilot 
-        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+      - name: Checkout PR branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: note.md
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Generate changelog entry
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_URL="https://github.com/${{ github.repository }}/pull/${PR_NUMBER}"
+          copilot -p "Add the changelog for this PR" \
+            --allow-tool='shell(git:*)' \
+            --allow-tool=write \
+            --allow-tool=read \
+            --no-ask-user
