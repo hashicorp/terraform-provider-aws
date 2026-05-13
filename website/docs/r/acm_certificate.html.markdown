@@ -183,10 +183,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ARN of the certificate
 * `arn` - ARN of the certificate
+* `created_at` - Time at which the certificate was requested.
 * `domain_name` - Domain name for which the certificate is issued
 * `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation.
   Can have more than one element, e.g., if SANs are defined.
   Only set if `DNS`-validation was used.
+* `issued_at` - Time at which the certificate was issued. This value exists only when the certificate type is `AMAZON_ISSUED`.
 * `not_after` - Expiration date and time of the certificate.
 * `not_before` - Start of the validity period of the certificate.
 * `pending_renewal` - `true` if a Private certificate eligible for managed renewal is within the `early_renewal_duration` period.
