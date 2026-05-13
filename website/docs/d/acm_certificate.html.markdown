@@ -53,7 +53,9 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the found certificate, suitable for referencing in other resources that support ACM certificates.
+* `created_at` - Time at which the certificate was requested.
 * `id` - ARN of the found certificate, suitable for referencing in other resources that support ACM certificates.
+* `issued_at` - Time at which the certificate was issued. This value exists only when the certificate type is `AMAZON_ISSUED`.
 * `status` - Status of the found certificate.
 * `certificate` - ACM-issued certificate.
 * `certificate_chain` - Certificates forming the requested ACM-issued certificate's chain of trust. The chain consists of the certificate of the issuing CA and the intermediate certificates of any other subordinate CAs.
