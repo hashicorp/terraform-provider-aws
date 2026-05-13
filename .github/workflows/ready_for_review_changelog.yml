@@ -1,0 +1,27 @@
+name: Ready for Review Changelog
+
+on:
+  pull_request_target:
+    types:
+      - ready_for_review
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  changelog-comment:
+    name: Add Changelog Comment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build comment body
+        shell: bash
+        run: |
+          echo '@copilot Add the changelog for this PR' > note.md
+
+      - name: Add Comment for copilot 
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: note.md
