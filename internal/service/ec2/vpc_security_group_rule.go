@@ -174,7 +174,11 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 	}
 
-	ipPermission := expandIPPermission(d, sg)
+	ipPermission, rulesEmpty := expandIPPermission(d, sg)
+	if rulesEmpty {
+		return sdkdiag.AppendErrorf(diags, "this resource must contain at least one rule")
+	}
+
 	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 	id, err := securityGroupRuleCreateID(securityGroupID, string(ruleType), &ipPermission)
 	if err != nil {
@@ -281,7 +285,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 	}
 
-	ipPermission := expandIPPermission(d, sg)
+	ipPermission, _ := expandIPPermission(d, sg)
 
 	var rules []awstypes.IpPermission
 
@@ -354,7 +358,11 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 		}
 
-		ipPermission := expandIPPermission(d, sg)
+		ipPermission, rulesEmpty := expandIPPermission(d, sg)
+		if rulesEmpty {
+			return sdkdiag.AppendErrorf(diags, "this resource must contain at least one rule")
+		}
+
 		ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 
 		switch ruleType {
@@ -398,7 +406,7 @@ func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 	}
 
-	ipPermission := expandIPPermission(d, sg)
+	ipPermission, _ := expandIPPermission(d, sg)
 	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 
 	switch ruleType {
@@ -766,7 +774,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 	return fmt.Sprintf("sgrule-%d", create.StringHashcode(buf.String())), nil
 }
 
-func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awstypes.IpPermission { // nosemgrep:ci.caps5-in-func-name
+func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) (awstypes.IpPermission, bool) { // nosemgrep:ci.caps5-in-func-name
 	apiObject := awstypes.IpPermission{
 		IpProtocol: aws.String(protocolForValue(d.Get(names.AttrProtocol).(string))),
 	}
@@ -777,7 +785,10 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 		apiObject.ToPort = aws.Int32(int32(d.Get("to_port").(int)))
 	}
 
+	rulesEmpty := true
+
 	if v, ok := d.GetOk("cidr_blocks"); ok && len(v.([]any)) > 0 {
+		rulesEmpty = false
 		for _, v := range v.([]any) {
 			apiObject.IpRanges = append(apiObject.IpRanges, awstypes.IpRange{
 				CidrIp: aws.String(v.(string)),
@@ -786,6 +797,7 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_blocks"); ok && len(v.([]any)) > 0 {
+		rulesEmpty = false
 		for _, v := range v.([]any) {
 			apiObject.Ipv6Ranges = append(apiObject.Ipv6Ranges, awstypes.Ipv6Range{
 				CidrIpv6: aws.String(v.(string)),
@@ -794,6 +806,7 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 	}
 
 	if v, ok := d.GetOk("prefix_list_ids"); ok && len(v.([]any)) > 0 {
+		rulesEmpty = false
 		for _, v := range v.([]any) {
 			apiObject.PrefixListIds = append(apiObject.PrefixListIds, awstypes.PrefixListId{
 				PrefixListId: aws.String(v.(string)),
@@ -804,6 +817,7 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 	var self string
 
 	if _, ok := d.GetOk("self"); ok {
+		rulesEmpty = false
 		self = aws.ToString(sg.GroupId)
 		apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, awstypes.UserIdGroupPair{
 			GroupId: aws.String(self),
@@ -812,6 +826,7 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 
 	if v, ok := d.GetOk("source_security_group_id"); ok {
 		if v := v.(string); v != self {
+			rulesEmpty = false
 			// [OwnerID/]SecurityGroupID.
 			if parts := strings.Split(v, "/"); len(parts) == 1 {
 				apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, awstypes.UserIdGroupPair{
@@ -845,7 +860,7 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 		}
 	}
 
-	return apiObject
+	return apiObject, rulesEmpty
 }
 
 func flattenIpPermission(d *schema.ResourceData, apiObject *awstypes.IpPermission) { // nosemgrep:ci.caps5-in-func-name
