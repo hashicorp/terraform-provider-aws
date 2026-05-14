@@ -49,8 +49,8 @@ This resource supports the following arguments:
 * `encrypted` - (Optional) Whether the destination snapshots of the copied image should be encrypted. Defaults to `false`
 * `kms_key_id` - (Optional) Full ARN of the KMS Key to use when encrypting the snapshots of an image during a copy operation. If not specified, then the default AWS KMS Key will be used
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-This resource also exposes the full set of arguments from the [`aws_ami`](ami.html) resource.
+* `deprecation_time` - (Optional) Date and time to deprecate the AMI, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8). If you specified a value for seconds, Amazon EC2 rounds the seconds to the nearest minute.
+* `description` - (Optional) Longer, human-readable description for the AMI.
 
 ## Attribute Reference
 

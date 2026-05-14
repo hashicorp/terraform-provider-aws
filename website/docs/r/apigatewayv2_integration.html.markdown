@@ -134,13 +134,13 @@ The default timeout is 29 seconds for WebSocket APIs and 30 seconds for HTTP API
 Terraform will only perform drift detection of its value when present in a configuration.
 * `tls_config` - (Optional) TLS configuration for a private integration. Supported only for HTTP APIs.
 
-The `response_parameters` object supports the following:
+### `response_parameters` Block
 
 * `status_code` - (Required) HTTP status code in the range 200-599.
 * `mappings` - (Required) Key-value map. The key of this map identifies the location of the request parameter to change, and how to change it. The corresponding value specifies the new data for the parameter.
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-parameter-mapping.html) for details.
 
-The `tls_config` object supports the following:
+### `tls_config` Block
 
 * `server_name_to_verify` - (Optional) If you specify a server name, API Gateway uses it to verify the hostname on the integration's certificate. The server name is also included in the TLS handshake to support Server Name Indication (SNI) or virtual hosting.
 

@@ -102,28 +102,28 @@ This resource supports the following arguments:
 * `product_code` - (Optional) AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-#### Api Stages arguments
+#### `api_stages` Block
 
-* `api_id` (Required) - API Id of the associated API stage in a usage plan.
-* `stage` (Required) - API stage name of the associated API stage in a usage plan.
-* `throttle` - (Optional) The [throttling limits](#throttle) of the usage plan.
+* `api_id` - (Required) API Id of the associated API stage in a usage plan.
+* `stage` - (Required) API stage name of the associated API stage in a usage plan.
+* `throttle` - (Optional) The throttling limits of the usage plan. See [`api_stages` `throttle`](#api_stages-throttle-block) below.
 
-##### Throttle
+#### `api_stages` `throttle` Block
 
-* `path` (Required) - Method to apply the throttle settings for. Specfiy the path and method, for example `/test/GET`.
-* `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
-* `rate_limit` (Optional) - The API request steady-state rate limit.
+* `path` - (Required) Method to apply the throttle settings for. Specify the path and method, for example `/test/GET`.
+* `burst_limit` - (Optional) The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
+* `rate_limit` - (Optional) The API request steady-state rate limit.
 
-#### Quota Settings Arguments
+#### `quota_settings` Block
 
-* `limit` (Optional) - Maximum number of requests that can be made in a given time period.
-* `offset` (Optional) - Number of requests subtracted from the given limit in the initial time period.
-* `period` (Optional) - Time period in which the limit applies. Valid values are "DAY", "WEEK" or "MONTH".
+* `limit` - (Optional) Maximum number of requests that can be made in a given time period.
+* `offset` - (Optional) Number of requests subtracted from the given limit in the initial time period.
+* `period` - (Optional) Time period in which the limit applies. Valid values are "DAY", "WEEK" or "MONTH".
 
-#### Throttling Settings Arguments
+#### `throttle_settings` Block
 
-* `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
-* `rate_limit` (Optional) - The API request steady-state rate limit.
+* `burst_limit` - (Optional) The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
+* `rate_limit` - (Optional) The API request steady-state rate limit.
 
 ## Attribute Reference
 

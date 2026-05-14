@@ -66,7 +66,7 @@ For `JWT` authorizers the single entry specifies where to extract the JSON Web T
 * `jwt_configuration` - (Optional) Configuration of a JWT authorizer. Required for the `JWT` authorizer type.
 Supported only for HTTP APIs.
 
-The `jwt_configuration` object supports the following:
+### `jwt_configuration` Block
 
 * `audience` - (Optional) List of the intended recipients of the JWT. A valid JWT must provide an aud that matches at least one entry in this list.
 * `issuer` - (Optional) Base domain of the identity provider that issues JSON Web Tokens, such as the `endpoint` attribute of the [`aws_cognito_user_pool`](/docs/providers/aws/r/cognito_user_pool.html) resource.

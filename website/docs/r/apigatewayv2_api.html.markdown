@@ -68,7 +68,7 @@ __Note__: If the `body` argument is provided, the OpenAPI specification will be 
 
 Further more, the `name`, `description`, `cors_configuration`, `tags` and `version` fields should be specified in the Terraform configuration and the values will override any values specified in the OpenAPI document.
 
-The `cors_configuration` object supports the following:
+### `cors_configuration` Block
 
 * `allow_credentials` - (Optional) Whether credentials are included in the CORS request.
 * `allow_headers` - (Optional) Set of allowed HTTP headers.

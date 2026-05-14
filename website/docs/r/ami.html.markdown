@@ -75,7 +75,7 @@ When `virtualization_type` is "hvm" the following additional arguments apply:
 * `sriov_net_support` - (Optional) When set to "simple" (the default), enables enhanced networking
   for created instances. No other value is supported at this time.
 
-Nested `ebs_block_device` blocks have the following structure:
+### `ebs_block_device` Block
 
 * `device_name` - (Required) Path at which the device is exposed to created instances.
 * `delete_on_termination` - (Optional) Boolean controlling whether the EBS volumes created to
@@ -95,7 +95,7 @@ Nested `ebs_block_device` blocks have the following structure:
 
 ~> **Note:** You can specify `encrypted` or `snapshot_id` but not both.
 
-Nested `ephemeral_block_device` blocks have the following structure:
+### `ephemeral_block_device` Block
 
 * `device_name` - (Required) Path at which the device is exposed to created instances.
 * `virtual_name` - (Required) Name for the ephemeral device, of the form "ephemeralN" where
