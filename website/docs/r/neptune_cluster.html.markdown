@@ -56,7 +56,7 @@ This resource supports the following arguments:
 * `iam_database_authentication_enabled` - (Optional) Whether or not mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
 * `kms_key_arn` - (Optional) ARN for the KMS encryption key. When specifying `kms_key_arn`, `storage_encrypted` needs to be set to true.
 * `neptune_cluster_parameter_group_name` - (Optional) Cluster parameter group to associate with the cluster.
-* `neptune_instance_parameter_group_name` – (Optional) Name of DB parameter group to apply to all instances in the cluster. When upgrading, AWS does not return this value, so do not reference it in other arguments—either leave it unset, configure each instance directly, or ensure it matches the `engine_version`.
+* `neptune_instance_parameter_group_name` - (Optional) Name of DB parameter group to apply to all instances in the cluster. When upgrading, AWS does not return this value, so do not reference it in other arguments—either leave it unset, configure each instance directly, or ensure it matches the `engine_version`.
 * `neptune_subnet_group_name` - (Optional) Neptune subnet group to associate with this Neptune instance.
 * `port` - (Optional) Port on which the Neptune accepts connections. Default is `8182`.
 * `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
@@ -105,7 +105,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Neptune Cluster ARN
 * `cluster_resource_id` - Neptune Cluster Resource ID
-* `cluster_members` – List of Neptune Instances that are a part of this cluster
+* `cluster_members` - List of Neptune Instances that are a part of this cluster
 * `endpoint` - DNS address of the Neptune instance
 * `hosted_zone_id` - Route53 Hosted Zone ID of the endpoint
 * `id` - Neptune Cluster Identifier

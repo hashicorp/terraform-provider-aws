@@ -46,6 +46,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `network_interface_permission_id` - ENI permission ID.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interface Permissions using the `network_interface_permission_id`. For example:

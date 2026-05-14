@@ -119,6 +119,13 @@ Because every argument of this resource is marked as forces-new, any change to t
 
 If a create operation produces a `FAILED` task, the resource is not written to Terraform state (the `failure_reason` is surfaced in the diagnostic instead), so no follow-up destroy is required.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
