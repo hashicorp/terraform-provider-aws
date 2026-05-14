@@ -34,7 +34,7 @@ var dataSetIdentifierDeclarationsDataSourceSchema = sync.OnceValue(func() *schem
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn":       sdkschema.ArnStringDataSourceSchema(),
+				"data_set_arn":       sdkschema.ARNStringDataSourceSchema(),
 				names.AttrIdentifier: stringComputedOnly(),
 			},
 		},

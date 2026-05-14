@@ -64,7 +64,7 @@ func ARNStringSchema(handling AttrHandling) *schema.Schema {
 	return s
 }
 
-func ArnStringDataSourceSchema() *schema.Schema {
+func ARNStringDataSourceSchema() *schema.Schema {
 	return ARNStringSchema(AttrComputed)
 }
 

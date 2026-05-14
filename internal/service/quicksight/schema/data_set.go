@@ -714,7 +714,7 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"data_source_arn": sdkschema.ArnStringDataSourceSchema(),
+							"data_source_arn": sdkschema.ARNStringDataSourceSchema(),
 							names.AttrName:    sdkschema.StringComputedOnly(),
 							"sql_query":       sdkschema.StringComputedOnly(),
 						},
@@ -727,7 +727,7 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"catalog":         sdkschema.StringComputedOnly(),
-							"data_source_arn": sdkschema.ArnStringDataSourceSchema(),
+							"data_source_arn": sdkschema.ARNStringDataSourceSchema(),
 							"input_columns": {
 								Type:     schema.TypeList,
 								Computed: true,
@@ -748,7 +748,7 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_source_arn": sdkschema.ArnStringDataSourceSchema(),
+							"data_source_arn": sdkschema.ARNStringDataSourceSchema(),
 							"input_columns": {
 								Type:     schema.TypeList,
 								Computed: true,
@@ -803,7 +803,7 @@ func DataSetRowLevelPermissionDataSetSchemaDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrARN:       sdkschema.ArnStringDataSourceSchema(),
+				names.AttrARN:       sdkschema.ARNStringDataSourceSchema(),
 				"format_version":    sdkschema.StringEnumDataSourceSchema[awstypes.RowLevelPermissionFormatVersion](),
 				names.AttrNamespace: sdkschema.StringComputedOnly(),
 				"permission_policy": sdkschema.StringEnumDataSourceSchema[awstypes.RowLevelPermissionPolicy](),
