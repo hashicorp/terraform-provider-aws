@@ -1,10 +1,14 @@
-## 6.45.0 (Unreleased)
+## 6.46.0 (Unreleased)
+
+## 6.45.0 (May 13, 2026)
 
 FEATURES:
 
+* **New List Resource:** `aws_observabilityadmin_telemetry_rule` ([#47857](https://github.com/hashicorp/terraform-provider-aws/issues/47857))
 * **New List Resource:** `aws_securityhub_connector_v2` ([#47678](https://github.com/hashicorp/terraform-provider-aws/issues/47678))
 * **New Resource:** `aws_observabilityadmin_telemetry_evaluation` ([#47799](https://github.com/hashicorp/terraform-provider-aws/issues/47799))
 * **New Resource:** `aws_observabilityadmin_telemetry_evaluation_for_organization` ([#47808](https://github.com/hashicorp/terraform-provider-aws/issues/47808))
+* **New Resource:** `aws_observabilityadmin_telemetry_rule` ([#47857](https://github.com/hashicorp/terraform-provider-aws/issues/47857))
 * **New Resource:** `aws_securityhub_aggregator_v2` ([#47651](https://github.com/hashicorp/terraform-provider-aws/issues/47651))
 * **New Resource:** `aws_securityhub_connector_v2` ([#47678](https://github.com/hashicorp/terraform-provider-aws/issues/47678))
 

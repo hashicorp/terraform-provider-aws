@@ -477,7 +477,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetAWSNil()))
 				}
@@ -491,7 +491,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetAWSNil()))
 				}
@@ -505,7 +505,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.CreateAWSValue(value)))
 				}
@@ -523,7 +523,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			awsFieldType := field.Type()
 			// For null values with non-pointer AWS fields, set to zero value
 			// For pointer fields, leave unset (nil is already the zero value)
-			if awsFieldType.Kind() != reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() != reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetZeroValue()))
 				}
@@ -533,7 +533,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.CreateAWSValue(value)))
 				}
