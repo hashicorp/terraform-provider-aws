@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -38,7 +39,8 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/observabilityadmin;observabilityadmin;observabilityadmin.GetTelemetryRuleForOrganizationOutput")
 // @Testing(preCheck="testAccTelemetryRuleForOrganizationPreCheck")
 // @Testing(tagsTest=false)
-// @Testing(generator=false)
+// @Testing(importStateIdAttribute="rule_name")
+// @Testing(serialize=true)
 func newTelemetryRuleForOrganizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &telemetryRuleForOrganizationResource{}
 
@@ -52,6 +54,7 @@ func newTelemetryRuleForOrganizationResource(_ context.Context) (resource.Resour
 type telemetryRuleForOrganizationResource struct {
 	framework.ResourceWithModel[telemetryRuleForOrganizationResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *telemetryRuleForOrganizationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -154,23 +157,12 @@ func (r *telemetryRuleForOrganizationResource) Read(ctx context.Context, request
 		return
 	}
 
-	data.setID()
-	data.RuleARN = fwflex.StringToFramework(ctx, output.RuleArn)
-
-	if output.TelemetryRule != nil {
-		ruleBlock := telemetryRuleForOrganizationBlockModel{
-			ResourceType:  fwtypes.StringEnumValue(output.TelemetryRule.ResourceType),
-			TelemetryType: fwtypes.StringEnumValue(output.TelemetryRule.TelemetryType),
-		}
-
-		ruleList, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &ruleBlock)
-		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		data.Rule = ruleList
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
+	if response.Diagnostics.HasError() {
+		return
 	}
+
+	data.setID()
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -269,6 +261,12 @@ func findTelemetryRuleForOrganization(ctx context.Context, conn *observabilityad
 	}
 
 	return output, nil
+}
+
+func (r *telemetryRuleForOrganizationResource) flatten(ctx context.Context, telemetryRule *observabilityadmin.GetTelemetryRuleForOrganizationOutput, data *telemetryRuleForOrganizationResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, telemetryRule, data, fwflex.WithFieldNamePrefix("Telemetry"))...)
+	return diags
 }
 
 type telemetryRuleForOrganizationResourceModel struct {

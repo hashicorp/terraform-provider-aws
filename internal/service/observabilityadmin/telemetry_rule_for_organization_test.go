@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfobservabilityadmin "github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
@@ -43,9 +44,11 @@ func testAccTelemetryRuleForOrganizationPreCheck(ctx context.Context, t *testing
 func TestAccObservabilityAdminTelemetryRuleForOrganization_serial(t *testing.T) {
 	t.Parallel()
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccObservabilityAdminTelemetryRuleForOrganization_basic,
-		acctest.CtDisappears: testAccObservabilityAdminTelemetryRuleForOrganization_disappears,
-		"tags":               testAccObservabilityAdminTelemetryRuleForOrganization_tags,
+		acctest.CtBasic:        testAccObservabilityAdminTelemetryRuleForOrganization_basic,
+		acctest.CtDisappears:   testAccObservabilityAdminTelemetryRuleForOrganization_disappears,
+		"tags":                 testAccObservabilityAdminTelemetryRuleForOrganization_tags,
+		"List_basic":           testAccTelemetryRuleForOrganization_List_basic,
+		"List_includeResource": testAccTelemetryRuleForOrganization_List_includeResource,
 	}
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
@@ -78,6 +81,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_basic(t *testing.T) {
 				),
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -113,6 +117,14 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_disappears(t *testing
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfobservabilityadmin.ResourceTelemetryRuleForOrganization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
