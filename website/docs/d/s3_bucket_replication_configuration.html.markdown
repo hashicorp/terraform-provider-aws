@@ -31,15 +31,15 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `role` – The ARN of the IAM role that Amazon S3 assumes when replicating objects.
-* `rule` – An unordered list of configuration blocks that define the rules managing replication.
+* `role` - The ARN of the IAM role that Amazon S3 assumes when replicating objects.
+* `rule` - An unordered list of configuration blocks that define the rules managing replication.
 
 See the [`aws_s3_replication_configuration`](../r/s3_bucket_replication_configuration.html.markdown#rule) resource documentation for details about the `rule` block (excluding the `and` block within the `filter` block).
 
 ### `and`
 
-* `prefix` – The object key name prefix that identifies the subset of objects to which the rule applies.
-* `tag` – An unordered list of tags that identify a subset of objects to which the rule applies.
+* `prefix` - The object key name prefix that identifies the subset of objects to which the rule applies.
+* `tag` - An unordered list of tags that identify a subset of objects to which the rule applies.
   
     * `key` – The key of the tag.
     * `value` – The value of the tag.

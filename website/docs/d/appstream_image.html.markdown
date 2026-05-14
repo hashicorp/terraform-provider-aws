@@ -36,7 +36,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `application` - A application object that contains the following:
+* `applications` - List of application objects that each contain the following:
     * `app_block_arn` - The app block ARN of the application.
     * `created_time` - The time at which the application was created within the app block.
     * `description` - The description of the application.
@@ -70,6 +70,5 @@ This data source exports the following attributes in addition to the arguments a
     * `allow_fleet` - Boolean indicating if the image can be used for a fleet.
     * `allow_image_builder` - indicated whether the image can be used for an image builder.
 * `platform` - Operating system platform of the image. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
-* `public_image_released_date` - Release date of base image if public. For private images, it is the release date of the base image that it was created from.
+* `public_base_image_released_date` - Release date of base image if public. For private images, it is the release date of the base image that it was created from.
 * `state` - Current state of image. Image starts in PENDING state which changes to AVAILABLE if creation passes and FAILED if it fails. Values will be from: PENDING | AVAILABLE | FAILED | COPYING | DELETING | CREATING | IMPORTING.
-* `visibility` - Visibility type enum indicating whether the image is PUBLIC, PRIVATE, or SHARED. Valid values include: PUBLIC | PRIVATE | SHARED.
