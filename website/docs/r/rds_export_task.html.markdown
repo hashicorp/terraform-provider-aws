@@ -159,6 +159,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `task_start_time` - Time that the snapshot export task started.
 * `warning_message` - Warning about the snapshot export task, if any.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a RDS (Relational Database) Export Task using the `export_task_identifier`. For example:
