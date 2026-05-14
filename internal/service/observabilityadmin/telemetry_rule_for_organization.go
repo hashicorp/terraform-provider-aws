@@ -142,9 +142,7 @@ func (r *telemetryRuleForOrganizationResource) Read(ctx context.Context, request
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
 	ruleName := fwflex.StringValueFromFramework(ctx, data.RuleName)
-	output, err := findTelemetryRuleForOrganizationStatus(ctx, conn, &observabilityadmin.GetTelemetryRuleForOrganizationInput{
-		RuleIdentifier: aws.String(ruleName),
-	})
+	output, err := findTelemetryRuleForOrganization(ctx, conn, ruleName)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -240,19 +238,6 @@ func (r *telemetryRuleForOrganizationResource) ImportState(ctx context.Context, 
 	resource.ImportStatePassthroughID(ctx, path.Root("rule_name"), request, response)
 }
 
-func findTelemetryRuleForOrganization(ctx context.Context, conn *observabilityadmin.Client, name string) (*awstypes.TelemetryRule, error) {
-	input := observabilityadmin.GetTelemetryRuleForOrganizationInput{
-		RuleIdentifier: aws.String(name),
-	}
-
-	output, err := findTelemetryRuleForOrganizationStatus(ctx, conn, &input)
-	if err != nil {
-		return nil, err
-	}
-
-	return output.TelemetryRule, nil
-}
-
 func findTelemetryRuleForOrganizationStatus(ctx context.Context, conn *observabilityadmin.Client, input *observabilityadmin.GetTelemetryRuleForOrganizationInput) (*observabilityadmin.GetTelemetryRuleForOrganizationOutput, error) {
 	output, err := conn.GetTelemetryRuleForOrganization(ctx, input)
 
@@ -268,6 +253,19 @@ func findTelemetryRuleForOrganizationStatus(ctx context.Context, conn *observabi
 
 	if output == nil || output.TelemetryRule == nil {
 		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func findTelemetryRuleForOrganization(ctx context.Context, conn *observabilityadmin.Client, name string) (*observabilityadmin.GetTelemetryRuleForOrganizationOutput, error) {
+	input := observabilityadmin.GetTelemetryRuleForOrganizationInput{
+		RuleIdentifier: aws.String(name),
+	}
+
+	output, err := findTelemetryRuleForOrganizationStatus(ctx, conn, &input)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,11 +24,10 @@ func testAccTelemetryRuleForOrganizationPreCheck(ctx context.Context, t *testing
 	var evalInput observabilityadmin.GetTelemetryEvaluationStatusForOrganizationInput
 	evalOutput, err := conn.GetTelemetryEvaluationStatusForOrganization(ctx, &evalInput)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
 	if err != nil {
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
@@ -40,15 +40,29 @@ func testAccTelemetryRuleForOrganizationPreCheck(ctx context.Context, t *testing
 	}
 }
 
-func TestAccObservabilityAdminTelemetryRuleForOrganization_basic(t *testing.T) {
+func TestAccObservabilityAdminTelemetryRuleForOrganization_serial(t *testing.T) {
+	t.Parallel()
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccObservabilityAdminTelemetryRuleForOrganization_basic,
+		acctest.CtDisappears: testAccObservabilityAdminTelemetryRuleForOrganization_disappears,
+		"tags":               testAccObservabilityAdminTelemetryRuleForOrganization_tags,
+	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccObservabilityAdminTelemetryRuleForOrganization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_observabilityadmin_telemetry_rule_for_organization.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			// https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-cloudwatch.html
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccTelemetryRuleForOrganizationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
@@ -73,15 +87,19 @@ func TestAccObservabilityAdminTelemetryRuleForOrganization_basic(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAdminTelemetryRuleForOrganization_disappears(t *testing.T) {
+func testAccObservabilityAdminTelemetryRuleForOrganization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_observabilityadmin_telemetry_rule_for_organization.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			// https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-cloudwatch.html
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccTelemetryRuleForOrganizationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
@@ -100,15 +118,19 @@ func TestAccObservabilityAdminTelemetryRuleForOrganization_disappears(t *testing
 	})
 }
 
-func TestAccObservabilityAdminTelemetryRuleForOrganization_tags(t *testing.T) {
+func testAccObservabilityAdminTelemetryRuleForOrganization_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_observabilityadmin_telemetry_rule_for_organization.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			// https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-cloudwatch.html
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccTelemetryRuleForOrganizationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
