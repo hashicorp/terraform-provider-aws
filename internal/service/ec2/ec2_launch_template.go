@@ -1078,7 +1078,7 @@ func resourceLaunchTemplate() *schema.Resource {
 			customdiff.ComputedIf("default_version", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
-					case "name", "name_prefix", "description":
+					case "name", "name_prefix":
 						continue
 					default:
 						return diff.Get("update_default_version").(bool)
@@ -1089,7 +1089,7 @@ func resourceLaunchTemplate() *schema.Resource {
 			customdiff.ComputedIf("latest_version", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
-					case "name", "name_prefix", "description", "default_version", "update_default_version":
+					case "name", "name_prefix", "default_version", "update_default_version":
 						continue
 					default:
 						return true
