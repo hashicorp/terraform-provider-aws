@@ -317,5 +317,30 @@ check "section_presence" {
 }
 
 check "timeouts_section" {
-  enabled = false
+  enabled = true
+
+  ignored_targets = [
+    "aws_autoscaling_group",
+    "aws_bedrock_custom_model",
+    "aws_bedrockagent_agent_action_group",
+    "aws_bedrockagent_agent_knowledge_base_association",
+    "aws_budgets_budget_action",
+    "aws_dx_hosted_private_virtual_interface",
+    "aws_dx_hosted_transit_virtual_interface",
+    "aws_eks_access_entry",
+    "aws_eks_access_policy_association",
+    "aws_fsx_openzfs_snapshot",
+    "aws_globalaccelerator_custom_routing_endpoint_group",
+    "aws_oam_sink_policy",
+    "aws_quicksight_account_subscription",
+    "aws_route53profiles_profile",
+    "aws_route53profiles_resource_association",
+    "aws_s3control_multi_region_access_point",
+    "aws_spot_fleet_request",
+    "aws_vpclattice_service",
+    "aws_vpclattice_service_network_service_association",
+    "aws_vpclattice_service_network_vpc_association",
+    "aws_vpclattice_target_group",
+    "aws_workspaces_connection_alias",
+  ]
 }
