@@ -150,6 +150,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `zone_id` - The canonical hosted zone ID of the ELB (to be used in a Route 53 Alias record)
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

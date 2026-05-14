@@ -285,6 +285,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Experiment Template ID.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FIS Experiment Templates using the `id`. For example:
