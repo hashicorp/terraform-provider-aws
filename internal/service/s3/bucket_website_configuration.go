@@ -179,6 +179,10 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrHostedZoneID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
@@ -324,6 +328,11 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, string(output.LocationConstraint))
 		d.Set("website_domain", domain)
 		d.Set("website_endpoint", endpoint)
+		if hostedZoneID, err := hostedZoneIDForRegion(string(output.LocationConstraint)); err == nil {
+			d.Set(names.AttrHostedZoneID, hostedZoneID)
+		} else {
+			log.Printf("[WARN] %s", err)
+		}
 	}
 
 	return diags
