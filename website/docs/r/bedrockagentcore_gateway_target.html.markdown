@@ -367,7 +367,7 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
       subnet_ids               = aws_subnet.example[*].id
       endpoint_ip_address_type = "IPV4"
       # Route through the internal ALB instead of the actual MCP server domain.
-      routing_domain           = aws_lb.mcp_alb.dns_name
+      routing_domain = aws_lb.mcp_alb.dns_name
     }
   }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -224,12 +224,12 @@ func (m privateEndpointModel) Expand(ctx context.Context) (any, diag.Diagnostics
 // to SDK field names, so VpcID would map to VpcId — not VpcIdentifier — causing
 // a "missing required field" API error.
 type managedVpcResourceModel struct {
-	VpcIdentifier         types.String                                          `tfsdk:"vpc_id"`
-	SubnetIDs             fwtypes.SetOfString                                   `tfsdk:"subnet_ids"`
-	EndpointIPAddressType fwtypes.StringEnum[awstypes.EndpointIpAddressType]    `tfsdk:"endpoint_ip_address_type"`
-	SecurityGroupIDs      fwtypes.SetOfString                                   `tfsdk:"security_group_ids"`
-	RoutingDomain         types.String                                          `tfsdk:"routing_domain"`
-	Tags                  fwtypes.MapOfString                                   `tfsdk:"tags"`
+	VpcIdentifier         types.String                                       `tfsdk:"vpc_id"`
+	SubnetIDs             fwtypes.SetOfString                                `tfsdk:"subnet_ids"`
+	EndpointIPAddressType fwtypes.StringEnum[awstypes.EndpointIpAddressType] `tfsdk:"endpoint_ip_address_type"`
+	SecurityGroupIDs      fwtypes.SetOfString                                `tfsdk:"security_group_ids"`
+	RoutingDomain         types.String                                       `tfsdk:"routing_domain"`
+	Tags                  fwtypes.MapOfString                                `tfsdk:"tags"`
 }
 
 var _ fwflex.Flattener = &managedVpcResourceModel{}
@@ -295,7 +295,8 @@ func (m *managedVpcResourceModel) Flatten(ctx context.Context, v any) diag.Diagn
 
 // selfManagedLatticeResourceModel maps to awstypes.SelfManagedLatticeResource.
 // The SDK type is itself a union with a single member:
-//   SelfManagedLatticeResourceMemberResourceConfigurationIdentifier (string)
+//
+//	SelfManagedLatticeResourceMemberResourceConfigurationIdentifier (string)
 //
 // We flatten it to a simple string attribute for usability.
 type selfManagedLatticeResourceModel struct {

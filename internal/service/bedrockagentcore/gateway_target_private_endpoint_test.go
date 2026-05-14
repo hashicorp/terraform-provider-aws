@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore_test
@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVpc verifies that a
+// TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVPC verifies that a
 // gateway target can be created with a managed VPC Lattice private endpoint.
-func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVpc(t *testing.T) {
+func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -31,7 +31,7 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVpc(t *testing.T
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_privateEndpointManagedVpc(rName),
+				Config: testAccGatewayTargetConfig_privateEndpointManagedVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.#", "1"),
@@ -117,7 +117,7 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointWithRoutingDomain(t *te
 // Config helpers
 // ---------------------------------------------------------------------------
 
-func testAccGatewayTargetConfig_privateEndpointManagedVpc(rName string) string {
+func testAccGatewayTargetConfig_privateEndpointManagedVPC(rName string) string {
 	return acctest.ConfigCompose(
 		testAccGatewayTargetConfig_infra(rName),
 		testAccVPCConfig(rName),
