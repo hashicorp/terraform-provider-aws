@@ -68,6 +68,7 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"cpu": schema.StringAttribute{
