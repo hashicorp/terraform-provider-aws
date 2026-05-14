@@ -1,5 +1,17 @@
 ## 6.46.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_securityhub_automation_rule_v2` ([#47677](https://github.com/hashicorp/terraform-provider-aws/issues/47677))
+* **New Resource:** `aws_securityhub_automation_rule_v2` ([#47677](https://github.com/hashicorp/terraform-provider-aws/issues/47677))
+
+ENHANCEMENTS:
+
+* data-source/aws_opensearch_domain: Add `jwt_options` block to fix "Invalid address to set" error ([#47874](https://github.com/hashicorp/terraform-provider-aws/issues/47874))
+* resource/aws_bedrockagent_agent: Increase maximum value of `idle_session_ttl_in_seconds` from `3600` to `5400` to match the AWS API limit ([#47890](https://github.com/hashicorp/terraform-provider-aws/issues/47890))
+* resource/aws_cloudfront_distribution: Add `cache_tag_config` configuration block ([#47872](https://github.com/hashicorp/terraform-provider-aws/issues/47872))
+* resource/aws_vpclattice_resource_gateway: Add `resource_config_dns_resolution` argument ([#47879](https://github.com/hashicorp/terraform-provider-aws/issues/47879))
+
 ## 6.45.0 (May 13, 2026)
 
 FEATURES:
