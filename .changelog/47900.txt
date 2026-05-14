@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_acm_certificate: Add `created_at` and `issued_at` attributes
+```
+
+```release-note:enhancement
+data-source/aws_acm_certificate: Add `created_at` and `issued_at` attributes
+```
+
+```release-note:enhancement
+resource/aws_acm_certificate_validation: Add `issued_at` attribute
+```
