@@ -39,3 +39,9 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Portfolio name.
 * `provider_name` - Name of the person or organization who owns the portfolio.
 * `tags` - Tags applied to the portfolio.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `read` - (Default `20m`)

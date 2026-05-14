@@ -48,3 +48,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `description` - Description of the constraint.
 * `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `STACKSET`, and `TEMPLATE`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `read` - (Default `20m`)
