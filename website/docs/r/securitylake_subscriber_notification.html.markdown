@@ -68,5 +68,3 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `endpoint_id` - (**Deprecated**) The subscriber endpoint to which exception messages are posted.
 * `subscriber_endpoint` - The subscriber endpoint to which exception messages are posted.
-
-

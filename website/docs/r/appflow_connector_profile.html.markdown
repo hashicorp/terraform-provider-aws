@@ -263,6 +263,7 @@ This resource supports the following arguments:
 
 * `auth_code` - (Optional) Ucode provided by the connector when it has been authenticated via the connected app.
 * `redirect_uri` - (Optional) URL to which the authentication server redirects the browser after authorization has been granted.
+
 ### `connector_profile_properties` Block
 
 * `custom_connector` - (Optional) See [`custom_connector`](#connector_profile_properties-custom_connector-block) below.
@@ -363,6 +364,7 @@ This resource supports the following arguments:
 ### `connector_profile_properties` `zendesk` Block
 
 * `instance_url` - (Required) Location of the Zendesk resource.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:

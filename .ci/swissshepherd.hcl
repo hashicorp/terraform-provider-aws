@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 provider_source = "registry.terraform.io/hashicorp/aws"
 provider_dir    = "."
 schema_json     = "terraform-providers-schema/schema.json"
