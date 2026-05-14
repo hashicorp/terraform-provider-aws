@@ -398,8 +398,8 @@ The `s3_location` configuration block supports the following arguments:
 The `storage_configuration` configuration block supports the following arguments:
 
 * `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `MONGO_DB_ATLAS`, `OPENSEARCH_SERVERLESS`, `OPENSEARCH_MANAGED_CLUSTER`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`, `S3_VECTORS`, `NEPTUNE_ANALYTICS`.
-* `mongo_db_atlas_configuration` – (Optional) The storage configuration of the knowledge base in MongoDB Atlas. See [`mongo_db_atlas_configuration` block](#mongo_db_atlas_configuration-block) for details.
-* `neptune_analytics_configuration` – (Optional) The storage configuration of the knowledge base in Amazon Neptune Analytics. See [`neptune_analytics_configuration` block](#neptune_analytics_configuration-block) for details.
+* `mongo_db_atlas_configuration` - (Optional) The storage configuration of the knowledge base in MongoDB Atlas. See [`mongo_db_atlas_configuration` block](#mongo_db_atlas_configuration-block) for details.
+* `neptune_analytics_configuration` - (Optional) The storage configuration of the knowledge base in Amazon Neptune Analytics. See [`neptune_analytics_configuration` block](#neptune_analytics_configuration-block) for details.
 * `opensearch_managed_cluster_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Managed Cluster. See [`opensearch_managed_cluster_configuration` block](#opensearch_managed_cluster_configuration-block) for details.
 * `opensearch_serverless_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Serverless. See [`opensearch_serverless_configuration` block](#opensearch_serverless_configuration-block) for details.
 * `pinecone_configuration` - (Optional)  The storage configuration of the knowledge base in Pinecone. See [`pinecone_configuration` block](#pinecone_configuration-block) for details.
@@ -411,17 +411,17 @@ The `storage_configuration` configuration block supports the following arguments
 
 The `mongo_db_atlas_configuration` configuration block supports the following arguments:
 
-* `collection_name` – (Required) The name of the collection in the MongoDB Atlas database.
-* `credentials_secret_arn` – (Required) The ARN of the secret that you created in AWS Secrets Manager that is linked to your MongoDB Atlas database.
-* `database_name` – (Required) The name of the database in the MongoDB Atlas database.
-* `endpoint` – (Required) The endpoint URL of the MongoDB Atlas database.
-* `field_mapping` – (Required) Contains the names of the fields to which to map information about the vector store.
+* `collection_name` - (Required) The name of the collection in the MongoDB Atlas database.
+* `credentials_secret_arn` - (Required) The ARN of the secret that you created in AWS Secrets Manager that is linked to your MongoDB Atlas database.
+* `database_name` - (Required) The name of the database in the MongoDB Atlas database.
+* `endpoint` - (Required) The endpoint URL of the MongoDB Atlas database.
+* `field_mapping` - (Required) Contains the names of the fields to which to map information about the vector store.
     * `metadata_field` – (Required) The name of the field in which Amazon Bedrock stores metadata about the vector store.
     * `text_field` – (Required) The name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.
     * `vector_field` – (Required) The name of the field in which Amazon Bedrock stores the vector embeddings for your data sources.
-* `vector_index_name` – (Required) The name of the vector index.
-* `endpoint_service_name` – (Optional) The name of the service that hosts the MongoDB Atlas database.
-* `text_index_name` – (Optional) The name of the vector index.
+* `vector_index_name` - (Required) The name of the vector index.
+* `endpoint_service_name` - (Optional) The name of the service that hosts the MongoDB Atlas database.
+* `text_index_name` - (Optional) The name of the vector index.
 
 ### `neptune_analytics_configuration` block
 

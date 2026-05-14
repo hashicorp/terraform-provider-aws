@@ -66,6 +66,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-vpc-origins.html
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+* `update` - (Default `10m`)
+
 ## Import
 
 ```terraform
