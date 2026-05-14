@@ -2319,7 +2319,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				log.Println("[INFO] Only settings updating, instance changes will be applied in next maintenance window")
 			}
 
-			dbInstancePopulateModify(input, d)
+			_, di := dbInstancePopulateModify(input, d)
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
 
 			if d.HasChange(names.AttrEngineVersion) {
 				input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
@@ -2626,23 +2630,26 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		input.OptionGroupName = aws.String(d.Get("option_group_name").(string))
 	}
 
-	if d.HasChange(names.AttrPassword) {
+	// Handle changes to either `password` or `password_wo` (driven by `password_wo_version`).
+	// This unified handling also covers the migration from `password` to `password_wo` where
+	// the `password` attribute is removed in the same plan that introduces `password_wo` and
+	// `password_wo_version`.
+	if d.HasChange(names.AttrPassword) || d.HasChange("password_wo_version") {
 		needsModify = true
+
 		// With ManageMasterUserPassword set to true, the password is no longer needed, so we omit it from the API call.
 		if v, ok := d.GetOk(names.AttrPassword); ok {
 			input.MasterUserPassword = aws.String(v.(string))
-		}
-	}
+		} else {
+			passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return false, diags
+			}
 
-	if d.HasChange("password_wo_version") {
-		passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
-		diags = append(diags, di...)
-		if diags.HasError() {
-			return false, diags
-		}
-
-		if passwordWO != "" {
-			input.MasterUserPassword = aws.String(passwordWO)
+			if passwordWO != "" {
+				input.MasterUserPassword = aws.String(passwordWO)
+			}
 		}
 	}
 

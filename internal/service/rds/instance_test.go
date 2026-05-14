@@ -1029,6 +1029,52 @@ func TestAccRDSInstance_passwordWriteOnly(t *testing.T) {
 	})
 }
 
+// TestAccRDSInstance_passwordMigrationToWriteOnly verifies that migrating an
+// existing aws_db_instance from the plain `password` attribute to the
+// write-only `password_wo` + `password_wo_version` pair updates the master
+// user password in-place (without recreating the instance and without
+// silently clearing the password). Regression test for issue #42582.
+func TestAccRDSInstance_passwordMigrationToWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_passwordWriteOnly(rName, "valid-password-2", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "password_wo_version", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPassword),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
