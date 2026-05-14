@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_apigatewayv2_stage: default value of `default_route_settings.0.throttling_burst_limit` should be `null` 
+resource/aws_apigatewayv2_stage: default value of `default_route_settings.0.throttling_rate_limit` should be `null` 
+```
