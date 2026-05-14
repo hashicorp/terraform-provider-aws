@@ -125,6 +125,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `owning_project_id` - Owning project id of the Form Type.
 * `revision` - Revision of the Form Type.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Form Type using a comma separated value of DomainIdentifier,Name,Revision. For example:
