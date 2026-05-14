@@ -62,7 +62,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateVerify:                     true,
+				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 			},
@@ -251,7 +251,7 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateVerify:                     true,
+				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore:              []string{"model.0.bedrock_model_config.0.temperature", "model.0.bedrock_model_config.0.top_p"},
@@ -416,7 +416,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateVerify:                     true,
+				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 			},

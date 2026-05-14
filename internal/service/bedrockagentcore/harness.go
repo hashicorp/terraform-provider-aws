@@ -24,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -80,7 +80,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
-				Sensitive:   true,
+				Sensitive:  true,
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -1393,31 +1393,31 @@ func flattenHarnessToModel(ctx context.Context, harness *awstypes.Harness, data 
 
 type harnessResourceModel struct {
 	framework.WithRegionModel
-	AllowedTools            fwtypes.ListOfString                                                        `tfsdk:"allowed_tools"`
-	ARN                     types.String                                                                `tfsdk:"arn"`
-	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]               `tfsdk:"authorizer_configuration"`
-	CreatedAt               timetypes.RFC3339                                                           `tfsdk:"created_at"`
-	Environment             fwtypes.ListNestedObjectValueOf[harnessEnvironmentModel]                    `tfsdk:"environment"`
-	EnvironmentArtifact     fwtypes.ListNestedObjectValueOf[harnessEnvironmentArtifactModel]            `tfsdk:"environment_artifact"`
-	EnvironmentVariables    fwtypes.MapOfString                                                         `tfsdk:"environment_variables"`
-	ExecutionRoleARN        fwtypes.ARN                                                                 `tfsdk:"execution_role_arn"`
-	FailureReason           types.String                                                                `tfsdk:"failure_reason"`
-	HarnessID               types.String                                                                `tfsdk:"harness_id"`
-	HarnessName             types.String                                                                `tfsdk:"harness_name"`
-	MaxIterations           types.Int32                                                                 `tfsdk:"max_iterations"`
-	MaxTokens               types.Int32                                                                 `tfsdk:"max_tokens"`
-	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]            `tfsdk:"memory"`
-	Model                   fwtypes.ListNestedObjectValueOf[harnessModelConfigurationModel]             `tfsdk:"model"`
-	Skills                  fwtypes.ListNestedObjectValueOf[harnessSkillModel]                          `tfsdk:"skill"`
-	Status                  types.String                                                                `tfsdk:"status"`
-	SystemPrompt            fwtypes.ListNestedObjectValueOf[harnessSystemContentBlockModel]             `tfsdk:"system_prompt"`
-	Tags                    tftags.Map                                                                  `tfsdk:"tags"`
-	TagsAll                 tftags.Map                                                                  `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value                                                              `tfsdk:"timeouts"`
-	TimeoutSeconds          types.Int32                                                                 `tfsdk:"timeout_seconds"`
-	Tools                   fwtypes.ListNestedObjectValueOf[harnessToolModel]                           `tfsdk:"tool"`
-	Truncation              fwtypes.ListNestedObjectValueOf[harnessTruncationConfigurationModel]        `tfsdk:"truncation"`
-	UpdatedAt               timetypes.RFC3339                                                           `tfsdk:"updated_at"`
+	AllowedTools            fwtypes.ListOfString                                                 `tfsdk:"allowed_tools"`
+	ARN                     types.String                                                         `tfsdk:"arn"`
+	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]        `tfsdk:"authorizer_configuration"`
+	CreatedAt               timetypes.RFC3339                                                    `tfsdk:"created_at"`
+	Environment             fwtypes.ListNestedObjectValueOf[harnessEnvironmentModel]             `tfsdk:"environment"`
+	EnvironmentArtifact     fwtypes.ListNestedObjectValueOf[harnessEnvironmentArtifactModel]     `tfsdk:"environment_artifact"`
+	EnvironmentVariables    fwtypes.MapOfString                                                  `tfsdk:"environment_variables"`
+	ExecutionRoleARN        fwtypes.ARN                                                          `tfsdk:"execution_role_arn"`
+	FailureReason           types.String                                                         `tfsdk:"failure_reason"`
+	HarnessID               types.String                                                         `tfsdk:"harness_id"`
+	HarnessName             types.String                                                         `tfsdk:"harness_name"`
+	MaxIterations           types.Int32                                                          `tfsdk:"max_iterations"`
+	MaxTokens               types.Int32                                                          `tfsdk:"max_tokens"`
+	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory"`
+	Model                   fwtypes.ListNestedObjectValueOf[harnessModelConfigurationModel]      `tfsdk:"model"`
+	Skills                  fwtypes.ListNestedObjectValueOf[harnessSkillModel]                   `tfsdk:"skill"`
+	Status                  types.String                                                         `tfsdk:"status"`
+	SystemPrompt            fwtypes.ListNestedObjectValueOf[harnessSystemContentBlockModel]      `tfsdk:"system_prompt"`
+	Tags                    tftags.Map                                                           `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                           `tfsdk:"tags_all"`
+	Timeouts                timeouts.Value                                                       `tfsdk:"timeouts"`
+	TimeoutSeconds          types.Int32                                                          `tfsdk:"timeout_seconds"`
+	Tools                   fwtypes.ListNestedObjectValueOf[harnessToolModel]                    `tfsdk:"tool"`
+	Truncation              fwtypes.ListNestedObjectValueOf[harnessTruncationConfigurationModel] `tfsdk:"truncation"`
+	UpdatedAt               timetypes.RFC3339                                                    `tfsdk:"updated_at"`
 }
 
 // Model configuration union.
@@ -1772,7 +1772,7 @@ func (m harnessToolConfigurationModel) Expand(ctx context.Context) (any, diag.Di
 }
 
 type harnessRemoteMcpConfigModel struct {
-	URL     types.String    `tfsdk:"url"`
+	URL     types.String        `tfsdk:"url"`
 	Headers fwtypes.MapOfString `tfsdk:"headers"`
 }
 
@@ -1785,7 +1785,7 @@ type harnessAgentCoreCodeInterpreterConfigModel struct {
 }
 
 type harnessAgentCoreGatewayConfigModel struct {
-	GatewayARN   fwtypes.ARN                                                         `tfsdk:"gateway_arn"`
+	GatewayARN   fwtypes.ARN                                                      `tfsdk:"gateway_arn"`
 	OutboundAuth fwtypes.ListNestedObjectValueOf[harnessGatewayOutboundAuthModel] `tfsdk:"outbound_auth"`
 }
 
@@ -1797,8 +1797,8 @@ type harnessInlineFunctionConfigModel struct {
 // Gateway outbound auth union.
 
 type harnessGatewayOutboundAuthModel struct {
-	AwsIam types.Bool                                                     `tfsdk:"aws_iam"`
-	None   types.Bool                                                     `tfsdk:"none"`
+	AwsIam types.Bool                                                           `tfsdk:"aws_iam"`
+	None   types.Bool                                                           `tfsdk:"none"`
 	OAuth  fwtypes.ListNestedObjectValueOf[harnessOAuthCredentialProviderModel] `tfsdk:"oauth"`
 }
 
@@ -1850,17 +1850,17 @@ func (m harnessGatewayOutboundAuthModel) Expand(ctx context.Context) (any, diag.
 }
 
 type harnessOAuthCredentialProviderModel struct {
-	ProviderARN      types.String                              `tfsdk:"provider_arn"`
-	Scopes           fwtypes.ListOfString                      `tfsdk:"scopes"`
-	CustomParameters fwtypes.MapOfString                       `tfsdk:"custom_parameters"`
+	ProviderARN      types.String                                `tfsdk:"provider_arn"`
+	Scopes           fwtypes.ListOfString                        `tfsdk:"scopes"`
+	CustomParameters fwtypes.MapOfString                         `tfsdk:"custom_parameters"`
 	GrantType        fwtypes.StringEnum[awstypes.OAuthGrantType] `tfsdk:"grant_type"`
-	DefaultReturnURL types.String                              `tfsdk:"default_return_url"`
+	DefaultReturnURL types.String                                `tfsdk:"default_return_url"`
 }
 
 // Truncation configuration.
 
 type harnessTruncationConfigurationModel struct {
-	Strategy fwtypes.StringEnum[awstypes.HarnessTruncationStrategy]                          `tfsdk:"strategy"`
+	Strategy fwtypes.StringEnum[awstypes.HarnessTruncationStrategy]                       `tfsdk:"strategy"`
 	Config   fwtypes.ListNestedObjectValueOf[harnessTruncationStrategyConfigurationModel] `tfsdk:"config"`
 }
 
@@ -1899,7 +1899,7 @@ func (m harnessTruncationConfigurationModel) Expand(ctx context.Context) (*awsty
 // Truncation strategy configuration union.
 
 type harnessTruncationStrategyConfigurationModel struct {
-	SlidingWindow fwtypes.ListNestedObjectValueOf[harnessSlidingWindowConfigModel]  `tfsdk:"sliding_window"`
+	SlidingWindow fwtypes.ListNestedObjectValueOf[harnessSlidingWindowConfigModel] `tfsdk:"sliding_window"`
 	Summarization fwtypes.ListNestedObjectValueOf[harnessSummarizationConfigModel] `tfsdk:"summarization"`
 }
 
@@ -2061,12 +2061,12 @@ func (m harnessEnvironmentModel) ExpandRequest(ctx context.Context) (awstypes.Ha
 }
 
 type harnessAgentCoreRuntimeEnvironmentModel struct {
-	AgentRuntimeARN          types.String                                                              `tfsdk:"agent_runtime_arn"`
-	AgentRuntimeID           types.String                                                              `tfsdk:"agent_runtime_id"`
-	AgentRuntimeName         types.String                                                              `tfsdk:"agent_runtime_name"`
-	FilesystemConfigurations fwtypes.ListNestedObjectValueOf[harnessFilesystemConfigurationModel]  `tfsdk:"filesystem_configuration"`
-	LifecycleConfiguration   fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]              `tfsdk:"lifecycle_configuration"`
-	NetworkConfiguration     fwtypes.ListNestedObjectValueOf[networkConfigurationModel]                `tfsdk:"network_configuration"`
+	AgentRuntimeARN          types.String                                                         `tfsdk:"agent_runtime_arn"`
+	AgentRuntimeID           types.String                                                         `tfsdk:"agent_runtime_id"`
+	AgentRuntimeName         types.String                                                         `tfsdk:"agent_runtime_name"`
+	FilesystemConfigurations fwtypes.ListNestedObjectValueOf[harnessFilesystemConfigurationModel] `tfsdk:"filesystem_configuration"`
+	LifecycleConfiguration   fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]         `tfsdk:"lifecycle_configuration"`
+	NetworkConfiguration     fwtypes.ListNestedObjectValueOf[networkConfigurationModel]           `tfsdk:"network_configuration"`
 }
 
 // Filesystem configuration union.
@@ -2250,9 +2250,9 @@ func (m harnessMemoryConfigurationModel) Expand(ctx context.Context) (any, diag.
 }
 
 type harnessAgentCoreMemoryConfigModel struct {
-	ARN             fwtypes.ARN                                                                `tfsdk:"arn"`
-	ActorID         types.String                                                               `tfsdk:"actor_id"`
-	MessagesCount   types.Int32                                                                `tfsdk:"messages_count"`
+	ARN             fwtypes.ARN                                                             `tfsdk:"arn"`
+	ActorID         types.String                                                            `tfsdk:"actor_id"`
+	MessagesCount   types.Int32                                                             `tfsdk:"messages_count"`
 	RetrievalConfig fwtypes.ListNestedObjectValueOf[harnessMemoryRetrievalConfigEntryModel] `tfsdk:"retrieval_config"`
 }
 
