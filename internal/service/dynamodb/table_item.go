@@ -35,6 +35,10 @@ func resourceTableItem() *schema.Resource {
 		UpdateWithoutTimeout: resourceTableItemUpdate,
 		DeleteWithoutTimeout: resourceTableItemDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceTableItemImportState,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"hash_key": {
 				Type:     schema.TypeString,
@@ -309,4 +313,100 @@ func expandTableItemQueryKey(attrs map[string]awstypes.AttributeValue, hashKey, 
 	}
 
 	return queryKey
+}
+
+func createTableItemKeyAttr(attrTypes map[string]awstypes.ScalarAttributeType, name, value string) (awstypes.AttributeValue, error) {
+	attrType, ok := attrTypes[name]
+	if !ok {
+		return nil, fmt.Errorf("key %s not found in attribute definitions", name)
+	}
+	switch attrType {
+	case awstypes.ScalarAttributeTypeS:
+		return &awstypes.AttributeValueMemberS{Value: value}, nil
+	case awstypes.ScalarAttributeTypeN:
+		return &awstypes.AttributeValueMemberN{Value: value}, nil
+	case awstypes.ScalarAttributeTypeB:
+		data, err := itypes.Base64Decode(value)
+		if err != nil {
+			return nil, fmt.Errorf("invalid base64 value for binary attribute %s: %s", name, err)
+		}
+		return &awstypes.AttributeValueMemberB{Value: data}, nil
+	default:
+		return nil, fmt.Errorf("unsupported attribute type: %s", attrType)
+	}
+}
+
+func resourceTableItemImportState(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+
+	idParts := strings.Split(d.Id(), "|")
+	if len(idParts) < 3 || len(idParts) > 4 {
+		return nil, fmt.Errorf("unexpected format for import ID (%s), expected tableName|hashKeyName|hashKeyValue[|rangeKeyValue]", d.Id())
+	}
+
+	tableName := idParts[0]
+	hashKey := idParts[1]
+	hashValue := idParts[2]
+	var rangeValue string
+	if len(idParts) == 4 {
+		rangeValue = idParts[3]
+	}
+
+	output, err := conn.DescribeTable(ctx, &dynamodb.DescribeTableInput{
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("describing table %s: %s", tableName, err)
+	}
+
+	var rangeKey string
+	if rangeValue != "" {
+		var found bool
+		for _, elem := range output.Table.KeySchema {
+			if aws.ToString(elem.AttributeName) != hashKey && elem.KeyType == awstypes.KeyTypeRange {
+				rangeKey = aws.ToString(elem.AttributeName)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("import ID contains range key value but table %s does not have a range key", tableName)
+		}
+	}
+
+	attrTypes := map[string]awstypes.ScalarAttributeType{}
+	for _, v := range output.Table.AttributeDefinitions {
+		attrTypes[aws.ToString(v.AttributeName)] = v.AttributeType
+	}
+
+	key := map[string]awstypes.AttributeValue{}
+	key[hashKey], err = createTableItemKeyAttr(attrTypes, hashKey, hashValue)
+	if err != nil {
+		return nil, err
+	}
+	if rangeValue != "" {
+		key[rangeKey], err = createTableItemKeyAttr(attrTypes, rangeKey, rangeValue)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	item, err := findTableItemByTwoPartKey(ctx, conn, tableName, key)
+	if err != nil {
+		return nil, fmt.Errorf("reading DynamoDB Table Item: %s: %s", d.Id(), err)
+	}
+	itemAttrs, err := flattenTableItemAttributes(item)
+	if err != nil {
+		return nil, fmt.Errorf("flattening item attributes: %s", err)
+	}
+
+	d.Set(names.AttrTableName, tableName)
+	d.Set("hash_key", hashKey)
+	if rangeKey != "" {
+		d.Set("range_key", rangeKey)
+	}
+	d.Set("item", itemAttrs)
+	d.SetId(tableItemCreateResourceID(tableName, hashKey, rangeKey, item))
+
+	return []*schema.ResourceData{d}, nil
 }
