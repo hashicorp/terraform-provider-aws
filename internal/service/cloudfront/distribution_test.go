@@ -40,6 +40,7 @@ func TestAccCloudFrontDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.response_completion_timeout", "0"),
 					resource.TestCheckResourceAttr(resourceName, "logging_v1_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "0"),
 				),
 			},
 			{
@@ -1938,6 +1939,55 @@ func TestAccCloudFrontDistribution_viewerMtlsConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_cacheTagConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_cacheTagConfig(false, false, "x-amz-meta-cache-tag1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.0.header_name", "x-amz-meta-cache-tag1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				// Update cache_tag_config.header_name
+				Config: testAccDistributionConfig_cacheTagConfig(false, false, "x-amz-meta-cache-tag2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.0.header_name", "x-amz-meta-cache-tag2"),
+				),
+			},
+			{
+				// Remove cache_tag_config block
+				Config: testAccDistributionConfig_enabled(false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "0"),
 				),
 			},
 		},
@@ -5738,4 +5788,54 @@ resource "aws_cloudfront_distribution" "test" {
 
 }
 `)
+}
+
+func testAccDistributionConfig_cacheTagConfig(enabled, retainOnDelete bool, cacheTagConfigHeaderName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = %[1]t
+  retain_on_delete = %[2]t
+
+  cache_tag_config {
+    header_name = %[3]q
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, enabled, retainOnDelete, cacheTagConfigHeaderName)
 }

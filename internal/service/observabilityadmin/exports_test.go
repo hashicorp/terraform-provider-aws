@@ -10,10 +10,12 @@ var (
 	ResourceTelemetryEvaluation                = newTelemetryEvaluationResource
 	ResourceTelemetryEvaluationForOrganization = newTelemetryEvaluationForOrganizationResource
 	ResourceTelemetryPipeline                  = newTelemetryPipelineResource
+	ResourceTelemetryRule                      = newTelemetryRuleResource
 
 	FindCentralizationRuleForOrganizationByID = findCentralizationRuleForOrganizationByID
 	FindTelemetryEnrichment                   = findTelemetryEnrichment
 	FindTelemetryEvaluation                   = findTelemetryEvaluation
 	FindTelemetryEvaluationForOrganization    = findTelemetryEvaluationForOrganization
 	FindTelemetryPipelineByARN                = findTelemetryPipelineByARN
+	FindTelemetryRuleByName                   = findTelemetryRuleByName
 )

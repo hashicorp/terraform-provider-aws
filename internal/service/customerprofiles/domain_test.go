@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcustomerprofiles "github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCustomerProfilesDomain_basic(t *testing.T) {
@@ -22,6 +23,7 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -55,6 +57,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -158,6 +161,7 @@ func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -202,6 +206,7 @@ func TestAccCustomerProfilesDomain_disappears(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{

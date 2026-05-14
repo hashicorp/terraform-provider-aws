@@ -1,0 +1,22 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: testcase-missing-precheck
+    languages: [go]
+    message: "All acceptance tests must include a PreCheck in the resource.TestCase"
+    severity: ERROR
+    patterns:
+      - pattern: |
+          resource.TestCase{
+            ...,
+          }
+      - pattern-not: |
+          resource.TestCase{
+            ...,
+            PreCheck: $PRECHECK,
+            ...,
+          }
+    paths:
+      include:
+        - "internal/service/**/*_test.go"

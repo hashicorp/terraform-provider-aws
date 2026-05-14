@@ -239,12 +239,17 @@ The following arguments are optional:
 
 * `s3_configuration` - (Required) Configuration for S3 bucket log delivery.
 
+#### `maintenance_schedule`
+
+* `preferred_maintenance_window` - (Required) Preferred maintenance window in the format `ddd:HH:MM-ddd:HH:MM`. Day must be one of `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, or `Sun`. Provide an empty string to let the system choose a window.
+* `timezone` - (Required) IANA timezone identifier for the maintenance window. For example, `America/New_York` or `UTC`.
+
 #### `s3_configuration`
 
 * `bucket_name` - (Required) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Indicates whether log delivery to the S3 bucket is enabled.
 
-**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `port`, `deployment_type`, `db_instance_type`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
+**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `deployment_type`, `db_instance_type`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
 
 ## Attribute Reference
 
