@@ -108,6 +108,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the connector.
 * `connector_id`  - The unique identifier for the AS2 profile or SFTP Profile.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+* `update` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer AS2 Connector using the `connector_id`. For example:
