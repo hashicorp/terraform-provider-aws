@@ -20,7 +20,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodePipelineWebhook_basic(t *testing.T) {
+// Webhook tests share the same GitHub OAuth token and target the same
+// external repo (lifesum-terraform/test).
+func TestAccCodePipelineWebhook_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:                    testAccWebhook_basic,
+		"ipAuth":                           testAccWebhook_ipAuth,
+		"unauthenticated":                  testAccWebhook_unauthenticated,
+		"tags":                             testAccWebhook_tags,
+		acctest.CtDisappears:               testAccWebhook_disappears,
+		"UpdateAuthentication_secretToken": testAccWebhook_UpdateAuthentication_secretToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccWebhook_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	ghToken := acctest.SkipIfEnvVarNotSet(t, envvar.GithubToken)
 	var v types.ListWebhookItem
@@ -90,7 +107,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 	})
 }
 
-func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
+func testAccWebhook_ipAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	ghToken := acctest.SkipIfEnvVarNotSet(t, envvar.GithubToken)
 	var v types.ListWebhookItem
@@ -125,7 +142,7 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 	})
 }
 
-func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
+func testAccWebhook_unauthenticated(t *testing.T) {
 	ctx := acctest.Context(t)
 	ghToken := acctest.SkipIfEnvVarNotSet(t, envvar.GithubToken)
 	var v types.ListWebhookItem
@@ -158,7 +175,7 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 	})
 }
 
-func TestAccCodePipelineWebhook_tags(t *testing.T) {
+func testAccWebhook_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	ghToken := acctest.SkipIfEnvVarNotSet(t, envvar.GithubToken)
 	var v types.ListWebhookItem
@@ -208,7 +225,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 	})
 }
 
-func TestAccCodePipelineWebhook_disappears(t *testing.T) {
+func testAccWebhook_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	ghToken := acctest.SkipIfEnvVarNotSet(t, envvar.GithubToken)
 	var v types.ListWebhookItem
@@ -236,7 +253,7 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
+func testAccWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	ghToken := acctest.SkipIfEnvVarNotSet(t, envvar.GithubToken)
 	var v1, v2 types.ListWebhookItem

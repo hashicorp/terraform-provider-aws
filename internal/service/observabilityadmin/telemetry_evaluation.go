@@ -5,8 +5,10 @@ package observabilityadmin
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -219,6 +221,7 @@ func waitTelemetryEvaluationRunning(ctx context.Context, conn *observabilityadmi
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*observabilityadmin.GetTelemetryEvaluationStatusOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, err
 	}
 
@@ -235,6 +238,7 @@ func waitTelemetryEvaluationStopped(ctx context.Context, conn *observabilityadmi
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*observabilityadmin.GetTelemetryEvaluationStatusOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, err
 	}
 

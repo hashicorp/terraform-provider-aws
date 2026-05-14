@@ -28,12 +28,12 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"featureDefinition_collectionType":   testAccFeatureGroup_featureDefinition_collectionType,
 		"featureDefinition_collectionConfig": testAccFeatureGroup_featureDefinition_collectionConfig,
 		"description":                        testAccFeatureGroup_description,
-		acctest.CtDisappears:                 TestAccSageMakerFeatureGroup_disappears,
+		acctest.CtDisappears:                 testAccFeatureGroup_disappears,
 		"multipleFeatures":                   testAccFeatureGroup_multipleFeatures,
 		"offlineConfig_basic":                testAccFeatureGroup_offlineConfig_basic,
 		"offlineConfig_format":               testAccFeatureGroup_offlineConfig_format,
 		"offlineConfig_createCatalog":        testAccFeatureGroup_offlineConfig_createCatalog,
-		"offlineConfig_providedCatalog":      TestAccSageMakerFeatureGroup_Offline_providedCatalog,
+		"offlineConfig_providedCatalog":      testAccFeatureGroup_Offline_providedCatalog,
 		"onlineConfigSecurityConfig":         testAccFeatureGroup_onlineConfigSecurityConfig,
 		"onlineConfig_TTLDuration":           testAccFeatureGroup_onlineConfigTTLDuration,
 		"throughputConfig":                   testAccFeatureGroup_throughputConfig,
@@ -407,7 +407,7 @@ func testAccFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerFeatureGroup_Offline_providedCatalog(t *testing.T) {
+func testAccFeatureGroup_Offline_providedCatalog(t *testing.T) {
 	ctx := acctest.Context(t)
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -556,7 +556,7 @@ func testAccFeatureGroup_featureDefinition_collectionConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerFeatureGroup_disappears(t *testing.T) {
+func testAccFeatureGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

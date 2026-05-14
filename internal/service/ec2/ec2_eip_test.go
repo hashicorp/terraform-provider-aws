@@ -652,7 +652,20 @@ func TestAccEC2EIP_BYOIPAddress_default(t *testing.T) {
 	})
 }
 
-func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
+// BYOIP tests share the same IP address from AWS_EC2_EIP_BYOIP_ADDRESS.
+// Only one EIP allocation can hold a given address at a time.
+func TestAccEC2EIP_BYOIPAddress_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"custom":                   testAccEIP_BYOIPAddress_custom,
+		"customWithPublicIPv4Pool": testAccEIP_BYOIPAddress_customWithPublicIPv4Pool,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccEIP_BYOIPAddress_custom(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := "AWS_EC2_EIP_BYOIP_ADDRESS"
 	address := os.Getenv(key)
@@ -681,7 +694,7 @@ func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
 	})
 }
 
-func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
+func testAccEIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := "AWS_EC2_EIP_BYOIP_ADDRESS"
 	address := os.Getenv(key)

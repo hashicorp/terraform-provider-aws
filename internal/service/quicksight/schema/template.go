@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -133,7 +134,7 @@ func (x attrHandling) isComputed() bool {
 	return x&attrComputed != 0
 }
 
-var arnStringSchemaCache syncMap[attrHandling, *schema.Schema]
+var arnStringSchemaCache tfsync.Map[attrHandling, *schema.Schema]
 
 func arnStringSchema(handling attrHandling) *schema.Schema {
 	if handling == attrComputed {
@@ -164,7 +165,7 @@ func arnStringDataSourceSchema() *schema.Schema {
 	return arnStringSchema(attrComputed)
 }
 
-var utcTimestampStringSchemaCache syncMap[attrHandling, *schema.Schema]
+var utcTimestampStringSchemaCache tfsync.Map[attrHandling, *schema.Schema]
 
 func utcTimestampStringSchema(handling attrHandling) *schema.Schema {
 	s, ok := utcTimestampStringSchemaCache.Load(handling)
@@ -192,7 +193,7 @@ type stringLenBetweenIdentity struct {
 	min, max int
 }
 
-var stringLenBetweenSchemaCache syncMap[stringLenBetweenIdentity, *schema.Schema]
+var stringLenBetweenSchemaCache tfsync.Map[stringLenBetweenIdentity, *schema.Schema]
 
 func stringLenBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
 	if handling == attrComputed {
@@ -230,7 +231,7 @@ type stringMatchIdentity struct {
 	re, message string
 }
 
-var stringMatchSchemaCache syncMap[stringMatchIdentity, *schema.Schema]
+var stringMatchSchemaCache tfsync.Map[stringMatchIdentity, *schema.Schema]
 
 func stringMatchSchema(handling attrHandling, re, message string) *schema.Schema {
 	if handling == attrComputed {
@@ -268,7 +269,7 @@ type stringEnumIdentity struct {
 	typ      reflect.Type
 }
 
-var stringEnumSchemaCache syncMap[stringEnumIdentity, *schema.Schema]
+var stringEnumSchemaCache tfsync.Map[stringEnumIdentity, *schema.Schema]
 
 func stringEnumSchema[T enum.Valueser[T]](handling attrHandling) *schema.Schema {
 	if handling == attrComputed {
@@ -332,31 +333,12 @@ var floatComputedOnly = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-// syncMap is a type-safe wrapper around `sync.Map`
-type syncMap[K comparable, V any] struct {
-	m sync.Map
-}
-
-func (m *syncMap[K, V]) Load(k K) (V, bool) {
-	if a, b := m.m.Load(k); b {
-		return a.(V), true
-	} else {
-		var zero V
-		return zero, false
-	}
-}
-
-func (m *syncMap[K, V]) LoadOrStore(k K, v V) (V, bool) {
-	a, b := m.m.LoadOrStore(k, v)
-	return a.(V), b
-}
-
 type intBetweenIdentity struct {
 	handling attrHandling
 	min, max int
 }
 
-var intBetweenSchemaCache syncMap[intBetweenIdentity, *schema.Schema]
+var intBetweenSchemaCache tfsync.Map[intBetweenIdentity, *schema.Schema]
 
 func intBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
 	id := intBetweenIdentity{
@@ -417,7 +399,7 @@ type floatBetweenIdentity struct {
 	min, max float64
 }
 
-var floatBetweenSchemaCache syncMap[floatBetweenIdentity, *schema.Schema]
+var floatBetweenSchemaCache tfsync.Map[floatBetweenIdentity, *schema.Schema]
 
 func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema {
 	id := floatBetweenIdentity{
@@ -446,7 +428,7 @@ func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema 
 	return s
 }
 
-var aggregationFunctionSchemaCache syncMap[bool, *schema.Schema]
+var aggregationFunctionSchemaCache tfsync.Map[bool, *schema.Schema]
 
 func aggregationFunctionSchema(required bool) *schema.Schema {
 	s, ok := aggregationFunctionSchemaCache.Load(required)
@@ -520,7 +502,7 @@ var calculatedFieldsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-var numericalAggregationFunctionSchemaCache syncMap[bool, *schema.Schema]
+var numericalAggregationFunctionSchemaCache tfsync.Map[bool, *schema.Schema]
 
 func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 	s, ok := numericalAggregationFunctionSchemaCache.Load(required)
@@ -598,7 +580,7 @@ var idDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-var columnSchemaCache syncMap[bool, *schema.Schema]
+var columnSchemaCache tfsync.Map[bool, *schema.Schema]
 
 func columnSchema(required bool) *schema.Schema {
 	s, ok := columnSchemaCache.Load(required)
