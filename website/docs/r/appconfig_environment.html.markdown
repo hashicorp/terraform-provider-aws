@@ -49,9 +49,9 @@ This resource supports the following arguments:
 * `monitor` - (Optional) Set of Amazon CloudWatch alarms to monitor during the deployment process. Maximum of 5. See [Monitor](#monitor) below for more details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Monitor
+### `monitor` Block
 
-The `monitor` block supports the following:
+The `monitor` block supports the following arguments:
 
 * `alarm_arn` - (Required) ARN of the Amazon CloudWatch alarm.
 * `alarm_role_arn` - (Optional) ARN of an IAM role for AWS AppConfig to monitor `alarm_arn`.

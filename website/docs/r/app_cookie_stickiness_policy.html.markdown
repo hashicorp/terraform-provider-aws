@@ -39,11 +39,8 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the stickiness policy.
-* `load_balancer` - (Required) Name of load balancer to which the policy
-  should be attached.
-* `lb_port` - (Required) Load balancer port to which the policy
-  should be applied. This must be an active listener on the load
-balancer.
+* `load_balancer` - (Required) Name of load balancer to which the policy should be attached.
+* `lb_port` - (Required) Load balancer port to which the policy should be applied. This must be an active listener on the load balancer.
 * `cookie_name` - (Required) Application cookie whose lifetime the ELB's cookie should follow.
 
 ## Attribute Reference

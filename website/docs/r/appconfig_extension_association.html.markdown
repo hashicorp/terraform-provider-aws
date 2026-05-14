@@ -64,9 +64,9 @@ resource "aws_appconfig_extension_association" "test" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `extension_arn` - (Required) The ARN of the extension defined in the association.
-* `resource_arn` - (Optional) The ARN of the application, configuration profile, or environment to associate with the extension.
-* `parameters` - (Optional) The parameter names and values defined for the association.
+* `extension_arn` - (Required) ARN of the extension defined in the association.
+* `resource_arn` - (Optional) ARN of the application, configuration profile, or environment to associate with the extension.
+* `parameters` - (Optional) Parameter names and values defined for the association.
 
 ## Attribute Reference
 
@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the AppConfig Extension Association.
 * `id` - AppConfig Extension Association ID.
-* `extension_version` - The version number for the extension defined in the association.
+* `extension_version` - Version number for the extension defined in the association.
 
 ## Import
 
