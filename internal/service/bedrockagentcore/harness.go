@@ -126,7 +126,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
-			"environment": schema.ListNestedBlock{
+			names.AttrEnvironment: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),

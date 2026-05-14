@@ -366,13 +366,13 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_environmentVariables(rName, "KEY1", "value1"),
+				Config: testAccHarnessConfig_environmentVariables(rName, "KEY1", acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
 			},
 			{
-				Config: testAccHarnessConfig_environmentVariables(rName, "KEY2", "value2"),
+				Config: testAccHarnessConfig_environmentVariables(rName, "KEY2", acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
