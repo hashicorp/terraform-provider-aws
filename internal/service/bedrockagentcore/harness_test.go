@@ -741,7 +741,7 @@ resource "aws_bedrockagentcore_harness" "test" {
 
     config {
       inline_function {
-        description  = "Gets the weather for a given location"
+        description = "Gets the weather for a given location"
         input_schema = jsonencode({
           type = "object"
           properties = {
