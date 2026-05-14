@@ -683,6 +683,142 @@ func TestAccElastiCacheServerlessCache_valkeyMajorEngineVersion(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheServerlessCache_modifyMultipleParameters_redis(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var v awstypes.ServerlessCache
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_majorEngineVersion(rName, tfelasticache.EngineRedis, "7"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
+					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccServerlessCacheConfig_modifyMultipleParameters(rName, tfelasticache.EngineRedis, "7", "test description", 15, 20, 5000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
+					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "15"),
+					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.maximum", "20"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.unit", "GB"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.ecpu_per_second.0.maximum", "5000"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccServerlessCacheConfig_modifyMultipleParameters(rName, tfelasticache.EngineRedis, "7", "test description updated", 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
+					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description updated"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "5"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheServerlessCache_modifyMultipleParameters_valkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var v awstypes.ServerlessCache
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_majorEngineVersion(rName, tfelasticache.EngineValkey, "7"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccServerlessCacheConfig_modifyMultipleParameters(rName, tfelasticache.EngineValkey, "7", "test description", 15, 20, 5000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "15"),
+					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.maximum", "20"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.unit", "GB"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.ecpu_per_second.0.maximum", "5000"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccServerlessCacheConfig_modifyMultipleParameters(rName, tfelasticache.EngineValkey, "7", "test description updated", 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description updated"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "5"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1193,4 +1329,39 @@ resource "aws_elasticache_serverless_cache" "test" {
 %[2]s
 }
 `, rName, tags)
+}
+
+func testAccServerlessCacheConfig_modifyMultipleParameters(rName, engine, majorEngineVersion, description string, snapshotRetention int, cacheUsageLimitOpts ...int) string {
+	dataStorageMax := 0
+	ecpuPerSecMax := 0
+
+	if len(cacheUsageLimitOpts) == 2 {
+		dataStorageMax = cacheUsageLimitOpts[0]
+		ecpuPerSecMax = cacheUsageLimitOpts[1]
+	}
+
+	cacheUsageLimits := ""
+	if dataStorageMax > 0 && ecpuPerSecMax > 0 {
+		cacheUsageLimits = fmt.Sprintf(`
+  cache_usage_limits {
+    data_storage {
+      maximum = %d
+      unit    = "GB"
+    }
+    ecpu_per_second {
+      maximum = %d
+    }
+  }`, dataStorageMax, ecpuPerSecMax)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  name                     = %[1]q
+  engine                   = %[2]q
+  major_engine_version 	   = %[3]q
+  description 		       = %[4]q 
+  snapshot_retention_limit = %[5]d
+  %[6]s
+}
+`, rName, engine, majorEngineVersion, description, snapshotRetention, cacheUsageLimits)
 }
