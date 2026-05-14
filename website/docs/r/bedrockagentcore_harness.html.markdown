@@ -135,6 +135,7 @@ The following arguments are optional:
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
 * `max_tokens` - (Optional) Maximum number of tokens in the model response.
 * `memory` - (Optional) Memory configuration. See [`memory`](#memory) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skill` - (Optional) Skill configurations. See [`skill`](#skill) below.
 * `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt`](#system_prompt) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
