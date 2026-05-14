@@ -296,7 +296,7 @@ This configuration block supports the following arguments:
 * `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metric_stat`, but not both.
 * `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
-##### metric_stat
+##### `metrics` `metric_stat` Block
 
 This configuration block supports the following arguments:
 
@@ -305,7 +305,7 @@ This configuration block supports the following arguments:
 * `stat` - (Required) Statistic of the metrics to return.
 * `unit` - (Optional) Unit of the metrics to return.
 
-##### metric
+##### `metrics` `metric` Block
 
 This configuration block supports the following arguments:
 
@@ -313,7 +313,7 @@ This configuration block supports the following arguments:
 * `metric_name` - (Required) Name of the metric.
 * `namespace` - (Required) Namespace of the metric.
 
-###### dimensions
+##### `metrics` `dimensions` Block
 
 This configuration block supports the following arguments:
 
@@ -390,7 +390,7 @@ This configuration block supports the following arguments:
 * `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
 * `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
-##### metric_stat
+##### `metric_data_queries` `metric_stat` Block
 
 This configuration block supports the following arguments:
 
@@ -398,7 +398,7 @@ This configuration block supports the following arguments:
 * `stat` - (Required) Statistic of the metrics to return.
 * `unit` - (Optional) Unit of the metrics to return.
 
-##### metric
+##### `metric_data_queries` `metric` Block
 
 This configuration block supports the following arguments:
 
@@ -406,7 +406,7 @@ This configuration block supports the following arguments:
 * `metric_name` - (Required) Name of the metric.
 * `namespace` - (Required) Namespace of the metric.
 
-##### dimensions
+##### `metric_data_queries` `dimensions` Block
 
 This configuration block supports the following arguments:
 

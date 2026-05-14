@@ -121,22 +121,22 @@ The following arguments are optional:
 
 The `event_config` block supports the following:
 
-* `auth_provider` - (Required) List of authentication providers. See [Auth Providers](#auth-providers) below.
-* `connection_auth_mode` - (Required) List of authentication modes for connections. See [Auth Modes](#auth-modes) below.
-* `default_publish_auth_mode` - (Required) List of default authentication modes for publishing. See [Auth Modes](#auth-modes) below.
-* `default_subscribe_auth_mode` - (Required) List of default authentication modes for subscribing. See [Auth Modes](#auth-modes) below.
-* `log_config` - (Optional) Logging configuration. See [Log Config](#log-config) below.
+* `auth_provider` - (Required) List of authentication providers. See [`auth_provider`](#auth_provider) below.
+* `connection_auth_mode` - (Required) List of authentication modes for connections. See [`connection_auth_mode`, `default_publish_auth_mode`, and `default_subscribe_auth_mode`](#connection_auth_mode-default_publish_auth_mode-and-default_subscribe_auth_mode) below.
+* `default_publish_auth_mode` - (Required) List of default authentication modes for publishing. See [`connection_auth_mode`, `default_publish_auth_mode`, and `default_subscribe_auth_mode`](#connection_auth_mode-default_publish_auth_mode-and-default_subscribe_auth_mode) below.
+* `default_subscribe_auth_mode` - (Required) List of default authentication modes for subscribing. See [`connection_auth_mode`, `default_publish_auth_mode`, and `default_subscribe_auth_mode`](#connection_auth_mode-default_publish_auth_mode-and-default_subscribe_auth_mode) below.
+* `log_config` - (Optional) Logging configuration. See [`log_config`](#log_config) below.
 
-### Auth Providers
+#### `auth_provider`
 
 The `auth_provider` block supports the following:
 
 * `auth_type` - (Required) Type of authentication provider. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`.
-* `cognito_config` - (Optional) Configuration for Cognito user pool authentication. Required when `auth_type` is `AMAZON_COGNITO_USER_POOLS`. See [Cognito Config](#cognito-config) below.
-* `lambda_authorizer_config` - (Optional) Configuration for Lambda authorization. Required when `auth_type` is `AWS_LAMBDA`. See [Lambda Authorizer Config](#lambda-authorizer-config) below.
-* `openid_connect_config` - (Optional) Configuration for OpenID Connect. Required when `auth_type` is `OPENID_CONNECT`. See [OpenID Connect Config](#openid-connect-config) below.
+* `cognito_config` - (Optional) Configuration for Cognito user pool authentication. Required when `auth_type` is `AMAZON_COGNITO_USER_POOLS`. See [`cognito_config`](#cognito_config) below.
+* `lambda_authorizer_config` - (Optional) Configuration for Lambda authorization. Required when `auth_type` is `AWS_LAMBDA`. See [`lambda_authorizer_config`](#lambda_authorizer_config) below.
+* `openid_connect_config` - (Optional) Configuration for OpenID Connect. Required when `auth_type` is `OPENID_CONNECT`. See [`openid_connect_config`](#openid_connect_config) below.
 
-### Cognito Config
+##### `cognito_config`
 
 The `cognito_config` block supports the following:
 
@@ -144,7 +144,7 @@ The `cognito_config` block supports the following:
 * `aws_region` - (Required) AWS region where the user pool is located.
 * `user_pool_id` - (Required) ID of the Cognito user pool.
 
-### Lambda Authorizer Config
+##### `lambda_authorizer_config`
 
 The `lambda_authorizer_config` block supports the following:
 
@@ -152,7 +152,7 @@ The `lambda_authorizer_config` block supports the following:
 * `authorizer_uri` - (Required) URI of the Lambda function for authorization.
 * `identity_validation_expression` - (Optional) Regular expression for identity validation.
 
-### OpenID Connect Config
+##### `openid_connect_config`
 
 The `openid_connect_config` block supports the following:
 
@@ -161,13 +161,13 @@ The `openid_connect_config` block supports the following:
 * `iat_ttl` - (Optional) TTL in seconds for the issued at time.
 * `issuer` - (Required) Issuer URL for the OpenID Connect provider.
 
-### Auth Modes
+#### `connection_auth_mode`, `default_publish_auth_mode`, and `default_subscribe_auth_mode`
 
 The `connection_auth_mode`, `default_publish_auth_mode`, and `default_subscribe_auth_mode` blocks support the following:
 
 * `auth_type` - (Required) Type of authentication. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`.
 
-### Log Config
+#### `log_config`
 
 The `log_config` block supports the following:
 

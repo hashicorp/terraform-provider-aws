@@ -141,7 +141,7 @@ The `authorization_config` configuration block supports the following arguments:
 The `aws_iam_config` configuration block supports the following arguments:
 
 * `signing_region` - (Optional) Signing Amazon Web Services Region for IAM authorization.
-* `signing_service_name`- (Optional) Signing service name for IAM authorization.
+* `signing_service_name` - (Optional) Signing service name for IAM authorization.
 
 ### `lambda_config` Block
 

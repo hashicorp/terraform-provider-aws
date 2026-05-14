@@ -164,8 +164,8 @@ This resource supports the following arguments:
 
 ### Runtime
 
-* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
-* `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
+* `name` - (Required) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
+* `runtime_version` - (Required) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
 ## Attribute Reference
 

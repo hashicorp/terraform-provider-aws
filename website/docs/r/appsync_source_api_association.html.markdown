@@ -30,6 +30,7 @@ The following arguments are optional:
 * `merged_api_arn` - (Optional) ARN of the merged API. One of `merged_api_arn` or `merged_api_id` must be specified.
 * `merged_api_id` - (Optional) ID of the merged API. One of `merged_api_arn` or `merged_api_id` must be specified.
 * `source_api_arn` - (Optional) ARN of the source API. One of `source_api_arn` or `source_api_id` must be specified.
+* `source_api_association_config` - (Optional) Source API association config. See [`source_api_association_config` Block](#source_api_association_config-block).
 * `source_api_id` - (Optional) ID of the source API. One of `source_api_arn` or `source_api_id` must be specified.
 
 ### `source_api_association_config` Block
