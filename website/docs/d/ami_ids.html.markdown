@@ -44,6 +44,11 @@ If no value is specified, the default value is `false`.
 * `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response.
 If false, no deprecated AMIs are included in the response. If no value is specified, the default value is `false`.
 
+### `filter` Block
+
+* `name` - (Required) Name of the filter field. See [describe-images](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html) for valid values.
+* `values` - (Required) Set of values for the filter field.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:

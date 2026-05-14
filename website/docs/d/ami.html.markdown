@@ -66,6 +66,11 @@ Terraform will fail. Ensure that your search is specific enough to return
 a single AMI ID only, or use `most_recent` to choose the most recent one. If
 you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
+### `filter` Block
+
+* `name` - (Required) Name of the filter field. See [describe-images](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html) for valid values.
+* `values` - (Required) Set of values for the filter field.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
