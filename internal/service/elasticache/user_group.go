@@ -62,6 +62,7 @@ func resourceUserGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				StateFunc: sdkv2.ToLowerSchemaStateFunc,
 			},
 			"user_ids": {
 				Type:     schema.TypeSet,
