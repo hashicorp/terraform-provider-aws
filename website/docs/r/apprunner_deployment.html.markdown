@@ -32,3 +32,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - A unique identifier for the deployment.
 * `operation_id` - The unique ID of the operation associated with deployment.
 * `status` - The current status of the App Runner service deployment.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)

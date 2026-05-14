@@ -43,7 +43,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the appstream user.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the user was created.
 * `id` - Unique ID of the appstream user.
-* `status` - Status of the user in the user pool.
 
 ## Import
 
