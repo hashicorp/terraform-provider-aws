@@ -23,7 +23,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -59,7 +59,7 @@ func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -85,7 +85,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -123,7 +123,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -161,7 +161,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 
@@ -229,7 +229,7 @@ func TestAccCEAnomalySubscription_tags(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

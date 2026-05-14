@@ -23,7 +23,7 @@ func TestAccServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -53,7 +53,7 @@ func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

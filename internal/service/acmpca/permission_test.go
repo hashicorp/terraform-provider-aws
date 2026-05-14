@@ -21,7 +21,7 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -50,7 +50,7 @@ func TestAccACMPCAPermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -74,7 +74,7 @@ func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

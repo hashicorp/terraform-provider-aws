@@ -90,6 +90,34 @@ func TestAccOpenSearchDomainDataSource_complex(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomainDataSource_advancedSecurityOptionsJWTOptions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := testAccRandomDomainName(t)
+	datasourceName := "data.aws_opensearch_domain.test"
+	resourceName := "aws_opensearch_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainDataSourceConfig_advancedSecurityOptionsJWTOptions(rName, "OpenSearch", "2.11", "sub", "roles"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.#", resourceName, "advanced_security_options.0.jwt_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.enabled", resourceName, "advanced_security_options.0.jwt_options.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.subject_key", resourceName, "advanced_security_options.0.jwt_options.0.subject_key"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.roles_key", resourceName, "advanced_security_options.0.jwt_options.0.roles_key"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDomainDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_basic(rName), `
 data "aws_opensearch_domain" "test" {
@@ -100,6 +128,14 @@ data "aws_opensearch_domain" "test" {
 
 func testAccDomainDataSourceConfig_complex(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_complex(rName), `
+data "aws_opensearch_domain" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
+}
+`)
+}
+
+func testAccDomainDataSourceConfig_advancedSecurityOptionsJWTOptions(rName, engineType, version, subjectKey, rolesKey string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_advancedSecurityOptionsJWTOptions(rName, engineType, version, subjectKey, rolesKey), `
 data "aws_opensearch_domain" "test" {
   domain_name = aws_opensearch_domain.test.domain_name
 }

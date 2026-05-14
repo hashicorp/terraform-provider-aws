@@ -1031,6 +1031,13 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTable, d.Id(), err)
 	}
 
+	return resourceTableFlatten(ctx, c, d, table)
+}
+
+func resourceTableFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, table *awstypes.TableDescription) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := c.DynamoDBClient(ctx)
+
 	d.Set(names.AttrARN, table.TableArn)
 	d.Set(names.AttrName, table.TableName)
 
@@ -1097,6 +1104,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	replicas := flattenReplicaDescriptions(table.Replicas)
 
+	var err error
 	if replicas, err = addReplicaPITRs(ctx, conn, d.Id(), replicas); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTable, d.Id(), err)
 	}

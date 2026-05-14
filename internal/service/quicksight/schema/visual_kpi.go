@@ -19,16 +19,16 @@ func kpiVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idSchema(),
+				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -58,7 +58,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -69,7 +69,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -81,10 +81,10 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"color":              hexColorSchema(attrOptional),
+													attrColor:            hexColorSchema(attrOptional),
 													"tooltip_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 													names.AttrType:       stringEnumSchema[awstypes.KPISparklineType](attrRequired),
-													"visibility":         stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility:       stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -95,7 +95,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -123,7 +123,7 @@ func kpiVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -138,7 +138,7 @@ func kpiVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrColumnHierarchies: columnHierarchiesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
 				"conditional_formatting": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConditionalFormatting.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -206,8 +206,175 @@ func kpiVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
+func kpiVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_values":  measureFieldDataSourceSchema(),
+										"trend_groups":   dimensionFieldDataSourceSchema(),
+										names.AttrValues: measureFieldDataSourceSchema(),
+									},
+								},
+							},
+							"kpi_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"comparison":                       comparisonConfigurationDataSourceSchema(),
+										"primary_value_display_type":       stringEnumDataSourceSchema[awstypes.PrimaryValueDisplayType](),
+										"primary_value_font_configuration": fontConfigurationDataSourceSchema(),
+										"progress_bar": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ProgressBarOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+										"secondary_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SecondaryValueOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+										"secondary_value_font_configuration": fontConfigurationDataSourceSchema(),
+										"sparkline": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISparklineOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrColor:            stringComputedOnly(),
+													"tooltip_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+													names.AttrType:       stringEnumDataSourceSchema[awstypes.KPISparklineType](),
+													attrVisibility:       stringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+										"trend_arrows": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TrendArrowOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+										"visual_layout_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIVisualLayoutOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"standard_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIVisualStandardLayout.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrType: stringEnumDataSourceSchema[awstypes.KPIVisualStandardLayoutType](),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"trend_group_sort": fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+						},
+					},
+				},
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				"conditional_formatting": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConditionalFormatting.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"conditional_formatting_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIConditionalFormattingOption.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"actual_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIActualValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconDataSourceSchema(),
+													"text_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+										"comparison_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIComparisonValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconDataSourceSchema(),
+													"text_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+										"primary_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIPrimaryValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconDataSourceSchema(),
+													"text_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+										"progress_bar": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIProgressBarConditionalFormatting.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"foreground_color": conditionalFormattingColorDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -225,7 +392,7 @@ func expandKPIVisual(tfList []any) *awstypes.KPIVisual {
 
 	apiObject := &awstypes.KPIVisual{}
 
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -237,13 +404,13 @@ func expandKPIVisual(tfList []any) *awstypes.KPIVisual {
 	if v, ok := tfMap["conditional_formatting"].([]any); ok && len(v) > 0 {
 		apiObject.ConditionalFormatting = expandKPIConditionalFormatting(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
@@ -268,7 +435,7 @@ func expandKPIConfiguration(tfList []any) *awstypes.KPIConfiguration {
 	if v, ok := tfMap["kpi_options"].([]any); ok && len(v) > 0 {
 		apiObject.KPIOptions = expandKPIOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandKPISortConfiguration(v)
 	}
 
@@ -354,7 +521,7 @@ func expandProgressBarOptions(tfList []any) *awstypes.ProgressBarOptions {
 
 	apiObject := &awstypes.ProgressBarOptions{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -373,7 +540,7 @@ func expandSecondaryValueOptions(tfList []any) *awstypes.SecondaryValueOptions {
 
 	apiObject := &awstypes.SecondaryValueOptions{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -392,7 +559,7 @@ func expandKPISparklineOptions(tfList []any) *awstypes.KPISparklineOptions {
 
 	apiObject := &awstypes.KPISparklineOptions{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["tooltip_visibility"].(string); ok && v != "" {
@@ -401,7 +568,7 @@ func expandKPISparklineOptions(tfList []any) *awstypes.KPISparklineOptions {
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = awstypes.KPISparklineType(v)
 	}
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -420,7 +587,7 @@ func expandTrendArrowOptions(tfList []any) *awstypes.TrendArrowOptions {
 
 	apiObject := &awstypes.TrendArrowOptions{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -641,7 +808,7 @@ func flattenKPIVisual(apiObject *awstypes.KPIVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		attrVisualID: aws.ToString(apiObject.VisualId),
 	}
 
 	if apiObject.Actions != nil {
@@ -654,13 +821,13 @@ func flattenKPIVisual(apiObject *awstypes.KPIVisual) []any {
 		tfMap["conditional_formatting"] = flattenKPIConditionalFormatting(apiObject.ConditionalFormatting)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}
@@ -680,7 +847,7 @@ func flattenKPIConfiguration(apiObject *awstypes.KPIConfiguration) []any {
 		tfMap["kpi_options"] = flattenKPIOptions(apiObject.KPIOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenKPISortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenKPISortConfiguration(apiObject.SortConfiguration)
 	}
 
 	return []any{tfMap}
@@ -748,7 +915,7 @@ func flattenProgressBarOptions(apiObject *awstypes.ProgressBarOptions) []any {
 	}
 
 	tfMap := map[string]any{
-		"visibility": apiObject.Visibility,
+		attrVisibility: apiObject.Visibility,
 	}
 
 	return []any{tfMap}
@@ -760,7 +927,7 @@ func flattenSecondaryValueOptions(apiObject *awstypes.SecondaryValueOptions) []a
 	}
 
 	tfMap := map[string]any{
-		"visibility": apiObject.Visibility,
+		attrVisibility: apiObject.Visibility,
 	}
 
 	return []any{tfMap}
@@ -774,11 +941,11 @@ func flattenKPISparklineOptions(apiObject *awstypes.KPISparklineOptions) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	tfMap["tooltip_visibility"] = apiObject.TooltipVisibility
 	tfMap[names.AttrType] = apiObject.Type
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }
@@ -789,7 +956,7 @@ func flattenTrendArrowOptions(apiObject *awstypes.TrendArrowOptions) []any {
 	}
 
 	tfMap := map[string]any{
-		"visibility": apiObject.Visibility,
+		attrVisibility: apiObject.Visibility,
 	}
 
 	return []any{tfMap}

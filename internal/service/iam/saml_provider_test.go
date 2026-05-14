@@ -19,8 +19,8 @@ import (
 func TestAccIAMSAMLProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
-	idpEntityIdModified := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
+	idpEntityIdModified := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_iam_saml_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -62,7 +62,7 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 func TestAccIAMSAMLProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_iam_saml_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -108,7 +108,7 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_iam_saml_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

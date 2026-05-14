@@ -24,7 +24,7 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -83,7 +83,7 @@ func TestAccFSxWindowsFileSystem_disappears(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -108,7 +108,7 @@ func TestAccFSxWindowsFileSystem_singleAz2(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -160,7 +160,7 @@ func TestAccFSxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -195,7 +195,7 @@ func TestAccFSxWindowsFileSystem_multiAz(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -246,7 +246,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -300,7 +300,7 @@ func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -350,7 +350,7 @@ func TestAccFSxWindowsFileSystem_copyTagsToBackups(t *testing.T) {
 	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -392,7 +392,7 @@ func TestAccFSxWindowsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -434,7 +434,7 @@ func TestAccFSxWindowsFileSystem_deleteConfig(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.SkipIfEnvVarNotSet(t, "AWS_FSX_CREATE_FINAL_BACKUP")
 
@@ -475,7 +475,7 @@ func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 	kmsKeyResourceName2 := "aws_kms_key.test2"
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -517,7 +517,7 @@ func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -559,7 +559,7 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -594,7 +594,7 @@ func TestAccFSxWindowsFileSystem_SelfManagedActiveDirectory_passwordWO(t *testin
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -630,7 +630,7 @@ func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -674,7 +674,7 @@ func TestAccFSxWindowsFileSystem_fromBackup(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -709,7 +709,7 @@ func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -763,7 +763,7 @@ func TestAccFSxWindowsFileSystem_throughputCapacity(t *testing.T) {
 	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -805,7 +805,7 @@ func TestAccFSxWindowsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -847,7 +847,7 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -903,7 +903,7 @@ func TestAccFSxWindowsFileSystem_diskIops(t *testing.T) {
 	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
@@ -1585,7 +1585,7 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectoryWithSecret(t *testing
 	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },

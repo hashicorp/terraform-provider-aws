@@ -55,7 +55,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"items": {
+						attrItems: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -66,7 +66,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -251,7 +251,7 @@ func expandEncryptionEntities(tfMap map[string]any) *awstypes.EncryptionEntities
 
 	apiObject := &awstypes.EncryptionEntities{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandEncryptionEntityItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -315,7 +315,7 @@ func expandFieldPatterns(tfMap map[string]any) *awstypes.FieldPatterns {
 
 	apiObject := &awstypes.FieldPatterns{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -332,7 +332,7 @@ func flattenEncryptionEntities(apiObject *awstypes.EncryptionEntities) map[strin
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenEncryptionEntityItems(v)
+		tfMap[attrItems] = flattenEncryptionEntityItems(v)
 	}
 
 	return tfMap
@@ -384,7 +384,7 @@ func flattenFieldPatterns(apiObject *awstypes.FieldPatterns) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap

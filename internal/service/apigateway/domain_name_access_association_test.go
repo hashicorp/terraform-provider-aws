@@ -22,7 +22,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_basic(t *testing.T) {
 	var v types.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomSubdomain()
+	domain := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
@@ -54,7 +54,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_disappears(t *testing.T) {
 	var v types.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomSubdomain()
+	domain := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 

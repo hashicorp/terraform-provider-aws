@@ -297,7 +297,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 func TestAccCognitoIDPUser_v5560Regression(t *testing.T) {
 	ctx := acctest.Context(t)
 	rUserPoolName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rUserName := acctest.RandomEmailAddress(domain)
 	resourceName := "aws_cognito_user.test"
 

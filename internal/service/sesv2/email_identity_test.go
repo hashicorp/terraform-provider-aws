@@ -21,7 +21,7 @@ import (
 
 func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -59,7 +59,7 @@ func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -97,7 +97,7 @@ func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -120,7 +120,7 @@ func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_configurationSetName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -154,7 +154,7 @@ func TestAccSESV2EmailIdentity_configurationSetName(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -190,7 +190,7 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 	resourceName := "aws_sesv2_email_identity.test"
 
 	key1 := inttypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))

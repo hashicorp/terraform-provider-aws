@@ -24,7 +24,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 	fsResourceName := "aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -64,7 +64,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 	var v datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -93,7 +93,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 	var v datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -128,7 +128,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 	var v datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

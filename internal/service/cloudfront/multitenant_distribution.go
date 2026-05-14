@@ -140,7 +140,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						names.AttrEnabled: schema.BoolAttribute{Computed: true},
 					},
 					Blocks: map[string]schema.Block{
-						"items": schema.ListNestedBlock{
+						attrItems: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[kgKeyPairIDsModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -223,7 +223,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Required:   true,
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 									},
@@ -275,7 +275,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
+									attrItems: schema.ListAttribute{
 										Optional:   true,
 										CustomType: fwtypes.ListOfStringType,
 									},
@@ -339,7 +339,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Required:   true,
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 									},
@@ -391,7 +391,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
+									attrItems: schema.ListAttribute{
 										Optional:   true,
 										CustomType: fwtypes.ListOfStringType,
 									},
@@ -580,7 +580,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Optional:   true,
 										CustomType: fwtypes.SetOfStringType,
 									},

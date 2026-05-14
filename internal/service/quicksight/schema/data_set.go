@@ -4,12 +4,13 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -48,7 +49,31 @@ func DataSetColumnGroupsSchema() *schema.Schema {
 }
 
 func DataSetColumnGroupsSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(DataSetColumnGroupsSchema())
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"geo_spatial_column_group": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"columns": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"country_code": stringEnumDataSourceSchema[awstypes.GeoSpatialCountryCode](),
+							names.AttrName: stringComputedOnly(),
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func DataSetColumnLevelPermissionRulesSchema() *schema.Schema {
@@ -77,7 +102,24 @@ func DataSetColumnLevelPermissionRulesSchema() *schema.Schema {
 }
 
 func DataSetColumnLevelPermissionRulesSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(DataSetColumnLevelPermissionRulesSchema())
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_names": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"principals": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+	}
 }
 
 func DataSetUsageConfigurationSchema() *schema.Schema {
@@ -104,7 +146,16 @@ func DataSetUsageConfigurationSchema() *schema.Schema {
 }
 
 func DataSetUsageConfigurationSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(DataSetUsageConfigurationSchema())
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"disable_use_as_direct_query_source": boolComputedOnly(),
+				"disable_use_as_imported_source":     boolComputedOnly(),
+			},
+		},
+	}
 }
 
 func DataSetFieldFoldersSchema() *schema.Schema {
@@ -131,12 +182,30 @@ func DataSetFieldFoldersSchema() *schema.Schema {
 }
 
 func DataSetFieldFoldersSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(DataSetFieldFoldersSchema())
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"field_folders_id": stringComputedOnly(),
+				"columns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: stringComputedOnly(),
+			},
+		},
+	}
 }
 
 func DataSetLogicalTableMapSchema() *schema.Schema {
-	logicalTableMapSchema := func() *schema.Resource {
-		return &schema.Resource{
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Computed: true,
+		MaxItems: 64,
+		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				names.AttrAlias: stringLenBetweenSchema(attrRequired, 1, 64),
 				"data_transforms": {
@@ -297,40 +366,12 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"left_join_key_properties": {
-											Type:     schema.TypeList,
-											Computed: true,
-											Optional: true,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"unique_key": {
-														Type:     schema.TypeBool,
-														Computed: true,
-														Optional: true,
-													},
-												},
-											},
-										},
-										"left_operand": stringLenBetweenSchema(attrRequired, 1, 64),
-										"on_clause":    stringLenBetweenSchema(attrRequired, 1, 512),
-										"right_join_key_properties": {
-											Type:     schema.TypeList,
-											Computed: true,
-											Optional: true,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"unique_key": {
-														Type:     schema.TypeBool,
-														Computed: true,
-														Optional: true,
-													},
-												},
-											},
-										},
-										"right_operand": stringLenBetweenSchema(attrRequired, 1, 64),
-										names.AttrType:  stringEnumSchema[awstypes.JoinType](attrRequired),
+										"left_join_key_properties":  dataSetJoinKeyPropertiesSchema(),
+										"left_operand":              stringLenBetweenSchema(attrRequired, 1, 64),
+										"on_clause":                 stringLenBetweenSchema(attrRequired, 1, 512),
+										"right_join_key_properties": dataSetJoinKeyPropertiesSchema(),
+										"right_operand":             stringLenBetweenSchema(attrRequired, 1, 64),
+										names.AttrType:              stringEnumSchema[awstypes.JoinType](attrRequired),
 									},
 								},
 							},
@@ -339,21 +380,189 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 					},
 				},
 			},
-		}
-	}
-
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Computed: true,
-		MaxItems: 64,
-		Elem:     logicalTableMapSchema(),
+		},
 	}
 }
 
 func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(DataSetLogicalTableMapSchema())
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrAlias: stringComputedOnly(),
+				"data_transforms": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cast_column_type_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name":     stringComputedOnly(),
+										names.AttrFormat:  stringComputedOnly(),
+										"new_column_type": stringEnumDataSourceSchema[awstypes.ColumnDataType](),
+									},
+								},
+							},
+							"create_columns_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"columns": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"column_id":          stringComputedOnly(),
+													"column_name":        stringComputedOnly(),
+													names.AttrExpression: stringComputedOnly(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"filter_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"condition_expression": stringComputedOnly(),
+									},
+								},
+							},
+							"project_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"projected_columns": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"rename_column_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name":     stringComputedOnly(),
+										"new_column_name": stringComputedOnly(),
+									},
+								},
+							},
+							"tag_column_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name": stringComputedOnly(),
+										names.AttrTags: {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"column_description": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"text": stringComputedOnly(),
+															},
+														},
+													},
+													"column_geographic_role": stringEnumDataSourceSchema[awstypes.GeoSpatialDataRole](),
+												},
+											},
+										},
+									},
+								},
+							},
+							"untag_column_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name": stringComputedOnly(),
+										"tag_names": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"logical_table_map_id": stringComputedOnly(),
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_set_arn": stringComputedOnly(),
+							"join_instruction": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"left_join_key_properties":  dataSetJoinKeyPropertiesDataSourceSchema(),
+										"left_operand":              stringComputedOnly(),
+										"on_clause":                 stringComputedOnly(),
+										"right_join_key_properties": dataSetJoinKeyPropertiesDataSourceSchema(),
+										"right_operand":             stringComputedOnly(),
+										names.AttrType:              stringEnumDataSourceSchema[awstypes.JoinType](),
+									},
+								},
+							},
+							"physical_table_id": stringComputedOnly(),
+						},
+					},
+				},
+			},
+		},
+	}
 }
+
+var dataSetJoinKeyPropertiesSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"unique_key": {
+					Type:     schema.TypeBool,
+					Computed: true,
+					Optional: true,
+				},
+			},
+		},
+	}
+})
+
+var dataSetJoinKeyPropertiesDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"unique_key": boolComputedOnly(),
+			},
+		},
+	}
+})
 
 func DataSetOutputColumnsSchema() *schema.Schema {
 	return &schema.Schema{
@@ -361,26 +570,20 @@ func DataSetOutputColumnsSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrDescription: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrName: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrType: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
+				names.AttrDescription: stringComputedOnly(),
+				names.AttrName:        stringComputedOnly(),
+				names.AttrType:        stringComputedOnly(),
 			},
 		},
 	}
 }
 
 func DataSetPhysicalTableMapSchema() *schema.Schema {
-	physicalTableMapSchema := func() *schema.Resource {
-		return &schema.Resource{
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		MaxItems: 32,
+		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"custom_sql": {
 					Type:     schema.TypeList,
@@ -485,19 +688,95 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 					},
 				},
 			},
-		}
-	}
-
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		MaxItems: 32,
-		Elem:     physicalTableMapSchema(),
+		},
 	}
 }
 
 func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(DataSetPhysicalTableMapSchema())
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_sql": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"columns": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: stringComputedOnly(),
+										names.AttrType: stringEnumDataSourceSchema[awstypes.InputColumnDataType](),
+									},
+								},
+							},
+							"data_source_arn": arnStringDataSourceSchema(),
+							names.AttrName:    stringComputedOnly(),
+							"sql_query":       stringComputedOnly(),
+						},
+					},
+				},
+				"physical_table_map_id": stringComputedOnly(),
+				"relational_table": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"catalog":         stringComputedOnly(),
+							"data_source_arn": arnStringDataSourceSchema(),
+							"input_columns": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: stringComputedOnly(),
+										names.AttrType: stringEnumDataSourceSchema[awstypes.InputColumnDataType](),
+									},
+								},
+							},
+							names.AttrName:   stringComputedOnly(),
+							names.AttrSchema: stringComputedOnly(),
+						},
+					},
+				},
+				"s3_source": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_source_arn": arnStringDataSourceSchema(),
+							"input_columns": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: stringComputedOnly(),
+										names.AttrType: stringEnumDataSourceSchema[awstypes.InputColumnDataType](),
+									},
+								},
+							},
+							"upload_settings": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"contains_header": boolComputedOnly(),
+										"delimiter":       stringComputedOnly(),
+										names.AttrFormat:  stringEnumDataSourceSchema[awstypes.FileFormat](),
+										"start_from_row":  intComputedOnly(),
+										"text_qualifier":  stringEnumDataSourceSchema[awstypes.TextQualifier](),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
@@ -518,7 +797,19 @@ func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
 }
 
 func DataSetRowLevelPermissionDataSetSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(DataSetRowLevelPermissionDataSetSchema())
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrARN:       arnStringDataSourceSchema(),
+				"format_version":    stringEnumDataSourceSchema[awstypes.RowLevelPermissionFormatVersion](),
+				names.AttrNamespace: stringComputedOnly(),
+				"permission_policy": stringEnumDataSourceSchema[awstypes.RowLevelPermissionPolicy](),
+				names.AttrStatus:    stringEnumDataSourceSchema[awstypes.Status](),
+			},
+		},
+	}
 }
 
 func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
@@ -553,7 +844,27 @@ func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
 }
 
 func DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(DataSetRowLevelPermissionTagConfigurationSchema())
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrStatus: stringEnumDataSourceSchema[awstypes.Status](),
+				"tag_rules": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column_name":               stringComputedOnly(),
+							"match_all_value":           stringComputedOnly(),
+							"tag_key":                   stringComputedOnly(),
+							"tag_multi_value_delimiter": stringComputedOnly(),
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func DataSetRefreshPropertiesSchema() *schema.Schema {

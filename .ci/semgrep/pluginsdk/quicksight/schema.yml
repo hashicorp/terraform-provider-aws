@@ -167,3 +167,67 @@ rules:
           }
     fix: floatBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
+
+  - id: quicksight-schema-string-computed-only
+    languages: [go]
+    message: Computed-Only String attributes should use stringComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeString,
+            Computed: true,
+          }
+    fix: stringComputedOnly()
+    severity: WARNING
+
+  - id: quicksight-schema-bool-computed-only
+    languages: [go]
+    message: Computed-Only Bool attributes should use boolComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeBool,
+            Computed: true,
+          }
+    fix: boolComputedOnly()
+    severity: WARNING
+
+  - id: quicksight-schema-int-computed-only
+    languages: [go]
+    message: Computed-Only Int attributes should use intComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeInt,
+            Computed: true,
+          }
+    fix: intComputedOnly()
+    severity: WARNING
+
+  - id: quicksight-schema-float-computed-only
+    languages: [go]
+    message: Computed-Only Float attributes should use floatComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeFloat,
+            Computed: true,
+          }
+    fix: floatComputedOnly()
+    severity: WARNING

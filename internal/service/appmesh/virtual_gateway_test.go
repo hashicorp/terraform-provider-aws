@@ -419,7 +419,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 
 	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	vgName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },

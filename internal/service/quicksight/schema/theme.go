@@ -8,7 +8,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 )
 
 func ThemeConfigurationSchema() *schema.Schema {
@@ -161,7 +160,129 @@ func ThemeConfigurationSchema() *schema.Schema {
 }
 
 func ThemeConfigurationDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(ThemeConfigurationSchema())
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColorPalette.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"colors": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"empty_fill_color": hexColorSchema(attrComputed),
+							"min_max_gradient": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"sheet": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetStyle.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tile": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileStyle.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BorderStyle.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"show": boolComputedOnly(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"tile_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileLayoutStyle.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"gutter": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GutterStyle.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"show": boolComputedOnly(),
+												},
+											},
+										},
+										"margin": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MarginStyle.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"show": boolComputedOnly(),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"typography": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Typography.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"font_families": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Font.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"font_family": stringComputedOnly(),
+									},
+								},
+							},
+						},
+					},
+				},
+				"ui_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UIColorPalette.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accent":               hexColorSchema(attrComputed),
+							"accent_foreground":    hexColorSchema(attrComputed),
+							"danger":               hexColorSchema(attrComputed),
+							"danger_foreground":    hexColorSchema(attrComputed),
+							"dimension":            hexColorSchema(attrComputed),
+							"dimension_foreground": hexColorSchema(attrComputed),
+							"measure":              hexColorSchema(attrComputed),
+							"measure_foreground":   hexColorSchema(attrComputed),
+							"primary_background":   hexColorSchema(attrComputed),
+							"primary_foreground":   hexColorSchema(attrComputed),
+							"secondary_background": hexColorSchema(attrComputed),
+							"secondary_foreground": hexColorSchema(attrComputed),
+							"success":              hexColorSchema(attrComputed),
+							"success_foreground":   hexColorSchema(attrComputed),
+							"warning":              hexColorSchema(attrComputed),
+							"warning_foreground":   hexColorSchema(attrComputed),
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func ExpandThemeConfiguration(tfList []any) *awstypes.ThemeConfiguration {

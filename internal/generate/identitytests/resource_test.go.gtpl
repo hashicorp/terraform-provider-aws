@@ -215,7 +215,17 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ if .HasIdentityDuplicateAttrs -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 			{{ end -}}
-		{{ else if gt (len .IdentityAttributes) 0 -}}
+		{{ else if eq (len .IdentityAttributes) 1 -}}
+			{{ if eq .PlannableResourceAction "Replace" -}}
+				{{ range .IdentityAttributes -}}
+				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
+				{{ end -}}
+			{{ else -}}
+				{{ range .IdentityAttributes -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
+				{{ end -}}
+			{{ end -}}
+		{{ else if gt (len .IdentityAttributes) 1 -}}
 			{{ range .IdentityAttributes -}}
 				{{ if not .Optional -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),

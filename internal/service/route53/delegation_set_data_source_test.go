@@ -18,7 +18,7 @@ func TestAccRoute53DelegationSetDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_delegation_set.dset"
 	resourceName := "aws_route53_delegation_set.dset"
 
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

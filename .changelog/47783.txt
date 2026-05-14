@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_securityhub_configuration_policy_association: Fix `waiting for Security Hub Configuration Policy Association (...) success: timeout while waiting for state to become 'SUCCESS' (last state: 'PENDING', timeout: 5m0s)` errors on Create. This fixes a regression introduced in [v6.34.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6340-february-25-2026)
+```

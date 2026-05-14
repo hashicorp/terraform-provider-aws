@@ -288,8 +288,8 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := acctest.RandomWithPrefix(t, "tfacctest") // 32 character limit
-	domainName1 := acctest.RandomSubdomain()
-	domainName2 := acctest.RandomSubdomain()
+	domainName1 := acctest.RandomSubdomain(t)
+	domainName2 := acctest.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

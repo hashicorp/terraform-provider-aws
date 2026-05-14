@@ -22,7 +22,7 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 	var userOutput awstypes.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -58,7 +58,7 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 	var userOutput awstypes.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -88,7 +88,7 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 	authType := "USERPOOL"
 	firstName := "John"
 	lastName := "Doe"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -599,21 +599,6 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 	}
 }
 
-type resourceGlobalSecondaryIndexModel struct {
-	framework.WithRegionModel
-
-	ARN                   types.String                                                `tfsdk:"arn"`
-	IndexName             types.String                                                `tfsdk:"index_name"`
-	KeySchema             fwtypes.ListNestedObjectValueOf[keySchemaModel]             `tfsdk:"key_schema"`
-	TableName             types.String                                                `tfsdk:"table_name"`
-	OnDemandThroughput    fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
-	Projection            fwtypes.ListNestedObjectValueOf[projectionModel]            `tfsdk:"projection"`
-	ProvisionedThroughput fwtypes.ListNestedObjectValueOf[provisionedThroughputModel] `tfsdk:"provisioned_throughput"`
-	WarmThroughput        fwtypes.ObjectValueOf[warmThroughputModel]                  `tfsdk:"warm_throughput"`
-
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-}
-
 func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecondaryIndexModel, index *awstypes.GlobalSecondaryIndexDescription, table *awstypes.TableDescription) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
@@ -656,6 +641,21 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 	}
 
 	return diags
+}
+
+type resourceGlobalSecondaryIndexModel struct {
+	framework.WithRegionModel
+
+	ARN                   types.String                                                `tfsdk:"arn"`
+	IndexName             types.String                                                `tfsdk:"index_name"`
+	KeySchema             fwtypes.ListNestedObjectValueOf[keySchemaModel]             `tfsdk:"key_schema"`
+	TableName             types.String                                                `tfsdk:"table_name"`
+	OnDemandThroughput    fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
+	Projection            fwtypes.ListNestedObjectValueOf[projectionModel]            `tfsdk:"projection"`
+	ProvisionedThroughput fwtypes.ListNestedObjectValueOf[provisionedThroughputModel] `tfsdk:"provisioned_throughput"`
+	WarmThroughput        fwtypes.ObjectValueOf[warmThroughputModel]                  `tfsdk:"warm_throughput"`
+
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
 type onDemandThroughputModel struct {

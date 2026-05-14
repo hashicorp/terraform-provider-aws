@@ -224,7 +224,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	acmRootCAResourceName := "aws_acmpca_certificate_authority.root"
 	acmSubordinateCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
-	rootDomain := acctest.RandomDomainName()
+	rootDomain := acctest.RandomDomainName(t)
 	subDomain := fmt.Sprintf("%s.%s", acctest.RandString(t, 8), rootDomain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

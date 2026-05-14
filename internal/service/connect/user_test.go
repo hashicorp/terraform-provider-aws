@@ -111,7 +111,7 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	rName4 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	rName5 := acctest.RandomWithPrefix(t, "resource-test-terraform")
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailOriginal := acctest.RandomEmailAddress(domain)
 	firstNameOriginal := "example-first-name-original"
 	lastNameOriginal := "example-last-name-original"
