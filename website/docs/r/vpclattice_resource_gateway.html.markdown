@@ -76,6 +76,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Status of the resource gateway.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+* `update` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Resource Gateway using the `id`. For example:

@@ -469,7 +469,7 @@ This resource supports the following arguments:
 * `name` - (Optional, Forces new resource) Friendly name of the WebACL. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `rule_json` (Optional) Raw JSON string to allow more than three nested statements. Conflicts with `rule` attribute. This is for advanced use cases where more than 3 levels of nested statements are required. **There is no drift detection at this time**. If you use this attribute instead of `rule`, you will be foregoing drift detection. Additionally, importing an existing web ACL into a configuration with `rule_json` set will result in a one time in-place update as the remote rule configuration is initially written to the `rule` attribute. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateWebACL.html) for the JSON structure.
+* `rule_json` - (Optional) Raw JSON string to allow more than three nested statements. Conflicts with `rule` attribute. This is for advanced use cases where more than 3 levels of nested statements are required. **There is no drift detection at this time**. If you use this attribute instead of `rule`, you will be foregoing drift detection. Additionally, importing an existing web ACL into a configuration with `rule_json` set will result in a one time in-place update as the remote rule configuration is initially written to the `rule` attribute. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateWebACL.html) for the JSON structure.
 * `rule` - (Optional) **`rule` blocks in this resource have several known limitations.** Consider using [`aws_wafv2_web_acl_rule`](/docs/providers/aws/r/wafv2_web_acl_rule.html) to manage rules as separate resources instead. Rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [`rule`](#rule-block) below for details.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -827,7 +827,7 @@ The `managed_rule_group_configs` block support the following arguments:
 * `aws_managed_rules_atp_rule_set` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
 * `login_path` - (Optional, **Deprecated**) The path of the login endpoint for your application.
 * `password_field` - (Optional, **Deprecated**) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
-* `payload_type`- (Optional, **Deprecated**) The payload type for your login endpoint, either JSON or form encoded.
+* `payload_type` - (Optional, **Deprecated**) The payload type for your login endpoint, either JSON or form encoded.
 * `username_field` - (Optional, **Deprecated**) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
 
 ### `aws_managed_rules_bot_control_rule_set` Block
@@ -843,14 +843,14 @@ The `managed_rule_group_configs` block support the following arguments:
 * `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block-acfp) for more details.
 * `response_inspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`response_inspection`](#response_inspection-block) for more details.
 
-### `request_inspection` Block (ACFP)
+### `aws_managed_rules_acfp_rule_set` `request_inspection` Block
 
-* `addressFields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`addressFields`](#address_fields-block) for more details.
-* `emailField` (Optional) The name of the field in the request payload that contains your customer's email. See [`emailField`](#email_field-block) for more details.
-* `passwordField` (Optional) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
-* `payloadType` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `phoneNumberFields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phoneNumberFields`](#phone_number_fields-block) for more details.
-* `usernameField` (Optional) Details about your login page username field. See [`usernameField`](#username_field-block) for more details.
+* `address_fields` - (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`address_fields`](#address_fields-block) for more details.
+* `email_field` - (Optional) The name of the field in the request payload that contains your customer's email. See [`email_field`](#email_field-block) for more details.
+* `password_field` - (Optional) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
+* `payload_type` - (Required) The payload type for your login endpoint, either JSON or form encoded.
+* `phone_number_fields` - (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phone_number_fields`](#phone_number_fields-block) for more details.
+* `username_field` - (Optional) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
 
 ### `aws_managed_rules_anti_ddos_rule_set` Block
 
@@ -859,11 +859,17 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `client_side_action_config` Block
 
-* `challenge` - (Required) Configuration for the use of the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests`.
-    * `exempt_uri_regular_expression` - (Optional) Block for the list of the regular expressions to match against the web request URI, used to identify requests that can't handle a silent browser challenge.
-        * `regex_string` - (Optional) Regular expression string.
-    * `sensitivity` - (Optional) Sensitivity that the rule group rule ChallengeDDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW`, `MEDIUM` and `HIGH` (Default).
-    * `usage_of_action` - (Required) Configuration whether to use the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests` in the rule group evaluation. Valid values are `ENABLED` and `DISABLED`.
+* `challenge` - (Required) Configuration for the use of the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests`. See [`client_side_action_config` `challenge`](#client_side_action_config-challenge-block) below.
+
+### `client_side_action_config` `challenge` Block
+
+* `exempt_uri_regular_expression` - (Optional) Regular expressions to match against the web request URI, used to identify requests that can't handle a silent browser challenge. See [`exempt_uri_regular_expression`](#exempt_uri_regular_expression-block) below.
+* `sensitivity` - (Optional) Sensitivity that the rule group rule ChallengeDDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW`, `MEDIUM` and `HIGH` (Default).
+* `usage_of_action` - (Required) Configuration whether to use the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests` in the rule group evaluation. Valid values are `ENABLED` and `DISABLED`.
+
+### `exempt_uri_regular_expression` Block
+
+* `regex_string` - (Optional) Regular expression string.
 
 ### `aws_managed_rules_atp_rule_set` Block
 
@@ -874,9 +880,9 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `request_inspection` Block
 
-* `password_field` (Optional) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
-* `payload_type` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `username_field` (Optional) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
+* `password_field` - (Optional) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
+* `payload_type` - (Required) The payload type for your login endpoint, either JSON or form encoded.
+* `username_field` - (Optional) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
 
 ### `address_fields` Block
 
@@ -900,32 +906,32 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `response_inspection` Block
 
-* `body_contains` (Optional) Configures inspection of the response body. See [`body_contains`](#body_contains-block) for more details.
-* `header` (Optional) Configures inspection of the response header.See [`header`](#header-block) for more details.
-* `json` (Optional) Configures inspection of the response JSON. See [`json`](#json-block) for more details.
-* `status_code` (Optional) Configures inspection of the response status code.See [`status_code`](#status_code-block) for more details.
+* `body_contains` - (Optional) Configures inspection of the response body. See [`body_contains`](#body_contains-block) for more details.
+* `header` - (Optional) Configures inspection of the response header.See [`header`](#header-block) for more details.
+* `json` - (Optional) Configures inspection of the response JSON. See [`json`](#json-block) for more details.
+* `status_code` - (Optional) Configures inspection of the response status code.See [`status_code`](#status_code-block) for more details.
 
 ### `body_contains` Block
 
-* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
-* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
+* `success_strings` - (Required) Strings in the body of the response that indicate a successful login attempt.
+* `failure_strings` - (Required) Strings in the body of the response that indicate a failed login attempt.
 
 ### `header` Block
 
-* `name` (Required) The name of the header to match against. The name must be an exact match, including case.
-* `success_values` (Required) Values in the response header with the specified name that indicate a successful login attempt.
-* `failure_values` (Required) Values in the response header with the specified name that indicate a failed login attempt.
+* `name` - (Required) The name of the header to match against. The name must be an exact match, including case.
+* `success_values` - (Required) Values in the response header with the specified name that indicate a successful login attempt.
+* `failure_values` - (Required) Values in the response header with the specified name that indicate a failed login attempt.
 
 ### `json` Block
 
-* `identifier` (Required) The identifier for the value to match against in the JSON.
-* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
-* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
+* `identifier` - (Required) The identifier for the value to match against in the JSON.
+* `success_values` - (Required) Values in the response JSON that indicate a successful login attempt.
+* `failure_values` - (Required) Values in the response JSON that indicate a failed login attempt.
 
 ### `status_code` Block
 
-* `success_codes` (Required) Status codes in the response that indicate a successful login attempt.
-* `failure_codes` (Required) Status codes in the response that indicate a failed login attempt.
+* `success_codes` - (Required) Status codes in the response that indicate a successful login attempt.
+* `failure_codes` - (Required) Status codes in the response that indicate a failed login attempt.
 
 ### `field_to_match` Block
 
@@ -1047,9 +1053,26 @@ Inspect the cookies in the web request. You can specify the parts of the cookies
 
 The `cookies` block supports the following arguments:
 
-* `match_pattern` - (Required) The filter to use to identify the subset of cookies to inspect in a web request. You must specify exactly one setting: either `all`, `included_cookies` or `excluded_cookies`. More details: [CookieMatchPattern](https://docs.aws.amazon.com/waf/latest/APIReference/API_CookieMatchPattern.html)
+* `match_pattern` - (Required) The filter to use to identify the subset of cookies to inspect in a web request. See [`match_pattern`](#match_pattern-block) below.
 * `match_scope` - (Required) The parts of the cookies to inspect with the rule inspection criteria. If you specify All, AWS WAF inspects both keys and values. Valid values: `ALL`, `KEY`, `VALUE`
 * `oversize_handling` - (Required) What AWS WAF should do if the cookies of the request are larger than AWS WAF can inspect. AWS WAF does not support inspecting the entire contents of request cookies when they exceed 8 KB (8192 bytes) or 200 total cookies. The underlying host service forwards a maximum of 200 cookies and at most 8 KB of cookie contents to AWS WAF. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`.
+
+### `cookies` `match_pattern` Block
+
+* `all` - (Optional) An empty configuration block that is used for inspecting all cookies.
+* `included_cookies` - (Optional) List of cookie names to include in the inspection.
+* `excluded_cookies` - (Optional) List of cookie names to exclude from the inspection.
+
+### `headers` `match_pattern` Block
+
+* `all` - (Optional) An empty configuration block that is used for inspecting all headers.
+* `included_headers` - (Optional) List of header names to include in the inspection.
+* `excluded_headers` - (Optional) List of header names to exclude from the inspection.
+
+### `json_body` `match_pattern` Block
+
+* `all` - (Optional) An empty configuration block that is used for inspecting the entire JSON body.
+* `included_paths` - (Optional) List of JSON paths to include in the inspection.
 
 ### `text_transformation` Block
 
@@ -1143,43 +1166,45 @@ The `custom_key` block supports the following arguments:
 * `query_string` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `query_string`](#ratelimit-query_string-block) below for details.
 * `uri_path` - (Optional) Use the request's URI path as an aggregate key. See [RateLimit `uri_path`](#ratelimit-uri_path-block) below for details.
 
-### RateLimit `asn` Block
+### `custom_key` `asn` Block
 
 Use an Autonomous System Number (ASN) derived from the request's originating or forwarded IP address as an aggregate key. Each distinct ASN contributes to the aggregation instance.
 
 The `asn` block is configured as an empty block `{}`.
 
-### RateLimit `cookie` Block
+### `custom_key` `cookie` Block
 
 Use the value of a cookie in the request as an aggregate key. Each distinct value in the cookie contributes to the aggregation instance. If you use a single cookie as your custom key, then each value fully defines an aggregation instance.
+
+* `name` - (Required) Name of the cookie to use.
 
 The `cookie` block supports the following arguments:
 
 * `name`: The name of the cookie to use.
 * `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
-### RateLimit `forwarded_ip` Block
+### `custom_key` `forwarded_ip` Block
 
 Use the first IP address in an HTTP header as an aggregate key. Each distinct forwarded IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the forwarded IP address by specifying `FORWARDED_IP` in your rate-based statement's `aggregate_key_type`. With this option, you must specify the header to use in the rate-based rule's [`forwarded_ip_config`](#forwarded_ip_config-block) block.
 
 The `forwarded_ip` block is configured as an empty block `{}`.
 
-### RateLimit `http_method` Block
+### `custom_key` `http_method` Block
 
 Use the request's HTTP method as an aggregate key. Each distinct HTTP method contributes to the aggregation instance. If you use just the HTTP method as your custom key, then each method fully defines an aggregation instance.
 
 The `http_method` block is configured as an empty block `{}`.
 
-### RateLimit `header` Block
+### `custom_key` `header` Block
 
 Use the value of a header in the request as an aggregate key. Each distinct value in the header contributes to the aggregation instance. If you use a single header as your custom key, then each value fully defines an aggregation instance.
 
 The `header` block supports the following arguments:
 
-* `name`: The name of the header to use.
-* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
+* `name` - The name of the header to use.
+* `text_transformation` - Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
-### RateLimit `ip` Block
+### `custom_key` `ip` Block
 
 Use the request's originating IP address as an aggregate key. Each distinct IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the IP address by specifying `IP` in your rate-based statement's `aggregate_key_type`.
 
@@ -1201,24 +1226,28 @@ The `ja4_fingerprint` block supports the following arguments:
 
 * `fallback_behavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
-### RateLimit `label_namespace` Block
+### `custom_key` `label_namespace` Block
 
 Use the specified label namespace as an aggregate key. Each distinct fully qualified label name that has the specified label namespace contributes to the aggregation instance. If you use just one label namespace as your custom key, then each label name fully defines an aggregation instance. This uses only labels that have been added to the request by rules that are evaluated before this rate-based rule in the web ACL. For information about label namespaces and names, see Label syntax and naming requirements (https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-label-requirements.html) in the WAF Developer Guide.
+
+* `namespace` - (Required) Label namespace to use as an aggregate key.
 
 The `label_namespace` block supports the following arguments:
 
 * `namespace`: The namespace to use for aggregation
 
-### RateLimit `query_argument` Block
+### `custom_key` `query_argument` Block
 
 Use the specified query argument as an aggregate key. Each distinct value for the named query argument contributes to the aggregation instance. If you use a single query argument as your custom key, then each value fully defines an aggregation instance.
+
+* `name` - (Required) Name of the query argument to use.
 
 The `query_argument` block supports the following arguments:
 
 * `name`: The name of the query argument to use.
 * `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
-### RateLimit `query_string` Block
+### `custom_key` `query_string` Block
 
 Use the request's query string as an aggregate key. Each distinct string contributes to the aggregation instance. If you use just the query string as your custom key, then each string fully defines an aggregation instance.
 
@@ -1226,7 +1255,7 @@ The `query_string` block supports the following arguments:
 
 * `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
-### RateLimit `uri_path` Block
+### `custom_key` `uri_path` Block
 
 Use the request's URI path as an aggregate key. Each distinct URI path contributes to the aggregation instance. If you use just the URI path as your custom key, then each URI path fully defines an aggregation instance.
 
