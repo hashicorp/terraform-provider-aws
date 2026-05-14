@@ -99,6 +99,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The name of the DynamoDB Global Table
 * `arn` - The ARN of the DynamoDB Global Table
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `delete` - (Default `1m`)
+* `update` - (Default `1m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB Global Tables using the global table name. For example:

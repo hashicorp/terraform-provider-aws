@@ -232,6 +232,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the GSI.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `delete` - (Default `20m`)
+* `update` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
