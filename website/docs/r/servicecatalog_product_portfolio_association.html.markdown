@@ -40,11 +40,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Identifier of the association.
 
+## Timeouts
+
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3m`)
-- `read` - (Default `10m`)
-- `delete` - (Default `3m`)
+* `create` - (Default `3m`)
+* `read` - (Default `10m`)
+* `delete` - (Default `3m`)
 
 ## Import
 
