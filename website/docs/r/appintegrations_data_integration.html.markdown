@@ -39,11 +39,13 @@ This resource supports the following arguments:
 * `description` - (Optional) Specifies the description of the Data Integration.
 * `kms_key` - (Required) Specifies the KMS key Amazon Resource Name (ARN) for the Data Integration.
 * `name` - (Required) Specifies the name of the Data Integration.
-* `schedule_config` - (Required) A block that defines the name of the data and how often it should be pulled from the source. The Schedule Config block is documented below.
+* `schedule_config` - (Required) A block that defines the name of the data and how often it should be pulled from the source. See [`schedule_config`](#schedule_config) below.
 * `source_uri` - (Required) Specifies the URI of the data source. Create an [AppFlow Connector Profile](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appflow_connector_profile) and reference the name of the profile in the URL. An example of this value for Salesforce is `Salesforce://AppFlow/example` where `example` is the name of the AppFlow Connector Profile.
 * `tags` - (Optional) Tags to apply to the Data Integration. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-A `schedule_config` block supports the following arguments:
+### `schedule_config`
+
+The `schedule_config` block supports the following arguments:
 
 * `first_execution_from` - (Required) The start date for objects to import in the first flow run as an Unix/epoch timestamp in milliseconds or in ISO-8601 format. This needs to be a time in the past, meaning that the data created or updated before this given date will not be downloaded.
 * `object` - (Required) The name of the object to pull from the data source. Examples of objects in Salesforce include `Case`, `Account`, or `Lead`.

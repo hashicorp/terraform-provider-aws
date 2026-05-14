@@ -26,21 +26,29 @@ resource "aws_appfabric_app_authorization_connection" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
-* `app_authorization_arn` - (Required) The Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app authorization to use for the request.
-* `auth_request` - (Optional) Contains OAuth2 authorization information.This is required if the app authorization for the request is configured with an OAuth2 (oauth2) authorization type.
+* `app_authorization_arn` - (Required) ARN of the app authorization to use for the request.
+* `app_bundle_arn` - (Required) ARN of the app bundle to use for the request.
+* `auth_request` - (Optional) OAuth2 authorization information. Required when the app authorization is configured with OAuth2. See [`auth_request` Block](#auth_request-block) below.
 
-Auth Request support the following:
+### `auth_request` Block
 
-* `code` - (Required) The authorization code returned by the application after permission is granted in the application OAuth page (after clicking on the AuthURL)..
-* `redirect_uri` - (Optional) The redirect URL that is specified in the AuthURL and the application client.
+The `auth_request` block supports the following arguments:
+
+* `code` - (Required) Authorization code returned by the application after permission is granted in the application OAuth page.
+* `redirect_uri` - (Required) Redirect URL specified in the AuthURL and the application client.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `app` - The name of the application.
-* `tenant` - Contains information about an application tenant, such as the application display name and identifier.
+* `app` - Name of the application.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tenant` - Information about the application tenant. See [`tenant` Block](#tenant-block) below.
+
+### `tenant` Block
+
+* `tenant_display_name` - Display name of the tenant.
+* `tenant_identifier` - ID of the application tenant.
 
 ## Timeouts
 

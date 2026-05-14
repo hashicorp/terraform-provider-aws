@@ -43,42 +43,42 @@ resource "aws_appfabric_ingestion_destination" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
-* `ingestion_arn` - (Required) The Amazon Resource Name (ARN) of the ingestion to use for the request.
-* `destination_configuration` - (Required) Contains information about the destination of ingested data.
-* `processing_configuration` - (Required) Contains information about how ingested data is processed.
+* `app_bundle_arn` - (Required) ARN of the app bundle to use for the request.
+* `ingestion_arn` - (Required) ARN of the ingestion to use for the request.
+* `destination_configuration` - (Required) Contains information about the destination of ingested data. See [`destination_configuration`](#destination_configuration-block) below.
+* `processing_configuration` - (Required) Contains information about how ingested data is processed. See [`processing_configuration`](#processing_configuration-block) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Destination Configuration support the following:
+### `destination_configuration` Block
 
-* `audit_log` - (Required) Contains information about an audit log destination configuration.
+* `audit_log` - (Required) Contains information about an audit log destination configuration. See [`audit_log`](#destination_configuration-audit_log-block) below.
 
-Audit Log Destination Configuration support the following:
+### `destination_configuration` `audit_log` Block
 
-* `destination` - (Required) Contains information about an audit log destination. Only one destination (Firehose Stream) or (S3 Bucket) can be specified.
+* `destination` - (Required) Contains information about an audit log destination. Only one destination (`firehose_stream` or `s3_bucket`) can be specified. See [`destination`](#destination-block) below.
 
-Destination support the following:
+### `destination` Block
 
-* `firehose_stream` - (Optional) Contains information about an Amazon Data Firehose delivery stream.
-* `s3_bucket` - (Optional) Contains information about an Amazon S3 bucket.
+* `firehose_stream` - (Optional) Contains information about an Amazon Data Firehose delivery stream. See [`firehose_stream`](#firehose_stream-block) below.
+* `s3_bucket` - (Optional) Contains information about an Amazon S3 bucket. See [`s3_bucket`](#s3_bucket-block) below.
 
-Firehose Stream support the following:
+### `firehose_stream` Block
 
-* `streamName` - (Required) The name of the Amazon Data Firehose delivery stream.
+* `stream_name` - (Required) Name of the Amazon Data Firehose delivery stream.
 
-S3 Bucket support the following:
+### `s3_bucket` Block
 
-* `bucketName` - (Required) The name of the Amazon S3 bucket.
-* `prefix` - (Optional) The object key to use.
+* `bucket_name` - (Required) Name of the Amazon S3 bucket.
+* `prefix` - (Optional) Object key prefix to use.
 
-Processing Configuration support the following:
+### `processing_configuration` Block
 
-* `audit_log` - (Required) Contains information about an audit log processing configuration.
+* `audit_log` - (Required) Contains information about an audit log processing configuration. See [`audit_log`](#processing_configuration-audit_log-block) below.
 
-Audit Log Processing Configuration support the following:
+### `processing_configuration` `audit_log` Block
 
-* `format` - (Required) The format in which the audit logs need to be formatted. Valid values: `json`, `parquet`.
-* `schema` - (Required) The event schema in which the audit logs need to be formatted. Valid values: `ocsf`, `raw`.
+* `format` - (Required) Format in which the audit logs need to be formatted. Valid values: `json`, `parquet`.
+* `schema` - (Required) Event schema in which the audit logs need to be formatted. Valid values: `ocsf`, `raw`.
 
 ## Attribute Reference
 

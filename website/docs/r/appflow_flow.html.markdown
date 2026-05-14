@@ -135,23 +135,23 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the flow.
-* `destination_flow_config` - (Required) A [Destination Flow Config](#destination-flow-config) that controls how Amazon AppFlow places data in the destination connector.
-* `source_flow_config` - (Required) The [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
-* `task` - (Required) A [Task](#task) that Amazon AppFlow performs while transferring the data in the flow run.
-* `trigger_config` - (Required) A [Trigger](#trigger-config) that determine how and when the flow runs.
+* `destination_flow_config` - (Required) [Destination Flow Config](#destination-flow-config) that controls how Amazon AppFlow places data in the destination connector.
+* `source_flow_config` - (Required) [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
+* `task` - (Required) [Task](#task) that Amazon AppFlow performs while transferring the data in the flow run.
+* `trigger_config` - (Required) [Trigger](#trigger-config) that determine how and when the flow runs.
 * `description` - (Optional) Description of the flow you want to create.
 * `kms_arn` - (Optional) ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `metadata_catalog_config` - (Optional) A [Catalog](#metadata-catalog-config) that determines the configuration that Amazon AppFlow uses when it catalogs the data that’s transferred by the associated flow. When Amazon AppFlow catalogs the data from a flow, it stores metadata in a data catalog.
+* `metadata_catalog_config` - (Optional) [Catalog](#metadata-catalog-config) that determines the configuration that Amazon AppFlow uses when it catalogs the data that’s transferred by the associated flow. When Amazon AppFlow catalogs the data from a flow, it stores metadata in a data catalog.
 
-### Destination Flow Config
+### `destination_flow_config` Block
 
 * `connector_type` - (Required) Type of connector, such as Salesforce, Amplitude, and so on. Valid values are `Salesforce`, `Singular`, `Slack`, `Redshift`, `S3`, `Marketo`, `Googleanalytics`, `Zendesk`, `Servicenow`, `Datadog`, `Trendmicro`, `Snowflake`, `Dynatrace`, `Infornexus`, `Amplitude`, `Veeva`, `EventBridge`, `LookoutMetrics`, `Upsolver`, `Honeycode`, `CustomerProfiles`, `SAPOData`, and `CustomConnector`.
 * `destination_connector_properties` - (Required) This stores the information that is required to query a particular connector. See [Destination Connector Properties](#destination-connector-properties) for more information.
 * `api_version` - (Optional) API version that the destination connector uses.
 * `connector_profile_name` - (Optional) Name of the connector profile. This name must be unique for each connector profile in the AWS account.
 
-#### Destination Connector Properties
+#### `destination_connector_properties` Block
 
 * `custom_connector` - (Optional) Properties that are required to query the custom Connector. See [Custom Connector Destination Properties](#custom-connector-destination-properties) for more details.
 * `customer_profiles` - (Optional) Properties that are required to query Amazon Connect Customer Profiles. See [Customer Profiles Destination Properties](#customer-profiles-destination-properties) for more details.
@@ -173,7 +173,22 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `object` - (Required) Object specified in the flow destination.
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 
-##### Custom Connector Destination Properties
+##### `destination_connector_properties` `honeycode` Block
+
+* `object` - (Required) Object specified in the flow destination.
+* `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
+
+##### `destination_connector_properties` `event_bridge` Block
+
+* `object` - (Required) Object specified in the flow destination.
+* `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
+
+##### `destination_connector_properties` `marketo` Block
+
+* `object` - (Required) Object specified in the flow destination.
+* `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
+
+##### `destination_connector_properties` `custom_connector` Block
 
 * `entity_name` - (Required) Entity specified in the custom connector as a destination in the flow.
 * `custom_properties` - (Optional) Custom properties that are specific to the connector when it's used as a destination in the flow. Maximum of 50 items.
@@ -181,109 +196,120 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `id_field_names` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update, delete, or upsert.
 * `write_operation_type` - (Optional) Type of write operation to be performed in the custom connector when it's used as destination. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
-##### Customer Profiles Destination Properties
+##### `destination_connector_properties` `customer_profiles` Block
 
 * `domain_name` - (Required) Unique name of the Amazon Connect Customer Profiles domain.
 * `object_type_name` - (Optional) Object specified in the Amazon Connect Customer Profiles flow destination.
 
-##### Redshift Destination Properties
+##### `destination_connector_properties` `redshift` Block
 
 * `intermediate_bucket_name` - (Required) Intermediate bucket that Amazon AppFlow uses when moving data into Amazon Redshift.
 * `object` - (Required) Object specified in the Amazon Redshift flow destination.
 * `bucket_prefix` - (Optional) Object key for the bucket in which Amazon AppFlow places the destination files.
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 
-##### S3 Destination Properties
+##### `destination_connector_properties` `s3` Block
 
 * `bucket_name` - (Required) Amazon S3 bucket name in which Amazon AppFlow places the transferred data.
 * `bucket_prefix` - (Optional) Object key for the bucket in which Amazon AppFlow places the destination files.
 * `s3_output_format_config` - (Optional) Configuration that determines how Amazon AppFlow should format the flow output data when Amazon S3 is used as the destination. See [S3 Output Format Config](#s3-output-format-config) for more details.
 
-###### S3 Output Format Config
+###### `destination_connector_properties` `s3` `s3_output_format_config` Block
 
 * `aggregation_config` - (Optional) Aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
 * `file_type` - (Optional) File type that Amazon AppFlow places in the Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefix_config` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
 * `preserve_source_data_typing` - (Optional, Boolean) Whether the data types from the source system need to be preserved (Only valid for `Parquet` file type)
 
-##### Salesforce Destination Properties
+###### `destination_connector_properties` `s3` `s3_output_format_config` `aggregation_config` Block
+
+* `aggregation_type` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
+* `target_file_size` - (Optional) Udesired file size, in MB, for each output file that Amazon AppFlow writes to the flow destination. Integer value.
+
+###### `destination_connector_properties` `s3` `s3_output_format_config` `prefix_config` Block
+
+* `prefix_format` - (Optional) Determines the level of granularity that's included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
+* `prefix_type` - (Optional) Determines the format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
+* `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`
+
+##### `destination_connector_properties` `salesforce` Block
 
 * `object` - (Required) Object specified in the flow destination.
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `id_field_names` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `write_operation_type` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
-* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
+* `data_transfer_api` - (Optional) Uwhich Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
-##### SAPOData Destination Properties
+##### `destination_connector_properties` `sapo_data` Block
 
 * `object_path` - (Required) Object path specified in the SAPOData flow destination.
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `id_field_names` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `success_response_handling_config` - (Optional) Determines how Amazon AppFlow handles the success response that it gets from the connector after placing data. See [Success Response Handling Config](#success-response-handling-config) for more details.
-* `write_operation` - (Optional) Possible write operations in the destination connector. When this value is not provided, this defaults to the `INSERT` operation. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `write_operation_type` - (Optional) Type of write operation to be performed in the destination connector. When this value is not provided, this defaults to the `INSERT` operation. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
-###### Success Response Handling Config
+###### `success_response_handling_config` Block
 
 * `bucket_name` - (Optional) Name of the Amazon S3 bucket.
 * `bucket_prefix` - (Optional) Amazon S3 bucket prefix.
 
-##### Snowflake Destination Properties
+##### `destination_connector_properties` `snowflake` Block
 
 * `intermediate_bucket_name` - (Required) Intermediate bucket that Amazon AppFlow uses when moving data into Amazon Snowflake.
 * `object` - (Required) Object specified in the Amazon Snowflake flow destination.
 * `bucket_prefix` - (Optional) Object key for the bucket in which Amazon AppFlow places the destination files.
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 
-##### Upsolver Destination Properties
+##### `destination_connector_properties` `upsolver` Block
 
 * `bucket_name` - (Required) Upsolver Amazon S3 bucket name in which Amazon AppFlow places the transferred data. This must begin with `upsolver-appflow`.
 * `bucket_prefix` - (Optional) Object key for the Upsolver Amazon S3 Bucket in which Amazon AppFlow places the destination files.
 * `s3_output_format_config` - (Optional) Configuration that determines how Amazon AppFlow should format the flow output data when Upsolver is used as the destination. See [Upsolver S3 Output Format Config](#upsolver-s3-output-format-config) for more details.
 
-###### Upsolver S3 Output Format Config
+###### `destination_connector_properties` `upsolver` `s3_output_format_config` Block
 
 * `aggregation_config` - (Optional) Aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
 * `file_type` - (Optional) File type that Amazon AppFlow places in the Upsolver Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefix_config` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
 
-###### Aggregation Config
+###### `destination_connector_properties` `upsolver` `s3_output_format_config` `aggregation_config` Block
 
 * `aggregation_type` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
-* `target_file_size` - (Optional) The desired file size, in MB, for each output file that Amazon AppFlow writes to the flow destination. Integer value.
 
-###### Prefix Config
+###### `destination_connector_properties` `upsolver` `s3_output_format_config` `prefix_config` Block
 
 * `prefix_format` - (Optional) Determines the level of granularity that's included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
 * `prefix_type` - (Optional) Determines the format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
 * `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`
 
-##### Zendesk Destination Properties
+##### `destination_connector_properties` `zendesk` Block
 
 * `object` - (Required) Object specified in the flow destination.
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `id_field_names` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `write_operation_type` - (Optional) This specifies the type of write operation to be performed in Zendesk. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
-###### Error Handling Config
+###### `error_handling_config` Block
 
 * `bucket_name` - (Optional) Name of the Amazon S3 bucket.
 * `bucket_prefix` - (Optional) Amazon S3 bucket prefix.
 * `fail_on_first_destination_error` - (Optional, boolean) If the flow should fail after the first instance of a failure when attempting to place data in the destination.
 
-### Source Flow Config
+### `source_flow_config` Block
 
 * `connector_type` - (Required) Type of connector, such as Salesforce, Amplitude, and so on. Valid values are `Salesforce`, `Singular`, `Slack`, `Redshift`, `S3`, `Marketo`, `Googleanalytics`, `Zendesk`, `Servicenow`, `Datadog`, `Trendmicro`, `Snowflake`, `Dynatrace`, `Infornexus`, `Amplitude`, `Veeva`, `EventBridge`, `LookoutMetrics`, `Upsolver`, `Honeycode`, `CustomerProfiles`, `SAPOData`, and `CustomConnector`.
 * `source_connector_properties` - (Required) Information that is required to query a particular source connector. See [Source Connector Properties](#source-connector-properties) for details.
 * `api_version` - (Optional) API version that the destination connector uses.
 * `connector_profile_name` - (Optional) Name of the connector profile. This name must be unique for each connector profile in the AWS account.
-* `incremental_pull_config` - (Optional) Defines the configuration for a scheduled incremental data pull. If a valid configuration is provided, the fields specified in the configuration are used when querying for the incremental data pull. See [Incremental Pull Config](#incremental-pull-config) for more details.
+* `incremental_pull_config` - (Optional) Uthe configuration for a scheduled incremental data pull. If a valid configuration is provided, the fields specified in the configuration are used when querying for the incremental data pull. See [Incremental Pull Config](#incremental-pull-config) for more details.
 
-#### Source Connector Properties
+#### `source_connector_properties` Block
 
 * `amplitude` - (Optional) Information that is required for querying Amplitude. See [Generic Source Properties](#generic-source-properties) for more details.
 * `custom_connector` - (Optional) Properties that are applied when the custom connector is being used as a source. See [Custom Connector Source Properties](#custom-connector-source-properties).
 * `datadog` - (Optional) Information that is required for querying Datadog. See [Generic Source Properties](#generic-source-properties) for more details.
-* `dynratrace` - (Optional) Information that is required for querying Dynatrace. See [Generic Source Properties](#generic-source-properties) for more details.
+* `dynatrace` - (Optional) Information that is required for querying Dynatrace. See [Generic Source Properties](#generic-source-properties) for more details.
+* `google_analytics` - (Optional) Information that is required for querying Google Analytics. See [Generic Source Properties](#generic-source-properties) for more details.
 * `infor_nexus` - (Optional) Information that is required for querying Infor Nexus. See [Generic Source Properties](#generic-source-properties) for more details.
 * `marketo` - (Optional) Information that is required for querying Marketo. See [Generic Source Properties](#generic-source-properties) for more details.
 * `s3` - (Optional) Information that is required for querying Amazon S3. See [S3 Source Properties](#s3-source-properties) for more details.
@@ -292,7 +318,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `service_now` - (Optional) Information that is required for querying ServiceNow. See [Generic Source Properties](#generic-source-properties) for more details.
 * `singular` - (Optional) Information that is required for querying Singular. See [Generic Source Properties](#generic-source-properties) for more details.
 * `slack` - (Optional) Information that is required for querying Slack. See [Generic Source Properties](#generic-source-properties) for more details.
-* `trend_micro` - (Optional) Information that is required for querying Trend Micro. See [Generic Source Properties](#generic-source-properties) for more details.
+* `trendmicro` - (Optional) Information that is required for querying Trend Micro. See [Generic Source Properties](#generic-source-properties) for more details.
 * `veeva` - (Optional) Information that is required for querying Veeva. See [Veeva Source Properties](#veeva-source-properties) for more details.
 * `zendesk` - (Optional) Information that is required for querying Zendesk. See [Generic Source Properties](#generic-source-properties) for more details.
 
@@ -302,37 +328,87 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 * `object` - (Required) Object specified in the flow source.
 
-##### Custom Connector Source Properties
+##### `source_connector_properties` `amplitude` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `datadog` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `dynatrace` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `google_analytics` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `infor_nexus` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `marketo` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `slack` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `service_now` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `singular` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `trendmicro` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `zendesk` Block
+
+* `object` - (Required) Object specified in the flow source.
+
+##### `source_connector_properties` `custom_connector` Block
 
 * `entity_name` - (Required) Entity specified in the custom connector as a source in the flow.
 * `custom_properties` - (Optional) Custom properties that are specific to the connector when it's used as a source in the flow. Maximum of 50 items.
 
-##### S3 Source Properties
+##### `source_connector_properties` `s3` Block
 
 * `bucket_name` - (Required) Amazon S3 bucket name where the source files are stored.
 * `bucket_prefix` - (Optional) Object key for the Amazon S3 bucket in which the source files are stored.
 * `s3_input_format_config` - (Optional) When you use Amazon S3 as the source, the configuration format that you provide the flow input data. See [S3 Input Format Config](#s3-input-format-config) for details.
 
-###### S3 Input Format Config
+###### `s3_input_format_config` Block
 
 * `s3_input_file_type` - (Optional) File type that Amazon AppFlow gets from your Amazon S3 bucket. Valid values are `CSV` and `JSON`.
 
-##### Salesforce Source Properties
+##### `source_connector_properties` `salesforce` Block
 
 * `object` - (Required) Object specified in the Salesforce flow source.
 * `enable_dynamic_field_update` - (Optional, boolean) Flag that enables dynamic fetching of new (recently added) fields in the Salesforce objects while running a flow.
 * `include_deleted_records` - (Optional, boolean) Whether Amazon AppFlow includes deleted files in the flow run.
-* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
+* `data_transfer_api` - (Optional) Salesforce API used by Amazon AppFlow when your flow transfers data to Salesforce.
 
-##### SAPOData Source Properties
+##### `source_connector_properties` `sapo_data` Block
 
 * `object_path` - (Required) Object path specified in the SAPOData flow source.
-* `pagination_config` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance.
-    * `max_page_size` - (Optional) he maximum number of records that Amazon AppFlow receives in each page of the response from your SAP application.
-* `parallelism_config` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance.
-    * `max_parallelism` - (Optional) The maximum number of processes that Amazon AppFlow runs at the same time when it retrieves your data from your SAP application.
+* `pagination_config` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance. See [Pagination Config](#pagination-config) for more details.
+* `parallelism_config` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance. See [Parallelism Config](#parallelism-config) for more details.
 
-##### Veeva Source Properties
+###### `sapo_data` `pagination_config` Block
+
+* `max_page_size` - (Optional) Maximum number of records that Amazon AppFlow receives in each page of the response from your SAP application.
+
+###### `sapo_data` `parallelism_config` Block
+
+* `max_page_size` - (Required) Maximum number of processes that Amazon AppFlow runs at the same time when it retrieves your data from your SAP application. Must be between 1 and 10.
+
+##### `source_connector_properties` `veeva` Block
 
 * `object` - (Required) Object specified in the Veeva flow source.
 * `document_type` - (Optional) Document type specified in the Veeva document extract flow.
@@ -340,11 +416,11 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `include_renditions` - (Optional, boolean) Boolean value to include file renditions in Veeva document extract flow.
 * `include_source_files` - (Optional, boolean) Boolean value to include source files in Veeva document extract flow.
 
-#### Incremental Pull Config
+#### `incremental_pull_config` Block
 
 * `datetime_type_field_name` - (Optional) Field that specifies the date time or timestamp field as the criteria to use when importing incremental records from the source.
 
-### Task
+### `task` Block
 
 * `source_fields` - (Required) Source fields to which a particular task is applied.
 * `task_type` - (Required) Particular task implementation that Amazon AppFlow performs. Valid values are `Arithmetic`, `Filter`, `Map`, `Map_all`, `Mask`, `Merge`, `Passthrough`, `Truncate`, and `Validate`.
@@ -352,7 +428,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `destination_field` - (Optional) Field in a destination connector, or a field value against which Amazon AppFlow validates a source field.
 * `task_properties` - (Optional) Map used to store task-related information. The execution service looks for particular information based on the `TaskType`. Valid keys are `VALUE`, `VALUES`, `DATA_TYPE`, `UPPER_BOUND`, `LOWER_BOUND`, `SOURCE_DATA_TYPE`, `DESTINATION_DATA_TYPE`, `VALIDATION_ACTION`, `MASK_VALUE`, `MASK_LENGTH`, `TRUNCATE_LENGTH`, `MATH_OPERATION_FIELDS_ORDER`, `CONCAT_FORMAT`, `SUBFIELD_CATEGORY_MAP`, and `EXCLUDE_SOURCE_FIELDS_LIST`.
 
-#### Connector Operator
+#### `connector_operator` Block
 
 * `amplitude` - (Optional) Operation to be performed on the provided Amplitude source fields. The only valid value is `BETWEEN`.
 * `custom_connector` - (Optional) Operators supported by the custom connector. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `CONTAINS`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `NOT_EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
@@ -371,14 +447,16 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `veeva` - (Optional) Operation to be performed on the provided Veeva source fields. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `CONTAINS`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `NOT_EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
 * `zendesk` - (Optional) Operation to be performed on the provided Zendesk source fields. Valid values are `PROJECTION`, `GREATER_THAN`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
 
-### Trigger Config
+### `trigger_config` Block
 
 * `trigger_type` - (Required) Type of flow trigger. Valid values are `Scheduled`, `Event`, and `OnDemand`.
 * `trigger_properties` - (Optional) Configuration details of a schedule-triggered flow as defined by the user. Currently, these settings only apply to the `Scheduled` trigger type. See [Scheduled Trigger Properties](#scheduled-trigger-properties) for details.
 
 #### Scheduled Trigger Properties
 
-The `trigger_properties` block only supports one attribute: `scheduled`, a block which in turn supports the following:
+The `trigger_properties` block only supports one attribute: `scheduled`. See [Scheduled](#scheduled) for details.
+
+##### `trigger_properties` `scheduled` Block
 
 * `schedule_expression` - (Required) Scheduling expression that determines the rate at which the schedule will run, for example `rate(5minutes)`.
 * `data_pull_mode` - (Optional) Whether a scheduled flow has an incremental data transfer or a complete data transfer for each flow run. Valid values are `Incremental` and `Complete`.
@@ -388,32 +466,22 @@ The `trigger_properties` block only supports one attribute: `scheduled`, a block
 * `schedule_start_time` - (Optional) Scheduled start time for a schedule-triggered flow. Must be a valid RFC3339 timestamp.
 * `timezone` - (Optional) Time zone used when referring to the date and time of a scheduled-triggered flow, such as `America/New_York`.
 
-```terraform
-resource "aws_appflow_flow" "example" {
-  # ... other configuration ...
+### `metadata_catalog_config` Block
 
-  trigger_config {
-    scheduled {
-      schedule_expression = "rate(1minutes)"
-    }
-  }
-}
-```
+The `metadata_catalog_config` block only supports one attribute: `glue_data_catalog`. See [Glue Data Catalog](#glue-data-catalog) for details.
 
-### Metadata Catalog Config
+#### `glue_data_catalog` Block
 
-The `metadata_catalog_config` block only supports one attribute: `glue_data_catalog`, a block which in turn supports the following:
-
-* `database_name` - (Required) The name of an existing Glue database to store the metadata tables that Amazon AppFlow creates.
-* `role_arn` - (Required) The ARN of an IAM role that grants AppFlow the permissions it needs to create Data Catalog tables, databases, and partitions.
-* `table_prefix` - (Required) A naming prefix for each Data Catalog table that Amazon AppFlow creates
+* `database_name` - (Required) Uname of an existing Glue database to store the metadata tables that Amazon AppFlow creates.
+* `role_arn` - (Required) ARN of an IAM role that grants AppFlow the permissions it needs to create Data Catalog tables, databases, and partitions.
+* `table_prefix` - (Required) Unaming prefix for each Data Catalog table that Amazon AppFlow creates
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Flow's ARN.
-* `flow_status` - The current status of the flow.
+* `flow_status` - Current status of the flow.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
