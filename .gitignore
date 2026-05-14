@@ -33,6 +33,7 @@ skaff/skaff
 sweeper-bin
 terraform-provider-aws
 terraform-providers-schema/
+/terraform-plugin-dir
 terraform.tfplan
 terraform.tfstate
 vendor/
