@@ -351,6 +351,43 @@ func TestExpandSetOfInt32(t *testing.T) {
 	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
+type tfListOfFloat64Field struct {
+	Field1 types.List `tfsdk:"field1"`
+}
+
+type tfObjectField struct {
+	Field1 fwtypes.ObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
+}
+
+type tfSetOfFloat64Field struct {
+	Field1 types.Set `tfsdk:"field1"`
+}
+
+func TestExpandCollectionIncompatibleTypes(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"list of float64 to incompatible": {
+			Source:     &tfListOfFloat64Field{Field1: types.ListValueMust(types.Float64Type, []attr.Value{types.Float64Value(1.1)})},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+		"set of float64 to incompatible": {
+			Source:     &tfSetOfFloat64Field{Field1: types.SetValueMust(types.Float64Type, []attr.Value{types.Float64Value(1.1)})},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+		"object to incompatible": {
+			Source:     &tfObjectField{Field1: fwtypes.NewObjectValueOfMust(ctx, &tfSingleStringField{Field1: types.StringValue("x")})},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
 func TestExpandListOfStringEnum(t *testing.T) {
 	t.Parallel()
 

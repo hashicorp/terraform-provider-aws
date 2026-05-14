@@ -68,6 +68,10 @@ type awsMapOfInt struct {
 	Field1 map[string]int
 }
 
+type tfSingleMapField struct {
+	Field1 types.Map `tfsdk:"field1"`
+}
+
 type awsMapOfStringPointerField struct {
 	Field1 map[string]*string
 }
@@ -208,6 +212,13 @@ func TestExpandMaps(t *testing.T) {
 					},
 				},
 			},
+		},
+		"map of string to incompatible target": {
+			Source: &tfSingleMapField{
+				Field1: types.MapValueMust(types.StringType, map[string]attr.Value{"a": types.StringValue("b")}),
+			},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
 		},
 	}
 
