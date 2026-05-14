@@ -16,6 +16,8 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -37,6 +39,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -278,6 +281,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 	if len(waitOut.ActiveConfigurations) > 0 {
 		// Save plan's env/secret ordering before flattening (API may reorder).
 		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
+		planNetworkConfiguration := plan.NetworkConfiguration
 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
@@ -285,6 +289,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		}
 
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
+		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
 	}
 
 	plan.Cluster = fwflex.StringValueToFramework(ctx, cluster)
@@ -303,6 +308,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 	}
 
 	conn := r.Meta().ECSClient(ctx)
+	ec2Conn := r.Meta().EC2Client(ctx)
 
 	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	out, err := findExpressGatewayServiceByARN(ctx, conn, serviceARN)
@@ -333,6 +339,8 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		filterAmazonECSManagedSecurityGroups(ctx, ec2Conn, &state.NetworkConfiguration)
 
 		// Restore state ordering if env vars are unchanged (no-op during import).
 		restoreContainerOrderingIfUnchanged(ctx, &state.PrimaryContainer, stateEnv, stateSecrets)
@@ -440,6 +448,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 	if len(waitOut.ActiveConfigurations) > 0 {
 		// Save plan's env/secret ordering before flattening (API may reorder).
 		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
+		planNetworkConfiguration := plan.NetworkConfiguration
 
 		orderExpressGatewayContainerEnvironmentVariables(&waitOut.ActiveConfigurations[0])
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
@@ -448,6 +457,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		}
 
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
+		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
 	}
 
 	// Set Optional+Computed attributes from API response
@@ -859,6 +869,81 @@ func restoreContainerOrderingIfUnchanged(
 		return
 	}
 	*primaryContainer = updated
+}
+
+func restorePlanNetworkConfigurationSecurityGroups(
+	ctx context.Context,
+	networkConfiguration *fwtypes.ListNestedObjectValueOf[expressGatewayServiceNetworkConfigurationModel],
+	planNetworkConfiguration fwtypes.ListNestedObjectValueOf[expressGatewayServiceNetworkConfigurationModel],
+) {
+	planConfig, diags := planNetworkConfiguration.ToPtr(ctx)
+	if diags.HasError() || planConfig == nil || planConfig.SecurityGroups.IsUnknown() {
+		return
+	}
+
+	currentConfig, diags := networkConfiguration.ToPtr(ctx)
+	if diags.HasError() || currentConfig == nil {
+		return
+	}
+
+	currentConfig.SecurityGroups = planConfig.SecurityGroups
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, currentConfig)
+	if diags.HasError() {
+		return
+	}
+
+	*networkConfiguration = updated
+}
+
+func filterAmazonECSManagedSecurityGroups(
+	ctx context.Context,
+	conn *ec2.Client,
+	networkConfiguration *fwtypes.ListNestedObjectValueOf[expressGatewayServiceNetworkConfigurationModel],
+) {
+	currentConfig, diags := networkConfiguration.ToPtr(ctx)
+	if diags.HasError() || currentConfig == nil || currentConfig.SecurityGroups.IsNull() || currentConfig.SecurityGroups.IsUnknown() {
+		return
+	}
+
+	securityGroups := fwflex.ExpandFrameworkStringValueSet(ctx, currentConfig.SecurityGroups)
+	if len(securityGroups) == 0 {
+		return
+	}
+
+	groups, err := tfec2.FindSecurityGroups(ctx, conn, &ec2.DescribeSecurityGroupsInput{
+		GroupIds: securityGroups,
+	})
+	if err != nil {
+		return
+	}
+
+	filteredGroupIDs := make([]string, 0, len(groups))
+	for _, group := range groups {
+		if !hasAmazonECSManagedTag(group.Tags) {
+			filteredGroupIDs = append(filteredGroupIDs, aws.ToString(group.GroupId))
+		}
+	}
+
+	slices.Sort(filteredGroupIDs)
+	currentConfig.SecurityGroups = fwflex.FlattenFrameworkStringValueSetOfString(ctx, filteredGroupIDs)
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, currentConfig)
+	if diags.HasError() {
+		return
+	}
+
+	*networkConfiguration = updated
+}
+
+func hasAmazonECSManagedTag(tags []ec2types.Tag) bool {
+	for _, tag := range tags {
+		if aws.ToString(tag.Key) == "AmazonECSManaged" && aws.ToString(tag.Value) == "true" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // envListsEquivalent returns true if two environment variable lists contain the same
