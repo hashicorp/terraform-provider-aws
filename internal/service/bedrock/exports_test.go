@@ -8,13 +8,15 @@ var (
 	ResourceCustomModel                         = newCustomModelResource
 	ResourceGuardrail                           = newGuardrailResource
 	ResourceGuardrailVersion                    = newGuardrailVersionResource
-	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
 	ResourceInferenceProfile                    = newInferenceProfileResource
+	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
+	ResourcePromptRouter                        = newPromptRouterResource
 
 	FindCustomModelByID                     = findCustomModelByID
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration
+	FindPromptRouterByARN                   = findPromptRouterByARN
 	FindProvisionedModelThroughputByID      = findProvisionedModelThroughputByID
 
 	WaitModelCustomizationJobCompleted = waitModelCustomizationJobCompleted
