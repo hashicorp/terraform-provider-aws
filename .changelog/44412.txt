@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_ssm_parameter: added `load_value` argument to not expose `value` and `insecure_value` attributes to tfstate.
+```
