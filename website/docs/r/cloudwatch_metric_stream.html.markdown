@@ -217,6 +217,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `state` - State of the metric stream. Possible values are `running` and `stopped`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `1m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch metric streams using the `name`. For example:

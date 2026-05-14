@@ -45,7 +45,7 @@ This resource supports the following arguments:
 * `filter` - (Required) Filter criteria for the archive rule. See [Filter](#filter) for more details.
 * `rule_name` - (Required) Rule name.
 
-### Filter
+### `filter` Block
 
 **Note** One comparator must be included with each filter.
 

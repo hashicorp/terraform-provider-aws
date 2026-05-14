@@ -47,3 +47,11 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudcontrolapi_resource.example.properties)["example"]`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `120m`)
+* `delete` - (Default `120m`)
+* `update` - (Default `120m`)

@@ -59,14 +59,14 @@ This resource supports the following arguments:
 * `sub_domain` - (Required) Setting for the subdomain. Documented below.
 * `wait_for_verification` - (Optional) If enabled, the resource will wait for the domain association status to change to `PENDING_DEPLOYMENT` or `AVAILABLE`. Setting this to `false` will skip the process. Default: `true`.
 
-The `certificate_settings` configuration block supports the following arguments:
+### `certificate_settings` Block
 
 * `type` - (Required) The certificate type.
   Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
 * `custom_certificate_arn` - (Optional) The Amazon resource name (ARN) for the custom certificate.
   Required when `type` is `CUSTOM`.
 
-The `sub_domain` configuration block supports the following arguments:
+### `sub_domain` Block
 
 * `branch_name` - (Required) Branch name setting for the subdomain.
 * `prefix` - (Required) Prefix setting for the subdomain.

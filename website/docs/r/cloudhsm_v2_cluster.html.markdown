@@ -90,6 +90,14 @@ This resource exports the following attributes in addition to the arguments abov
 [1]: https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html
 [2]: https://docs.aws.amazon.com/cloudhsm/latest/APIReference/Welcome.html
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `120m`)
+* `delete` - (Default `120m`)
+* `update` - (Default `120m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudHSM v2 Clusters using the cluster `id`. For example:
