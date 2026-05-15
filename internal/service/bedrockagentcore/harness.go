@@ -1071,7 +1071,7 @@ func (m harnessToolConfigurationModel) Expand(ctx context.Context) (any, diag.Di
 		}
 		var r awstypes.HarnessToolConfigurationMemberInlineFunction
 		r.Value = awstypes.HarnessInlineFunctionConfig{
-			Description: aws.String(data.Description.ValueString()),
+			Description: fwflex.StringFromFramework(ctx, data.Description),
 		}
 		if !data.InputSchema.IsNull() {
 			if json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, data.InputSchema), document.NewLazyDocument); err == nil {
