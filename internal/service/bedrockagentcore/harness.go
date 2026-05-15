@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -1355,8 +1356,8 @@ type harnessMemoryConfigurationModel struct {
 }
 
 var (
-	_ fwflex.Expander  = harnessMemoryConfigurationModel{}
-	_ fwflex.Flattener = &harnessMemoryConfigurationModel{}
+	_ fwflex.TypedExpander = harnessMemoryConfigurationModel{}
+	_ fwflex.Flattener     = &harnessMemoryConfigurationModel{}
 )
 
 func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
@@ -1375,7 +1376,19 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 	return diags
 }
 
-func (m harnessMemoryConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m harnessMemoryConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.HarnessMemoryConfiguration]():
+		return m.expandToHarnessMemoryConfiguration(ctx)
+
+	case reflect.TypeFor[awstypes.UpdatedHarnessMemoryConfiguration]():
+		return m.expandToUpdatedHarnessMemoryConfiguration(ctx)
+	}
+	return nil, diags
+}
+
+func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx context.Context) (awstypes.HarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if !m.AgentCoreMemoryConfiguration.IsNull() {
 		data, d := m.AgentCoreMemoryConfiguration.ToPtr(ctx)
@@ -1386,6 +1399,19 @@ func (m harnessMemoryConfigurationModel) Expand(ctx context.Context) (any, diag.
 		var r awstypes.HarnessMemoryConfigurationMemberAgentCoreMemoryConfiguration
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		return &r, diags
+	}
+	return nil, diags
+}
+
+func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfiguration(ctx context.Context) (*awstypes.UpdatedHarnessMemoryConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if !m.AgentCoreMemoryConfiguration.IsNull() {
+		r, d := m.expandToHarnessMemoryConfiguration(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
 	}
 	return nil, diags
 }
