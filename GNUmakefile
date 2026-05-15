@@ -821,7 +821,11 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 
 swissshepherd: ## [CI] Run Swiss Shepherd checks
 	@echo "make: Running Swiss Shepherd checks..."
-	@swissshepherd --config .ci/swissshepherd.hcl
+	@swissshepherd --config .ci/swissshepherd-weak.hcl
+
+swissshepherd-count: ## [CI] Run Swiss Shepherd checks
+	@echo "make: Count of all Swiss Shepherd checks..."
+	@swissshepherd --config .ci/swissshepherd-full.hcl | grep -E '^(WARN|ERROR)' | wc -l
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
@@ -1268,6 +1272,8 @@ yamllint: ## [CI] YAML Linting / yamllint
 	sweeper-check \
 	sweeper-linked \
 	sweeper-unlinked \
+	swissshepherd \
+	swissshepherd-full \
 	t \
 	test \
 	test-compile \
