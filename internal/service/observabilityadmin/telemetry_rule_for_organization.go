@@ -38,9 +38,11 @@ import (
 // @Tags(identifierAttribute="rule_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/observabilityadmin;observabilityadmin;observabilityadmin.GetTelemetryRuleForOrganizationOutput")
 // @Testing(preCheck="testAccTelemetryRuleForOrganizationPreCheck")
+// @IdentityAttribute("rule_name")
 // @Testing(tagsTest=false)
 // @Testing(importStateIdAttribute="rule_name")
 // @Testing(serialize=true)
+// @Testing(hasNoPreExistingResource=true)
 func newTelemetryRuleForOrganizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &telemetryRuleForOrganizationResource{}
 
