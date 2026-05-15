@@ -26,10 +26,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccRandomHarnessName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
+
 func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +73,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -108,7 +112,7 @@ func TestAccBedrockAgentCoreHarness_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -150,7 +154,7 @@ func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_update_allowedTools(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -192,7 +196,7 @@ func TestAccBedrockAgentCoreHarness_update_allowedTools(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_update_limits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -234,7 +238,7 @@ func TestAccBedrockAgentCoreHarness_update_limits(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -272,7 +276,7 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_truncation_slidingWindow(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -314,7 +318,7 @@ func TestAccBedrockAgentCoreHarness_truncation_slidingWindow(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_truncation_summarization(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -345,7 +349,7 @@ func TestAccBedrockAgentCoreHarness_truncation_summarization(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_tools_inlineFunction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -376,7 +380,7 @@ func TestAccBedrockAgentCoreHarness_tools_inlineFunction(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -418,7 +422,7 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -460,7 +464,7 @@ func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -502,7 +506,7 @@ func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_authorizerConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -544,7 +548,7 @@ func TestAccBedrockAgentCoreHarness_authorizerConfiguration(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomHarnessName(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

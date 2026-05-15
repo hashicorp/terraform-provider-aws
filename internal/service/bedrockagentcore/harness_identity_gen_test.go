@@ -26,7 +26,7 @@ func TestAccBedrockAgentCoreHarness_Identity_basic(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomHarnessName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -113,7 +113,7 @@ func TestAccBedrockAgentCoreHarness_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomHarnessName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
