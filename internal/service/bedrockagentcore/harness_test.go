@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -42,7 +43,10 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -57,13 +61,6 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
-				ImportStateVerifyIdentifierAttribute: "harness_id",
 			},
 		},
 	})
@@ -86,7 +83,10 @@ func TestAccBedrockAgentCoreHarness_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceHarness, resourceName),
@@ -259,12 +259,11 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ImportStateVerifyIdentifierAttribute: "harness_id",
-				ImportStateVerifyIgnore:              []string{"model.0.bedrock_model_config.0.temperature", "model.0.bedrock_model_config.0.top_p"},
 			},
 		},
 	})
@@ -575,10 +574,10 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 			},
 			{
@@ -718,25 +717,6 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 `, rName)
-}
-
-func testAccHarnessConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_harness" "test" {
-  harness_name       = %[1]q
-  execution_role_arn = aws_iam_role.test.arn
-
-  model {
-    bedrock_model_config {
-      model_id = "anthropic.claude-sonnet-4-20250514"
-    }
-  }
-
-  system_prompt {
-    text = "You are a helpful assistant."
-  }
-}
-`, rName))
 }
 
 func testAccHarnessConfig_systemPrompt(rName, prompt string) string {

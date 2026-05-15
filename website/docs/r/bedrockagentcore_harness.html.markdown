@@ -352,17 +352,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Harness using `harness_id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_harness.example
-  id = "harness-12345"
+  identity = {
+    "harness_id" = "example-Ab12Cd34Ef"
+  }
+}
+
+resource "aws_bedrockagentcore_harness" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Harness using `harness_id`. For example:
+### Identity Schema
+
+#### Required
+
+- `harness_id` (String) ID of the harness.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Harnesses using `harness_id`. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_harness.example
+  id = "example-Ab12Cd34Ef"
+}
+```
+
+Using `terraform import`, import Bedrock AgentCore Harnesses using `harness_id`. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_harness.example harness-12345
+% terraform import aws_bedrockagentcore_harness.example example-Ab12Cd34Ef
 ```
