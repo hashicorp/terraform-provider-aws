@@ -73,6 +73,10 @@ func (r *trustStoreResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"use_client_certificate_ocsp_endpoint": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"ca_certificates_bundle_source": schema.ListNestedBlock{
@@ -354,15 +358,16 @@ func findTrustStore(ctx context.Context, conn *cloudfront.Client, input *cloudfr
 }
 
 type trustStoreResourceModel struct {
-	ARN                        types.String                                                     `tfsdk:"arn"`
-	CACertificatesBundleSource fwtypes.ListNestedObjectValueOf[caCertificatesBundleSourceModel] `tfsdk:"ca_certificates_bundle_source"`
-	Etag                       types.String                                                     `tfsdk:"etag"`
-	ID                         types.String                                                     `tfsdk:"id"`
-	Name                       types.String                                                     `tfsdk:"name"`
-	NumberOfCACertificates     types.Int32                                                      `tfsdk:"number_of_ca_certificates"`
-	Tags                       tftags.Map                                                       `tfsdk:"tags"`
-	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
+	ARN                              types.String                                                     `tfsdk:"arn"`
+	CACertificatesBundleSource       fwtypes.ListNestedObjectValueOf[caCertificatesBundleSourceModel] `tfsdk:"ca_certificates_bundle_source"`
+	Etag                             types.String                                                     `tfsdk:"etag"`
+	ID                               types.String                                                     `tfsdk:"id"`
+	Name                             types.String                                                     `tfsdk:"name"`
+	NumberOfCACertificates           types.Int32                                                      `tfsdk:"number_of_ca_certificates"`
+	Tags                             tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                          tftags.Map                                                       `tfsdk:"tags_all"`
+	Timeouts                         timeouts.Value                                                   `tfsdk:"timeouts"`
+	UseClientCertificateOCSPEndpoint types.Bool                                                       `tfsdk:"use_client_certificate_ocsp_endpoint"`
 }
 
 type caCertificatesBundleSourceModel struct {
