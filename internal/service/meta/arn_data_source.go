@@ -10,8 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,10 +41,7 @@ func (d *arnDataSource) Schema(ctx context.Context, request datasource.SchemaReq
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID: datasourceattribute.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			"partition": schema.StringAttribute{
 				Computed: true,
 			},
