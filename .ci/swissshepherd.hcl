@@ -25,16 +25,167 @@ ignore_contents_check = [
   "data_source/aws_kms_secret",
 ]
 
+# ─── Type overrides ─────────────────────────────────────────────────────────
+# Define bylines, frontmatter requirements, and other AWS-specific conventions.
+
+type "resource" {
+  schema_kind   = "resource"
+  website_paths = ["website/docs/r/{name}.html.markdown"]
+  title_prefix  = "Resource"
+
+  arguments_bylines = [
+    "This resource supports the following arguments:",
+    "The following arguments are required:",
+    "The following arguments are optional:",
+    "This resource does not support any arguments.",
+  ]
+  attributes_bylines = [
+    "This resource exports the following attributes in addition to the arguments above:",
+    "This resource exports no additional attributes.",
+  ]
+
+  require_attributes = "required"
+  require_import     = "optional"
+  require_timeouts   = "optional"
+  require_signature  = "forbidden"
+
+  frontmatter_require = ["description", "page_title"]
+  frontmatter_forbid  = ["sidebar_current"]
+
+  region_aware = true
+}
+
+type "data_source" {
+  schema_kind   = "data_source"
+  website_paths = ["website/docs/d/{name}.html.markdown"]
+  title_prefix  = "Data Source"
+
+  arguments_bylines = [
+    "This data source supports the following arguments:",
+    "The following arguments are required:",
+    "The following arguments are optional:",
+    "This data source does not support any arguments.",
+  ]
+  attributes_bylines = [
+    "This data source exports the following attributes in addition to the arguments above:",
+    "This data source exports no additional attributes.",
+  ]
+
+  require_attributes = "required"
+  require_import     = "forbidden"
+  require_timeouts   = "optional"
+  require_signature  = "forbidden"
+
+  frontmatter_require = ["description", "page_title"]
+  frontmatter_forbid  = ["sidebar_current"]
+
+  region_aware = true
+}
+
+type "ephemeral" {
+  schema_kind   = "ephemeral"
+  website_paths = ["website/docs/ephemeral-resources/{name}.html.markdown"]
+  title_prefix  = "Ephemeral"
+
+  arguments_bylines = [
+    "This ephemeral resource supports the following arguments:",
+    "The following arguments are required:",
+    "The following arguments are optional:",
+    "This ephemeral resource does not support any arguments.",
+  ]
+  attributes_bylines = [
+    "This ephemeral resource exports the following attributes in addition to the arguments above:",
+    "This ephemeral resource exports no additional attributes.",
+  ]
+
+  require_attributes = "required"
+  require_import     = "forbidden"
+  require_timeouts   = "forbidden"
+  require_signature  = "forbidden"
+
+  frontmatter_require = ["description", "page_title"]
+  frontmatter_forbid  = ["sidebar_current"]
+
+  region_aware = true
+}
+
+type "function" {
+  schema_kind   = "function"
+  website_paths = ["website/docs/functions/{name}.html.markdown"]
+  title_prefix  = "Function"
+
+  arguments_heading              = "Arguments"
+  allow_missing_arguments_byline = true
+
+  require_attributes = "forbidden"
+  require_import     = "forbidden"
+  require_timeouts   = "forbidden"
+  require_signature  = "required"
+
+  frontmatter_require = ["description", "page_title"]
+  frontmatter_forbid  = ["sidebar_current"]
+
+  region_aware = false
+}
+
+type "list_resource" {
+  schema_kind   = "list_resource"
+  website_paths = ["website/docs/list-resources/{name}.html.markdown"]
+  title_prefix  = "List Resource"
+
+  arguments_bylines = [
+    "This list resource supports the following arguments:",
+    "The following arguments are required:",
+    "The following arguments are optional:",
+    "This list resource does not support any arguments.",
+  ]
+
+  require_attributes = "forbidden"
+  require_import     = "forbidden"
+  require_timeouts   = "forbidden"
+  require_signature  = "forbidden"
+
+  frontmatter_require = ["description", "page_title"]
+  frontmatter_forbid  = ["sidebar_current"]
+
+  region_aware = true
+}
+
+type "action" {
+  schema_kind   = "action"
+  website_paths = ["website/docs/actions/{name}.html.markdown"]
+  title_prefix  = "Action"
+
+  arguments_bylines = [
+    "This action supports the following arguments:",
+    "The following arguments are required:",
+    "The following arguments are optional:",
+    "This action does not support any arguments.",
+  ]
+
+  require_attributes = "forbidden"
+  require_import     = "forbidden"
+  require_timeouts   = "forbidden"
+  require_signature  = "forbidden"
+
+  frontmatter_require = ["description", "page_title", "subcategory"]
+  frontmatter_forbid  = ["sidebar_current"]
+
+  region_aware = false
+}
+
+# ─── Check blocks ───────────────────────────────────────────────────────────
+
 check "schema_docs" {
   enabled = true
 
-  # Sub-check toggles
   coverage    = true
   ordering    = false
   description = false
   heading     = true
   format      = true
   labels      = true
+  byline      = true
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
@@ -52,7 +203,7 @@ check "schema_docs" {
     "{Title}",
   ]
 
-  preferred_block_heading_styles = [
+  prefer_block_heading_styles = [
     "`{Parent}` `{Block}` Block",
     "`{Block}` Block",
   ]
@@ -298,11 +449,11 @@ check "frontmatter" {
   enabled = true
 
   require_subcategory = true
-  require_page_title = true
+  require_page_title  = true
   require_description = true
-  require_layout = true
+  require_layout      = true
 
-  allowed_subcategories_file = "website/allowed-subcategories.txt"
+  allow_subcategories_file = "website/allowed-subcategories.txt"
 
   allow_empty_subcategory_targets = [
     "arn_build",
@@ -319,7 +470,7 @@ check "section_presence" {
 check "timeouts_section" {
   enabled = true
 
-  ignored_targets = [
+  ignore_targets = [
     "aws_autoscaling_group",
     "aws_bedrock_custom_model",
     "aws_bedrockagent_agent_action_group",
@@ -342,5 +493,15 @@ check "timeouts_section" {
     "aws_vpclattice_service_network_vpc_association",
     "aws_vpclattice_target_group",
     "aws_workspaces_connection_alias",
+  ]
+}
+
+check "region_argument" {
+  enabled = true
+  ignore_resources = [
+    "aws_default_subnet",
+    "aws_default_vpc",
+    "aws_default_vpc_dhcp_options",
+    "aws_kms_secrets",
   ]
 }
