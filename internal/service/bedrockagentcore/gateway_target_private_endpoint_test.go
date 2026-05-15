@@ -36,7 +36,7 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVPC(t *testing.T
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.managed_vpc_resource.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "private_endpoint.0.managed_vpc_resource.0.vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "private_endpoint.0.managed_vpc_resource.0.vpc_id", "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.managed_vpc_resource.0.endpoint_ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.self_managed_lattice_resource.#", "0"),
 				),

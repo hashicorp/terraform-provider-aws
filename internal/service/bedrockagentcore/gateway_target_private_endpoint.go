@@ -63,7 +63,7 @@ func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
 								},
 							},
 							// subnetIds: subnets inside the VPC where Lattice ENIs are placed.
-							"subnet_ids": schema.SetAttribute{
+							names.AttrSubnetIDs: schema.SetAttribute{
 								CustomType: fwtypes.SetOfStringType,
 								Required:   true,
 							},
@@ -73,7 +73,7 @@ func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
 								CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
 							},
 							// securityGroupIds: up to 5 security groups for the Lattice resource gateway.
-							"security_group_ids": schema.SetAttribute{
+							names.AttrSecurityGroupIDs: schema.SetAttribute{
 								CustomType: fwtypes.SetOfStringType,
 								Optional:   true,
 							},
