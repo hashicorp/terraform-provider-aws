@@ -252,6 +252,8 @@ type tfStringLegacyOmitEmptyNoExpandNoFlattenStruct struct {
 }
 
 func TestExpandStringField(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]map[string]map[string]struct {
 		source        any
 		expected      any
@@ -765,10 +767,13 @@ func TestExpandStringField(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			for name, tc := range tc {
 				t.Run(name, func(t *testing.T) {
+					t.Parallel()
 					for name, tc := range tc {
 						t.Run(name, func(t *testing.T) {
+							t.Parallel()
 							ctx := t.Context()
 
 							var buf bytes.Buffer
@@ -794,6 +799,8 @@ func TestExpandStringField(t *testing.T) {
 }
 
 func TestFlattenStringField(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]map[string]map[string]struct {
 		expected      any
 		source        any
@@ -1237,10 +1244,13 @@ func TestFlattenStringField(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			for name, tc := range tc {
 				t.Run(name, func(t *testing.T) {
+					t.Parallel()
 					for name, tc := range tc {
 						t.Run(name, func(t *testing.T) {
+							t.Parallel()
 							ctx := t.Context()
 
 							var buf bytes.Buffer
