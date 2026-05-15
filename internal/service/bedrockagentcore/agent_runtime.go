@@ -8,6 +8,7 @@ package bedrockagentcore
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -1014,8 +1015,8 @@ type authorizerConfigurationModel struct {
 }
 
 var (
-	_ fwflex.Expander  = authorizerConfigurationModel{}
-	_ fwflex.Flattener = &authorizerConfigurationModel{}
+	_ fwflex.TypedExpander = authorizerConfigurationModel{}
+	_ fwflex.Flattener     = &authorizerConfigurationModel{}
 )
 
 func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
@@ -1038,7 +1039,19 @@ func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) diag.
 	return diags
 }
 
-func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m authorizerConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.AuthorizerConfiguration]():
+		return m.expandToAuthorizerConfiguration(ctx)
+
+	case reflect.TypeFor[awstypes.UpdatedAuthorizerConfiguration]():
+		return m.expandToUpdatedAuthorizerConfiguration(ctx)
+	}
+	return nil, diags
+}
+
+func (m authorizerConfigurationModel) expandToAuthorizerConfiguration(ctx context.Context) (awstypes.AuthorizerConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
 	case !m.CustomJWTAuthorizer.IsNull():
@@ -1055,6 +1068,19 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 		return &r, diags
 	}
 	return nil, diags
+}
+
+func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx context.Context) (*awstypes.UpdatedAuthorizerConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if !m.CustomJWTAuthorizer.IsNull() {
+		r, d := m.expandToAuthorizerConfiguration(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &awstypes.UpdatedAuthorizerConfiguration{OptionalValue: r}, diags
+	}
+	return &awstypes.UpdatedAuthorizerConfiguration{}, diags
 }
 
 type customJWTAuthorizerConfigurationModel struct {
