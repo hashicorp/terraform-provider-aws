@@ -1273,7 +1273,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	sweeper-linked \
 	sweeper-unlinked \
 	swissshepherd \
-	swissshepherd-full \
+	swissshepherd-count \
 	t \
 	test \
 	test-compile \
