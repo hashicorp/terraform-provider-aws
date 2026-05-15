@@ -140,7 +140,6 @@ The following arguments are optional:
 * `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt`](#system_prompt) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout_seconds` - (Optional) Timeout in seconds for the harness execution.
-* `timeouts` - (Optional) Configuration block for operation timeouts. See [Timeouts](#timeouts) below.
 * `tool` - (Optional) Tool configurations. See [`tool`](#tool) below.
 * `truncation` - (Optional) Truncation configuration for conversation history. See [`truncation`](#truncation) below.
 
@@ -178,7 +177,7 @@ The `model` block supports exactly one of the following:
 
 ### `system_prompt`
 
-* `text` - (Required) Text content of the system prompt.
+* `text` - (Required, Sensitive) Text content of the system prompt.
 
 ### `tool`
 
@@ -288,11 +287,31 @@ The `config` block supports exactly one of the following:
 
 ### `filesystem_configuration`
 
-* `session_storage` - (Optional) Session storage configuration. See [`session_storage`](#session_storage) below.
+Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
+
+* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage`](#session_storage) below.
+* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point) below.
+* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point) below.
 
 ### `session_storage`
 
-* `mount_path` - (Required) Mount path for session storage.
+The `session_storage` block supports the following:
+
+* `mount_path` - (Required) Mount path for the session storage filesystem inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+
+### `s3_files_access_point`
+
+The `s3_files_access_point` block supports the following:
+
+* `access_point_arn` - (Required) ARN of the Amazon S3 Files access point to mount into the agent runtime.
+* `mount_path` - (Required) Mount path for the S3 Files access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+
+### `efs_access_point`
+
+The `efs_access_point` block supports the following:
+
+* `access_point_arn` - (Required) ARN of the Amazon EFS access point to mount into the agent runtime.
+* `mount_path` - (Required) Mount path for the EFS access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
 ### `environment_artifact`
 
@@ -304,14 +323,41 @@ The `config` block supports exactly one of the following:
 
 ### `authorizer_configuration`
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration. See [`custom_jwt_authorizer`](#custom_jwt_authorizer) below.
+The `authorizer_configuration` block supports the following:
+
+* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer) below.
 
 ### `custom_jwt_authorizer`
 
-* `discovery_url` - (Required) URL for OpenID Connect configuration discovery.
-* `allowed_audience` - (Optional) Set of allowed audience values for JWT validation.
-* `allowed_clients` - (Optional) Set of allowed client IDs for JWT validation.
-* `allowed_scopes` - (Optional) Set of allowed scopes for JWT validation.
+The `custom_jwt_authorizer` block supports the following:
+
+* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
+* `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
+* `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
+* `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+
+### `custom_claim`
+
+The `custom_claim` block supports the following:
+
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
+* `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
+
+### `authorizing_claim_match_value`
+
+The `authorizing_claim_match_value` block supports the following:
+
+* `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+
+### `claim_match_value`
+
+The `claim_match_value` block supports the following:
+
+* `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+* `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 
 ### `memory`
 
@@ -322,25 +368,24 @@ The `config` block supports exactly one of the following:
 * `arn` - (Required) ARN of the AgentCore memory resource.
 * `actor_id` - (Optional) Actor ID for memory sessions.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
-* `retrieval_config` - (Optional) Map of retrieval configuration parameters.
+* `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config`](#retrieval_config) below.
+
+### `retrieval_config`
+
+`retrieval_config` supports the following:
+
+* `map_block_key` - (Required) Key for the retrieval configuration map block.
+* `relevance_score` - (Optional) Relevance score threshold. Valid value is between `0` and `1`.
+* `strategy_id` - (Optional) ID of the memory strategy.
+* `top_k` - (Optional) Number of top results to retrieve.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Harness.
 * `harness_id` - Unique identifier of the Harness.
-* `status` - Current status of the Harness.
-* `created_at` - Timestamp when the Harness was created.
-* `updated_at` - Timestamp when the Harness was last updated.
-* `failure_reason` - Reason for failure if the Harness is in a failed state.
+* `arn` - ARN of the Harness.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-### `agentcore_runtime_environment` Computed Attributes
-
-* `agent_runtime_arn` - ARN of the created agent runtime.
-* `agent_runtime_id` - ID of the created agent runtime.
-* `agent_runtime_name` - Name of the created agent runtime.
 
 ## Timeouts
 
