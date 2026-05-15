@@ -47,8 +47,9 @@ func (d *regionDataSource) Schema(ctx context.Context, request datasource.Schema
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:           true,
+				Computed:           true,
+				DeprecationMessage: "id is deprecated. Use region instead.",
 			},
 			names.AttrName: schema.StringAttribute{
 				Optional:           true,
