@@ -8,6 +8,7 @@ linters:
     # !! only add f-m linters here
     - goconst
     - gocritic
+    - godox
     - govet
     - importas
     - ineffassign
@@ -26,6 +27,10 @@ linters:
         - opinionated
         - performance
         - style
+    godox:
+      keywords:
+        # for lingering skaff TIP comments
+        - TIP
     importas:
       no-unaliased: true
       alias:
