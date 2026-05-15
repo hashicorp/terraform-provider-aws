@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -67,7 +68,7 @@ func (l *harnessListResource) List(ctx context.Context, request list.ListRequest
 
 			var data harnessResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(l.flatten(ctx, output, &data)...)
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}

@@ -180,8 +180,8 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"map_block_key": schema.StringAttribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
+											Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
+												"map_block_key": schema.StringAttribute{
 													Required: true,
 												},
 												"relevance_score": schema.Float32Attribute{
