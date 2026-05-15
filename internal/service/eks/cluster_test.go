@@ -1395,7 +1395,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "remote_network_config"},
 			},
 		},
 	})
@@ -2553,7 +2553,7 @@ data "aws_iam_role" "test" {
 }
 
 data "aws_outposts_outpost" "test" {
-  id = "op-XXXXXXXX"
+  id = "op-062c383102b6f92a2"
 }
 
 data "aws_subnets" test {
@@ -2565,11 +2565,17 @@ data "aws_subnets" test {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = data.aws_iam_role.cluster.arn
+  role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
     control_plane_instance_type = "m5d.large"
     outpost_arns                = [data.aws_outposts_outpost.test.arn]
+  }
+
+  remote_network_config {
+    remote_pod_networks {
+      cidrs = ["100.64.0.0/16", "100.80.0.0/16", "100.96.0.0/16", "100.112.0.0/16"]
+    }
   }
 
   vpc_config {
@@ -2607,7 +2613,7 @@ resource "aws_placement_group" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = data.aws_iam_role.cluster.arn
+  role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
     control_plane_instance_type = "m5d.large"

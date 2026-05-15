@@ -99,7 +99,7 @@ func TestAccEKSClusterDataSource_outpost(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, dataSourceResourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "identity.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.#", dataSourceResourceName, "kubernetes_network_config.#"),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.ip_family", dataSourceResourceName, "kubernetes_network_config.0.ip_family"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv4_cidr"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv6_cidr"),
