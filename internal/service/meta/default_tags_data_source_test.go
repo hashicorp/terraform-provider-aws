@@ -26,21 +26,17 @@ func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("first", acctest.CtValue1),
-					testAccDefaultTagsDataSourceConfig_basic(),
-				),
+				Config: testAccDefaultTagsDataSourceConfig_basic(),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"first": knownvalue.StringExact(acctest.CtValue1),
-					})),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
 		},
 	})
 }
 
-func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
+func TestAccMetaDefaultTagsDataSource_single(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
@@ -51,9 +47,14 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultTagsDataSourceConfig_basic(),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("first", acctest.CtValue1),
+					testAccDefaultTagsDataSourceConfig_basic(),
+				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"first": knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 			},
 		},
