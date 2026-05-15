@@ -55,7 +55,6 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`harness/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_name"), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.HarnessStatusReady)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
@@ -127,8 +126,10 @@ func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.HarnessStatusReady)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 				},
 			},
 			{
@@ -140,9 +141,6 @@ func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.HarnessStatusReady)),
 				},
 			},
 		},
@@ -170,6 +168,11 @@ func TestAccBedrockAgentCoreHarness_update_allowedTools(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccHarnessConfig_allowedTools(rName, `["@builtin"]`),
@@ -207,6 +210,11 @@ func TestAccBedrockAgentCoreHarness_update_limits(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccHarnessConfig_limits(rName, 20, 8192, 600),
@@ -244,8 +252,10 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListSizeExact(1)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 				},
 			},
 			{
@@ -281,6 +291,11 @@ func TestAccBedrockAgentCoreHarness_truncation_slidingWindow(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccHarnessConfig_truncationSlidingWindow(rName, 100),
@@ -318,6 +333,11 @@ func TestAccBedrockAgentCoreHarness_truncation_summarization(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -344,6 +364,11 @@ func TestAccBedrockAgentCoreHarness_tools_inlineFunction(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -370,6 +395,11 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccHarnessConfig_environmentVariables(rName, "KEY2", acctest.CtValue2),
@@ -407,6 +437,11 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
