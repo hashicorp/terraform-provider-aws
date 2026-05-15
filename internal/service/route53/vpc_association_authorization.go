@@ -28,15 +28,16 @@ import (
 )
 
 // @SDKResource("aws_route53_vpc_association_authorization", name="VPC Association Authorization")
+// @IdentityAttribute("zone_id")
+// @IdentityAttribute("vpc_id")
+// @ImportIDHandler("vpcAssociationAuthorizationImportID")
+// @Testing(useAlternateAccount=true)
+// @Testing(preIdentityVersion="v6.45.0")
 func resourceVPCAssociationAuthorization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAssociationAuthorizationCreate,
 		ReadWithoutTimeout:   resourceVPCAssociationAuthorizationRead,
 		DeleteWithoutTimeout: resourceVPCAssociationAuthorizationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -123,9 +124,7 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 	}
 
 	output := outputRaw.(*awstypes.VPC)
-	d.Set(names.AttrVPCID, output.VPCId)
-	d.Set("vpc_region", output.VPCRegion)
-	d.Set("zone_id", zoneID)
+	resourceVPCAssociationAuthorizationFlatten(d, zoneID, output)
 
 	return diags
 }
@@ -161,6 +160,12 @@ func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
+func resourceVPCAssociationAuthorizationFlatten(d *schema.ResourceData, zoneID string, vpc *awstypes.VPC) {
+	d.Set(names.AttrVPCID, vpc.VPCId)
+	d.Set("vpc_region", vpc.VPCRegion)
+	d.Set("zone_id", zoneID)
+}
+
 const vpcAssociationAuthorizationResourceIDSeparator = ":"
 
 func vpcAssociationAuthorizationCreateResourceID(zoneID, vpcID string) string {
@@ -178,6 +183,26 @@ func vpcAssociationAuthorizationParseResourceID(id string) (string, string, erro
 	}
 
 	return parts[0], parts[1], nil
+}
+
+type vpcAssociationAuthorizationImportID struct{}
+
+func (vpcAssociationAuthorizationImportID) Create(d *schema.ResourceData) string {
+	return vpcAssociationAuthorizationCreateResourceID(d.Get("zone_id").(string), d.Get(names.AttrVPCID).(string))
+}
+
+func (vpcAssociationAuthorizationImportID) Parse(id string) (string, map[string]any, error) {
+	zoneID, vpcID, err := vpcAssociationAuthorizationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"zone_id":       zoneID,
+		names.AttrVPCID: vpcID,
+	}
+
+	return id, result, nil
 }
 
 func findVPCAssociationAuthorizationByTwoPartKey(ctx context.Context, conn *route53.Client, zoneID, vpcID string) (*awstypes.VPC, error) {

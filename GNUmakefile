@@ -245,7 +245,6 @@ clean-tidy: prereq-go ## Clean up tidy
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 	fi ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
-	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
 	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
 	cd skaff && $$gover mod tidy && cd .. ; \
@@ -1019,10 +1018,6 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
 		-enable-enhanced-region-check
 
-tfsdk2fw: prereq-go ## Install tfsdk2fw
-	@echo "make: Installing tfsdk2fw..."
-	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
-
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
@@ -1046,7 +1041,6 @@ update: prereq-go ## Update dependencies
 	$(GO_VER) get -u ./...
 	$(GO_VER) mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
-	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
@@ -1291,7 +1285,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	terraform-fmt \
 	tflint-init \
 	tfproviderdocs \
-	tfsdk2fw \
 	tools \
 	ts \
 	update \
