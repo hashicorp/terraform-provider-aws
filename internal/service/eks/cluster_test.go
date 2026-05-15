@@ -2553,7 +2553,7 @@ data "aws_iam_role" "test" {
 }
 
 data "aws_outposts_outpost" "test" {
-  id = "op-062c383102b6f92a2"
+  id = "op-XXXXXXXX"
 }
 
 data "aws_subnets" test {
