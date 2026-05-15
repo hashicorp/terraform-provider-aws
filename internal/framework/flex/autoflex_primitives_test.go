@@ -16,6 +16,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
@@ -183,72 +184,72 @@ func testStringRoundtrip(t *testing.T) {
 	}
 }
 
-type awsStringStruct struct {
+type awsPrimitiveField struct {
 	Field1 string
 }
 
-type awsStringPointerStruct struct {
+type awsPrimitivePointerField struct {
 	Field1 *string
 }
 
-type tfStringStruct struct {
-	Field1 types.String `tfsdk:"field1"`
+type tfPrimitiveField[T attr.Value] struct {
+	Field1 T `tfsdk:"field1"`
 }
 
-type tfStringLegacyStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",legacy"`
+type tfPrimitiveFieldLegacy[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",legacy"`
 }
 
-type tfStringOmitEmptyStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",omitempty"`
+type tfPrimitiveFieldOmitEmpty[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",omitempty"`
 }
 
-type tfStringNoExpandStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",noexpand"`
+type tfPrimitiveFieldNoExpand[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",noexpand"`
 }
 
-type tfStringNoFlattenStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",noflatten"`
+type tfPrimitiveFieldNoFlatten[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",noflatten"`
 }
 
-type tfStringLegacyOmitEmptyStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",legacy,omitempty"`
+type tfPrimitiveFieldLegacyOmitEmpty[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",legacy,omitempty"`
 }
 
-type tfStringLegacyNoExpandStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",legacy,noexpand"`
+type tfPrimitiveFieldLegacyNoExpand[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",legacy,noexpand"`
 }
 
-type tfStringLegacyNoFlattenStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",legacy,noflatten"`
+type tfPrimitiveFieldLegacyNoFlatten[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",legacy,noflatten"`
 }
 
-type tfStringOmitEmptyNoExpandStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",omitempty,noexpand"`
+type tfPrimitiveFieldOmitEmptyNoExpand[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",omitempty,noexpand"`
 }
 
-type tfStringOmitEmptyNoFlattenStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",omitempty,noflatten"`
+type tfPrimitiveFieldOmitEmptyNoFlatten[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",omitempty,noflatten"`
 }
 
-type tfStringNoExpandNoFlattenStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",noexpand,noflatten"`
+type tfPrimitiveFieldNoExpandNoFlatten[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",noexpand,noflatten"`
 }
 
-type tfStringLegacyOmitEmptyNoExpandStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",legacy,omitempty,noexpand"`
+type tfPrimitiveFieldLegacyOmitEmptyNoExpand[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",legacy,omitempty,noexpand"`
 }
 
-type tfStringLegacyOmitEmptyNoFlattenStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",legacy,omitempty,noflatten"`
+type tfPrimitiveFieldLegacyOmitEmptyNoFlatten[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",legacy,omitempty,noflatten"`
 }
 
-type tfStringLegacyNoExpandNoFlattenStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",legacy,noexpand,noflatten"`
+type tfPrimitiveFieldLegacyNoExpandNoFlatten[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",legacy,noexpand,noflatten"`
 }
 
-type tfStringLegacyOmitEmptyNoExpandNoFlattenStruct struct {
-	Field1 types.String `tfsdk:"field1" autoflex:",legacy,omitempty,noexpand,noflatten"`
+type tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[T attr.Value] struct {
+	Field1 T `tfsdk:"field1" autoflex:",legacy,omitempty,noexpand,noflatten"`
 }
 
 func TestExpandStringField(t *testing.T) {
@@ -262,42 +263,42 @@ func TestExpandStringField(t *testing.T) {
 		"no options": {
 			"with value": {
 				"value target": {
-					source:   &tfStringStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: "test_value"},
+					source:   &tfPrimitiveField[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: "test_value"},
 				},
 				"pointer target": {
-					source:   &tfStringStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: aws.String("test_value")},
+					source:   &tfPrimitiveField[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("test_value")},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveField[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: aws.String("")},
+					source:   &tfPrimitiveField[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("")},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveField[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveField[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"unknown value": {
 				"value target": {
-					source:   &tfStringStruct{Field1: types.StringUnknown()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveField[types.String]{Field1: types.StringUnknown()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringStruct{Field1: types.StringUnknown()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveField[types.String]{Field1: types.StringUnknown()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -305,32 +306,32 @@ func TestExpandStringField(t *testing.T) {
 		"legacy": {
 			"with value": {
 				"value target": {
-					source:   &tfStringLegacyStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: "test_value"},
+					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: "test_value"},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: aws.String("test_value")},
+					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("test_value")},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringLegacyStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringLegacyStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -338,32 +339,32 @@ func TestExpandStringField(t *testing.T) {
 		"omitempty": {
 			"with value": {
 				"value target": {
-					source:   &tfStringOmitEmptyStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: "test_value"},
+					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: "test_value"},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: aws.String("test_value")},
+					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("test_value")},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringOmitEmptyStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: aws.String("")},
+					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("")},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringOmitEmptyStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -371,32 +372,32 @@ func TestExpandStringField(t *testing.T) {
 		"noexpand": {
 			"with value": {
 				"value target": {
-					source:   &tfStringNoExpandStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringNoExpandStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringNoExpandStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringNoExpandStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringNoExpandStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringNoExpandStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -404,32 +405,32 @@ func TestExpandStringField(t *testing.T) {
 		"noflatten": {
 			"with value": {
 				"value target": {
-					source:   &tfStringNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: "test_value"},
+					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: "test_value"},
 				},
 				"pointer target": {
-					source:   &tfStringNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: aws.String("test_value")},
+					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("test_value")},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: aws.String("")},
+					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("")},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -437,32 +438,32 @@ func TestExpandStringField(t *testing.T) {
 		"legacy,omitempty": {
 			"with value": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: "test_value"},
+					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: "test_value"},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: aws.String("test_value")},
+					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("test_value")},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -470,32 +471,32 @@ func TestExpandStringField(t *testing.T) {
 		"legacy,noexpand": {
 			"with value": {
 				"value target": {
-					source:   &tfStringLegacyNoExpandStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoExpandStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringLegacyNoExpandStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoExpandStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringLegacyNoExpandStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoExpandStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -503,32 +504,32 @@ func TestExpandStringField(t *testing.T) {
 		"legacy,noflatten": {
 			"with value": {
 				"value target": {
-					source:   &tfStringLegacyNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: "test_value"},
+					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: "test_value"},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: aws.String("test_value")},
+					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("test_value")},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringLegacyNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringLegacyNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -536,32 +537,32 @@ func TestExpandStringField(t *testing.T) {
 		"omitempty,noexpand": {
 			"with value": {
 				"value target": {
-					source:   &tfStringOmitEmptyNoExpandStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyNoExpandStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringOmitEmptyNoExpandStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyNoExpandStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringOmitEmptyNoExpandStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyNoExpandStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -569,32 +570,32 @@ func TestExpandStringField(t *testing.T) {
 		"omitempty,noflatten": {
 			"with value": {
 				"value target": {
-					source:   &tfStringOmitEmptyNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: "test_value"},
+					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: "test_value"},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: aws.String("test_value")},
+					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("test_value")},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringOmitEmptyNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: aws.String("")},
+					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("")},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringOmitEmptyNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringOmitEmptyNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -602,32 +603,32 @@ func TestExpandStringField(t *testing.T) {
 		"noexpand,noflatten": {
 			"with value": {
 				"value target": {
-					source:   &tfStringNoExpandNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringNoExpandNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringNoExpandNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringNoExpandNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringNoExpandNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringNoExpandNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -635,32 +636,32 @@ func TestExpandStringField(t *testing.T) {
 		"legacy,omitempty,noexpand": {
 			"with value": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -668,32 +669,32 @@ func TestExpandStringField(t *testing.T) {
 		"legacy,omitempty,noflatten": {
 			"with value": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: "test_value"},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: "test_value"},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: aws.String("test_value")},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: aws.String("test_value")},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -701,32 +702,32 @@ func TestExpandStringField(t *testing.T) {
 		"legacy,noexpand,noflatten": {
 			"with value": {
 				"value target": {
-					source:   &tfStringLegacyNoExpandNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoExpandNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringLegacyNoExpandNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoExpandNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringLegacyNoExpandNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyNoExpandNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -734,32 +735,32 @@ func TestExpandStringField(t *testing.T) {
 		"legacy,omitempty,noexpand,noflatten": {
 			"with value": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandNoFlattenStruct{Field1: types.StringValue("test_value")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"empty string": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandNoFlattenStruct{Field1: types.StringValue("")},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 			"null value": {
 				"value target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringStruct{Field1: ""},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitiveField{Field1: ""},
 				},
 				"pointer target": {
-					source:   &tfStringLegacyOmitEmptyNoExpandNoFlattenStruct{Field1: types.StringNull()},
-					expected: &awsStringPointerStruct{Field1: nil},
+					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
+					expected: &awsPrimitivePointerField{Field1: nil},
 				},
 			},
 		},
@@ -809,28 +810,28 @@ func TestFlattenStringField(t *testing.T) {
 		"no options": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveField[types.String]{Field1: types.StringValue("test_value")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveField[types.String]{Field1: types.StringValue("test_value")},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveField[types.String]{Field1: types.StringValue("")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveField[types.String]{Field1: types.StringValue("")},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveField[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -838,28 +839,28 @@ func TestFlattenStringField(t *testing.T) {
 		"legacy": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
 				},
 			},
 		},
@@ -867,28 +868,28 @@ func TestFlattenStringField(t *testing.T) {
 		"omitempty": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -896,28 +897,28 @@ func TestFlattenStringField(t *testing.T) {
 		"noexpand": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringNoExpandStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("test_value")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringNoExpandStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("test_value")},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringNoExpandStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringNoExpandStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("")},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringNoExpandStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -925,28 +926,28 @@ func TestFlattenStringField(t *testing.T) {
 		"noflatten": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -954,28 +955,28 @@ func TestFlattenStringField(t *testing.T) {
 		"legacy,omitempty": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
 				},
 			},
 		},
@@ -983,28 +984,28 @@ func TestFlattenStringField(t *testing.T) {
 		"legacy,noexpand": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringLegacyNoExpandStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("test_value")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringLegacyNoExpandStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("test_value")},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringLegacyNoExpandStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringLegacyNoExpandStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("")},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringLegacyOmitEmptyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
 				},
 			},
 		},
@@ -1012,28 +1013,28 @@ func TestFlattenStringField(t *testing.T) {
 		"legacy,noflatten": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -1041,28 +1042,28 @@ func TestFlattenStringField(t *testing.T) {
 		"omitempty,noexpand": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringOmitEmptyStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -1070,28 +1071,28 @@ func TestFlattenStringField(t *testing.T) {
 		"omitempty,noflatten": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -1099,28 +1100,28 @@ func TestFlattenStringField(t *testing.T) {
 		"noexpand,noflatten": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -1128,28 +1129,28 @@ func TestFlattenStringField(t *testing.T) {
 		"legacy,omitempty,noexpand": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("test_value")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringLegacyStruct{Field1: types.StringValue("")},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
 				},
 			},
 		},
@@ -1157,28 +1158,28 @@ func TestFlattenStringField(t *testing.T) {
 		"legacy,omitempty,noflatten": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -1186,28 +1187,28 @@ func TestFlattenStringField(t *testing.T) {
 		"legacy,noexpand,noflatten": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
@@ -1215,28 +1216,28 @@ func TestFlattenStringField(t *testing.T) {
 		"legacy,omitempty,noexpand,noflatten": {
 			"with value": {
 				"value source": {
-					source:   &awsStringStruct{Field1: "test_value"},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: "test_value"},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("test_value")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("test_value")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"empty string": {
 				"value source": {
-					source:   &awsStringStruct{Field1: ""},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitiveField{Field1: ""},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: aws.String("")},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: aws.String("")},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 			"null value": {
 				"pointer source": {
-					source:   &awsStringPointerStruct{Field1: nil},
-					expected: &tfStringNoFlattenStruct{Field1: types.StringNull()},
+					source:   &awsPrimitivePointerField{Field1: nil},
+					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
 				},
 			},
 		},
