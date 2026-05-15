@@ -55,6 +55,7 @@ func TestAccObservabilityAdminTelemetryRuleForOrganization_serial(t *testing.T) 
 
 func testAccObservabilityAdminTelemetryRuleForOrganization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v observabilityadmin.GetTelemetryRuleForOrganizationOutput
 	resourceName := "aws_observabilityadmin_telemetry_rule_for_organization.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -75,7 +76,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_basic(t *testing.T) {
 			{
 				Config: testAccTelemetryRuleForOrganizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName),
+					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_arn"),
 				),
@@ -93,6 +94,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_basic(t *testing.T) {
 
 func testAccObservabilityAdminTelemetryRuleForOrganization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v observabilityadmin.GetTelemetryRuleForOrganizationOutput
 	resourceName := "aws_observabilityadmin_telemetry_rule_for_organization.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -113,7 +115,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_disappears(t *testing
 			{
 				Config: testAccTelemetryRuleForOrganizationConfig_disappears(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName),
+					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfobservabilityadmin.ResourceTelemetryRuleForOrganization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -132,6 +134,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_disappears(t *testing
 
 func testAccObservabilityAdminTelemetryRuleForOrganization_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v observabilityadmin.GetTelemetryRuleForOrganizationOutput
 	resourceName := "aws_observabilityadmin_telemetry_rule_for_organization.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -152,7 +155,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_tags(t *testing.T) {
 			{
 				Config: testAccTelemetryRuleForOrganizationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName),
+					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -166,7 +169,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_tags(t *testing.T) {
 			{
 				Config: testAccTelemetryRuleForOrganizationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName),
+					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -175,7 +178,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_tags(t *testing.T) {
 			{
 				Config: testAccTelemetryRuleForOrganizationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName),
+					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -203,7 +206,7 @@ func testAccCheckTelemetryRuleForOrganizationDestroy(ctx context.Context, t *tes
 	}
 }
 
-func testAccCheckTelemetryRuleForOrganizationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckTelemetryRuleForOrganizationExists(ctx context.Context, t *testing.T, n string, v *observabilityadmin.GetTelemetryRuleForOrganizationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -212,9 +215,14 @@ func testAccCheckTelemetryRuleForOrganizationExists(ctx context.Context, t *test
 
 		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
-		_, err := tfobservabilityadmin.FindTelemetryRuleForOrganization(ctx, conn, rs.Primary.ID)
+		output, err := tfobservabilityadmin.FindTelemetryRuleForOrganization(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
-		return err
+		*v = *output
+
+		return nil
 	}
 }
 
@@ -224,7 +232,7 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule_name = %[1]q
 
   rule {
-    resource_type  = "AWS::EC2::VPC"
+    resource_type  = "AWS::SecurityHub::Hub"
     telemetry_type = "Logs"
   }
 }
@@ -237,8 +245,8 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule_name = %[1]q
 
   rule {
-    resource_type  = "AWS::EC2::VPC"
-    telemetry_type = "Logs"
+    resource_type  = "AWS::EC2::Instance"
+    telemetry_type = "Metrics"
   }
 }
 `, rName)
@@ -250,7 +258,7 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule_name = %[1]q
 
   rule {
-    resource_type  = "AWS::EC2::VPC"
+    resource_type  = "AWS::SecurityHub::HubV2"
     telemetry_type = "Logs"
   }
 
@@ -267,7 +275,7 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule_name = %[1]q
 
   rule {
-    resource_type  = "AWS::EC2::VPC"
+    resource_type  = "AWS::SecurityHub::HubV2"
     telemetry_type = "Logs"
   }
 

@@ -6,7 +6,7 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
 
   rule_name = "${var.rName}-${count.index}"
   rule {
-    resource_type  = "AWS::EC2::VPC"
+    resource_type  = count.index == 0 ? "AWS::SecurityHub::Hub" : "AWS::MSK::Cluster"
     telemetry_type = "Logs"
   }
 
