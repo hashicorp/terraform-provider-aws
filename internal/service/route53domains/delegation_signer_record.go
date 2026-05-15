@@ -280,7 +280,7 @@ func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client,
 	}
 
 	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
-		return aws.ToString(v.Id) == keyID
+		return aws.ToString(v.Digest) == keyID
 	}))
 }
 
