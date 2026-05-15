@@ -285,7 +285,7 @@ func testAccPolicy_resourceTagLogicalOperator(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_resourceTagLogicalOperator_default(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", ""),
+					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", "AND"),
 				),
 			},
 			{

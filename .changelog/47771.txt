@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_fms_policy: Default `resource_tag_logical_operator` to `AND` so drift from remote `OR` values is shown in plans when the argument is omitted
+```
