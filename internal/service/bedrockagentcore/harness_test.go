@@ -458,6 +458,48 @@ func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_environmentArtifact(rName, "2.0.20230404.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environmentArtifact(rName, "2.0.20230515.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -892,6 +934,37 @@ resource "aws_bedrockagentcore_memory" "test" {
   event_expiry_duration = 7
 }
 `, rName, relevanceScore))
+}
+
+func testAccHarnessConfig_environmentArtifact(rName, imageTag string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  environment_artifact {
+    container_configuration {
+      container_uri = data.aws_ecr_image.test.image_uri
+    }
+  }
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+
+data "aws_ecr_image" "test" {
+  registry_id     = "137112412989"
+  repository_name = "amazonlinux"
+  image_tag       = %[2]q
+}
+`, rName, imageTag))
 }
 
 func testAccHarnessConfig_tags1(rName, tagKey1, tagValue1 string) string {

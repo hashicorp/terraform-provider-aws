@@ -1314,8 +1314,8 @@ type harnessEnvironmentArtifactModel struct {
 }
 
 var (
-	_ fwflex.Expander  = harnessEnvironmentArtifactModel{}
-	_ fwflex.Flattener = &harnessEnvironmentArtifactModel{}
+	_ fwflex.TypedExpander = harnessEnvironmentArtifactModel{}
+	_ fwflex.Flattener     = &harnessEnvironmentArtifactModel{}
 )
 
 func (m *harnessEnvironmentArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
@@ -1334,7 +1334,19 @@ func (m *harnessEnvironmentArtifactModel) Flatten(ctx context.Context, v any) di
 	return diags
 }
 
-func (m harnessEnvironmentArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m harnessEnvironmentArtifactModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.HarnessEnvironmentArtifact]():
+		return m.expandToHarnessEnvironmentArtifact(ctx)
+
+	case reflect.TypeFor[awstypes.UpdatedHarnessEnvironmentArtifact]():
+		return m.expandToUpdatedHarnessEnvironmentArtifact(ctx)
+	}
+	return nil, diags
+}
+
+func (m harnessEnvironmentArtifactModel) expandToHarnessEnvironmentArtifact(ctx context.Context) (awstypes.HarnessEnvironmentArtifact, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if !m.ContainerConfiguration.IsNull() {
 		data, d := m.ContainerConfiguration.ToPtr(ctx)
@@ -1347,6 +1359,19 @@ func (m harnessEnvironmentArtifactModel) Expand(ctx context.Context) (any, diag.
 		return &r, diags
 	}
 	return nil, diags
+}
+
+func (m harnessEnvironmentArtifactModel) expandToUpdatedHarnessEnvironmentArtifact(ctx context.Context) (*awstypes.UpdatedHarnessEnvironmentArtifact, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if !m.ContainerConfiguration.IsNull() {
+		r, d := m.expandToHarnessEnvironmentArtifact(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &awstypes.UpdatedHarnessEnvironmentArtifact{OptionalValue: r}, diags
+	}
+	return &awstypes.UpdatedHarnessEnvironmentArtifact{}, diags
 }
 
 // Memory configuration union.
@@ -1413,7 +1438,7 @@ func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfigurati
 		}
 		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
 	}
-	return nil, diags
+	return &awstypes.UpdatedHarnessMemoryConfiguration{}, diags
 }
 
 type harnessAgentCoreMemoryConfigurationModel struct {
