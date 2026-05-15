@@ -598,7 +598,7 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, harness, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -675,6 +675,12 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
 		return
 	}
+}
+
+func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, harness, data)...)
+	return diags
 }
 
 // Waiters.

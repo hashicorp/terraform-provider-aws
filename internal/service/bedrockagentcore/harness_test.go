@@ -30,6 +30,14 @@ func testAccRandomHarnessName(t *testing.T) string {
 	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 }
 
+func checkHarnessARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`harness/`+name+`-[a-zA-Z0-9]{10}`))
+}
+
+func checkHarnessARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("bedrock-agentcore", regexache.MustCompile(`harness/`+name+`-[a-zA-Z0-9]{10}`))
+}
+
 func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -60,7 +68,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`harness/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkHarnessARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
