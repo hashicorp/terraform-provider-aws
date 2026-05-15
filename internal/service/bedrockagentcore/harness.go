@@ -175,7 +175,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"map_block_key": schema.StringAttribute{
+												"map_block_key": schema.StringAttribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 													Required: true,
 												},
 												"relevance_score": schema.Float32Attribute{
