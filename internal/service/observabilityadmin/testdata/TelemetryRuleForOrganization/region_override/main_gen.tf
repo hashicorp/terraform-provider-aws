@@ -5,8 +5,7 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule_name = var.rName
 
   rule {
-    resource_type  = "AWS::CloudWatch::OTelEnrichment"
-    telemetry_type = "Logs"
+    telemetry_type = "Metrics"
   }
   region = var.region
 

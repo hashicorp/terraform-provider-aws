@@ -5,8 +5,7 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule_name = var.rName
 
   rule {
-    resource_type  = "AWS::SecurityHub::HubV2"
-    telemetry_type = "Logs"
+    telemetry_type = "Metrics"
   }
 }
 variable "rName" {
