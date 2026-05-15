@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,10 +33,7 @@ type defaultTagsDataSource struct {
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID:   datasourceattribute.IDAttributeDeprecatedNoReplacement(),
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
