@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -303,6 +304,77 @@ func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 				Config: testAccVPCEndpointConfig_gatewayPolicy(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccVPCEndpoint_gatewayPolicyRemoval verifies that removing the `policy`
+// attribute from configuration after creation triggers an update that resets
+// the endpoint to its default policy.
+//
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/40973.
+func TestAccVPCEndpoint_gatewayPolicyRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	policy := `
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyAll",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "*",
+      "Resource": "*"
+    }
+  ]
+}
+`
+	resourceName := "aws_vpc_endpoint.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with custom policy.
+				Config: testAccVPCEndpointConfig_gatewayPolicy(rName, policy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+				),
+			},
+			{
+				// Step 2: remove `policy` from config. Plan must show an update,
+				// not a no-op, and apply must reset the endpoint to the default
+				// permissive policy returned by the API.
+				Config: testAccVPCEndpointConfig_gatewayNoPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
+					// AWS returns its default policy (`{"Statement":[{"Action":"*","Effect":"Allow",...}]}`),
+					// which is not the user's custom DenyAll. Asserting non-empty
+					// is sufficient because the schema is Computed; asserting
+					// inequality with the original DenyAll policy is the
+					// behavior under test.
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
+						if value == "" {
+							return fmt.Errorf("expected default policy after removal, got empty")
+						}
+						if equivalent, _ := awspolicy.PoliciesAreEquivalent(value, policy); equivalent {
+							return fmt.Errorf("expected policy to be reset to default, got original custom policy")
+						}
+						return nil
+					}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1980,6 +2052,35 @@ POLICY
   }
 }
 `, rName, policy)
+}
+
+// testAccVPCEndpointConfig_gatewayNoPolicy is the same as
+// testAccVPCEndpointConfig_gatewayPolicy but omits the `policy` attribute,
+// used to test reverting to the API-default policy. See issue #40973.
+func testAccVPCEndpointConfig_gatewayNoPolicy(rName string) string {
+	return fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  service      = "dynamodb"
+  service_type = "Gateway"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  service_name = data.aws_vpc_endpoint_service.test.service_name
+  vpc_id       = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
 
 func testAccVPCEndpointConfig_vpcBase(rName string) string {
