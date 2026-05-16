@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -291,6 +292,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
 	}
+	normalizeIngressPathEndpoints(ctx, &plan.IngressPaths)
 
 	plan.Cluster = fwflex.StringValueToFramework(ctx, cluster)
 	plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
@@ -345,6 +347,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 		// Restore state ordering if env vars are unchanged (no-op during import).
 		restoreContainerOrderingIfUnchanged(ctx, &state.PrimaryContainer, stateEnv, stateSecrets)
 	}
+	normalizeIngressPathEndpoints(ctx, &state.IngressPaths)
 
 	// Set Optional+Computed attributes from API response
 	if out.Cluster != nil {
@@ -459,6 +462,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
 	}
+	normalizeIngressPathEndpoints(ctx, &plan.IngressPaths)
 
 	// Set Optional+Computed attributes from API response
 	if waitOut.Cluster != nil {
@@ -944,6 +948,45 @@ func hasAmazonECSManagedTag(tags []ec2types.Tag) bool {
 	}
 
 	return false
+}
+
+func normalizeIngressPathEndpoints(ctx context.Context, ingressPaths *fwtypes.ListNestedObjectValueOf[ingressPathSummaryModel]) {
+	paths, diags := ingressPaths.ToSlice(ctx)
+	if diags.HasError() || len(paths) == 0 {
+		return
+	}
+
+	updatedPaths := make([]*ingressPathSummaryModel, 0, len(paths))
+	changed := false
+
+	for _, ingressPath := range paths {
+		if ingressPath == nil || ingressPath.Endpoint.IsNull() || ingressPath.Endpoint.IsUnknown() {
+			updatedPaths = append(updatedPaths, ingressPath)
+			continue
+		}
+
+		endpoint := ingressPath.Endpoint.ValueString()
+		if strings.HasPrefix(endpoint, "https://") || endpoint == "" {
+			updatedPaths = append(updatedPaths, ingressPath)
+			continue
+		}
+
+		clone := *ingressPath
+		clone.Endpoint = types.StringValue("https://" + endpoint)
+		updatedPaths = append(updatedPaths, &clone)
+		changed = true
+	}
+
+	if !changed {
+		return
+	}
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, updatedPaths, nil)
+	if diags.HasError() {
+		return
+	}
+
+	*ingressPaths = updated
 }
 
 // envListsEquivalent returns true if two environment variable lists contain the same
