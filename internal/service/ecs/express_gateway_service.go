@@ -342,7 +342,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 			return
 		}
 
-		filterAmazonECSManagedSecurityGroups(ctx, ec2Conn, &state.NetworkConfiguration)
+		filterManagedSecurityGroups(ctx, ec2Conn, &state.NetworkConfiguration)
 
 		// Restore state ordering if env vars are unchanged (no-op during import).
 		restoreContainerOrderingIfUnchanged(ctx, &state.PrimaryContainer, stateEnv, stateSecrets)
@@ -900,7 +900,7 @@ func restorePlanNetworkConfigurationSecurityGroups(
 	*networkConfiguration = updated
 }
 
-func filterAmazonECSManagedSecurityGroups(
+func filterManagedSecurityGroups(
 	ctx context.Context,
 	conn *ec2.Client,
 	networkConfiguration *fwtypes.ListNestedObjectValueOf[expressGatewayServiceNetworkConfigurationModel],
@@ -924,7 +924,7 @@ func filterAmazonECSManagedSecurityGroups(
 
 	filteredGroupIDs := make([]string, 0, len(groups))
 	for _, group := range groups {
-		if !hasAmazonECSManagedTag(group.Tags) {
+		if !hasManagedTag(group.Tags) {
 			filteredGroupIDs = append(filteredGroupIDs, aws.ToString(group.GroupId))
 		}
 	}
@@ -940,7 +940,7 @@ func filterAmazonECSManagedSecurityGroups(
 	*networkConfiguration = updated
 }
 
-func hasAmazonECSManagedTag(tags []ec2types.Tag) bool {
+func hasManagedTag(tags []ec2types.Tag) bool {
 	for _, tag := range tags {
 		if aws.ToString(tag.Key) == "AmazonECSManaged" && aws.ToString(tag.Value) == "true" {
 			return true
