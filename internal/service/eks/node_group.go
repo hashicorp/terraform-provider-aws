@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -16,8 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,22 +30,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_node_group", name="Node Group")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("node_group_name")
+// @ImportIDHandler("nodeGroupImportID")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Nodegroup")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNodeGroupCreate,
 		ReadWithoutTimeout:   resourceNodeGroupRead,
 		UpdateWithoutTimeout: resourceNodeGroupUpdate,
 		DeleteWithoutTimeout: resourceNodeGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -143,7 +147,7 @@ func resourceNodeGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
 			},
 			"node_repair_config": {
 				Type:     schema.TypeList,
@@ -383,10 +387,10 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
-	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
-	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	input := &eks.CreateNodegroupInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+	nodeGroupName := create.Name(ctx, d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
+	groupID := nodeGroupCreateResourceID(clusterName, nodeGroupName)
+	input := eks.CreateNodegroupInput{
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
@@ -446,7 +450,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Version = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateNodegroup(ctx, input)
+	_, err := conn.CreateNodegroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EKS Node Group (%s): %s", groupID, err)
@@ -466,7 +470,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -541,15 +545,15 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Do any version update first.
 	if d.HasChanges(names.AttrLaunchTemplate, "release_version", names.AttrVersion) {
-		input := &eks.UpdateNodegroupVersionInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
+		input := eks.UpdateNodegroupVersionInput{
+			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			ClusterName:        aws.String(clusterName),
 			Force:              d.Get("force_update_version").(bool),
 			NodegroupName:      aws.String(nodeGroupName),
@@ -583,7 +587,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			input.Version = aws.String(v.(string))
 		}
 
-		output, err := conn.UpdateNodegroupVersion(ctx, input)
+		output, err := conn.UpdateNodegroupVersion(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Node Group (%s) version: %s", d.Id(), err)
@@ -600,8 +604,8 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
-		input := &eks.UpdateNodegroupConfigInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
+		input := eks.UpdateNodegroupConfigInput{
+			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			ClusterName:        aws.String(clusterName),
 			Labels:             expandUpdateLabelsPayload(ctx, oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
@@ -626,7 +630,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		}
 
-		output, err := conn.UpdateNodegroupConfig(ctx, input)
+		output, err := conn.UpdateNodegroupConfig(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Node Group (%s) config: %s", d.Id(), err)
@@ -647,16 +651,17 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Node Group: %s", d.Id())
-	_, err = conn.DeleteNodegroup(ctx, &eks.DeleteNodegroupInput{
+	input := eks.DeleteNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
-	})
+	}
+	_, err = conn.DeleteNodegroup(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -686,9 +691,8 @@ func findNodegroup(ctx context.Context, conn *eks.Client, input *eks.DescribeNod
 	output, err := conn.DescribeNodegroup(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -697,7 +701,7 @@ func findNodegroup(ctx context.Context, conn *eks.Client, input *eks.DescribeNod
 	}
 
 	if output == nil || output.Nodegroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Nodegroup, nil
@@ -713,8 +717,8 @@ func findNodegroupUpdateByThreePartKey(ctx context.Context, conn *eks.Client, cl
 	return findUpdate(ctx, conn, &input)
 }
 
-func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNodegroup(conn *eks.Client, clusterName, nodeGroupName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
 		if retry.NotFound(err) {
@@ -729,8 +733,8 @@ func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGro
 	}
 }
 
-func statusNodegroupUpdate(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNodegroupUpdate(conn *eks.Client, clusterName, nodeGroupName, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findNodegroupUpdateByThreePartKey(ctx, conn, clusterName, nodeGroupName, id)
 
 		if retry.NotFound(err) {
@@ -746,10 +750,10 @@ func statusNodegroupUpdate(ctx context.Context, conn *eks.Client, clusterName, n
 }
 
 func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string, timeout time.Duration) (*types.Nodegroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.NodegroupStatusCreating),
 		Target:  enum.Slice(types.NodegroupStatusActive),
-		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
+		Refresh: statusNodegroup(conn, clusterName, nodeGroupName),
 		Timeout: timeout,
 	}
 
@@ -757,7 +761,7 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, no
 
 	if output, ok := outputRaw.(*types.Nodegroup); ok {
 		if status, health := output.Status, output.Health; status == types.NodegroupStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, issuesError(health.Issues))
+			retry.SetLastError(err, issuesError(health.Issues))
 		}
 
 		return output, err
@@ -767,10 +771,10 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, no
 }
 
 func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string, timeout time.Duration) (*types.Nodegroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.NodegroupStatusActive, types.NodegroupStatusDeleting),
 		Target:  []string{},
-		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
+		Refresh: statusNodegroup(conn, clusterName, nodeGroupName),
 		Timeout: timeout,
 	}
 
@@ -778,7 +782,7 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, no
 
 	if output, ok := outputRaw.(*types.Nodegroup); ok {
 		if status, health := output.Status, output.Health; status == types.NodegroupStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, issuesError(health.Issues))
+			retry.SetLastError(err, issuesError(health.Issues))
 		}
 
 		return output, err
@@ -788,10 +792,10 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, no
 }
 
 func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string, timeout time.Duration) (*types.Update, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
-		Refresh: statusNodegroupUpdate(ctx, conn, clusterName, nodeGroupName, id),
+		Refresh: statusNodegroupUpdate(conn, clusterName, nodeGroupName, id),
 		Timeout: timeout,
 	}
 
@@ -799,7 +803,7 @@ func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.Client, cluste
 
 	if output, ok := outputRaw.(*types.Update); ok {
 		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -1287,4 +1291,47 @@ func flattenTaints(apiObjects []types.Taint) []any {
 	}
 
 	return tfList
+}
+
+const nodeGroupResourceIDSeparator = ":"
+
+func nodeGroupCreateResourceID(clusterName, nodeGroupName string) string {
+	parts := []string{clusterName, nodeGroupName}
+	id := strings.Join(parts, nodeGroupResourceIDSeparator)
+
+	return id
+}
+
+func nodeGroupParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, nodeGroupResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]snode-group-name", id, nodeGroupResourceIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = nodeGroupImportID{}
+)
+
+type nodeGroupImportID struct{}
+
+func (nodeGroupImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrClusterName: clusterName,
+		"node_group_name":     nodeGroupName,
+	}
+
+	return id, result, nil
+}
+
+func (nodeGroupImportID) Create(d *schema.ResourceData) string {
+	return nodeGroupCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("node_group_name").(string))
 }

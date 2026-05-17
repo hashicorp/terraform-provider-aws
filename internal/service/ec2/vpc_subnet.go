@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -7,37 +9,28 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	fdiag "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 // @SDKResource("aws_subnet", name="Subnet")
@@ -91,6 +84,7 @@ func resourceSubnet() *schema.Resource {
 			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
@@ -119,20 +113,48 @@ func resourceSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"ipv4_ipam_pool_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"customer_owned_ipv4_pool"},
+			},
+			"ipv4_netmask_length": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+				RequiredWith:  []string{"ipv4_ipam_pool_id"},
+			},
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 			},
 			"ipv6_cidr_block_association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ipv6_ipam_pool_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"ipv6_native": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
+			},
+			"ipv6_netmask_length": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntInSlice(subnetCIDRValidIPv6Netmasks),
+				ConflictsWith: []string{"ipv6_cidr_block"},
+				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
 			"map_customer_owned_ip_on_launch": {
 				Type:         schema.TypeBool,
@@ -168,22 +190,28 @@ func resourceSubnet() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+		CustomizeDiff: customdiff.ForceNewIf("ipv6_cidr_block", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+			if d.HasChange("ipv6_cidr_block") {
+				ob, _ := d.GetChange("ipv6_cidr_block")
+				oa, _ := d.GetChange("assign_ipv6_address_on_creation")
+				// If the previous ipv6 subnet was created with assign_ipv6_address_on_creation=true,
+				// resource recreation is required.
+				if ob != nil {
+					if v, ok := oa.(bool); ok && v {
+						return true
+					}
+				}
+			}
+			return false
+		}),
 	}
-}
-
-// @SDKListResource("aws_subnet")
-func subnetResourceAsListResource() inttypes.ListResourceForSDK {
-	l := subnetListResource{}
-	l.SetResourceSchema(resourceSubnet())
-
-	return &l
 }
 
 func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateSubnetInput{
+	input := ec2.CreateSubnetInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSubnet),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
@@ -200,19 +228,35 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.CidrBlock = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("ipv4_ipam_pool_id"); ok {
+		input.Ipv4IpamPoolId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv4_netmask_length"); ok {
+		input.Ipv4NetmaskLength = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
 		input.Ipv6CidrBlock = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+		input.Ipv6IpamPoolId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ipv6_native"); ok {
 		input.Ipv6Native = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
+		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("outpost_arn"); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateSubnet(ctx, input)
+	output, err := conn.CreateSubnet(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Subnet: %s", err)
@@ -240,7 +284,19 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	if err := modifySubnetAttributesOnCreate(ctx, conn, d, subnet, false); err != nil {
+	var computedIPv6CidrBlock bool
+	_, cidrExists := d.GetOk("ipv6_cidr_block")
+
+	if !cidrExists {
+		if _, ok := d.GetOk("ipv6_native"); ok {
+			computedIPv6CidrBlock = true
+		}
+		if _, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+			computedIPv6CidrBlock = true
+		}
+	}
+
+	if err := modifySubnetAttributesOnCreate(ctx, conn, d, subnet, computedIPv6CidrBlock); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -292,8 +348,15 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	// If we're enabling dns64 and resource_name_dns_aaaa_record_on_launch, do that after modifying the IPv6 CIDR block.
-	if d.HasChange("ipv6_cidr_block") {
-		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
+	// Check if ipv6_cidr_block needs to be modified. When Optional+Computed, removal from config doesn't trigger HasChange()
+	rawConfig := d.GetRawConfig()
+	if currentIPv6, ipv6InConfig := d.Get("ipv6_cidr_block").(string), !rawConfig.GetAttr("ipv6_cidr_block").IsNull(); d.HasChange("ipv6_cidr_block") || (currentIPv6 != "" && !ipv6InConfig) {
+		targetValue := ""
+		if ipv6InConfig {
+			targetValue = d.Get("ipv6_cidr_block").(string)
+		}
+
+		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), targetValue); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -356,14 +419,51 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		return conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
-			SubnetId: aws.String(d.Id()),
-		})
-	}, errCodeDependencyViolation)
+	// First attempt at deletion.
+	input := ec2.DeleteSubnetInput{
+		SubnetId: aws.String(d.Id()),
+	}
+	_, err := conn.DeleteSubnet(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
 		return diags
+	}
+
+	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so that no new permissions,
+	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
+	var guardDutyDiags diag.Diagnostics
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		tflog.Debug(ctx, "Subnet deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
+			"error": err,
+		})
+
+		vpcID := d.Get(names.AttrVPCID).(string)
+		accountID := meta.(*conns.AWSClient).AccountID(ctx)
+		dissociateErr := dissociateGuardDutyVPCEndpoints(ctx, conn, d.Id(), vpcID, accountID)
+		if dissociateErr != nil {
+			if isUnauthorizedError(dissociateErr) {
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
+					"While deleting EC2 Subnet %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
+						"If GuardDuty monitoring is enabled for the containing VPC %q, the missing permissions will prevent deletion of the Subnet\n\n"+
+						"Error: %s", d.Id(), vpcID, dissociateErr.Error(),
+				)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "dissociating GuardDuty VPC endpoints for EC2 Subnet %q: %s", d.Id(), dissociateErr)
+			}
+		}
+
+		// Retry the deletion now that GuardDuty resources have been cleaned up.
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+			return conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
+				SubnetId: aws.String(d.Id()),
+			})
+		}, errCodeDependencyViolation)
+	}
+
+	// Only append GuardDuty-related warnings if we're still seeing a DependencyViolation:
+	// If there's no longer a DependencyViolation, any GuardDuty-related warings are not relevant.
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		diags = append(diags, guardDutyDiags...)
 	}
 
 	if err != nil {
@@ -707,159 +807,131 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	setTagsOut(ctx, subnet.Tags)
 }
 
-var _ list.ListResourceWithRawV5Schemas = &subnetListResource{}
-
-type subnetListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type subnetListResourceModel struct {
-	framework.WithRegionModel
-	SubnetIDs fwtypes.ListValueOf[types.String] `tfsdk:"subnet_ids"`
-	Filters   customListFilters                 `tfsdk:"filter"`
-}
-
-func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			names.AttrSubnetIDs: listschema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-		},
-		Blocks: map[string]listschema.Block{
-			names.AttrFilter: listschema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
-				NestedObject: listschema.NestedBlockObject{
-					Attributes: map[string]listschema.Attribute{
-						names.AttrName: listschema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								notDefaultForAZValidator{},
-							},
-						},
-						names.AttrValues: listschema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
-						},
-					},
-				},
-			},
-		},
+func isUnauthorizedError(err error) bool {
+	if err == nil {
+		return false
 	}
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "UnauthorizedOperation") ||
+		strings.Contains(errMsg, "AccessDenied") ||
+		strings.Contains(errMsg, "not authorized")
 }
 
-var _ validator.String = notDefaultForAZValidator{}
+const (
+	vpcEndpointDeletionTimeout = 10 * time.Minute
+)
 
-type notDefaultForAZValidator struct{}
-
-func (v notDefaultForAZValidator) Description(ctx context.Context) string {
-	return v.MarkdownDescription(ctx)
+func findGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) ([]awstypes.VpcEndpoint, error) {
+	return findVPCEndpoints(ctx, conn, &ec2.DescribeVpcEndpointsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"vpc-id":                        vpcID,
+			"service-name":                  guardDutyServiceNamePattern,
+			"tag:" + guardDutyManagedTagKey: guardDutyManagedTagValue,
+		}),
+	})
 }
 
-func (v notDefaultForAZValidator) MarkdownDescription(_ context.Context) string {
-	return ""
-}
-
-func (v notDefaultForAZValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
-		return
+func isVPCOwnedByAccount(ctx context.Context, conn *ec2.Client, vpcID, accountID string) (bool, error) {
+	vpc, err := findVPCByID(ctx, conn, vpcID)
+	if err != nil {
+		return false, fmt.Errorf("describing VPC %s: %w", vpcID, err)
 	}
 
-	value := request.ConfigValue
-
-	if value.ValueString() == "default-for-az" {
-		response.Diagnostics.Append(fdiag.NewAttributeErrorDiagnostic(
-			request.Path,
-			"Invalid Attribute Value",
-			`The filter "default-for-az" is not supported. To list default Subnets, use the resource type "aws_default_subnet".`,
-		))
-	}
+	return aws.ToString(vpc.OwnerId) == accountID, nil
 }
 
-func (l *subnetListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.EC2Client(ctx)
+// dissociateGuardDutyVPCEndpoints removes GuardDuty-managed VPC endpoint associations
+// from a subnet to unblock deletion. The VPC ownership check (isVPCOwnedByAccount) is
+// a defensive guard for shared VPC scenarios: when GuardDuty is enabled with shared VPC
+// support, the VPC endpoint is always created in the VPC owner's account, so only the
+// owner can manage it. In practice, participant accounts in a shared VPC cannot create
+// or delete subnets (they receive UnauthorizedOperation), so this code path is only
+// reachable by the VPC owner. The ownership check ensures correctness if this assumption
+// ever changes.
+// See: https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring-shared-vpc.html
+func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subnetID, vpcID, accountID string) error {
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrVPCID), vpcID)
 
-	attributes := []attribute.KeyValue{
-		otelaws.RegionAttr(awsClient.Region(ctx)),
-	}
-	for _, attribute := range attributes {
-		ctx = tflog.SetField(ctx, string(attribute.Key), attribute.Value.AsInterface())
-	}
-
-	var query subnetListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
+	ownedByAccount, err := isVPCOwnedByAccount(ctx, conn, vpcID, accountID)
+	if err != nil {
+		tflog.Warn(ctx, "Error checking VPC ownership for GuardDuty cleanup", map[string]any{
+			"error": err,
+		})
+		if isUnauthorizedError(err) {
+			return err
 		}
+		return nil
+	}
+	if !ownedByAccount {
+		tflog.Debug(ctx, "VPC owned by a different account, skipping")
+		return nil
 	}
 
-	var input ec2.DescribeSubnetsInput
-	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
+	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for subnet dissociation")
+
+	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
+	if err != nil {
+		if isUnauthorizedError(err) {
+			return err
+		}
+		return fmt.Errorf("listing GuardDuty VPC endpoints for Subnet %q: %w", subnetID, err)
 	}
 
-	input.Filters = append(input.Filters, awstypes.Filter{
-		Name:   aws.String("default-for-az"),
-		Values: []string{"false"},
+	if len(endpoints) == 0 {
+		tflog.Debug(ctx, "No GuardDuty VPC endpoints found")
+		return nil
+	}
+
+	tflog.Debug(ctx, "Found GuardDuty VPC endpoints", map[string]any{
+		"count": len(endpoints),
 	})
 
-	tflog.Info(ctx, "Listing resources")
+	for _, endpoint := range endpoints {
+		endpointID := aws.ToString(endpoint.VpcEndpointId)
+		ctx := tflog.SetField(ctx, "endpoint_id", endpointID)
 
-	stream.Results = func(yield func(list.ListResult) bool) {
-		pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			for _, subnet := range page.Subnets {
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(subnet.SubnetId))
-
-				result := request.NewListResult(ctx)
-
-				tags := keyValueTags(ctx, subnet.Tags)
-
-				rd := l.ResourceData()
-				rd.SetId(aws.ToString(subnet.SubnetId))
-
-				tflog.Info(ctx, "Reading resource")
-				resourceSubnetFlatten(ctx, &subnet, rd)
-
-				// set tags
-				err = l.SetTags(ctx, awsClient, rd)
-				if err != nil {
-					result = fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
-
-				if v, ok := tags["Name"]; ok {
-					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(subnet.SubnetId))
-				} else {
-					result.DisplayName = aws.ToString(subnet.SubnetId)
-				}
-
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return
-				}
-
-				if !yield(result) {
-					return
-				}
-			}
+		if !slices.Contains(endpoint.SubnetIds, subnetID) {
+			tflog.Debug(ctx, "Subnet is not associated with GuardDuty VPC endpoint, skipping")
+			continue
 		}
+
+		tflog.Debug(ctx, "Dissociating subnet from GuardDuty VPC endpoint")
+
+		modifyInput := ec2.ModifyVpcEndpointInput{
+			VpcEndpointId:   aws.String(endpointID),
+			RemoveSubnetIds: []string{subnetID},
+		}
+		err := tfresource.Retry(ctx, vpcEndpointDeletionTimeout, func(ctx context.Context) *tfresource.RetryError {
+			if _, err := conn.ModifyVpcEndpoint(ctx, &modifyInput); err != nil {
+				if tfawserr.ErrCodeEquals(err, errCodeOperationInProgress) {
+					return tfresource.RetryableError(err)
+				}
+				return tfresource.NonRetryableError(err)
+			}
+			return nil
+		}, tfresource.WithPollInterval(10*time.Second))
+
+		if err != nil {
+			if isUnauthorizedError(err) {
+				return err
+			}
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during dissociation")
+				continue
+			}
+			return fmt.Errorf("modifying GuardDuty VPC endpoint %q to remove subnet %q: %w", endpointID, subnetID, err)
+		}
+
+		if _, err := waitVPCEndpointAvailable(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for available state")
+				continue
+			}
+			return fmt.Errorf("waiting for GuardDuty VPC endpoint %q to reach available state after dissociating subnet %q: %w", endpointID, subnetID, err)
+		}
+
+		tflog.Debug(ctx, "Successfully dissociated subnet from GuardDuty VPC endpoint")
 	}
+
+	return nil
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_networkmanager_core_network_policy_document: Fix panic when `attachment_routing_policy_rules.action.associate_routing_policies` is empty
+```

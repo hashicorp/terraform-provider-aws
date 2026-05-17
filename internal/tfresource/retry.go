@@ -1,12 +1,14 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
 
 import (
 	"context"
+	"crypto/rand"
+	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -190,7 +192,12 @@ func WithDelay(delay time.Duration) OptionsFunc {
 // WithDelayRand sets the delay to a value between 0s and the passed duration
 func WithDelayRand(delayRand time.Duration) OptionsFunc {
 	return func(o *Options) {
-		o.Delay = time.Duration(rand.Int63n(delayRand.Milliseconds())) * time.Millisecond
+		n, err := rand.Int(rand.Reader, big.NewInt(delayRand.Milliseconds()))
+		if err != nil {
+			// Fallback to maximum delay if crypto/rand fails
+			n = big.NewInt(delayRand.Milliseconds())
+		}
+		o.Delay = time.Duration(n.Int64()) * time.Millisecond
 	}
 }
 
@@ -234,7 +241,7 @@ func Retry(ctx context.Context, timeout time.Duration, f func(context.Context) *
 			return nil, f(ctx)
 		},
 		func(err error) (bool, error) {
-			if err, ok := errs.As[*RetryError](err); ok {
+			if err, ok := errors.AsType[*RetryError](err); ok {
 				if err != nil {
 					return err.isRetryable, err.err
 				}

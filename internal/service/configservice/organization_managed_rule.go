@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,16 +30,17 @@ import (
 )
 
 // @SDKResource("aws_config_organization_managed_rule", name="Organization Managed Rule")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.OrganizationConfigRule")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 func resourceOrganizationManagedRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationManagedRuleCreate,
 		ReadWithoutTimeout:   resourceOrganizationManagedRuleRead,
 		UpdateWithoutTimeout: resourceOrganizationManagedRuleUpdate,
 		DeleteWithoutTimeout: resourceOrganizationManagedRuleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -124,7 +126,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutOrganizationConfigRuleInput{
+	input := configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(name),
 		OrganizationManagedRuleMetadata: &types.OrganizationManagedRuleMetadata{
 			RuleIdentifier: aws.String(d.Get("rule_identifier").(string)),
@@ -164,7 +166,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutOrganizationConfigRule(ctx, input)
+		return conn.PutOrganizationConfigRule(ctx, &input)
 	})
 
 	if err != nil {
@@ -216,7 +218,7 @@ func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	input := &configservice.PutOrganizationConfigRuleInput{
+	input := configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
 		OrganizationManagedRuleMetadata: &types.OrganizationManagedRuleMetadata{
 			RuleIdentifier: aws.String(d.Get("rule_identifier").(string)),
@@ -255,7 +257,7 @@ func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.Resour
 		input.OrganizationManagedRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConfigRule(ctx, input)
+	_, err := conn.PutOrganizationConfigRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating ConfigService Organization Managed Rule (%s): %s", d.Id(), err)
@@ -272,14 +274,15 @@ func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Organization Managed Rule: %s", d.Id())
 	const (
 		timeout = 2 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Organization Managed Rule: %s", d.Id())
+	input := configservice.DeleteOrganizationConfigRuleInput{
+		OrganizationConfigRuleName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
-			OrganizationConfigRuleName: aws.String(d.Id()),
-		})
+		return conn.DeleteOrganizationConfigRule(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
@@ -305,18 +308,18 @@ func findOrganizationManagedRuleByName(ctx context.Context, conn *configservice.
 	}
 
 	if output.OrganizationManagedRuleMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 func findOrganizationConfigRuleByName(ctx context.Context, conn *configservice.Client, name string) (*types.OrganizationConfigRule, error) {
-	input := &configservice.DescribeOrganizationConfigRulesInput{
+	input := configservice.DescribeOrganizationConfigRulesInput{
 		OrganizationConfigRuleNames: []string{name},
 	}
 
-	return findOrganizationConfigRule(ctx, conn, input)
+	return findOrganizationConfigRule(ctx, conn, &input)
 }
 
 func findOrganizationConfigRule(ctx context.Context, conn *configservice.Client, input *configservice.DescribeOrganizationConfigRulesInput) (*types.OrganizationConfigRule, error) {
@@ -337,16 +340,14 @@ func findOrganizationConfigRules(ctx context.Context, conn *configservice.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
 		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -361,20 +362,19 @@ func findOrganizationConfigRules(ctx context.Context, conn *configservice.Client
 }
 
 func findOrganizationConfigRuleStatusByName(ctx context.Context, conn *configservice.Client, name string) (*types.OrganizationConfigRuleStatus, error) {
-	input := &configservice.DescribeOrganizationConfigRuleStatusesInput{
+	input := configservice.DescribeOrganizationConfigRuleStatusesInput{
 		OrganizationConfigRuleNames: []string{name},
 	}
 
-	output, err := findOrganizationConfigRuleStatus(ctx, conn, input)
+	output, err := findOrganizationConfigRuleStatus(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if status := output.OrganizationRuleStatus; status == types.OrganizationRuleStatusDeleteSuccessful {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -404,9 +404,8 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 		})
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -421,14 +420,14 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 }
 
 func findOrganizationConfigRuleDetailedStatusesByTwoPartKey(ctx context.Context, conn *configservice.Client, name string, status types.MemberAccountRuleStatus) ([]types.MemberAccountStatus, error) {
-	input := &configservice.GetOrganizationConfigRuleDetailedStatusInput{
+	input := configservice.GetOrganizationConfigRuleDetailedStatusInput{
 		Filters: &types.StatusDetailFilters{
 			MemberAccountRuleStatus: status,
 		},
 		OrganizationConfigRuleName: aws.String(name),
 	}
 
-	return findOrganizationConfigRuleDetailedStatuses(ctx, conn, input)
+	return findOrganizationConfigRuleDetailedStatuses(ctx, conn, &input)
 }
 
 func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *configservice.Client, input *configservice.GetOrganizationConfigRuleDetailedStatusInput) ([]types.MemberAccountStatus, error) {
@@ -439,9 +438,8 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -455,8 +453,8 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 	return output, nil
 }
 
-func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOrganizationConfigRule(conn *configservice.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOrganizationConfigRuleStatusByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -472,10 +470,10 @@ func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Clien
 }
 
 func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.OrganizationRuleStatusCreateInProgress),
 		Target:         enum.Slice(types.OrganizationRuleStatusCreateSuccessful),
-		Refresh:        statusOrganizationConfigRule(ctx, conn, name),
+		Refresh:        statusOrganizationConfigRule(conn, name),
 		Timeout:        timeout,
 		Delay:          30 * time.Second,
 		NotFoundChecks: 10,
@@ -484,7 +482,7 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -493,10 +491,10 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 }
 
 func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OrganizationRuleStatusUpdateInProgress),
 		Target:  enum.Slice(types.OrganizationRuleStatusUpdateSuccessful),
-		Refresh: statusOrganizationConfigRule(ctx, conn, name),
+		Refresh: statusOrganizationConfigRule(conn, name),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -504,7 +502,7 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -513,10 +511,10 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 }
 
 func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationRuleStatusDeleteInProgress),
 		Target:                    []string{},
-		Refresh:                   statusOrganizationConfigRule(ctx, conn, name),
+		Refresh:                   statusOrganizationConfigRule(conn, name),
 		Timeout:                   timeout,
 		Delay:                     10 * time.Second,
 		ContinuousTargetOccurence: 2,
@@ -525,7 +523,7 @@ func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}

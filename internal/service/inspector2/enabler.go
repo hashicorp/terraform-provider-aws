@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package inspector2
 
@@ -17,8 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -109,7 +109,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any
 	in := &inspector2.EnableInput{
 		AccountIds:    accountIDs,
 		ResourceTypes: typeEnable,
-		ClientToken:   aws.String(sdkid.UniqueId()),
+		ClientToken:   aws.String(create.UniqueId(ctx)),
 	}
 
 	id := enablerID(accountIDs, typeEnable)
@@ -122,7 +122,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any
 			return tfresource.NonRetryableError(err)
 		}
 		if out == nil {
-			return tfresource.RetryableError(tfresource.NewEmptyResultError(nil))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError())
 		}
 
 		if len(out.FailedAccounts) == 0 {
@@ -274,7 +274,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			in := &inspector2.EnableInput{
 				AccountIds:    acctEnable,
 				ResourceTypes: typeEnable,
-				ClientToken:   aws.String(sdkid.UniqueId()),
+				ClientToken:   aws.String(create.UniqueId(ctx)),
 			}
 
 			out, err := conn.Enable(ctx, in)
@@ -283,7 +283,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 
 			if out == nil {
-				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError(nil))
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError())
 			}
 
 			if len(out.FailedAccounts) > 0 {
@@ -380,7 +380,7 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
 	if out == nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError(nil))
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError())
 	}
 
 	var errs []error
@@ -426,10 +426,10 @@ const (
 )
 
 func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) (map[string]AccountResourceStatus, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusInProgress},
 		Target:  []string{statusComplete},
-		Refresh: statusEnablerAccountAndResourceTypes(ctx, conn, accountIDs),
+		Refresh: statusEnablerAccountAndResourceTypes(conn, accountIDs),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -444,10 +444,10 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []stri
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusInProgress},
 		Target:  []string{},
-		Refresh: statusEnablerAccount(ctx, conn, accountIDs),
+		Refresh: statusEnablerAccount(conn, accountIDs),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -470,8 +470,8 @@ var (
 )
 
 // statusEnablerAccountAndResourceTypes checks the status of Inspector for the account and resource types
-func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.Client, accountIDs []string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnablerAccountAndResourceTypes(conn *inspector2.Client, accountIDs []string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		st, err := AccountStatuses(ctx, conn, accountIDs)
 		if err != nil {
 			return nil, "", err
@@ -504,8 +504,8 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 
 // statusEnablerAccount checks only the status of Inspector for the account as a whole.
 // It is only used for deletion, so the non-error states are in-progress or not-found
-func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountIDs []string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnablerAccount(conn *inspector2.Client, accountIDs []string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		st, err := AccountStatuses(ctx, conn, accountIDs)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -575,7 +575,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 	}
 
 	if len(results) == 0 {
-		return results, &sdkretry.NotFoundError{}
+		return results, &retry.NotFoundError{}
 	}
 
 	return results, err

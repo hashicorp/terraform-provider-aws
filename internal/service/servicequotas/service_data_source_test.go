@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas_test
@@ -16,7 +16,7 @@ func TestAccServiceQuotasServiceDataSource_serviceName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicequotas_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)

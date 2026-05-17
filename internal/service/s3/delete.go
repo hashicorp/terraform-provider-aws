@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	smithy "github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
@@ -207,7 +206,7 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 			continue
 		}
 
-		if err, ok := errs.As[smithy.APIError](err); ok {
+		if err, ok := errors.AsType[smithy.APIError](err); ok {
 			if errorCode := err.ErrorCode(); errorCode == errCodeNoSuchBucket {
 				return int64(len(toDelete)), nil
 			} else {

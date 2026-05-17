@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfrontkeyvaluestore
 
@@ -18,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -112,6 +113,8 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 
 	// Additional fields.
 	input.IfMatch = etag
+	// Manually set Value to avoid JSON encoding by AutoFlEx.
+	input.Value = data.Value.ValueStringPointer()
 
 	output, err := conn.PutKey(ctx, input)
 
@@ -158,6 +161,11 @@ func (r *keyResource) Read(ctx context.Context, request resource.ReadRequest, re
 		return
 	}
 
+	// Manually set Value to avoid JSON decoding by AutoFlEx.
+	if output.Value != nil {
+		data.Value = types.StringValue(*output.Value)
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -199,6 +207,8 @@ func (r *keyResource) Update(ctx context.Context, request resource.UpdateRequest
 
 		// Additional fields.
 		input.IfMatch = etag
+		// Manually set Value to avoid JSON encoding by AutoFlEx.
+		input.Value = new.Value.ValueStringPointer()
 
 		output, err := conn.PutKey(ctx, input)
 
@@ -267,9 +277,8 @@ func findKeyByTwoPartKey(ctx context.Context, conn *cloudfrontkeyvaluestore.Clie
 	output, err := conn.GetKey(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -278,7 +287,7 @@ func findKeyByTwoPartKey(ctx context.Context, conn *cloudfrontkeyvaluestore.Clie
 	}
 
 	if output == nil || output.Key == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -292,9 +301,8 @@ func findETagByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.Client, ar
 	output, err := conn.DescribeKeyValueStore(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -303,7 +311,7 @@ func findETagByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.Client, ar
 	}
 
 	if output == nil || output.ETag == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ETag, nil
@@ -341,13 +349,13 @@ var (
 
 type securityGroupVPCAssociationImportID struct{}
 
-func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]any, error) {
 	kvsARN, key, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <key-value-store-arn>"+intflex.ResourceIdSeparator+"<key>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"key_value_store_arn": kvsARN,
 		names.AttrKey:         key,
 	}

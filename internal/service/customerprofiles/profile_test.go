@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package customerprofiles_test
@@ -8,12 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
+	tfcustomerprofiles "github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,14 +20,15 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	accountNumber := sdkacctest.RandString(8)
-	accountNumberUpdated := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	accountNumber := acctest.RandString(t, 8)
+	accountNumberUpdated := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
 	emailUpdated := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -102,7 +102,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccProfileImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, "/", names.AttrDomainName, names.AttrID),
 				ImportStateVerify: true,
 			},
 			{
@@ -179,12 +179,13 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	accountNumber := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	accountNumber := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -192,7 +193,7 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 				Config: testAccProfileConfig_full(rName, accountNumber, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, customerprofiles.ResourceProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcustomerprofiles.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -209,7 +210,7 @@ func testAccCheckProfileExists(ctx context.Context, t *testing.T, n string) reso
 
 		conn := acctest.ProviderMeta(ctx, t).CustomerProfilesClient(ctx)
 
-		_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
+		_, err := tfcustomerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
 
 		return err
 	}
@@ -224,7 +225,7 @@ func testAccCheckProfileDestroy(ctx context.Context, t *testing.T) resource.Test
 				continue
 			}
 
-			_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
+			_, err := tfcustomerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
 
 			if retry.NotFound(err) {
 				continue
@@ -238,17 +239,6 @@ func testAccCheckProfileDestroy(ctx context.Context, t *testing.T) resource.Test
 		}
 
 		return nil
-	}
-}
-
-func testAccProfileImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrDomainName], rs.Primary.ID), nil
 	}
 }
 

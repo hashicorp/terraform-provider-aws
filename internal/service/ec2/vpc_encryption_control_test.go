@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -134,7 +133,7 @@ func TestAccVPCVPCEncryptionControl_disappears(t *testing.T) {
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeMonitor),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEncryptionControl, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCEncryptionControl, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1457,7 +1456,7 @@ resource "aws_vpc_encryption_control" "test" {
 }
 
 func testAccInstanceConfig_orderableClassPostgres() string {
-	return testAccInstanceConfig_orderableClass(rds.InstanceEnginePostgres, "postgresql-license", "standard")
+	return testAccInstanceConfig_orderableClass("postgres", "postgresql-license", "standard")
 }
 
 func testAccInstanceConfig_orderableClass(engine, license, storage string) string {

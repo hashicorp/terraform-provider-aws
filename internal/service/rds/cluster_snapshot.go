@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -275,9 +276,7 @@ func findDBClusterSnapshotByID(ctx context.Context, conn *rds.Client, id string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterSnapshotIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -301,9 +300,8 @@ func findDBClusterSnapshots(ctx context.Context, conn *rds.Client, input *rds.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -321,8 +319,8 @@ func findDBClusterSnapshots(ctx context.Context, conn *rds.Client, input *rds.De
 	return output, nil
 }
 
-func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBClusterSnapshot(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBClusterSnapshotByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -338,10 +336,10 @@ func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) s
 }
 
 func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterSnapshot, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating, clusterSnapshotStatusCopying},
 		Target:     []string{clusterSnapshotStatusAvailable},
-		Refresh:    statusDBClusterSnapshot(ctx, conn, id),
+		Refresh:    statusDBClusterSnapshot(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      5 * time.Second,
@@ -380,9 +378,8 @@ func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.Client, inpu
 	output, err := conn.DescribeDBClusterSnapshotAttributes(ctx, input)
 
 	if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -391,7 +388,7 @@ func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.Client, inpu
 	}
 
 	if output == nil || output.DBClusterSnapshotAttributesResult == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, tfslices.PredicateValue(filter)), nil

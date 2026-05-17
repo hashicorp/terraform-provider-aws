@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -129,7 +129,7 @@ func (d *resourceData) GetRawPlan() cty.Value {
 	})
 }
 
-func (d *resourceData) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+func (d *resourceData) GetRawState() cty.Value {
 	return cty.Value{}
 }
 

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -19,18 +18,18 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster_iam_roles.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
 				),
 			},
@@ -42,14 +41,14 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 			{
 				Config: testAccClusterIAMRolesConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "2"),
 				),
 			},
 			{
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
 				),
 			},
@@ -61,19 +60,19 @@ func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), resourceName),
+					testAccCheckClusterExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

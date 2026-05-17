@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -40,7 +41,7 @@ func resourceDocumentationVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -58,7 +59,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	input := apigateway.CreateDocumentationVersionInput{
 		DocumentationVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		RestApiId:            aws.String(apiID),
@@ -101,7 +102,7 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set(names.AttrDescription, version.Description)
-	d.Set("rest_api_id", apiID)
+	d.Set(attrRestAPIID, apiID)
 	d.Set(names.AttrVersion, version.Version)
 
 	return diags
@@ -172,9 +173,8 @@ func findDocumentationVersionByTwoPartKey(ctx context.Context, conn *apigateway.
 	output, err := conn.GetDocumentationVersion(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -183,7 +183,7 @@ func findDocumentationVersionByTwoPartKey(ctx context.Context, conn *apigateway.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

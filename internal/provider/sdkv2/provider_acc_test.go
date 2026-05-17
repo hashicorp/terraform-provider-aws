@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2_test
@@ -1014,8 +1014,7 @@ func funcHasConnFuncSignature(method reflect.Value) bool {
 		return false
 	}
 
-	fn := func(ctx context.Context) {}
-	ftyp := reflect.TypeOf(fn)
+	ftyp := reflect.TypeFor[func(ctx context.Context)]()
 
 	return typ.In(0) == ftyp.In(0)
 }
@@ -1102,7 +1101,7 @@ func testAccProviderConfig_overridesUseFipsEndpointFlagForAppConfig(rName string
 provider "aws" {
   use_fips_endpoint = true
   endpoints {
-	appconfig = %[1]q
+    appconfig = %[1]q
   }
 }
 

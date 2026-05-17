@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudformation
 
@@ -15,8 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -300,7 +300,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 		func(ctx context.Context) (any, error) {
-			input.OperationId = aws.String(sdkid.UniqueId())
+			input.OperationId = aws.String(create.UniqueId(ctx))
 
 			output, err := conn.CreateStackInstances(ctx, input)
 			if err != nil {
@@ -465,7 +465,7 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 		"parameter_overrides",
 	) {
 		input := &cloudformation.UpdateStackInstancesInput{
-			OperationId:        aws.String(sdkid.UniqueId()),
+			OperationId:        aws.String(create.UniqueId(ctx)),
 			ParameterOverrides: []awstypes.Parameter{},
 			Regions:            flex.ExpandStringValueSet(d.Get(AttrRegions).(*schema.Set)),
 			StackSetName:       aws.String(d.Get("stack_set_name").(string)),
@@ -526,7 +526,7 @@ func deleteStackInstances(ctx context.Context, d *schema.ResourceData, meta any,
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.DeleteStackInstancesInput{
-		OperationId:  aws.String(sdkid.UniqueId()),
+		OperationId:  aws.String(create.UniqueId(ctx)),
 		Accounts:     accounts,
 		Regions:      regions,
 		RetainStacks: aws.Bool(d.Get("retain_stacks").(bool)),
@@ -616,9 +616,8 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta any, stackSetName,
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.StackInstanceNotFoundException](err) || errs.IsA[*awstypes.StackSetNotFoundException](err) {
-			return output, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return output, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -672,9 +671,8 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta any, stackSetName,
 	// set based on the first account and region which means they may not be accurate for all stack instances
 	stackInstance, err := findStackInstanceByFourPartKey(ctx, conn, stackSetName, output.Accounts[0], output.Regions[0], callAs)
 	if none || retry.NotFound(err) {
-		return output, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return output, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

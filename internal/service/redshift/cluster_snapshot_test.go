@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Snapshot
 	resourceName := "aws_redshift_cluster_snapshot.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "owner_account"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
@@ -52,7 +50,7 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotConfig_retention(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
@@ -68,19 +66,19 @@ func TestAccRedshiftClusterSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Snapshot
 	resourceName := "aws_redshift_cluster_snapshot.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceClusterSnapshot(), resourceName),
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceClusterSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +86,7 @@ func TestAccRedshiftClusterSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *awstypes.Snapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, t *testing.T, n string, v *awstypes.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -99,7 +97,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *awstype
 			return fmt.Errorf("No Redshift Cluster Snapshot is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		out, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
@@ -113,9 +111,9 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *awstype
 	}
 }
 
-func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster_snapshot" {

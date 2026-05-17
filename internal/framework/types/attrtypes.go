@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // AttributeTypes returns a map of attribute types for the specified type T.
@@ -22,7 +23,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 	val := reflect.ValueOf(t)
 	typ := val.Type()
 
-	if typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Struct {
+	if typ.Kind() == reflect.Pointer && typ.Elem().Kind() == reflect.Struct {
 		val = reflect.New(typ.Elem()).Elem()
 		typ = typ.Elem()
 	}
@@ -56,6 +57,5 @@ func AttributeTypesMust[T any](ctx context.Context) map[string]attr.Type {
 }
 
 func newAttrTypeOf[T attr.Value](ctx context.Context) attr.Type {
-	var zero T
-	return zero.Type(ctx)
+	return inttypes.Zero[T]().Type(ctx)
 }

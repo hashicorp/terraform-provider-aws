@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,16 +30,19 @@ import (
 )
 
 // @SDKResource("aws_securityhub_configuration_policy", name="Configuration Policy")
+// @IdentityAttribute("id")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// Alternate account not working
+// @Testing(identityTest=false)
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationMemberAccount")
 func resourceConfigurationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationPolicyCreate,
 		ReadWithoutTimeout:   resourceConfigurationPolicyRead,
 		UpdateWithoutTimeout: resourceConfigurationPolicyUpdate,
 		DeleteWithoutTimeout: resourceConfigurationPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			customParameterResource := func() *schema.Resource {
@@ -271,7 +275,7 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &securityhub.CreateConfigurationPolicyInput{
+	input := securityhub.CreateConfigurationPolicyInput{
 		Name: aws.String(name),
 	}
 
@@ -287,7 +291,7 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateConfigurationPolicy(ctx, input)
+	output, err := conn.CreateConfigurationPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", name, err)
@@ -328,7 +332,7 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.UpdateConfigurationPolicyInput{
+	input := securityhub.UpdateConfigurationPolicyInput{
 		Identifier: aws.String(d.Id()),
 		Name:       aws.String(d.Get(names.AttrName).(string)),
 	}
@@ -345,7 +349,7 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateConfigurationPolicy(ctx, input)
+	_, err := conn.UpdateConfigurationPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s", d.Id(), err)
@@ -359,9 +363,10 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Configuration Policy: %s", d.Id())
-	_, err := conn.DeleteConfigurationPolicy(ctx, &securityhub.DeleteConfigurationPolicyInput{
+	input := securityhub.DeleteConfigurationPolicyInput{
 		Identifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConfigurationPolicy(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
 		return diags
@@ -375,20 +380,19 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 }
 
 func findConfigurationPolicyByID(ctx context.Context, conn *securityhub.Client, id string) (*securityhub.GetConfigurationPolicyOutput, error) {
-	input := &securityhub.GetConfigurationPolicyInput{
+	input := securityhub.GetConfigurationPolicyInput{
 		Identifier: aws.String(id),
 	}
 
-	return findConfigurationPolicy(ctx, conn, input)
+	return findConfigurationPolicy(ctx, conn, &input)
 }
 
 func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyInput) (*securityhub.GetConfigurationPolicyOutput, error) {
 	output, err := conn.GetConfigurationPolicy(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -397,7 +401,7 @@ func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, inpu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

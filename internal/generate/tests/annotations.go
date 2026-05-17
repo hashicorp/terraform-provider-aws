@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tests
@@ -6,8 +6,10 @@ package tests
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -17,6 +19,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+const (
+	acctestImportPath = "github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
+
 type CommonArgs struct {
 	Name           string // Resource Type Name
 	TypeName       string // Terraform Type Name
@@ -24,20 +30,22 @@ type CommonArgs struct {
 
 	// CheckDestroy
 	CheckDestroyNoop bool
-	DestroyTakesT    bool
+	destroyTakesNoT  bool
 
 	// CheckExists
 	HasExistsFunc  bool
 	ExistsTypeName string
-	ExistsTakesT   bool
+	existsTakesNoT bool
 
 	// Import
-	NoImport               bool
-	ImportStateID          string
-	importStateIDAttribute string
-	ImportStateIDFunc      string
-	ImportIgnore           []string
-	plannableImportAction  importAction
+	NoImport                   bool
+	ImportStateID              string
+	importStateIDAttribute     string
+	importStateIDAttributes    []string
+	importStateIDAttributesSep string
+	ImportStateIDFunc          string
+	ImportIgnore               []string
+	plannableImportAction      importAction
 
 	// Serialization
 	Serialize              bool
@@ -51,21 +59,29 @@ type CommonArgs struct {
 
 	UseAlternateAccount     bool
 	AlternateRegionProvider bool
+	AlternateRegionTfVars   bool
 
 	Generator     string
 	generatorSeen bool
 
-	RequiredEnvVars []string
+	RequiredEnvVars      []string
+	RequiredEnvVarValues []string
 
 	GoImports         []common.GoImport
 	InitCodeBlocks    []CodeBlock
 	AdditionalTfVars_ map[string]TFVar
+
+	// Resource Identity Versions
+	HasNoPreExistingResource bool
+	PreIdentityVersion       *version.Version
+	IdentityVersions         map[int64]*version.Version
 }
 
 func InitCommonArgs() CommonArgs {
 	return CommonArgs{
-		AdditionalTfVars_: make(map[string]TFVar),
+		AdditionalTfVars_: make(map[string]TFVar, 0),
 		HasExistsFunc:     true,
+		IdentityVersions:  make(map[int64]*version.Version, 0),
 	}
 }
 
@@ -79,6 +95,46 @@ func (c CommonArgs) ImportStateIDAttribute() string {
 
 func (c *CommonArgs) SetImportStateIDAttribute(attrName string) {
 	c.importStateIDAttribute = attrName
+}
+
+func (c CommonArgs) HasImportStateIDAttributes() bool {
+	return len(c.importStateIDAttributes) > 0
+}
+
+func (c CommonArgs) ImportStateIDAttributes() string {
+	quoted := make([]string, len(c.importStateIDAttributes))
+	for i, attr := range c.importStateIDAttributes {
+		quoted[i] = namesgen.ConstOrQuote(attr)
+	}
+	return strings.Join(quoted, ", ")
+}
+
+func (c CommonArgs) ImportStateIDAttributesFirst() string {
+	if len(c.importStateIDAttributes) > 0 {
+		return namesgen.ConstOrQuote(c.importStateIDAttributes[0])
+	}
+	return ""
+}
+
+func (c CommonArgs) ImportStateIDAttributesSep() string {
+	if c.importStateIDAttributesSep == "" {
+		return namesgen.ConstOrQuote(",")
+	}
+	sep := c.importStateIDAttributesSep
+	// Check if it looks like a package-qualified constant (e.g., "intflex.ResourceIdSeparator")
+	if strings.Contains(sep, ".") {
+		return sep // Return as-is (constant reference)
+	}
+	// Check if it starts with uppercase (unqualified constant)
+	if len(sep) > 0 && sep[0] >= 'A' && sep[0] <= 'Z' {
+		return sep // Return as-is (constant reference)
+	}
+	return namesgen.ConstOrQuote(sep) // Quote it (string literal)
+}
+
+func (c *CommonArgs) SetImportStateIDAttributes(attrNames []string, sep string) {
+	c.importStateIDAttributes = attrNames
+	c.importStateIDAttributesSep = sep
 }
 
 func (c CommonArgs) HasImportIgnore() bool {
@@ -96,6 +152,14 @@ func (c CommonArgs) AdditionalTfVars() map[string]TFVar {
 	return tfmaps.ApplyToAllKeys(c.AdditionalTfVars_, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
+}
+
+func (c CommonArgs) DestroyTakesT() bool {
+	return !c.destroyTakesNoT
+}
+
+func (c CommonArgs) ExistsTakesT() bool {
+	return !c.existsTakesNoT
 }
 
 type importAction int
@@ -152,7 +216,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			stuff.CheckDestroyNoop = b
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -162,7 +226,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		if b, err := common.ParseBoolAttr("destroyTakesT", attr); err != nil {
 			return err
 		} else {
-			stuff.DestroyTakesT = b
+			stuff.destroyTakesNoT = !b
 		}
 	}
 
@@ -190,7 +254,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		if b, err := common.ParseBoolAttr("existsTakesT", attr); err != nil {
 			return err
 		} else {
-			stuff.ExistsTakesT = b
+			stuff.existsTakesNoT = !b
 		}
 	}
 
@@ -213,16 +277,32 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		stuff.importStateIDAttribute = attr
 	}
 
-	if attr, ok := args.Keyword["importStateIdFunc"]; ok {
-		stuff.ImportStateIDFunc = attr
+	if attr, ok := args.Keyword["importStateIdAttributes"]; ok {
+		attrs := strings.Split(attr, ";")
+		for i, a := range attrs {
+			attrs[i] = strings.TrimSpace(a)
+		}
+		sep := ","
+		if s, ok := args.Keyword["importStateIdAttributesSep"]; ok {
+			sep = s
+			// If separator references intflex, add the import
+			switch {
+			case strings.Contains(sep, "intflex."):
+				stuff.GoImports = append(stuff.GoImports, common.GoImport{
+					Path:  "github.com/hashicorp/terraform-provider-aws/internal/flex",
+					Alias: "intflex",
+				})
+			case strings.Contains(sep, "flex."):
+				stuff.GoImports = append(stuff.GoImports, common.GoImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/flex",
+				})
+			}
+		}
+		stuff.SetImportStateIDAttributes(attrs, sep)
 	}
 
-	if attr, ok := args.Keyword["noImport"]; ok {
-		if b, err := common.ParseBoolAttr("noImport", attr); err != nil {
-			return err
-		} else {
-			stuff.NoImport = b
-		}
+	if attr, ok := args.Keyword["importStateIdFunc"]; ok {
+		stuff.ImportStateIDFunc = attr
 	}
 
 	if attr, ok := args.Keyword["plannableImportAction"]; ok {
@@ -309,6 +389,10 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		stuff.RequiredEnvVars = append(stuff.RequiredEnvVars, attr)
 	}
 
+	if attr, ok := args.Keyword["requireEnvVarValue"]; ok {
+		stuff.RequiredEnvVarValues = append(stuff.RequiredEnvVarValues, attr)
+	}
+
 	if attr, ok := args.Keyword["useAlternateAccount"]; ok {
 		if b, err := common.ParseBoolAttr("useAlternateAccount", attr); err != nil {
 			return err
@@ -318,8 +402,12 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 				Code: "acctest.PreCheckAlternateAccount(t)",
 			})
 			stuff.GoImports = append(stuff.GoImports,
+				// Required to initialize `schema.Provider` map.
 				common.GoImport{
 					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+				},
+				common.GoImport{
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -330,6 +418,30 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			return err
 		} else {
 			stuff.AlternateRegionProvider = b
+			stuff.PreChecks = append(stuff.PreChecks, CodeBlock{
+				Code: "acctest.PreCheckMultipleRegion(t, 2)",
+			})
+			stuff.GoImports = append(stuff.GoImports,
+				common.GoImport{
+					Path: acctestImportPath,
+				},
+			)
+		}
+	}
+
+	if attr, ok := args.Keyword["altRegionTfVars"]; ok {
+		if b, err := common.ParseBoolAttr("altRegionTfVars", attr); err != nil {
+			return err
+		} else {
+			stuff.AlternateRegionTfVars = b
+			stuff.PreChecks = append(stuff.PreChecks, CodeBlock{
+				Code: "acctest.PreCheckMultipleRegion(t, 2)",
+			})
+			stuff.GoImports = append(stuff.GoImports,
+				common.GoImport{
+					Path: acctestImportPath,
+				},
+			)
 		}
 	}
 
@@ -355,12 +467,12 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
 			Code: fmt.Sprintf(
-				`domain := acctest.RandomDomainName()
+				`domain := acctest.RandomDomainName(t)
 %s := acctest.RandomEmailAddress(domain)`, varName),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
@@ -376,11 +488,11 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
+			Code: fmt.Sprintf(`%s := acctest.RandomDomainName(t)`, varName),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
 			GoVarName: varName,
@@ -402,14 +514,14 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := acctest.RandomDomain()`, parentName),
+			Code: fmt.Sprintf(`%s := acctest.RandomDomain(t)`, parentName),
 		})
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
+			Code: fmt.Sprintf(`%s := %s.RandomSubdomain(t)`, varName, parentName),
 		})
 		stuff.AdditionalTfVars_[parentName] = TFVar{
 			GoVarName: fmt.Sprintf("%s.String()", parentName),
@@ -426,12 +538,11 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		varName := "rBgpAsn"
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-				Alias: "sdkacctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf("%s := sdkacctest.RandIntRange(%s,%s)", varName, parts[0], parts[1]),
+			Code: fmt.Sprintf("%s := acctest.RandIntRange(t, %s,%s)", varName, parts[0], parts[1]),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
 			GoVarName: varName,
@@ -476,6 +587,84 @@ if err != nil {
 		}
 	}
 
+	if attr, ok := args.Keyword["acmRootDomainTfVar"]; ok {
+		varName := "rootDomain"
+		if len(attr) > 0 {
+			varName = attr
+		}
+		stuff.GoImports = append(stuff.GoImports,
+			common.GoImport{
+				Path: acctestImportPath,
+			},
+		)
+		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+			Code: fmt.Sprintf(`%s := acctest.ACMCertificateDomainFromEnv(t)`, varName),
+		})
+		stuff.AdditionalTfVars_[varName] = TFVar{
+			GoVarName: varName,
+			Type:      TFVarTypeString,
+		}
+	}
+
+	if attr, ok := args.Keyword["acmSubdomainTfVar"]; ok {
+		parentName := "rootDomain"
+		varName := "domainName"
+		parts := strings.Split(attr, ";")
+		if len(parts) > 0 && len(parts[0]) > 0 {
+			parentName = parts[0]
+		}
+		if len(parts) > 1 && len(parts[1]) > 0 {
+			varName = parts[1]
+		}
+		stuff.GoImports = append(stuff.GoImports,
+			common.GoImport{
+				Path: acctestImportPath,
+			},
+		)
+		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+			Code: fmt.Sprintf(`%s := acctest.ACMCertificateRandomSubDomain(%s)`, varName, parentName),
+		})
+		stuff.AdditionalTfVars_[varName] = TFVar{
+			GoVarName: varName,
+			Type:      TFVarTypeString,
+		}
+	}
+
+	// Resource Identity Versions
+	if attr, ok := args.Keyword["preIdentityVersion"]; ok {
+		version, err := version.NewVersion(attr)
+		if err != nil {
+			return fmt.Errorf("invalid preIdentityVersion value: %q. Should be version value.", attr)
+		}
+		stuff.PreIdentityVersion = version
+	}
+
+	if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
+		if b, err := common.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
+			return err
+		} else {
+			stuff.HasNoPreExistingResource = b
+		}
+	}
+
+	if attr, ok := args.Keyword["identityVersion"]; ok {
+		parts := strings.Split(attr, ";")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid identityVersion value: %q. Should be in format <identity version>;<provider version>.", attr)
+		}
+		var identityVersion int64
+		if i, err := strconv.ParseInt(parts[0], 10, 64); err != nil {
+			return fmt.Errorf("invalid identity version value: %q. Should be integer value.", parts[0])
+		} else {
+			identityVersion = i
+		}
+		providerVersion, err := version.NewVersion(parts[1])
+		if err != nil {
+			return fmt.Errorf("invalid provider version value: %q. Should be version value.", parts[1])
+		}
+		stuff.IdentityVersions[identityVersion] = providerVersion
+	}
+
 	return nil
 }
 
@@ -501,7 +690,7 @@ func Configure(d *CommonArgs) error {
 		d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 		d.GoImports = append(d.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 	}

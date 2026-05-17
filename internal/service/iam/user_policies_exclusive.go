@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -17,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -156,7 +157,7 @@ func (r *userPoliciesExclusiveResource) syncAttachments(ctx context.Context, use
 		return err
 	}
 
-	create, remove, _ := intflex.DiffSlices(have, want, func(s1, s2 string) bool { return s1 == s2 })
+	create, remove, _ := intflex.DiffSlices(have, want, intflex.Equal)
 
 	for _, name := range create {
 		in := &iam.PutUserPolicyInput{
@@ -200,9 +201,8 @@ func findUserPoliciesByName(ctx context.Context, conn *iam.Client, userName stri
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if errs.IsA[*awstypes.NoSuchEntityException](err) {
-				return nil, &sdkretry.NotFoundError{
-					LastError:   err,
-					LastRequest: in,
+				return nil, &retry.NotFoundError{
+					LastError: err,
 				}
 			}
 			return policyNames, err

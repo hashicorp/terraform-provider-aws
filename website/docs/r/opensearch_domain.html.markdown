@@ -328,6 +328,7 @@ The following arguments are optional:
 * `auto_tune_options` - (Optional) Configuration block for the Auto-Tune options of the domain. Detailed below.
 * `cluster_config` - (Optional) Configuration block for the cluster of the domain. Detailed below.
 * `cognito_options` - (Optional) Configuration block for authenticating dashboard with Cognito. Detailed below.
+* `deployment_strategy_options` - (Optional) Configuration block for the deployment strategy options of the domain. Detailed below.
 * `domain_endpoint_options` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebs_options` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/opensearch-service/pricing/). Detailed below.
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
@@ -349,7 +350,15 @@ The following arguments are optional:
 * `anonymous_auth_enabled` - (Optional) Whether Anonymous auth is enabled. Enables fine-grained access control on an existing domain. Ignored unless `advanced_security_options` are enabled. _Can only be enabled on an existing domain._
 * `enabled` - (Required, Forces new resource when changing from `true` to `false`) Whether advanced security is enabled.
 * `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled. Default is `false`.
+* `jwt_options` - (Optional) Configuration block for JWT authentication. Requires OpenSearch 2.11 or later. Detailed below.
 * `master_user_options` - (Optional) Configuration block for the main user. Detailed below.
+
+#### jwt_options
+
+* `enabled` - (Optional) Whether JWT authentication is enabled.
+* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures.
+* `roles_key` - (Optional) Element of the JWT assertion to use for roles. Default is `roles`.
+* `subject_key` - (Optional) Element of the JWT assertion to use for the user name. Default is `sub`.
 
 #### master_user_options
 
@@ -361,6 +370,7 @@ The following arguments are optional:
 
 * `natural_language_query_generation_options` - (Optional) Configuration block for parameters required for natural language query generation on the specified domain.
 * `s3_vectors_engine` - (Optional) Configuration block for parameters required to enable S3 vectors engine features on the specified domain.
+* `serverless_vector_acceleration` - (Optional) Configuration block for parameters required to enable GPU-accelerated vector search on the specified domain.
 
 #### natural_language_query_generation_options
 
@@ -369,6 +379,10 @@ The following arguments are optional:
 #### s3_vectors_engine
 
 * `enabled` - (Optional) Enables S3 vectors engine features.
+
+#### serverless_vector_acceleration
+
+* `enabled` - (Optional) Enables GPU-accelerated vector search for improved performance on vector workloads.
 
 ### auto_tune_options
 
@@ -435,6 +449,10 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `identity_pool_id` - (Required) ID of the Cognito Identity Pool to use.
 * `role_arn` - (Required) ARN of the IAM role that has the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `user_pool_id` - (Required) ID of the Cognito User Pool to use.
+
+### deployment_strategy_options
+
+* `deployment_strategy` - (Optional) Deployment strategy for the domain. Valid values: `Default` and `CapacityOptimized`.
 
 ### domain_endpoint_options
 

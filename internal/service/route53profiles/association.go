@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53profiles
 
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -244,10 +245,10 @@ func (r *associationResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func waitAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
-		Refresh:                   statusAssociation(ctx, conn, id),
+		Refresh:                   statusAssociation(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -262,10 +263,10 @@ func waitAssociationCreated(ctx context.Context, conn *route53profiles.Client, i
 }
 
 func waitAssociationDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusAssociation(ctx, conn, id),
+		Refresh: statusAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -277,8 +278,8 @@ func waitAssociationDeleted(ctx context.Context, conn *route53profiles.Client, i
 	return nil, err
 }
 
-func statusAssociation(ctx context.Context, conn *route53profiles.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAssociation(conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findAssociationByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -300,9 +301,8 @@ func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id s
 	out, err := conn.GetProfileAssociation(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -310,7 +310,7 @@ func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id s
 	}
 
 	if out == nil || out.ProfileAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfileAssociation, nil

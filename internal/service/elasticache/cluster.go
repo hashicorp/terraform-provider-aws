@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
@@ -142,7 +144,7 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
-				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis, engineValkey}, false),
+				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -964,12 +966,12 @@ func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error
 	engine := aws.ToString(c.Engine)
 	d.Set(names.AttrEngine, engine)
 	switch engine {
-	case engineValkey:
-		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
-			return err // nosemgrep:ci.bare-error-returns
-		}
 	case engineRedis:
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
+			return err // nosemgrep:ci.bare-error-returns
+		}
+	case engineValkey:
+		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	default:
@@ -1021,7 +1023,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 	if diff.Id() == "" || !diff.HasChange("node_type") {
 		return nil
 	}
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	return diff.ForceNew("node_type")
@@ -1029,7 +1031,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 
 // clusterValidateMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
 func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v any) error {
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	if _, ok := diff.GetOk(names.AttrFinalSnapshotIdentifier); !ok {

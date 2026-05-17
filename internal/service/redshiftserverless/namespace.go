@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftserverless
 
@@ -16,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -341,9 +342,8 @@ func findNamespaceByName(ctx context.Context, conn *redshiftserverless.Client, n
 	output, err := conn.GetNamespace(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -352,14 +352,14 @@ func findNamespaceByName(ctx context.Context, conn *redshiftserverless.Client, n
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Namespace, nil
 }
 
-func statusNamespace(ctx context.Context, conn *redshiftserverless.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNamespace(conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findNamespaceByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -375,10 +375,10 @@ func statusNamespace(ctx context.Context, conn *redshiftserverless.Client, name 
 }
 
 func waitNamespaceDeleted(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Namespace, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NamespaceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusNamespace(ctx, conn, name),
+		Refresh: statusNamespace(conn, name),
 		Timeout: namespaceDeletedTimeout,
 	}
 
@@ -392,10 +392,10 @@ func waitNamespaceDeleted(ctx context.Context, conn *redshiftserverless.Client, 
 }
 
 func waitNamespaceUpdated(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Namespace, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NamespaceStatusModifying),
 		Target:  enum.Slice(awstypes.NamespaceStatusAvailable),
-		Refresh: statusNamespace(ctx, conn, name),
+		Refresh: statusNamespace(conn, name),
 		Timeout: namespaceUpdatedTimeout,
 	}
 

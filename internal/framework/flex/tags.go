@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // Based on from https://cs.opensource.google/go/go/+/refs/tags/go1.23.0:src/encoding/json/tags.go
@@ -44,6 +44,10 @@ func (o tagOptions) Legacy() bool {
 
 func (o tagOptions) OmitEmpty() bool {
 	return o.Contains("omitempty")
+}
+
+func (o tagOptions) NoExpand() bool {
+	return o.Contains("noexpand")
 }
 
 func (o tagOptions) NoFlatten() bool {

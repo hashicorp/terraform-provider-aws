@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -6,85 +6,164 @@ package framework
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type Lister interface {
-	AppendResultInterceptor(listresource.ListResultInterceptor)
+// Lister is an interface for resources that support List operations
+type Lister[T listresource.InterceptorParams | listresource.InterceptorParamsSDK] interface {
+	AppendResultInterceptor(listresource.ListResultInterceptor[T])
 }
 
-var _ Lister = &WithList{}
+var _ Lister[listresource.InterceptorParams] = &WithList{}
 
+// WithList provides common functionality for ListResources
 type WithList struct {
-	interceptors []listresource.ListResultInterceptor
+	withListResourceConfigSchema
+	interceptors []listresource.ListResultInterceptor[listresource.InterceptorParams]
 }
 
-func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor) {
+type FlattenFunc func()
+
+func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParams]) {
 	w.interceptors = append(w.interceptors, interceptor)
 }
 
-func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor {
+func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor[listresource.InterceptorParams] {
 	return w.interceptors
 }
 
-func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.When, params listresource.InterceptorParams) diag.Diagnostics {
+func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
+	params := listresource.InterceptorParams{
+		C:               awsClient,
+		IncludeResource: includeResource,
+		Data:            data,
+		Result:          result,
+		When:            when,
+	}
+
 	switch when {
 	case listresource.Before:
-		params.When = listresource.Before
 		for interceptor := range slices.Values(w.interceptors) {
 			diags.Append(interceptor.Read(ctx, params)...)
 		}
-		return diags
 	case listresource.After:
-		params.When = listresource.After
 		for interceptor := range tfslices.BackwardValues(w.interceptors) {
 			diags.Append(interceptor.Read(ctx, params)...)
 		}
-		return diags
 	}
 
 	return diags
 }
 
-func (w *WithList) ListResourceTagsInit(ctx context.Context, result list.ListResult) basetypes.MapValue {
-	typ, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTags))
-	tagsType := typ.(attr.TypeWithElementType)
+func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f FlattenFunc) {
+	var diags diag.Diagnostics
 
-	return basetypes.NewMapNull(tagsType.ElementType())
-}
-
-func (w *WithList) ListResourceTimeoutInit(ctx context.Context, result list.ListResult) (basetypes.ObjectValue, diag.Diagnostics) {
-	timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTimeouts))
-
-	return newNullObject(timeoutsType)
-}
-
-func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
-	i, ok := typ.(attr.TypeWithAttributeTypes)
-	if !ok {
-		diags.AddError(
-			"Internal Error",
-			"An unexpected error occurred. "+
-				"This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected value type to implement attr.TypeWithAttributeTypes, got: %T", typ),
-		)
+	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, includeResource, data, result)...)
+	if diags.HasError() {
+		result.Diagnostics.Append(diags...)
 		return
 	}
 
-	attrTypes := i.AttributeTypes()
+	f()
+	if result.Diagnostics.HasError() {
+		return
+	}
 
-	obj = basetypes.NewObjectNull(attrTypes)
+	diags.Append(setZeroValueAttrFieldsToNull(ctx, data)...)
+	if diags.HasError() {
+		result.Diagnostics.Append(diags...)
+		return
+	}
 
-	return obj, diags
+	diags.Append(result.Resource.Set(ctx, data)...)
+	if diags.HasError() {
+		result.Diagnostics.Append(diags...)
+		return
+	}
+
+	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, includeResource, data, result)...)
+	if diags.HasError() {
+		result.Diagnostics.Append(diags...)
+		return
+	}
+}
+
+func setZeroValueAttrFieldsToNull(ctx context.Context, target any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	value := reflect.ValueOf(target)
+	if !value.IsValid() {
+		return diags
+	}
+
+	if value.Kind() != reflect.Pointer {
+		diags.AddError("Normalizing List Result", fmt.Sprintf("target must be a pointer, got %T", target))
+		return diags
+	}
+
+	if value.IsNil() {
+		return diags
+	}
+
+	walkStructSetZeroAttrNull(ctx, value.Elem(), &diags)
+
+	return diags
+}
+
+func walkStructSetZeroAttrNull(ctx context.Context, value reflect.Value, diags *diag.Diagnostics) {
+	if diags.HasError() || !value.IsValid() || value.Kind() != reflect.Struct {
+		return
+	}
+
+	for _, field := range value.Fields() {
+		if !field.CanSet() {
+			continue
+		}
+
+		if field.Kind() != reflect.Struct {
+			continue
+		}
+
+		if attrValue, ok := field.Interface().(attr.Value); ok {
+			if field.IsZero() {
+				nullValue, d := fwtypes.NullValueOf(ctx, attrValue)
+				if d.HasError() {
+					diags.Append(d...)
+					return
+				}
+
+				if nullValue == nil {
+					continue
+				}
+
+				nullValueReflect := reflect.ValueOf(nullValue)
+				switch {
+				case nullValueReflect.Type().AssignableTo(field.Type()):
+					field.Set(nullValueReflect)
+				case nullValueReflect.Type().ConvertibleTo(field.Type()):
+					field.Set(nullValueReflect.Convert(field.Type()))
+				default:
+					diags.AddError("Normalizing List Result", fmt.Sprintf("cannot assign null value of type %T to field type %s", nullValue, field.Type()))
+					return
+				}
+			}
+
+			continue
+		}
+
+		walkStructSetZeroAttrNull(ctx, field, diags)
+		if diags.HasError() {
+			return
+		}
+	}
 }

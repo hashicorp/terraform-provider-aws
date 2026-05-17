@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -224,9 +225,8 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 	output, err := conn.GetDNSSEC(ctx, input)
 
 	if errs.IsA[*awstypes.DNSSECNotFound](err) || errs.IsA[*awstypes.NoSuchHostedZone](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -235,14 +235,14 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 	}
 
 	if output == nil || output.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Client, hostedZoneID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusHostedZoneDNSSEC(conn *route53.Client, hostedZoneID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findHostedZoneDNSSECByZoneID(ctx, conn, hostedZoneID)
 
 		if retry.NotFound(err) {
@@ -261,9 +261,9 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Client
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusHostedZoneDNSSEC(ctx, conn, hostedZoneID),
+		Refresh:    statusHostedZoneDNSSEC(conn, hostedZoneID),
 		MinTimeout: 5 * time.Second,
 		Timeout:    timeout,
 	}
@@ -272,7 +272,7 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Client
 
 	if output, ok := outputRaw.(*awstypes.DNSSECStatus); ok {
 		if serveSignature := aws.ToString(output.ServeSignature); serveSignature == serveSignatureInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

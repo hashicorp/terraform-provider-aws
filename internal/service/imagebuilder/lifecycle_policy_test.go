@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,18 +20,18 @@ import (
 func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("lifecycle-policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Used for setting lifecycle policies"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role"),
@@ -65,18 +63,18 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_policyDetails(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDisable)),
@@ -105,7 +103,7 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_policyDetailsUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDelete)),
@@ -134,18 +132,18 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 func TestAccImageBuilderLifecyclePolicy_policyDetailsExclusionRulesAMIsIsPublic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_policyDetailsExclusionRulesAMIsIsPublic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDelete)),
@@ -174,18 +172,18 @@ func TestAccImageBuilderLifecyclePolicy_policyDetailsExclusionRulesAMIsIsPublic(
 func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_resourceSelection(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.name", rName),
@@ -200,11 +198,21 @@ func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_resourceSelectionUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.semantic_version", "2.0.0"),
+				),
+			},
+			{
+				Config: testAccLifecyclePolicyConfig_resourceSelectionWithWildCardSemanticVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.semantic_version", "x.x.x"),
 				),
 			},
 		},
@@ -213,19 +221,19 @@ func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 
 func TestAccImageBuilderLifecyclePolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -238,7 +246,7 @@ func TestAccImageBuilderLifecyclePolicy_tags(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -247,7 +255,7 @@ func TestAccImageBuilderLifecyclePolicy_tags(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -258,20 +266,20 @@ func TestAccImageBuilderLifecyclePolicy_tags(t *testing.T) {
 
 func TestAccImageBuilderLifecyclePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceLifecyclePolicy, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfimagebuilder.ResourceLifecyclePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -279,14 +287,14 @@ func TestAccImageBuilderLifecyclePolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLifecyclePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ImageBuilderClient(ctx)
 
 		_, err := tfimagebuilder.FindLifecyclePolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -294,9 +302,9 @@ func testAccCheckLifecyclePolicyExists(ctx context.Context, n string) resource.T
 	}
 }
 
-func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_lifecycle_policy" {
@@ -615,6 +623,49 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     recipe {
       name             = aws_imagebuilder_image_recipe.test.name
       semantic_version = aws_imagebuilder_image_recipe.test.version
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
+}
+
+func testAccLifecyclePolicyConfig_resourceSelectionWithWildCardSemanticVersion(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLifecyclePolicyConfig_base(rName),
+		testAccLifecyclePolicyConfig_baseComponent(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "2.0.0"
+}
+
+resource "aws_imagebuilder_lifecycle_policy" "test" {
+  name           = %[1]q
+  description    = "Used for setting lifecycle policies"
+  execution_role = aws_iam_role.test.arn
+  resource_type  = "AMI_IMAGE"
+  policy_detail {
+    action {
+      type = "DELETE"
+    }
+    filter {
+      type            = "AGE"
+      value           = 6
+      retain_at_least = 10
+      unit            = "YEARS"
+    }
+  }
+  resource_selection {
+    recipe {
+      name             = aws_imagebuilder_image_recipe.test.name
+      semantic_version = "x.x.x"
     }
   }
 

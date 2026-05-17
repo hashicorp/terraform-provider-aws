@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -68,6 +68,13 @@ const (
 
 const (
 	vpnStateModifying = "modifying"
+)
+
+const (
+	guardDutyServiceNamePattern  = "*guardduty-data*"
+	guardDutySecurityGroupPrefix = "GuardDutyManagedSecurityGroup-"
+	guardDutyManagedTagKey       = "GuardDutyManaged"
+	guardDutyManagedTagValue     = "true"
 )
 
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana_test
@@ -7,38 +7,211 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestExpandNetworkAccessControl(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName          string
+		TFList            []any
+		WantNil           bool
+		WantPrefixListIDs []string
+		WantVpceIDs       []string
+	}{
+		{
+			TestName: "empty list",
+			TFList:   []any{},
+			WantNil:  true,
+		},
+		{
+			TestName: "nil element in list",
+			TFList:   []any{nil},
+			WantNil:  true,
+		},
+		{
+			TestName: "both sets empty",
+			TFList:   buildNetworkAccessTFList(newStringSet(), newStringSet()),
+			WantNil:  true,
+		},
+		{
+			TestName:          "both populated",
+			TFList:            buildNetworkAccessTFList(newStringSet("pl-111"), newStringSet("vpce-aaa")),
+			WantPrefixListIDs: []string{"pl-111"},
+			WantVpceIDs:       []string{"vpce-aaa"},
+		},
+		{
+			TestName:          "only prefix_list_ids",
+			TFList:            buildNetworkAccessTFList(newStringSet("pl-222"), newStringSet()),
+			WantPrefixListIDs: []string{"pl-222"},
+			WantVpceIDs:       []string{},
+		},
+		{
+			TestName:          "only vpce_ids",
+			TFList:            buildNetworkAccessTFList(newStringSet(), newStringSet("vpce-aaa", "vpce-bbb")),
+			WantPrefixListIDs: []string{},
+			WantVpceIDs:       []string{"vpce-aaa", "vpce-bbb"},
+		},
+		{
+			TestName:          "multiple vpce_ids",
+			TFList:            buildNetworkAccessTFList(newStringSet("pl-333"), newStringSet("vpce-x", "vpce-y", "vpce-z")),
+			WantPrefixListIDs: []string{"pl-333"},
+			WantVpceIDs:       []string{"vpce-x", "vpce-y", "vpce-z"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			out := tfgrafana.ExpandNetworkAccessControl(testCase.TFList)
+
+			if testCase.WantNil {
+				if out != nil {
+					t.Errorf("expected nil, got %+v", out)
+				}
+				return
+			}
+
+			if out == nil {
+				t.Fatal("expected non-nil NetworkAccessConfiguration")
+			}
+			if out.PrefixListIds == nil {
+				t.Error("PrefixListIds must not be nil (SDK v2 omitempty would drop a nil slice)")
+			}
+			if out.VpceIds == nil {
+				t.Error("VpceIds must not be nil (SDK v2 omitempty would drop a nil slice)")
+			}
+			gotPrefix := slices.Clone(out.PrefixListIds)
+			slices.Sort(gotPrefix)
+			wantPrefix := slices.Clone(testCase.WantPrefixListIDs)
+			slices.Sort(wantPrefix)
+			if !slices.Equal(gotPrefix, wantPrefix) {
+				t.Errorf("PrefixListIds: got %v, want %v", out.PrefixListIds, testCase.WantPrefixListIDs)
+			}
+			gotVpce := slices.Clone(out.VpceIds)
+			slices.Sort(gotVpce)
+			wantVpce := slices.Clone(testCase.WantVpceIDs)
+			slices.Sort(wantVpce)
+			if !slices.Equal(gotVpce, wantVpce) {
+				t.Errorf("VpceIds: got %v, want %v", out.VpceIds, testCase.WantVpceIDs)
+			}
+		})
+	}
+}
+
+func TestFlattenNetworkAccessControl(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName      string
+		APIObject     *awstypes.NetworkAccessConfiguration
+		WantEmpty     bool
+		WantPrefixIDs []string
+		WantVpceIDs   []string
+	}{
+		{
+			TestName:  "nil input",
+			APIObject: nil,
+			WantEmpty: true,
+		},
+		{
+			TestName: "both fields empty",
+			APIObject: &awstypes.NetworkAccessConfiguration{
+				PrefixListIds: []string{},
+				VpceIds:       []string{},
+			},
+			WantEmpty: true,
+		},
+		{
+			TestName: "both fields populated",
+			APIObject: &awstypes.NetworkAccessConfiguration{
+				PrefixListIds: []string{"pl-abc"},
+				VpceIds:       []string{"vpce-def"},
+			},
+			WantPrefixIDs: []string{"pl-abc"},
+			WantVpceIDs:   []string{"vpce-def"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			out := tfgrafana.FlattenNetworkAccessControl(testCase.APIObject)
+
+			if testCase.WantEmpty {
+				if len(out) != 0 {
+					t.Errorf("expected empty slice, got %v", out)
+				}
+				return
+			}
+
+			if len(out) != 1 {
+				t.Fatalf("expected 1 element, got %d", len(out))
+			}
+			m, ok := out[0].(map[string]any)
+			if !ok {
+				t.Fatalf("element is not map[string]any: %T", out[0])
+			}
+			if pl, ok := m["prefix_list_ids"].([]string); !ok || !slices.Equal(pl, testCase.WantPrefixIDs) {
+				t.Errorf("prefix_list_ids: got %v, want %v", m["prefix_list_ids"], testCase.WantPrefixIDs)
+			}
+			if vp, ok := m["vpce_ids"].([]string); !ok || !slices.Equal(vp, testCase.WantVpceIDs) {
+				t.Errorf("vpce_ids: got %v, want %v", m["vpce_ids"], testCase.WantVpceIDs)
+			}
+		})
+	}
+}
+
+func newStringSet(values ...string) *schema.Set {
+	raw := make([]any, len(values))
+	for i, v := range values {
+		raw[i] = v
+	}
+	return schema.NewSet(schema.HashString, raw)
+}
+
+func buildNetworkAccessTFList(prefixIDs, vpceIDs *schema.Set) []any {
+	return []any{
+		map[string]any{
+			"prefix_list_ids": prefixIDs,
+			"vpce_ids":        vpceIDs,
+		},
+	}
+}
+
 func testAccWorkspace_saml(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", string(awstypes.AccountAccessTypeCurrentAccount)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
@@ -72,19 +245,19 @@ func testAccWorkspace_saml(t *testing.T) {
 func testAccWorkspace_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_vpc(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", "2"),
@@ -98,7 +271,7 @@ func testAccWorkspace_vpc(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_vpc(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", "3"),
@@ -107,7 +280,7 @@ func testAccWorkspace_vpc(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_vpcRemoved(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
 				),
 			},
@@ -118,24 +291,24 @@ func testAccWorkspace_vpc(t *testing.T) {
 func testAccWorkspace_sso(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "AWS_SSO"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", string(awstypes.AccountAccessTypeCurrentAccount)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
@@ -167,20 +340,20 @@ func testAccWorkspace_sso(t *testing.T) {
 func testAccWorkspace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspace(), resourceName),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgrafana.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -191,10 +364,10 @@ func testAccWorkspace_disappears(t *testing.T) {
 func testAccWorkspace_organization(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID)
@@ -202,13 +375,13 @@ func testAccWorkspace_organization(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", string(awstypes.AccountAccessTypeOrganization)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", string(awstypes.AuthenticationProviderTypesSaml)),
@@ -228,19 +401,19 @@ func testAccWorkspace_organization(t *testing.T) {
 func testAccWorkspace_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -253,7 +426,7 @@ func testAccWorkspace_tags(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -262,7 +435,7 @@ func testAccWorkspace_tags(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -274,20 +447,20 @@ func testAccWorkspace_tags(t *testing.T) {
 func testAccWorkspace_dataSources(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_dataSources(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", string(awstypes.AccountAccessTypeCurrentAccount)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
@@ -321,19 +494,19 @@ func testAccWorkspace_dataSources(t *testing.T) {
 func testAccWorkspace_permissionType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_permissionType(rName, "CUSTOMER_MANAGED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", string(awstypes.PermissionTypeCustomerManaged)),
 				),
 			},
@@ -345,7 +518,7 @@ func testAccWorkspace_permissionType(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_permissionType(rName, "SERVICE_MANAGED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", string(awstypes.PermissionTypeServiceManaged)),
 				),
 			},
@@ -356,19 +529,19 @@ func testAccWorkspace_permissionType(t *testing.T) {
 func testAccWorkspace_notificationDestinations(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "notification_destinations.#", "0"),
@@ -377,7 +550,7 @@ func testAccWorkspace_notificationDestinations(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_notificationDestinations(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "notification_destinations.#", "1"),
@@ -396,19 +569,19 @@ func testAccWorkspace_notificationDestinations(t *testing.T) {
 func testAccWorkspace_configuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_configuration(rName, `{"unifiedAlerting": { "enabled": true }, "plugins": {"pluginAdminEnabled": false}}`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConfiguration, `{"unifiedAlerting":{"enabled":true},"plugins":{"pluginAdminEnabled":false}}`),
 				),
 			},
@@ -420,7 +593,7 @@ func testAccWorkspace_configuration(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_configuration(rName, `{"unifiedAlerting": { "enabled": false }, "plugins": {"pluginAdminEnabled": true}}`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConfiguration, `{"unifiedAlerting":{"enabled":false},"plugins":{"pluginAdminEnabled":true}}`),
 				),
 			},
@@ -431,19 +604,34 @@ func testAccWorkspace_configuration(t *testing.T) {
 func testAccWorkspace_networkAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "0"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
 				Config: testAccWorkspaceConfig_networkAccess(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.prefix_list_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.vpce_ids.#", "1"),
@@ -457,16 +645,31 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_networkAccess(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.prefix_list_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.vpce_ids.#", "2"),
 				),
 			},
 			{
+				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "0"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
 				Config: testAccWorkspaceConfig_networkAccessRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "0"),
 				),
 			},
@@ -477,19 +680,19 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 func testAccWorkspace_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 awstypes.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_version(rName, "8.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "grafana_version", "8.4"),
 				),
 			},
@@ -501,7 +704,7 @@ func testAccWorkspace_version(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_version(rName, "9.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "grafana_version", "9.4"),
 					testAccCheckWorkspaceNotRecreated(&v2, &v1),
 				),
@@ -509,7 +712,7 @@ func testAccWorkspace_version(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_version(rName, "10.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "grafana_version", "10.4"),
 					testAccCheckWorkspaceNotRecreated(&v3, &v2),
 				),
@@ -518,14 +721,43 @@ func testAccWorkspace_version(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkspaceExists(ctx context.Context, n string, v *awstypes.WorkspaceDescription) resource.TestCheckFunc {
+func testAccWorkspace_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WorkspaceDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_kmsKeyID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckWorkspaceExists(ctx context.Context, t *testing.T, n string, v *awstypes.WorkspaceDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GrafanaClient(ctx)
 
 		output, err := tfgrafana.FindWorkspaceByID(ctx, conn, rs.Primary.ID)
 
@@ -539,9 +771,9 @@ func testAccCheckWorkspaceExists(ctx context.Context, n string, v *awstypes.Work
 	}
 }
 
-func testAccCheckWorkspaceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkspaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GrafanaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_grafana_workspace" {
@@ -742,6 +974,41 @@ resource "aws_grafana_workspace" "test" {
 `, rName, endpoints))
 }
 
+func testAccWorkspaceConfig_networkAccessEmpty(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  name           = %[1]q
+  address_family = "IPv4"
+  max_entries    = 5
+}
+
+resource "aws_security_group" "test" {
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  private_dns_enabled = false
+  security_group_ids  = [aws_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.grafana-workspace"
+  subnet_ids          = aws_subnet.test[*].id
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
+}
+
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  description              = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+}
+`, rName))
+}
+
 func testAccWorkspaceConfig_networkAccessRemoved(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
@@ -836,4 +1103,21 @@ resource "aws_grafana_workspace" "test" {
   grafana_version          = %[1]q
 }
 `, version))
+}
+
+func testAccWorkspaceConfig_kmsKeyID(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+  kms_key_id               = aws_kms_key.test.arn
+}
+`, rName))
 }

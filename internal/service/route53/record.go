@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -370,7 +371,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return conn.ChangeResourceRecordSets(ctx, input)
 	})
 
-	if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
+	if v, ok := errors.AsType[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
 		err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
 	}
 
@@ -670,7 +671,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := conn.ChangeResourceRecordSets(ctx, input)
 
-	if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
+	if v, ok := errors.AsType[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
 		err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
 	}
 
@@ -832,9 +833,8 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchHostedZone](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -1133,7 +1133,7 @@ func (recordImportID) Create(d *schema.ResourceData) string {
 	return createRecordImportID(d)
 }
 
-func (recordImportID) Parse(id string) (string, map[string]string, error) {
+func (recordImportID) Parse(id string) (string, map[string]any, error) {
 	parts := recordParseResourceID(id)
 	// We check that we have parsed the id into the correct number of segments.
 	// We need at least 3 segments!
@@ -1143,7 +1143,7 @@ func (recordImportID) Parse(id string) (string, map[string]string, error) {
 		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"zone_id":      parts[0],
 		names.AttrName: parts[1],
 		names.AttrType: parts[2],

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/tags/main.go -ServiceTagsMap -KVTValues -ListTags -ListTagsInIDElem=ResourceArn -ListTagsOutTagsElem=Tags  -TagOp=TagResource -TagInIDElem=ResourceArn -UntagOp=UntagResource -UpdateTags

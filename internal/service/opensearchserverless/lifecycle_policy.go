@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearchserverless
 
@@ -19,8 +21,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -31,12 +34,20 @@ import (
 )
 
 // @FrameworkResource("aws_opensearchserverless_lifecycle_policy", name="Lifecycle Policy")
+// @IdentityAttribute("name")
+// @IdentityAttribute("type")
+// @ImportIDHandler("lifecyclePolicyImportID", setIDAttribute=true)
+// @Testing(idAttrDuplicates="id")
+// @Testing(importStateIdFunc="testAccLifecyclePolicyImportStateIDFunc")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.LifecyclePolicyDetail")
+// @Testing(preIdentityVersion="v6.39.0")
 func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &lifecyclePolicyResource{}, nil
 }
 
 type lifecyclePolicyResource struct {
 	framework.ResourceWithModel[lifecyclePolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -101,7 +112,7 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	output, err := conn.CreateLifecyclePolicy(ctx, &input)
 
@@ -127,7 +138,7 @@ func (r *lifecyclePolicyResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	name := fwflex.StringValueFromFramework(ctx, data.ID)
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findLifecyclePolicyByNameAndType(ctx, conn, name, data.Type.ValueString())
 
 	if retry.NotFound(err) {
@@ -174,7 +185,7 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.PolicyVersion = old.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		output, err := conn.UpdateLifecyclePolicy(ctx, &input)
@@ -201,9 +212,9 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	name := fwflex.StringValueFromFramework(ctx, data.ID)
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := opensearchserverless.DeleteLifecyclePolicyInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Type:        data.Type.ValueEnum(),
 	}
@@ -220,19 +231,6 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-func (r *lifecyclePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, resourceIDSeparator)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected lifecycle-policy-name%[2]slifecycle-policy-type", request.ID, resourceIDSeparator)
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[1])...)
-}
-
 type lifecyclePolicyResourceModel struct {
 	framework.WithRegionModel
 	Description   types.String                                     `tfsdk:"description"`
@@ -241,4 +239,30 @@ type lifecyclePolicyResourceModel struct {
 	Policy        jsontypes.Normalized                             `tfsdk:"policy"`
 	PolicyVersion types.String                                     `tfsdk:"policy_version"`
 	Type          fwtypes.StringEnum[awstypes.LifecyclePolicyType] `tfsdk:"type"`
+}
+
+type lifecyclePolicyImportID struct{}
+
+func (lifecyclePolicyImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, resourceIDSeparator)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected lifecycle-policy-name%[2]slifecycle-policy-type", id, resourceIDSeparator)
+	}
+
+	name := parts[0]
+	lifecycleType := parts[1]
+
+	result := map[string]any{
+		names.AttrName: name,
+		names.AttrType: lifecycleType,
+	}
+
+	return name, result, nil
+}
+
+func (lifecyclePolicyImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var name types.String
+	state.GetAttribute(ctx, path.Root(names.AttrName), &name)
+
+	return name.ValueString()
 }

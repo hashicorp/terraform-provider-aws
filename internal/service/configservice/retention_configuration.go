@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -17,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -28,13 +29,18 @@ import (
 )
 
 // @FrameworkResource("aws_config_retention_configuration", name="Retention Configuration")
+// @IdentityAttribute("name", identityDuplicateAttributes="id")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.RetentionConfiguration")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(generator=false)
 func newRetentionConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &retentionConfigurationResource{}, nil
 }
 
 type retentionConfigurationResource struct {
 	framework.ResourceWithModel[retentionConfigurationResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *retentionConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -66,11 +72,11 @@ func (r *retentionConfigurationResource) Create(ctx context.Context, request res
 
 	conn := r.Meta().ConfigServiceClient(ctx)
 
-	input := &configservice.PutRetentionConfigurationInput{
+	input := configservice.PutRetentionConfigurationInput{
 		RetentionPeriodInDays: fwflex.Int32FromFrameworkInt64(ctx, data.RetentionPeriodInDays),
 	}
 
-	output, err := conn.PutRetentionConfiguration(ctx, input)
+	output, err := conn.PutRetentionConfiguration(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating ConfigService Retention Configuration", err.Error())
@@ -79,8 +85,9 @@ func (r *retentionConfigurationResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns.
-	data.Name = fwflex.StringToFramework(ctx, output.RetentionConfiguration.Name)
-	data.setID()
+	name := aws.ToString(output.RetentionConfiguration.Name)
+	data.Name = fwflex.StringValueToFramework(ctx, name)
+	data.ID = data.Name
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -92,15 +99,9 @@ func (r *retentionConfigurationResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().ConfigServiceClient(ctx)
 
-	name := data.ID.ValueString()
+	name := fwflex.StringValueFromFramework(ctx, data.ID)
 	retentionConfiguration, err := findRetentionConfigurationByName(ctx, conn, name)
 
 	if retry.NotFound(err) {
@@ -116,6 +117,7 @@ func (r *retentionConfigurationResource) Read(ctx context.Context, request resou
 		return
 	}
 
+	data.Name = fwflex.StringValueToFramework(ctx, aws.ToString(retentionConfiguration.Name))
 	data.RetentionPeriodInDays = fwflex.Int32ToFrameworkInt64(ctx, retentionConfiguration.RetentionPeriodInDays)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -130,14 +132,15 @@ func (r *retentionConfigurationResource) Update(ctx context.Context, request res
 
 	conn := r.Meta().ConfigServiceClient(ctx)
 
-	input := &configservice.PutRetentionConfigurationInput{
+	name := fwflex.StringValueFromFramework(ctx, new.ID)
+	input := configservice.PutRetentionConfigurationInput{
 		RetentionPeriodInDays: fwflex.Int32FromFrameworkInt64(ctx, new.RetentionPeriodInDays),
 	}
 
-	_, err := conn.PutRetentionConfiguration(ctx, input)
+	_, err := conn.PutRetentionConfiguration(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating ConfigService Retention Configuration (%s)", new.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating ConfigService Retention Configuration (%s)", name), err.Error())
 
 		return
 	}
@@ -154,7 +157,7 @@ func (r *retentionConfigurationResource) Delete(ctx context.Context, request res
 
 	conn := r.Meta().ConfigServiceClient(ctx)
 
-	name := data.ID.ValueString()
+	name := fwflex.StringValueFromFramework(ctx, data.ID)
 	input := configservice.DeleteRetentionConfigurationInput{
 		RetentionConfigurationName: aws.String(name),
 	}
@@ -172,11 +175,11 @@ func (r *retentionConfigurationResource) Delete(ctx context.Context, request res
 }
 
 func findRetentionConfigurationByName(ctx context.Context, conn *configservice.Client, name string) (*awstypes.RetentionConfiguration, error) {
-	input := &configservice.DescribeRetentionConfigurationsInput{
+	input := configservice.DescribeRetentionConfigurationsInput{
 		RetentionConfigurationNames: []string{name},
 	}
 
-	return findRetentionConfiguration(ctx, conn, input)
+	return findRetentionConfiguration(ctx, conn, &input)
 }
 
 func findRetentionConfiguration(ctx context.Context, conn *configservice.Client, input *configservice.DescribeRetentionConfigurationsInput) (*awstypes.RetentionConfiguration, error) {
@@ -197,9 +200,8 @@ func findRetentionConfigurations(ctx context.Context, conn *configservice.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchRetentionConfigurationException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -218,14 +220,4 @@ type retentionConfigurationResourceModel struct {
 	ID                    types.String `tfsdk:"id"`
 	Name                  types.String `tfsdk:"name"`
 	RetentionPeriodInDays types.Int64  `tfsdk:"retention_period_in_days"`
-}
-
-func (model *retentionConfigurationResourceModel) InitFromID() error {
-	model.Name = model.ID
-
-	return nil
-}
-
-func (model *retentionConfigurationResourceModel) setID() {
-	model.ID = model.Name
 }

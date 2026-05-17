@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -180,6 +181,13 @@ func resourceCapacityProvider() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"capacity_option_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CapacityOptionType](),
+									},
 									"ec2_instance_profile_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -732,17 +740,16 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	}
 
 	if status := output.Status; status == awstypes.CapacityProviderStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapacityProvider(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -757,8 +764,8 @@ func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) s
 	}
 }
 
-func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapacityProviderUpdate(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -774,17 +781,17 @@ func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn str
 }
 
 func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateComplete),
-		Refresh: statusCapacityProviderUpdate(ctx, conn, arn),
+		Refresh: statusCapacityProviderUpdate(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
 
 		return output, err
 	}
@@ -793,10 +800,10 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 }
 
 func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderStatusActive, awstypes.CapacityProviderStatusDeprovisioning),
 		Target:  []string{},
-		Refresh: statusCapacityProvider(ctx, conn, arn),
+		Refresh: statusCapacityProvider(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1005,6 +1012,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.InstanceLaunchTemplate{}
+
+	if v, ok := tfMap["capacity_option_type"].(string); ok && v != "" {
+		apiObject.CapacityOptionType = awstypes.CapacityOptionType(v)
+	}
 
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
@@ -1411,6 +1422,7 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 	}
 
 	tfMap := map[string]any{
+		"capacity_option_type":     template.CapacityOptionType,
 		"ec2_instance_profile_arn": aws.ToString(template.Ec2InstanceProfileArn),
 		"monitoring":               template.Monitoring,
 	}

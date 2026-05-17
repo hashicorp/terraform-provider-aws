@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -236,9 +237,8 @@ func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input 
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.ReplicationNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -268,14 +268,14 @@ func findReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id 
 	}
 
 	if len(output.Destinations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusReplicationConfiguration(ctx context.Context, conn *efs.Client, id string, optFns ...func(*efs.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationConfiguration(conn *efs.Client, id string, optFns ...func(*efs.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationConfigurationByID(ctx, conn, id, optFns...)
 
 		if retry.NotFound(err) {
@@ -291,10 +291,10 @@ func statusReplicationConfiguration(ctx context.Context, conn *efs.Client, id st
 }
 
 func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ReplicationStatusEnabling),
 		Target:  enum.Slice(awstypes.ReplicationStatusEnabled),
-		Refresh: statusReplicationConfiguration(ctx, conn, id, optFns...),
+		Refresh: statusReplicationConfiguration(conn, id, optFns...),
 		Timeout: timeout,
 	}
 
@@ -308,10 +308,10 @@ func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.Client, 
 }
 
 func waitReplicationConfigurationDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ReplicationStatusDeleting),
 		Target:                    []string{},
-		Refresh:                   statusReplicationConfiguration(ctx, conn, id, optFns...),
+		Refresh:                   statusReplicationConfiguration(conn, id, optFns...),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

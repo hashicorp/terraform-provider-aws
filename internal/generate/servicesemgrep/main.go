@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -59,7 +59,7 @@ type CAEData struct {
 func main() {
 	const (
 		filename        = `../../../.ci/.semgrep-service-name.yml`
-		filenameCAE     = `../../../.ci/.semgrep-caps-aws-ec2.yml`
+		filenameCAE     = `../../../.ci/semgrep-caps-aws-ec2.yml`
 		filenameConfigs = `../../../.ci/.semgrep-configs.yml`
 		capsDataFile    = "../../../names/caps.csv"
 	)

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -216,9 +217,7 @@ func findReservedDBInstanceByID(ctx context.Context, conn *rds.Client, id string
 
 	// Eventual consistency check.
 	if aws.ToString(output.ReservedDBInstanceId) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -242,9 +241,8 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ReservedDBInstanceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -262,8 +260,8 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 	return output, nil
 }
 
-func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReservedInstance(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReservedDBInstanceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -279,10 +277,10 @@ func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) sd
 }
 
 func waitReservedInstanceCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.ReservedDBInstance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{reservedInstanceStatePaymentPending},
 		Target:         []string{reservedInstanceStateActive},
-		Refresh:        statusReservedInstance(ctx, conn, id),
+		Refresh:        statusReservedInstance(conn, id),
 		NotFoundChecks: 5,
 		Timeout:        timeout,
 		MinTimeout:     10 * time.Second,

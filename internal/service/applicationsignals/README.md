@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Terraform AWS Provider Amazon Application Signals Package
 
 * AWS Provider: [Contribution Guide](https://hashicorp.github.io/terraform-provider-aws/#contribute)

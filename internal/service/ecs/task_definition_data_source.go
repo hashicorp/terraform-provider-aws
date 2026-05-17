@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
@@ -12,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,261 +23,142 @@ func dataSourceTaskDefinition() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTaskDefinitionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn_without_revision": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"container_definitions": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cpu": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_fault_injection": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ephemeral_storage": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"size_in_gib": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrExecutionRoleARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFamily: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipc_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"memory": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pid_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"placement_constraints": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrExpression: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"arn_without_revision": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"proxy_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrProperties: {
-							Type:     schema.TypeMap,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"container_definitions": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"requires_compatibilities": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"cpu": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"runtime_platform": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"operating_system_family": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cpu_architecture": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"enable_fault_injection": {
+					Type:     schema.TypeBool,
+					Computed: true,
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"task_definition": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"task_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configure_at_launch": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"docker_volume_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"autoprovision": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"driver": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"driver_opts": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										Computed: true,
-									},
-									"labels": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										Computed: true,
-									},
-									names.AttrScope: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+				"ephemeral_storage": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"size_in_gib": {
+								Type:     schema.TypeInt,
+								Computed: true,
 							},
 						},
-						"efs_volume_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authorization_config": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"access_point_id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"iam": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-									names.AttrFileSystemID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"root_directory": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"transit_encryption": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"transit_encryption_port": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
+					},
+				},
+				names.AttrExecutionRoleARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFamily: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipc_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"memory": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pid_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"placement_constraints": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrExpression: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"fsx_windows_file_server_volume_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authorization_config": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"credentials_parameter": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrDomain: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-									names.AttrFileSystemID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"root_directory": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"host_path": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
 						},
 					},
 				},
-			},
+				"proxy_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrProperties: {
+								Type:     schema.TypeMap,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"requires_compatibilities": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"runtime_platform": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"operating_system_family": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cpu_architecture": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"task_definition": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"task_role_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume": sdkv2.ComputedOnlyFromSchema(resourceTaskDefinitionVolumeSchema()),
+			}
 		},
 	}
 }

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -15,46 +17,38 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	fdiag "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
-	vpcCIDRMaxIPv4Netmask  = 28
-	vpcCIDRMinIPv4Netmask  = 16
-	vpcCIDRMaxIPv6Netmask  = 60
-	vpcCIDRMinIPv6Netmask  = 44
-	vpcCIDRIPv6NetmaskStep = 4
+	vpcCIDRMaxIPv4Netmask     = 28
+	vpcCIDRMinIPv4Netmask     = 16
+	vpcCIDRMaxIPv6Netmask     = 60
+	vpcCIDRMinIPv6Netmask     = 44
+	vpcCIDRIPv6NetmaskStep    = 4
+	subnetCIDRMinIPv6Netmask  = 44
+	subnetCIDRMaxIPv6Netmask  = 64
+	subnetCIDRIPv6NetmaskStep = 4
 )
 
 var (
-	vpcCIDRValidIPv6Netmasks = tfslices.Range(vpcCIDRMinIPv6Netmask, vpcCIDRMaxIPv6Netmask+1, vpcCIDRIPv6NetmaskStep)
-	validVPCIPv6CIDRBlock    = validation.All(
+	subnetCIDRValidIPv6Netmasks = tfslices.Range(subnetCIDRMinIPv6Netmask, subnetCIDRMaxIPv6Netmask+1, subnetCIDRIPv6NetmaskStep)
+	vpcCIDRValidIPv6Netmasks    = tfslices.Range(vpcCIDRMinIPv6Netmask, vpcCIDRMaxIPv6Netmask+1, vpcCIDRIPv6NetmaskStep)
+	validVPCIPv6CIDRBlock       = validation.All(
 		verify.ValidIPv6CIDRNetworkAddress,
 		validation.Any(tfslices.ApplyToAll(vpcCIDRValidIPv6Netmasks, func(v int) schema.SchemaValidateFunc {
 			return validation.IsCIDRNetwork(v, v)
@@ -69,7 +63,6 @@ var (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v6.15.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -201,19 +194,11 @@ func resourceVPC() *schema.Resource {
 	}
 }
 
-// @SDKListResource("aws_vpc")
-func vpcResourceAsListResource() inttypes.ListResourceForSDK {
-	l := vpcListResource{}
-	l.SetResourceSchema(resourceVPC())
-
-	return &l
-}
-
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateVpcInput{
+	input := ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             awstypes.Tenancy(d.Get("instance_tenancy").(string)),
 		TagSpecifications:           getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpc),
@@ -248,15 +233,13 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateVpc(ctx, input)
+	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func(ctx context.Context) (*ec2.CreateVpcOutput, error) {
+		return conn.CreateVpc(ctx, &input)
 	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC: %s", err)
 	}
-
-	output := outputRaw.(*ec2.CreateVpcOutput)
 
 	d.SetId(aws.ToString(output.Vpc.VpcId))
 
@@ -310,6 +293,33 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err := resourceVPCFlatten(ctx, c, vpc, d); err != nil {
 		diags = sdkdiag.AppendFromErr(diags, err)
 	}
+
+	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
+	} else {
+		d.Set("default_network_acl_id", v.NetworkAclId)
+	}
+
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
+		d.Set("default_route_table_id", nil)
+		d.Set("main_route_table_id", nil)
+	} else {
+		d.Set("default_route_table_id", v.RouteTableId)
+		d.Set("main_route_table_id", v.RouteTableId)
+	}
+
+	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
+		d.Set("default_security_group_id", nil)
+	} else {
+		d.Set("default_security_group_id", v.GroupId)
+	}
+
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }
@@ -381,17 +391,70 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DeleteVpcInput{
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+	tflog.Info(ctx, "Deleting EC2 VPC")
+
+	input := ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),
 	}
 
-	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		return conn.DeleteVpc(ctx, input)
-	}, errCodeDependencyViolation)
+	// First attempt at deletion.
+	_, err := conn.DeleteVpc(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return diags
+	}
+
+	// RAM-shared VPC.
+	// "UnauthorizedOperation: You are not authorized to perform DeleteVpc operation. A subnet in this vpc is shared but the provided object is not owned by you".
+	if tfawserr.ErrMessageContains(err, errCodeUnauthorizedOperation, "is not owned by you") {
+		return diags
+	}
+
+	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so that no new permissions,
+	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
+	var guardDutyDiags diag.Diagnostics
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		tflog.Debug(ctx, "VPC deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
+			"error": err,
+		})
+
+		endpointsErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
+		if endpointsErr != nil {
+			if isUnauthorizedError(endpointsErr) {
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
+					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
+						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
+						"Error: %s", d.Id(), endpointsErr.Error(),
+				)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC endpoints for EC2 VPC %q: %s", d.Id(), endpointsErr)
+			}
+		}
+
+		sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
+		if sgErr != nil {
+			if isUnauthorizedError(sgErr) {
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
+					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
+						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
+						"Error: %s", d.Id(), sgErr.Error(),
+				)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC security groups for EC2 VPC %q: %s", d.Id(), sgErr)
+			}
+		}
+
+		// Retry the deletion now that GuardDuty resources have been cleaned up.
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+			return conn.DeleteVpc(ctx, &input)
+		}, errCodeDependencyViolation)
+	}
+
+	// Only append GuardDuty-related warnings if we're still seeing a DependencyViolation:
+	// If there's no longer a DependencyViolation, any GuardDuty-related warings are not relevant.
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		diags = append(diags, guardDutyDiags...)
 	}
 
 	if err != nil {
@@ -433,8 +496,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func resourceVPCImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	identitySpec := importer.IdentitySpec(ctx)
-	if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
 	}
 
@@ -542,7 +604,9 @@ func modifyVPCDNSHostnames(ctx context.Context, conn *ec2.Client, vpcID string, 
 		return fmt.Errorf("modifying EnableDnsHostnames: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsHostnames, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsHostnames)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableDnsHostnames: waiting for completion: %w", err)
 	}
 
@@ -561,7 +625,9 @@ func modifyVPCDNSSupport(ctx context.Context, conn *ec2.Client, vpcID string, v 
 		return fmt.Errorf("modifying EnableDnsSupport: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsSupport, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsSupport)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableDnsSupport: waiting for completion: %w", err)
 	}
 
@@ -580,7 +646,9 @@ func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.Client, 
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: waiting for completion: %w", err)
 	}
 
@@ -670,7 +738,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	d.Set(names.AttrOwnerID, ownerID)
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
@@ -678,7 +746,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 	} else {
@@ -686,30 +754,11 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
-	}
-
-	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("reading EC2 VPC (%s) default NACL: %w", d.Id(), err)
-	} else {
-		d.Set("default_network_acl_id", v.NetworkAclId)
-	}
-
-	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("reading EC2 VPC (%s) main Route Table: %w", d.Id(), err)
-	} else {
-		d.Set("default_route_table_id", v.RouteTableId)
-		d.Set("main_route_table_id", v.RouteTableId)
-	}
-
-	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("reading EC2 VPC (%s) default Security Group: %w", d.Id(), err)
-	} else {
-		d.Set("default_security_group_id", v.GroupId)
 	}
 
 	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
@@ -751,8 +800,6 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 		}
 	}
 
-	setTagsOut(ctx, vpc.Tags)
-
 	return nil
 }
 
@@ -760,168 +807,115 @@ func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) st
 	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "vpc/"+vpcID)
 }
 
-var _ list.ListResourceWithRawV5Schemas = &vpcListResource{}
+func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) error {
+	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC")
 
-type vpcListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type vpcListResourceModel struct {
-	framework.WithRegionModel
-	VPCIDs  fwtypes.ListValueOf[types.String] `tfsdk:"vpc_ids"`
-	Filters customListFilters                 `tfsdk:"filter"`
-}
-
-func (l *vpcListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			"vpc_ids": listschema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-		},
-		Blocks: map[string]listschema.Block{
-			names.AttrFilter: listschema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
-				NestedObject: listschema.NestedBlockObject{
-					Attributes: map[string]listschema.Attribute{
-						names.AttrName: listschema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								notIsDefaultValidator{},
-							},
-						},
-						names.AttrValues: listschema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-var _ validator.String = notIsDefaultValidator{}
-
-type notIsDefaultValidator struct{}
-
-func (v notIsDefaultValidator) Description(ctx context.Context) string {
-	return v.MarkdownDescription(ctx)
-}
-
-func (v notIsDefaultValidator) MarkdownDescription(_ context.Context) string {
-	return ""
-}
-
-func (v notIsDefaultValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
-		return
-	}
-
-	value := request.ConfigValue
-
-	if value.ValueString() == "is-default" {
-		response.Diagnostics.Append(fdiag.NewAttributeErrorDiagnostic(
-			request.Path,
-			"Invalid Attribute Value",
-			`The filter "is-default" is not supported. To list default VPCs, use the resource type "aws_default_vpc".`,
-		))
-	}
-}
-
-func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.EC2Client(ctx)
-
-	attributes := []attribute.KeyValue{
-		otelaws.RegionAttr(awsClient.Region(ctx)),
-	}
-	for _, attribute := range attributes {
-		ctx = tflog.SetField(ctx, string(attribute.Key), attribute.Value.AsInterface())
-	}
-
-	var query vpcListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
+	sgs, err := findGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
+	if err != nil {
+		if isUnauthorizedError(err) {
+			return err
 		}
+		return fmt.Errorf("listing GuardDuty security groups for VPC %q: %w", vpcID, err)
 	}
 
-	var input ec2.DescribeVpcsInput
-	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
+	if len(sgs) == 0 {
+		tflog.Debug(ctx, "No GuardDuty security groups found in VPC")
+		return nil
 	}
 
-	input.Filters = append(input.Filters, awstypes.Filter{
-		Name:   aws.String("is-default"),
-		Values: []string{"false"},
+	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{
+		"count": len(sgs),
 	})
 
-	tflog.Info(ctx, "Listing resources")
+	for _, sg := range sgs {
+		groupID := aws.ToString(sg.GroupId)
+		ctx := tflog.SetField(ctx, "group_id", groupID)
 
-	stream.Results = func(yield func(list.ListResult) bool) {
-		pages := ec2.NewDescribeVpcsPaginator(conn, &input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
+		tflog.Debug(ctx, "Deleting GuardDuty security group")
 
-			for _, vpc := range page.Vpcs {
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(vpc.VpcId))
-
-				result := request.NewListResult(ctx)
-
-				tags := keyValueTags(ctx, vpc.Tags)
-
-				rd := l.ResourceData()
-				rd.SetId(aws.ToString(vpc.VpcId))
-
-				tflog.Info(ctx, "Reading resource")
-				err := resourceVPCFlatten(ctx, awsClient, &vpc, rd)
-				if retry.NotFound(err) {
-					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
-					continue
-				}
-				if err != nil {
-					result = fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
-
-				// set tags
-				err = l.SetTags(ctx, awsClient, rd)
-				if err != nil {
-					result = fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
-
-				if v, ok := tags["Name"]; ok {
-					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(vpc.VpcId))
-				} else {
-					result.DisplayName = aws.ToString(vpc.VpcId)
-				}
-
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return
-				}
-
-				if !yield(result) {
-					return
-				}
-			}
+		deleteInput := ec2.DeleteSecurityGroupInput{
+			GroupId: aws.String(groupID),
 		}
+		_, err := conn.DeleteSecurityGroup(ctx, &deleteInput)
+		if err != nil {
+			if isUnauthorizedError(err) {
+				return err
+			}
+			return fmt.Errorf("deleting GuardDuty security group %q: %w", groupID, err)
+		}
+
+		tflog.Debug(ctx, "Successfully deleted GuardDuty security group")
 	}
+
+	return nil
+}
+
+func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) error {
+	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for deletion")
+
+	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
+	if err != nil {
+		if isUnauthorizedError(err) {
+			return err
+		}
+		return fmt.Errorf("listing GuardDuty VPC endpoints for VPC %q: %w", vpcID, err)
+	}
+
+	if len(endpoints) == 0 {
+		tflog.Debug(ctx, "No GuardDuty VPC endpoints found")
+		return nil
+	}
+
+	tflog.Debug(ctx, "Found GuardDuty VPC endpoints", map[string]any{
+		"count": len(endpoints),
+	})
+
+	for _, endpoint := range endpoints {
+		endpointID := aws.ToString(endpoint.VpcEndpointId)
+		ctx := tflog.SetField(ctx, "endpoint_id", endpointID)
+
+		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint")
+
+		deleteInput := ec2.DeleteVpcEndpointsInput{
+			VpcEndpointIds: []string{endpointID},
+		}
+		_, err := conn.DeleteVpcEndpoints(ctx, &deleteInput)
+		if err != nil {
+			if isUnauthorizedError(err) {
+				return err
+			}
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion")
+				continue
+			}
+			return fmt.Errorf("deleting GuardDuty VPC endpoint %q in VPC %q: %w", endpointID, vpcID, err)
+		}
+
+		if err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state")
+				continue
+			}
+			return fmt.Errorf("waiting for GuardDuty VPC endpoint %q to reach deleted state in VPC %q: %w", endpointID, vpcID, err)
+		}
+
+		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint")
+	}
+
+	return nil
+}
+
+func guardDutySecurityGroupNameForVPC(vpcID string) string {
+	return guardDutySecurityGroupPrefix + vpcID
+}
+
+func findGuardDutySecurityGroupsForVPC(ctx context.Context, conn *ec2.Client, vpcID string) ([]awstypes.SecurityGroup, error) {
+	groupName := guardDutySecurityGroupNameForVPC(vpcID)
+	return findSecurityGroups(ctx, conn, &ec2.DescribeSecurityGroupsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"vpc-id":                        vpcID,
+			"group-name":                    groupName,
+			"tag:" + guardDutyManagedTagKey: guardDutyManagedTagValue,
+		}),
+	})
 }

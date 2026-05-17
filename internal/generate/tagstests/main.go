@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -10,8 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"iter"
 	"os"
 	"path"
@@ -85,7 +83,19 @@ func main() {
 		g: g,
 	}
 
-	v.processDir(".")
+	for file, err := range common.ScanDirectory(".") {
+		if err != nil {
+			g.Fatalf("%s", err.Error())
+		}
+
+		v.packageName = file.PackageName()
+		v.fileName = file.Name()
+
+		v.processFile(file.File())
+
+		v.fileName = ""
+		v.packageName = ""
+	}
 
 	if err := errors.Join(v.errs...); err != nil {
 		g.Fatalf("%s", err.Error())
@@ -166,7 +176,7 @@ func main() {
 		}
 
 		if !resource.IsDataSource {
-			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
 			var configTmpl string
 			if _, err := os.Stat(configTmplFile); err == nil {
 				b, err := os.ReadFile(configTmplFile)
@@ -206,6 +216,7 @@ func main() {
 					AdditionalTfVars:        additionalTfVars,
 					WithRName:               (resource.Generator != ""),
 					AlternateRegionProvider: resource.AlternateRegionProvider,
+					AlternateRegionTfVars:   resource.AlternateRegionTfVars,
 				}
 
 				generateTestConfig(g, testDirPath, "tags", false, tfTemplates, common)
@@ -216,7 +227,7 @@ func main() {
 			}
 		} else {
 			sourceName = strings.TrimSuffix(sourceName, "_data_source")
-			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
 			var configTmpl string
 			if _, err := os.Stat(configTmplFile); err == nil {
 				b, err := os.ReadFile(configTmplFile)
@@ -276,6 +287,7 @@ func main() {
 					AdditionalTfVars:        additionalTfVars,
 					WithRName:               (resource.Generator != ""),
 					AlternateRegionProvider: resource.AlternateRegionProvider,
+					AlternateRegionTfVars:   resource.AlternateRegionTfVars,
 				}
 
 				generateTestConfig(g, testDirPath, "data.tags", false, tfTemplates, common)
@@ -429,6 +441,7 @@ type commonConfig struct {
 	AdditionalTfVars        []string
 	WithRName               bool
 	AlternateRegionProvider bool
+	AlternateRegionTfVars   bool
 }
 
 type ConfigDatum struct {
@@ -468,35 +481,6 @@ type visitor struct {
 	packageName  string
 
 	taggedResources []ResourceDatum
-}
-
-// processDir scans a single service package directory and processes contained Go sources files.
-func (v *visitor) processDir(path string) {
-	fileSet := token.NewFileSet()
-	packageMap, err := parser.ParseDir(fileSet, path, func(fi os.FileInfo) bool {
-		// Skip tests.
-		return !strings.HasSuffix(fi.Name(), "_test.go")
-	}, parser.ParseComments)
-
-	if err != nil {
-		v.errs = append(v.errs, fmt.Errorf("parsing (%s): %w", path, err))
-
-		return
-	}
-
-	for name, pkg := range packageMap {
-		v.packageName = name
-
-		for name, file := range pkg.Files {
-			v.fileName = name
-
-			v.processFile(file)
-
-			v.fileName = ""
-		}
-
-		v.packageName = ""
-	}
 }
 
 // processFile processes a single Go source file.
@@ -666,7 +650,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tlsKey {
 		if len(tlsKeyCN) == 0 {
-			tlsKeyCN = "acctest.RandomDomain().String()"
+			tlsKeyCN = "acctest.RandomDomain(t).String()"
 			d.GoImports = append(d.GoImports,
 				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",

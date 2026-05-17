@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -49,7 +52,6 @@ updates:
       - "/.ci/providerlint"
       - "/.ci/tools"
       - "/skaff"
-      - "/tools/tfsdk2fw"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30

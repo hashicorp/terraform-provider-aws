@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -23,20 +24,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_access_policy_association", name="Access Policy Association")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("principal_arn")
+// @IdentityAttribute("policy_arn")
+// @ImportIDHandler("accessPolicyAssociationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.AssociatedAccessPolicy")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceAccessPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPolicyAssociationCreate,
 		ReadWithoutTimeout:   resourceAccessPolicyAssociationRead,
 		DeleteWithoutTimeout: resourceAccessPolicyAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -106,7 +110,7 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	principalARN := d.Get("principal_arn").(string)
 	policyARN := d.Get("policy_arn").(string)
 	id := accessPolicyAssociationCreateResourceID(clusterName, principalARN, policyARN)
-	input := &eks.AssociateAccessPolicyInput{
+	input := eks.AssociateAccessPolicyInput{
 		AccessScope:  expandAccessScope(d.Get("access_scope").([]any)),
 		ClusterName:  aws.String(clusterName),
 		PolicyArn:    aws.String(policyARN),
@@ -114,7 +118,7 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	}
 
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.ResourceNotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.AssociateAccessPolicy(ctx, input)
+		return conn.AssociateAccessPolicy(ctx, &input)
 	}, "The specified principalArn could not be found")
 
 	if err != nil {
@@ -167,11 +171,12 @@ func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Access Policy Association: %s", d.Id())
-	_, err = conn.DisassociateAccessPolicy(ctx, &eks.DisassociateAccessPolicyInput{
+	input := eks.DisassociateAccessPolicyInput{
 		ClusterName:  aws.String(clusterName),
 		PolicyArn:    aws.String(policyARN),
 		PrincipalArn: aws.String(principalARN),
-	})
+	}
+	_, err = conn.DisassociateAccessPolicy(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -204,17 +209,17 @@ func accessPolicyAssociationParseResourceID(id string) (string, string, string, 
 }
 
 func findAccessPolicyAssociationByThreePartKey(ctx context.Context, conn *eks.Client, clusterName, principalARN, policyARN string) (*types.AssociatedAccessPolicy, error) {
-	input := &eks.ListAssociatedAccessPoliciesInput{
+	input := eks.ListAssociatedAccessPoliciesInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
 	}
 
-	return findAssociatedAccessPolicy(ctx, conn, input, func(v *types.AssociatedAccessPolicy) bool {
+	return findAssociatedAccessPolicy(ctx, conn, &input, func(v types.AssociatedAccessPolicy) bool {
 		return aws.ToString(v.PolicyArn) == policyARN
 	})
 }
 
-func findAssociatedAccessPolicy(ctx context.Context, conn *eks.Client, input *eks.ListAssociatedAccessPoliciesInput, filter tfslices.Predicate[*types.AssociatedAccessPolicy]) (*types.AssociatedAccessPolicy, error) {
+func findAssociatedAccessPolicy(ctx context.Context, conn *eks.Client, input *eks.ListAssociatedAccessPoliciesInput, filter tfslices.Predicate[types.AssociatedAccessPolicy]) (*types.AssociatedAccessPolicy, error) {
 	output, err := findAssociatedAccessPolicies(ctx, conn, input, filter)
 
 	if err != nil {
@@ -224,7 +229,7 @@ func findAssociatedAccessPolicy(ctx context.Context, conn *eks.Client, input *ek
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *eks.ListAssociatedAccessPoliciesInput, filter tfslices.Predicate[*types.AssociatedAccessPolicy]) ([]types.AssociatedAccessPolicy, error) {
+func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *eks.ListAssociatedAccessPoliciesInput, filter tfslices.Predicate[types.AssociatedAccessPolicy]) ([]types.AssociatedAccessPolicy, error) {
 	var output []types.AssociatedAccessPolicy
 
 	pages := eks.NewListAssociatedAccessPoliciesPaginator(conn, input)
@@ -232,9 +237,8 @@ func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -243,7 +247,7 @@ func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *
 		}
 
 		for _, v := range page.AssociatedAccessPolicies {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
@@ -252,24 +256,23 @@ func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *
 	return output, nil
 }
 
-func expandAccessScope(l []any) *types.AccessScope {
-	if len(l) == 0 {
+func expandAccessScope(tfList []any) *types.AccessScope {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &types.AccessScope{}
 
-	accessScope := &types.AccessScope{}
-
-	if v, ok := m[names.AttrType].(string); ok && v != "" {
-		accessScope.Type = types.AccessScopeType(v)
+	if v, ok := tfMap["namespaces"]; ok {
+		apiObject.Namespaces = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := m["namespaces"]; ok {
-		accessScope.Namespaces = flex.ExpandStringValueSet(v.(*schema.Set))
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = types.AccessScopeType(v)
 	}
 
-	return accessScope
+	return apiObject
 }
 
 func flattenAccessScope(apiObject *types.AccessScope) []any {
@@ -283,4 +286,29 @@ func flattenAccessScope(apiObject *types.AccessScope) []any {
 	}
 
 	return []any{tfMap}
+}
+
+var (
+	_ inttypes.SDKv2ImportID = accessPolicyAssociationImportID{}
+)
+
+type accessPolicyAssociationImportID struct{}
+
+func (accessPolicyAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, principalARN, policyARN, err := accessPolicyAssociationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrClusterName: clusterName,
+		"policy_arn":          policyARN,
+		"principal_arn":       principalARN,
+	}
+
+	return id, result, nil
+}
+
+func (accessPolicyAssociationImportID) Create(d *schema.ResourceData) string {
+	return accessPolicyAssociationCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("principal_arn").(string), d.Get("policy_arn").(string))
 }

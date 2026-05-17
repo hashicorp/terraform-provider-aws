@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_sfn_state_machine" "test" {
@@ -76,7 +76,7 @@ resource "aws_lambda_function" "test" {
   function_name = var.rName
   role          = aws_iam_role.for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 data "aws_region" "current" {
@@ -133,6 +133,7 @@ resource "aws_iam_role" "for_sfn" {
 }
 EOF
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

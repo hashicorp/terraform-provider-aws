@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,34 +26,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_integration", name="Integration")
+// @IdAttrFormat("agi-{rest_api_id}-{resource_id}-{http_method}")
+// @IdentityAttribute("rest_api_id")
+// @IdentityAttribute("resource_id")
+// @IdentityAttribute("http_method")
+// @ImportIDHandler("integrationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetIntegrationOutput")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(importStateIdFunc="testAccIntegrationImportStateIdFunc")
+// @Testing(plannableImportAction="NoOp")
 func resourceIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationCreate,
 		ReadWithoutTimeout:   resourceIntegrationRead,
 		UpdateWithoutTimeout: resourceIntegrationUpdate,
 		DeleteWithoutTimeout: resourceIntegrationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
-				}
-				restApiID := idParts[0]
-				resourceID := idParts[1]
-				httpMethod := idParts[2]
-				d.Set("http_method", httpMethod)
-				d.Set(names.AttrResourceID, resourceID)
-				d.Set("rest_api_id", restApiID)
-				d.SetId(fmt.Sprintf("agi-%s-%s-%s", restApiID, resourceID, httpMethod))
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			"cache_key_parameters": {
@@ -134,7 +128,7 @@ func resourceIntegration() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ResponseTransferMode](),
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -208,7 +202,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := apigateway.PutIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 		Type:       types.IntegrationType(d.Get(names.AttrType).(string)),
 	}
 
@@ -279,7 +273,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
+	d.SetId(resourceIntegrationIDAttr(d.Get(attrRestAPIID).(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
 
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
@@ -288,7 +282,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string))
+	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get(attrRestAPIID).(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Integration (%s) not found, removing from state", d.Id())
@@ -300,6 +294,12 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Integration (%s): %s", d.Id(), err)
 	}
 
+	resourceIntegrationFlatten(d, integration)
+
+	return diags
+}
+
+func resourceIntegrationFlatten(d *schema.ResourceData, integration *apigateway.GetIntegrationOutput) {
 	d.Set("cache_key_parameters", integration.CacheKeyParameters)
 	d.Set("cache_namespace", integration.CacheNamespace)
 	d.Set(names.AttrConnectionID, integration.ConnectionId)
@@ -322,12 +322,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set(names.AttrType, integration.Type)
 	d.Set(names.AttrURI, integration.Uri)
-
-	if err := d.Set("tls_config", flattenTLSConfig(integration.TlsConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
-	}
-
-	return diags
+	d.Set("tls_config", flattenTLSConfig(integration.TlsConfig))
 }
 
 func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -558,7 +553,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			HttpMethod:      aws.String(d.Get("http_method").(string)),
 			PatchOperations: operations,
 			ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
-			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+			RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 		}
 
 		_, err := conn.UpdateIntegration(ctx, &input)
@@ -580,7 +575,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// No reasonable way to determine the first stage has fully propagated, so we wait a bit.
 	time.Sleep(pauseBetweenUpdateStages)
 
-	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string))
+	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get(attrRestAPIID).(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration (%s): %s", d.Id(), err)
 	}
@@ -649,7 +644,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				HttpMethod:      aws.String(d.Get("http_method").(string)),
 				PatchOperations: lackingOperations,
 				ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
-				RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+				RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 			}
 			_, err = conn.UpdateIntegration(ctx, &input)
 			if err != nil {
@@ -669,7 +664,7 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	input := apigateway.DeleteIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 	}
 	_, err := conn.DeleteIntegration(ctx, &input)
 
@@ -713,9 +708,8 @@ func findIntegration(ctx context.Context, conn *apigateway.Client, input *apigat
 	output, err := conn.GetIntegration(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -724,7 +718,7 @@ func findIntegration(ctx context.Context, conn *apigateway.Client, input *apigat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -753,4 +747,35 @@ func flattenTLSConfig(apiObject *types.TlsConfig) []any {
 	return []any{map[string]any{
 		"insecure_skip_verification": apiObject.InsecureSkipVerification,
 	}}
+}
+
+var _ inttypes.SDKv2ImportID = integrationImportID{}
+
+type integrationImportID struct{}
+
+func integrationCreateImportID(restApiID, resourceID, httpMethod string) string {
+	return restApiID + "/" + resourceID + "/" + httpMethod
+}
+
+func resourceIntegrationIDAttr(restApiID, resourceID, httpMethod string) string {
+	return fmt.Sprintf("agi-%s-%s-%s", restApiID, resourceID, httpMethod)
+}
+
+func (integrationImportID) Create(d *schema.ResourceData) string {
+	return integrationCreateImportID(d.Get(attrRestAPIID).(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string))
+}
+
+func (integrationImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", nil, fmt.Errorf("id %q should be in the format <rest-api-id>/<resource-id>/<http-method>", id)
+	}
+
+	result := map[string]any{
+		attrRestAPIID:        parts[0],
+		names.AttrResourceID: parts[1],
+		"http_method":        parts[2],
+	}
+
+	return resourceIntegrationIDAttr(parts[0], parts[1], parts[2]), result, nil
 }

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -11,10 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -54,7 +55,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"items": {
+						attrItems: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -65,7 +66,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -105,7 +106,7 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 
 	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
-		CallerReference: aws.String(id.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 		Name:            aws.String(name),
 	}
 
@@ -227,9 +228,8 @@ func findFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 	output, err := conn.GetFieldLevelEncryptionProfile(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionProfile](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -238,7 +238,7 @@ func findFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 	}
 
 	if output == nil || output.FieldLevelEncryptionProfile == nil || output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -251,7 +251,7 @@ func expandEncryptionEntities(tfMap map[string]any) *awstypes.EncryptionEntities
 
 	apiObject := &awstypes.EncryptionEntities{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandEncryptionEntityItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -315,7 +315,7 @@ func expandFieldPatterns(tfMap map[string]any) *awstypes.FieldPatterns {
 
 	apiObject := &awstypes.FieldPatterns{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -332,7 +332,7 @@ func flattenEncryptionEntities(apiObject *awstypes.EncryptionEntities) map[strin
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenEncryptionEntityItems(v)
+		tfMap[attrItems] = flattenEncryptionEntityItems(v)
 	}
 
 	return tfMap
@@ -384,7 +384,7 @@ func flattenFieldPatterns(apiObject *awstypes.FieldPatterns) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap

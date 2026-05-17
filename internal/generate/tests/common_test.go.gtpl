@@ -2,6 +2,9 @@
 {{ range .RequiredEnvVars -}}
 	acctest.SkipIfEnvVarNotSet(t, "{{ . }}")
 {{ end -}}
+{{ range .RequiredEnvVarValues -}}
+	acctest.SkipIfEnvVarNotSet(t, "{{ . }}")
+{{ end -}}
 {{ block "targetName" . }}Missing template "targetName"{{ end }}
 {{- if .Generator }}
 	rName := {{ .Generator }}

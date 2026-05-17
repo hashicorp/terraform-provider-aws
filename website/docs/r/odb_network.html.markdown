@@ -61,6 +61,11 @@ The following arguments are optional:
 * `tags` - (Optional) A map of tags to assign to the exadata infrastructure. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delete_associated_resources` - (Optional) If set to true deletes associated OCI resources. Default false.
+* `sts_access` - (Optional) Specifies the configuration for STS access from the ODB network.
+* `kms_access` - (Optional) Specifies the configuration for KMS access from the ODB network.
+* `sts_policy_document` - (Optional) Specifies the endpoint policy for STS access from the ODB network.
+* `kms_policy_document` - (Optional) Specifies the endpoint policy for KMS access from the ODB network.
+* `cross_region_s3_restore_sources_access` - (Optional) The list of regions enabled for cross-region restore in the ODB network.
 
 ## Attribute Reference
 
@@ -76,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `oci_vcn_id` - The unique identifier  Oracle Cloud ID (OCID) of the OCI VCN for the ODB network.
 * `oci_vcn_url` - The URL of the OCI VCN for the ODB network.
 * `percent_progress` - The amount of progress made on the current operation on the ODB network, expressed as a percentage.
-* `managed_services` - The name of the OCI resource anchor for the Exadata infrastructure.
+* `managed_services` - The managed services configuration for the ODB network.
 * `status` - The status of the network resource.
 * `status_reason` - Additional information about the current status of the ODB network.
 * `created_at` - The date and time when the ODB network was created.

@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: acceptance-test-naming-parent-disappears
     languages: [go]
@@ -567,6 +570,8 @@ rules:
     paths:
       include:
         - "/internal/service"
+      exclude:
+        - "*_test.go"
     patterns:
       - pattern-either:
           - pattern: errs.Must(...)

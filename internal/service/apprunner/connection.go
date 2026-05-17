@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apprunner
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -154,9 +155,8 @@ func findConnectionByName(ctx context.Context, conn *apprunner.Client, name stri
 	}
 
 	if status := output.Status; status == types.ConnectionStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -181,9 +181,8 @@ func findConnections(ctx context.Context, conn *apprunner.Client, input *apprunn
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -197,8 +196,8 @@ func findConnections(ctx context.Context, conn *apprunner.Client, input *apprunn
 	return output, nil
 }
 
-func statusConnection(ctx context.Context, conn *apprunner.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnection(conn *apprunner.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -217,10 +216,10 @@ func waitConnectionDeleted(ctx context.Context, conn *apprunner.Client, name str
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStatusPendingHandshake, types.ConnectionStatusAvailable),
 		Target:  []string{},
-		Refresh: statusConnection(ctx, conn, name),
+		Refresh: statusConnection(conn, name),
 		Timeout: timeout,
 	}
 

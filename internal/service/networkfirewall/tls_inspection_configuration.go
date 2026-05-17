@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkfirewall
 
@@ -28,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -470,9 +471,8 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 	output, err := conn.DescribeTLSInspectionConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -481,14 +481,14 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 	}
 
 	if output == nil || output.TLSInspectionConfigurationResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTLSInspectionConfiguration(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -507,8 +507,8 @@ const (
 	resourceStatusPending = "PENDING"
 )
 
-func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTLSInspectionConfigurationCertificates(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -534,10 +534,10 @@ func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *net
 }
 
 func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{resourceStatusPending},
 		Target:  enum.Slice(awstypes.ResourceStatusActive),
-		Refresh: statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
+		Refresh: statusTLSInspectionConfigurationCertificates(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -551,10 +551,10 @@ func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfir
 }
 
 func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{resourceStatusPending},
 		Target:  enum.Slice(awstypes.ResourceStatusActive),
-		Refresh: statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
+		Refresh: statusTLSInspectionConfigurationCertificates(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -568,10 +568,10 @@ func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfir
 }
 
 func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusActive, awstypes.ResourceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusTLSInspectionConfiguration(ctx, conn, arn),
+		Refresh: statusTLSInspectionConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 

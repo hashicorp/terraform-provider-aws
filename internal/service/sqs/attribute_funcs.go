@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs
@@ -28,6 +28,30 @@ type queueAttributeHandler struct {
 	AttributeName types.QueueAttributeName
 	SchemaKey     string
 	ToSet         func(string, string) (string, error)
+}
+
+func (h *queueAttributeHandler) flattenResourceData(d *schema.ResourceData, value string) error {
+	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), value)
+	if err != nil {
+		return err
+	}
+
+	if h.SchemaKey == names.AttrPolicy {
+		newValue, err = verify.PolicyToSet(d.Get(names.AttrPolicy).(string), newValue)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := d.Set(h.SchemaKey, newValue); err != nil {
+		return err
+	}
+
+	if err := d.Set("queue_url", d.Id()); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -85,20 +109,9 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s) attribute (%s): %s", d.Id(), h.AttributeName, err)
 	}
 
-	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), aws.ToString(output))
-	if err != nil {
+	if err := h.flattenResourceData(d, aws.ToString(output)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	if h.SchemaKey == names.AttrPolicy {
-		newValue, err = verify.PolicyToSet(d.Get(names.AttrPolicy).(string), newValue)
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	d.Set(h.SchemaKey, newValue)
-	d.Set("queue_url", d.Id())
 
 	return diags
 }

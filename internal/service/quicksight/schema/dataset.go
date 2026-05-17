@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -22,6 +22,19 @@ var dataSetIdentifierDeclarationsSchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_arn":       arnStringSchema(attrOptional),
 				names.AttrIdentifier: stringLenBetweenSchema(attrOptional, 1, 2048),
+			},
+		},
+	}
+})
+
+var dataSetIdentifierDeclarationsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_arn":       arnStringDataSourceSchema(),
+				names.AttrIdentifier: stringComputedOnly(),
 			},
 		},
 	}

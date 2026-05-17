@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iot
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -249,7 +250,7 @@ pageLoop:
 	}
 
 	if destination == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	inputG := &iot.GetTopicRuleDestinationInput{
@@ -259,9 +260,8 @@ pageLoop:
 	output, err := conn.GetTopicRuleDestination(ctx, inputG)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: inputG,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -270,14 +270,14 @@ pageLoop:
 	}
 
 	if output == nil || output.TopicRuleDestination == nil {
-		return nil, tfresource.NewEmptyResultError(inputG)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TopicRuleDestination, nil
 }
 
-func statusTopicRuleDestination(ctx context.Context, conn *iot.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTopicRuleDestination(conn *iot.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTopicRuleDestinationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -293,17 +293,17 @@ func statusTopicRuleDestination(ctx context.Context, conn *iot.Client, arn strin
 }
 
 func waitTopicRuleDestinationCreated(ctx context.Context, conn *iot.Client, arn string, timeout time.Duration) (*awstypes.TopicRuleDestination, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.TopicRuleDestinationStatusInProgress)),
 		Target:  enum.Slice(string(awstypes.TopicRuleDestinationStatusEnabled)),
-		Refresh: statusTopicRuleDestination(ctx, conn, arn),
+		Refresh: statusTopicRuleDestination(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TopicRuleDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -312,17 +312,17 @@ func waitTopicRuleDestinationCreated(ctx context.Context, conn *iot.Client, arn 
 }
 
 func waitTopicRuleDestinationDeleted(ctx context.Context, conn *iot.Client, arn string, timeout time.Duration) (*awstypes.TopicRuleDestination, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.TopicRuleDestinationStatusDeleting)),
 		Target:  []string{},
-		Refresh: statusTopicRuleDestination(ctx, conn, arn),
+		Refresh: statusTopicRuleDestination(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TopicRuleDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -331,17 +331,17 @@ func waitTopicRuleDestinationDeleted(ctx context.Context, conn *iot.Client, arn 
 }
 
 func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.Client, arn string, timeout time.Duration) (*awstypes.TopicRuleDestination, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.TopicRuleDestinationStatusInProgress)),
 		Target:  enum.Slice(string(awstypes.TopicRuleDestinationStatusDisabled)),
-		Refresh: statusTopicRuleDestination(ctx, conn, arn),
+		Refresh: statusTopicRuleDestination(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TopicRuleDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -350,17 +350,17 @@ func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.Client, arn
 }
 
 func waitTopicRuleDestinationEnabled(ctx context.Context, conn *iot.Client, arn string, timeout time.Duration) (*awstypes.TopicRuleDestination, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.TopicRuleDestinationStatusInProgress)),
 		Target:  enum.Slice(string(awstypes.TopicRuleDestinationStatusEnabled)),
-		Refresh: statusTopicRuleDestination(ctx, conn, arn),
+		Refresh: statusTopicRuleDestination(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TopicRuleDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

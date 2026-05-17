@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,16 +28,19 @@ import (
 )
 
 // @SDKResource("aws_securityhub_configuration_policy_association", name="Configuration Policy Association")
+// @IdentityAttribute("target_id")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// Alternate account not working
+// @Testing(identityTest=false)
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationMemberAccount")
 func resourceConfigurationPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationPolicyAssociationCreateOrUpdate,
 		ReadWithoutTimeout:   resourceConfigurationPolicyAssociationRead,
 		UpdateWithoutTimeout: resourceConfigurationPolicyAssociationCreateOrUpdate,
 		DeleteWithoutTimeout: resourceConfigurationPolicyAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(90 * time.Second),
@@ -45,10 +49,13 @@ func resourceConfigurationPolicyAssociation() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "The universally unique identifier (UUID) of the configuration policy.",
-				ValidateFunc: validation.IsUUID,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The universally unique identifier (UUID) of the configuration policy, or SELF_MANAGED_SECURITY_HUB for a self-managed configuration.",
+				ValidateFunc: validation.Any(
+					validation.IsUUID,
+					validation.StringInSlice([]string{"SELF_MANAGED_SECURITY_HUB"}, false),
+				),
 			},
 			"target_id": {
 				Type:        schema.TypeString,
@@ -69,12 +76,12 @@ func resourceConfigurationPolicyAssociationCreateOrUpdate(ctx context.Context, d
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	targetID := d.Get("target_id").(string)
-	input := &securityhub.StartConfigurationPolicyAssociationInput{
+	input := securityhub.StartConfigurationPolicyAssociationInput{
 		ConfigurationPolicyIdentifier: aws.String(d.Get("policy_id").(string)),
 		Target:                        expandTarget(targetID),
 	}
 
-	_, err := conn.StartConfigurationPolicyAssociation(ctx, input)
+	_, err := conn.StartConfigurationPolicyAssociation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting Security Hub Configuration Policy Association (%s): %s", targetID, err)
@@ -121,10 +128,11 @@ func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Configuration Policy Association: %s", d.Id())
-	_, err := conn.StartConfigurationPolicyDisassociation(ctx, &securityhub.StartConfigurationPolicyDisassociationInput{
+	input := securityhub.StartConfigurationPolicyDisassociationInput{
 		ConfigurationPolicyIdentifier: aws.String(d.Get("policy_id").(string)),
 		Target:                        expandTarget(d.Id()),
-	})
+	}
+	_, err := conn.StartConfigurationPolicyDisassociation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
@@ -138,20 +146,19 @@ func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema
 }
 
 func findConfigurationPolicyAssociationByID(ctx context.Context, conn *securityhub.Client, id string) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {
-	input := &securityhub.GetConfigurationPolicyAssociationInput{
+	input := securityhub.GetConfigurationPolicyAssociationInput{
 		Target: expandTarget(id),
 	}
 
-	return findConfigurationPolicyAssociation(ctx, conn, input)
+	return findConfigurationPolicyAssociation(ctx, conn, &input)
 }
 
 func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyAssociationInput) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {
 	output, err := conn.GetConfigurationPolicyAssociation(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -160,14 +167,14 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConfigurationPolicyAssociation(conn *securityhub.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConfigurationPolicyAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -183,16 +190,16 @@ func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub
 }
 
 func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *securityhub.Client, id string, timeout time.Duration) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigurationPolicyAssociationStatusPending),
 		Target:  enum.Slice(types.ConfigurationPolicyAssociationStatusSuccess),
-		Refresh: statusConfigurationPolicyAssociation(ctx, conn, id),
+		Refresh: statusConfigurationPolicyAssociation(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if tfresource.TimedOut(err) {
+	if retry.TimedOut(err) {
 		log.Printf("[WARN] Security Hub Configuration Policy Association (%s) still in PENDING state. It can take up to 24 hours for the status to change from PENDING to SUCCESS or FAILURE", id)
 		// We try to wait until SUCCESS state is reached but don't error if still in PENDING state.
 		// We must attempt to wait/retry in order for Policy Disassociations to take effect
@@ -200,7 +207,7 @@ func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *secu
 	}
 
 	if output, ok := outputRaw.(*securityhub.GetConfigurationPolicyAssociationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
 
 		return output, err
 	}

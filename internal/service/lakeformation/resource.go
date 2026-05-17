@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lakeformation
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -141,8 +142,17 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("last_modified", v.Format(time.RFC3339))
 	}
 	d.Set(names.AttrRoleARN, resource.RoleArn)
-	d.Set("with_federation", resource.WithFederation)
-	d.Set("with_privileged_access", resource.WithPrivilegedAccess)
+	// AWS omits with_federation / with_privileged_access for connection ARNs
+	// whose Glue connection type is not federated-capable (e.g. JDBC). Passing
+	// a nil *bool to d.Set coerces to false and causes a perpetual drift
+	// against a user's configured `true`. Guard the Set so we only overwrite
+	// state when AWS actually returned a value.
+	if resource.WithFederation != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set("with_federation", resource.WithFederation)
+	}
+	if resource.WithPrivilegedAccess != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set("with_privileged_access", resource.WithPrivilegedAccess)
+	}
 
 	return diags
 }
@@ -175,9 +185,8 @@ func FindResourceByARN(ctx context.Context, conn *lakeformation.Client, arn stri
 	output, err := conn.DescribeResource(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -186,7 +195,7 @@ func FindResourceByARN(ctx context.Context, conn *lakeformation.Client, arn stri
 	}
 
 	if output == nil || output.ResourceInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourceInfo, nil

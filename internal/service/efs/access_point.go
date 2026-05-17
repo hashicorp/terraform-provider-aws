@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -256,9 +257,8 @@ func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.AccessPointNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -288,17 +288,16 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	}
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusAccessPointLifeCycleState(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccessPointLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccessPointByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -317,10 +316,10 @@ func waitAccessPointCreated(ctx context.Context, conn *efs.Client, id string) (*
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:  enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh: statusAccessPointLifeCycleState(ctx, conn, id),
+		Refresh: statusAccessPointLifeCycleState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -338,10 +337,10 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, id string) (*
 		accessPointCreatedTimeout = 10 * time.Minute
 		accessPointDeletedTimeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
-		Refresh: statusAccessPointLifeCycleState(ctx, conn, id),
+		Refresh: statusAccessPointLifeCycleState(conn, id),
 		Timeout: accessPointDeletedTimeout,
 	}
 

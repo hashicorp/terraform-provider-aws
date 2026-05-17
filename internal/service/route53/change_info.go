@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -25,9 +24,8 @@ func findChangeByID(ctx context.Context, conn *route53.Client, id string) (*awst
 	output, err := conn.GetChange(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchChange](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -36,14 +34,14 @@ func findChangeByID(ctx context.Context, conn *route53.Client, id string) (*awst
 	}
 
 	if output == nil || output.ChangeInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ChangeInfo, nil
 }
 
-func statusChange(ctx context.Context, conn *route53.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusChange(conn *route53.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findChangeByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -65,10 +63,10 @@ func waitChangeInsync(ctx context.Context, conn *route53.Client, id string, time
 		minTimeout   = 5 * time.Second
 		pollInterval = 15 * time.Second
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.ChangeStatusPending),
 		Target:       enum.Slice(awstypes.ChangeStatusInsync),
-		Refresh:      statusChange(ctx, conn, id),
+		Refresh:      statusChange(conn, id),
 		Delay:        delay,
 		MinTimeout:   minTimeout,
 		PollInterval: pollInterval,

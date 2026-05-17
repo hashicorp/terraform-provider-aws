@@ -51,13 +51,13 @@ data "archive_file" "example" {
 
 # Lambda function
 resource "aws_lambda_function" "example" {
-  filename         = data.archive_file.example.output_path
-  function_name    = "example_lambda_function"
-  role             = aws_iam_role.example.arn
-  handler          = "index.handler"
-  source_code_hash = data.archive_file.example.output_base64sha256
+  filename      = data.archive_file.example.output_path
+  function_name = "example_lambda_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  code_sha256   = data.archive_file.example.output_base64sha256
 
-  runtime = "nodejs20.x"
+  runtime = "nodejs24.x"
 
   environment {
     variables = {
@@ -104,7 +104,7 @@ resource "aws_lambda_layer_version" "example" {
   filename            = "layer.zip"
   layer_name          = "example_dependencies_layer"
   description         = "Common dependencies for Lambda functions"
-  compatible_runtimes = ["nodejs20.x", "python3.12"]
+  compatible_runtimes = ["nodejs24.x", "python3.12"]
 
   compatible_architectures = ["x86_64", "arm64"]
 }
@@ -115,7 +115,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_layered_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   layers = [aws_lambda_layer_version.example.arn]
 
@@ -208,7 +208,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_efs_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = var.subnet_ids
@@ -222,6 +222,101 @@ resource "aws_lambda_function" "example" {
 
   # Ensure EFS is ready before Lambda creation
   depends_on = [aws_efs_mount_target.example]
+}
+```
+
+### Function with S3 Files File System
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "lambda_file_system" {
+  bucket           = "example-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-an"
+  bucket_namespace = "account-regional"
+}
+
+resource "aws_s3_bucket_versioning" "lambda_file_system" {
+  bucket = aws_s3_bucket.lambda_file_system.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3files_file_system" "for_lambda" {
+  bucket = aws_s3_bucket.lambda_file_system.arn
+  # For required IAM permissions to use S3Files file system,
+  # see https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-files-prereq-policies.html#s3-files-prereq-iam
+  role_arn = aws_iam_role.s3files.arn
+
+  depends_on = [
+    aws_s3_bucket_versioning.lambda_file_system
+  ]
+}
+
+resource "aws_s3files_access_point" "for_lambda" {
+  file_system_id = aws_s3files_file_system.for_lambda.id
+
+  root_directory {
+    path = "/lambda"
+    creation_permissions {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "755"
+    }
+  }
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
+}
+
+resource "aws_security_group" "s3files_mount_targets" {
+  name   = "example-s3files-mount-targets-sg"
+  vpc_id = aws_vpc.vpc_for_lambda.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "s3files_mount_targets_nfs" {
+  ip_protocol                  = "tcp"
+  from_port                    = 2049
+  to_port                      = 2049
+  referenced_security_group_id = aws_security_group.lambda_s3files.id
+  security_group_id            = aws_security_group.s3files_mount_targets.id
+}
+
+resource "aws_security_group" "lambda_s3files" {
+  name   = "example-lambda-s3files-sg"
+  vpc_id = aws_vpc.vpc_for_lambda.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "lambda_s3files_nfs" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.lambda_s3files.id
+  from_port                    = 2049
+  to_port                      = 2049
+  referenced_security_group_id = aws_security_group.s3files_mount_targets.id
+}
+
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_s3files_function"
+  # For required IAM permissions to use S3Files with Lambda,
+  # see https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-files-prereq-policies.html#s3-files-prereq-iam
+  role    = aws_iam_role.iam_for_lambda.arn
+  handler = "exports.example"
+  runtime = "nodejs24.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda_az1.id]
+    security_group_ids = [aws_security_group.lambda_s3files.id]
+  }
+
+  file_system_config {
+    arn              = aws_s3files_access_point.for_lambda.arn
+    local_mount_path = "/mnt/s3files"
+  }
+  depends_on = [aws_s3files_mount_target.for_lambda]
 }
 ```
 
@@ -243,7 +338,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   # Advanced logging configuration
   logging_config {
@@ -361,7 +456,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   dead_letter_config {
     target_arn = aws_sqs_queue.dlq.arn
@@ -459,7 +554,7 @@ resource "aws_lambda_function" "example" {
   function_name = var.function_name
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   # Advanced logging configuration
   logging_config {
@@ -521,7 +616,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   memory_size   = 2048
 
   publish = true
@@ -547,6 +642,8 @@ resource "aws_lambda_capacity_provider" "example" {
 }
 ```
 
+See [the `aws_lambda_capacity_provider` resource](lambda_capacity_provider.html) for more details, such as configuring instance requirements and the scaling policy.
+
 ## Specifying the Deployment Package
 
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
@@ -566,13 +663,14 @@ The following arguments are optional:
 
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
 * `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-configuration).
+* `code_sha256` - (Optional) Base64-encoded representation the source code package file. Use this argument to trigger updates when the function source code changes. For OCI, this value is relayed directly from the image digest. For zip files, this value is the Base64 encoded SHA-256 hash of the `.zip` file. Layers are not included in the calculation. To trigger updates using a non-standard hashing algorithm, use the `source_code_hash` argument instead.
 * `code_signing_config_arn` - (Optional) ARN of a code-signing configuration to enable code signing for this function.
 * `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-configuration-block).
 * `description` - (Optional) Description of what your Lambda Function does.
 * `durable_config` - (Optional) Configuration block for durable function settings. [See below](#durable_config-configuration-block). `durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
 * `environment` - (Optional) Configuration block for environment variables. [See below](#environment-configuration-block).
 * `ephemeral_storage` - (Optional) Amount of ephemeral storage (`/tmp`) to allocate for the Lambda Function. [See below](#ephemeral_storage-configuration-block).
-* `file_system_config` - (Optional) Configuration block for EFS file system. [See below](#file_system_config-configuration-block).
+* `file_system_config` - (Optional) Configuration block for EFS or S3 Files file system. [See below](#file_system_config-configuration-block).
 * `filename` - (Optional) Path to the function's deployment package within the local filesystem. Conflicts with `image_uri` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
 * `handler` - (Optional) Function entry point in your code. Required if `package_type` is `Zip`.
 * `image_config` - (Optional) Container image configuration values. [See below](#image_config-configuration-block).
@@ -580,7 +678,7 @@ The following arguments are optional:
 * `kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function.
 * `logging_config` - (Optional) Configuration block for advanced logging settings. [See below](#logging_config-configuration-block).
-* `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 10,240 MB (10 GB), in 1 MB increments. Defaults to 128.
+* `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 32,768 MB (32 GB), in 1 MB increments. Defaults to 128.
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `publish_to` - (Optional) Whether to publish to a alias or version number. Omit for regular version publishing. Option is `LATEST_PUBLISHED`.
@@ -594,7 +692,7 @@ The following arguments are optional:
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
-* `source_code_hash` - (Optional) Base64-encoded SHA256 hash of the package file. Used to trigger updates when source code changes.
+* `source_code_hash` - (Optional) User-defined hash of the source code package file. Use this argument to trigger updates when the local function source code changes. This is a synthetic argument tracked only by the AWS provider and does not need to match the hashing algorithm used by Lambda to compute the `CodeSha256` response value. Out-of-band changes to the source code _will not_ be captured by this argument. To include out-of-band source code changes as an update trigger, use the `code_sha256` argument instead.
 * `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
@@ -603,6 +701,8 @@ The following arguments are optional:
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
 ### capacity_provider_config Configuration
+
+~> **NOTE:** If `capacity_provider_config` is set, `vpc_config` cannot be set.
 
 * `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-configuration-block).
 
@@ -633,7 +733,7 @@ The following arguments are optional:
 
 ### file_system_config Configuration Block
 
-* `arn` - (Required) ARN of the Amazon EFS Access Point.
+* `arn` - (Required) ARN of the Amazon EFS Access Point, or the Amazon S3 Files access point.
 * `local_mount_path` - (Required) Path where the function can access the file system. Must start with `/mnt/`.
 
 ### image_config Configuration Block
@@ -674,7 +774,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN identifying your Lambda Function.
-* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `last_modified` - Date this resource was last modified.
 * `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
@@ -683,6 +782,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `snap_start.optimization_status` - Optimization status of the snap start configuration. Valid values are `On` and `Off`.
 * `source_code_size` - Size in bytes of the function .zip file.
+* `response_streaming_invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway with response streaming - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpc_config.vpc_id` - ID of the VPC.

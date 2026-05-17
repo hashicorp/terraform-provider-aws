@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower_test
@@ -16,6 +16,7 @@ func TestAccControlTower_serial(t *testing.T) {
 		"LandingZone": {
 			acctest.CtBasic:      testAccLandingZone_basic,
 			acctest.CtDisappears: testAccLandingZone_disappears,
+			"remediationTypes":   testAccLandingZone_remediationTypes,
 			"tags":               testAccLandingZone_tags,
 		},
 		"Control": {

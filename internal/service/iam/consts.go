@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -14,4 +14,8 @@ const (
 	// have incorrect references or permissions.
 	// Reference: https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency
 	propagationTimeout = 2 * time.Minute
+
+	arnStateIsUniqueID = "uniqueid"
+	arnStateIsARN      = "isarn"
+	arnStateNotFound   = "notfound"
 )

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package enum
@@ -24,5 +24,11 @@ func TestValues(t *testing.T) {
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+	}
+}
+
+func BenchmarkValues(b *testing.B) {
+	for b.Loop() {
+		Values[types.AclPermission]()
 	}
 }

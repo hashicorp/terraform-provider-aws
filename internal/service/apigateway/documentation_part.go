@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -79,7 +80,7 @@ func resourceDocumentationPart() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -92,7 +93,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	input := apigateway.CreateDocumentationPartInput{
 		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]any)),
 		Properties: aws.String(d.Get(names.AttrProperties).(string)),
@@ -134,7 +135,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("documentation_part_id", docPart.Id)
 	d.Set(names.AttrLocation, flattenDocumentationPartLocation(docPart.Location))
 	d.Set(names.AttrProperties, docPart.Properties)
-	d.Set("rest_api_id", apiID)
+	d.Set(attrRestAPIID, apiID)
 
 	return diags
 }
@@ -210,9 +211,8 @@ func findDocumentationPartByTwoPartKey(ctx context.Context, conn *apigateway.Cli
 	output, err := conn.GetDocumentationPart(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -221,7 +221,7 @@ func findDocumentationPartByTwoPartKey(ctx context.Context, conn *apigateway.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

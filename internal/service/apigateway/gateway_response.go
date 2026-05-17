@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -41,7 +42,7 @@ func resourceGatewayResponse() *schema.Resource {
 				restApiID := idParts[0]
 				responseType := idParts[1]
 				d.Set("response_type", responseType)
-				d.Set("rest_api_id", restApiID)
+				d.Set(attrRestAPIID, restApiID)
 				d.SetId(fmt.Sprintf("aggr-%s-%s", restApiID, responseType))
 				return []*schema.ResourceData{d}, nil
 			},
@@ -63,7 +64,7 @@ func resourceGatewayResponse() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -82,7 +83,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 
 	input := apigateway.PutGatewayResponseInput{
 		ResponseType: types.GatewayResponseType(d.Get("response_type").(string)),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:    aws.String(d.Get(attrRestAPIID).(string)),
 	}
 
 	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]any)) > 0 {
@@ -104,7 +105,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("aggr-%s-%s", d.Get("rest_api_id").(string), d.Get("response_type").(string)))
+		d.SetId(fmt.Sprintf("aggr-%s-%s", d.Get(attrRestAPIID).(string), d.Get("response_type").(string)))
 	}
 
 	return append(diags, resourceGatewayResponseRead(ctx, d, meta)...)
@@ -114,7 +115,7 @@ func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	gatewayResponse, err := findGatewayResponseByTwoPartKey(ctx, conn, d.Get("response_type").(string), d.Get("rest_api_id").(string))
+	gatewayResponse, err := findGatewayResponseByTwoPartKey(ctx, conn, d.Get("response_type").(string), d.Get(attrRestAPIID).(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Gateway Response (%s) not found, removing from state", d.Id())
@@ -141,7 +142,7 @@ func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 	input := apigateway.DeleteGatewayResponseInput{
 		ResponseType: types.GatewayResponseType(d.Get("response_type").(string)),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:    aws.String(d.Get(attrRestAPIID).(string)),
 	}
 	_, err := conn.DeleteGatewayResponse(ctx, &input)
 
@@ -165,9 +166,8 @@ func findGatewayResponseByTwoPartKey(ctx context.Context, conn *apigateway.Clien
 	output, err := conn.GetGatewayResponse(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -176,7 +176,7 @@ func findGatewayResponseByTwoPartKey(ctx context.Context, conn *apigateway.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

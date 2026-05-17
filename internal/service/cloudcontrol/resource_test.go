@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudcontrol_test
@@ -64,7 +64,7 @@ func TestAccCloudControlResource_disappears(t *testing.T) {
 			{
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudcontrol.ResourceResource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudcontrol.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package inspector2
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -147,9 +148,8 @@ func findMemberByAccountID(ctx context.Context, conn *inspector2.Client, id stri
 	}
 
 	if status := output.RelationshipStatus; status == awstypes.RelationshipStatusRemoved {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -160,9 +160,8 @@ func findMember(ctx context.Context, conn *inspector2.Client, input *inspector2.
 	output, err := conn.GetMember(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Invoking account does not have access to get member account") || errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -171,14 +170,14 @@ func findMember(ctx context.Context, conn *inspector2.Client, input *inspector2.
 	}
 
 	if output == nil || output.Member == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Member, nil
 }
 
-func statusMemberAssociation(ctx context.Context, conn *inspector2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMemberAssociation(conn *inspector2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMemberByAccountID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -193,10 +192,10 @@ func statusMemberAssociation(ctx context.Context, conn *inspector2.Client, id st
 }
 
 func waitMemberAssociationCreated(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) (*awstypes.Member, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RelationshipStatusCreated),
 		Target:  enum.Slice(awstypes.RelationshipStatusEnabled),
-		Refresh: statusMemberAssociation(ctx, conn, id),
+		Refresh: statusMemberAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -210,10 +209,10 @@ func waitMemberAssociationCreated(ctx context.Context, conn *inspector2.Client, 
 }
 
 func waitMemberAssociationDeleted(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) (*awstypes.Member, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RelationshipStatusCreated, awstypes.RelationshipStatusEnabled),
 		Target:  []string{},
-		Refresh: statusMemberAssociation(ctx, conn, id),
+		Refresh: statusMemberAssociation(conn, id),
 		Timeout: timeout,
 	}
 

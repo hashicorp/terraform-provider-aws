@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -36,8 +38,6 @@ import (
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="enabled")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anomalyDetectorResource{}
 
@@ -256,7 +256,7 @@ func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

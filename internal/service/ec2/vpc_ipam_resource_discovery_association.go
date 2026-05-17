@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -13,9 +15,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -88,7 +90,7 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 	ipamID := d.Get("ipam_id").(string)
 	ipamResourceDiscoveryID := d.Get("ipam_resource_discovery_id").(string)
 	input := &ec2.AssociateIpamResourceDiscoveryInput{
-		ClientToken:             aws.String(id.UniqueId()),
+		ClientToken:             aws.String(create.UniqueId(ctx)),
 		IpamId:                  aws.String(ipamID),
 		IpamResourceDiscoveryId: aws.String(ipamResourceDiscoveryID),
 		TagSpecifications:       getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamResourceDiscoveryAssociation),

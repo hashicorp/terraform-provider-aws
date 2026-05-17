@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,7 +62,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -75,7 +76,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -89,7 +90,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -103,7 +104,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -129,7 +130,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"items": {
+						attrItems: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -167,7 +168,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"items": {
+						attrItems: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -521,9 +522,8 @@ func findResponseHeadersPolicyByID(ctx context.Context, conn *cloudfront.Client,
 	output, err := conn.GetResponseHeadersPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResponseHeadersPolicy](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -532,7 +532,7 @@ func findResponseHeadersPolicyByID(ctx context.Context, conn *cloudfront.Client,
 	}
 
 	if output == nil || output.ResponseHeadersPolicy == nil || output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -587,7 +587,7 @@ func expandResponseHeadersPolicyAccessControlAllowHeaders(tfMap map[string]any) 
 
 	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowHeaders{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -603,7 +603,7 @@ func expandResponseHeadersPolicyAccessControlAllowMethods(tfMap map[string]any) 
 
 	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowMethods{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringyValueSet[awstypes.ResponseHeadersPolicyAccessControlAllowMethodsValues](v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -619,7 +619,7 @@ func expandResponseHeadersPolicyAccessControlAllowOrigins(tfMap map[string]any) 
 
 	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowOrigins{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -635,7 +635,7 @@ func expandResponseHeadersPolicyAccessControlExposeHeaders(tfMap map[string]any)
 
 	apiObject := &awstypes.ResponseHeadersPolicyAccessControlExposeHeaders{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -690,7 +690,7 @@ func flattenResponseHeadersPolicyAccessControlAllowHeaders(apiObject *awstypes.R
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -704,7 +704,7 @@ func flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject *awstypes.R
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -718,7 +718,7 @@ func flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject *awstypes.R
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -732,7 +732,7 @@ func flattenResponseHeadersPolicyAccessControlExposeHeaders(apiObject *awstypes.
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -749,7 +749,7 @@ func expandResponseHeadersPolicyCustomHeadersConfig(tfMap map[string]any) *awsty
 
 	apiObject := &awstypes.ResponseHeadersPolicyCustomHeadersConfig{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandResponseHeadersPolicyCustomHeaders(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -814,7 +814,7 @@ func flattenResponseHeadersPolicyCustomHeadersConfig(apiObject *awstypes.Respons
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenResponseHeadersPolicyCustomHeaders(v)
+		tfMap[attrItems] = flattenResponseHeadersPolicyCustomHeaders(v)
 	}
 
 	return tfMap
@@ -869,7 +869,7 @@ func expandResponseHeadersPolicyRemoveHeadersConfig(tfMap map[string]any) *awsty
 
 	apiObject := &awstypes.ResponseHeadersPolicyRemoveHeadersConfig{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandResponseHeadersPolicyRemoveHeaders(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -926,7 +926,7 @@ func flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject *awstypes.Respons
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenResponseHeadersPolicyRemoveHeaders(v)
+		tfMap[attrItems] = flattenResponseHeadersPolicyRemoveHeaders(v)
 	}
 
 	return tfMap

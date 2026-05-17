@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,7 +40,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrColumn:             columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
@@ -101,7 +102,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 									},
 								},
 							},
-							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
+							attrTitle: stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -133,9 +134,13 @@ func (x attrHandling) isComputed() bool {
 	return x&attrComputed != 0
 }
 
-var arnStringSchemaCache syncMap[attrHandling, *schema.Schema]
+var arnStringSchemaCache tfsync.Map[attrHandling, *schema.Schema]
 
 func arnStringSchema(handling attrHandling) *schema.Schema {
+	if handling == attrComputed {
+		return stringComputedOnly()
+	}
+
 	s, ok := arnStringSchemaCache.Load(handling)
 	if ok {
 		return s
@@ -156,7 +161,11 @@ func arnStringSchema(handling attrHandling) *schema.Schema {
 	return s
 }
 
-var utcTimestampStringSchemaCache syncMap[attrHandling, *schema.Schema]
+func arnStringDataSourceSchema() *schema.Schema {
+	return arnStringSchema(attrComputed)
+}
+
+var utcTimestampStringSchemaCache tfsync.Map[attrHandling, *schema.Schema]
 
 func utcTimestampStringSchema(handling attrHandling) *schema.Schema {
 	s, ok := utcTimestampStringSchemaCache.Load(handling)
@@ -184,9 +193,13 @@ type stringLenBetweenIdentity struct {
 	min, max int
 }
 
-var stringLenBetweenSchemaCache syncMap[stringLenBetweenIdentity, *schema.Schema]
+var stringLenBetweenSchemaCache tfsync.Map[stringLenBetweenIdentity, *schema.Schema]
 
 func stringLenBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
+	if handling == attrComputed {
+		return stringComputedOnly()
+	}
+
 	id := stringLenBetweenIdentity{
 		handling: handling,
 		min:      min,
@@ -218,9 +231,13 @@ type stringMatchIdentity struct {
 	re, message string
 }
 
-var stringMatchSchemaCache syncMap[stringMatchIdentity, *schema.Schema]
+var stringMatchSchemaCache tfsync.Map[stringMatchIdentity, *schema.Schema]
 
 func stringMatchSchema(handling attrHandling, re, message string) *schema.Schema {
+	if handling == attrComputed {
+		return stringComputedOnly()
+	}
+
 	id := stringMatchIdentity{
 		handling: handling,
 		re:       re,
@@ -252,9 +269,13 @@ type stringEnumIdentity struct {
 	typ      reflect.Type
 }
 
-var stringEnumSchemaCache syncMap[stringEnumIdentity, *schema.Schema]
+var stringEnumSchemaCache tfsync.Map[stringEnumIdentity, *schema.Schema]
 
 func stringEnumSchema[T enum.Valueser[T]](handling attrHandling) *schema.Schema {
+	if handling == attrComputed {
+		return stringComputedOnly()
+	}
+
 	id := stringEnumIdentity{
 		handling: handling,
 		typ:      reflect.TypeFor[T](),
@@ -280,31 +301,44 @@ func stringEnumSchema[T enum.Valueser[T]](handling attrHandling) *schema.Schema 
 	return s
 }
 
-// syncMap is a type-safe wrapper around `sync.Map`
-type syncMap[K comparable, V any] struct {
-	m sync.Map
+func stringEnumDataSourceSchema[T enum.Valueser[T]]() *schema.Schema {
+	return stringEnumSchema[T](attrComputed)
 }
 
-func (m *syncMap[K, V]) Load(k K) (V, bool) {
-	if a, b := m.m.Load(k); b {
-		return a.(V), true
-	} else {
-		var zero V
-		return zero, false
+var stringComputedOnly = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
 	}
-}
+})
 
-func (m *syncMap[K, V]) LoadOrStore(k K, v V) (V, bool) {
-	a, b := m.m.LoadOrStore(k, v)
-	return a.(V), b
-}
+var boolComputedOnly = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeBool,
+		Computed: true,
+	}
+})
+
+var intComputedOnly = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeInt,
+		Computed: true,
+	}
+})
+
+var floatComputedOnly = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeFloat,
+		Computed: true,
+	}
+})
 
 type intBetweenIdentity struct {
 	handling attrHandling
 	min, max int
 }
 
-var intBetweenSchemaCache syncMap[intBetweenIdentity, *schema.Schema]
+var intBetweenSchemaCache tfsync.Map[intBetweenIdentity, *schema.Schema]
 
 func intBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
 	id := intBetweenIdentity{
@@ -365,7 +399,7 @@ type floatBetweenIdentity struct {
 	min, max float64
 }
 
-var floatBetweenSchemaCache syncMap[floatBetweenIdentity, *schema.Schema]
+var floatBetweenSchemaCache tfsync.Map[floatBetweenIdentity, *schema.Schema]
 
 func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema {
 	id := floatBetweenIdentity{
@@ -394,7 +428,7 @@ func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema 
 	return s
 }
 
-var aggregationFunctionSchemaCache syncMap[bool, *schema.Schema]
+var aggregationFunctionSchemaCache tfsync.Map[bool, *schema.Schema]
 
 func aggregationFunctionSchema(required bool) *schema.Schema {
 	s, ok := aggregationFunctionSchemaCache.Load(required)
@@ -424,6 +458,20 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 	return s
 }
 
+var aggregationFunctionDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"categorical_aggregation_function": stringEnumDataSourceSchema[awstypes.CategoricalAggregationFunction](),
+				"date_aggregation_function":        stringEnumDataSourceSchema[awstypes.DateAggregationFunction](),
+				"numerical_aggregation_function":   numericalAggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+			},
+		},
+	}
+})
+
 var calculatedFieldsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 		Type:     schema.TypeSet,
@@ -440,7 +488,21 @@ var calculatedFieldsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-var numericalAggregationFunctionSchemaCache syncMap[bool, *schema.Schema]
+var calculatedFieldsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringComputedOnly(),
+				names.AttrExpression:  stringComputedOnly(),
+				names.AttrName:        stringComputedOnly(),
+			},
+		},
+	}
+})
+
+var numericalAggregationFunctionSchemaCache tfsync.Map[bool, *schema.Schema]
 
 func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 	s, ok := numericalAggregationFunctionSchemaCache.Load(required)
@@ -479,6 +541,27 @@ func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 	return s
 }
 
+var numericalAggregationFunctionDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"percentile_aggregation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentileAggregation.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"percentile_value": floatComputedOnly(),
+						},
+					},
+				},
+				"simple_numerical_aggregation": stringEnumDataSourceSchema[awstypes.SimpleNumericalAggregationFunction](),
+			},
+		},
+	}
+})
+
 var idSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeString,
@@ -490,7 +573,14 @@ var idSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-var columnSchemaCache syncMap[bool, *schema.Schema]
+var idDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	}
+})
+
+var columnSchemaCache tfsync.Map[bool, *schema.Schema]
 
 func columnSchema(required bool) *schema.Schema {
 	s, ok := columnSchemaCache.Load(required)
@@ -518,6 +608,19 @@ func columnSchema(required bool) *schema.Schema {
 	)
 	return s
 }
+
+var columnDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_name":         stringComputedOnly(),
+				"data_set_identifier": stringComputedOnly(),
+			},
+		},
+	}
+})
 
 func dataSetConfigurationSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetConfiguration.html
@@ -605,6 +708,19 @@ var rollingDateConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringLenBetweenSchema(attrOptional, 1, 2048),
 				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 4096),
+			},
+		},
+	}
+})
+
+var rollingDateConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RollingDateConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringComputedOnly(),
+				names.AttrExpression:  stringComputedOnly(),
 			},
 		},
 	}
@@ -1674,7 +1790,7 @@ func flattenSheetDefinitions(apiObjects []awstypes.SheetDefinition) []any {
 			tfMap["text_boxes"] = flattenTextBoxes(apiObject.TextBoxes)
 		}
 		if apiObject.Title != nil {
-			tfMap["title"] = aws.ToString(apiObject.Title)
+			tfMap[attrTitle] = aws.ToString(apiObject.Title)
 		}
 		if apiObject.Visuals != nil {
 			tfMap["visuals"] = flattenVisuals(apiObject.Visuals)

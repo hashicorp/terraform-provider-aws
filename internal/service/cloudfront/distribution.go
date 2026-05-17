@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -13,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -31,6 +33,11 @@ import (
 
 // @SDKResource("aws_cloudfront_distribution", name="Distribution")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.Distribution")
+// @Testing(importIgnore="retain_on_delete;wait_for_deployment", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -41,9 +48,26 @@ func resourceDistribution() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				// Set non API attributes to their Default settings in the schema
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+
+				output, err := findDistributionByID(ctx, conn, d.Id())
+
+				if err != nil {
+					return nil, err
+				}
+
+				if connectionMode := output.Distribution.DistributionConfig.ConnectionMode; connectionMode == awstypes.ConnectionModeTenantOnly {
+					return nil, fmt.Errorf("distribution (%s) has incorrect connection mode: %s. Use the aws_cloudfront_multitenant_distribution resource instead", d.Id(), connectionMode)
+				}
+
+				// Set non API attributes to their default settings in the schema.
 				d.Set("retain_on_delete", false)
 				d.Set("wait_for_deployment", true)
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -69,10 +93,37 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cache_tag_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"header_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
+			},
+			"connection_function_association": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrID: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 64),
+						},
+					},
+				},
 			},
 			"continuous_deployment_policy_id": {
 				Type:     schema.TypeString,
@@ -740,6 +791,10 @@ func resourceDistribution() *schema.Resource {
 										Default:      30,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
+									names.AttrOwnerAccountID: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"vpc_origin_id": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -814,7 +869,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -846,7 +901,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -895,6 +950,41 @@ func resourceDistribution() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.SSLSupportMethod](),
+						},
+					},
+				},
+			},
+			"viewer_mtls_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMode: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ViewerMtlsMode](),
+						},
+						"trust_store_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"trust_store_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"advertise_trust_store_ca_names": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"ignore_certificate_expiry": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -953,7 +1043,8 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.CloudFrontClient(ctx)
 
 	output, err := findDistributionByID(ctx, conn, d.Id())
 
@@ -967,10 +1058,19 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceDistributionFlatten(ctx, awsClient, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceDistributionFlatten(ctx context.Context, awsClient *conns.AWSClient, output *cloudfront.GetDistributionOutput, d *schema.ResourceData) error {
 	distributionConfig := output.Distribution.DistributionConfig
+
 	if distributionConfig.Aliases != nil {
 		if err := d.Set("aliases", flattenAliases(distributionConfig.Aliases)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
+			return fmt.Errorf("setting aliases: %w", err)
 		}
 	}
 	d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
@@ -979,24 +1079,32 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if aws.ToString(distributionConfig.Comment) != "" {
 		d.Set(names.AttrComment, distributionConfig.Comment)
 	}
+	if err := d.Set("cache_tag_config", flattenCacheTagConfig(distributionConfig.CacheTagConfig)); err != nil {
+		return fmt.Errorf("setting cache_tag_config: %w", err)
+	}
+	if distributionConfig.ConnectionFunctionAssociation != nil {
+		if err := d.Set("connection_function_association", []any{flattenConnectionFunctionAssociation(distributionConfig.ConnectionFunctionAssociation)}); err != nil {
+			return fmt.Errorf("setting connection_function_association: %w", err)
+		}
+	}
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
 	// API call for staging distributions.
 	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 	if distributionConfig.CustomErrorResponses != nil {
 		if err := d.Set("custom_error_response", flattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting custom_error_response: %s", err)
+			return fmt.Errorf("setting custom_error_response: %w", err)
 		}
 	}
 	if err := d.Set("default_cache_behavior", []any{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_cache_behavior: %s", err)
+		return fmt.Errorf("setting default_cache_behavior: %w", err)
 	}
 	d.Set("default_root_object", distributionConfig.DefaultRootObject)
 	d.Set(names.AttrDomainName, output.Distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
-	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, awsClient.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
@@ -1004,7 +1112,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("logging_v1_enabled", distributionConfig.Logging.Enabled)
 		if aws.ToBool(distributionConfig.Logging.Enabled) || aws.ToBool(distributionConfig.Logging.IncludeCookies) {
 			if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+				return fmt.Errorf("setting logging_config: %w", err)
 			}
 		} else {
 			d.Set("logging_config", []any{})
@@ -1015,39 +1123,46 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if distributionConfig.CacheBehaviors != nil {
 		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting ordered_cache_behavior: %s", err)
+			return fmt.Errorf("setting ordered_cache_behavior: %w", err)
 		}
 	}
 	if aws.ToInt32(distributionConfig.Origins.Quantity) > 0 {
 		if err := d.Set("origin", flattenOrigins(distributionConfig.Origins)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting origin: %s", err)
+			return fmt.Errorf("setting origin: %w", err)
 		}
 	}
 	if aws.ToInt32(distributionConfig.OriginGroups.Quantity) > 0 {
 		if err := d.Set("origin_group", flattenOriginGroups(distributionConfig.OriginGroups)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting origin_group: %s", err)
+			return fmt.Errorf("setting origin_group: %w", err)
 		}
 	}
 	d.Set("price_class", distributionConfig.PriceClass)
 	if distributionConfig.Restrictions != nil {
 		if err := d.Set("restrictions", flattenRestrictions(distributionConfig.Restrictions)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting restrictions: %s", err)
+			return fmt.Errorf("setting restrictions: %w", err)
 		}
 	}
 	d.Set("staging", distributionConfig.Staging)
 	d.Set(names.AttrStatus, output.Distribution.Status)
 	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(output.Distribution.ActiveTrustedKeyGroups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting trusted_key_groups: %s", err)
+		return fmt.Errorf("setting trusted_key_groups: %w", err)
 	}
 	if err := d.Set("trusted_signers", flattenActiveTrustedSigners(output.Distribution.ActiveTrustedSigners)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting trusted_signers: %s", err)
+		return fmt.Errorf("setting trusted_signers: %w", err)
 	}
 	if err := d.Set("viewer_certificate", flattenViewerCertificate(distributionConfig.ViewerCertificate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting viewer_certificate: %s", err)
+		return fmt.Errorf("setting viewer_certificate: %w", err)
+	}
+	if distributionConfig.ViewerMtlsConfig != nil {
+		if err := d.Set("viewer_mtls_config", flattenViewerMtlsConfig(distributionConfig.ViewerMtlsConfig)); err != nil {
+			return fmt.Errorf("setting viewer_mtls_config: %w", err)
+		}
+	} else {
+		d.Set("viewer_mtls_config", []any{})
 	}
 	d.Set("web_acl_id", distributionConfig.WebACLId)
 
-	return diags
+	return nil
 }
 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1209,7 +1324,7 @@ func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 		return fmt.Errorf("deleting CloudFront Distribution (%s): %w", id, err)
 	}
 
-	if _, err := waitDistributionDeleted(ctx, conn, id); err != nil {
+	if err := waitDistributionDeleted(ctx, conn, id); err != nil {
 		return fmt.Errorf("waiting for CloudFront Distribution (%s) delete: %w", id, err)
 	}
 
@@ -1276,12 +1391,15 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetDistribution(ctx, &input)
+	return findDistribution(ctx, conn, &input)
+}
+
+func findDistribution(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetDistributionInput) (*cloudfront.GetDistributionOutput, error) {
+	output, err := conn.GetDistribution(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1290,14 +1408,14 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	}
 
 	if output == nil || output.Distribution == nil || output.Distribution.DistributionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDistribution(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDistributionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -1317,10 +1435,10 @@ func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 }
 
 func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress},
 		Target:     []string{distributionStatusDeployed},
-		Refresh:    statusDistribution(ctx, conn, id),
+		Refresh:    statusDistribution(conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      30 * time.Second,
@@ -1335,29 +1453,25 @@ func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id s
 	return nil, err
 }
 
-func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) error {
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress, distributionStatusDeployed},
 		Target:     []string{},
-		Refresh:    statusDistribution(ctx, conn, id),
+		Refresh:    statusDistribution(conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudfront.GetDistributionOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConfig {
 	apiObject := &awstypes.DistributionConfig{
 		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]any)),
-		CallerReference:              aws.String(id.UniqueId()),
+		CallerReference:              aws.String(sdkid.UniqueId()),
 		Comment:                      aws.String(d.Get(names.AttrComment).(string)),
 		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
 		CustomErrorResponses:         expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
@@ -1386,6 +1500,14 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		apiObject.CallerReference = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("cache_tag_config"); ok {
+		apiObject.CacheTagConfig = expandCacheTagConfig(v.([]any))
+	}
+
+	if v, ok := d.GetOk("connection_function_association"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ConnectionFunctionAssociation = expandConnectionFunctionAssociation(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.Logging = expandLoggingConfig(v.([]any)[0].(map[string]any))
 	} else {
@@ -1402,6 +1524,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 
 	if v, ok := d.GetOk("viewer_certificate"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.ViewerCertificate = expandViewerCertificate(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("viewer_mtls_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ViewerMtlsConfig = expandViewerMtlsConfig(v.([]any)[0].(map[string]any))
 	}
 
 	return apiObject
@@ -1532,7 +1658,7 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["forwarded_values"] = []any{flattenForwardedValues(apiObject.ForwardedValues)}
 	}
 
-	if len(apiObject.FunctionAssociations.Items) > 0 {
+	if apiObject.FunctionAssociations != nil && len(apiObject.FunctionAssociations.Items) > 0 {
 		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
@@ -1540,7 +1666,7 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["grpc_config"] = []any{flattenGRPCConfig(apiObject.GrpcConfig)}
 	}
 
-	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
+	if apiObject.LambdaFunctionAssociations != nil && len(apiObject.LambdaFunctionAssociations.Items) > 0 {
 		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
 
@@ -1556,11 +1682,11 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["smooth_streaming"] = aws.ToBool(apiObject.SmoothStreaming)
 	}
 
-	if len(apiObject.TrustedKeyGroups.Items) > 0 {
+	if apiObject.TrustedKeyGroups != nil && len(apiObject.TrustedKeyGroups.Items) > 0 {
 		tfMap["trusted_key_groups"] = flattenTrustedKeyGroups(apiObject.TrustedKeyGroups)
 	}
 
-	if len(apiObject.TrustedSigners.Items) > 0 {
+	if apiObject.TrustedSigners != nil && len(apiObject.TrustedSigners.Items) > 0 {
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
@@ -1682,7 +1808,7 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["forwarded_values"] = []any{flattenForwardedValues(apiObject.ForwardedValues)}
 	}
 
-	if len(apiObject.FunctionAssociations.Items) > 0 {
+	if apiObject.FunctionAssociations != nil && len(apiObject.FunctionAssociations.Items) > 0 {
 		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
@@ -1690,7 +1816,7 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["grpc_config"] = []any{flattenGRPCConfig(apiObject.GrpcConfig)}
 	}
 
-	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
+	if apiObject.LambdaFunctionAssociations != nil && len(apiObject.LambdaFunctionAssociations.Items) > 0 {
 		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
 
@@ -1702,11 +1828,11 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["smooth_streaming"] = aws.ToBool(apiObject.SmoothStreaming)
 	}
 
-	if len(apiObject.TrustedKeyGroups.Items) > 0 {
+	if apiObject.TrustedKeyGroups != nil && len(apiObject.TrustedKeyGroups.Items) > 0 {
 		tfMap["trusted_key_groups"] = flattenTrustedKeyGroups(apiObject.TrustedKeyGroups)
 	}
 
-	if len(apiObject.TrustedSigners.Items) > 0 {
+	if apiObject.TrustedSigners != nil && len(apiObject.TrustedSigners.Items) > 0 {
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
@@ -2531,11 +2657,17 @@ func expandVPCOriginConfig(tfMap map[string]any) *awstypes.VpcOriginConfig {
 		return nil
 	}
 
-	return &awstypes.VpcOriginConfig{
+	apiObject := &awstypes.VpcOriginConfig{
 		OriginKeepaliveTimeout: aws.Int32(int32(tfMap["origin_keepalive_timeout"].(int))),
 		OriginReadTimeout:      aws.Int32(int32(tfMap["origin_read_timeout"].(int))),
 		VpcOriginId:            aws.String(tfMap["vpc_origin_id"].(string)),
 	}
+
+	if v, ok := tfMap[names.AttrOwnerAccountID].(string); ok && v != "" {
+		apiObject.OwnerAccountId = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenOriginShield(apiObject *awstypes.OriginShield) map[string]any {
@@ -2564,11 +2696,17 @@ func flattenVPCOriginConfig(apiObject *awstypes.VpcOriginConfig) map[string]any 
 		return nil
 	}
 
-	return map[string]any{
+	tfMap := map[string]any{
 		"origin_keepalive_timeout": aws.ToInt32(apiObject.OriginKeepaliveTimeout),
 		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
 		"vpc_origin_id":            aws.ToString(apiObject.VpcOriginId),
 	}
+
+	if v := aws.ToString(apiObject.OwnerAccountId); v != "" {
+		tfMap[names.AttrOwnerAccountID] = v
+	}
+
+	return tfMap
 }
 
 func expandCustomErrorResponses(tfList []any) *awstypes.CustomErrorResponses {
@@ -2719,6 +2857,30 @@ func flattenAliases(apiObject *awstypes.Aliases) []any {
 	return []any{}
 }
 
+func expandCacheTagConfig(tfList []any) *awstypes.CacheTagConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.CacheTagConfig{
+		HeaderName: aws.String(tfMap["header_name"].(string)),
+	}
+
+	return apiObject
+}
+
+func flattenCacheTagConfig(apiObject *awstypes.CacheTagConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{
+		"header_name": aws.ToString(apiObject.HeaderName),
+	}
+
+	return []any{tfMap}
+}
+
 func expandRestrictions(tfMap map[string]any) *awstypes.Restrictions {
 	if tfMap == nil {
 		return nil
@@ -2832,7 +2994,7 @@ func flattenActiveTrustedKeyGroups(apiObject *awstypes.ActiveTrustedKeyGroups) [
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenKGKeyPairIDs(apiObject.Items),
+		attrItems:         flattenKGKeyPairIDs(apiObject.Items),
 	}
 
 	return []any{tfMap}
@@ -2860,7 +3022,7 @@ func flattenActiveTrustedSigners(apiObject *awstypes.ActiveTrustedSigners) []any
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenSigners(apiObject.Items),
+		attrItems:         flattenSigners(apiObject.Items),
 	}
 
 	return []any{tfMap}
@@ -2879,4 +3041,99 @@ func flattenSigners(apiObjects []awstypes.Signer) []any {
 	}
 
 	return tfList
+}
+func expandConnectionFunctionAssociation(tfMap map[string]any) *awstypes.ConnectionFunctionAssociation {
+	if tfMap == nil {
+		return nil
+	}
+
+	return &awstypes.ConnectionFunctionAssociation{
+		Id: aws.String(tfMap[names.AttrID].(string)),
+	}
+}
+
+func flattenConnectionFunctionAssociation(apiObject *awstypes.ConnectionFunctionAssociation) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return map[string]any{
+		names.AttrID: aws.ToString(apiObject.Id),
+	}
+}
+
+func expandViewerMtlsConfig(tfMap map[string]any) *awstypes.ViewerMtlsConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ViewerMtlsConfig{}
+
+	if v, ok := tfMap[names.AttrMode]; ok && v.(string) != "" {
+		apiObject.Mode = awstypes.ViewerMtlsMode(v.(string))
+	}
+
+	if v, ok := tfMap["trust_store_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TrustStoreConfig = expandTrustStoreConfig(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func flattenViewerMtlsConfig(apiObject *awstypes.ViewerMtlsConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]any)
+
+	if apiObject.Mode != "" {
+		tfMap[names.AttrMode] = string(apiObject.Mode)
+	}
+
+	if apiObject.TrustStoreConfig != nil {
+		tfMap["trust_store_config"] = []any{flattenTrustStoreConfig(apiObject.TrustStoreConfig)}
+	}
+
+	return []any{tfMap}
+}
+
+func expandTrustStoreConfig(tfMap map[string]any) *awstypes.TrustStoreConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.TrustStoreConfig{
+		TrustStoreId: aws.String(tfMap["trust_store_id"].(string)),
+	}
+
+	if v, ok := tfMap["advertise_trust_store_ca_names"]; ok {
+		apiObject.AdvertiseTrustStoreCaNames = aws.Bool(v.(bool))
+	}
+
+	if v, ok := tfMap["ignore_certificate_expiry"]; ok {
+		apiObject.IgnoreCertificateExpiry = aws.Bool(v.(bool))
+	}
+
+	return apiObject
+}
+
+func flattenTrustStoreConfig(apiObject *awstypes.TrustStoreConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"trust_store_id": aws.ToString(apiObject.TrustStoreId),
+	}
+
+	if apiObject.AdvertiseTrustStoreCaNames != nil {
+		tfMap["advertise_trust_store_ca_names"] = aws.ToBool(apiObject.AdvertiseTrustStoreCaNames)
+	}
+
+	if apiObject.IgnoreCertificateExpiry != nil {
+		tfMap["ignore_certificate_expiry"] = aws.ToBool(apiObject.IgnoreCertificateExpiry)
+	}
+
+	return tfMap
 }

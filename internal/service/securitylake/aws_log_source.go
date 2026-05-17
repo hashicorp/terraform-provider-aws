@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securitylake
 
@@ -19,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -114,7 +115,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
 	})
 
@@ -212,7 +213,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.DeleteAwsLogSourceOutput, error) {
 		return conn.DeleteAwsLogSource(ctx, input)
 	})
 
@@ -236,9 +237,8 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -266,7 +266,7 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(sourceName)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

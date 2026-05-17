@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -14,11 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -143,7 +144,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	input := &route53.CreateKeySigningKeyInput{
-		CallerReference: aws.String(sdkid.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 		HostedZoneId:    aws.String(hostedZoneID),
 		Name:            aws.String(name),
 		Status:          aws.String(status),
@@ -336,9 +337,8 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 	output, err := conn.GetDNSSEC(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) || errs.IsA[*awstypes.NoSuchKeySigningKey](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -347,7 +347,7 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.KeySigningKeys {
@@ -356,11 +356,11 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
-func statusKeySigningKey(ctx context.Context, conn *route53.Client, hostedZoneID, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKeySigningKey(conn *route53.Client, hostedZoneID, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findKeySigningKeyByTwoPartKey(ctx, conn, hostedZoneID, name)
 
 		if retry.NotFound(err) {
@@ -379,9 +379,9 @@ func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Client, h
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusKeySigningKey(ctx, conn, hostedZoneID, name),
+		Refresh:    statusKeySigningKey(conn, hostedZoneID, name),
 		MinTimeout: 5 * time.Second,
 		Timeout:    timeout,
 	}
@@ -390,7 +390,7 @@ func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Client, h
 
 	if output, ok := outputRaw.(*awstypes.KeySigningKey); ok {
 		if status := aws.ToString(output.Status); status == keySigningKeyStatusInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

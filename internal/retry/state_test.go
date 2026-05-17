@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry
@@ -192,6 +192,10 @@ func TestWaitForState_timeout(t *testing.T) {
 
 	if obj != nil {
 		t.Fatalf("should not return obj")
+	}
+
+	if !TimedOut(err) {
+		t.Fatalf("Expected TimedOut to return true, err: %s", err)
 	}
 }
 

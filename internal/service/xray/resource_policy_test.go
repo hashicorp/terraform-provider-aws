@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package xray_test
@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
@@ -25,21 +23,21 @@ import (
 func TestAccXRayResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcepolicy types.ResourcePolicy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_xray_resource_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_check", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "policy_revision_id", "1"),
@@ -113,22 +111,22 @@ func TestAccXRayResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var resourcepolicy types.ResourcePolicy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_xray_resource_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfxray.ResourceResourcePolicy, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfxray.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,9 +134,9 @@ func TestAccXRayResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_xray_resource_policy" {
@@ -162,7 +160,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, name string, resourcepolicy *types.ResourcePolicy) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name string, resourcepolicy *types.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -173,7 +171,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 			return create.Error(names.XRay, create.ErrActionCheckingExistence, tfxray.ResNameResourcePolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
 
 		output, err := tfxray.FindResourcePolicyByName(ctx, conn, rs.Primary.Attributes["policy_name"])
 

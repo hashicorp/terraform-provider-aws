@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kinesis
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -564,7 +565,7 @@ func findLimits(ctx context.Context, conn *kinesis.Client) (*kinesis.DescribeLim
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -578,9 +579,8 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 	output, err := conn.DescribeStreamSummary(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -589,14 +589,14 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 	}
 
 	if output == nil || output.StreamDescriptionSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StreamDescriptionSummary, nil
 }
 
-func streamStatus(ctx context.Context, conn *kinesis.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func streamStatus(conn *kinesis.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStreamByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -612,10 +612,10 @@ func streamStatus(ctx context.Context, conn *kinesis.Client, name string) sdkret
 }
 
 func waitStreamCreated(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusCreating),
 		Target:     enum.Slice(types.StreamStatusActive),
-		Refresh:    streamStatus(ctx, conn, name),
+		Refresh:    streamStatus(conn, name),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -631,10 +631,10 @@ func waitStreamCreated(ctx context.Context, conn *kinesis.Client, name string, t
 }
 
 func waitStreamDeleted(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusDeleting),
 		Target:     []string{},
-		Refresh:    streamStatus(ctx, conn, name),
+		Refresh:    streamStatus(conn, name),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -650,10 +650,10 @@ func waitStreamDeleted(ctx context.Context, conn *kinesis.Client, name string, t
 }
 
 func waitStreamUpdated(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusUpdating),
 		Target:     enum.Slice(types.StreamStatusActive),
-		Refresh:    streamStatus(ctx, conn, name),
+		Refresh:    streamStatus(conn, name),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

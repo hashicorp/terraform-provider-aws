@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package listresourceattribute
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var Region = sync.OnceValue(func() schema.Attribute {
+var Region = sync.OnceValue(func() schema.StringAttribute {
 	return schema.StringAttribute{
 		Optional:    true,
 		Description: names.ListResourceTopLevelRegionAttributeDescription,

@@ -1,10 +1,14 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package enum
 
 import (
+	"reflect"
+
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type Valueser[T ~string] interface {
@@ -13,12 +17,30 @@ type Valueser[T ~string] interface {
 }
 
 func EnumValues[T Valueser[T]]() []T {
-	var zero T
-	return zero.Values()
+	return inttypes.Zero[T]().Values()
 }
 
 func Values[T Valueser[T]]() []string {
-	return tfslices.Strings(EnumValues[T]())
+	typ := reflect.TypeFor[T]()
+
+	s, ok := valuesCache.Load(typ)
+	if ok {
+		return s
+	}
+
+	// Separates the slow path so that the fast path can be inlined
+	return valuesSlow[T]()
+}
+
+var valuesCache tfsync.Map[reflect.Type, []string]
+
+func valuesSlow[T Valueser[T]]() []string {
+	typ := reflect.TypeFor[T]()
+	s, _ := valuesCache.LoadOrStore(
+		typ,
+		tfslices.Strings(EnumValues[T]()),
+	)
+	return s
 }
 
 func EnumSlice[T ~string](l ...T) []T {

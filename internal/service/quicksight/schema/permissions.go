@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -43,10 +43,7 @@ func PermissionsDataSourceSchema() *schema.Schema {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrPrincipal: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
+				names.AttrPrincipal: stringComputedOnly(),
 			},
 		},
 	}

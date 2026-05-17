@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -37,7 +37,7 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 	exaInfraResource := "aws_odb_cloud_exadata_infrastructure.test"
 	exaInfraDataSource := "data.aws_odb_cloud_exadata_infrastructure.test"
 	displayNameSuffix := sdkacctest.RandomWithPrefix(exaInfraDataSourceTestEntity.displayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 

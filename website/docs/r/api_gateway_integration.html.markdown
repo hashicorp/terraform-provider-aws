@@ -58,10 +58,9 @@ EOF
 ## Lambda integration
 
 ```terraform
-# Variables
-variable "myregion" {}
-
-variable "accountId" {}
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 # API Gateway
 resource "aws_api_gateway_rest_api" "api" {
@@ -98,7 +97,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   principal     = "apigateway.amazonaws.com"
 
   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
-  source_arn = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
+  source_arn = "arn:${data.aws_partition.current.partition}:execute-api:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -128,6 +127,24 @@ data "aws_iam_policy_document" "assume_role" {
 resource "aws_iam_role" "role" {
   name               = "myrole"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+```
+
+## Lambda integration with response streaming
+
+All other resources and data sources are the same as in [the previous example](#lambda-integration); only the integration configuration differs.
+Note that the `timeout` of the `aws_lambda_function` may need to be adjusted.
+
+```terraform
+resource "aws_api_gateway_integration" "integration" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.lambda.response_streaming_invoke_arn
+  response_transfer_mode  = "STREAM"
+  timeout_milliseconds    = 900000
 }
 ```
 
@@ -303,6 +320,36 @@ The `tls_config` configuration block supports the following arguments:
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_api_gateway_integration.example
+  identity = {
+    rest_api_id = "12345abcde"
+    resource_id = "67890fghij"
+    http_method = "GET"
+  }
+}
+
+resource "aws_api_gateway_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `rest_api_id` (String) - ID of the associated REST API.
+* `resource_id` (String) - API resource ID.
+* `http_method` (String) - HTTP Method.
+
+#### Optional
+
+* `account_id` (String) - AWS Account where this resource is managed.
+* `region` (String) - Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_integration` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`. For example:
 

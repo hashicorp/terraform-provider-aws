@@ -131,8 +131,9 @@ resource "aws_lambda_event_source_mapping" "example" {
   }
 
   provisioned_poller_config {
-    maximum_pollers = 100
-    minimum_pollers = 10
+    maximum_pollers   = 100
+    minimum_pollers   = 10
+    poller_group_name = "group-123"
   }
 }
 ```
@@ -242,7 +243,7 @@ The following arguments are optional:
 
 #### destination_config on_failure Configuration Block
 
-* `destination_arn` - (Required) ARN of the destination resource.
+* `destination_arn` - (Required) ARN of the destination resource, or `kafka://your-topic-name` for Amazon MSK and self-managed Apache Kafka destinations.
 
 ### document_db_event_source_config Configuration Block
 
@@ -266,6 +267,7 @@ The following arguments are optional:
 
 * `maximum_pollers` - (Optional) Maximum number of event pollers this event source can scale up to. The range is between 1 and 2000.
 * `minimum_pollers` - (Optional) Minimum number of event pollers this event source can scale down to. The range is between 1 and 200.
+* `poller_group_name` - (Optional) The name of the provisioned poller group used to group multiple ESMs within the event source's VPC to share Event Poller Unit (EPU) capacity. You can use this option to optimize Provisioned mode costs for your ESMs. You can group up to 100 ESMs per poller group and aggregate maximum pollers across all ESMs in a group cannot exceed 2000.
 
 ### scaling_config Configuration Block
 
@@ -309,6 +311,28 @@ This resource exports the following attributes in addition to the arguments abov
 * `uuid` - UUID of the created event source mapping.
 
 ## Import
+
+In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute to import Lambda event source mappings. For example:
+
+```terraform
+import {
+  to = aws_lambda_event_source_mapping.example
+  identity = {
+    uuid = "12345kxodurf3443"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `uuid` (String) UUID of the event source mapping.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
 

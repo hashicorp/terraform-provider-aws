@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -23,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -41,7 +42,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.VpcEncryptionControl")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="egress_only_internet_gateway_exclusion;elastic_file_system_exclusion;internet_gateway_exclusion;lambda_exclusion;nat_gateway_exclusion;virtual_private_gateway_exclusion;vpc_lattice_exclusion;vpc_peering_exclusion")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(generator=false)
 func newResourceVPCEncryptionControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCEncryptionControl{}
@@ -480,7 +480,7 @@ func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan reso
 	}
 
 	ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), timeout)
-	if use, ok := errs.As[*retry.UnexpectedStateError](err); ok && use.State == string(awstypes.VpcEncryptionControlStateEnforceFailed) {
+	if use, ok := errors.AsType[*retry.UnexpectedStateError](err); ok && use.State == string(awstypes.VpcEncryptionControlStateEnforceFailed) {
 		// Ignore errors here and fall through to the outer error
 		blockers, _ := encryptionEnforcementBlockers(ctx, conn, plan.VPCID.ValueString())
 		if len(blockers) > 0 {

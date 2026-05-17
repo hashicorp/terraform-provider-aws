@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -10,8 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"maps"
 	"os"
 	"path"
@@ -21,6 +19,8 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/dlclark/regexp2" // Regexps include Perl syntax.
 	"github.com/hashicorp/go-version"
@@ -87,7 +87,19 @@ func main() {
 		g: g,
 	}
 
-	v.processDir(".")
+	for file, err := range common.ScanDirectory(".") {
+		if err != nil {
+			g.Fatalf("%s", err.Error())
+		}
+
+		v.packageName = file.PackageName()
+		v.fileName = file.Name()
+
+		v.processFile(file.File())
+
+		v.fileName = ""
+		v.packageName = ""
+	}
 
 	if err := errors.Join(v.errs...); err != nil {
 		g.Fatalf("%s", err.Error())
@@ -121,6 +133,14 @@ func main() {
 			},
 			"NewVersion":            version.NewVersion,
 			"VersionDecrementMinor": common.VersionDecrementMinor,
+			// FirstUpper returns a string with the first character as upper case.
+			"FirstUpper": func(s string) string {
+				if s == "" {
+					return ""
+				}
+				r, n := utf8.DecodeRuneInString(s)
+				return string(unicode.ToUpper(r)) + s[n:]
+			},
 		}
 		templates := template.New("identitytests").Funcs(templateFuncMap)
 
@@ -142,140 +162,141 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
-		basicConfigTmplFile := fmt.Sprintf("%s_basic.gtpl", sourceName)
-		basicConfigTmplPath := path.Join("testdata", "tmpl", basicConfigTmplFile)
-		var configTmplFile string
-		var configTmplPath string
-		if _, err := os.Stat(basicConfigTmplPath); err == nil {
-			configTmplFile = basicConfigTmplFile
-			configTmplPath = basicConfigTmplPath
-		} else if !errors.Is(err, os.ErrNotExist) {
-			g.Fatalf("accessing config template %q: %w", basicConfigTmplPath, err)
-		}
-
-		tagsConfigTmplFile := fmt.Sprintf("%s_tags.gtpl", sourceName)
-		tagsConfigTmplPath := path.Join("testdata", "tmpl", tagsConfigTmplFile)
-		if configTmplPath == "" {
-			if _, err := os.Stat(tagsConfigTmplPath); err == nil {
-				configTmplFile = tagsConfigTmplFile
-				configTmplPath = tagsConfigTmplPath
+		for _, testCaseName := range resource.IdentityTestCases {
+			testCaseConfigTmplFile := fmt.Sprintf("%s_%s.gtpl", sourceName, testCaseName)
+			testCaseConfigTmplPath := path.Join("testdata", "tmpl", testCaseConfigTmplFile)
+			var configTmplFile string
+			var configTmplPath string
+			if _, err := os.Stat(testCaseConfigTmplPath); err == nil {
+				configTmplFile = testCaseConfigTmplFile
+				configTmplPath = testCaseConfigTmplPath
 			} else if !errors.Is(err, os.ErrNotExist) {
-				g.Fatalf("accessing config template %q: %w", tagsConfigTmplPath, err)
+				g.Fatalf("accessing config template %q: %w", testCaseConfigTmplPath, err)
 			}
-		}
 
-		if configTmplPath == "" {
-			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplPath, tagsConfigTmplPath)
-			continue
-		}
+			if configTmplPath == "" {
+				g.Errorf("identitytests: no config template found for %q at %q", sourceName, testCaseConfigTmplPath)
+				continue
+			}
 
-		b, err := os.ReadFile(configTmplPath)
-		if err != nil {
-			g.Fatalf("reading config template %q: %w", configTmplPath, err)
-		}
-		configTmpl := string(b)
-		resource.GenerateConfig = true
-
-		if resource.GenerateConfig {
-			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars_)
-			slices.Sort(additionalTfVars)
-			testDirPath := path.Join("testdata", resource.Name)
-
-			tfTemplates, err := template.New("identitytests").Parse(testTfTmpl)
+			b, err := os.ReadFile(configTmplPath)
 			if err != nil {
-				g.Fatalf("parsing base Terraform config template: %s", err)
+				g.Fatalf("reading config template %q: %w", configTmplPath, err)
 			}
+			configTmpl := string(b)
+			resource.GenerateConfig = true
 
-			tfTemplates, err = tests.AddCommonTfTemplates(tfTemplates)
-			if err != nil {
-				g.Fatalf(err.Error())
-			}
+			if resource.GenerateConfig {
+				additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars_)
+				slices.Sort(additionalTfVars)
+				testDirPath := path.Join("testdata", resource.Name)
 
-			_, err = tfTemplates.New("body").Parse(configTmpl)
-			if err != nil {
-				g.Fatalf("parsing config template %q: %s", configTmplPath, err)
-			}
+				tfTemplates, err := template.New("identitytests").Parse(testTfTmpl)
+				if err != nil {
+					g.Fatalf("parsing base Terraform config template: %s", err)
+				}
 
-			_, err = tfTemplates.New("region").Parse("")
-			if err != nil {
-				g.Fatalf("parsing config template: %s", err)
-			}
+				tfTemplates, err = tests.AddCommonTfTemplates(tfTemplates)
+				if err != nil {
+					g.Fatalf(err.Error())
+				}
 
-			commonConfig := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				RequiredEnvVars:  resource.RequiredEnvVars,
-				WithRName:        (resource.Generator != ""),
-			}
+				_, err = tfTemplates.New("body").Parse(configTmpl)
+				if err != nil {
+					g.Fatalf("parsing config template %q: %s", configTmplPath, err)
+				}
 
-			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
+				_, err = tfTemplates.New("region").Parse("")
+				if err != nil {
+					g.Fatalf("parsing config template: %s", err)
+				}
 
-			var versions []*version.Version
+				commonConfig := commonConfig{
+					AdditionalTfVars:      additionalTfVars,
+					RequiredEnvVars:       resource.RequiredEnvVars,
+					RequiredEnvVarValues:  resource.RequiredEnvVarValues,
+					WithRName:             (resource.Generator != ""),
+					AlternateRegionTfVars: resource.AlternateRegionTfVars,
+				}
 
-			if resource.PreIdentityVersion != nil {
-				if resource.PreIdentityVersion.Equal(v5_100_0) {
-					tfTemplatesV5, err := tfTemplates.Clone()
+				configName := "basic"
+				if testCaseName != "basic" {
+					configName = testCaseName + "_basic"
+				}
+				generateTestConfig(g, testDirPath, configName, tfTemplates, commonConfig)
+
+				var versions []*version.Version
+
+				if resource.PreIdentityVersion != nil {
+					if resource.PreIdentityVersion.Equal(v5_100_0) {
+						tfTemplatesV5, err := tfTemplates.Clone()
+						if err != nil {
+							g.Fatalf("cloning Terraform config template: %s", err)
+						}
+						ext := filepath.Ext(configTmplFile)
+						name := strings.TrimSuffix(configTmplFile, ext)
+						configTmplV5File := name + "_v5.100.0" + ext
+						configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
+						if _, err := os.Stat(configTmplV5Path); err == nil {
+							b, err := os.ReadFile(configTmplV5Path)
+							if err != nil {
+								g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+							}
+							configTmplV5 := string(b)
+							_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
+							if err != nil {
+								g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+							}
+						}
+						commonConfigV5 := commonConfig
+						commonConfigV5.ExternalProviders = map[string]requiredProvider{
+							"aws": {
+								Source:  "hashicorp/aws",
+								Version: "5.100.0",
+							},
+						}
+						generateTestConfig(g, testDirPath, fmt.Sprintf("%s_v5.100.0", testCaseName), tfTemplatesV5, commonConfigV5)
+
+						versions = append(versions, version.Must(version.NewVersion("6.0.0")))
+					} else {
+						versions = append(versions, resource.PreIdentityVersion)
+					}
+				}
+
+				if len(resource.IdentityVersions) > 1 {
+					v := resource.IdentityVersions[1]
+					v, err := common.VersionDecrementMinor(v)
 					if err != nil {
-						g.Fatalf("cloning Terraform config template: %s", err)
+						g.Fatalf("generating versioned configurations: %s", err)
 					}
-					ext := filepath.Ext(configTmplFile)
-					name := strings.TrimSuffix(configTmplFile, ext)
-					configTmplV5File := name + "_v5.100.0" + ext
-					configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
-					if _, err := os.Stat(configTmplV5Path); err == nil {
-						b, err := os.ReadFile(configTmplV5Path)
-						if err != nil {
-							g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
-						}
-						configTmplV5 := string(b)
-						_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
-						if err != nil {
-							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
-						}
-					}
-					commonConfigV5 := commonConfig
-					commonConfigV5.ExternalProviders = map[string]requiredProvider{
+					versions = append(versions, v)
+				}
+
+				for _, version := range versions {
+					common := commonConfig
+					common.ExternalProviders = map[string]requiredProvider{
 						"aws": {
 							Source:  "hashicorp/aws",
-							Version: "5.100.0",
+							Version: version.String(),
 						},
 					}
-					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonConfigV5)
-
-					versions = append(versions, version.Must(version.NewVersion("6.0.0")))
-				} else {
-					versions = append(versions, resource.PreIdentityVersion)
+					generateTestConfig(g, testDirPath, fmt.Sprintf("%s_v%s", testCaseName, version.String()), tfTemplates, common)
 				}
-			}
 
-			if len(resource.IdentityVersions) > 1 {
-				v := resource.IdentityVersions[1]
-				v, err := common.VersionDecrementMinor(v)
+				_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
 				if err != nil {
-					g.Fatalf("generating versioned configurations: %s", err)
+					g.Fatalf("parsing config template: %s", err)
 				}
-				versions = append(versions, v)
-			}
 
-			for _, version := range versions {
-				common := commonConfig
-				common.ExternalProviders = map[string]requiredProvider{
-					"aws": {
-						Source:  "hashicorp/aws",
-						Version: version.String(),
-					},
+				if resource.GenerateRegionOverrideTest() {
+					commonConfig.WithRegion = true
+
+					configName := "region_override"
+					if testCaseName != "basic" {
+						configName = testCaseName + "_region_override"
+					}
+					generateTestConfig(g, testDirPath, configName, tfTemplates, commonConfig)
 				}
-				generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", version.String()), tfTemplates, common)
-			}
-
-			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
-			if err != nil {
-				g.Fatalf("parsing config template: %s", err)
-			}
-
-			if resource.GenerateRegionOverrideTest() {
-				commonConfig.WithRegion = true
-
-				generateTestConfig(g, testDirPath, "region_override", tfTemplates, commonConfig)
 			}
 		}
 	}
@@ -368,11 +389,10 @@ type ResourceDatum struct {
 	arnAttribute             string
 	isARNFormatGlobal        common.TriBoolean
 	IsGlobal                 bool
+	RegionOverrideDeprecated bool
 	HasRegionOverrideTest    bool
 	IDAttrFormat             string
-	HasNoPreExistingResource bool
-	PreIdentityVersion       *version.Version
-	IdentityVersions         map[int64]*version.Version
+	IdentityTestCases        []string
 	tests.CommonArgs
 	common.ResourceIdentity
 }
@@ -418,30 +438,36 @@ func (d ResourceDatum) IsRegionalSingleton() bool {
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
-	return !d.IsGlobal && d.HasRegionOverrideTest
+	return d.HasRegionAttribute() && d.HasRegionOverrideTest
 }
 
 func (d ResourceDatum) HasInherentRegionImportID() bool {
-	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity()
+	return (d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity()) && !d.RegionOverrideDeprecated
 }
 
-func (r ResourceDatum) IsARNFormatGlobal() bool {
-	return r.isARNFormatGlobal == common.TriBooleanTrue
+func (d ResourceDatum) IsARNFormatGlobal() bool {
+	return d.isARNFormatGlobal == common.TriBooleanTrue
 }
 
-func (r ResourceDatum) LatestIdentityVersion() int64 {
-	if len(r.IdentityVersions) == 0 {
+func (d ResourceDatum) LatestIdentityVersion() int64 {
+	if len(d.IdentityVersions) == 0 {
 		return 0
 	}
-	return slices.Max(slices.Collect(maps.Keys(r.IdentityVersions)))
+	return slices.Max(slices.Collect(maps.Keys(d.IdentityVersions)))
+}
+
+func (d ResourceDatum) HasRegionAttribute() bool {
+	return !d.IsGlobal || d.RegionOverrideDeprecated
 }
 
 type commonConfig struct {
-	AdditionalTfVars  []string
-	WithRName         bool
-	WithRegion        bool
-	ExternalProviders map[string]requiredProvider
-	RequiredEnvVars   []string
+	AdditionalTfVars      []string
+	WithRName             bool
+	WithRegion            bool
+	AlternateRegionTfVars bool
+	ExternalProviders     map[string]requiredProvider
+	RequiredEnvVars       []string
+	RequiredEnvVarValues  []string
 }
 
 type requiredProvider struct {
@@ -479,35 +505,6 @@ type visitor struct {
 	identityResources []ResourceDatum
 }
 
-// processDir scans a single service package directory and processes contained Go sources files.
-func (v *visitor) processDir(path string) {
-	fileSet := token.NewFileSet()
-	packageMap, err := parser.ParseDir(fileSet, path, func(fi os.FileInfo) bool {
-		// Skip tests.
-		return !strings.HasSuffix(fi.Name(), "_test.go")
-	}, parser.ParseComments)
-
-	if err != nil {
-		v.errs = append(v.errs, fmt.Errorf("parsing (%s): %w", path, err))
-
-		return
-	}
-
-	for name, pkg := range packageMap {
-		v.packageName = name
-
-		for name, file := range pkg.Files {
-			v.fileName = name
-
-			v.processFile(file)
-
-			v.fileName = ""
-		}
-
-		v.packageName = ""
-	}
-}
-
 // processFile processes a single Go source file.
 func (v *visitor) processFile(file *ast.File) {
 	ast.Walk(v, file)
@@ -523,11 +520,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs:            tests.InitCommonArgs(),
 		IsGlobal:              false,
 		HasRegionOverrideTest: true,
-		IdentityVersions:      make(map[int64]*version.Version, 0),
+		IdentityTestCases:     []string{"basic"},
 	}
 	skip := false
 	tlsKey := false
 	var tlsKeyCN string
+	isDataSource := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -535,6 +533,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
 			case "FrameworkDataSource":
+				isDataSource = true
 				break
 
 			case "FrameworkResource":
@@ -551,6 +550,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKDataSource":
+				isDataSource = true
 				break
 
 			case "SDKResource":
@@ -597,6 +597,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.IsGlobal = global
 					}
 				}
+				if attr, ok := args.Keyword["overrideDeprecated"]; ok {
+					if deprecated, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.RegionOverrideDeprecated = deprecated
+					}
+				}
 
 			case "NoImport":
 				d.NoImport = true
@@ -620,6 +627,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["identityTest"]; ok {
+					if isDataSource {
+						v.errs = append(v.errs, fmt.Errorf("identityTest cannot be specified on data source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						skip = true
+						continue
+					}
 					switch attr {
 					case "false":
 						v.g.Infof("Skipping Identity test for %s.%s", v.packageName, v.functionName)
@@ -629,6 +641,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid identityTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
 					}
+				}
+				if attr, ok := args.Keyword["identityTestCases"]; ok {
+					d.IdentityTestCases = strings.Split(attr, ";")
 				}
 				if attr, ok := args.Keyword["identityRegionOverrideTest"]; ok {
 					if b, err := common.ParseBoolAttr("identityRegionOverrideTest", attr); err != nil {
@@ -658,21 +673,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 				}
-				if attr, ok := args.Keyword["preIdentityVersion"]; ok {
-					version, err := version.NewVersion(attr)
-					if err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid preIdentityVersion value: %q at %s. Should be version value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					}
-					d.PreIdentityVersion = version
-				}
-				if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
-					if b, err := common.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
-						v.errs = append(v.errs, err)
-					} else {
-						d.HasNoPreExistingResource = b
-					}
-				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
 					if b, err := common.ParseBoolAttr("tlsKey", attr); err != nil {
 						v.errs = append(v.errs, err)
@@ -683,26 +683,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
-				}
-				if attr, ok := args.Keyword["identityVersion"]; ok {
-					parts := strings.Split(attr, ";")
-					if len(parts) != 2 {
-						v.errs = append(v.errs, fmt.Errorf("invalid identityVersion value: %q at %s. Should be in format <identity version>;<provider version>.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					}
-					var identityVersion int64
-					if i, err := strconv.ParseInt(parts[0], 10, 64); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid identity version value: %q at %s. Should be integer value.", parts[0], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						identityVersion = i
-					}
-					providerVersion, err := version.NewVersion(parts[1])
-					if err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid provider version value: %q at %s. Should be version value.", parts[1], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					}
-					d.IdentityVersions[identityVersion] = providerVersion
 				}
 
 			default:
@@ -716,7 +696,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tlsKey {
 		if len(tlsKeyCN) == 0 {
-			tlsKeyCN = "acctest.RandomDomain().String()"
+			tlsKeyCN = "acctest.RandomDomain(t).String()"
 			d.GoImports = append(d.GoImports,
 				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
@@ -737,12 +717,18 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if d.IsGlobal {
+	if d.IsGlobal && !d.RegionOverrideDeprecated {
 		d.HasRegionOverrideTest = false
 	}
 
 	if d.HasResourceIdentity() {
-		if !skip {
+		if isDataSource {
+			v.errs = append(v.errs, fmt.Errorf("resource identity specified on data source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		} else if !skip {
+			if err := d.Validate(); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+			}
+
 			if err := tests.Configure(&d.CommonArgs); err != nil {
 				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				return
@@ -761,7 +747,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.PreIdentityVersion = v5_100_0
 			}
 			if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
-				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: one of \"preIdentityVersion\" or \"hasNoPreExistingResource\" is required", v.packageName, v.functionName))
 				return
 			}
 			if d.IsARNIdentity() {
@@ -769,7 +755,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
-					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") && !d.HasImportStateIDAttributes() {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
 					}
 				}
@@ -804,7 +790,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 
 	mainPath := path.Join(dirPath, "main_gen.tf")
 	var tf common.Destination
-	if test == "basic_v5.100.0" {
+	if strings.HasSuffix(test, "_v5.100.0") {
 		tf = g.NewFileDestinationWithFormatter(mainPath, func(b []byte) ([]byte, error) {
 			re := regexp.MustCompile(`(data\.aws_region\.\w+)\.region`) // nosemgrep:ci.calling-regexp.MustCompile-directly
 			return re.ReplaceAll(b, []byte("$1.name")), nil

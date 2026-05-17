@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -90,4 +90,12 @@ func SuppressEquivalentIAMPolicyDocuments(k, old, new string, _ *schema.Resource
 func equalEmptyJSONStrings(old, new string) bool {
 	old, new = strings.TrimSpace(old), strings.TrimSpace(new)
 	return (old == "" || old == "{}") && (new == "" || new == "{}")
+}
+
+// SuppressNewStringValueEquivalentToUnset provides custom difference suppression
+// for new string values that are equivalent to the unset (unconfigured) value.
+func SuppressNewStringValueEquivalentToUnset[T ~string](v T) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		return d.Id() != "" && old == "" && T(new) == v
+	}
 }

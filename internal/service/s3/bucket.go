@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -24,8 +26,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,6 +50,17 @@ const (
 	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
 	bucketPropagationTimeout = 2 * time.Minute
 )
+
+var (
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
+	// e.g. example-123456789012-us-west-2-an.
+	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
+)
+
+func isGeneralPurposeBucket(bucket string) bool {
+	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket
+}
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
@@ -64,9 +77,7 @@ func resourceBucket() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
+				if err := importer.Import(ctx, rd, meta); err != nil {
 					return nil, err
 				}
 
@@ -118,6 +129,13 @@ func resourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bucket_namespace": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.BucketNamespace](),
+			},
 			names.AttrBucketPrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -125,7 +143,7 @@ func resourceBucket() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrBucket},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+					validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
 				),
 			},
 			"bucket_region": {
@@ -724,9 +742,15 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
-	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
+	ns := types.BucketNamespace(d.Get("bucket_namespace").(string))
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrBucket).(string)), create.WithConfiguredPrefix(d.Get(names.AttrBucketPrefix).(string))}
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		optFns = append(optFns, create.WithSuffix(fmt.Sprintf("-%s-%s-an", c.AccountID(ctx), c.Region(ctx))))
+	}
+	bucket := create.NewNameGenerator(optFns...).Generate(ctx)
 	region := c.Region(ctx)
-	if err := validBucketName(bucket, region); err != nil {
+	if err := validBucketName(bucket, region, ns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
 	}
 
@@ -750,6 +774,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		// Use default value previously available in v3.x of the provider.
 		input.ACL = types.BucketCannedACLPrivate
+	}
+
+	if v, ok := d.GetOk("bucket_namespace"); ok {
+		input.BucketNamespace = types.BucketNamespace(v.(string))
 	}
 
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
@@ -783,10 +811,22 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return conn.CreateBucket(ctx, input)
 	}, errCodeOperationAborted)
 
-	if errs.Contains(err, "is not authorized to perform: s3:TagResource") {
-		// Remove tags and try again
+	if errs.Contains(err, "is not authorized to perform: s3:TagResource") ||
+		tfawserr.ErrCodeEquals(err, errCodeUnsupportedArgument, errCodeMalformedXML) {
+		// Remove tags and try again.
 		input.CreateBucketConfiguration.Tags = nil
 		tagOnCreate = false
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			return conn.CreateBucket(ctx, input)
+		}, errCodeOperationAborted)
+	}
+
+	// If still MalformedXML after removing tags, the S3-compatible API does not
+	// support the CreateBucketConfiguration body at all. Remove it entirely and retry.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/47061.
+	if tfawserr.ErrCodeEquals(err, errCodeMalformedXML) {
+		input.CreateBucketConfiguration = nil
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 			return conn.CreateBucket(ctx, input)
@@ -833,16 +873,13 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
-	d.Set(names.AttrBucket, d.Id())
-	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
-	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
+	resourceBucketFlatten(ctx, c, d.Id(), d)
 
 	//
 	// Bucket Policy.
 	//
 	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource.
-	policy, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (string, error) {
+	policy, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (string, error) {
 		return findBucketPolicy(ctx, conn, d.Id())
 	})
 
@@ -872,7 +909,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket ACL.
 	//
-	bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketAclOutput, error) {
+	bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
 		return findBucketACL(ctx, conn, d.Id(), "")
 	})
 
@@ -896,7 +933,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket CORS Configuration.
 	//
-	corsRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() ([]types.CORSRule, error) {
+	corsRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) ([]types.CORSRule, error) {
 		return findCORSRules(ctx, conn, d.Id(), "")
 	})
 
@@ -920,7 +957,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Website Configuration.
 	//
-	bucketWebsite, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketWebsiteOutput, error) {
+	bucketWebsite, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketWebsiteOutput, error) {
 		return findBucketWebsite(ctx, conn, d.Id(), "")
 	})
 
@@ -948,7 +985,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Versioning.
 	//
-	bucketVersioning, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketVersioningOutput, error) {
+	bucketVersioning, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketVersioningOutput, error) {
 		return findBucketVersioning(ctx, conn, d.Id(), "")
 	})
 
@@ -972,7 +1009,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Accelerate Configuration.
 	//
-	bucketAccelerate, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketAccelerateConfigurationOutput, error) {
+	bucketAccelerate, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketAccelerateConfigurationOutput, error) {
 		return findBucketAccelerateConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -994,7 +1031,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Request Payment Configuration.
 	//
-	bucketRequestPayment, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketRequestPaymentOutput, error) {
+	bucketRequestPayment, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketRequestPaymentOutput, error) {
 		return findBucketRequestPayment(ctx, conn, d.Id(), "")
 	})
 
@@ -1016,7 +1053,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Logging.
 	//
-	loggingEnabled, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.LoggingEnabled, error) {
+	loggingEnabled, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.LoggingEnabled, error) {
 		return findLoggingEnabled(ctx, conn, d.Id(), "")
 	})
 
@@ -1040,7 +1077,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Lifecycle Configuration.
 	//
-	lifecycleRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() ([]types.LifecycleRule, error) {
+	lifecycleRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) ([]types.LifecycleRule, error) {
 		output, err := findBucketLifecycleConfiguration(ctx, conn, d.Id(), "")
 
 		if err != nil {
@@ -1070,7 +1107,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Replication Configuration.
 	//
-	replicationConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ReplicationConfiguration, error) {
+	replicationConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ReplicationConfiguration, error) {
 		return findReplicationConfiguration(ctx, conn, d.Id())
 	})
 
@@ -1094,7 +1131,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Server-side Encryption Configuration.
 	//
-	encryptionConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ServerSideEncryptionConfiguration, error) {
+	encryptionConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ServerSideEncryptionConfiguration, error) {
 		return findServerSideEncryptionConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -1118,7 +1155,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Object Lock Configuration.
 	//
-	objLockConfig, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ObjectLockConfiguration, error) {
+	objLockConfig, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ObjectLockConfiguration, error) {
 		return findObjectLockConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -1171,6 +1208,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	}
 
+	//
+	// Bucket Website
+	//
 	if _, ok := d.GetOk("website"); ok {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
 		d.Set("website_domain", domain)
@@ -1341,7 +1381,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() > 0 {
-		bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutUpdate), func() (*s3.GetBucketAclOutput, error) {
+		bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
 			return findBucketACL(ctx, conn, d.Id(), "")
 		})
 
@@ -1626,6 +1666,26 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
+func resourceBucketFlatten(ctx context.Context, awsClient *conns.AWSClient, bucketName string, d *schema.ResourceData) {
+	d.Set(names.AttrARN, bucketARN(ctx, awsClient, bucketName))
+	d.Set(names.AttrBucket, bucketName)
+	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucketName+".s3"))
+
+	bucketNamespace := bucketNamespace(bucketName)
+	d.Set("bucket_namespace", bucketNamespace)
+	if bucketNamespace == types.BucketNamespaceAccountRegional {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromNameWithSuffix(bucketName, fmt.Sprintf("-%s-%s-an", awsClient.AccountID(ctx), awsClient.Region(ctx))))
+	} else {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(bucketName))
+	}
+
+	region := awsClient.Region(ctx)
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucketName, region))
+	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
+	}
+}
+
 func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
 	input := s3.HeadBucketInput{
 		Bucket: aws.String(bucket),
@@ -1636,14 +1696,13 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	// For directory buckets that no longer exist it's the CreateSession call invoked by HeadBucket that returns "NoSuchBucket",
 	// and that error code is flattend into HeadBucket's error message -- hence the 'errs.Contains' call.
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1669,9 +1728,8 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 	region, err := manager.GetBucketRegion(ctx, c.S3Client(ctx), bucket, optFns...)
 
 	if errs.IsA[manager.BucketNotFound](err) {
-		return "", &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: bucket,
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1682,17 +1740,8 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 	return region, nil
 }
 
-func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
-		return f()
-	}, errCodeNoSuchBucket)
-
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return outputRaw.(T), nil
+func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, f, errCodeNoSuchBucket)
 }
 
 func bucketARN(ctx context.Context, c *conns.AWSClient, bucket string) string {
@@ -1738,6 +1787,13 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 	}
 
 	return fmt.Sprintf("%s.%s", bucket, domain), domain
+}
+
+func bucketNamespace(bucket string) types.BucketNamespace {
+	if accountRegionalBucketNameRegex.MatchString(bucket) {
+		return types.BucketNamespaceAccountRegional
+	}
+	return types.BucketNamespaceGlobal
 }
 
 //
@@ -2178,7 +2234,7 @@ func expandBucketLifecycleRules(ctx context.Context, tfList []any) []types.Lifec
 		if v, ok := tfMap[names.AttrID].(string); ok {
 			apiObject.ID = aws.String(v)
 		} else {
-			apiObject.ID = aws.String(id.PrefixedUniqueId("tf-s3-lifecycle-"))
+			apiObject.ID = aws.String(sdkid.PrefixedUniqueId("tf-s3-lifecycle-"))
 		}
 
 		if v, ok := tfMap["noncurrent_version_expiration"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -2998,34 +3054,46 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 // validBucketName validates any S3 bucket name that is not inside the us-east-1 region.
 // Buckets outside of this region have to be DNS-compliant. After the same restrictions are
 // applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
-func validBucketName(value string, region string) error {
+func validBucketName(bucket, region string, ns types.BucketNamespace) error {
 	if region != endpoints.UsEast1RegionID {
-		if (len(value) < 3) || (len(value) > 63) {
-			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
+		if (len(bucket) < 3) || (len(bucket) > 63) {
+			return fmt.Errorf("%q must contain from 3 to 63 characters", bucket)
 		}
-		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(value) {
-			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", value)
+		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(bucket) {
+			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", bucket)
 		}
-		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(value) {
-			return fmt.Errorf("%q must not be formatted as an IP address", value)
+		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(bucket) {
+			return fmt.Errorf("%q must not be formatted as an IP address", bucket)
 		}
-		if strings.HasPrefix(value, `.`) {
-			return fmt.Errorf("%q cannot start with a period", value)
+		if strings.HasPrefix(bucket, `.`) {
+			return fmt.Errorf("%q cannot start with a period", bucket)
 		}
-		if strings.HasSuffix(value, `.`) {
-			return fmt.Errorf("%q cannot end with a period", value)
+		if strings.HasSuffix(bucket, `.`) {
+			return fmt.Errorf("%q cannot end with a period", bucket)
 		}
-		if strings.Contains(value, `..`) {
-			return fmt.Errorf("%q can be only one period between labels", value)
+		if strings.Contains(bucket, `..`) {
+			return fmt.Errorf("%q can be only one period between labels", bucket)
 		}
 	} else {
-		if len(value) > 255 {
-			return fmt.Errorf("%q must contain less than 256 characters", value)
+		if len(bucket) > 255 {
+			return fmt.Errorf("%q must contain less than 256 characters", bucket)
 		}
-		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(value) {
-			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", value)
+		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(bucket) {
+			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", bucket)
 		}
 	}
+
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		if !accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is not an account-regional namespace bucket", bucket)
+		}
+	default:
+		if accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is an account-regional namespace bucket", bucket)
+		}
+	}
+
 	return nil
 }
 

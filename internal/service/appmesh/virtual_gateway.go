@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appmesh
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -808,9 +809,8 @@ func findVirtualGatewayByThreePartKey(ctx context.Context, conn *appmesh.Client,
 	}
 
 	if output.Status.Status == awstypes.VirtualGatewayStatusCodeDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(output.Status.Status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(output.Status.Status),
 		}
 	}
 
@@ -821,9 +821,8 @@ func findVirtualGateway(ctx context.Context, conn *appmesh.Client, input *appmes
 	output, err := conn.DescribeVirtualGateway(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -832,7 +831,7 @@ func findVirtualGateway(ctx context.Context, conn *appmesh.Client, input *appmes
 	}
 
 	if output == nil || output.VirtualGateway == nil || output.VirtualGateway.Metadata == nil || output.VirtualGateway.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualGateway, nil

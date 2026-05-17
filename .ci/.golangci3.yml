@@ -1,7 +1,11 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 version: "2"
 linters:
   default: none
   enable:
+    # !! only add f-m linters here
     - goconst
     - gocritic
     - govet
@@ -10,14 +14,10 @@ linters:
     - makezero
     - misspell
     - mnd
-  exclusions:
-    rules:
-      - path: '(.+)_test\.go'
-        linters:
-          - goconst
   settings:
     goconst:
-      min-occurrences: 6
+      min-occurrences: 30
+      ignore-tests: true
     gocritic:
       enabled-tags:
         - diagnostic
@@ -29,8 +29,12 @@ linters:
     importas:
       no-unaliased: true
       alias:
+        - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/id
+          alias: sdkid
         - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
           alias: sdkretry
+        - pkg: "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+          alias: sdkacctest
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
           alias: inttypes
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/retry
@@ -48,6 +52,7 @@ linters:
         - nullable.*
         - tfresource.Retry*
         - tfresource.With*
+        - verify.StringUTF8LenBetween
         # Terraform Plugin SDK
         - retry.RetryContext
         - schema.DefaultTimeout
@@ -56,6 +61,8 @@ linters:
         - intBetweenSchema
         - stringLenBetweenSchema
         # Terraform Plugin Framework
+        - float64validator.*
+        - fwactions.TimeoutOr
         - int32validator.*
         - int64validator.*
         - listvalidator.*
@@ -74,8 +81,8 @@ linters:
         - strconv.ParseInt
         - strings.SplitN
 issues:
-  max-issues-per-linter: 10
-  max-same-issues: 3
+  max-issues-per-linter: 10000
+  max-same-issues: 10000
 formatters:
   enable:
     - gofmt

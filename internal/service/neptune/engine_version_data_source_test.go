@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune_test
@@ -13,8 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +27,7 @@ func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -38,13 +41,15 @@ func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", dataSourceNameLatest, "version_actual"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parameter_group_family"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
-					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_timezones.#", regexache.MustCompile(`^[0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_global_databases"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_log_exports_to_cloudwatch"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_read_replica"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version_description"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("exportable_log_types"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("supported_timezones"), knownvalue.NotNull()),
+				},
 			},
 		},
 	})
@@ -54,7 +59,7 @@ func TestAccNeptuneEngineVersionDataSource_upgradeTargets(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -63,9 +68,11 @@ func TestAccNeptuneEngineVersionDataSource_upgradeTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_upgradeTargets(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version_actual"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("valid_upgrade_targets"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})
@@ -76,7 +83,7 @@ func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -104,7 +111,7 @@ func TestAccNeptuneEngineVersionDataSource_preferredVersionsPreferredUpgradeTarg
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -130,7 +137,7 @@ func TestAccNeptuneEngineVersionDataSource_preferredUpgradeTargetsVersion(t *tes
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -154,7 +161,7 @@ func TestAccNeptuneEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 	majorTarget := "1.4"
 	oneLess := `^1\.3\.`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -174,7 +181,7 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnlyImplicit(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -195,7 +202,7 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 	updateDataSourceName := "data.aws_neptune_engine_version.latest"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -217,7 +224,7 @@ func TestAccNeptuneEngineVersionDataSource_latest(t *testing.T) {
 	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
 	dataSourceNameEarlier2 := "data.aws_neptune_engine_version.earlier2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -243,7 +250,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -317,7 +324,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).NeptuneClient(ctx)
 
 	input := &neptune.DescribeDBEngineVersionsInput{
 		Engine:      aws.String(tfneptune.DefaultEngine),

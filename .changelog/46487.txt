@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_acmpca_certificate_authority: Add `custom_path` argument to `revocation_configuration.crl_configuration` configuration block
+```
+
+```release-note:enhancement
+data/aws_acmpca_certificate_authority: Add `custom_path` argument to `revocation_configuration.crl_configuration` configuration block
+```

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package batch
 
@@ -15,28 +17,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -56,10 +50,8 @@ func resourceJobDefinition() *schema.Resource {
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				identity := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalARN(ctx, rd, identity); err != nil {
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, rd, meta); err != nil {
 					return nil, err
 				}
 
@@ -196,6 +188,10 @@ func resourceJobDefinition() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"allow_privilege_escalation": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
 															"privileged": {
 																Type:     schema.TypeBool,
 																Optional: true,
@@ -334,6 +330,10 @@ func resourceJobDefinition() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"allow_privilege_escalation": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
 															"privileged": {
 																Type:     schema.TypeBool,
 																Optional: true,
@@ -864,54 +864,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
 	}
 
-	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
-	d.Set(names.AttrARN, arn)
-	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
-	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("container_properties", containerProperties)
-	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("ecs_properties", ecsProperties)
-	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
-	}
-	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
-	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if err := d.Set("node_properties", nodeProperties); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
-	}
-	d.Set(names.AttrParameters, jobDefinition.Parameters)
-	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
-	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
-	if jobDefinition.RetryStrategy != nil {
-		if err := d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting retry_strategy: %s", err)
-		}
-	} else {
-		d.Set("retry_strategy", nil)
-	}
-	d.Set("revision", revision)
-	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
-	if jobDefinition.Timeout != nil {
-		if err := d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
-		}
-	} else {
-		d.Set(names.AttrTimeout, nil)
-	}
-	d.Set(names.AttrType, jobDefinition.Type)
-
-	setTagsOut(ctx, jobDefinition.Tags)
-
-	return diags
+	return append(diags, resourceJobDefinitionFlatten(ctx, jobDefinition, d)...)
 }
 
 func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -971,7 +924,9 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 				}
 
 				for _, node := range props.NodeRangeProperties {
-					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					if node.Container != nil {
+						diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					}
 				}
 				input.NodeProperties = props
 			}
@@ -1078,9 +1033,8 @@ func findJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string)
 	}
 
 	if status := aws.ToString(output.Status); status == jobDefinitionStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
@@ -1423,6 +1377,10 @@ func expandContainers(tfList []any) []awstypes.EksContainer {
 			securityContext := &awstypes.EksContainerSecurityContext{}
 			tfMap := v[0].(map[string]any)
 
+			if v, ok := tfMap["allow_privilege_escalation"]; ok {
+				securityContext.AllowPrivilegeEscalation = aws.Bool(v.(bool))
+			}
+
 			if v, ok := tfMap["privileged"]; ok {
 				securityContext.Privileged = aws.Bool(v.(bool))
 			}
@@ -1670,6 +1628,7 @@ func flattenEKSContainers(apiObjects []awstypes.EksContainer) []any {
 
 		if v := apiObject.SecurityContext; v != nil {
 			tfMap["security_context"] = []map[string]any{{
+				"allow_privilege_escalation": aws.ToBool(v.AllowPrivilegeEscalation),
 				"privileged":                 aws.ToBool(v.Privileged),
 				"read_only_root_file_system": aws.ToBool(v.ReadOnlyRootFilesystem),
 				"run_as_group":               aws.ToInt64(v.RunAsGroup),
@@ -1768,91 +1727,48 @@ func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []any {
 	return tfList
 }
 
-// @SDKListResource("aws_batch_job_definition")
-func jobDefinitionResourceAsListResource() inttypes.ListResourceForSDK {
-	l := jobDefinitionListResource{}
-	l.SetResourceSchema(resourceJobDefinition())
-	return &l
-}
-
-type jobDefinitionListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type jobDefinitionListResourceModel struct {
-	framework.WithRegionModel
-}
-
-func (l *jobDefinitionListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-		Blocks:     map[string]listschema.Block{},
-	}
-}
-
-func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.BatchClient(ctx)
-
-	var query jobDefinitionListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
+func resourceJobDefinitionFlatten(ctx context.Context, jobDefinition *awstypes.JobDefinition, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
+	d.Set(names.AttrARN, arn)
+	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
+	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	var input batch.DescribeJobDefinitionsInput
-
-	tflog.Info(ctx, "Listing Batch job definitions")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		pages := batch.NewDescribeJobDefinitionsPaginator(conn, &input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			for _, jobDef := range page.JobDefinitions {
-				arn := aws.ToString(jobDef.JobDefinitionArn)
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
-
-				result := request.NewListResult(ctx)
-				rd := l.ResourceData()
-				rd.SetId(arn)
-
-				tflog.Info(ctx, "Reading Batch job definition")
-				diags := resourceJobDefinitionRead(ctx, rd, awsClient)
-				if diags.HasError() {
-					result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading Batch job definition %s", arn))
-					yield(result)
-					return
-				}
-
-				err = l.SetTags(ctx, awsClient, rd)
-				if err != nil {
-					result = fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
-
-				result.DisplayName = aws.ToString(jobDef.JobDefinitionName)
-
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return
-				}
-
-				if !yield(result) {
-					return
-				}
-			}
-		}
+	d.Set("container_properties", containerProperties)
+	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
+	d.Set("ecs_properties", ecsProperties)
+
+	d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties))
+	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
+	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set("node_properties", nodeProperties)
+	d.Set(names.AttrParameters, jobDefinition.Parameters)
+	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
+	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
+	if jobDefinition.RetryStrategy != nil {
+		d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)})
+	} else {
+		d.Set("retry_strategy", nil)
+	}
+	d.Set("revision", revision)
+	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
+	if jobDefinition.Timeout != nil {
+		d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)})
+	} else {
+		d.Set(names.AttrTimeout, nil)
+	}
+	d.Set(names.AttrType, jobDefinition.Type)
+
+	setTagsOut(ctx, jobDefinition.Tags)
+
+	return diags
 }

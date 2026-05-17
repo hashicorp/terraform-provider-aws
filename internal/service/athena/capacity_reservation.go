@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package athena
 
@@ -19,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -269,10 +270,10 @@ func (r *capacityReservationResource) buildARN(ctx context.Context, name string)
 }
 
 func waitCapacityReservationActive(ctx context.Context, conn *athena.Client, name string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatusPending, awstypes.CapacityReservationStatusUpdatePending),
 		Target:  enum.Slice(awstypes.CapacityReservationStatusActive),
-		Refresh: statusCapacityReservation(ctx, conn, name),
+		Refresh: statusCapacityReservation(conn, name),
 		Timeout: timeout,
 	}
 
@@ -285,10 +286,10 @@ func waitCapacityReservationActive(ctx context.Context, conn *athena.Client, nam
 }
 
 func waitCapacityReservationCancelled(ctx context.Context, conn *athena.Client, name string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatusActive, awstypes.CapacityReservationStatusCancelling),
 		Target:  enum.Slice(awstypes.CapacityReservationStatusCancelled),
-		Refresh: statusCapacityReservation(ctx, conn, name),
+		Refresh: statusCapacityReservation(conn, name),
 		Timeout: timeout,
 	}
 
@@ -300,8 +301,8 @@ func waitCapacityReservationCancelled(ctx context.Context, conn *athena.Client, 
 	return nil, err
 }
 
-func statusCapacityReservation(ctx context.Context, conn *athena.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapacityReservation(conn *athena.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findCapacityReservationByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -323,9 +324,8 @@ func findCapacityReservationByName(ctx context.Context, conn *athena.Client, nam
 	out, err := conn.GetCapacityReservation(ctx, &input)
 	if err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -333,7 +333,7 @@ func findCapacityReservationByName(ctx context.Context, conn *athena.Client, nam
 	}
 
 	if out == nil || out.CapacityReservation == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CapacityReservation, nil

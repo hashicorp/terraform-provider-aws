@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codegurureviewer
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -371,9 +372,8 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 	output, err := conn.DescribeRepositoryAssociation(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -382,14 +382,14 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 	}
 
 	if output == nil || output.RepositoryAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RepositoryAssociation, nil
 }
 
-func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRepositoryAssociation(conn *codegurureviewer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRepositoryAssociationByARN(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -405,10 +405,10 @@ func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.Cli
 }
 
 func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewer.Client, id string, timeout time.Duration) (*types.RepositoryAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RepositoryAssociationStateAssociating),
 		Target:                    enum.Slice(types.RepositoryAssociationStateAssociated),
-		Refresh:                   statusRepositoryAssociation(ctx, conn, id),
+		Refresh:                   statusRepositoryAssociation(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -417,7 +417,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -426,17 +426,17 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 }
 
 func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewer.Client, id string, timeout time.Duration) (*types.RepositoryAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RepositoryAssociationStateDisassociating, types.RepositoryAssociationStateAssociated),
 		Target:  []string{},
-		Refresh: statusRepositoryAssociation(ctx, conn, id),
+		Refresh: statusRepositoryAssociation(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}

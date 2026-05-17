@@ -1,0 +1,67 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: update-sdk-check-resource-disappears
+    languages: [go]
+    message: '"acctest.CheckResourceDisappears" has been renamed to "acctest.CheckSDKResourceDisappears" and now takes the parameter "t" instead of "provider"'
+    pattern: acctest.CheckResourceDisappears(ctx, acctest.Provider, $RES, $NAME)
+    fix: acctest.CheckSDKResourceDisappears(ctx, t, $RES, $NAME)
+    severity: ERROR
+
+  - id: update-framework-check-resource-disappears
+    languages: [go]
+    message: '"acctest.CheckFrameworkResourceDisappears" now takes the parameter "t" instead of "provider"'
+    pattern: acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, $RES, $NAME)
+    fix: acctest.CheckFrameworkResourceDisappears(ctx, t, $RES, $NAME)
+    severity: ERROR
+
+  - id: update-framework-check-resource-disappears-with-state-func
+    languages: [go]
+    message: '"acctest.CheckFrameworkResourceDisappearsWithStateFunc" now takes the parameter "t" instead of "provider"'
+    pattern: acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, $RES, $NAME, $F)
+    fix: acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, $RES, $NAME, $F)
+    severity: ERROR
+
+  - id: disappears-expect-resource-action
+    languages: [go]
+    message: |
+      Disappears acceptance tests should include `ConfigPlanChecks` with a `PostApplyPostRefresh` plan check
+      using `plancheck.ExpectResourceAction` to verify the resource is planned for re-creation.
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: acctest.CheckSDKResourceDisappears(...)
+          - pattern: acctest.CheckFrameworkResourceDisappears(...)
+          - pattern: acctest.CheckFrameworkResourceDisappearsWithStateFunc(...)
+      - pattern-inside: |
+          Steps: []resource.TestStep{
+            ...,
+          }
+      - pattern-not-inside: |
+          {
+            ...,
+            ConfigPlanChecks: resource.ConfigPlanChecks{
+              ...,
+              PostApplyPostRefresh: []plancheck.PlanCheck{
+                ...,
+                plancheck.ExpectResourceAction($NAME, plancheck.ResourceActionCreate),
+                ...,
+              },
+              ...,
+            },
+            ...,
+          }
+    # To roll out gradually, only fully-compliant services are included in the
+    # paths list below. As each service is updated, add its path to the list.
+    paths:
+      include:
+        - "/internal/service/bedrockagentcore/*_test.go"
+        - "/internal/service/billing/*_test.go"
+        - "/internal/service/cur/*_test.go"
+        - "/internal/service/networkflowmonitor/*_test.go"
+        - "/internal/service/notifications/*_test.go"
+        - "/internal/service/notificationscontacts/*_test.go"
+        - "/internal/service/observabilityadmin/*_test.go"
+        - "/internal/service/timestreaminfluxdb/*_test.go"
+        - "/internal/service/workmail/*_test.go"

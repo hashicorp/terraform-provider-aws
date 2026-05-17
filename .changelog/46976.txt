@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Support `tier-8xl` as a valid value for `control_plane_scaling_config.tier`
+```

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,16 +29,17 @@ import (
 )
 
 // @SDKResource("aws_config_conformance_pack", name="Conformance Pack")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConformancePackDetail")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(importIgnore="template_body")
 func resourceConformancePack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConformancePackPut,
 		ReadWithoutTimeout:   resourceConformancePackRead,
 		UpdateWithoutTimeout: resourceConformancePackPut,
 		DeleteWithoutTimeout: resourceConformancePackDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -109,7 +111,7 @@ func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutConformancePackInput{
+	input := configservice.PutConformancePackInput{
 		ConformancePackName: aws.String(name),
 	}
 
@@ -133,7 +135,7 @@ func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, met
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutConformancePack(ctx, input)
+	_, err := conn.PutConformancePack(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ConfigService Conformance Pack (%s): %s", name, err)
@@ -184,14 +186,15 @@ func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Conformance Pack: %s", d.Id())
 	const (
 		timeout = 5 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Conformance Pack: %s", d.Id())
+	input := configservice.DeleteConformancePackInput{
+		ConformancePackName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteConformancePack(ctx, &configservice.DeleteConformancePackInput{
-			ConformancePackName: aws.String(d.Id()),
-		})
+		return conn.DeleteConformancePack(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchConformancePackException](err) {
@@ -210,11 +213,11 @@ func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findConformancePackByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConformancePackDetail, error) {
-	input := &configservice.DescribeConformancePacksInput{
+	input := configservice.DescribeConformancePacksInput{
 		ConformancePackNames: []string{name},
 	}
 
-	return findConformancePack(ctx, conn, input)
+	return findConformancePack(ctx, conn, &input)
 }
 
 func findConformancePack(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConformancePacksInput) (*types.ConformancePackDetail, error) {
@@ -235,9 +238,8 @@ func findConformancePacks(ctx context.Context, conn *configservice.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchConformancePackException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -252,11 +254,11 @@ func findConformancePacks(ctx context.Context, conn *configservice.Client, input
 }
 
 func findConformancePackStatusByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConformancePackStatusDetail, error) {
-	input := &configservice.DescribeConformancePackStatusInput{
+	input := configservice.DescribeConformancePackStatusInput{
 		ConformancePackNames: []string{name},
 	}
 
-	return findConformancePackStatus(ctx, conn, input)
+	return findConformancePackStatus(ctx, conn, &input)
 }
 
 func findConformancePackStatus(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConformancePackStatusInput) (*types.ConformancePackStatusDetail, error) {
@@ -277,9 +279,8 @@ func findConformancePackStatuses(ctx context.Context, conn *configservice.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchConformancePackException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -293,8 +294,8 @@ func findConformancePackStatuses(ctx context.Context, conn *configservice.Client
 	return output, nil
 }
 
-func statusConformancePack(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConformancePack(conn *configservice.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConformancePackStatusByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -310,17 +311,17 @@ func statusConformancePack(ctx context.Context, conn *configservice.Client, name
 }
 
 func waitConformancePackCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.ConformancePackStatusDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConformancePackStateCreateInProgress),
 		Target:  enum.Slice(types.ConformancePackStateCreateComplete),
-		Refresh: statusConformancePack(ctx, conn, name),
+		Refresh: statusConformancePack(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.ConformancePackStatusDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
 
 		return output, err
 	}
@@ -329,17 +330,17 @@ func waitConformancePackCreated(ctx context.Context, conn *configservice.Client,
 }
 
 func waitConformancePackDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.ConformancePackStatusDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConformancePackStateDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusConformancePack(ctx, conn, name),
+		Refresh: statusConformancePack(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.ConformancePackStatusDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
 
 		return output, err
 	}

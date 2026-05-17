@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package outposts_test
@@ -16,7 +16,7 @@ func TestAccOutpostsAssetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_asset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -27,6 +27,7 @@ func TestAccOutpostsAssetDataSource_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "outposts", regexache.MustCompile(`outpost/.+`)),
 					resource.TestMatchResourceAttr(dataSourceName, "asset_id", regexache.MustCompile(`^(\w+)$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "asset_type"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "instance_families.#"),
 					resource.TestMatchResourceAttr(dataSourceName, "rack_elevation", regexache.MustCompile(`^[\S \n]+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "rack_id", regexache.MustCompile(`^[\S \n]+$`)),
 				),

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lambda
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -129,7 +130,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	qualifier := d.Get("qualifier").(string)
 	id := functionURLCreateResourceID(name, qualifier)
 	authorizationType := awstypes.FunctionUrlAuthType(d.Get("authorization_type").(string))
-	input := &lambda.CreateFunctionUrlConfigInput{
+	input := lambda.CreateFunctionUrlConfigInput{
 		AuthType:     authorizationType,
 		FunctionName: aws.String(name),
 		InvokeMode:   awstypes.InvokeMode(d.Get("invoke_mode").(string)),
@@ -143,7 +144,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Cors = expandCors(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.CreateFunctionUrlConfig(ctx, input)
+	_, err := conn.CreateFunctionUrlConfig(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lambda Function URL (%s): %s", id, err)
@@ -152,7 +153,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(id)
 
 	if authorizationType == awstypes.FunctionUrlAuthTypeNone {
-		input := &lambda.AddPermissionInput{
+		input := lambda.AddPermissionInput{
 			Action:              aws.String("lambda:InvokeFunctionUrl"),
 			FunctionName:        aws.String(name),
 			FunctionUrlAuthType: authorizationType,
@@ -164,11 +165,33 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.Qualifier = aws.String(qualifier)
 		}
 
-		_, err := conn.AddPermission(ctx, input)
+		_, err := conn.AddPermission(ctx, &input)
 
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.ResourceConflictException](err, "The statement id (FunctionURLAllowPublicAccess) provided already exists") {
 				log.Printf("[DEBUG] function permission statement 'FunctionURLAllowPublicAccess' already exists.")
+			} else {
+				return sdkdiag.AppendErrorf(diags, "adding Lambda Function URL (%s) permission %s", d.Id(), err)
+			}
+		}
+
+		input = lambda.AddPermissionInput{
+			Action:                aws.String("lambda:InvokeFunction"),
+			FunctionName:          aws.String(name),
+			InvokedViaFunctionUrl: aws.Bool(true),
+			Principal:             aws.String("*"),
+			StatementId:           aws.String("FunctionURLAllowInvokeAction"),
+		}
+
+		if qualifier != "" {
+			input.Qualifier = aws.String(qualifier)
+		}
+
+		_, err = conn.AddPermission(ctx, &input)
+
+		if err != nil {
+			if errs.IsAErrorMessageContains[*awstypes.ResourceConflictException](err, "The statement id (FunctionURLAllowInvokeAction) provided already exists") {
+				log.Printf("[DEBUG] function permission statement 'FunctionURLAllowInvokeAction' already exists.")
 			} else {
 				return sdkdiag.AppendErrorf(diags, "adding Lambda Function URL (%s) permission %s", d.Id(), err)
 			}
@@ -236,7 +259,7 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &lambda.UpdateFunctionUrlConfigInput{
+	input := lambda.UpdateFunctionUrlConfigInput{
 		FunctionName: aws.String(name),
 	}
 
@@ -260,7 +283,7 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.InvokeMode = awstypes.InvokeMode(d.Get("invoke_mode").(string))
 	}
 
-	_, err = conn.UpdateFunctionUrlConfig(ctx, input)
+	_, err = conn.UpdateFunctionUrlConfig(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Function URL (%s): %s", d.Id(), err)
@@ -278,7 +301,7 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &lambda.DeleteFunctionUrlConfigInput{
+	input := lambda.DeleteFunctionUrlConfigInput{
 		FunctionName: aws.String(name),
 	}
 
@@ -287,7 +310,7 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Deleting Lambda Function URL: %s", d.Id())
-	_, err = conn.DeleteFunctionUrlConfig(ctx, input)
+	_, err = conn.DeleteFunctionUrlConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -315,9 +338,8 @@ func findFunctionURL(ctx context.Context, conn *lambda.Client, input *lambda.Get
 	output, err := conn.GetFunctionUrlConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -326,7 +348,7 @@ func findFunctionURL(ctx context.Context, conn *lambda.Client, input *lambda.Get
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

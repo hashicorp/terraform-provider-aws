@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package outposts
 
@@ -39,6 +41,11 @@ func dataSourceOutpostAsset() *schema.Resource {
 			"host_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"instance_families": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"rack_elevation": {
 				Type:     schema.TypeInt,
@@ -88,8 +95,13 @@ func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.ToString(outpost_id))
 	d.Set("asset_id", asset.AssetId)
 	d.Set("asset_type", asset.AssetType)
-	d.Set("host_id", asset.ComputeAttributes.HostId)
-	d.Set("rack_elevation", asset.AssetLocation.RackElevation)
+	if asset.ComputeAttributes != nil {
+		d.Set("host_id", asset.ComputeAttributes.HostId)
+		d.Set("instance_families", asset.ComputeAttributes.InstanceFamilies)
+	}
+	if asset.AssetLocation != nil {
+		d.Set("rack_elevation", asset.AssetLocation.RackElevation)
+	}
 	d.Set("rack_id", asset.RackId)
 	return diags
 }

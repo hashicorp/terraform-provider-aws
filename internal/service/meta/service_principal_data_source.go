@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package meta
 
@@ -106,7 +108,9 @@ func servicePrincipalNameForPartition(service string, partition endpoints.Partit
 			switch service {
 			case "codedeploy",
 				"elasticmapreduce",
-				"logs":
+				"logs",
+				"ec2",
+				"s3":
 				return partition.DNSSuffix()
 			}
 		}

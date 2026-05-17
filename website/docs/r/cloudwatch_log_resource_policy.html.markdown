@@ -69,27 +69,41 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy_document` - (Required) Details of the resource policy, including the identity of the principal that is enabled to put logs to this account. This is formatted as a JSON string. Maximum length of 5120 characters.
-* `policy_name` - (Required) Name of the resource policy.
+* `policy_name` - (Optional) Name of the resource policy. Exactly one of `policy_name` or `resource_arn` must be specified and this argument is required for account-scoped policies. Note that the number of resource policies without `resource_arn` is limited to 10 per region.
+* `resource_arn` - (Optional) ARN of the CloudWatch Logs resource to which the resource policy is attached. Exactly one of `policy_name` or `resource_arn` must be specified and this argument is required for resource-scoped policies. Only one policy can be attached per log group resource ARN.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the CloudWatch log resource policy
+* `id` - The name of the CloudWatch log resource policy when `resource_arn` is not specified, or the ARN of the CloudWatch log group when `resource_arn` is specified.
+* `policy_scope` - Scope of the resource policy (`ACCOUNT` or `RESOURCE`).
+* `revision_id` - Revision ID of the resource policy. Only populated for resource-scoped policies.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch log resource policies using the policy name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs resource policies using the policy name for account-scoped policies, or the ARN of the CloudWatch Logs resource to which the policy is attached for resource-scoped policies. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_log_resource_policy.MyPolicy
-  id = "MyPolicy"
+  to = aws_cloudwatch_log_resource_policy.my_policy_account_scoped
+  id = "my_policy"
 }
 ```
 
-Using `terraform import`, import CloudWatch log resource policies using the policy name. For example:
+```terraform
+import {
+  to = aws_cloudwatch_log_resource_policy.my_policy_resource_scoped
+  id = "arn:aws:logs:us-west-2:123456789012:log-group:/my-log-group"
+}
+```
+
+Using `terraform import`, import CloudWatch log resource policies using the policy name for account-scoped policies, or the ARN of the CloudWatch Logs resource to which the policy is attached for resource-scoped policies. For example:
 
 ```console
-% terraform import aws_cloudwatch_log_resource_policy.MyPolicy MyPolicy
+% terraform import aws_cloudwatch_log_resource_policy.my_policy_account_scoped my_policy
+```
+
+```console
+% terraform import aws_cloudwatch_log_resource_policy.my_policy_resource_scoped "arn:aws:logs:us-west-2:123456789012:log-group:/my-log-group"
 ```

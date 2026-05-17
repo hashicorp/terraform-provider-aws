@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package odb
 
@@ -188,13 +190,16 @@ type odbNwkOciDnsForwardingConfigDataSourceModel struct {
 }
 
 type odbNetworkManagedServicesDataSourceModel struct {
-	ServiceNetworkArn        types.String                                                                     `tfsdk:"service_network_arn"`
-	ResourceGatewayArn       types.String                                                                     `tfsdk:"resource_gateway_arn"`
-	ManagedServicesIpv4Cidrs fwtypes.ListOfString                                                             `tfsdk:"managed_service_ipv4_cidrs"`
-	ServiceNetworkEndpoint   fwtypes.ListNestedObjectValueOf[serviceNetworkEndpointOdbNetworkDataSourceModel] `tfsdk:"service_network_endpoint"`
-	ManagedS3BackupAccess    fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkDataSourceModel]  `tfsdk:"managed_s3_backup_access"`
-	ZeroEtlAccess            fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkDataSourceModel]          `tfsdk:"zero_tl_access"`
-	S3Access                 fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkDataSourceModel]               `tfsdk:"s3_access"`
+	ServiceNetworkArn                 types.String                                                                                `tfsdk:"service_network_arn"`
+	ResourceGatewayArn                types.String                                                                                `tfsdk:"resource_gateway_arn"`
+	ManagedServicesIpv4Cidrs          fwtypes.ListOfString                                                                        `tfsdk:"managed_service_ipv4_cidrs"`
+	ServiceNetworkEndpoint            fwtypes.ListNestedObjectValueOf[serviceNetworkEndpointOdbNetworkDataSourceModel]            `tfsdk:"service_network_endpoint"`
+	ManagedS3BackupAccess             fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkDataSourceModel]             `tfsdk:"managed_s3_backup_access"`
+	ZeroEtlAccess                     fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkDataSourceModel]                     `tfsdk:"zero_tl_access"`
+	S3Access                          fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkDataSourceModel]                          `tfsdk:"s3_access"`
+	StsAccess                         fwtypes.ListNestedObjectValueOf[stsAccessOdbNetworkDataSourceModel]                         `tfsdk:"sts_access"`
+	KmsAccess                         fwtypes.ListNestedObjectValueOf[kmsAccessOdbNetworkDataSourceModel]                         `tfsdk:"kms_access"`
+	CrossRegionS3RestoreSourcesAccess fwtypes.ListNestedObjectValueOf[crossRegionS3RestoreSourcesAccessOdbNetworkDataSourceModel] `tfsdk:"cross_region_s3_restore_sources_access"`
 }
 
 type serviceNetworkEndpointOdbNetworkDataSourceModel struct {
@@ -217,4 +222,24 @@ type s3AccessOdbNetworkDataSourceModel struct {
 	Ipv4Addresses    fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
 	DomainName       types.String                                       `tfsdk:"domain_name"`
 	S3PolicyDocument types.String                                       `tfsdk:"s3_policy_document"`
+}
+
+type stsAccessOdbNetworkDataSourceModel struct {
+	Status            fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
+	Ipv4Addresses     fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
+	DomainName        types.String                                       `tfsdk:"domain_name"`
+	StsPolicyDocument types.String                                       `tfsdk:"sts_policy_document"`
+}
+
+type kmsAccessOdbNetworkDataSourceModel struct {
+	Status            fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
+	Ipv4Addresses     fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
+	DomainName        types.String                                       `tfsdk:"domain_name"`
+	KmsPolicyDocument types.String                                       `tfsdk:"kms_policy_document"`
+}
+
+type crossRegionS3RestoreSourcesAccessOdbNetworkDataSourceModel struct {
+	Ipv4Addresses fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
+	Region        types.String                                       `tfsdk:"region"`
+	Status        fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
 }

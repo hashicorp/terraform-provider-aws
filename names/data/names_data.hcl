@@ -1,5 +1,5 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 service "accessanalyzer" {
   sdk {
@@ -58,8 +58,9 @@ service "acm" {
   }
 
   names {
-    provider_name_upper = "ACM"
-    human_friendly      = "ACM (Certificate Manager)"
+    provider_name_upper  = "ACM"
+    human_friendly       = "ACM (Certificate Manager)"
+    human_friendly_short = "ACM"
   }
 
   endpoint_info {
@@ -661,14 +662,11 @@ service "arcregionswitch" {
 
   names {
     provider_name_upper = "ARCRegionSwitch"
-    human_friendly      = "Application Resilience Controller Region Switch"
+    human_friendly      = "ARC (Application Recovery Controller) Region Switch"
   }
 
   endpoint_info {
     endpoint_api_call = "ListPlans"
-    endpoint_region_overrides = {
-      "aws" = "us-east-1"
-    }
   }
 
   resource_prefix {
@@ -677,7 +675,9 @@ service "arcregionswitch" {
 
   provider_package_correct = "arcregionswitch"
   doc_prefix               = ["arcregionswitch_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
+
+  is_global = true
 }
 
 service "arczonalshift" {
@@ -693,7 +693,7 @@ service "arczonalshift" {
 
   names {
     provider_name_upper = "ARCZonalShift"
-    human_friendly      = "Application Recovery Controller Zonal Shift"
+    human_friendly      = "ARC (Application Recovery Controller) Zonal Shift"
   }
 
   endpoint_info {
@@ -706,7 +706,7 @@ service "arczonalshift" {
 
   provider_package_correct = "arczonalshift"
   doc_prefix               = ["arczonalshift_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "athena" {
@@ -1617,7 +1617,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_"]
+  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_"]
   brand                    = "AWS"
 }
 
@@ -2743,6 +2743,35 @@ service "devicefarm" {
   brand                    = "AWS"
 }
 
+service "devopsagent" {
+  cli_v2_command {
+    aws_cli_v2_command           = "devops-agent"
+    aws_cli_v2_command_no_dashes = "devopsagent"
+  }
+
+  sdk {
+    id            = "DevOps Agent"
+    arn_namespace = "aidevops"
+  }
+
+  names {
+    provider_name_upper = "DevOpsAgent"
+    human_friendly      = "DevOps Agent"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListAgentSpaces"
+  }
+
+  resource_prefix {
+    correct = "aws_devopsagent_"
+  }
+
+  provider_package_correct = "devopsagent"
+  doc_prefix               = ["devopsagent_"]
+  brand                    = "AWS"
+}
+
 service "devopsguru" {
   cli_v2_command {
     aws_cli_v2_command           = "devops-guru"
@@ -3368,13 +3397,14 @@ service "elbv2" {
 
   sdk {
     id            = "Elastic Load Balancing v2"
-    arn_namespace = "elbv2"
+    arn_namespace = "elasticloadbalancing"
   }
 
   names {
-    aliases             = ["elasticloadbalancingv2"]
-    provider_name_upper = "ELBV2"
-    human_friendly      = "ELB (Elastic Load Balancing)"
+    aliases              = ["elasticloadbalancingv2"]
+    provider_name_upper  = "ELBV2"
+    human_friendly       = "ELB (Elastic Load Balancing)"
+    human_friendly_short = "ELB"
   }
 
   endpoint_info {
@@ -3398,7 +3428,7 @@ service "elb" {
 
   sdk {
     id            = "Elastic Load Balancing"
-    arn_namespace = "elb"
+    arn_namespace = "elasticloadbalancing"
   }
 
   names {
@@ -3442,6 +3472,8 @@ service "invoicing" {
   provider_package_correct = "invoicing"
   doc_prefix               = ["invoicing_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "mediaconnect" {
@@ -4200,8 +4232,9 @@ service "iam" {
   }
 
   names {
-    provider_name_upper = "IAM"
-    human_friendly      = "IAM (Identity & Access Management)"
+    provider_name_upper  = "IAM"
+    human_friendly       = "IAM (Identity & Access Management)"
+    human_friendly_short = "IAM"
   }
 
   env_var {
@@ -5820,6 +5853,33 @@ service "mobile" {
   doc_prefix               = ["mobile_"]
   brand                    = "AWS"
   not_implemented          = true
+}
+
+service "mpa" {
+  sdk {
+    id            = "MPA"
+    arn_namespace = "mpa"
+  }
+
+  names {
+    provider_name_upper = "MPA"
+    human_friendly      = "Multi-party Approval"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApprovalTeams"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_mpa_"
+  }
+
+  provider_package_correct = "mpa"
+  doc_prefix               = ["mpa_"]
+  brand                    = "AWS"
 }
 
 service "mq" {
@@ -7472,9 +7532,10 @@ service "s3" {
   }
 
   names {
-    aliases             = ["s3api"]
-    provider_name_upper = "S3"
-    human_friendly      = "S3 (Simple Storage)"
+    aliases              = ["s3api"]
+    provider_name_upper  = "S3"
+    human_friendly       = "S3 (Simple Storage)"
+    human_friendly_short = "S3"
   }
 
   env_var {
@@ -7541,6 +7602,30 @@ service "s3tables" {
 
   doc_prefix = ["s3tables_"]
   brand      = "Amazon"
+}
+
+service "s3files" {
+  sdk {
+    id            = "S3Files"
+    arn_namespace = "s3files"
+  }
+
+  names {
+    provider_name_upper = "S3Files"
+    human_friendly      = "S3 Files"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListFileSystems"
+  }
+
+  resource_prefix {
+    correct = "aws_s3files_"
+  }
+
+  provider_package_correct = "s3files"
+  doc_prefix               = ["s3files_"]
+  brand                    = "AWS"
 }
 
 service "s3vectors" {
@@ -7765,6 +7850,10 @@ service "savingsplans" {
     human_friendly      = "Savings Plans"
   }
 
+  endpoint_info {
+    endpoint_api_call = "DescribeSavingsPlans"
+  }
+
   resource_prefix {
     correct = "aws_savingsplans_"
   }
@@ -7772,7 +7861,8 @@ service "savingsplans" {
   provider_package_correct = "savingsplans"
   doc_prefix               = ["savingsplans_"]
   brand                    = "AWS"
-  not_implemented          = true
+
+  is_global = true
 }
 
 service "simpledb" {
@@ -8863,6 +8953,34 @@ service "translate" {
   not_implemented          = true
 }
 
+service "uxc" {
+  sdk {
+    id            = "UXC"
+    arn_namespace = "uxc"
+  }
+
+  names {
+    provider_name_upper = "UXC"
+    human_friendly      = "User Experience Customization"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListServices"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_uxc_"
+  }
+
+  provider_package_correct = "uxc"
+  doc_prefix               = ["uxc_"]
+  brand                    = "Amazon"
+  is_global                = true
+}
+
 service "vpclattice" {
   cli_v2_command {
     aws_cli_v2_command           = "vpc-lattice"
@@ -9325,8 +9443,9 @@ service "ec2" {
   }
 
   names {
-    provider_name_upper = "EC2"
-    human_friendly      = "EC2 (Elastic Compute Cloud)"
+    provider_name_upper  = "EC2"
+    human_friendly       = "EC2 (Elastic Compute Cloud)"
+    human_friendly_short = "EC2"
   }
 
   endpoint_info {
@@ -9334,7 +9453,7 @@ service "ec2" {
   }
 
   resource_prefix {
-    actual  = "aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
+    actual  = "aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|secondary_network|secondary_subnet|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
     correct = "aws_ec2_"
   }
 
@@ -9399,7 +9518,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "outposts_"
-    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway"]
+    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway", "ec2_service_link_virtual_interface"]
     brand               = "AWS"
     exclude             = true
     allowed_subcategory = true
@@ -9490,8 +9609,9 @@ service "ec2" {
     }
 
     names {
-      provider_name_upper = "VPC"
-      human_friendly      = "VPC (Virtual Private Cloud)"
+      provider_name_upper  = "VPC"
+      human_friendly       = "VPC (Virtual Private Cloud)"
+      human_friendly_short = "VPC"
     }
 
     resource_prefix {
@@ -9644,7 +9764,7 @@ service "ec2" {
   provider_package_correct = "ec2"
   split_package            = "ec2"
   file_prefix              = "ec2_"
-  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_secondary_network", "ec2_secondary_subnet", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
 }
 

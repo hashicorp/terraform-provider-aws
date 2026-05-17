@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appstream
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -361,9 +362,8 @@ func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appst
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -374,8 +374,8 @@ func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appst
 	return output, nil
 }
 
-func statusImageBuilder(ctx context.Context, conn *appstream.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusImageBuilder(conn *appstream.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findImageBuilderByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -394,17 +394,17 @@ func waitImageBuilderRunning(ctx context.Context, conn *appstream.Client, id str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageBuilderStatePending),
 		Target:  enum.Slice(awstypes.ImageBuilderStateRunning),
-		Refresh: statusImageBuilder(ctx, conn, id),
+		Refresh: statusImageBuilder(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ImageBuilder); ok {
-		tfresource.SetLastError(err, resourcesError(output.ImageBuilderErrors))
+		retry.SetLastError(err, resourcesError(output.ImageBuilderErrors))
 
 		return output, err
 	}
@@ -416,17 +416,17 @@ func waitImageBuilderDeleted(ctx context.Context, conn *appstream.Client, id str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageBuilderStatePending, awstypes.ImageBuilderStateDeleting),
 		Target:  []string{},
-		Refresh: statusImageBuilder(ctx, conn, id),
+		Refresh: statusImageBuilder(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ImageBuilder); ok {
-		tfresource.SetLastError(err, resourcesError(output.ImageBuilderErrors))
+		retry.SetLastError(err, resourcesError(output.ImageBuilderErrors))
 
 		return output, err
 	}

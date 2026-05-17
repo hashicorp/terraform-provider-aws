@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -42,10 +41,10 @@ func testAccCheckInvocationResult(name, expectedResult string) resource.TestChec
 
 func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,10 +61,10 @@ func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 
 func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,10 +81,10 @@ func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 
 func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -102,10 +101,10 @@ func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
 
 func TestAccLambdaInvocationDataSource_tenantId(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -157,7 +156,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   environment {
     variables = {
@@ -188,7 +187,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
 
   environment {
@@ -221,7 +220,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
 
   environment {
@@ -260,7 +259,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   tenancy_config {
     tenant_isolation_mode = "PER_TENANT"
   }

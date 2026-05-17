@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -174,9 +175,8 @@ func findRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.
 	output, err := conn.GetRegistry(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -187,11 +187,9 @@ func findRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.
 	return output, nil
 }
 
-func statusRegistry(ctx context.Context, conn *glue.Client, id string) sdkretry.StateRefreshFunc {
-	const (
-		registryStatusUnknown = "Unknown"
-	)
-	return func() (any, string, error) {
+func statusRegistry(conn *glue.Client, id string) retry.StateRefreshFunc {
+	const registryStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRegistryByID(ctx, conn, id)
 		if err != nil {
 			return nil, registryStatusUnknown, err
@@ -210,10 +208,10 @@ func waitRegistryDeleted(ctx context.Context, conn *glue.Client, registryID stri
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RegistryStatusDeleting),
 		Target:  []string{},
-		Refresh: statusRegistry(ctx, conn, registryID),
+		Refresh: statusRegistry(conn, registryID),
 		Timeout: timeout,
 	}
 

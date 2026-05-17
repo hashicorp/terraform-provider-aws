@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -14,18 +16,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -85,6 +87,32 @@ func resourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+			},
+			"ena_srd_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ena_srd_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"ena_srd_udp_specification": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ena_srd_udp_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"interface_type": {
 				Type:             schema.TypeString,
@@ -355,7 +383,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	ipv4PrefixesSpecified := false
 	ipv6PrefixesSpecified := false
 	input := ec2.CreateNetworkInterfaceInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		SubnetId:    aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
@@ -513,6 +541,19 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if v, ok := d.GetOk("ena_srd_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId:  aws.String(d.Id()),
+			EnaSrdSpecification: expandEnaSrdSpecification(v.([]any)[0].(map[string]any)),
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) ENA SRD specification: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
@@ -543,6 +584,13 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	} else {
 		d.Set("attachment", nil)
+	}
+	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil && aws.ToBool(eni.Attachment.EnaSrdSpecification.EnaSrdEnabled) {
+		if err := d.Set("ena_srd_specification", []any{flattenAttachmentEnaSrdSpecification(eni.Attachment.EnaSrdSpecification)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ena_srd_specification: %s", err)
+		}
+	} else {
+		d.Set("ena_srd_specification", nil)
 	}
 	d.Set(names.AttrDescription, eni.Description)
 	d.Set("interface_type", eni.InterfaceType)
@@ -678,8 +726,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			n = make([]string, 0)
 		}
 
-		if len(o.([]any))-1 > 0 {
-			privateIPsToUnassign := make([]any, len(o.([]any))-1)
+		if n := len(o.([]any)); n > 1 {
+			privateIPsToUnassign := make([]any, n-1)
 			idx := 0
 			for i, ip := range o.([]any) {
 				// skip primary private ip address
@@ -1078,6 +1126,26 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if d.HasChange("ena_srd_specification") {
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("ena_srd_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.EnaSrdSpecification = expandEnaSrdSpecification(v.([]any)[0].(map[string]any))
+		} else {
+			input.EnaSrdSpecification = &awstypes.EnaSrdSpecification{
+				EnaSrdEnabled: aws.Bool(false),
+			}
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) ENA SRD specification: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
@@ -1088,8 +1156,22 @@ func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]any)
 
-		if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout); err != nil {
+		// Check that attachment still exists and is not already detached.
+		output, err := findNetworkInterfaceByID(ctx, conn, d.Id())
+		if retry.NotFound(err) {
+			return diags
+		}
+
+		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		if output != nil && output.Attachment != nil {
+			if output.Attachment.Status != awstypes.AttachmentStatusDetached {
+				if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
 		}
 	}
 
@@ -1499,10 +1581,74 @@ func flattenIPv6PrefixSpecifications(apiObjects []awstypes.Ipv6PrefixSpecificati
 	return tfList
 }
 
+func expandEnaSrdSpecification(tfMap map[string]any) *awstypes.EnaSrdSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdSpecification{}
+
+	if v, ok := tfMap["ena_srd_enabled"].(bool); ok {
+		apiObject.EnaSrdEnabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["ena_srd_udp_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EnaSrdUdpSpecification = expandEnaSrdUdpSpecification(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandEnaSrdUdpSpecification(tfMap map[string]any) *awstypes.EnaSrdUdpSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdUdpSpecification{}
+
+	if v, ok := tfMap["ena_srd_udp_enabled"].(bool); ok {
+		apiObject.EnaSrdUdpEnabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenAttachmentEnaSrdSpecification(apiObject *awstypes.AttachmentEnaSrdSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnaSrdEnabled; v != nil {
+		tfMap["ena_srd_enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.EnaSrdUdpSpecification; v != nil {
+		tfMap["ena_srd_udp_specification"] = []any{flattenAttachmentEnaSrdUdpSpecification(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAttachmentEnaSrdUdpSpecification(apiObject *awstypes.AttachmentEnaSrdUdpSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnaSrdUdpEnabled; v != nil {
+		tfMap["ena_srd_udp_enabled"] = aws.ToBool(v)
+	}
+
+	return tfMap
+}
+
 // Some AWS services creates ENIs behind the scenes and keeps these around for a while
 // which can prevent security groups and subnets attached to such ENIs from being destroyed
 func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, resourceId string, timeout time.Duration) error {
-	var g multierror.Group
+	var g tfsync.Group
 
 	tflog.Trace(ctx, "Checking for lingering ENIs")
 
@@ -1531,10 +1677,10 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, reso
 		deleteLingeringQuickSightENI(ctx, &g, conn, eni, timeout)
 	}
 
-	return g.Wait().ErrorOrNil()
+	return g.Wait(ctx)
 }
 
-func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, eni *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringLambdaENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, eni *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
 	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1544,7 +1690,7 @@ func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil && aws.ToString(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
@@ -1575,7 +1721,7 @@ func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec
 	return true
 }
 
-func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, eni *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringComprehendENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, eni *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1585,7 +1731,7 @@ func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil {
@@ -1604,7 +1750,7 @@ func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn
 	return true
 }
 
-func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringDMSENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1614,7 +1760,7 @@ func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 		if v.Attachment != nil {
@@ -1633,7 +1779,7 @@ func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 	return true
 }
 
-func deleteLingeringRDSENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringRDSENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1643,7 +1789,7 @@ func deleteLingeringRDSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 		if v.Attachment != nil {
@@ -1662,7 +1808,7 @@ func deleteLingeringRDSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 	return true
 }
 
-func deleteLingeringQuickSightENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringQuickSightENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1672,7 +1818,7 @@ func deleteLingeringQuickSightENI(ctx context.Context, g *multierror.Group, conn
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 		if v.Attachment != nil {

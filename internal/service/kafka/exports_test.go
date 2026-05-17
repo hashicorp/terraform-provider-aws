@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka
@@ -12,6 +12,7 @@ var (
 	ResourceSCRAMSecretAssociation       = resourceSCRAMSecretAssociation
 	ResourceSingleSCRAMSecretAssociation = newSingleSCRAMSecretAssociationResource
 	ResourceServerlessCluster            = resourceServerlessCluster
+	ResourceTopic                        = newTopicResource
 	ResourceVPCConnection                = resourceVPCConnection
 
 	FindClusterByARN                             = findClusterByARN
@@ -21,6 +22,7 @@ var (
 	FindSCRAMSecretAssociation                   = findSCRAMSecretAssociation
 	FindSingleSCRAMSecretAssociationByTwoPartKey = findSingleSCRAMSecretAssociationByTwoPartKey
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
+	FindTopicByTwoPartKey                        = findTopicByTwoPartKey
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
 
 	ClusterUUIDFromARN    = clusterUUIDFromARN

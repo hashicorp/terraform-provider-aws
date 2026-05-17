@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codeconnections
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -270,10 +271,10 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ConnectionStatusPending, awstypes.ConnectionStatusAvailable),
-		Refresh:                   statusConnection(ctx, conn, id),
+		Refresh:                   statusConnection(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -288,10 +289,10 @@ func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id
 }
 
 func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatusPending, awstypes.ConnectionStatusAvailable, awstypes.ConnectionStatusError),
 		Target:  []string{},
-		Refresh: statusConnection(ctx, conn, id),
+		Refresh: statusConnection(conn, id),
 		Timeout: timeout,
 	}
 
@@ -303,8 +304,8 @@ func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id
 	return nil, err
 }
 
-func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnection(conn *codeconnections.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findConnectionByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -327,9 +328,8 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 	output, err := conn.GetConnection(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -338,7 +338,7 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 	}
 
 	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connection, nil

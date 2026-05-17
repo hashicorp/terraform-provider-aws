@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -327,7 +329,7 @@ func (r *clusterSnapshotCopyResource) Update(ctx context.Context, req resource.U
 			return
 		}
 
-		toAdd, toRemove, _ := intflex.DiffSlices(have, want, func(s1, s2 string) bool { return s1 == s2 })
+		toAdd, toRemove, _ := intflex.DiffSlices(have, want, intflex.Equal)
 
 		input := &rds.ModifyDBClusterSnapshotAttributeInput{
 			AttributeName:               aws.String(dbSnapshotAttributeNameRestore),

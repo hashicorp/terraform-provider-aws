@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/useragent"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -28,21 +29,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-var (
-	resourceSchemasValidated bool
 )
 
 type sdkProvider struct {
 	provider        *schema.Provider
 	servicePackages iter.Seq2[int, conns.ServicePackage]
+}
+
+// providerMeta matches the shape of ProviderMetaSchema
+type providerMeta struct {
+	UserAgent []string `cty:"user_agent"`
 }
 
 // NewProvider returns a new, initialized Terraform Plugin SDK v2-style provider instance.
@@ -279,6 +282,22 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Optional:    true,
 					Description: "Resolve an endpoint with FIPS capability",
 				},
+				"user_agent": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+			},
+
+			// ProviderMetaSchema enables module-scoped User-Agent modifications
+			ProviderMetaSchema: map[string]*schema.Schema{
+				"user_agent": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
 			},
 
 			// Data sources and resources implemented using Terraform Plugin SDK
@@ -291,24 +310,6 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 	}
 
 	sdkProvider.provider.ConfigureContextFunc = sdkProvider.configure
-
-	// Acceptance tests call this function multiple times, potentially in parallel.
-	// To avoid "fatal error: concurrent map writes", take a lock.
-	const (
-		mutexKVKey = "provider.New"
-	)
-	conns.GlobalMutexKV.Lock(mutexKVKey)
-	defer conns.GlobalMutexKV.Unlock(mutexKVKey)
-
-	// Because we try and share resource schemas as much as possible,
-	// we need to ensure that we only validate the resource schemas once.
-	if !resourceSchemasValidated {
-		if err := sdkProvider.validateResourceSchemas(ctx); err != nil {
-			return nil, err
-		}
-
-		resourceSchemasValidated = true
-	}
 
 	servicePackageMap, err := sdkProvider.initialize(ctx)
 
@@ -501,6 +502,10 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		}
 	}
 
+	if v, ok := d.GetOk("user_agent"); ok && len(v.([]any)) > 0 {
+		config.UserAgent = useragent.FromSlice(v.([]any))
+	}
+
 	var c *conns.AWSClient
 	if v, ok := p.provider.Meta().(*conns.AWSClient); ok {
 		c = v
@@ -538,12 +543,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			r := v.Factory()
 
-			// Ensure that the correct CRUD handler variants are used.
-			if r.Read != nil || r.ReadContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s data source", typeName))
-				continue
-			}
-
 			var isRegionOverrideEnabled bool
 			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
@@ -557,7 +556,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := attribute.Region()
+					regionSchema := sdkv2.RegionOptionalComputed()
 
 					if f := r.SchemaFunc; f != nil {
 						r.SchemaFunc = func() map[string]*schema.Schema {
@@ -593,7 +592,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			}
 
 			opts := wrappedDataSourceOptions{
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, getProviderMeta getProviderMetaFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
@@ -606,6 +605,17 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
+					}
+
+					if getProviderMeta != nil {
+						var metadata providerMeta
+						if err := getProviderMeta(&metadata); err != nil {
+							return ctx, fmt.Errorf("getting provider_meta: %w", err)
+						}
+
+						if len(metadata.UserAgent) > 0 {
+							ctx = useragent.Context(ctx, useragent.FromSlice(metadata.UserAgent))
+						}
 					}
 
 					return ctx, nil
@@ -627,24 +637,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			r := resource.Factory()
 
-			// Ensure that the correct CRUD handler variants are used.
-			if r.Create != nil || r.CreateContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Read != nil || r.ReadContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Update != nil || r.UpdateContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Delete != nil || r.DeleteContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s resource", typeName))
-				continue
-			}
-
 			var isRegionOverrideEnabled bool
 			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
@@ -658,7 +650,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := attribute.Region()
+					regionSchema := sdkv2.RegionOptionalComputed()
 
 					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
 					if r.UpdateWithoutTimeout == nil {
@@ -757,13 +749,13 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				} else if resource.Identity.IsCustomInherentRegion {
 					r.Importer = customInherentRegionResourceImporter(resource.Identity)
 				} else {
-					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
+					r.Importer = newParameterizedIdentityImporter(resource.Identity, resource.Import)
 				}
 			}
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, getProviderMeta getProviderMetaFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
@@ -776,6 +768,20 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
+						if s := c.RandomnessSource(); s != nil {
+							ctx = vcr.NewContext(ctx, s)
+						}
+					}
+
+					if getProviderMeta != nil {
+						var metadata providerMeta
+						if err := getProviderMeta(&metadata); err != nil {
+							return ctx, fmt.Errorf("getting provider_meta: %w", err)
+						}
+
+						if len(metadata.UserAgent) > 0 {
+							ctx = useragent.Context(ctx, useragent.FromSlice(metadata.UserAgent))
+						}
 					}
 
 					return ctx, nil
@@ -789,85 +795,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 	}
 
 	return servicePackageMap, errors.Join(errs...)
-}
-
-// validateResourceSchemas is called from `New` to validate Terraform Plugin SDK v2-style resource schemas.
-func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
-	var errs []error
-
-	for _, sp := range p.servicePackages {
-		for _, v := range sp.SDKDataSources(ctx) {
-			typeName := v.TypeName
-			r := v.Factory()
-			s := r.SchemaMap()
-
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := s[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
-					continue
-				}
-			}
-
-			if !tfunique.IsHandleNil(v.Tags) {
-				// The data source has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := s[names.AttrTags]; ok {
-					if !v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
-					continue
-				}
-			}
-		}
-
-		for _, resource := range sp.SDKResources(ctx) {
-			typeName := resource.TypeName
-			r := resource.Factory()
-			s := r.SchemaMap()
-
-			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := s[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
-					continue
-				}
-			}
-
-			if !tfunique.IsHandleNil(resource.Tags) {
-				// The resource has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := s[names.AttrTags]; ok {
-					if v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
-					continue
-				}
-				if v, ok := s[names.AttrTagsAll]; ok {
-					if !v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
-					continue
-				}
-			}
-
-			if resource.Identity.IsCustomInherentRegion {
-				if resource.Identity.IsGlobalResource {
-					errs = append(errs, fmt.Errorf("`IsCustomInherentRegion` is not supported for Global resources: %s resource", typeName))
-					continue
-				}
-			}
-		}
-	}
-
-	return errors.Join(errs...)
 }
 
 func assumeRoleSchema() *schema.Schema {
@@ -1189,11 +1116,12 @@ func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyCon
 }
 
 func validateTagPolicySeverity(path cty.Path, s string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch s {
 	case "error", "warning", "disabled":
-		return nil
+		return diags
 	}
-	return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`)}
+	return append(diags, errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`))
 }
 
 const (
@@ -1201,12 +1129,13 @@ const (
 )
 
 func validateTagPolicySeverityEnvVar(s string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch s {
 	case "error", "warning", "disabled":
-		return nil
+		return diags
 	}
-	return diag.Diagnostics{errs.NewErrorDiagnostic(
+	return append(diags, errs.NewErrorDiagnostic(
 		summaryInvalidEnvironmentVariableValue,
 		fmt.Sprintf(`%s must be one of "error", "warning", or "disabled"`, tftags.TagPolicyComplianceEnvVar),
-	)}
+	))
 }

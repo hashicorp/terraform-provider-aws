@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appstream
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -590,9 +591,8 @@ func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.De
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -603,8 +603,8 @@ func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.De
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *appstream.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFleet(conn *appstream.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -623,17 +623,17 @@ func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string) (*
 	const (
 		timeout = 180 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStarting),
 		Target:  enum.Slice(awstypes.FleetStateRunning),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Fleet); ok {
-		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+		retry.SetLastError(err, fleetsError(output.FleetErrors))
 
 		return output, err
 	}
@@ -645,17 +645,17 @@ func waitFleetStopped(ctx context.Context, conn *appstream.Client, id string) (*
 	const (
 		timeout = 180 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStopping),
 		Target:  enum.Slice(awstypes.FleetStateStopped),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Fleet); ok {
-		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+		retry.SetLastError(err, fleetsError(output.FleetErrors))
 
 		return output, err
 	}

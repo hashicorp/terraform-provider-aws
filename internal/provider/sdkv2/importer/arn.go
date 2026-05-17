@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer
@@ -131,9 +131,9 @@ func GlobalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttypes
 	return nil
 }
 
-func setAttribute(rd *schema.ResourceData, name string, value string) {
+func setAttribute(rd *schema.ResourceData, name string, value any) {
 	if name == "id" {
-		rd.SetId(value)
+		rd.SetId(value.(string))
 		return
 	}
 	rd.Set(name, value)

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -20,6 +20,18 @@ var geospatialMapStyleOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"base_map_style": stringEnumSchema[awstypes.BaseMapStyleType](attrOptional),
+			},
+		},
+	}
+})
+
+var geospatialMapStyleOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapStyleOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"base_map_style": stringEnumDataSourceSchema[awstypes.BaseMapStyleType](),
 			},
 		},
 	}
@@ -48,6 +60,30 @@ var geospatialWindowOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					},
 				},
 				"map_zoom_mode": stringEnumSchema[awstypes.MapZoomMode](attrOptional),
+			},
+		},
+	}
+})
+
+var geospatialWindowOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialWindowOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"bounds": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialCoordinateBounds.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"east":  floatComputedOnly(),
+							"north": floatComputedOnly(),
+							"south": floatComputedOnly(),
+							"west":  floatComputedOnly(),
+						},
+					},
+				},
+				"map_zoom_mode": stringEnumDataSourceSchema[awstypes.MapZoomMode](),
 			},
 		},
 	}

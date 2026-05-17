@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -16,10 +18,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -31,16 +33,16 @@ import (
 // @SDKResource("aws_nat_gateway", name="NAT Gateway")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.NatGateway")
+// @Testing(idAttrDuplicates="id")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceNATGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNATGatewayCreate,
 		ReadWithoutTimeout:   resourceNATGatewayRead,
 		UpdateWithoutTimeout: resourceNATGatewayUpdate,
 		DeleteWithoutTimeout: resourceNATGatewayDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -278,7 +280,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateNatGatewayInput{
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNatgateway),
 	}
 
@@ -353,6 +355,16 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceNATGatewayFlatten(d, natGateway); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	setTagsOut(ctx, natGateway.Tags)
+
+	return diags
+}
+
+func resourceNATGatewayFlatten(d *schema.ResourceData, natGateway *awstypes.NatGateway) error {
 	d.Set("availability_mode", natGateway.AvailabilityMode)
 	d.Set("connectivity_type", natGateway.ConnectivityType)
 	d.Set(names.AttrVPCID, natGateway.VpcId)
@@ -378,6 +390,9 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 				}
 			}
 		}
+		if err := d.Set("regional_nat_gateway_address", nil); err != nil {
+			return fmt.Errorf("setting regional_nat_gateway_address: %w", err)
+		}
 		d.Set("secondary_allocation_ids", secondaryAllocationIDs)
 		d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 		d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
@@ -389,19 +404,17 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 		if natGateway.AutoProvisionZones == awstypes.AutoProvisionZonesStateEnabled {
 			d.Set("availability_zone_address", nil)
 		} else if err := d.Set("availability_zone_address", flattenNATGatewayAvailabilityZoneAddresses(natGateway.NatGatewayAddresses)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting availability_zone_address: %s", err)
+			return fmt.Errorf("setting availability_zone_address: %w", err)
 		}
 
 		if err := d.Set("regional_nat_gateway_address", flattenRegionalNATGatewayAddress(natGateway.NatGatewayAddresses)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting regional_nat_gateway_address: %s", err)
+			return fmt.Errorf("setting regional_nat_gateway_address: %w", err)
 		}
 		d.Set("regional_nat_gateway_auto_mode", natGateway.AutoProvisionZones)
 		d.Set("route_table_id", natGateway.RouteTableId)
 	}
 
-	setTagsOut(ctx, natGateway.Tags)
-
-	return diags
+	return nil
 }
 
 func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -603,6 +616,11 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	// Eventual consistency wait for any attached appliances to be detached before deleting the NAT Gateway
+	if _, err := waitNATGatewayAttachedAppliancesDetached(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) attached appliances to detach: %s", d.Id(), err)
+	}
 
 	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
 	input := ec2.DeleteNatGatewayInput{

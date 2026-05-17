@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -22,6 +24,7 @@ import (
 func dataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {
 				Type:         schema.TypeString,
@@ -64,15 +67,15 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting delegated_services: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func findDelegatedServicesByAccountID(ctx context.Context, conn *organizations.Client, accountID string) ([]awstypes.DelegatedService, error) {
-	input := &organizations.ListDelegatedServicesForAccountInput{
+	input := organizations.ListDelegatedServicesForAccountInput{
 		AccountId: aws.String(accountID),
 	}
 
-	return findDelegatedServices(ctx, conn, input)
+	return findDelegatedServices(ctx, conn, &input)
 }
 
 func findDelegatedServices(ctx context.Context, conn *organizations.Client, input *organizations.ListDelegatedServicesForAccountInput) ([]awstypes.DelegatedService, error) {

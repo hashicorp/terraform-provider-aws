@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package detective_test
@@ -17,7 +17,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 	graphResourceName := "aws_detective_graph.test"
 	resourceName := "aws_detective_organization_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -26,7 +26,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Detective Organization Configuration cannot be deleted separately.
 		// Ensure parent resource is destroyed instead.
-		CheckDestroy: testAccCheckGraphDestroy(ctx),
+		CheckDestroy: testAccCheckGraphDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apprunner
 
@@ -17,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -176,9 +177,8 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -196,8 +196,8 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 	return output, nil
 }
 
-func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOperation(conn *apprunner.Client, serviceARN, operationID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
 
 		if retry.NotFound(err) {
@@ -213,10 +213,10 @@ func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, op
 }
 
 func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string, timeout time.Duration) (*awstypes.OperationSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.OperationStatusPending, awstypes.OperationStatusInProgress),
 		Target:         enum.Slice(awstypes.OperationStatusSucceeded),
-		Refresh:        statusOperation(ctx, conn, serviceARN, operationID),
+		Refresh:        statusOperation(conn, serviceARN, operationID),
 		Timeout:        timeout,
 		PollInterval:   30 * time.Second,
 		NotFoundChecks: 30,

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -15,11 +17,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -151,6 +152,20 @@ func resourceImage() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrLoggingConfiguration: {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrLogGroupName: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -279,7 +294,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImageInput{
-		ClientToken:                  aws.String(id.UniqueId()),
+		ClientToken:                  aws.String(create.UniqueId(ctx)),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
 	}
@@ -310,6 +325,10 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoggingConfiguration = expandLoggingConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("workflow"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -377,6 +396,11 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if image.InfrastructureConfiguration != nil {
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
 	}
+	if image.LoggingConfiguration != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenLoggingConfiguration(image.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+		}
+	}
 	d.Set(names.AttrName, image.Name)
 	d.Set("os_version", image.OsVersion)
 	if image.OutputResources != nil {
@@ -437,9 +461,8 @@ func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) 
 	output, err := conn.GetImage(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -448,14 +471,14 @@ func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) 
 	}
 
 	if output == nil || output.Image == nil || output.Image.State == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Image, nil
 }
 
-func statusImage(ctx context.Context, conn *imagebuilder.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusImage(conn *imagebuilder.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findImageByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -471,7 +494,7 @@ func statusImage(ctx context.Context, conn *imagebuilder.Client, arn string) sdk
 }
 
 func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, arn string, timeout time.Duration) (*awstypes.Image, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ImageStatusBuilding,
 			awstypes.ImageStatusCreating,
@@ -481,14 +504,14 @@ func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, ar
 			awstypes.ImageStatusTesting,
 		),
 		Target:  enum.Slice(awstypes.ImageStatusAvailable),
-		Refresh: statusImage(ctx, conn, arn),
+		Refresh: statusImage(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Image); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
 
 		return output, err
 	}

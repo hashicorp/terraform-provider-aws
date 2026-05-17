@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -12,11 +12,10 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,20 +23,24 @@ import (
 
 func testAccCustomModel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
 	var v bedrock.GetModelCustomizationJobOutput
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomModelConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					testAccCheckCustomModelExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "base_model_identifier"),
 					resource.TestCheckNoResourceAttr(resourceName, "custom_model_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "custom_model_kms_key_id"),
@@ -45,10 +48,10 @@ func testAccCustomModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customization_type", "FINE_TUNING"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.batchSize", "1"),
-					resource.TestCheckResourceAttr(resourceName, "hyperparameters.epochCount", "1"),
-					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRate", "0.005"),
-					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRateWarmupSteps", "0"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "job_arn", "bedrock", regexache.MustCompile(`model-customization-job/amazon.titan-text-express-v1.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.epochCount", "2"),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRate", "0.00005"),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRateWarmupSteps", "10"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "job_arn", "bedrock", regexache.MustCompile(`model-customization-job/amazon.nova-micro-v1.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "job_status", "InProgress"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
@@ -75,21 +78,25 @@ func testAccCustomModel_basic(t *testing.T) {
 
 func testAccCustomModel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
 	var v bedrock.GetModelCustomizationJobOutput
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceCustomModel, resourceName),
+					testAccCheckCustomModelExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceCustomModel, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,20 +106,24 @@ func testAccCustomModel_disappears(t *testing.T) {
 
 func testAccCustomModel_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
 	var v bedrock.GetModelCustomizationJobOutput
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomModelConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					testAccCheckCustomModelExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "custom_model_kms_key_id"),
 				),
 			},
@@ -128,20 +139,24 @@ func testAccCustomModel_kmsKey(t *testing.T) {
 
 func testAccCustomModel_validationDataConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
 	var v bedrock.GetModelCustomizationJobOutput
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomModelConfig_validationDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					testAccCheckCustomModelExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validation_data_config.0.validator.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "validation_data_config.0.validator.0.s3_uri"),
@@ -163,20 +178,24 @@ func testAccCustomModel_validationDataConfigWaitForCompletion(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
 	var v bedrock.GetModelCustomizationJobOutput
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomModelConfig_validationDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					testAccCheckCustomModelExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validation_data_config.0.validator.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "validation_data_config.0.validator.0.s3_uri"),
@@ -207,20 +226,24 @@ func testAccCustomModel_validationDataConfigWaitForCompletion(t *testing.T) {
 
 func testAccCustomModel_vpcConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
 	var v bedrock.GetModelCustomizationJobOutput
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomModelConfig_vpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					testAccCheckCustomModelExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
@@ -237,7 +260,7 @@ func testAccCustomModel_vpcConfig(t *testing.T) {
 }
 
 func testAccWaitModelCustomizationJobCompleted(ctx context.Context, t *testing.T, v *bedrock.GetModelCustomizationJobOutput) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 	jobARN := aws.ToString(v.JobArn)
 	const (
@@ -250,9 +273,9 @@ func testAccWaitModelCustomizationJobCompleted(ctx context.Context, t *testing.T
 	}
 }
 
-func testAccCheckCustomModelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCustomModelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrock_custom_model" {
@@ -289,14 +312,14 @@ func testAccCheckCustomModelDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckCustomModelExists(ctx context.Context, n string, v *bedrock.GetModelCustomizationJobOutput) resource.TestCheckFunc {
+func testAccCheckCustomModelExists(ctx context.Context, t *testing.T, n string, v *bedrock.GetModelCustomizationJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		output, err := tfbedrock.FindModelCustomizationJobByID(ctx, conn, rs.Primary.ID)
 
@@ -419,8 +442,9 @@ resource "aws_iam_role_policy_attachment" "output" {
   policy_arn = aws_iam_policy.output.arn
 }
 
+# https://docs.aws.amazon.com/bedrock/latest/userguide/custom-model-fine-tuning.html
 data "aws_bedrock_foundation_model" "test" {
-  model_id = "amazon.titan-text-express-v1"
+  model_id = "amazon.nova-micro-v1:0:128k"
 }
 `, rName)
 }
@@ -434,10 +458,10 @@ resource "aws_bedrock_custom_model" "test" {
   role_arn              = aws_iam_role.test.arn
 
   hyperparameters = {
-    "epochCount"              = "1"
+    "epochCount"              = "2"
     "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
+    "learningRate"            = "0.00005"
+    "learningRateWarmupSteps" = "10"
   }
 
   output_data_config {
@@ -469,10 +493,10 @@ resource "aws_bedrock_custom_model" "test" {
   customization_type      = "FINE_TUNING"
 
   hyperparameters = {
-    "epochCount"              = "1"
+    "epochCount"              = "2"
     "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
+    "learningRate"            = "0.00005"
+    "learningRateWarmupSteps" = "10"
   }
 
   output_data_config {
@@ -495,10 +519,10 @@ resource "aws_bedrock_custom_model" "test" {
   role_arn              = aws_iam_role.test.arn
 
   hyperparameters = {
-    "epochCount"              = "1"
+    "epochCount"              = "2"
     "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
+    "learningRate"            = "0.00005"
+    "learningRateWarmupSteps" = "10"
   }
 
   output_data_config {
@@ -565,10 +589,10 @@ resource "aws_bedrock_custom_model" "test" {
   role_arn              = aws_iam_role.test.arn
 
   hyperparameters = {
-    "epochCount"              = "1"
+    "epochCount"              = "2"
     "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
+    "learningRate"            = "0.00005"
+    "learningRateWarmupSteps" = "10"
   }
 
   output_data_config {

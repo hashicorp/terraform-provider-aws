@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,19 +20,19 @@ func TestAccAMPAlertManagerDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_prometheus_alert_manager_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAlertManagerDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckAlertManagerDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAlertManagerDefinitionConfig_basic(defaultAlertManagerDefinition()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAlertManagerDefinitionExists(ctx, resourceName),
+					testAccCheckAlertManagerDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "definition", defaultAlertManagerDefinition()),
 				),
 			},
@@ -45,14 +44,14 @@ func TestAccAMPAlertManagerDefinition_basic(t *testing.T) {
 			{
 				Config: testAccAlertManagerDefinitionConfig_basic(anotherAlertManagerDefinition()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAlertManagerDefinitionExists(ctx, resourceName),
+					testAccCheckAlertManagerDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "definition", anotherAlertManagerDefinition()),
 				),
 			},
 			{
 				Config: testAccAlertManagerDefinitionConfig_basic(defaultAlertManagerDefinition()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAlertManagerDefinitionExists(ctx, resourceName),
+					testAccCheckAlertManagerDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "definition", defaultAlertManagerDefinition()),
 				),
 			},
@@ -63,20 +62,20 @@ func TestAccAMPAlertManagerDefinition_basic(t *testing.T) {
 func TestAccAMPAlertManagerDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_prometheus_alert_manager_definition.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAlertManagerDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckAlertManagerDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAlertManagerDefinitionConfig_basic(defaultAlertManagerDefinition()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAlertManagerDefinitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceAlertManagerDefinition(), resourceName),
+					testAccCheckAlertManagerDefinitionExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamp.ResourceAlertManagerDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,14 +83,14 @@ func TestAccAMPAlertManagerDefinition_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAlertManagerDefinitionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAlertManagerDefinitionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		_, err := tfamp.FindAlertManagerDefinitionByID(ctx, conn, rs.Primary.ID)
 
@@ -99,9 +98,9 @@ func testAccCheckAlertManagerDefinitionExists(ctx context.Context, n string) res
 	}
 }
 
-func testAccCheckAlertManagerDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAlertManagerDefinitionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_alert_manager_definition" {

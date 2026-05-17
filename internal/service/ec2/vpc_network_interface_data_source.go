@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -95,6 +97,30 @@ func dataSourceNetworkInterface() *schema.Resource {
 						"network_card_index": {
 							Type:     schema.TypeInt,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"ena_srd_specification": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ena_srd_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"ena_srd_udp_specification": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ena_srd_udp_enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -206,6 +232,13 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 		}
 	} else {
 		d.Set("attachment", nil)
+	}
+	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil && aws.ToBool(eni.Attachment.EnaSrdSpecification.EnaSrdEnabled) {
+		if err := d.Set("ena_srd_specification", []any{flattenAttachmentEnaSrdSpecification(eni.Attachment.EnaSrdSpecification)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ena_srd_specification: %s", err)
+		}
+	} else {
+		d.Set("ena_srd_specification", nil)
 	}
 	d.Set(names.AttrAvailabilityZone, eni.AvailabilityZone)
 	d.Set(names.AttrDescription, eni.Description)

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Terraform Plugin Migrations
 
 With the introduction of [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) there are now two options for creating resource/data-sources in the provider.
@@ -5,30 +8,6 @@ All new resources/data-sources [must](https://github.com/hashicorp/terraform-pro
 At this time we do not intend to pursue migration of existing resources from [terraform-plugin-sdk](https://developer.hashicorp.com/terraform/plugin/sdkv2) to [terraform-plugin-framework](https://developer.hashicorp.com/terraform/plugin/framework). While they seem functionally identical, they exhibit enough differences
 in behavior that it has proven difficult to migrate resources of any complexity without introducing breaking changes. That said there are likely to be simple resources for which the migration will work fine,
 but we would discourage any attempts to migrate resources of any complexity, particularly those that are heavily used.
-
-## Migration Tooling
-
-Tooling has been created that will scaffold an existing resource into a Framework resource. This tool is meant to be used as a starting point so additional editing will be needed.
-
-Build:
-
-```console
-make tfsdk2fw
-```
-
-Convert a resource:
-
-The following pattern is used to generate a file:  `tfsdk2fw [-resource <resource-type>|-data-source <data-source-type>] <package-name> <name> <generated-file>`
-
-Example:
-
-```console
-tfsdk2fw -resource aws_example_resource examplepackage ResourceName internal/service/examplepackage/resource_name_fw.go
-```
-
-This command creates a separate file that exists alongside the existing SDKv2 resource. Ultimately, the new file should replace the SDKv2 resource.
-
-When done creating the resource using the Framework run `make gen` to remove the SDK resource and add the Framework resource to the list of generated service packages.
 
 ## State Upgrade
 

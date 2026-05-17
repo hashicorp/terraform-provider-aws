@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -108,7 +109,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
@@ -278,9 +279,7 @@ func findEventSubscriptionByID(ctx context.Context, conn *rds.Client, id string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.CustSubscriptionId) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -304,9 +303,8 @@ func findEventSubscriptions(ctx context.Context, conn *rds.Client, input *rds.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.SubscriptionNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -324,8 +322,8 @@ func findEventSubscriptions(ctx context.Context, conn *rds.Client, input *rds.De
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEventSubscription(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEventSubscriptionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -341,10 +339,10 @@ func statusEventSubscription(ctx context.Context, conn *rds.Client, id string) s
 }
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, id),
+		Refresh:    statusEventSubscription(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -360,10 +358,10 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *rds.Client, id stri
 }
 
 func waitEventSubscriptionDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusEventSubscription(ctx, conn, id),
+		Refresh:    statusEventSubscription(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -379,10 +377,10 @@ func waitEventSubscriptionDeleted(ctx context.Context, conn *rds.Client, id stri
 }
 
 func waitEventSubscriptionUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{eventSubscriptionStatusModifying},
 		Target:                    []string{eventSubscriptionStatusActive},
-		Refresh:                   statusEventSubscription(ctx, conn, id),
+		Refresh:                   statusEventSubscription(conn, id),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		Delay:                     30 * time.Second,

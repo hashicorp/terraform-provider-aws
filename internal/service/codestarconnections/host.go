@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codestarconnections
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -245,9 +246,8 @@ func findHostByARN(ctx context.Context, conn *codestarconnections.Client, arn st
 	output, err := conn.GetHost(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -256,14 +256,14 @@ func findHostByARN(ctx context.Context, conn *codestarconnections.Client, arn st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusHost(ctx context.Context, conn *codestarconnections.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusHost(conn *codestarconnections.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findHostByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -287,10 +287,10 @@ const (
 )
 
 func waitHostPendingOrAvailable(ctx context.Context, conn *codestarconnections.Client, arn string, timeout time.Duration) (*codestarconnections.GetHostOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{hostStatusVPCConfigInitializing},
 		Target:  []string{hostStatusAvailable, hostStatusPending},
-		Refresh: statusHost(ctx, conn, arn),
+		Refresh: statusHost(conn, arn),
 		Timeout: timeout,
 	}
 

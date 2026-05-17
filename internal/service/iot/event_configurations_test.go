@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -16,7 +16,7 @@ func TestAccIoTEventConfigurations_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccEventConfigurations_basic,
-		"Identity":      testAccIoTEventConfigurations_IdentitySerial,
+		"Identity":      testAccIoTEventConfigurations_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -26,7 +26,7 @@ func testAccEventConfigurations_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iot_event_configurations.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

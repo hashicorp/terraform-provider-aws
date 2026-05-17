@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -13,11 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -188,7 +189,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
-		creationToken = id.UniqueId()
+		creationToken = create.UniqueId(ctx)
 	}
 	throughputMode := awstypes.ThroughputMode(d.Get("throughput_mode").(string))
 	input := &efs.CreateFileSystemInput{
@@ -417,9 +418,8 @@ func findFileSystems(ctx context.Context, conn *efs.Client, input *efs.DescribeF
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -449,17 +449,16 @@ func findFileSystemByID(ctx context.Context, conn *efs.Client, id string) (*awst
 	}
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFileSystemLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileSystemByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -478,10 +477,10 @@ func waitFileSystemAvailable(ctx context.Context, conn *efs.Client, fileSystemID
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating, awstypes.LifeCycleStateUpdating),
 		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
+		Refresh:    statusFileSystemLifeCycleState(conn, fileSystemID),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -500,10 +499,10 @@ func waitFileSystemDeleted(ctx context.Context, conn *efs.Client, fileSystemID s
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:     []string{},
-		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
+		Refresh:    statusFileSystemLifeCycleState(conn, fileSystemID),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,

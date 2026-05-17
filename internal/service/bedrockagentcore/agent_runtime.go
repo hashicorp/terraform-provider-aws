@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -16,6 +18,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -26,8 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -217,30 +220,74 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					},
 				},
 			},
-			"authorizer_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
+			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			"filesystem_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[filesystemConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtMost(5),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"custom_jwt_authorizer": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
+						"efs_access_point": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[efsAccessPointConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"allowed_audience": schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
+									"access_point_arn": schema.StringAttribute{
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
-									"allowed_clients": schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-									},
-									"discovery_url": schema.StringAttribute{
+									"mount_path": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(6, 200),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+										},
+									},
+								},
+							},
+						},
+						"s3_files_access_point": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3FilesAccessPointConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"access_point_arn": schema.StringAttribute{
+										Required:   true,
+										CustomType: fwtypes.ARNType,
+									},
+									"mount_path": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(6, 200),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+										},
+									},
+								},
+							},
+						},
+						"session_storage": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[sessionStorageConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("efs_access_point"),
+									path.MatchRelative().AtParent().AtName("s3_files_access_point"),
+									path.MatchRelative().AtParent().AtName("session_storage"),
+								),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"mount_path": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(6, 200),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+										},
 									},
 								},
 							},
@@ -320,6 +367,118 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 	}
 }
 
+// Note that this function and the models used within it are also used in gateway.go.
+func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"custom_jwt_authorizer": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"allowed_audience": schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+							},
+							"allowed_clients": schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+							},
+							"allowed_scopes": schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+							},
+							"discovery_url": schema.StringAttribute{
+								Required: true,
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"custom_claim": schema.SetNestedBlock{
+								CustomType: fwtypes.NewSetNestedObjectTypeOf[customJWTAuthorizerCustomClaimModel](ctx),
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"inbound_token_claim_name": schema.StringAttribute{
+											Required: true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 255),
+												stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-:]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+											},
+										},
+										"inbound_token_claim_value_type": schema.StringAttribute{
+											CustomType: fwtypes.StringEnumType[awstypes.InboundTokenClaimValueType](),
+											Required:   true,
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"authorizing_claim_match_value": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerAuthorizingClaimMatchValueModel](ctx),
+											Validators: []validator.List{
+												listvalidator.IsRequired(),
+												listvalidator.SizeAtMost(1),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Attributes: map[string]schema.Attribute{
+													"claim_match_operator": schema.StringAttribute{
+														CustomType: fwtypes.StringEnumType[awstypes.ClaimMatchOperatorType](),
+														Required:   true,
+													},
+												},
+												Blocks: map[string]schema.Block{
+													"claim_match_value": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerClaimMatchValueModel](ctx),
+														Validators: []validator.List{
+															listvalidator.IsRequired(),
+															listvalidator.SizeAtMost(1),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Validators: []validator.Object{
+																objectvalidator.ExactlyOneOf(
+																	path.MatchRelative().AtName("match_value_string"),
+																	path.MatchRelative().AtName("match_value_string_list"),
+																),
+															},
+															Attributes: map[string]schema.Attribute{
+																"match_value_string": schema.StringAttribute{
+																	Optional: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 255),
+																		stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
+																	},
+																},
+																"match_value_string_list": schema.SetAttribute{
+																	Optional:    true,
+																	ElementType: types.StringType,
+																	Validators: []validator.Set{
+																		setvalidator.ValueStringsAre(
+																			stringvalidator.LengthBetween(1, 255),
+																			stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
+																		),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *agentRuntimeResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data agentRuntimeResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
@@ -336,7 +495,7 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -441,7 +600,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		out, err := conn.UpdateAgentRuntime(ctx, &input)
 		if err != nil {
@@ -499,10 +658,10 @@ func (r *agentRuntimeResource) ImportState(ctx context.Context, request resource
 }
 
 func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusCreating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
-		Refresh:                   statusAgentRuntime(ctx, conn, id),
+		Refresh:                   statusAgentRuntime(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -516,10 +675,10 @@ func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 }
 
 func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusUpdating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
-		Refresh:                   statusAgentRuntime(ctx, conn, id),
+		Refresh:                   statusAgentRuntime(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -533,10 +692,10 @@ func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 }
 
 func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentRuntimeStatusDeleting, awstypes.AgentRuntimeStatusReady),
 		Target:  []string{},
-		Refresh: statusAgentRuntime(ctx, conn, id),
+		Refresh: statusAgentRuntime(conn, id),
 		Timeout: timeout,
 	}
 
@@ -548,8 +707,8 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 	return nil, smarterr.NewError(err)
 }
 
-func statusAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAgentRuntime(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findAgentRuntimeByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -575,9 +734,8 @@ func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 	out, err := conn.GetAgentRuntime(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 
@@ -586,7 +744,7 @@ func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
@@ -602,6 +760,7 @@ type agentRuntimeResourceModel struct {
 	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]    `tfsdk:"authorizer_configuration"`
 	Description                types.String                                                     `tfsdk:"description"`
 	EnvironmentVariables       fwtypes.MapOfString                                              `tfsdk:"environment_variables"`
+	FilesystemConfigurations   fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel]    `tfsdk:"filesystem_configuration"`
 	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]     `tfsdk:"lifecycle_configuration"`
 	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
 	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
@@ -672,6 +831,108 @@ func (m agentRuntimeArtifactModel) Expand(ctx context.Context) (any, diag.Diagno
 			return nil, diags
 		}
 		var r awstypes.AgentRuntimeArtifactMemberContainerConfiguration
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
+}
+
+type filesystemConfigurationModel struct {
+	EFSAccessPoint     fwtypes.ListNestedObjectValueOf[efsAccessPointConfigurationModel]     `tfsdk:"efs_access_point"`
+	S3FilesAccessPoint fwtypes.ListNestedObjectValueOf[s3FilesAccessPointConfigurationModel] `tfsdk:"s3_files_access_point"`
+	SessionStorage     fwtypes.ListNestedObjectValueOf[sessionStorageConfigurationModel]     `tfsdk:"session_storage"`
+}
+
+type sessionStorageConfigurationModel struct {
+	MountPath types.String `tfsdk:"mount_path"`
+}
+
+type s3FilesAccessPointConfigurationModel struct {
+	AccessPointARN fwtypes.ARN  `tfsdk:"access_point_arn"`
+	MountPath      types.String `tfsdk:"mount_path"`
+}
+
+type efsAccessPointConfigurationModel struct {
+	AccessPointARN fwtypes.ARN  `tfsdk:"access_point_arn"`
+	MountPath      types.String `tfsdk:"mount_path"`
+}
+
+var (
+	_ fwflex.Expander  = filesystemConfigurationModel{}
+	_ fwflex.Flattener = &filesystemConfigurationModel{}
+)
+
+func (m *filesystemConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.FilesystemConfigurationMemberSessionStorage:
+		var data sessionStorageConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.SessionStorage = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.FilesystemConfigurationMemberS3FilesAccessPoint:
+		var data s3FilesAccessPointConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.S3FilesAccessPoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.FilesystemConfigurationMemberEfsAccessPoint:
+		var data efsAccessPointConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.EFSAccessPoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("filesystem configuration flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m filesystemConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.SessionStorage.IsNull():
+		data, d := m.SessionStorage.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.FilesystemConfigurationMemberSessionStorage
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	case !m.S3FilesAccessPoint.IsNull():
+		data, d := m.S3FilesAccessPoint.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.FilesystemConfigurationMemberS3FilesAccessPoint
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	case !m.EFSAccessPoint.IsNull():
+		data, d := m.EFSAccessPoint.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.FilesystemConfigurationMemberEfsAccessPoint
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
@@ -794,9 +1055,64 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 }
 
 type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience fwtypes.SetOfString `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.SetOfString `tfsdk:"allowed_clients"`
-	DiscoveryURL    types.String        `tfsdk:"discovery_url"`
+	AllowedAudience fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
+	AllowedClients  fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
+	AllowedScopes   fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
+	CustomClaim     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
+	DiscoveryURL    types.String                                                        `tfsdk:"discovery_url"`
+}
+
+type customJWTAuthorizerCustomClaimModel struct {
+	InboundTokenClaimName      types.String                                                                        `tfsdk:"inbound_token_claim_name"`
+	InboundTokenClaimValueType fwtypes.StringEnum[awstypes.InboundTokenClaimValueType]                             `tfsdk:"inbound_token_claim_value_type"`
+	AuthorizingClaimMatchValue fwtypes.ListNestedObjectValueOf[customJWTAuthorizerAuthorizingClaimMatchValueModel] `tfsdk:"authorizing_claim_match_value"`
+}
+
+type customJWTAuthorizerAuthorizingClaimMatchValueModel struct {
+	ClaimMatchOperator fwtypes.StringEnum[awstypes.ClaimMatchOperatorType]                      `tfsdk:"claim_match_operator"`
+	ClaimMatchValue    fwtypes.ListNestedObjectValueOf[customJWTAuthorizerClaimMatchValueModel] `tfsdk:"claim_match_value"`
+}
+
+type customJWTAuthorizerClaimMatchValueModel struct {
+	MatchValueString     types.String        `tfsdk:"match_value_string"`
+	MatchValueStringList fwtypes.SetOfString `tfsdk:"match_value_string_list"`
+}
+
+var (
+	_ fwflex.Expander  = customJWTAuthorizerClaimMatchValueModel{}
+	_ fwflex.Flattener = &customJWTAuthorizerClaimMatchValueModel{}
+)
+
+func (m *customJWTAuthorizerClaimMatchValueModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.ClaimMatchValueTypeMemberMatchValueString:
+		m.MatchValueString = types.StringValue(t.Value)
+	case awstypes.ClaimMatchValueTypeMemberMatchValueStringList:
+		m.MatchValueStringList = fwflex.FlattenFrameworkStringValueSetOfString(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("claim match value flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m customJWTAuthorizerClaimMatchValueModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.MatchValueString.IsNull():
+		var r awstypes.ClaimMatchValueTypeMemberMatchValueString
+		r.Value = fwflex.StringValueFromFramework(ctx, m.MatchValueString)
+		return &r, diags
+	case !m.MatchValueStringList.IsNull():
+		var r awstypes.ClaimMatchValueTypeMemberMatchValueStringList
+		r.Value = fwflex.ExpandFrameworkStringValueSet(ctx, m.MatchValueStringList)
+		return &r, diags
+	}
+	return nil, diags
 }
 
 type lifecycleConfigurationModel struct {

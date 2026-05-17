@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package gamelift
 
@@ -16,7 +18,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -369,9 +370,8 @@ func findGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name 
 	output, err := conn.DescribeGameServerGroup(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -380,14 +380,14 @@ func findGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name 
 	}
 
 	if output == nil || output.GameServerGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GameServerGroup, nil
 }
 
-func statusGameServerGroup(ctx context.Context, conn *gamelift.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGameServerGroup(conn *gamelift.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGameServerGroupByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -403,20 +403,20 @@ func statusGameServerGroup(ctx context.Context, conn *gamelift.Client, name stri
 }
 
 func waitGameServerGroupActive(ctx context.Context, conn *gamelift.Client, name string, timeout time.Duration) (*awstypes.GameServerGroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.GameServerGroupStatusNew,
 			awstypes.GameServerGroupStatusActivating,
 		),
 		Target:  enum.Slice(awstypes.GameServerGroupStatusActive),
-		Refresh: statusGameServerGroup(ctx, conn, name),
+		Refresh: statusGameServerGroup(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.GameServerGroup); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -425,20 +425,20 @@ func waitGameServerGroupActive(ctx context.Context, conn *gamelift.Client, name 
 }
 
 func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.Client, name string, timeout time.Duration) (*awstypes.GameServerGroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.GameServerGroupStatusDeleteScheduled,
 			awstypes.GameServerGroupStatusDeleting,
 		),
 		Target:  []string{},
-		Refresh: statusGameServerGroup(ctx, conn, name),
+		Refresh: statusGameServerGroup(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.GameServerGroup); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -48,7 +48,7 @@ func TestAccODBListNetworksDataSource_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(dataSourceName, "aws_odb_networks.#", strconv.Itoa(len(output.OdbNetworks)))
 						i := 0
 						for i < len(output.OdbNetworks) {
-							key := fmt.Sprintf("aws_odb_networks.%q.id", i)
+							key := fmt.Sprintf("aws_odb_networks.%d.id", i)
 							resource.TestMatchResourceAttr(dataSourceName, key, regexache.MustCompile(pattern))
 						}
 						return nil

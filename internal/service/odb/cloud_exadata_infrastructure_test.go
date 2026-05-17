@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -76,7 +76,7 @@ func TestAccODBCloudExadataInfrastructureResource_withAllParameters(t *testing.T
 	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
 	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 	resource.ParallelTest(t, resource.TestCase{
@@ -283,7 +283,7 @@ func TestAccODBCloudExadataInfrastructureResource_disappears(t *testing.T) {
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudExadataInfrastructure, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudExadataInfrastructure, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

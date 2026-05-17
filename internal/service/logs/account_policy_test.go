@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -123,7 +123,7 @@ func TestAccLogsAccountPolicy_disappears(t *testing.T) {
 				Config: testAccAccountPolicyConfig_basicDataProtection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPolicyExists(ctx, t, resourceName, &accountPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceAccountPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceAccountPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -272,7 +272,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   handler       = "exports.handler"
 }
 

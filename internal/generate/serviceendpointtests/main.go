@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -37,6 +37,7 @@ func main() {
 		case "arcregionswitch", // Resolver modifies URL
 			"cloudfrontkeyvaluestore", // Endpoint includes account ID
 			"codecatalyst",            // Bearer auth token needs special handling
+			"devopsagent",             // Adds 'cp.' prefix
 			"location",                // Resolver modifies URL
 			"mwaa",                    // Resolver modifies URL
 			"neptunegraph",            // EndpointParameters has an additional parameter, ApiType
@@ -83,7 +84,7 @@ func main() {
 
 		switch packageName {
 		// TODO: This case should be handled in service data
-		case "costoptimizationhub", "cur", "globalaccelerator", "notifications", "notificationscontacts", "route53domains", "route53recoverycontrolconfig", "route53recoveryreadiness":
+		case "costoptimizationhub", "cur", "globalaccelerator", "mpa", "notifications", "notificationscontacts", "route53domains", "route53recoverycontrolconfig", "route53recoveryreadiness", "uxc":
 			td.OverrideRegionRegionalEndpoint = true
 
 		case "chatbot":

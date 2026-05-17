@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer_test
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -25,7 +25,7 @@ var regionalARNSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 // lintignore:S013 // Identity Schemas cannot specify Computed, Optional, or Required

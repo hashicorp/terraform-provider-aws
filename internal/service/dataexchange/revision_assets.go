@@ -1,11 +1,13 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dataexchange
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- AWS DataExchange API requires MD5 for asset upload integrity checking
 	"errors"
 	"fmt"
 	"io"
@@ -34,7 +36,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -854,7 +855,7 @@ func findRevisionByID(ctx context.Context, conn *dataexchange.Client, dataSetId,
 	output, err := conn.GetRevision(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -958,10 +959,10 @@ type kmsKeyToGrantModel struct {
 }
 
 func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.StateWaiting, awstypes.StateInProgress),
 		Target:       enum.Slice(awstypes.StateCompleted),
-		Refresh:      statusJob(ctx, conn, jobID),
+		Refresh:      statusJob(conn, jobID),
 		Timeout:      timeout,
 		PollInterval: 10 * time.Second,
 	}
@@ -994,8 +995,8 @@ func startJob(ctx context.Context, id *string, conn *dataexchange.Client) error 
 	return err
 }
 
-func statusJob(ctx context.Context, conn *dataexchange.Client, jobID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusJob(conn *dataexchange.Client, jobID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findJobByID(ctx, conn, jobID)
 
 		if retry.NotFound(err) {
@@ -1018,7 +1019,7 @@ func findJobByID(ctx context.Context, conn *dataexchange.Client, jobID string) (
 	out, err := conn.GetJob(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
 		}
@@ -1027,7 +1028,7 @@ func findJobByID(ctx context.Context, conn *dataexchange.Client, jobID string) (
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -1057,6 +1058,8 @@ type nestedObjectCollectionValue[T any] interface {
 }
 
 func md5Reader(src io.Reader) (string, error) {
+	// MD5 is required by AWS DataExchange API for asset upload integrity checking.
+	// This is not used for cryptographic security purposes.
 	h := md5.New()
 	if _, err := io.Copy(h, src); err != nil {
 		return "", err

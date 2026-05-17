@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package devopsguru
 
@@ -17,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -257,9 +258,8 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 	out, err := conn.GetResourceCollection(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -267,7 +267,7 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 	}
 
 	if out == nil || out.ResourceCollection == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	switch collectionType {
@@ -276,18 +276,14 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 		// a non-empty array of stack names
 		if out.ResourceCollection.CloudFormation == nil ||
 			len(out.ResourceCollection.CloudFormation.StackNames) == 0 {
-			return nil, &sdkretry.NotFoundError{
-				LastRequest: in,
-			}
+			return nil, &retry.NotFoundError{}
 		}
 	case awstypes.ResourceCollectionTypeAwsTags:
 		// AWS_TAGS collection types should have a Tags array with 1 item,
 		// and that object should have a TagValues array with at least 1 item
 		if len(out.ResourceCollection.Tags) == 0 ||
 			len(out.ResourceCollection.Tags) == 1 && len(out.ResourceCollection.Tags[0].TagValues) == 0 {
-			return nil, &sdkretry.NotFoundError{
-				LastRequest: in,
-			}
+			return nil, &retry.NotFoundError{}
 		}
 	}
 
