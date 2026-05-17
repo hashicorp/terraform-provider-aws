@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,7 +81,7 @@ func resourceParameterGroup() *schema.Resource {
 				StateFunc: func(val any) string {
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validation.StringLenBetween(1, 255-id.UniqueIDSuffixLength),
+				ValidateFunc: validation.StringLenBetween(1, 255-sdkid.UniqueIDSuffixLength),
 			},
 			names.AttrParameter: {
 				Type:     schema.TypeSet,
