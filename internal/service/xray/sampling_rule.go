@@ -38,10 +38,6 @@ func resourceSamplingRule() *schema.Resource {
 		UpdateWithoutTimeout: resourceSamplingRuleUpdate,
 		DeleteWithoutTimeout: resourceSamplingRuleDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
