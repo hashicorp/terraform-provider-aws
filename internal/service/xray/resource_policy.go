@@ -35,10 +35,6 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 	return r, nil
 }
 
-const (
-	ResNameResourcePolicy = "Resource Policy"
-)
-
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
 }
@@ -46,6 +42,13 @@ type resourcePolicyResource struct {
 func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"bypass_policy_lockout_check": schema.BoolAttribute{
+				Optional: true,
+			},
+			names.AttrLastUpdatedTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 			"policy_document": schema.StringAttribute{
 				CustomType: jsontypes.NormalizedType{},
 				Required:   true,
@@ -53,30 +56,24 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.Schema
 			"policy_name": schema.StringAttribute{
 				Required: true,
 			},
-			"bypass_policy_lockout_check": schema.BoolAttribute{
-				Optional: true,
-			},
 			"policy_revision_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-			},
-			names.AttrLastUpdatedTime: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
 			},
 		},
 	}
 }
 
 func (r *resourcePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().XRayClient(ctx)
-
 	var plan resourcePolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().XRayClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, plan.PolicyName)
 	in := xray.PutResourcePolicyInput{
 		PolicyDocument: plan.PolicyDocument.ValueStringPointer(),
 		PolicyName:     plan.PolicyName.ValueStringPointer(),
@@ -235,9 +232,9 @@ func findResourcePolicies(ctx context.Context, conn *xray.Client, input *xray.Li
 
 type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
+	BypassPolicyLockoutCheck types.Bool           `tfsdk:"bypass_policy_lockout_check"`
 	LastUpdatedTime          timetypes.RFC3339    `tfsdk:"last_updated_time"`
 	PolicyDocument           jsontypes.Normalized `tfsdk:"policy_document"`
 	PolicyName               types.String         `tfsdk:"policy_name"`
 	PolicyRevisionID         types.String         `tfsdk:"policy_revision_id"`
-	BypassPolicyLockoutCheck types.Bool           `tfsdk:"bypass_policy_lockout_check"`
 }
