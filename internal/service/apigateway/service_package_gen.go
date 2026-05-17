@@ -186,6 +186,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  resourceDomainNameShare,
+			TypeName: "aws_api_gateway_domain_name_share",
+			Name:     "Domain Name Share",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  resourceGatewayResponse,
 			TypeName: "aws_api_gateway_gateway_response",
 			Name:     "Gateway Response",
