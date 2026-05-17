@@ -124,16 +124,6 @@ func TestAccXRayResourcePolicy_policyDocument(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "policy_name",
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "policy_name"),
-				ImportStateVerifyIgnore: []string{
-					"bypass_policy_lockout_check",
-				},
-			},
-			{
 				Config: testAccResourcePolicyConfig_policyDocument(rName, policyDocument2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),

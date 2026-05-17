@@ -14,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,6 +30,11 @@ import (
 )
 
 // @FrameworkResource("aws_xray_resource_policy", name="Resource Policy")
+// @IdentityAttribute("policy_name")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="policy_name")
+// @Testing(importIgnore="bypass_policy_lockout_check")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.ResourcePolicy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -39,6 +43,7 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -201,10 +206,6 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 		resp.Diagnostics.AddError(fmt.Sprintf("deleting XRay Resource Policy (%s)", name), err.Error())
 		return
 	}
-}
-
-func (r *resourcePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("policy_name"), req, resp)
 }
 
 func findResourcePolicyByName(ctx context.Context, conn *xray.Client, name string) (*awstypes.ResourcePolicy, error) {

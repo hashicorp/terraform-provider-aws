@@ -1,6 +1,11 @@
 ```release-note:bug
 resource/aws_xray_resource_policy: Fix `Provider returned invalid result object after apply` errors on Update
 ```
+
 ```release-note:bug
-resource/aws_xray_resource_policy:  Mark `policy_name` as as `ForceNew`
+resource/aws_xray_resource_policy: Mark `policy_name` as as `ForceNew`
+```
+
+```release-note:bug
+resource/aws_xray_resource_policy: Add Resource Identity support
 ```
