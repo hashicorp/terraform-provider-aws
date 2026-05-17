@@ -7,7 +7,7 @@ package xray
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -17,9 +17,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -55,6 +57,9 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"policy_name": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"policy_revision_id": schema.StringAttribute{
 				Optional: true,
@@ -74,55 +79,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 	conn := r.Meta().XRayClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, plan.PolicyName)
-	in := xray.PutResourcePolicyInput{
-		PolicyDocument: plan.PolicyDocument.ValueStringPointer(),
-		PolicyName:     plan.PolicyName.ValueStringPointer(),
-	}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := conn.PutResourcePolicy(ctx, &in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.XRay, create.ErrActionCreating, ResNameResourcePolicy, plan.PolicyName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.ResourcePolicy == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.XRay, create.ErrActionCreating, ResNameResourcePolicy, plan.PolicyName.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	plan.LastUpdatedTime = fwflex.TimeToFramework(ctx, out.ResourcePolicy.LastUpdatedTime)
-	plan.PolicyRevisionID = fwflex.StringValueToFramework(ctx, *out.ResourcePolicy.PolicyRevisionId)
-
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().XRayClient(ctx)
-
-	var plan resourcePolicyResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := xray.PutResourcePolicyInput{
-		PolicyDocument: plan.PolicyDocument.ValueStringPointer(),
-		PolicyName:     plan.PolicyName.ValueStringPointer(),
-	}
+	var in xray.PutResourcePolicyInput
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -130,22 +87,17 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 
 	_, err := conn.PutResourcePolicy(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.XRay, create.ErrActionUpdating, ResNameResourcePolicy, plan.PolicyName.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("creating XRay Resource Policy (%s)", name), err.Error())
 		return
 	}
 
-	out, err := findResourcePolicyByName(ctx, conn, plan.PolicyName.ValueString())
+	out, err := findResourcePolicyByName(ctx, conn, name)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.XRay, create.ErrActionSetting, ResNameResourcePolicy, plan.PolicyName.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading XRay Resource Policy (%s)", name), err.Error())
 		return
 	}
 
+	// Set values for unknowns.
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -155,63 +107,98 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().XRayClient(ctx)
-
 	var state resourcePolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findResourcePolicyByName(ctx, conn, state.PolicyName.ValueString())
+	conn := r.Meta().XRayClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, state.PolicyName)
+	out, err := findResourcePolicyByName(ctx, conn, name)
 	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.XRay, create.ErrActionSetting, ResNameResourcePolicy, state.PolicyName.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading XRay Resource Policy (%s)", name), err.Error())
 		return
 	}
 
+	// Set attributes for import.
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan resourcePolicyResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().XRayClient(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.PolicyName)
+	var in xray.PutResourcePolicyInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.PutResourcePolicy(ctx, &in)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("updating XRay Resource Policy (%s)", name), err.Error())
+		return
+	}
+
+	out, err := findResourcePolicyByName(ctx, conn, name)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("reading XRay Resource Policy (%s)", name), err.Error())
+		return
+	}
+
+	// Set values for unknowns.
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state resourcePolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().XRayClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, state.PolicyName)
 	policy, err := findResourcePolicyByName(ctx, conn, state.PolicyName.ValueString())
 	if retry.NotFound(err) {
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.XRay, create.ErrActionDeleting, ResNameResourcePolicy, state.PolicyName.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading XRay Resource Policy (%s)", name), err.Error())
 		return
 	}
 
 	in := xray.DeleteResourcePolicyInput{
-		PolicyName:       state.PolicyName.ValueStringPointer(),
+		PolicyName:       aws.String(name),
 		PolicyRevisionId: policy.PolicyRevisionId,
 	}
-
 	_, err = conn.DeleteResourcePolicy(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.XRay, create.ErrActionDeleting, ResNameResourcePolicy, state.PolicyName.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting XRay Resource Policy (%s)", name), err.Error())
 		return
 	}
 }
@@ -221,23 +208,23 @@ func (r *resourcePolicyResource) ImportState(ctx context.Context, req resource.I
 }
 
 func findResourcePolicyByName(ctx context.Context, conn *xray.Client, name string) (*awstypes.ResourcePolicy, error) {
-	in := xray.ListResourcePoliciesInput{}
-
-	policy, err := findResourcePolicy(ctx, conn, &in, func(policy *awstypes.ResourcePolicy) bool {
-		return aws.ToString(policy.PolicyName) == name
+	var input xray.ListResourcePoliciesInput
+	output, err := findResourcePolicy(ctx, conn, &input, func(v awstypes.ResourcePolicy) bool {
+		return aws.ToString(v.PolicyName) == name
 	})
 
 	if err != nil {
 		return nil, err
 	}
-	if policy == nil {
+
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return policy, nil
+	return output, nil
 }
 
-func findResourcePolicy(ctx context.Context, conn *xray.Client, input *xray.ListResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy]) (*awstypes.ResourcePolicy, error) {
+func findResourcePolicy(ctx context.Context, conn *xray.Client, input *xray.ListResourcePoliciesInput, filter tfslices.Predicate[awstypes.ResourcePolicy]) (*awstypes.ResourcePolicy, error) {
 	output, err := findResourcePolicies(ctx, conn, input, filter)
 
 	if err != nil {
@@ -247,9 +234,8 @@ func findResourcePolicy(ctx context.Context, conn *xray.Client, input *xray.List
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findResourcePolicies(ctx context.Context, conn *xray.Client, input *xray.ListResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy]) ([]awstypes.ResourcePolicy, error) {
+func findResourcePolicies(ctx context.Context, conn *xray.Client, input *xray.ListResourcePoliciesInput, filter tfslices.Predicate[awstypes.ResourcePolicy]) ([]awstypes.ResourcePolicy, error) {
 	var output []awstypes.ResourcePolicy
-
 	pages := xray.NewListResourcePoliciesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -264,9 +250,9 @@ func findResourcePolicies(ctx context.Context, conn *xray.Client, input *xray.Li
 			return nil, err
 		}
 
-		for _, policy := range page.ResourcePolicies {
-			if filter(&policy) {
-				output = append(output, policy)
+		for _, v := range page.ResourcePolicies {
+			if filter(v) {
+				output = append(output, v)
 			}
 		}
 	}

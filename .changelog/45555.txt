@@ -1,3 +1,6 @@
 ```release-note:bug
-resource/aws_xray_resource_policy: Fix `Provider returned invalid result object after apply` error occurred when updating the resource
+resource/aws_xray_resource_policy: Fix `Provider returned invalid result object after apply` errors on Update
+```
+```release-note:bug
+resource/aws_xray_resource_policy:  Mark `policy_name` as as `ForceNew`
 ```

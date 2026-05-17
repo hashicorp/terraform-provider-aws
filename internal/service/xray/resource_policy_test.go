@@ -5,16 +5,17 @@ package xray_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,66 +43,15 @@ func TestAccXRayResourcePolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_check", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "policy_revision_id", "1"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccXRayResourcePolicy_policyDocument(t *testing.T) {
-	ctx := acctest.Context(t)
-	var resourcepolicy types.ResourcePolicy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_xray_resource_policy.test"
-	policyDocument1 := `{"Version":"2012-10-17","Statement":[{"Sid":"AllowXRayAccess","Effect":"Allow","Principal":{"AWS":"*"},"Action":["xray:*","xray:PutResourcePolicy"],"Resource":"*"}]}`
-	policyDocument2 := `{"Version":"2012-10-17","Statement":[{"Sid":"AllowXRayAccessUpdated","Effect":"Allow","Principal":{"AWS":"*"},"Action":["xray:PutTraceSegments","xray:PutTelemetryRecords"],"Resource":"*"}]}`
-	policyDocument3 := `{"Version":"2012-10-17","Statement":[{"Sid":"AllowXRayAccessFinal","Effect":"Allow","Principal":{"Service":"sns.amazonaws.com"},"Action":"xray:PutTraceSegments","Resource":"*"}]}`
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourcePolicyConfig_policyDocument(rName, policyDocument1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_revision_id", "1"),
-					testAccCheckResourcePolicyHasPolicyDocument(ctx, resourceName, policyDocument1),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "policy_name",
-				ImportStateIdFunc:                    testAccResourcePolicyImportStateIDFunc(resourceName),
-				ImportStateVerifyIgnore: []string{
-					"bypass_policy_lockout_check",
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 				},
-			},
-			{
-				Config: testAccResourcePolicyConfig_policyDocument(rName, policyDocument2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_revision_id", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
-					testAccCheckResourcePolicyHasPolicyDocument(ctx, resourceName, policyDocument2),
-				),
-			},
-			{
-				Config: testAccResourcePolicyConfig_policyDocument(rName, policyDocument3),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_revision_id", "3"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
-					testAccCheckResourcePolicyHasPolicyDocument(ctx, resourceName, policyDocument3),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrLastUpdatedTime), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_revision_id"), knownvalue.StringExact("1")),
+				},
 			},
 		},
 	})
@@ -109,7 +59,6 @@ func TestAccXRayResourcePolicy_policyDocument(t *testing.T) {
 
 func TestAccXRayResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcepolicy types.ResourcePolicy
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_xray_resource_policy.test"
@@ -129,6 +78,90 @@ func TestAccXRayResourcePolicy_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfxray.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccXRayResourcePolicy_policyDocument(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourcepolicy types.ResourcePolicy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_xray_resource_policy.test"
+	policyDocument1 := `{"Version":"2012-10-17","Statement":[{"Sid":"AllowXRayAccess","Effect":"Allow","Principal":{"AWS":"*"},"Action":["xray:*","xray:PutResourcePolicy"],"Resource":"*"}]}`
+	policyDocument2 := `{"Version":"2012-10-17","Statement":[{"Sid":"AllowXRayAccessUpdated","Effect":"Allow","Principal":{"AWS":"*"},"Action":["xray:PutTraceSegments","xray:PutTelemetryRecords"],"Resource":"*"}]}`
+	policyDocument3 := `{"Version":"2012-10-17","Statement":[{"Sid":"AllowXRayAccessFinal","Effect":"Allow","Principal":{"Service":"sns.amazonaws.com"},"Action":"xray:PutTraceSegments","Resource":"*"}]}`
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyConfig_policyDocument(rName, policyDocument1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
+					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", policyDocument1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_revision_id"), knownvalue.StringExact("1")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_name",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "policy_name"),
+				ImportStateVerifyIgnore: []string{
+					"bypass_policy_lockout_check",
+				},
+			},
+			{
+				Config: testAccResourcePolicyConfig_policyDocument(rName, policyDocument2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
+					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", policyDocument2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_revision_id"), knownvalue.StringExact("2")),
+				},
+			},
+			{
+				Config: testAccResourcePolicyConfig_policyDocument(rName, policyDocument3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
+					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", policyDocument3),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_revision_id"), knownvalue.StringExact("3")),
+				},
 			},
 		},
 	})
@@ -153,22 +186,18 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 				return err
 			}
 
-			return create.Error(names.XRay, create.ErrActionCheckingDestroyed, tfxray.ResNameResourcePolicy, rs.Primary.Attributes["policy_name"], errors.New("not destroyed"))
+			return fmt.Errorf("XRay Resource Policy %s still exists", rs.Primary.Attributes["policy_name"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name string, resourcepolicy *types.ResourcePolicy) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, n string, v *types.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.XRay, create.ErrActionCheckingExistence, tfxray.ResNameResourcePolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.XRay, create.ErrActionCheckingExistence, tfxray.ResNameResourcePolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
@@ -179,20 +208,9 @@ func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name st
 			return err
 		}
 
-		*resourcepolicy = *output
+		*v = *output
 
 		return nil
-	}
-}
-
-func testAccResourcePolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["policy_name"], nil
 	}
 }
 
@@ -214,29 +232,4 @@ resource "aws_xray_resource_policy" "test" {
   bypass_policy_lockout_check = true
 }
 `, rName, policyDocument)
-}
-
-func testAccCheckResourcePolicyHasPolicyDocument(ctx context.Context, name string, expectedDocument string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return create.Error(names.XRay, create.ErrActionCheckingExistence, tfxray.ResNameResourcePolicy, name, errors.New("not found"))
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
-		output, err := tfxray.FindResourcePolicyByName(ctx, conn, rs.Primary.Attributes["policy_name"])
-		if err != nil {
-			return err
-		}
-
-		if output.PolicyDocument == nil {
-			return fmt.Errorf("policy_document is nil")
-		}
-
-		if aws.ToString(output.PolicyDocument) != expectedDocument {
-			return fmt.Errorf("policy_document mismatch:\nexpected: %s\nactual:   %s", expectedDocument, aws.ToString(output.PolicyDocument))
-		}
-
-		return nil
-	}
 }
