@@ -280,7 +280,7 @@ func findSamplingRules(ctx context.Context, conn *xray.Client, input *xray.GetSa
 
 		for _, v := range page.SamplingRuleRecords {
 			if v := v.SamplingRule; v != nil {
-				if v := *v; filter(v) {
+				if v := *v; filter(v) { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
 					output = append(output, v)
 				}
 			}
