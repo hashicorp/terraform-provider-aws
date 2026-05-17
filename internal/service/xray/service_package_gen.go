@@ -32,6 +32,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Resource Policy",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newTraceSegmentDestinationResource,
+			TypeName: "aws_xray_trace_segment_destination",
+			Name:     "Trace Segment Destination",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
