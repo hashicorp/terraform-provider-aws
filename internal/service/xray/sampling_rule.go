@@ -20,13 +20,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_xray_sampling_rule", name="Sampling Rule")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;types.SamplingRule")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.SamplingRule")
+// @IdentityAttribute("rule_name", identityDuplicateAttributes="id")
+// @Testing(hasNoPreExistingResource=true)
 func resourceSamplingRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSamplingRuleCreate,
@@ -242,9 +246,35 @@ func resourceSamplingRuleDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func findSamplingRuleByName(ctx context.Context, conn *xray.Client, name string) (*types.SamplingRule, error) {
-	input := xray.GetSamplingRulesInput{}
+	var input xray.GetSamplingRulesInput
+	output, err := findSamplingRule(ctx, conn, &input, func(v types.SamplingRule) bool {
+		return aws.ToString(v.RuleName) == name
+	})
 
-	pages := xray.NewGetSamplingRulesPaginator(conn, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func findSamplingRule(ctx context.Context, conn *xray.Client, input *xray.GetSamplingRulesInput, filter tfslices.Predicate[types.SamplingRule]) (*types.SamplingRule, error) {
+	output, err := findSamplingRules(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSamplingRules(ctx context.Context, conn *xray.Client, input *xray.GetSamplingRulesInput, filter tfslices.Predicate[types.SamplingRule]) ([]types.SamplingRule, error) {
+	var output []types.SamplingRule
+	pages := xray.NewGetSamplingRulesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -253,11 +283,13 @@ func findSamplingRuleByName(ctx context.Context, conn *xray.Client, name string)
 		}
 
 		for _, v := range page.SamplingRuleRecords {
-			if v := v.SamplingRule; v != nil && aws.ToString(v.RuleName) == name {
-				return v, nil
+			if v := v.SamplingRule; v != nil {
+				if v := *v; filter(v) {
+					output = append(output, v)
+				}
 			}
 		}
 	}
 
-	return nil, &retry.NotFoundError{}
+	return output, nil
 }

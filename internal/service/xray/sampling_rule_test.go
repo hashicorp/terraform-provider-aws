@@ -148,10 +148,6 @@ func testAccCheckSamplingRuleExists(ctx context.Context, t *testing.T, n string,
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No XRay Sampling Rule ID is set")
-		}
-
 		conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
 
 		output, err := tfxray.FindSamplingRuleByName(ctx, conn, rs.Primary.ID)

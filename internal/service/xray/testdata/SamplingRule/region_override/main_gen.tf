@@ -1,5 +1,9 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_xray_sampling_rule" "test" {
-{{- template "region" }}
+  region = var.region
+
   rule_name      = var.rName
   priority       = 5
   reservoir_size = 10
@@ -15,6 +19,16 @@ resource "aws_xray_sampling_rule" "test" {
   attributes = {
     Hello = "World"
   }
+}
 
-{{- template "tags" . }}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
