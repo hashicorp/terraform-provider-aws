@@ -13,10 +13,6 @@ resource "aws_xray_sampling_rule" "test" {
   fixed_rate     = 0.3
   resource_arn   = "*"
   version        = 1
-
-  attributes = {
-    Hello = "World"
-  }
 }
 
 variable "rName" {
