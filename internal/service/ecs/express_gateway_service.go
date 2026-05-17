@@ -971,9 +971,8 @@ func normalizeIngressPathEndpoints(ctx context.Context, ingressPaths *fwtypes.Li
 			continue
 		}
 
-		clone := *ingressPath
-		clone.Endpoint = types.StringValue("https://" + endpoint)
-		updatedPaths = append(updatedPaths, &clone)
+		ingressPath.Endpoint = types.StringValue("https://" + endpoint)
+		updatedPaths = append(updatedPaths, ingressPath)
 		changed = true
 	}
 
