@@ -10,7 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -31,7 +33,10 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSamplingRuleConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/SamplingRule/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
@@ -48,6 +53,11 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -73,7 +83,12 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSamplingRuleConfig_update(rName, acctest.RandIntRange(t, 0, 9999), acctest.RandIntRange(t, 0, 2147483647)),
+				ConfigDirectory: config.StaticDirectory("testdata/SamplingRule/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"priority":       config.IntegerVariable(acctest.RandIntRange(t, 0, 9999)),
+					"reservoir_size": config.IntegerVariable(acctest.RandIntRange(t, 0, 2147483647)),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
@@ -89,9 +104,18 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
-			{ // Update attributes
-				Config: testAccSamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
+			{
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"priority":       config.IntegerVariable(updatedPriority),
+					"reservoir_size": config.IntegerVariable(updatedReservoirSize),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
@@ -107,6 +131,11 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -130,12 +159,23 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSamplingRuleConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/SamplingRule/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfxray.ResourceSamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -186,44 +226,4 @@ func testAccCheckSamplingRuleDestroy(ctx context.Context, t *testing.T) resource
 
 		return nil
 	}
-}
-
-func testAccSamplingRuleConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_xray_sampling_rule" "test" {
-  rule_name      = %[1]q
-  priority       = 5
-  reservoir_size = 10
-  url_path       = "*"
-  host           = "*"
-  http_method    = "GET"
-  service_type   = "*"
-  service_name   = "*"
-  fixed_rate     = 0.3
-  resource_arn   = "*"
-  version        = 1
-
-  attributes = {
-    Hello = "World"
-  }
-}
-`, rName)
-}
-
-func testAccSamplingRuleConfig_update(rName string, priority, reservoirSize int) string {
-	return fmt.Sprintf(`
-resource "aws_xray_sampling_rule" "test" {
-  rule_name      = %[1]q
-  priority       = %[2]d
-  reservoir_size = %[3]d
-  url_path       = "*"
-  host           = "*"
-  http_method    = "GET"
-  service_type   = "*"
-  service_name   = "*"
-  fixed_rate     = 0.3
-  resource_arn   = "*"
-  version        = 1
-}
-`, rName, priority, reservoirSize)
 }
