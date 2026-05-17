@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"iter"
 	"slices"
@@ -4608,6 +4609,11 @@ func findImageByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 	output, err := findImage(ctx, conn, &input)
 
 	if err != nil {
+		if errors.Is(err, tfresource.ErrEmptyResult) {
+			return nil, &retry.NotFoundError{
+				Message: fmt.Sprintf("AMI (%s) not found; the AMI may have been recently deregistered", id),
+			}
+		}
 		return nil, err
 	}
 
