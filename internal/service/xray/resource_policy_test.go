@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -36,7 +37,10 @@ func TestAccXRayResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
@@ -72,7 +76,10 @@ func TestAccXRayResourcePolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfxray.ResourceResourcePolicy, resourceName),
@@ -202,16 +209,6 @@ func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, n strin
 
 		return nil
 	}
-}
-
-func testAccResourcePolicyConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_xray_resource_policy" "test" {
-  policy_name                 = %[1]q
-  policy_document             = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowXRayAccess\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":[\"xray:*\",\"xray:PutResourcePolicy\"],\"Resource\":\"*\"}]}"
-  bypass_policy_lockout_check = true
-}
-`, rName)
 }
 
 func testAccResourcePolicyConfig_policyDocument(rName, policyDocument string) string {

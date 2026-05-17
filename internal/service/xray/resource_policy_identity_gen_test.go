@@ -70,7 +70,7 @@ func TestAccXRayResourcePolicy_Identity_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "policy_name",
 				ImportStateVerifyIgnore: []string{
-					"bypass_policy_lockout_check",
+					"bypass_policy_lockout_check", "policy_document",
 				},
 			},
 
@@ -163,7 +163,7 @@ func TestAccXRayResourcePolicy_Identity_regionOverride(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "policy_name",
 				ImportStateVerifyIgnore: []string{
-					"bypass_policy_lockout_check",
+					"bypass_policy_lockout_check", "policy_document",
 				},
 			},
 

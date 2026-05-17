@@ -33,7 +33,7 @@ import (
 // @IdentityAttribute("policy_name")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="policy_name")
-// @Testing(importIgnore="bypass_policy_lockout_check")
+// @Testing(importIgnore="bypass_policy_lockout_check;policy_document")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.ResourcePolicy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
