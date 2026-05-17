@@ -1,0 +1,3 @@
+```release-note:enhancement
+service/eks: Add access_entry_id to aws_eks_access_policy_association for implicit dependency with aws_eks_access_entry
+```
