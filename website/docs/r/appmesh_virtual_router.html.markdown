@@ -46,19 +46,18 @@ This resource supports the following arguments:
 * `name` - (Required) Name to use for the virtual router. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual router. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `spec` - (Required) Virtual router specification to apply.
+* `spec` - (Required) Virtual router specification to apply. See [`spec` Block](#spec-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `spec` object supports the following:
+### `spec` Block
 
-* `listener` - (Optional) Listeners that the virtual router is expected to receive inbound traffic from.
-Currently only one listener is supported per virtual router.
+* `listener` - (Optional) Listeners that the virtual router is expected to receive inbound traffic from. Currently only one listener is supported per virtual router. See [`listener` Block](#listener-block) for details.
 
-The `listener` object supports the following:
+### `listener` Block
 
-* `port_mapping` - (Required) Port mapping information for the listener.
+* `port_mapping` - (Required) Port mapping information for the listener. See [`port_mapping` Block](#port_mapping-block) for details.
 
-The `port_mapping` object supports the following:
+### `port_mapping` Block
 
 * `port` - (Required) Port used for the port mapping.
 * `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`,`http2`, `tcp` and `grpc`.
