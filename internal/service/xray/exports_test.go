@@ -7,12 +7,12 @@ package xray
 var (
 	FindEncryptionConfig        = findEncryptionConfig
 	FindGroupByARN              = findGroupByARN
-	FindSamplingRuleByName      = findSamplingRuleByName
 	FindResourcePolicyByName    = findResourcePolicyByName
+	FindSamplingRuleByName      = findSamplingRuleByName
 	FindTraceSegmentDestination = findTraceSegmentDestination
 
 	ResourceEncryptionConfig = resourceEncryptionConfig
 	ResourceGroup            = resourceGroup
-	ResourceSamplingRule     = resourceSamplingRule
 	ResourceResourcePolicy   = newResourcePolicyResource
+	ResourceSamplingRule     = resourceSamplingRule
 )

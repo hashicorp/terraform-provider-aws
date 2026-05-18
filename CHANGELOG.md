@@ -1,9 +1,16 @@
 ## 6.46.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_xray_resource_policy: Changes to `policy_name` now force resource recreation. Technically this is a breaking change but the resource did not function correctly previously; updating `policy_name` would leave an orphaned policy with the old name in AWS ([#47948](https://github.com/hashicorp/terraform-provider-aws/issues/47948))
+
 FEATURES:
 
+* **New List Resource:** `aws_bedrockagentcore_harness` ([#47725](https://github.com/hashicorp/terraform-provider-aws/issues/47725))
 * **New List Resource:** `aws_route53_vpc_association_authorization` ([#47905](https://github.com/hashicorp/terraform-provider-aws/issues/47905))
+* **New List Resource:** `aws_route53_zone_association` ([#47950](https://github.com/hashicorp/terraform-provider-aws/issues/47950))
 * **New List Resource:** `aws_securityhub_automation_rule_v2` ([#47677](https://github.com/hashicorp/terraform-provider-aws/issues/47677))
+* **New Resource:** `aws_bedrockagentcore_harness` ([#47725](https://github.com/hashicorp/terraform-provider-aws/issues/47725))
 * **New Resource:** `aws_securityhub_automation_rule_v2` ([#47677](https://github.com/hashicorp/terraform-provider-aws/issues/47677))
 
 ENHANCEMENTS:
@@ -13,7 +20,15 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_agent_runtime: Add `filesystem_configuration` argument for mounting session storage, Amazon S3 Files access points, or Amazon EFS access points into the agent runtime ([#47810](https://github.com/hashicorp/terraform-provider-aws/issues/47810))
 * resource/aws_cloudfront_distribution: Add `cache_tag_config` configuration block ([#47872](https://github.com/hashicorp/terraform-provider-aws/issues/47872))
 * resource/aws_route53_vpc_association_authorization: Add resource identity support ([#47905](https://github.com/hashicorp/terraform-provider-aws/issues/47905))
+* resource/aws_route53_zone_association: Add resource identity support ([#47950](https://github.com/hashicorp/terraform-provider-aws/issues/47950))
 * resource/aws_vpclattice_resource_gateway: Add `resource_config_dns_resolution` argument ([#47879](https://github.com/hashicorp/terraform-provider-aws/issues/47879))
+
+BUG FIXES:
+
+* resource/aws_xray_resource_policy: Add Resource Identity support ([#47948](https://github.com/hashicorp/terraform-provider-aws/issues/47948))
+* resource/aws_xray_resource_policy: Fix `Provider returned invalid result object after apply` errors on Update ([#47948](https://github.com/hashicorp/terraform-provider-aws/issues/47948))
+* resource/aws_xray_resource_policy: Mark `policy_name` as as `ForceNew` ([#47948](https://github.com/hashicorp/terraform-provider-aws/issues/47948))
+* resource/aws_xray_sampling_rule: Add Resource Identity support ([#47948](https://github.com/hashicorp/terraform-provider-aws/issues/47948))
 
 ## 6.45.0 (May 13, 2026)
 

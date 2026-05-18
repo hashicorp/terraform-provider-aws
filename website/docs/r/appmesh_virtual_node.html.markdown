@@ -180,269 +180,272 @@ This resource supports the following arguments:
 * `spec` - (Required) Virtual node specification to apply.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `spec` object supports the following:
+### `spec` Block
 
-* `backend` - (Optional) Backends to which the virtual node is expected to send outbound traffic.
-* `backend_defaults` - (Optional) Defaults for backends.
-* `listener` - (Optional) Listeners from which the virtual node is expected to receive inbound traffic.
-* `logging` - (Optional) Inbound and outbound access logging information for the virtual node.
-* `service_discovery` - (Optional) Service discovery information for the virtual node.
+* `backend` - (Optional) Backends to which the virtual node is expected to send outbound traffic. See [`backend` Block](#backend-block) for details.
+* `backend_defaults` - (Optional) Defaults for backends. See [`backend_defaults` Block](#backend_defaults-block) for details.
+* `listener` - (Optional) Listeners from which the virtual node is expected to receive inbound traffic. See [`listener` Block](#listener-block) for details.
+* `logging` - (Optional) Inbound and outbound access logging information for the virtual node. See [`logging` Block](#logging-block) for details.
+* `service_discovery` - (Optional) Service discovery information for the virtual node. See [`service_discovery` Block](#service_discovery-block) for details.
 
-The `backend` object supports the following:
+### `backend` Block
 
 * `virtual_service` - (Required) Virtual service to use as a backend for a virtual node.
 
-The `virtual_service` object supports the following:
+### `virtual_service` Block
 
 * `client_policy` - (Optional) Client policy for the backend.
 * `virtual_service_name` - (Required) Name of the virtual service that is acting as a virtual node backend. Must be between 1 and 255 characters in length.
 
-The `client_policy` object supports the following:
+### `client_policy` Block
 
 * `tls` - (Optional) Transport Layer Security (TLS) client policy.
 
-The `tls` object supports the following:
+### `tls` Block
 
 * `certificate` (Optional) Virtual node's client's Transport Layer Security (TLS) certificate.
 * `enforce` - (Optional) Whether the policy is enforced. Default is `true`.
 * `ports` - (Optional) One or more ports that the policy is enforced for.
 * `validation` - (Required) TLS validation context.
 
-The `certificate` object supports the following:
+### `certificate` Block
 
 * `file` - (Optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
-The `file` object supports the following:
+### `file` Block
 
 * `certificate_chain` - (Required) Certificate chain for the certificate.
 * `private_key` - (Required) Private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on.
 
-The `sds` object supports the following:
+### `sds` Block
 
 * `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
-The `validation` object supports the following:
+### `validation` Block
 
 * `subject_alternative_names` - (Optional) SANs for a TLS validation context.
 * `trust` - (Required) TLS validation context trust.
 
-The `subject_alternative_names` object supports the following:
+### `subject_alternative_names` Block
 
 * `match` - (Required) Criteria for determining a SAN's match.
 
-The `match` object supports the following:
+### `match` Block
 
 * `exact` - (Required) Values sent must match the specified values exactly.
 
-The `trust` object supports the following:
+### `trust` Block
 
 * `acm` - (Optional) TLS validation context trust for an AWS Certificate Manager (ACM) certificate.
 * `file` - (Optional) TLS validation context trust for a local file certificate.
 * `sds` - (Optional) TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
-The `acm` object supports the following:
+### `acm` Block
 
 * `certificate_authority_arns` - (Required) One or more ACM ARNs.
 
-The `file` object supports the following:
+### `file` Block
 
 * `certificate_chain` - (Required) Certificate trust chain for a certificate stored on the file system of the virtual node that the proxy is running on. Must be between 1 and 255 characters in length.
 
-The `sds` object supports the following:
+### `sds` Block
 
 * `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
-The `backend_defaults` object supports the following:
+### `backend_defaults` Block
 
 * `client_policy` - (Optional) Default client policy for virtual service backends. See above for details.
 
-The `listener` object supports the following:
+### `listener` Block
 
-* `port_mapping` - (Required) Port mapping information for the listener.
-* `connection_pool` - (Optional) Connection pool information for the listener.
-* `health_check` - (Optional) Health check information for the listener.
-* `outlier_detection` - (Optional) Outlier detection information for the listener.
-* `timeout` - (Optional) Timeouts for different protocols.
-* `tls` - (Optional) Transport Layer Security (TLS) properties for the listener
+* `connection_pool` - (Optional) Connection pool information for the listener. See [`connection_pool` Block](#connection_pool-block) for details.
+* `health_check` - (Optional) Health check information for the listener. See [`health_check` Block](#health_check-block) for details.
+* `outlier_detection` - (Optional) Outlier detection information for the listener. See [`outlier_detection` Block](#outlier_detection-block) for details.
+* `port_mapping` - (Required) Port mapping information for the listener. See [`port_mapping` Block](#port_mapping-block) for details.
+* `timeout` - (Optional) Timeouts for different protocols. See [`timeout` Block](#timeout-block) for details.
+* `tls` - (Optional) Transport Layer Security (TLS) properties for the listener. See [`tls` Block](#tls-block) for details.
 
-The `logging` object supports the following:
+### `logging` Block
 
-* `access_log` - (Optional) Access log configuration for a virtual node.
+* `access_log` - (Optional) Access log configuration for a virtual node. See [`access_log` Block](#access_log-block) for details.
 
-The `access_log` object supports the following:
+### `access_log` Block
 
-* `file` - (Optional) File object to send virtual node access logs to.
+* `file` - (Optional) File object to send virtual node access logs to. See [`file` Block](#file-block) for details.
 
-The `file` object supports the following:
+### `file` Block
 
-* `format` - (Optional) The specified format for the logs.
+* `format` - (Optional) The specified format for the logs. See [`format` Block](#format-block) for details.
 * `path` - (Required) File path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
 
-The `format` object supports the following:
+### `format` Block
 
-* `json` - (Optional) The logging format for JSON.
+* `json` - (Optional) The logging format for JSON. See [`json` Block](#json-block) for details.
 * `text` - (Optional) The logging format for text. Must be between 1 and 1000 characters in length.
 
-The `json` object supports the following:
+### `json` Block
 
 * `key` - (Required) The specified key for the JSON. Must be between 1 and 100 characters in length.
 * `value` - (Required) The specified value for the JSON. Must be between 1 and 100 characters in length.
 
-The `service_discovery` object supports the following:
+### `service_discovery` Block
 
-* `aws_cloud_map` - (Optional) Any AWS Cloud Map information for the virtual node.
-* `dns` - (Optional) DNS service name for the virtual node.
+* `aws_cloud_map` - (Optional) Any AWS Cloud Map information for the virtual node. See [`aws_cloud_map` Block](#aws_cloud_map-block) for details.
+* `dns` - (Optional) DNS service name for the virtual node. See [`dns` Block](#dns-block) for details.
 
-The `aws_cloud_map` object supports the following:
+### `aws_cloud_map` Block
 
 * `attributes` - (Optional) String map that contains attributes with values that you can use to filter instances by any custom attribute that you specified when you registered the instance. Only instances that match all of the specified key/value pairs will be returned.
-* `namespace_name` - (Required) Name of the AWS Cloud Map namespace to use.
-Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace. Must be between 1 and 1024 characters in length.
+* `namespace_name` - (Required) Name of the AWS Cloud Map namespace to use. Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace. Must be between 1 and 1024 characters in length.
 * `service_name` - (Required) Name of the AWS Cloud Map service to use. Use the [`aws_service_discovery_service`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service. Must be between 1 and 1024 characters in length.
 
-The `dns` object supports the following:
+### `dns` Block
 
 * `hostname` - (Required) DNS host name for your virtual node.
 * `ip_preference` - (Optional) The preferred IP version that this virtual node uses. Valid values: `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, `IPv6_ONLY`.
 * `response_type` - (Optional) The DNS response type for the virtual node. Valid values: `LOADBALANCER`, `ENDPOINTS`.
 
-The `port_mapping` object supports the following:
+### `port_mapping` Block
 
 * `port` - (Required) Port used for the port mapping.
 * `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
 
-The `connection_pool` object supports the following:
+### `connection_pool` Block
 
-* `grpc` - (Optional) Connection pool information for gRPC listeners.
-* `http` - (Optional) Connection pool information for HTTP listeners.
-* `http2` - (Optional) Connection pool information for HTTP2 listeners.
-* `tcp` - (Optional) Connection pool information for TCP listeners.
+* `grpc` - (Optional) Connection pool information for gRPC listeners. See [`grpc` Block](#grpc-block) for details.
+* `http` - (Optional) Connection pool information for HTTP listeners. See [`http` Block](#http-block) for details.
+* `http2` - (Optional) Connection pool information for HTTP2 listeners. See [`http2` Block](#http2-block) for details.
+* `tcp` - (Optional) Connection pool information for TCP listeners. See [`tcp` Block](#tcp-block) for details.
 
-The `grpc` connection pool object supports the following:
+#### `grpc` Block
 
 * `max_requests` - (Required) Maximum number of inflight requests Envoy can concurrently support across hosts in upstream cluster. Minimum value of `1`.
 
-The `http` connection pool object supports the following:
+#### `http` Block
 
 * `max_connections` - (Required) Maximum number of outbound TCP connections Envoy can establish concurrently with all hosts in upstream cluster. Minimum value of `1`.
 * `max_pending_requests` - (Optional) Number of overflowing requests after `max_connections` Envoy will queue to upstream cluster. Minimum value of `1`.
 
-The `http2` connection pool object supports the following:
+#### `http2` Block
 
 * `max_requests` - (Required) Maximum number of inflight requests Envoy can concurrently support across hosts in upstream cluster. Minimum value of `1`.
 
-The `tcp` connection pool object supports the following:
+#### `tcp` Block
 
 * `max_connections` - (Required) Maximum number of outbound TCP connections Envoy can establish concurrently with all hosts in upstream cluster. Minimum value of `1`.
 
-The `health_check` object supports the following:
+### `health_check` Block
 
 * `healthy_threshold` - (Required) Number of consecutive successful health checks that must occur before declaring listener healthy.
-* `interval_millis`- (Required) Time period in milliseconds between each health check execution.
+* `interval_millis` - (Required) Time period in milliseconds between each health check execution.
+* `path` - (Optional) Destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
+* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 * `protocol` - (Required) Protocol for the health check request. Valid values are `http`, `http2`, `tcp` and `grpc`.
 * `timeout_millis` - (Required) Amount of time to wait when receiving a response from the health check, in milliseconds.
 * `unhealthy_threshold` - (Required) Number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
-* `path` - (Optional) Destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
-* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 
-The `outlier_detection` object supports the following:
+### `outlier_detection` Block
 
-* `base_ejection_duration` - (Required) Base amount of time for which a host is ejected.
-* `interval` - (Required) Time interval between ejection sweep analysis.
-* `max_ejection_percent` - (Required) Maximum percentage of hosts in load balancing pool for upstream service that can be ejected. Will eject at least one host regardless of the value.
-Minimum value of `0`. Maximum value of `100`.
+* `base_ejection_duration` - (Required) Base amount of time for which a host is ejected. See [`base_ejection_duration` Block](#base_ejection_duration-block) for details.
+* `interval` - (Required) Time interval between ejection sweep analysis. See [`interval` Block](#interval-block) for details.
+* `max_ejection_percent` - (Required) Maximum percentage of hosts in load balancing pool for upstream service that can be ejected. Will eject at least one host regardless of the value. Minimum value of `0`. Maximum value of `100`.
 * `max_server_errors` - (Required) Number of consecutive `5xx` errors required for ejection. Minimum value of `1`.
 
-The `base_ejection_duration` and `interval` objects support the following:
+#### `base_ejection_duration` Block
 
 * `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
 * `value` - (Required) Number of time units. Minimum value of `0`.
 
-The `timeout` object supports the following:
-
-* `grpc` - (Optional) Timeouts for gRPC listeners.
-* `http` - (Optional) Timeouts for HTTP listeners.
-* `http2` - (Optional) Timeouts for HTTP2 listeners.
-* `tcp` - (Optional) Timeouts for TCP listeners.
-
-The `grpc` timeout object supports the following:
-
-* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-* `per_request` - (Optional) Per request timeout.
-
-The `idle` and `per_request` objects support the following:
+#### `interval` Block
 
 * `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
 * `value` - (Required) Number of time units. Minimum value of `0`.
 
-The `http` and `http2` timeout objects support the following:
+### `timeout` Block
 
-* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-* `per_request` - (Optional) Per request timeout.
+* `grpc` - (Optional) Timeouts for gRPC listeners. See [`grpc` Block](#grpc-block-1) for details.
+* `http` - (Optional) Timeouts for HTTP listeners. See [`http` Block](#http-block-1) for details.
+* `http2` - (Optional) Timeouts for HTTP2 listeners. See [`http2` Block](#http2-block-1) for details.
+* `tcp` - (Optional) Timeouts for TCP listeners. See [`tcp` Block](#tcp-block-1) for details.
 
-The `idle` and `per_request` objects support the following:
+#### `grpc` Block
+
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle. See [`idle` Block](#idle-block) for details.
+* `per_request` - (Optional) Per request timeout. See [`per_request` Block](#per_request-block) for details.
+
+#### `http` Block
+
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle. See [`idle` Block](#idle-block) for details.
+* `per_request` - (Optional) Per request timeout. See [`per_request` Block](#per_request-block) for details.
+
+#### `http2` Block
+
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle. See [`idle` Block](#idle-block) for details.
+* `per_request` - (Optional) Per request timeout. See [`per_request` Block](#per_request-block) for details.
+
+#### `tcp` Block
+
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle. See [`idle` Block](#idle-block) for details.
+
+##### `idle` Block
 
 * `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
 * `value` - (Required) Number of time units. Minimum value of `0`.
 
-The `tcp` timeout object supports the following:
-
-* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-
-The `idle` object supports the following:
+##### `per_request` Block
 
 * `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
 * `value` - (Required) Number of time units. Minimum value of `0`.
 
-The `tls` object supports the following:
+### `tls` Block
 
 * `certificate` - (Required) Listener's TLS certificate.
-* `mode`- (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
-* `validation`- (Optional) Listener's Transport Layer Security (TLS) validation context.
+* `mode` - (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
+* `validation` - (Optional) Listener's Transport Layer Security (TLS) validation context.
 
-The `certificate` object supports the following:
+### `certificate` Block
 
 * `acm` - (Optional) An AWS Certificate Manager (ACM) certificate.
 * `file` - (Optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
-The `acm` object supports the following:
+### `acm` Block
 
 * `certificate_arn` - (Required) ARN for the certificate.
 
-The `file` object supports the following:
+### `file` Block
 
 * `certificate_chain` - (Required) Certificate chain for the certificate. Must be between 1 and 255 characters in length.
 * `private_key` - (Required) Private key for a certificate stored on the file system of the virtual node that the proxy is running on. Must be between 1 and 255 characters in length.
 
-The `sds` object supports the following:
+### `sds` Block
 
 * `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
-The `validation` object supports the following:
+### `validation` Block
 
 * `subject_alternative_names` - (Optional) SANs for a TLS validation context.
 * `trust` - (Required) TLS validation context trust.
 
-The `subject_alternative_names` object supports the following:
+### `subject_alternative_names` Block
 
 * `match` - (Required) Criteria for determining a SAN's match.
 
-The `match` object supports the following:
+### `match` Block
 
 * `exact` - (Required) Values sent must match the specified values exactly.
 
-The `trust` object supports the following:
+### `trust` Block
 
 * `file` - (Optional) TLS validation context trust for a local file certificate.
 * `sds` - (Optional) TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
-The `file` object supports the following:
+### `file` Block
 
 * `certificate_chain` - (Required) Certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
-The `sds` object supports the following:
+### `sds` Block
 
 * `secret_name` - (Required) Name of the secret for a virtual node's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
