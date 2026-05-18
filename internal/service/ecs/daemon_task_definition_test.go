@@ -467,11 +467,37 @@ func TestAccECSDaemonTaskDefinition_containerDefinitionAllNestedBlocks(t *testin
 					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awslogs"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awsfirelens"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.environment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.source_volume", "data"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.depends_on.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.depends_on.0.container_name", "sidecar"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.depends_on.0.condition", "START"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.linux_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.linux_parameters.0.init_process_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.restart_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.restart_policy.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.restart_policy.0.restart_attempt_period", "120"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.secret.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.secret.0.name", "MY_SECRET"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.system_control.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.system_control.0.namespace", "net.core.somaxconn"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.system_control.0.value", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.ulimit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.ulimit.0.name", "nofile"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.ulimit.0.hard_limit", "65536"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.ulimit.0.soft_limit", "65536"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.1.firelens_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.1.firelens_configuration.0.type", "fluentbit"),
 				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -984,8 +1010,6 @@ resource "aws_ecs_daemon_task_definition" "test" {
 
 func testAccDaemonTaskDefinitionConfig_allNestedBlocks(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_iam_role" "execution" {
   name = "%[1]s-execution"
 
@@ -997,6 +1021,15 @@ resource "aws_iam_role" "execution" {
       Principal = { Service = "ecs-tasks.amazonaws.com" }
     }]
   })
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = "test-secret-value"
 }
 
 resource "aws_ecs_daemon_task_definition" "test" {
@@ -1012,6 +1045,11 @@ resource "aws_ecs_daemon_task_definition" "test" {
     memory    = 512
     essential = true
 
+    depends_on {
+      container_name = "sidecar"
+      condition      = "START"
+    }
+
     health_check {
       command  = ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       interval = 30
@@ -1020,11 +1058,9 @@ resource "aws_ecs_daemon_task_definition" "test" {
     }
 
     log_configuration {
-      log_driver = "awslogs"
+      log_driver = "awsfirelens"
       options = {
-        "awslogs-group"         = "/ecs/daemon"
-        "awslogs-region"        = data.aws_region.current.name
-        "awslogs-stream-prefix" = "ecs"
+        "Name" = "stdout"
       }
     }
 
@@ -1037,6 +1073,43 @@ resource "aws_ecs_daemon_task_definition" "test" {
       source_volume  = "data"
       container_path = "/usr/share/nginx/html"
       read_only      = true
+    }
+
+    linux_parameters {
+      init_process_enabled = true
+    }
+
+    restart_policy {
+      enabled                = true
+      restart_attempt_period = 120
+    }
+
+    secret {
+      name       = "MY_SECRET"
+      value_from = aws_secretsmanager_secret.test.arn
+    }
+
+    system_control {
+      namespace = "net.core.somaxconn"
+      value     = "1024"
+    }
+
+    ulimit {
+      name       = "nofile"
+      hard_limit = 65536
+      soft_limit = 65536
+    }
+  }
+
+  container_definition {
+    name      = "sidecar"
+    image     = "amazon/aws-for-fluent-bit:latest"
+    cpu       = 128
+    memory    = 256
+    essential = false
+
+    firelens_configuration {
+      type = "fluentbit"
     }
   }
 

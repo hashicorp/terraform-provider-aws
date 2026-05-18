@@ -6,13 +6,13 @@ package ecs
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -53,7 +53,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -64,15 +65,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"delete_requested_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -93,19 +88,6 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"registered_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"registered_by": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"revision": schema.Int64Attribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
@@ -113,7 +95,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 				},
 			},
 			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.DaemonTaskDefinitionStatus](),
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -121,7 +104,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"task_role_arn": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -130,6 +114,10 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 		Blocks: map[string]schema.Block{
 			"container_definition": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[containerDefinitionModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -142,13 +130,16 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						"cpu": schema.Int64Attribute{
 							Optional: true,
 							Computed: true,
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.UseStateForUnknown(),
+							},
 						},
 						"entry_point": schema.ListAttribute{
 							CustomType: fwtypes.ListOfStringType,
 							Optional:   true,
 						},
 						"essential": schema.BoolAttribute{
-							Required: true,
+							Optional: true,
 						},
 						"image": schema.StringAttribute{
 							Required: true,
@@ -163,7 +154,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							Optional: true,
 						},
 						names.AttrName: schema.StringAttribute{
-							Required: true,
+							Optional: true,
 						},
 						"privileged": schema.BoolAttribute{
 							Optional: true,
@@ -182,6 +173,10 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						"user": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 						"working_directory": schema.StringAttribute{
 							Optional: true,
@@ -224,7 +219,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 										Required:   true,
 									},
 									names.AttrValue: schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 								},
 							},
@@ -233,14 +229,14 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							CustomType: fwtypes.NewListNestedObjectTypeOf[firelensConfigurationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrType: schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.FirelensConfigurationType](),
-										Required:   true,
-									},
 									"options": schema.MapAttribute{
 										CustomType:  fwtypes.MapOfStringType,
 										Optional:    true,
 										ElementType: types.StringType,
+									},
+									names.AttrType: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.FirelensConfigurationType](),
+										Required:   true,
 									},
 								},
 							},
@@ -255,15 +251,27 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 									},
 									names.AttrInterval: schema.Int64Attribute{
 										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(5, 300),
+										},
 									},
 									"retries": schema.Int64Attribute{
 										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(1, 10),
+										},
 									},
 									"start_period": schema.Int64Attribute{
 										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(0, 300),
+										},
 									},
 									names.AttrTimeout: schema.Int64Attribute{
 										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(2, 60),
+										},
 									},
 								},
 							},
@@ -303,8 +311,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 													Required: true,
 												},
 												names.AttrPermissions: schema.ListAttribute{
-													Optional:    true,
-													ElementType: types.StringType,
+													CustomType: fwtypes.ListOfStringEnumType[awstypes.DeviceCgroupPermission](),
+													Optional:   true,
 												},
 											},
 										},
@@ -345,7 +353,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 								},
 								Blocks: map[string]schema.Block{
 									"secret_option": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[secretModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[daemonSecretModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												names.AttrName: schema.StringAttribute{
@@ -371,7 +379,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 										Optional: true,
 									},
 									"source_volume": schema.StringAttribute{
-										Required: true,
+										Optional: true,
 									},
 								},
 							},
@@ -381,7 +389,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"credentials_parameter": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 								},
 							},
@@ -391,20 +400,26 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrEnabled: schema.BoolAttribute{
-										Optional: true,
+										Required: true,
 									},
 									"ignored_exit_codes": schema.ListAttribute{
-										Optional:    true,
-										ElementType: types.Int64Type,
+										Optional:   true,
+										CustomType: fwtypes.ListOfInt64Type,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(50),
+										},
 									},
 									"restart_attempt_period": schema.Int64Attribute{
 										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(60, 1800),
+										},
 									},
 								},
 							},
 						},
 						"secret": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[secretModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[daemonSecretModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrName: schema.StringAttribute{
@@ -460,7 +475,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							Optional: true,
 						},
 						names.AttrName: schema.StringAttribute{
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
@@ -501,7 +516,7 @@ func (r *daemonTaskDefinitionResource) Create(ctx context.Context, request resou
 		return
 	}
 
-	plan.DaemonTaskDefinitionArn = types.StringPointerValue(output.DaemonTaskDefinitionArn)
+	plan.DaemonTaskDefinitionArn = fwtypes.ARNValue(aws.ToString(output.DaemonTaskDefinitionArn))
 
 	// Read back to populate all computed attributes
 	dtd, err := findDaemonTaskDefinitionByARN(ctx, conn, plan.DaemonTaskDefinitionArn.ValueString())
@@ -555,8 +570,6 @@ func (r *daemonTaskDefinitionResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().ECSClient(ctx)
 
-	log.Printf("[DEBUG] Deleting ECS Daemon Task Definition: %s", state.DaemonTaskDefinitionArn.ValueString())
-
 	_, err := conn.DeleteDaemonTaskDefinition(ctx, &ecs.DeleteDaemonTaskDefinitionInput{
 		DaemonTaskDefinition: state.DaemonTaskDefinitionArn.ValueStringPointer(),
 	})
@@ -572,11 +585,11 @@ func (r *daemonTaskDefinitionResource) Delete(ctx context.Context, request resou
 
 // flattenDaemonTaskDefinition populates the model from a DaemonTaskDefinition using AutoFlex
 // for matching fields and manual handling for fields that require transformation.
-func flattenDaemonTaskDefinition(ctx context.Context, dtd *awstypes.DaemonTaskDefinition, model *daemonTaskDefinitionResourceModel) diag.Diagnostics {
+func flattenDaemonTaskDefinition(ctx context.Context, dtd *awstypes.DaemonTaskDefinition, model *daemonTaskDefinitionResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
 	// AutoFlex handles DaemonTaskDefinitionArn, Family, Cpu, Memory, ExecutionRoleArn,
-	// TaskRoleArn, Revision, Status, RegisteredBy, ContainerDefinitions
+	// TaskRoleArn, Revision, Status, ContainerDefinitions
 	diags.Append(fwflex.Flatten(ctx, dtd, model)...)
 	if diags.HasError() {
 		return diags
@@ -624,24 +637,21 @@ func expandDaemonVolumesFromModel(volumes []*volumeModel) []awstypes.DaemonVolum
 	return apiObjects
 }
 
-// Helper functions used by both resource and data sources.
+// Model and helper types.
 
 type daemonTaskDefinitionResourceModel struct {
 	framework.WithRegionModel
-	DaemonTaskDefinitionArn types.String                                              `tfsdk:"arn"`
+	DaemonTaskDefinitionArn fwtypes.ARN                                               `tfsdk:"arn"`
 	ContainerDefinitions    fwtypes.ListNestedObjectValueOf[containerDefinitionModel] `tfsdk:"container_definition"`
 	Cpu                     types.String                                              `tfsdk:"cpu"`
-	DeleteRequestedAt       timetypes.RFC3339                                         `tfsdk:"delete_requested_at"`
-	ExecutionRoleArn        types.String                                              `tfsdk:"execution_role_arn"`
+	ExecutionRoleArn        fwtypes.ARN                                               `tfsdk:"execution_role_arn"`
 	Family                  types.String                                              `tfsdk:"family"`
 	Memory                  types.String                                              `tfsdk:"memory"`
-	RegisteredAt            timetypes.RFC3339                                         `tfsdk:"registered_at"`
-	RegisteredBy            types.String                                              `tfsdk:"registered_by"`
 	Revision                types.Int64                                               `tfsdk:"revision"`
-	Status                  types.String                                              `tfsdk:"status"`
+	Status                  fwtypes.StringEnum[awstypes.DaemonTaskDefinitionStatus]   `tfsdk:"status"`
 	Tags                    tftags.Map                                                `tfsdk:"tags"`
 	TagsAll                 tftags.Map                                                `tfsdk:"tags_all"`
-	TaskRoleArn             types.String                                              `tfsdk:"task_role_arn"`
+	TaskRoleArn             fwtypes.ARN                                               `tfsdk:"task_role_arn"`
 	Volumes                 fwtypes.SetNestedObjectValueOf[volumeModel]               `tfsdk:"volume"`
 }
 
@@ -668,7 +678,7 @@ type containerDefinitionModel struct {
 	ReadonlyRootFilesystem types.Bool                                                   `tfsdk:"readonly_root_filesystem"`
 	RepositoryCredentials  fwtypes.ListNestedObjectValueOf[repositoryCredentialsModel]  `tfsdk:"repository_credentials"`
 	RestartPolicy          fwtypes.ListNestedObjectValueOf[containerRestartPolicyModel] `tfsdk:"restart_policy"`
-	Secrets                fwtypes.ListNestedObjectValueOf[secretModel]                 `tfsdk:"secret"`
+	Secrets                fwtypes.ListNestedObjectValueOf[daemonSecretModel]           `tfsdk:"secret"`
 	StartTimeout           types.Int64                                                  `tfsdk:"start_timeout"`
 	StopTimeout            types.Int64                                                  `tfsdk:"stop_timeout"`
 	SystemControls         fwtypes.ListNestedObjectValueOf[systemControlModel]          `tfsdk:"system_control"`
@@ -684,12 +694,12 @@ type containerDependencyModel struct {
 
 type environmentFileModel struct {
 	Type  fwtypes.StringEnum[awstypes.EnvironmentFileType] `tfsdk:"type"`
-	Value types.String                                     `tfsdk:"value"`
+	Value fwtypes.ARN                                      `tfsdk:"value"`
 }
 
 type firelensConfigurationModel struct {
-	Type    fwtypes.StringEnum[awstypes.FirelensConfigurationType] `tfsdk:"type"`
 	Options fwtypes.MapOfString                                    `tfsdk:"options"`
+	Type    fwtypes.StringEnum[awstypes.FirelensConfigurationType] `tfsdk:"type"`
 }
 
 type healthCheckModel struct {
@@ -725,9 +735,9 @@ type tmpfsModel struct {
 }
 
 type logConfigurationModel struct {
-	LogDriver     fwtypes.StringEnum[awstypes.LogDriver]       `tfsdk:"log_driver"`
-	Options       fwtypes.MapOfString                          `tfsdk:"options"`
-	SecretOptions fwtypes.ListNestedObjectValueOf[secretModel] `tfsdk:"secret_option"`
+	LogDriver     fwtypes.StringEnum[awstypes.LogDriver]             `tfsdk:"log_driver"`
+	Options       fwtypes.MapOfString                                `tfsdk:"options"`
+	SecretOptions fwtypes.ListNestedObjectValueOf[daemonSecretModel] `tfsdk:"secret_option"`
 }
 
 type mountPointModel struct {
@@ -737,7 +747,7 @@ type mountPointModel struct {
 }
 
 type repositoryCredentialsModel struct {
-	CredentialsParameter types.String `tfsdk:"credentials_parameter"`
+	CredentialsParameter fwtypes.ARN `tfsdk:"credentials_parameter"`
 }
 
 type containerRestartPolicyModel struct {
@@ -755,6 +765,16 @@ type ulimitModel struct {
 	HardLimit types.Int64                             `tfsdk:"hard_limit"`
 	Name      fwtypes.StringEnum[awstypes.UlimitName] `tfsdk:"name"`
 	SoftLimit types.Int64                             `tfsdk:"soft_limit"`
+}
+
+type volumeModel struct {
+	HostPath types.String `tfsdk:"host_path"`
+	Name     types.String `tfsdk:"name"`
+}
+
+type daemonSecretModel struct {
+	Name      types.String `tfsdk:"name"`
+	ValueFrom types.String `tfsdk:"value_from"`
 }
 
 func findDaemonTaskDefinitionByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonTaskDefinition, error) {
@@ -787,22 +807,4 @@ func findDaemonTaskDefinitionByARN(ctx context.Context, conn *ecs.Client, arn st
 	}
 
 	return output.DaemonTaskDefinition, nil
-}
-
-func findDaemonTaskDefinitions(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonTaskDefinitionsInput) ([]awstypes.DaemonTaskDefinitionSummary, error) {
-	var result []awstypes.DaemonTaskDefinitionSummary
-
-	err := listDaemonTaskDefinitionsPages(ctx, conn, input, func(page *ecs.ListDaemonTaskDefinitionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-		result = append(result, page.DaemonTaskDefinitions...)
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }

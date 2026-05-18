@@ -173,8 +173,6 @@ func TestAccECSDaemonTaskDefinition_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("container_definition"), knownvalue.ListSizeExact(1)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrFamily), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("registered_at"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("registered_by"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("revision"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),

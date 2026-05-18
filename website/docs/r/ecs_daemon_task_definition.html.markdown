@@ -154,7 +154,6 @@ The following arguments are optional:
 ### container_definition
 
 * `image` - (Required) The image used to start a container.
-* `name` - (Required) The name of a container.
 * `command` - (Optional) The command that is passed to the container.
 * `cpu` - (Optional) The number of cpu units reserved for the container.
 * `depends_on` - (Optional) The dependencies defined for container startup and shutdown. Detailed below.
@@ -170,6 +169,7 @@ The following arguments are optional:
 * `memory` - (Optional) The amount (in MiB) of memory to present to the container.
 * `memory_reservation` - (Optional) The soft limit (in MiB) of memory to reserve for the container.
 * `mount_point` - (Optional) The mount points for data volumes in your container. Detailed below.
+* `name` - (Optional) The name of a container.
 * `privileged` - (Optional) When this parameter is true, the container is given elevated privileges on the host container instance.
 * `pseudo_terminal` - (Optional) When this parameter is true, a TTY is allocated.
 * `readonly_root_filesystem` - (Optional) When this parameter is true, the container is given read-only access to its root file system.
@@ -186,16 +186,108 @@ The following arguments are optional:
 ### volume
 
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
-* `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
+* `name` - (Optional) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
+
+### depends_on
+
+* `condition` - (Required) The dependency condition of the container. Valid values: `START`, `COMPLETE`, `SUCCESS`, `HEALTHY`.
+* `container_name` - (Required) The name of a container.
+
+### environment
+
+* `name` - (Required) The name of the environment variable.
+* `value` - (Required) The value of the environment variable.
+
+### environment_file
+
+* `type` - (Required) The file type to use. The only supported value is `s3`.
+* `value` - (Required) The ARN of the Amazon S3 object containing the environment variable file.
+
+### firelens_configuration
+
+* `options` - (Optional) The options to use when configuring the log router.
+* `type` - (Required) The log router to use. Valid values: `fluentd`, `fluentbit`.
+
+### health_check
+
+* `command` - (Required) A string array representing the command that the container runs to determine if it is healthy.
+* `interval` - (Optional) The time period in seconds between each health check execution. Valid range: 5–300.
+* `retries` - (Optional) The number of times to retry a failed health check. Valid range: 1–10.
+* `start_period` - (Optional) The grace period in seconds to provide containers time to bootstrap. Valid range: 0–300.
+* `timeout` - (Optional) The time period in seconds to wait for a health check to succeed. Valid range: 2–60.
+
+### linux_parameters
+
+* `capabilities` - (Optional) The Linux capabilities for the container. Detailed below.
+* `device` - (Optional) Any host devices to expose to the container. Detailed below.
+* `init_process_enabled` - (Optional) Run an init process inside the container that forwards signals and reaps processes.
+* `tmpfs` - (Optional) The container path, mount options, and size of the tmpfs mount. Detailed below.
+
+### capabilities
+
+* `add` - (Optional) The Linux capabilities for the container that have been added to the default configuration provided by Docker.
+* `drop` - (Optional) The Linux capabilities for the container that have been removed from the default configuration provided by Docker.
+
+### device
+
+* `container_path` - (Optional) The path inside the container at which to expose the host device.
+* `host_path` - (Required) The path for the device on the host container instance.
+* `permissions` - (Optional) The explicit permissions to provide to the container for the device. Valid values: `read`, `write`, `mknod`.
+
+### tmpfs
+
+* `container_path` - (Required) The absolute file path where the tmpfs volume is to be mounted.
+* `mount_options` - (Optional) The list of tmpfs volume mount options.
+* `size` - (Required) The maximum size (in MiB) of the tmpfs volume.
+
+### log_configuration
+
+* `log_driver` - (Required) The log driver to use for the container. Valid values: `json-file`, `syslog`, `journald`, `gelf`, `fluentd`, `awslogs`, `splunk`, `awsfirelens`.
+* `options` - (Optional) The configuration options to send to the log driver.
+* `secret_option` - (Optional) The secrets to pass to the log configuration. Detailed below.
+
+### secret_option
+
+* `name` - (Required) The name of the secret.
+* `value_from` - (Required) The secret to expose to the log configuration.
+
+### mount_point
+
+* `container_path` - (Optional) The path on the container to mount the host volume at.
+* `read_only` - (Optional) If this value is true, the container has read-only access to the volume.
+* `source_volume` - (Optional) The name of the volume to mount.
+
+### repository_credentials
+
+* `credentials_parameter` - (Required) The ARN of the secret containing the private repository credentials.
+
+### restart_policy
+
+* `enabled` - (Required) Specifies whether a restart policy is enabled for the container.
+* `ignored_exit_codes` - (Optional) A list of exit codes that Amazon ECS will ignore and not attempt a restart on. Maximum of 50.
+* `restart_attempt_period` - (Optional) A period of time (in seconds) that the container must run for before a restart can be attempted. Valid range: 60–1800.
+
+### secret
+
+* `name` - (Required) The name of the secret.
+* `value_from` - (Required) The secret to expose to the container. The supported values are either the full ARN of the Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+
+### system_control
+
+* `namespace` - (Optional) The namespaced kernel parameter to set a value for.
+* `value` - (Optional) The value for the namespaced kernel parameter.
+
+### ulimit
+
+* `hard_limit` - (Required) The hard limit for the ulimit type.
+* `name` - (Required) The type of the ulimit.
+* `soft_limit` - (Required) The soft limit for the ulimit type.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Full ARN of the Daemon Task Definition (including both `family` and `revision`).
-* `delete_requested_at` - Timestamp when deletion was requested (if applicable).
-* `registered_at` - Timestamp when the daemon task definition was registered.
-* `registered_by` - Principal that registered the daemon task definition.
 * `revision` - Revision of the task in a particular family.
 * `status` - Status of the daemon task definition.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

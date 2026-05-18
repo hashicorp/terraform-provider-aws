@@ -23,10 +23,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -180,7 +180,7 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Fields AutoFlex can't handle
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	// Write-only fields — read from config
@@ -375,7 +375,7 @@ func daemonNameFromARN(arn string) types.String {
 // provider ARNs from a DaemonRevision and DaemonRevisionDetail. DaemonTaskDefinitionArn is only
 // set when the model's value is null (e.g., during import) to avoid overwriting
 // the plan value with potentially stale revision data during Create/Update.
-func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevision, revisionDetail awstypes.DaemonRevisionDetail, model *daemonResourceModel) {
+func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevision, revisionDetail awstypes.DaemonRevisionDetail, model *daemonResourceModel) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	if model.DaemonTaskDefinitionArn.IsNull() {
 		model.DaemonTaskDefinitionArn = types.StringPointerValue(revision.DaemonTaskDefinitionArn)
 	}
@@ -394,7 +394,7 @@ func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevisio
 // flattenDaemonCurrentRevision fetches the current revision for a daemon and
 // flattens its fields into the model. This is shared across Create, Read,
 // Update, and the list resource.
-func flattenDaemonCurrentRevision(ctx context.Context, conn *ecs.Client, daemon *awstypes.DaemonDetail, diags *diag.Diagnostics, model *daemonResourceModel) {
+func flattenDaemonCurrentRevision(ctx context.Context, conn *ecs.Client, daemon *awstypes.DaemonDetail, diags *diag.Diagnostics, model *daemonResourceModel) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	if len(daemon.CurrentRevisions) == 0 || daemon.CurrentRevisions[0].Arn == nil {
 		return
 	}
@@ -436,7 +436,7 @@ type alarmConfigurationModel struct {
 
 // expandDaemonWriteOnlyFields reads write-only fields from the Terraform config.
 // These fields are not returned by the API, so they must always be read from config.
-func expandDaemonWriteOnlyFields(ctx context.Context, cfg tfsdk.Config, diags *diag.Diagnostics) (enableManagedTags, enableExecCmd types.Bool) {
+func expandDaemonWriteOnlyFields(ctx context.Context, cfg tfsdk.Config, diags *diag.Diagnostics) (enableManagedTags, enableExecCmd types.Bool) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	var data daemonResourceModel
 	diags.Append(cfg.Get(ctx, &data)...)
 	if diags.HasError() {
@@ -477,24 +477,6 @@ func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstyp
 	}
 
 	return output.Daemon, nil
-}
-
-func findDaemons(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonsInput) ([]awstypes.DaemonSummary, error) {
-	var result []awstypes.DaemonSummary
-
-	err := listDaemonsPages(ctx, conn, input, func(page *ecs.ListDaemonsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-		result = append(result, page.DaemonSummariesList...)
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }
 
 func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {

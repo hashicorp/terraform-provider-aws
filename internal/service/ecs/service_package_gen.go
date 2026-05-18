@@ -30,31 +30,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Clusters",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
-		{
-			Factory:  newDaemonDataSource,
-			TypeName: "aws_ecs_daemon",
-			Name:     "Daemon",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region:   inttypes.ResourceRegionDefault(),
-		},
-		{
-			Factory:  newDaemonTaskDefinitionDataSource,
-			TypeName: "aws_ecs_daemon_task_definition",
-			Name:     "Daemon Task Definition",
-			Region:   inttypes.ResourceRegionDefault(),
-		},
-		{
-			Factory:  newDaemonTaskDefinitionsDataSource,
-			TypeName: "aws_ecs_daemon_task_definitions",
-			Name:     "Daemon Task Definitions",
-			Region:   inttypes.ResourceRegionDefault(),
-		},
-		{
-			Factory:  newDaemonsDataSource,
-			TypeName: "aws_ecs_daemons",
-			Name:     "Daemons",
-			Region:   inttypes.ResourceRegionDefault(),
-		},
 	}
 }
 
