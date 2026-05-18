@@ -121,7 +121,12 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_harness.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_harness.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					querycheck.ExpectResourceKnownValues("aws_bedrockagentcore_harness.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("allowed_tools"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkHarnessARN(rName+"_0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_name"), knownvalue.StringExact(rName+"_0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("max_iterations"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
@@ -129,6 +134,7 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("timeout_seconds"), knownvalue.NotNull()),
 					}),
 				},
 			},
