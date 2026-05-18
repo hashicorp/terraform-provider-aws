@@ -197,19 +197,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "action/aws_codebuild_start_build",
-    "action/aws_dms_start_replication_task_assessment_run",
-    "action/aws_sns_publish",
-    "data_source/aws_acm_certificate",
-    "data_source/aws_acmpca_certificate_authority",
-    "data_source/aws_ami",
-    "data_source/aws_ami_ids",
-    "data_source/aws_api_gateway_api_key",
-    "data_source/aws_api_gateway_domain_name",
-    "data_source/aws_api_gateway_rest_api",
-    "data_source/aws_api_gateway_vpc_link",
-    "data_source/aws_apigatewayv2_api",
-    "data_source/aws_apigatewayv2_apis",
     "data_source/aws_appconfig_configuration_profile",
     "data_source/aws_appconfig_environment",
     "data_source/aws_appstream_image",
