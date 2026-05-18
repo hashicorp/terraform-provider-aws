@@ -197,7 +197,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "data_source/aws_auditmanager_control",
     "data_source/aws_auditmanager_framework",
     "data_source/aws_autoscaling_group",
     "data_source/aws_autoscaling_groups",
