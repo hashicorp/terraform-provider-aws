@@ -30,12 +30,13 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Set to the ID of the API Key.
-* `name` - Set to the name of the API Key.
-* `value` - Set to the value of the API Key.
+* `arn` - ARN of the API Key.
 * `created_date` - Date and time when the API Key was created.
-* `last_updated_date` - Date and time when the API Key was last updated.
 * `customer_id` - Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
 * `description` - Description of the API Key.
 * `enabled` - Whether the API Key is enabled.
+* `id` - Set to the ID of the API Key.
+* `last_updated_date` - Date and time when the API Key was last updated.
+* `name` - Set to the name of the API Key.
 * `tags` - Map of tags for the resource.
+* `value` - Set to the value of the API Key.
