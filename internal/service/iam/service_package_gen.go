@@ -221,6 +221,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_access_key",
 			Name:     "Access Key",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceAccountAlias,
