@@ -12,11 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,6 +27,12 @@ import (
 )
 
 // @FrameworkResource("aws_xray_trace_segment_destination", name="Trace Segment Destination")
+// @SingletonIdentity(identityDuplicateAttributes="id")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray;xray.GetTraceSegmentDestinationOutput")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(serialize=true)
 func newTraceSegmentDestinationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &traceSegmentDestinationResource{}
 
@@ -47,6 +56,7 @@ func (r *traceSegmentDestinationResource) Schema(ctx context.Context, req resour
 				CustomType: fwtypes.StringEnumType[awstypes.TraceSegmentDestination](),
 				Required:   true,
 			},
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -74,6 +84,8 @@ func (r *traceSegmentDestinationResource) Create(ctx context.Context, req resour
 		resp.Diagnostics.AddError("creating XRay Trace Segment Destination (%s)", err.Error())
 		return
 	}
+
+	plan.ID = fwflex.StringValueToFramework(ctx, r.Meta().Region(ctx))
 
 	if _, err := waitTraceSegmentDestinationActive(ctx, conn, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
 		resp.Diagnostics.AddError("waiting for XRay Trace Segment Destination create (%s)", err.Error())
@@ -184,5 +196,6 @@ func waitTraceSegmentDestinationActive(ctx context.Context, conn *xray.Client, t
 type traceSegmentDestinationResourceModel struct {
 	framework.WithRegionModel
 	Destination fwtypes.StringEnum[awstypes.TraceSegmentDestination] `tfsdk:"destination"`
+	ID          types.String                                         `tfsdk:"id"`
 	Timeouts    timeouts.Value                                       `tfsdk:"timeouts"`
 }
