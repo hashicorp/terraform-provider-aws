@@ -72,14 +72,14 @@ This data source exports the following attributes in addition to the arguments a
 ### eks_container
 
 * `args` - An array of arguments to the entrypoint
-* `commands` - The entrypoint for the container. This isn't run within a shell. If this isn't specified, the ENTRYPOINT of the container image is used. Environment variable references are expanded using the container's environment.
-* `env` - The environment variables to pass to a container.  Array of [EksContainerEnvironmentVariable](#eks_environment) objects.
-* `image` - The Docker image used to start the container.
-* `image_pull_policy` - The image pull policy for the container.
-* `name` - The name of the container.
-* `resources` - The type and amount of [resources](#eks_resources) to assign to a container.
-* `security_context` - The [security context](#eks_security_context) for a job.
-* `volume_mounts` - The [volume mounts](#eks_volume_mounts) for the container.
+* `commands` - Entrypoint for the container. This isn't run within a shell. If this isn't specified, the ENTRYPOINT of the container image is used. Environment variable references are expanded using the container's environment.
+* `env` - Environment variables to pass to a container.  Array of [EksContainerEnvironmentVariable](#eks_environment) objects.
+* `image` - Docker image used to start the container.
+* `image_pull_policy` - Image pull policy for the container.
+* `name` - Name of the container.
+* `resources` - Type and amount of [resources](#eks_resources) to assign to a container.
+* `security_context` - [Security context](#eks_security_context) for a job.
+* `volume_mounts` - [Volume mounts](#eks_volume_mounts) for the container.
 
 ### eks_metadata
 
@@ -127,15 +127,15 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_volume_mounts
 
-* `mount_path` - The path on the container where the volume is mounted.
-* `name` - The name the volume mount.
+* `mount_path` - Path on the container where the volume is mounted.
+* `name` - Name of the volume mount.
 * `read_only` - If this value is true, the container has read-only access to the volume. Otherwise, the container can write to the volume.
 
 ### node_properties
 
-* `main_node` - Specifies the node index for the main node of a multi-node parallel job. This node index value must be fewer than the number of nodes.
-* `node_range_properties` - A list of node ranges and their [properties](#node_range_properties) that are associated with a multi-node parallel job.
-* `num_nodes` - The number of nodes that are associated with a multi-node parallel job.
+* `main_node` - Node index for the main node of a multi-node parallel job. This node index value must be fewer than the number of nodes.
+* `node_range_properties` - List of node ranges and their [properties](#node_range_properties) that are associated with a multi-node parallel job.
+* `num_nodes` - Number of nodes that are associated with a multi-node parallel job.
 
 ### node_range_properties
 
@@ -205,8 +205,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### resource_requirements
 
-* `type` - The type of resource to assign to a container. The supported resources include `GPU`, `MEMORY`, and `VCPU`.
-* `value` - The quantity of the specified resource to reserve for the container.
+* `type` - Type of resource to assign to a container. The supported resources include `GPU`, `MEMORY`, and `VCPU`.
+* `value` - Quantity of the specified resource to reserve for the container.
 
 ### secrets
 
@@ -243,8 +243,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### volumes
 
-* `name` - The name of the volume.
-* `host` - The contents of the host parameter determine whether your data volume persists on the host container instance and where it's stored.
+* `name` - Name of the volume.
+* `host` - Contents of the host parameter determine whether your data volume persists on the host container instance and where it's stored.
 * `efs_volume_configuration` - This [parameter](#efs_volume_configuration) is specified when you're using an Amazon Elastic File System file system for job storage.
 
 ### host
