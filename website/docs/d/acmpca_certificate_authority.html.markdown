@@ -38,6 +38,10 @@ This data source exports the following attributes in addition to the arguments a
 * `not_after` - Date and time after which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `not_before` - Date and time before which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `revocation_configuration` - Nested attribute containing revocation configuration. See [`revocation_configuration`](#revocation_configuration) below.
+* `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
+* `status` - Status of the certificate authority.
+* `tags` - Key-value map of user-defined tags that are attached to the certificate authority.
+* `type` - Type of the certificate authority.
 
 ### `revocation_configuration`
 
@@ -57,7 +61,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `enabled` - Boolean value that specifies whether a custom OCSP responder is enabled.
 * `ocsp_custom_cname` - A CNAME specifying a customized OCSP domain.
-* `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
-* `status` - Status of the certificate authority.
-* `tags` - Key-value map of user-defined tags that are attached to the certificate authority.
-* `type` - Type of the certificate authority.
