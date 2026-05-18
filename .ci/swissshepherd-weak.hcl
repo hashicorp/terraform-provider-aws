@@ -232,7 +232,6 @@ check "schema_docs" {
     "data_source/aws_athena_named_query",
     "data_source/aws_auditmanager_framework",
     "data_source/aws_autoscaling_group",
-    "data_source/aws_autoscaling_groups",
     "data_source/aws_availability_zone",
     "data_source/aws_availability_zones",
     "data_source/aws_backup_framework",
