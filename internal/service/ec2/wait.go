@@ -2994,7 +2994,7 @@ func waitVolumeAttachmentCreated(ctx context.Context, conn *ec2.Client, volumeID
 
 func waitVolumeAttachmentDeleted(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string, timeout time.Duration) (*awstypes.VolumeAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.VolumeAttachmentStateDetaching),
+		Pending:    enum.Slice(awstypes.VolumeAttachmentStateAttached, awstypes.VolumeAttachmentStateDetaching),
 		Target:     []string{},
 		Refresh:    statusVolumeAttachment(conn, volumeID, instanceID, deviceName),
 		Timeout:    timeout,
