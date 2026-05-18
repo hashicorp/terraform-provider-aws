@@ -30,7 +30,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.SamplingRule")
 // @IdentityAttribute("rule_name", identityDuplicateAttributes="id")
-// @Testing(hasNoPreExistingResource=true)
+// @Testing(preIdentityVersion="v6.45.0")
 func resourceSamplingRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSamplingRuleCreate,

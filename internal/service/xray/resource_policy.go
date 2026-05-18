@@ -31,7 +31,7 @@ import (
 
 // @FrameworkResource("aws_xray_resource_policy", name="Resource Policy")
 // @IdentityAttribute("policy_name")
-// @Testing(hasNoPreExistingResource=true)
+// @Testing(preIdentityVersion="v6.45.0")
 // @Testing(importStateIdAttribute="policy_name")
 // @Testing(importIgnore="bypass_policy_lockout_check;policy_document")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.ResourcePolicy")
