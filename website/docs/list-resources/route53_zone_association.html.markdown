@@ -15,6 +15,10 @@ Lists Route 53 Zone Association resources.
 ```terraform
 list "aws_route53_zone_association" "example" {
   provider = aws
+
+  config {
+    vpc_id = aws_vpc.example.id
+  }
 }
 ```
 
@@ -22,4 +26,5 @@ list "aws_route53_zone_association" "example" {
 
 This list resource supports the following arguments:
 
-* `region` - (Optional) Region to query. Defaults to provider region.
+* `vpc_id` - (Required) ID of the VPC to list hosted zone associations for.
+* `vpc_region` - (Optional) Region of the VPC. Defaults to the provider region.
