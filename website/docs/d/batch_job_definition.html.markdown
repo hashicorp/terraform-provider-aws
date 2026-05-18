@@ -60,14 +60,14 @@ This data source exports the following attributes in addition to the arguments a
 
 ### pod_properties
 
-* `containers` - The properties of the container that's used on the Amazon EKS pod. See [containers](#container) below.
-* `dns_policy` - The DNS policy for the pod. The default value is ClusterFirst. If the hostNetwork parameter is not specified, the default is ClusterFirstWithHostNet. ClusterFirst indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node.
-* `host_network` - Indicates if the pod uses the hosts' network IP address. The default value is true. Setting this to false enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
+* `containers` - Properties of the container that's used on the Amazon EKS pod. See [containers](#container) below.
+* `dns_policy` - DNS policy for the pod. The default value is ClusterFirst. If the hostNetwork parameter is not specified, the default is ClusterFirstWithHostNet. ClusterFirst indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node.
+* `host_network` - Whether the pod uses the hosts' network IP address. The default value is true. Setting this to false enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
 * `init_containers` - Containers which run before application containers, always runs to completion, and must complete successfully before the next container starts. These containers are registered with the Amazon EKS Connector agent and persists the registration information in the Kubernetes backend data store. See [containers](#container) below.
-* `service_account_name` - The name of the service account that's used to run the pod.
-* `share_process_namespace` - Indicates if the processes in a container are shared, or visible, to other containers in the same pod.
+* `service_account_name` - Name of the service account that's used to run the pod.
+* `share_process_namespace` - Whether the processes in a container are shared, or visible, to other containers in the same pod.
 * `metadata` - [Metadata](#eks_metadata) about the Kubernetes pod.
-* `volumes` -  Specifies the volumes for a job definition that uses Amazon EKS resources. Array of [EksVolume](#eks_volumes) objects.
+* `volumes` - Volumes for a job definition that uses Amazon EKS resources. Array of [EksVolume](#eks_volumes) objects.
 
 ### eks_container
 
@@ -94,8 +94,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_volume_empty_dir
 
-* `medium` - The medium to store the volume.
-* `size_limit` - The maximum size of the volume. By default, there's no maximum size defined.
+* `medium` - Medium to store the volume.
+* `size_limit` - Maximum size of the volume. By default, there's no maximum size defined.
 
 ### eks_volume_host_path
 
@@ -113,8 +113,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_resources
 
-* `limits` - The type and quantity of the resources to reserve for the container.
-* `requests` - The type and quantity of the resources to request for the container.
+* `limits` - Type and quantity of the resources to reserve for the container.
+* `requests` - Type and quantity of the resources to request for the container.
 
 ### eks_security_context
 
@@ -172,7 +172,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### ephemeral_storage
 
-* `size_in_gb` - The total amount, in GiB, of ephemeral storage to set for the task.
+* `size_in_gb` - Total amount, in GiB, of ephemeral storage to set for the task.
 
 ### fargate_platform_configuration
 
@@ -237,9 +237,9 @@ This data source exports the following attributes in addition to the arguments a
 
 ### tmpfs
 
-* `container_path` - The absolute file path in the container where the tmpfs volume is mounted.
-* `size` - The size (in MiB) of the tmpfs volume.
-* `mount_options` - The list of tmpfs volume mount options.
+* `container_path` - Absolute file path in the container where the tmpfs volume is mounted.
+* `size` - Size (in MiB) of the tmpfs volume.
+* `mount_options` - List of tmpfs volume mount options.
 
 ### volumes
 
@@ -266,7 +266,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### retry_strategy
 
-* `attempts` - The number of times to move a job to the RUNNABLE status.
+* `attempts` - Number of times to move a job to the RUNNABLE status.
 * `evaluate_on_exit` - Array of up to 5 [objects](#evaluate_on_exit) that specify the conditions where jobs are retried or failed.
 
 ### evaluate_on_exit
