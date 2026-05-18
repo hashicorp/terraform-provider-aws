@@ -34,6 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `certificate_chain` - Base64-encoded certificate chain that includes any intermediate certificates and chains up to root on-premises certificate that you used to sign your private CA certificate. The chain does not include your private CA certificate. Only available after the certificate authority certificate has been imported.
 * `certificate_signing_request` - The base64 PEM-encoded certificate signing request (CSR) for your private CA certificate.
 * `usage_mode` - Specifies whether the CA issues general-purpose certificates that typically require a revocation mechanism, or short-lived certificates that may optionally omit revocation because they expire quickly.
+* `key_storage_security_standard` - Level of security of the key storage endpoint of the certificate authority.
 * `not_after` - Date and time after which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `not_before` - Date and time before which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `revocation_configuration` - Nested attribute containing revocation configuration.
