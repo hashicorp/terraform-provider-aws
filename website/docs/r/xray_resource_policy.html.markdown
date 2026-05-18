@@ -50,7 +50,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_xray_resource_policy.example
   identity = {
-    "policy_name" = "example-policy"
+    policy_name = "example-policy"
   }
 }
 

@@ -67,7 +67,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_xray_sampling_rule.example
   identity = {
-    "rule_name" = "example-rule"
+    rule_name = "example-rule"
   }
 }
 
