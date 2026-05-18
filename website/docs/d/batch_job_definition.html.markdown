@@ -43,16 +43,16 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn_prefix` - The ARN prefix of the job definition.
-* `container_orchestration_type` - The orchestration type of the compute environment.
-* `scheduling_priority` - The scheduling priority for jobs that are submitted with this job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority.
-* `id` - The ARN
-* `eks_properties` - An [object](#eks_properties) with various properties that are specific to Amazon EKS based jobs. This must not be specified for Amazon ECS based job definitions.
-* `node_properties` - An [object](#node_properties) with various properties specific to multi-node parallel jobs. If you specify node properties for a job, it becomes a multi-node parallel job. For more information, see Multi-node Parallel Jobs in the AWS Batch User Guide. If the job definition's type parameter is container, then you must specify either containerProperties or nodeProperties.
-* `retry_strategy` - The [retry strategy](#retry_strategy) to use for failed jobs that are submitted with this job definition. Any retry strategy that's specified during a SubmitJob operation overrides the retry strategy defined here. If a job is terminated due to a timeout, it isn't retried.
+* `arn_prefix` - ARN prefix of the job definition.
+* `container_orchestration_type` - Orchestration type of the compute environment.
+* `scheduling_priority` - Scheduling priority for jobs that are submitted with this job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority.
+* `id` - ARN
+* `eks_properties` - [Object](#eks_properties) with various properties that are specific to Amazon EKS based jobs. This must not be specified for Amazon ECS based job definitions.
+* `node_properties` - [Object](#node_properties) with various properties specific to multi-node parallel jobs. If you specify node properties for a job, it becomes a multi-node parallel job. For more information, see Multi-node Parallel Jobs in the AWS Batch User Guide. If the job definition's type parameter is container, then you must specify either containerProperties or nodeProperties.
+* `retry_strategy` - [Retry strategy](#retry_strategy) to use for failed jobs that are submitted with this job definition. Any retry strategy that's specified during a SubmitJob operation overrides the retry strategy defined here. If a job is terminated due to a timeout, it isn't retried.
 * `tags` - Map of tags assigned to the resource.
-* `timeout` - The [timeout configuration](#timeout) for jobs that are submitted with this job definition, after which AWS Batch terminates your jobs if they have not finished. If a job is terminated due to a timeout, it isn't retried. The minimum value for the timeout is 60 seconds.
-* `type` - The type of job definition.
+* `timeout` - [Timeout configuration](#timeout) for jobs that are submitted with this job definition, after which AWS Batch terminates your jobs if they have not finished. If a job is terminated due to a timeout, it isn't retried. The minimum value for the timeout is 60 seconds.
+* `type` - Type of job definition.
 
 ### eks_properties
 
@@ -108,7 +108,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_environment
 
-* `name` - The name of the environment variable.
+* `name` - Name of the environment variable.
 * `value` - Value of the environment variable.
 
 ### eks_resources
@@ -217,7 +217,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `hard_limit` - The hard limit for the ulimit type.
 * `name` - The type of the ulimit.
-* `soft_limit` - The soft limit for the ulimit type.
+* `soft_limit` - Soft limit for the ulimit type.
 
 ### runtime_platform
 
@@ -253,11 +253,11 @@ This data source exports the following attributes in addition to the arguments a
 
 ### efs_volume_configuration
 
-* `file_system_id` - The Amazon EFS file system ID to use.
-* `root_directory` - The directory within the Amazon EFS file system to mount as the root directory inside the host.
+* `file_system_id` - Amazon EFS file system ID to use.
+* `root_directory` - Directory within the Amazon EFS file system to mount as the root directory inside the host.
 * `transit_encryption` - Determines whether to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server
-* `transit_encryption_port` - The port to use when sending encrypted data between the Amazon ECS host and the Amazon EFS server.
-* `authorization_config` - The [authorization configuration](#authorization_config) details for the Amazon EFS file system.
+* `transit_encryption_port` - Port to use when sending encrypted data between the Amazon ECS host and the Amazon EFS server.
+* `authorization_config` - [Authorization configuration](#authorization_config) details for the Amazon EFS file system.
 
 ### authorization_config
 
