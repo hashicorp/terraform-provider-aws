@@ -197,7 +197,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "data_source/aws_availability_zone",
     "data_source/aws_availability_zones",
     "data_source/aws_backup_report_plan",
     "data_source/aws_batch_job_definition",
