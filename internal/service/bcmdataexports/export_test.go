@@ -170,7 +170,7 @@ func TestAccBCMDataExportsExport_s3BucketOwner(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_bucket_owner", "data.aws_caller_identity.current", names.AttrAccountID),
 				),
 			},
 			{
