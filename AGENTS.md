@@ -152,7 +152,7 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 - Authoritative reference: `./docs/end-user-documentation.md`.
 - New features require new documentation.
 - Correct spelling and grammar are important.
-- Run `make tfproviderdocs`.
+- Run `make swissshepherd` to verify.
 
 ### Copyright headers
 - All applicable files must have a copyright header.

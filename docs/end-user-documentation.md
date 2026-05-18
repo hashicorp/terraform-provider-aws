@@ -49,11 +49,20 @@ In documentation, the order of arguments is:
 1. Required arguments, sorted alphabetically.
 1. Optional arguments, sorted alphabetically.
 
+#### Bylines
+
+Valid bylines are:
+
+- "This resource supports the following arguments:" if required and optional arguments are in one list, or
+- "The following arguments are required:" and "The following arguments are optional:" if required and optional arguments are split into separate lists.
+
 #### Description
 
 Every argument must have a description.
 
 - Descriptions are concise and follow US English spelling and grammar rules.
+- Descriptions start with a verb or noun — never "A ", "An ", "The ", "Specifies ", "Indicates ".
+- Boolean argument descriptions start with "Whether to ".
 - Information about AWS service features and valid argument values that are likely to update over time should link to AWS service user guides and API references where possible.
 - If an argument has validation allowing only specific inputs, these must be documented. For example:
     - `` Allowed values are: `value1`, `value2`, and `value3`. ``.
@@ -64,7 +73,7 @@ Every argument must have a description.
 
 Each block argument must have two entries in the documentation:
 
-1. The initial entry, with a link to the subsection describing the block's arguments. e.g. `` `ip_rule` - (Optional) IP rules. See [`ip_rule`](#ip_rule) below. ``.
+1. The initial entry, with a link to the subsection describing the block's arguments. e.g. `` `ip_rule` - (Optional) IP rules. See [`ip_rule` Block](#ip_rule-block) below. ``.
 1. A subsection, added after all top-level arguments. If the resource has multiple blocks, these subsections should be ordered alphabetically.
 
 Within the subsection, arguments follow the ordering rules above.
@@ -75,11 +84,11 @@ For example:
 ## Argument Reference
 
 * `name` - (Required) Name of the thing.
-* `ip_rule` - (Optional) IP rules. See [ip_rule](#ip-rule) below.
+* `ip_rule` - (Optional) IP rules. See [`ip_rule` Block](#ip_rule-block) below.
 
-### `ip_rule`
+### `ip_rule` Block
 
-`ip_rule` supports the following:
+The `ip_rule` block supports:
 
 * `ip_range` - (Required) IP range of the rule.
 * `description` - (Optional) Description of the rule.
@@ -95,6 +104,13 @@ In documentation, the order of attributes is:
 
 1. Any `id` attribute
 1. The remaining attributes, sorted alphabetically.
+
+#### Bylines
+
+Valid bylines are:
+
+- "In addition to all arguments above, the following attributes are exported:", or
+- "This resource exports no additional attributes." if no attributes are exported.
 
 #### Description
 
@@ -124,7 +140,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `health`
 
-`health` supports the following:
+`health` supports:
 
 * `status_code` - Health status code.
 * `status_message` - Health status message.
