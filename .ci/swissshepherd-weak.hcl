@@ -197,7 +197,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "data_source/aws_appstream_image",
     "data_source/aws_arcregionswitch_route53_health_checks",
     "data_source/aws_arn",
     "data_source/aws_athena_named_query",

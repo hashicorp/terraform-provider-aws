@@ -26,17 +26,17 @@ data "aws_appstream_image" "test" {
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - Name of the image being searched for. Cannot be used with `name_regex` or `arn`.
-* `name_regex` - Regular expression name of the image being searched for. Cannot be used with `arn` or `name`.
-* `arn` - ARN of the image being searched for. Cannot be used with `name_regex` or `name`.
-* `type` - The type of image which must be (`PUBLIC`, `PRIVATE`, or `SHARED`).
-* `most_recent` - Boolean that if it is set to `true` and there are multiple images returned the most recent will be returned. If it is set to `false` and there are multiple images return the datasource will error.
+* `name` - (Optional) Name of the image being searched for. Cannot be used with `name_regex` or `arn`.
+* `name_regex` - (Optional) Regular expression name of the image being searched for. Cannot be used with `arn` or `name`.
+* `arn` - (Optional) ARN of the image being searched for. Cannot be used with `name_regex` or `name`.
+* `type` - (Optional) The type of image which must be (`PUBLIC`, `PRIVATE`, or `SHARED`).
+* `most_recent` - (Optional) Boolean that if it is set to `true` and there are multiple images returned the most recent will be returned. If it is set to `false` and there are multiple images return the datasource will error.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `application` - A application object that contains the following:
+* `applications` - A application object that contains the following:
     * `app_block_arn` - The app block ARN of the application.
     * `created_time` - The time at which the application was created within the app block.
     * `description` - The description of the application.
@@ -51,8 +51,7 @@ This data source exports the following attributes in addition to the arguments a
     * `launch_path` -  Path to the application's excecutable in the instance.
     * `metadata` - String to string map that contains additional attributes used to describe the application.
     * `Name` - Name of the application.
-    * `platforms` - Array of strings describing the platforms on which the application can run.
-      Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
+    * `platforms` - Array of strings describing the platforms on which the application can run. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
     * `working_directory` - Working directory for the application.
 * `appstream_agent_version` - Version of the AppStream 2.0 agent to use for instances that are launched from this image. Has a maximum length of 100 characters.
 * `arn` - ARN of the image.
@@ -70,6 +69,6 @@ This data source exports the following attributes in addition to the arguments a
     * `allow_fleet` - Boolean indicating if the image can be used for a fleet.
     * `allow_image_builder` - indicated whether the image can be used for an image builder.
 * `platform` - Operating system platform of the image. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
-* `public_image_released_date` - Release date of base image if public. For private images, it is the release date of the base image that it was created from.
+* `public_base_image_released_date` - Release date of base image if public. For private images, it is the release date of the base image that it was created from.
 * `state` - Current state of image. Image starts in PENDING state which changes to AVAILABLE if creation passes and FAILED if it fails. Values will be from: PENDING | AVAILABLE | FAILED | COPYING | DELETING | CREATING | IMPORTING.
-* `visibility` - Visibility type enum indicating whether the image is PUBLIC, PRIVATE, or SHARED. Valid values include: PUBLIC | PRIVATE | SHARED.
+* `state_change_reason` - Reason why the last state change occurred.
