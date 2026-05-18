@@ -71,7 +71,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_container
 
-* `args` - An array of arguments to the entrypoint
+* `args` - Array of arguments to the entrypoint
 * `commands` - Entrypoint for the container. This isn't run within a shell. If this isn't specified, the ENTRYPOINT of the container image is used. Environment variable references are expanded using the container's environment.
 * `env` - Environment variables to pass to a container.  Array of [EksContainerEnvironmentVariable](#eks_environment) objects.
 * `image` - Docker image used to start the container.
@@ -87,10 +87,10 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_volumes
 
-* `name` - The name of the volume. The name must be allowed as a DNS subdomain name.
-* `empty_dir` - Specifies the configuration of a Kubernetes [emptyDir volume](#eks_volume_empty_dir).
-* `host_path` - Specifies the configuration of a Kubernetes [hostPath volume](#eks_volume_host_path).
-* `secret` - Specifies the configuration of a Kubernetes [secret volume](#eks_volume_secret).
+* `name` - Name of the volume. The name must be allowed as a DNS subdomain name.
+* `empty_dir` - Configuration of a Kubernetes [emptyDir volume](#eks_volume_empty_dir).
+* `host_path` - Configuration of a Kubernetes [hostPath volume](#eks_volume_host_path).
+* `secret` - Configuration of a Kubernetes [secret volume](#eks_volume_secret).
 
 ### eks_volume_empty_dir
 
@@ -99,7 +99,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_volume_host_path
 
-* `path` - The path of the file or directory on the host to mount into containers on the pod.
+* `path` - Path of the file or directory on the host to mount into containers on the pod.
 
 ### eks_volume_secret
 
@@ -182,10 +182,10 @@ This data source exports the following attributes in addition to the arguments a
 
 * `init_process_enabled` - If true, run an init process inside the container that forwards signals and reaps processes.
 * `max_swap` - The total amount of swap memory (in MiB) a container can use.
-* `shared_memory_size` - The value for the size (in MiB) of the `/dev/shm` volume.
+* `shared_memory_size` - Value for the size (in MiB) of the `/dev/shm` volume.
 * `swappiness` - You can use this parameter to tune a container's memory swappiness behavior.
 * `devices` - Any of the [host devices](#devices) to expose to the container.
-* `tmpfs` - The container path, mount options, and size (in MiB) of the [tmpfs](#tmpfs) mount.
+* `tmpfs` - Container path, mount options, and size (in MiB) of the [tmpfs](#tmpfs) mount.
 
 ### log_configuration
 
@@ -215,8 +215,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### ulimits
 
-* `hard_limit` - The hard limit for the ulimit type.
-* `name` - The type of the ulimit.
+* `hard_limit` - Hard limit for the ulimit type.
+* `name` - Type of the ulimit.
 * `soft_limit` - Soft limit for the ulimit type.
 
 ### runtime_platform
@@ -226,8 +226,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### secret_options
 
-* `name` - The name of the secret.
-* `value_from` - The secret to expose to the container. The supported values are either the full Amazon Resource Name (ARN) of the AWS Secrets Manager secret or the full ARN of the parameter in the AWS Systems Manager Parameter Store.
+* `name` - Name of the secret.
+* `value_from` - Secret to expose to the container. The supported values are either the full Amazon Resource Name (ARN) of the AWS Secrets Manager secret or the full ARN of the parameter in the AWS Systems Manager Parameter Store.
 
 ### devices
 
@@ -249,7 +249,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### host
 
-* `source_path` - The path on the host container instance that's presented to the container.
+* `source_path` - Path on the host container instance that's presented to the container.
 
 ### efs_volume_configuration
 
@@ -271,11 +271,11 @@ This data source exports the following attributes in addition to the arguments a
 
 ### evaluate_on_exit
 
-* `action` - Specifies the action to take if all of the specified conditions (onStatusReason, onReason, and onExitCode) are met. The values aren't case sensitive.
+* `action` - Action to take if all of the specified conditions (onStatusReason, onReason, and onExitCode) are met. The values aren't case sensitive.
 * `on_exit_code` - Contains a glob pattern to match against the decimal representation of the ExitCode returned for a job.
 * `on_reason` - Contains a glob pattern to match against the Reason returned for a job.
 * `on_status_reason` - Contains a glob pattern to match against the StatusReason returned for a job.
 
 ### timeout
 
-* `attempt_duration_seconds` - The job timeout time (in seconds) that's measured from the job attempt's startedAt timestamp.
+* `attempt_duration_seconds` - Job timeout time (in seconds) that's measured from the job attempt's startedAt timestamp.
