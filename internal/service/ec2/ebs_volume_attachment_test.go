@@ -427,10 +427,6 @@ func sequenceRefreshFunc(states []awstypes.VolumeAttachmentState) retry.StateRef
 	}
 }
 
-// TestVolumeAttachmentWaiterDeleted_attachedTransitionSucceeds verifies that the
-// waiter handles the attached → detaching → gone sequence without error.
-// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/47314:
-// AWS does not always immediately transition to detaching after DetachVolume is called.
 func TestVolumeAttachmentWaiterDeleted_attachedTransitionSucceeds(t *testing.T) {
 	t.Parallel()
 
@@ -455,8 +451,6 @@ func TestVolumeAttachmentWaiterDeleted_attachedTransitionSucceeds(t *testing.T) 
 	}
 }
 
-// TestVolumeAttachmentWaiterDeleted_attachedOnlyPending_fails shows the pre-fix
-// behaviour: with only detaching in Pending, seeing attached immediately fails.
 func TestVolumeAttachmentWaiterDeleted_attachedOnlyPending_fails(t *testing.T) {
 	t.Parallel()
 
