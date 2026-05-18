@@ -403,7 +403,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_bedrockagentcore_harness.example
   identity = {
-    "harness_id" = "example-Ab12Cd34Ef"
+    harness_id = "example-Ab12Cd34Ef"
   }
 }
 
