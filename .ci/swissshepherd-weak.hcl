@@ -197,7 +197,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "data_source/aws_autoscaling_group",
     "data_source/aws_autoscaling_groups",
     "data_source/aws_availability_zone",
     "data_source/aws_availability_zones",
