@@ -141,12 +141,16 @@ func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Route 53 Zone Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("owning_account", hostedZoneSummary.Owner.OwningAccount)
-	d.Set(names.AttrVPCID, vpcID)
-	d.Set("vpc_region", vpcRegion)
-	d.Set("zone_id", hostedZoneSummary.HostedZoneId)
+	resourceZoneAssociationFlatten(d, hostedZoneSummary, vpcID, vpcRegion)
 
 	return diags
+}
+
+func resourceZoneAssociationFlatten(d *schema.ResourceData, summary *awstypes.HostedZoneSummary, vpcID, vpcRegion string) {
+	d.Set("owning_account", summary.Owner.OwningAccount)
+	d.Set(names.AttrVPCID, vpcID)
+	d.Set("vpc_region", vpcRegion)
+	d.Set("zone_id", summary.HostedZoneId)
 }
 
 func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
