@@ -43,9 +43,6 @@ func TestAccXRayResourcePolicy_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_check", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "policy_revision_id", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

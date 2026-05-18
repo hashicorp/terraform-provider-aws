@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -36,8 +37,8 @@ import (
 func newTraceSegmentDestinationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &traceSegmentDestinationResource{}
 
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
 
 	return r, nil
 }
@@ -80,15 +81,18 @@ func (r *traceSegmentDestinationResource) Create(ctx context.Context, req resour
 		Destination: plan.Destination.ValueEnum(),
 	}
 	_, err := conn.UpdateTraceSegmentDestination(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError("creating XRay Trace Segment Destination (%s)", err.Error())
+	switch {
+	case errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "The destination is already set to "):
+		// e.g. "InvalidRequestException: The destination is already set to XRay".
+	case err != nil:
+		resp.Diagnostics.AddError("creating XRay Trace Segment Destination", err.Error())
 		return
 	}
 
 	plan.ID = fwflex.StringValueToFramework(ctx, r.Meta().Region(ctx))
 
 	if _, err := waitTraceSegmentDestinationActive(ctx, conn, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
-		resp.Diagnostics.AddError("waiting for XRay Trace Segment Destination create (%s)", err.Error())
+		resp.Diagnostics.AddError("waiting for XRay Trace Segment Destination create", err.Error())
 		return
 	}
 
@@ -111,7 +115,7 @@ func (r *traceSegmentDestinationResource) Read(ctx context.Context, req resource
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError("reading XRay Trace Segment Destination (%s)", err.Error())
+		resp.Diagnostics.AddError("reading XRay Trace Segment Destination", err.Error())
 		return
 	}
 
@@ -133,13 +137,16 @@ func (r *traceSegmentDestinationResource) Update(ctx context.Context, req resour
 		Destination: plan.Destination.ValueEnum(),
 	}
 	_, err := conn.UpdateTraceSegmentDestination(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError("updating XRay Trace Segment Destination (%s)", err.Error())
+	switch {
+	case errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "The destination is already set to "):
+		// e.g. "InvalidRequestException: The destination is already set to XRay".
+	case err != nil:
+		resp.Diagnostics.AddError("updating XRay Trace Segment Destination", err.Error())
 		return
 	}
 
 	if _, err := waitTraceSegmentDestinationActive(ctx, conn, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-		resp.Diagnostics.AddError("waiting for XRay Trace Segment Destination update (%s)", err.Error())
+		resp.Diagnostics.AddError("waiting for XRay Trace Segment Destination update", err.Error())
 		return
 	}
 
