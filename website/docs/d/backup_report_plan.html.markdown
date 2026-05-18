@@ -50,9 +50,9 @@ This data source exports the following attributes in addition to the arguments a
 
 `report_setting` has the following attributes:
 
-* `accounts` - (Optional) Specifies the list of accounts a report covers.
+* `accounts` - Specifies the list of accounts a report covers.
 * `framework_arns` - ARNs of the frameworks a report covers.
 * `number_of_frameworks` - Specifies the number of frameworks a report covers.
-* `organization_units` - (Optional) Specifies the list of Organizational Units a report covers.
-* `regions` - (Optional) Specifies the list of regions a report covers.
+* `organization_units` - Specifies the list of Organizational Units a report covers.
+* `regions` - Specifies the list of regions a report covers.
 * `report_template` - Identifies the report template for the report. Reports are built using a report template.
