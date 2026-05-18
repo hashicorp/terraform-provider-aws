@@ -36,6 +36,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newConfigurationSetEventDestinationResource,
+			TypeName: "aws_pinpointsmsvoicev2_configuration_set_event_destination",
+			Name:     "Configuration Set Event Destination",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("configuration_set_name", true),
+				inttypes.StringIdentityAttribute("event_destination_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      configurationSetEventDestinationImportID{},
+			},
+		},
+		{
 			Factory:  newOptOutListResource,
 			TypeName: "aws_pinpointsmsvoicev2_opt_out_list",
 			Name:     "Opt-out List",
