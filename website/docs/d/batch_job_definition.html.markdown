@@ -35,9 +35,9 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the Job Definition.
-* `revision` - (Optional) The revision of the job definition.
-* `name` - (Optional) The name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
-* `status` - (Optional) The status of the job definition.
+* `revision` - (Optional) Revision of the job definition.
+* `name` - (Optional) Name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
+* `status` - (Optional) Status of the job definition.
 
 ## Attribute Reference
 
@@ -45,8 +45,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn_prefix` - ARN prefix of the job definition.
 * `container_orchestration_type` - Orchestration type of the compute environment.
-* `scheduling_priority` - Scheduling priority for jobs that are submitted with this job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority.
 * `id` - ARN
+* `scheduling_priority` - Scheduling priority for jobs that are submitted with this job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority.
 * `eks_properties` - [Object](#eks_properties) with various properties that are specific to Amazon EKS based jobs. This must not be specified for Amazon ECS based job definitions.
 * `node_properties` - [Object](#node_properties) with various properties specific to multi-node parallel jobs. If you specify node properties for a job, it becomes a multi-node parallel job. For more information, see Multi-node Parallel Jobs in the AWS Batch User Guide. If the job definition's type parameter is container, then you must specify either containerProperties or nodeProperties.
 * `retry_strategy` - [Retry strategy](#retry_strategy) to use for failed jobs that are submitted with this job definition. Any retry strategy that's specified during a SubmitJob operation overrides the retry strategy defined here. If a job is terminated due to a timeout, it isn't retried.
@@ -87,9 +87,9 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_volumes
 
-* `name` - Name of the volume. The name must be allowed as a DNS subdomain name.
 * `empty_dir` - Configuration of a Kubernetes [emptyDir volume](#eks_volume_empty_dir).
 * `host_path` - Configuration of a Kubernetes [hostPath volume](#eks_volume_host_path).
+* `name` - Name of the volume. The name must be allowed as a DNS subdomain name.
 * `secret` - Configuration of a Kubernetes [secret volume](#eks_volume_secret).
 
 ### eks_volume_empty_dir
@@ -144,14 +144,14 @@ This data source exports the following attributes in addition to the arguments a
 
 ### container
 
-* `command` - The command that's passed to the container.
+* `command` - Command that's passed to the container.
 * `environment` - [Environment](#environment) variables to pass to a container.
-* `ephemeral_storage` - The amount of [ephemeral storage](#ephemeral_storage) to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate.
-* `execution_role_arn` - The Amazon Resource Name (ARN) of the execution role that AWS Batch can assume. For jobs that run on Fargate resources, you must provide an execution role.
-* `fargate_platform_configuration` - The [platform configuration](#fargate_platform_configuration) for jobs that are running on Fargate resources. Jobs that are running on EC2 resources must not specify this parameter.
-* `image` - The image used to start a container.
-* `instance_type` - The instance type to use for a multi-node parallel job.
-* `job_role_arn` - The Amazon Resource Name (ARN) of the IAM role that the container can assume for AWS permissions.
+* `ephemeral_storage` - Amount of [ephemeral storage](#ephemeral_storage) to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate.
+* `execution_role_arn` - Amazon Resource Name (ARN) of the execution role that AWS Batch can assume. For jobs that run on Fargate resources, you must provide an execution role.
+* `fargate_platform_configuration` - [Platform configuration](#fargate_platform_configuration) for jobs that are running on Fargate resources. Jobs that are running on EC2 resources must not specify this parameter.
+* `image` - Image used to start a container.
+* `instance_type` - Instance type to use for a multi-node parallel job.
+* `job_role_arn` - Amazon Resource Name (ARN) of the IAM role that the container can assume for AWS permissions.
 * `linux_parameters` - [Linux-specific modifications](#linux_parameters) that are applied to the container.
 * `log_configuration` - [Log configuration](#log_configuration) specification for the container.
 * `mount_points` - [Mount points](#mount_points) for data volumes in your container.
@@ -181,7 +181,7 @@ This data source exports the following attributes in addition to the arguments a
 ### linux_parameters
 
 * `init_process_enabled` - If true, run an init process inside the container that forwards signals and reaps processes.
-* `max_swap` - The total amount of swap memory (in MiB) a container can use.
+* `max_swap` - Total amount of swap memory (in MiB) a container can use.
 * `shared_memory_size` - Value for the size (in MiB) of the `/dev/shm` volume.
 * `swappiness` - You can use this parameter to tune a container's memory swappiness behavior.
 * `devices` - Any of the [host devices](#devices) to expose to the container.
@@ -199,9 +199,9 @@ This data source exports the following attributes in addition to the arguments a
 
 ### mount_points
 
-* `container_path` - The path on the container where the host volume is mounted.
+* `container_path` - Path on the container where the host volume is mounted.
 * `read_only` - If this value is true, the container has read-only access to the volume.
-* `source_volume` - The name of the volume to mount.
+* `source_volume` - Name of the volume to mount.
 
 ### resource_requirements
 
