@@ -51,10 +51,7 @@ This data source supports the following arguments:
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned by AWS. This allows more advanced filtering not supported from the AWS API. This filtering is done locally on what AWS returns, and could have a performance impact if the result is large. Combine this with other options to narrow down the list AWS returns.
 * `uefi_data` - (Optional) Base64 representation of the non-volatile UEFI variable store.
 
-~> **NOTE:** If more or less than a single match is returned by the search,
-Terraform will fail. Ensure that your search is specific enough to return
-a single AMI ID only, or use `most_recent` to choose the most recent one. If
-you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
+~> **NOTE:** If more or less than a single match is returned by the search, Terraform will fail. Ensure that your search is specific enough to return a single AMI ID only, or use `most_recent` to choose the most recent one. If you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
 ## Attribute Reference
 
@@ -97,10 +94,10 @@ This data source exports the following attributes in addition to the arguments a
 
 ~> **NOTE:** Some values are not always set and may not be available for interpolation.
 
-### `filter`
+### `filter` Block
 
-* `name` - (Required) Name of the filter. For a full reference, check out [describe-images in the AWS CLI reference][1].
-* `values` - (Required) Set of values that are accepted for the given filter.
+* `name` - Name of the filter. For a full reference, check out [describe-images in the AWS CLI reference][1].
+* `values` - Set of values that are accepted for the given filter.
 
 ### `block_device_mappings`
 
