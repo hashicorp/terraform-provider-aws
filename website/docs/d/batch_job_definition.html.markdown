@@ -153,17 +153,17 @@ This data source exports the following attributes in addition to the arguments a
 * `instance_type` - The instance type to use for a multi-node parallel job.
 * `job_role_arn` - The Amazon Resource Name (ARN) of the IAM role that the container can assume for AWS permissions.
 * `linux_parameters` - [Linux-specific modifications](#linux_parameters) that are applied to the container.
-* `log_configuration` - The [log configuration](#log_configuration) specification for the container.
-* `mount_points` - The [mount points](#mount_points) for data volumes in your container.
-* `network_configuration` - The [network configuration](#network_configuration) for jobs that are running on Fargate resources.
+* `log_configuration` - [Log configuration](#log_configuration) specification for the container.
+* `mount_points` - [Mount points](#mount_points) for data volumes in your container.
+* `network_configuration` - [Network configuration](#network_configuration) for jobs that are running on Fargate resources.
 * `privileged` - When this parameter is true, the container is given elevated permissions on the host container instance (similar to the root user).
 * `readonly_root_filesystem` - When this parameter is true, the container is given read-only access to its root file system.
-* `resource_requirements` - The type and amount of [resources](#resource_requirements) to assign to a container.
-* `runtime_platform` - An [object](#runtime_platform) that represents the compute environment architecture for AWS Batch jobs on Fargate.
-* `secrets` - The [secrets](#secrets) for the container.
-* `ulimits` - A list of [ulimits](#ulimits) to set in the container.
-* `user` - The user name to use inside the container.
-* `volumes` - A list of data [volumes](#volumes) used in a job.
+* `resource_requirements` - Type and amount of [resources](#resource_requirements) to assign to a container.
+* `runtime_platform` - [Object](#runtime_platform) that represents the compute environment architecture for AWS Batch jobs on Fargate.
+* `secrets` - [Secrets](#secrets) for the container.
+* `ulimits` - List of [ulimits](#ulimits) to set in the container.
+* `user` - User name to use inside the container.
+* `volumes` - List of data [volumes](#volumes) used in a job.
 
 ### environment
 
@@ -176,7 +176,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### fargate_platform_configuration
 
-* `platform_version` - The AWS Fargate platform version where the jobs are running. A platform version is specified only for jobs that are running on Fargate resources.
+* `platform_version` - AWS Fargate platform version where the jobs are running. A platform version is specified only for jobs that are running on Fargate resources.
 
 ### linux_parameters
 
@@ -189,9 +189,9 @@ This data source exports the following attributes in addition to the arguments a
 
 ### log_configuration
 
-* `options` - The configuration options to send to the log driver.
-* `log_driver` - The log driver to use for the container.
-* `secret_options` - The secrets to pass to the log configuration.
+* `options` - Configuration options to send to the log driver.
+* `log_driver` - Log driver to use for the container.
+* `secret_options` - Secrets to pass to the log configuration.
 
 ### network_configuration
 
@@ -210,8 +210,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### secrets
 
-* `name` - The name of the secret.
-* `value_from` - The secret to expose to the container.
+* `name` - Name of the secret.
+* `value_from` - Secret to expose to the container.
 
 ### ulimits
 
