@@ -1229,7 +1229,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Policy.
 	//
-	if d.HasChange(names.AttrPolicy) {
+	// Only act if the practitioner has explicitly configured `policy` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_policy` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange(names.AttrPolicy) && deprecatedAttributeInRawConfig(d, names.AttrPolicy) {
 		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -1264,7 +1267,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket CORS Configuration.
 	//
-	if d.HasChange("cors_rule") {
+	// Only act if the practitioner has explicitly configured `cors_rule` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_cors_configuration` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("cors_rule") && deprecatedAttributeInRawConfig(d, "cors_rule") {
 		if v, ok := d.GetOk("cors_rule"); !ok || len(v.([]any)) == 0 {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketCors(ctx, &s3.DeleteBucketCorsInput{
@@ -1296,7 +1302,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Website Configuration.
 	//
-	if d.HasChange("website") {
+	// Only act if the practitioner has explicitly configured `website` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_website_configuration` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("website") && deprecatedAttributeInRawConfig(d, "website") {
 		if v, ok := d.GetOk("website"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketWebsite(ctx, &s3.DeleteBucketWebsiteInput{
@@ -1331,7 +1340,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Versioning.
 	//
-	if d.HasChange("versioning") {
+	// Only act if the practitioner has explicitly configured `versioning` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_versioning` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("versioning") && deprecatedAttributeInRawConfig(d, "versioning") {
 		v := d.Get("versioning").([]any)
 		var versioningConfig *types.VersioningConfiguration
 
@@ -1360,7 +1372,12 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket ACL.
 	//
-	if (d.HasChange("acl") && !d.IsNewResource()) || (d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() == 0) {
+	// Only act if the practitioner has explicitly configured `acl` or `grant` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_acl` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	aclChanged := d.HasChange("acl") && !d.IsNewResource() && deprecatedAttributeInRawConfig(d, "acl")
+	grantEmptied := d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() == 0 && deprecatedAttributeInRawConfig(d, "grant")
+	if aclChanged || grantEmptied {
 		acl := types.BucketCannedACL(d.Get("acl").(string))
 		if acl == "" {
 			// Use default value previously available in v3.x of the provider.
@@ -1380,7 +1397,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	if d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() > 0 {
+	if d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() > 0 && deprecatedAttributeInRawConfig(d, "grant") {
 		bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
 			return findBucketACL(ctx, conn, d.Id(), "")
 		})
@@ -1409,7 +1426,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Logging.
 	//
-	if d.HasChange("logging") {
+	// Only act if the practitioner has explicitly configured `logging` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_logging` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("logging") && deprecatedAttributeInRawConfig(d, "logging") {
 		input := &s3.PutBucketLoggingInput{
 			Bucket:              aws.String(d.Id()),
 			BucketLoggingStatus: &types.BucketLoggingStatus{},
@@ -1441,7 +1461,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Lifecycle Configuration.
 	//
-	if d.HasChange("lifecycle_rule") {
+	// Only act if the practitioner has explicitly configured `lifecycle_rule` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_lifecycle_configuration` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("lifecycle_rule") && deprecatedAttributeInRawConfig(d, "lifecycle_rule") {
 		if v, ok := d.GetOk("lifecycle_rule"); !ok || len(v.([]any)) == 0 {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketLifecycle(ctx, &s3.DeleteBucketLifecycleInput{
@@ -1473,7 +1496,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Accelerate Configuration.
 	//
-	if d.HasChange("acceleration_status") {
+	// Only act if the practitioner has explicitly configured `acceleration_status` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_accelerate_configuration` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("acceleration_status") && deprecatedAttributeInRawConfig(d, "acceleration_status") {
 		input := &s3.PutBucketAccelerateConfigurationInput{
 			AccelerateConfiguration: &types.AccelerateConfiguration{
 				Status: types.BucketAccelerateStatus(d.Get("acceleration_status").(string)),
@@ -1493,7 +1519,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Request Payment Configuration.
 	//
-	if d.HasChange("request_payer") {
+	// Only act if the practitioner has explicitly configured `request_payer` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_request_payment_configuration` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("request_payer") && deprecatedAttributeInRawConfig(d, "request_payer") {
 		input := &s3.PutBucketRequestPaymentInput{
 			Bucket: aws.String(d.Id()),
 			RequestPaymentConfiguration: &types.RequestPaymentConfiguration{
@@ -1513,7 +1542,13 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Replication Configuration.
 	//
-	if d.HasChange("replication_configuration") {
+	// Only act if the practitioner has explicitly configured `replication_configuration` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_replication_configuration` resource. This
+	// avoids round-tripping fields not represented in this deprecated schema (e.g.
+	// `replica_modifications`) and writing back a corrupted configuration on unrelated bucket
+	// updates such as tags.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("replication_configuration") && deprecatedAttributeInRawConfig(d, "replication_configuration") {
 		if v, ok := d.GetOk("replication_configuration"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketReplication(ctx, &s3.DeleteBucketReplicationInput{
@@ -1567,7 +1602,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Server-side Encryption Configuration.
 	//
-	if d.HasChange("server_side_encryption_configuration") {
+	// Only act if the practitioner has explicitly configured `server_side_encryption_configuration` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_server_side_encryption_configuration` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("server_side_encryption_configuration") && deprecatedAttributeInRawConfig(d, "server_side_encryption_configuration") {
 		if v, ok := d.GetOk("server_side_encryption_configuration"); !ok || len(v.([]any)) == 0 {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketEncryption(ctx, &s3.DeleteBucketEncryptionInput{
@@ -1599,7 +1637,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Object Lock Configuration.
 	//
-	if d.HasChange("object_lock_configuration") {
+	// Only act if the practitioner has explicitly configured `object_lock_configuration` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_object_lock_configuration` resource.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("object_lock_configuration") && deprecatedAttributeInRawConfig(d, "object_lock_configuration") {
 		// S3 Object Lock configuration cannot be deleted, only updated.
 		input := &s3.PutObjectLockConfigurationInput{
 			Bucket:                  aws.String(d.Id()),
@@ -1616,6 +1657,37 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
+}
+
+// deprecatedAttributeInRawConfig reports whether the practitioner has the
+// named top-level attribute (a deprecated bucket nested attribute) in their
+// HCL configuration. When the value in state was populated solely by Read
+// (i.e. the attribute is Computed-only at runtime), this returns false, and
+// callers should skip the corresponding API update. This avoids the
+// deprecated attribute fighting with its dedicated standalone resource over
+// fields not represented in the deprecated schema, which can write back
+// corrupted configuration on unrelated bucket updates such as tags.
+//
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+func deprecatedAttributeInRawConfig(d *schema.ResourceData, name string) bool {
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.IsKnown() || rawConfig.IsNull() {
+		return false
+	}
+
+	v := rawConfig.GetAttr(name)
+	if !v.IsKnown() || v.IsNull() {
+		return false
+	}
+
+	// For collection types (most commonly nested block lists/sets), an
+	// unconfigured attribute reports as a non-null empty collection rather
+	// than null, so check the length explicitly.
+	if t := v.Type(); t.IsListType() || t.IsSetType() || t.IsMapType() || t.IsTupleType() || t.IsObjectType() {
+		return v.LengthInt() > 0
+	}
+
+	return true
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
