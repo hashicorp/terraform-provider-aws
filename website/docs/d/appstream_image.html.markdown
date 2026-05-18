@@ -50,7 +50,7 @@ This data source exports the following attributes in addition to the arguments a
     * `launch_parameters` - Arguments that are passed to the application at it's launch.
     * `launch_path` -  Path to the application's excecutable in the instance.
     * `metadata` - String to string map that contains additional attributes used to describe the application.
-    * `Name` - Name of the application.
+    * `name` - Name of the application.
     * `platforms` - Array of strings describing the platforms on which the application can run. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
     * `working_directory` - Working directory for the application.
 * `appstream_agent_version` - Version of the AppStream 2.0 agent to use for instances that are launched from this image. Has a maximum length of 100 characters.
@@ -61,14 +61,12 @@ This data source exports the following attributes in addition to the arguments a
 * `display_name` - Image name to display.
 * `image_builder_name` - The name of the image builder that was used to created the private image. If the image is sharedthen the value is null.
 * `image_builder_supported` - Boolean to indicate whether an image builder can be launched from this image.
-* `image error` - Resource error object that describes the error containing the following:
-    * `error_code` - Error code of the image. Values will be from: IAM_SERVICE_ROLE_MISSING_ENI_DESCRIBE_ACTION | IAM_SERVICE_ROLE_MISSING_ENI_CREATE_ACTION | IAM_SERVICE_ROLE_MISSING_ENI_DELETE_ACTION | NETWORK_INTERFACE_LIMIT_EXCEEDED | INTERNAL_SERVICE_ERROR | IAM_SERVICE_ROLE_IS_MISSING | MACHINE_ROLE_IS_MISSING | STS_DISABLED_IN_REGION | SUBNET_HAS_INSUFFICIENT_IP_ADDRESSES | IAM_SERVICE_ROLE_MISSING_DESCRIBE_SUBNET_ACTION | SUBNET_NOT_FOUND | IMAGE_NOT_FOUND | INVALID_SUBNET_CONFIGURATION | SECURITY_GROUPS_NOT_FOUND | IGW_NOT_ATTACHED | IAM_SERVICE_ROLE_MISSING_DESCRIBE_SECURITY_GROUPS_ACTION | FLEET_STOPPED | FLEET_INSTANCE_PROVISIONING_FAILURE | DOMAIN_JOIN_ERROR_FILE_NOT_FOUND | DOMAIN_JOIN_ERROR_ACCESS_DENIED | DOMAIN_JOIN_ERROR_LOGON_FAILURE | DOMAIN_JOIN_ERROR_INVALID_PARAMETER | DOMAIN_JOIN_ERROR_MORE_DATA | DOMAIN_JOIN_ERROR_NO_SUCH_DOMAIN | DOMAIN_JOIN_ERROR_NOT_SUPPORTED | DOMAIN_JOIN_NERR_INVALID_WORKGROUP_NAME | DOMAIN_JOIN_NERR_WORKSTATION_NOT_STARTED | DOMAIN_JOIN_ERROR_DS_MACHINE_ACCOUNT_QUOTA_EXCEEDED | DOMAIN_JOIN_NERR_PASSWORD_EXPIRED | DOMAIN_JOIN_INTERNAL_SERVICE_ERROR as the values.
-    * `error_message` - Error message of the image.
-    * `error_timestamp` - Time when the error occurred.
+* `state_change_reason` - Reason for the last state change.
+    * `code` - State change reason code.
+    * `message` - State change reason message.
 * `image_permissions` - List of strings describing the image permissions containing the following:
     * `allow_fleet` - Boolean indicating if the image can be used for a fleet.
     * `allow_image_builder` - indicated whether the image can be used for an image builder.
 * `platform` - Operating system platform of the image. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
 * `public_base_image_released_date` - Release date of base image if public. For private images, it is the release date of the base image that it was created from.
 * `state` - Current state of image. Image starts in PENDING state which changes to AVAILABLE if creation passes and FAILED if it fails. Values will be from: PENDING | AVAILABLE | FAILED | COPYING | DELETING | CREATING | IMPORTING.
-* `state_change_reason` - Reason why the last state change occurred.
