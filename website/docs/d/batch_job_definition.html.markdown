@@ -34,22 +34,25 @@ data "aws_batch_job_definition" "name" {
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `arn` - ARN of the Job Definition.
-* `revision` - The revision of the job definition.
-* `name` - The name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
-* `status` - The status of the job definition.
+* `arn` - (Optional) ARN of the Job Definition.
+* `revision` - (Optional) The revision of the job definition.
+* `name` - (Optional) The name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
+* `status` - (Optional) The status of the job definition.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn_prefix` - The ARN prefix of the job definition.
 * `container_orchestration_type` - The orchestration type of the compute environment.
 * `scheduling_priority` - The scheduling priority for jobs that are submitted with this job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority.
 * `id` - The ARN
 * `eks_properties` - An [object](#eks_properties) with various properties that are specific to Amazon EKS based jobs. This must not be specified for Amazon ECS based job definitions.
 * `node_properties` - An [object](#node_properties) with various properties specific to multi-node parallel jobs. If you specify node properties for a job, it becomes a multi-node parallel job. For more information, see Multi-node Parallel Jobs in the AWS Batch User Guide. If the job definition's type parameter is container, then you must specify either containerProperties or nodeProperties.
 * `retry_strategy` - The [retry strategy](#retry_strategy) to use for failed jobs that are submitted with this job definition. Any retry strategy that's specified during a SubmitJob operation overrides the retry strategy defined here. If a job is terminated due to a timeout, it isn't retried.
+* `tags` - Map of tags assigned to the resource.
 * `timeout` - The [timeout configuration](#timeout) for jobs that are submitted with this job definition, after which AWS Batch terminates your jobs if they have not finished. If a job is terminated due to a timeout, it isn't retried. The minimum value for the timeout is 60 seconds.
+* `type` - The type of job definition.
 
 ### eks_properties
 
@@ -62,7 +65,7 @@ This data source exports the following attributes in addition to the arguments a
 * `host_network` - Indicates if the pod uses the hosts' network IP address. The default value is true. Setting this to false enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
 * `init_containers` - Containers which run before application containers, always runs to completion, and must complete successfully before the next container starts. These containers are registered with the Amazon EKS Connector agent and persists the registration information in the Kubernetes backend data store. See [containers](#container) below.
 * `service_account_name` - The name of the service account that's used to run the pod.
-* `share_process_namespace` - (Optional) Indicates if the processes in a container are shared, or visible, to other containers in the same pod.
+* `share_process_namespace` - Indicates if the processes in a container are shared, or visible, to other containers in the same pod.
 * `metadata` - [Metadata](#eks_metadata) about the Kubernetes pod.
 * `volumes` -  Specifies the volumes for a job definition that uses Amazon EKS resources. Array of [EksVolume](#eks_volumes) objects.
 

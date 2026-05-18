@@ -197,7 +197,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "data_source/aws_batch_job_definition",
     "data_source/aws_batch_job_queue",
     "data_source/aws_batch_scheduling_policy",
     "data_source/aws_bedrock_custom_model",
