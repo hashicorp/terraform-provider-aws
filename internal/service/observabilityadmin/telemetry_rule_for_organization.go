@@ -239,7 +239,7 @@ func findTelemetryRuleForOrganizationByName(ctx context.Context, conn *observabi
 func findTelemetryRuleForOrganization(ctx context.Context, conn *observabilityadmin.Client, input *observabilityadmin.GetTelemetryRuleForOrganizationInput) (*observabilityadmin.GetTelemetryRuleForOrganizationOutput, error) {
 	output, err := conn.GetTelemetryRuleForOrganization(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Telemetry evaluation is not enabled for the organization") {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

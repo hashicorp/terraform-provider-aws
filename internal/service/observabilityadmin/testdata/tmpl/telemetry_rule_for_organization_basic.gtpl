@@ -3,7 +3,8 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule_name = var.rName
 
   rule {
-    telemetry_type = "Metrics"
+    resource_type  = "AWS::EC2::VPC"
+    telemetry_type = "Logs"
   }
 
 {{- template "tags" . }}
