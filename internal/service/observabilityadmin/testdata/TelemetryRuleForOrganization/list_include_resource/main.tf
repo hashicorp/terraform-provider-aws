@@ -30,7 +30,7 @@ variable "resource_count" {
 }
 
 variable "resource_tags" {
-  description = "Tags to set on resource. To specify no tags, set to `null`"
+  description = "Tags to set on resource"
   type        = map(string)
-  default     = null
+  nullable    = false
 }

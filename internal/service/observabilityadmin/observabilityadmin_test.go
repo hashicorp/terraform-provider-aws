@@ -38,12 +38,13 @@ func TestAccObservabilityAdmin_serial(t *testing.T) {
 			"ListRegionOverride":  testAccTelemetryRule_List_regionOverride,
 		},
 		"TelemetryRuleForOrganization": {
-			acctest.CtBasic:        testAccTelemetryRuleForOrganization_basic,
-			acctest.CtDisappears:   testAccTelemetryRuleForOrganization_disappears,
-			"tags":                 testAccTelemetryRuleForOrganization_tags,
-			"Identity":             testAccObservabilityAdminTelemetryRuleForOrganization_identitySerial,
-			"List_basic":           testAccTelemetryRuleForOrganization_List_basic,
-			"List_includeResource": testAccTelemetryRuleForOrganization_List_includeResource,
+			acctest.CtBasic:       testAccTelemetryRuleForOrganization_basic,
+			acctest.CtDisappears:  testAccTelemetryRuleForOrganization_disappears,
+			"tags":                testAccTelemetryRuleForOrganization_tags,
+			"Identity":            testAccObservabilityAdminTelemetryRuleForOrganization_identitySerial,
+			"ListBasic":           testAccTelemetryRuleForOrganization_List_basic,
+			"ListIncludeResource": testAccTelemetryRuleForOrganization_List_includeResource,
+			"ListRegionOverride":  testAccTelemetryRuleForOrganization_List_regionOverride,
 		},
 	}
 
