@@ -22,3 +22,46 @@ rules:
     pattern: acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, $RES, $NAME, $F)
     fix: acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, $RES, $NAME, $F)
     severity: ERROR
+
+  - id: disappears-expect-resource-action
+    languages: [go]
+    message: |
+      Disappears acceptance tests should include `ConfigPlanChecks` with a `PostApplyPostRefresh` plan check
+      using `plancheck.ExpectResourceAction` to verify the resource is planned for re-creation.
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: acctest.CheckSDKResourceDisappears(...)
+          - pattern: acctest.CheckFrameworkResourceDisappears(...)
+          - pattern: acctest.CheckFrameworkResourceDisappearsWithStateFunc(...)
+      - pattern-inside: |
+          Steps: []resource.TestStep{
+            ...,
+          }
+      - pattern-not-inside: |
+          {
+            ...,
+            ConfigPlanChecks: resource.ConfigPlanChecks{
+              ...,
+              PostApplyPostRefresh: []plancheck.PlanCheck{
+                ...,
+                plancheck.ExpectResourceAction($NAME, plancheck.ResourceActionCreate),
+                ...,
+              },
+              ...,
+            },
+            ...,
+          }
+    # To roll out gradually, only fully-compliant services are included in the
+    # paths list below. As each service is updated, add its path to the list.
+    paths:
+      include:
+        - "/internal/service/bedrockagentcore/*_test.go"
+        - "/internal/service/billing/*_test.go"
+        - "/internal/service/cur/*_test.go"
+        - "/internal/service/networkflowmonitor/*_test.go"
+        - "/internal/service/notifications/*_test.go"
+        - "/internal/service/notificationscontacts/*_test.go"
+        - "/internal/service/observabilityadmin/*_test.go"
+        - "/internal/service/timestreaminfluxdb/*_test.go"
+        - "/internal/service/workmail/*_test.go"

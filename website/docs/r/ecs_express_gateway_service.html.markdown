@@ -8,9 +8,7 @@ description: |-
 
 # Resource: aws_ecs_express_gateway_service
 
-Manages an ECS Express service. The Express service provides a simplified way to deploy containerized applications with automatic provisioning and management of AWS infrastructure including Application Load Balancers (ALBs), target groups, security groups, and auto-scaling policies. This service offers built-in load balancing, auto-scaling, and networking capabilities with zero-downtime deployments.
-
-Express services automatically handle infrastructure provisioning and updates through rolling deployments, ensuring high availability during service modifications. When you update an Express service, a new service revision is created and deployed with zero downtime.
+Manages an [ECS Express service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-overview.html). The Express service provides a simplified way to deploy containerized applications with automatic provisioning and management of AWS infrastructure including Application Load Balancers (ALBs), target groups, security groups, and auto-scaling policies. This service offers built-in load balancing, auto-scaling, and networking capabilities with zero-downtime deployments.
 
 -> **Note:** To prevent a race condition during service deletion, make sure to set `depends_on` to the related `aws_iam_role_policy` or `aws_iam_role_policy_attachment` resources. Otherwise, the policy may be destroyed too soon and the ECS service will then get stuck in the `DRAINING` state.
 
@@ -33,7 +31,7 @@ resource "aws_ecs_express_gateway_service" "example" {
 
 ### Updates
 
-When you update an Express service configuration, a new service revision is created and deployed using a rolling deployment strategy with zero downtime. The service automatically manages the transition from the old configuration to the new one, ensuring continuous availability.
+When you update an Express service configuration, a new service revision is created and deployed using a canary deployment strategy with zero downtime. For more information, see [Updating an Express service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-update.html).
 
 ### Deletion
 
@@ -49,9 +47,9 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cluster` - (Optional) Name or ARN of the ECS cluster. Defaults to `default`.
-* `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096.
-* `health_check_path` - (Optional) Path for health check requests. Defaults to `/ping`.
-* `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192.
+* `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096. Defaults to `1024`.
+* `health_check_path` - (Optional) Path for health check requests. Defaults to `/`.
+* `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192. Defaults to `2048`.
 * `region` - (Optional) AWS region where the service will be created. If not specified, the region configured in the provider will be used.
 * `service_name` - (Optional) Name of the service. If not specified, a name will be generated. Changing this forces a new resource to be created.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -64,7 +62,7 @@ The `primary_container` configuration block supports the following:
 
 * `image` - (Required) Docker image to use for the container.
 * `command` - (Optional) Command to run in the container. Overrides the default command from the Docker image.
-* `container_port` - (Optional) Port on which the container listens for connections.
+* `container_port` - (Optional) Port on which the container listens for connections. Defaults to `80`.
 
 #### aws_logs_configuration
 
@@ -164,8 +162,8 @@ The `scaling_target` configuration block supports the following:
 
 * `auto_scaling_metric` - (Optional) Metric to use for auto-scaling. Valid values are `AVERAGE_CPU`, `AVERAGE_MEMORY` and `REQUEST_COUNT_PER_TARGET`.
 * `auto_scaling_target_value` - (Optional) Target value for the auto-scaling metric (as a percentage). Defaults to `60`.
-* `max_task_count` - (Optional) Maximum number of tasks to run.
-* `min_task_count` - (Optional) Minimum number of tasks to run.
+* `max_task_count` - (Optional) Maximum number of tasks to run. Defaults to `20`.
+* `min_task_count` - (Optional) Minimum number of tasks to run. Defaults to `1`.
 
 ## Attribute Reference
 

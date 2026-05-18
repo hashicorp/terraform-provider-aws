@@ -1013,7 +1013,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 						}
 						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NewMapValueOf", map[string]any{
 							logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
-							logAttrKeySourceType: fullTypeName(reflect.TypeOf(v)),
+							logAttrKeySourceType: fullTypeName(reflect.TypeFor[map[string]string]()),
 							logAttrKeySourceSize: len(v),
 							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
 							logAttrKeyTargetType: fullTypeName(reflect.TypeFor[map[string]attr.Value]()),
@@ -1054,7 +1054,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 						}
 						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NewMapValueOf", map[string]any{
 							logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
-							logAttrKeySourceType: fullTypeName(reflect.TypeOf(v)),
+							logAttrKeySourceType: fullTypeName(reflect.TypeFor[map[string]*string]()),
 							logAttrKeySourceSize: len(v),
 							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
 							logAttrKeyTargetType: fullTypeName(reflect.TypeFor[map[string]attr.Value]()),
@@ -1741,7 +1741,7 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, sourcePat
 		// Rule 2 detection: check if source AWS struct has more than 2 fields
 		// (Items, Quantity, plus additional fields like Enabled)
 		sourceStructType := vFrom.Type()
-		if sourceStructType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+		if sourceStructType.Kind() == reflect.Pointer {
 			sourceStructType = sourceStructType.Elem()
 		}
 

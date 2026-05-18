@@ -27,6 +27,7 @@ func testAccDRTAccessRoleARNAssociation_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckRoleARN(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDRTAccessRoleARNAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -63,6 +64,7 @@ func testAccDRTAccessRoleARNAssociation_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckRoleARN(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDRTAccessRoleARNAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{

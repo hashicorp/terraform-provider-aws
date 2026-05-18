@@ -15,8 +15,6 @@ import (
 
 func TestAccChatbotSlackWorkspaceDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

@@ -64,7 +64,6 @@ func (l *metricFilterListResource) List(ctx context.Context, request list.ListRe
 		logging.ResourceAttributeKey(names.AttrLogGroupName): logGroupName,
 	})
 
-	// TIP: -- 4. Get information about a resource from AWS
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := cloudwatchlogs.DescribeMetricFiltersInput{
 			LogGroupName: aws.String(logGroupName),

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,7 +32,7 @@ const (
 
 type dimensionFieldSchemaIdentity dimensionFieldSize
 
-var dimensionFieldSchemaCache syncMap[dimensionFieldSchemaIdentity, *schema.Schema]
+var dimensionFieldSchemaCache tfsync.Map[dimensionFieldSchemaIdentity, *schema.Schema]
 
 func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 	id := dimensionFieldSchemaIdentity(maxItems)
@@ -152,7 +153,7 @@ var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 
 type meaureFieldSchemaIdentity measureFieldsSize
 
-var measureFieldSchemaCache syncMap[meaureFieldSchemaIdentity, *schema.Schema]
+var measureFieldSchemaCache tfsync.Map[meaureFieldSchemaIdentity, *schema.Schema]
 
 func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 	id := meaureFieldSchemaIdentity(maxItems)

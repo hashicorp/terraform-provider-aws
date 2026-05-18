@@ -91,6 +91,7 @@ func TestAccLexModelsBot_Version_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		"LexBot_createVersion":         testAccBot_createVersion,
+		"LexBot_computeVersion":        testAccBot_computeVersion,
 		"LexBotAlias_botVersion":       testAccBotAlias_botVersion,
 		"DataSourceLexBot_withVersion": testAccBotDataSource_withVersion,
 		"DataSourceLexBotAlias_basic":  testAccBotAliasDataSource_basic,
@@ -577,7 +578,7 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 	})
 }
 
-func TestAccLexModelsBot_computeVersion(t *testing.T) {
+func testAccBot_computeVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 lexmodelbuildingservice.GetBotOutput
 	var v2 lexmodelbuildingservice.GetBotAliasOutput
