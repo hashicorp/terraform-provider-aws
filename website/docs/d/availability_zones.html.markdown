@@ -77,14 +77,11 @@ This data source supports the following arguments:
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `exclude_names` - (Optional) List of Availability Zone names to exclude.
 * `exclude_zone_ids` - (Optional) List of Availability Zone IDs to exclude.
-* `state` - (Optional) Allows to filter list of Availability Zones based on their
-current state. Can be either `"available"`, `"information"`, `"impaired"` or
-`"unavailable"`. By default the list includes a complete set of Availability Zones
-to which the underlying AWS account has access, regardless of their state.
+* `state` - (Optional) Allows to filter list of Availability Zones based on their current state. Can be either `"available"`, `"information"`, `"impaired"` or `"unavailable"`. By default the list includes a complete set of Availability Zones to which the underlying AWS account has access, regardless of their state.
 
-### filter Configuration Block
+### `filter` Block
 
-The `filter` configuration block supports the following arguments:
+The `filter` block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeAvailabilityZones API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
@@ -93,12 +90,10 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `group_names` A set of the Availability Zone Group names. For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
+* `group_names` - Set of the Availability Zone Group names. For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
 * `id` - Region of the Availability Zones.
 * `names` - List of the Availability Zone names available to the account.
 * `zone_ids` - List of the Availability Zone IDs available to the account.
-
-Note that the indexes of Availability Zone names and IDs correspond.
 
 ## Timeouts
 
