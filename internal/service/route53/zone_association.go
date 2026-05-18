@@ -25,19 +25,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_zone_association", name="Zone Association")
+// @IdentityAttribute("zone_id")
+// @IdentityAttribute("vpc_id")
+// @IdentityAttribute("vpc_region", optional="true", testNotNull="true")
+// @ImportIDHandler("zoneAssociationImportID")
+// @Testing(preIdentityVersion="v6.45.0")
 func resourceZoneAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneAssociationCreate,
 		ReadWithoutTimeout:   resourceZoneAssociationRead,
 		DeleteWithoutTimeout: resourceZoneAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"owning_account": {
@@ -266,4 +268,29 @@ func findZoneAssociations(ctx context.Context, conn *route53.Client, input *rout
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = zoneAssociationImportID{}
+
+type zoneAssociationImportID struct{}
+
+func (zoneAssociationImportID) Create(d *schema.ResourceData) string {
+	return zoneAssociationCreateResourceID(d.Get("zone_id").(string), d.Get(names.AttrVPCID).(string), d.Get("vpc_region").(string))
+}
+
+func (zoneAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	zoneID, vpcID, vpcRegion, err := zoneAssociationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"zone_id":       zoneID,
+		names.AttrVPCID: vpcID,
+	}
+	if vpcRegion != "" {
+		result["vpc_region"] = vpcRegion
+	}
+
+	return id, result, nil
 }

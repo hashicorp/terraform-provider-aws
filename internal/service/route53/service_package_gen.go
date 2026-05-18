@@ -185,6 +185,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53_zone_association",
 			Name:     "Zone Association",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("zone_id", true),
+				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
+				inttypes.StringIdentityAttribute("vpc_region", false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      zoneAssociationImportID{},
+			},
 		},
 	}
 }
