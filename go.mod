@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.14
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.11
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.73.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.23
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.15
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.14
@@ -142,7 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.22
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.6
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.16
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/iot v1.73.0
@@ -171,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.91.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.23
-	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.23
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.23
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.16

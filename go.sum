@@ -135,8 +135,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.11 h1:3IDx7ybn7pyrLgVShEfG
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.11/go.mod h1:iSArc5uhvz1S3EICNNvRzPksb6HPAUhltzMvoCrGyfM=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0 h1:dlkFtYOrwOuM7IIBD6FPLtt0Xvnph+8hqmmbzyowkCk=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0/go.mod h1:7900IH3EvTrwNGLNx3QDKnQwPF/Cw+pD9cuvBDQ4org=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.73.0 h1:JmrHkELR2Q0O28swrFMm0hZNwpQrV8qmbhnb7suKIfc=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.73.0/go.mod h1:MLJu3PUd8fp5Qvj4CiLvyY5H8y7kxHKlTp060Wsd+Vc=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0 h1:6TqDeYdvJJEIJGg5ICy7nzC7/UuHk2Eg3wrpb5bWKPM=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0/go.mod h1:MLJu3PUd8fp5Qvj4CiLvyY5H8y7kxHKlTp060Wsd+Vc=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.23 h1:IAhqTt0h8aXVWauAlMpmR/S8I6rJwJDkBMM+Orl5dUY=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.23/go.mod h1:eyySIoSU4Mj4Ya1HD5Mf1EuzWvXAGaAS4mjSuGiBF4A=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.15 h1:ZrDV293SvcUFF/2QQ+oBeIPj/0vn7OC7q5CtuBQx6ow=
@@ -293,8 +293,8 @@ github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.54.0 h1:MlFy3L3RStulK0LNyq9
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.54.0/go.mod h1:qaCPaUpUwFeeqaeG4x0eNKkPt5fINOh4YEoSLLcxdjc=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.30.22 h1:phWl4pu6OSvB8xRF14eTKWrvk7hQspQqz1YqyV++fmA=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.30.22/go.mod h1:BRKeLwlPqToFLwqO3GcIETzktr5QvnWprfI/iICeyJ0=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.6 h1:Z8mkRPVl24t+m5FTtHJFBfh5mMKv+mUpubZgNwR1aWY=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.6/go.mod h1:LuywkZEbCgj1aB3Ij62TrWfPThhx6GHJqZSO1ZDj2cM=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.7 h1:vHOhsldnj34FLcf4Vhruf4rXjuS/h2+rVq7g/Ff2Z1E=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.7/go.mod h1:LuywkZEbCgj1aB3Ij62TrWfPThhx6GHJqZSO1ZDj2cM=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.9 h1:FLudkZLt5ci0ozzgkVo8BJGwvqNaZbTWb3UcucAateA=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.9/go.mod h1:w7wZ/s9qK7c8g4al+UyoF1Sp/Z45UwMGcqIzLWVQHWk=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.15 h1:ieLCO1JxUWuxTZ1cRd0GAaeX7O6cIxnwk7tc1LsQhC4=
@@ -361,8 +361,8 @@ github.com/aws/aws-sdk-go-v2/service/medialive v1.96.0 h1:2A2YYpr3IDLZ9y2WRg/oXS
 github.com/aws/aws-sdk-go-v2/service/medialive v1.96.0/go.mod h1:YtEXuL0GNGkAeeFSs2wT/KTnaqykXJ52d+4MefPwJKg=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.23 h1:ztbUtcql2vd65yqnEz/k+bTX8PBP1J4to32/ck5hLAA=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.23/go.mod h1:3+LhO1Y/ZUTvLmnBsWJyMs4qBBUQJ9dAe8/DqutP+48=
-github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.37.0 h1:EhuYHjqXNpkpROCzG1ypSXS2oUhYoQRYl8239qtr45U=
-github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.37.0/go.mod h1:lmYE+EShgxxI35+UwVCbE8Z3OsutViSOMNNx3Y3/Y3c=
+github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.38.0 h1:h0V/iGRimHbTMN3szN6377Th1883YLME/v9jCUKqJjo=
+github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.38.0/go.mod h1:lmYE+EShgxxI35+UwVCbE8Z3OsutViSOMNNx3Y3/Y3c=
 github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.23 h1:3D0AdP2dlAuyS8+bI32nwWeVElqpum5x57qd7gnv0/g=
 github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.23/go.mod h1:3nv4OO4gMdloy2CVFb+veQzwndmDhxXatvZ/D0dEN1Y=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.23 h1:yxt0mlXvIz6tBqE6tE+8nT4HInWgEjzwnHDI6TxKm7E=
