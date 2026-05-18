@@ -11,7 +11,10 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -24,9 +27,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -157,6 +167,156 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 	}
 }
 
+func (r *configurationSetEventDestinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
+
+	var plan configurationSetEventDestinationResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := &pinpointsmsvoicev2.CreateEventDestinationInput{
+		ClientToken: aws.String(create.UniqueId(ctx)),
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, input))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+		func(ctx context.Context) (*pinpointsmsvoicev2.CreateEventDestinationOutput, error) {
+			return conn.CreateEventDestination(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Could not access Kinesis Firehose Stream") ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "Could not assume IAM role") {
+				return true, err
+			}
+			return false, err
+		},
+	)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.EventDestinationName.ValueString())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.EventDestination, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.ConfigurationSetARN = fwtypes.ARNValue(aws.ToString(out.ConfigurationSetArn))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *configurationSetEventDestinationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
+
+	var state configurationSetEventDestinationResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	eventDestination, configurationSetArn, err := findConfigurationSetEventDestinationByTwoPartKey(ctx, conn, state.ConfigurationSetName.ValueString(), state.EventDestinationName.ValueString())
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.EventDestinationName.ValueString())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, eventDestination, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.ConfigurationSetARN = fwtypes.ARNValue(aws.ToString(configurationSetArn))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func (r *configurationSetEventDestinationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
+
+	var plan, state configurationSetEventDestinationResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input pinpointsmsvoicev2.UpdateEventDestinationInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		input.ConfigurationSetName = plan.ConfigurationSetName.ValueStringPointer()
+		input.EventDestinationName = plan.EventDestinationName.ValueStringPointer()
+
+		out, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+			func(ctx context.Context) (*pinpointsmsvoicev2.UpdateEventDestinationOutput, error) {
+				return conn.UpdateEventDestination(ctx, &input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, "ValidationException", "Could not access Kinesis Firehose Stream") ||
+					tfawserr.ErrMessageContains(err, "ValidationException", "Could not assume IAM role") {
+					return true, err
+				}
+				return false, err
+			},
+		)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.EventDestinationName.ValueString())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.EventDestination, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.ConfigurationSetARN = fwtypes.ARNValue(aws.ToString(out.ConfigurationSetArn))
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *configurationSetEventDestinationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
+
+	var state configurationSetEventDestinationResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := &pinpointsmsvoicev2.DeleteEventDestinationInput{
+		ConfigurationSetName: state.ConfigurationSetName.ValueStringPointer(),
+		EventDestinationName: state.EventDestinationName.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteEventDestination(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.EventDestinationName.ValueString())
+		return
+	}
+}
+
 func (r *configurationSetEventDestinationResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
@@ -167,20 +327,21 @@ func (r *configurationSetEventDestinationResource) ConfigValidators(_ context.Co
 	}
 }
 
-func (r *configurationSetEventDestinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TODO: populated in the CRUD-wiring commit.
-}
+func findConfigurationSetEventDestinationByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName, eventDestinationName string) (*awstypes.EventDestination, *string, error) {
+	parent, err := findConfigurationSetByID(ctx, conn, configurationSetName)
+	if err != nil {
+		return nil, nil, err
+	}
 
-func (r *configurationSetEventDestinationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO: populated in the CRUD-wiring commit.
-}
+	for i, ed := range parent.EventDestinations {
+		if aws.ToString(ed.EventDestinationName) == eventDestinationName {
+			return &parent.EventDestinations[i], parent.ConfigurationSetArn, nil
+		}
+	}
 
-func (r *configurationSetEventDestinationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TODO: populated in the CRUD-wiring commit.
-}
-
-func (r *configurationSetEventDestinationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TODO: populated in the CRUD-wiring commit.
+	return nil, nil, &retry.NotFoundError{
+		Message: fmt.Sprintf("event destination %q not found in configuration set %q", eventDestinationName, configurationSetName),
+	}
 }
 
 type configurationSetEventDestinationResourceModel struct {
