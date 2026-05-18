@@ -62,7 +62,7 @@ func (r *traceSegmentDestinationResource) Schema(ctx context.Context, req resour
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Delete: true,
+				Update: true,
 			}),
 		},
 	}
