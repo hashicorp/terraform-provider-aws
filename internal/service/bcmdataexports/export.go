@@ -185,6 +185,12 @@ func exportS3DestinationSchema(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
+				"s3_bucket_owner": schema.StringAttribute{
+					Optional: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
 				"s3_prefix": schema.StringAttribute{
 					Required: true,
 					PlanModifiers: []planmodifier.String{
@@ -518,6 +524,7 @@ type s3OutputConfigurations struct {
 
 type s3Destination struct {
 	S3Bucket               types.String                                            `tfsdk:"s3_bucket"`
+	S3BucketOwner          types.String                                            `tfsdk:"s3_bucket_owner"`
 	S3Prefix               types.String                                            `tfsdk:"s3_prefix"`
 	S3Region               types.String                                            `tfsdk:"s3_region"`
 	S3OutputConfigurations fwtypes.ListNestedObjectValueOf[s3OutputConfigurations] `tfsdk:"s3_output_configurations"`
