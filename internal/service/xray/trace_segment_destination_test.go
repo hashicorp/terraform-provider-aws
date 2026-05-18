@@ -78,8 +78,8 @@ func testAccTraceSegmentDestination_update(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TraceSegmentDestination/update/"),
 				ConfigVariables: config.Variables{
-					names.AttrDestination: config.StringVariable(string(awstypes.TraceSegmentDestinationCloudWatchLogs)),
-					acctest.CtRName:       config.StringVariable(rName),
+					"destination":   config.StringVariable(string(awstypes.TraceSegmentDestinationCloudWatchLogs)),
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTraceSegmentDestinationExists(ctx, t, resourceName, &v),
@@ -96,8 +96,8 @@ func testAccTraceSegmentDestination_update(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TraceSegmentDestination/update/"),
 				ConfigVariables: config.Variables{
-					names.AttrDestination: config.StringVariable(string(awstypes.TraceSegmentDestinationXRay)),
-					acctest.CtRName:       config.StringVariable(rName),
+					"destination":   config.StringVariable(string(awstypes.TraceSegmentDestinationXRay)),
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTraceSegmentDestinationExists(ctx, t, resourceName, &v),
