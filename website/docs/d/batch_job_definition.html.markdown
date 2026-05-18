@@ -33,8 +33,8 @@ data "aws_batch_job_definition" "name" {
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the Job Definition.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `revision` - (Optional) Revision of the job definition.
 * `name` - (Optional) Name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
 * `status` - (Optional) Status of the job definition.
@@ -45,11 +45,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn_prefix` - ARN prefix of the job definition.
 * `container_orchestration_type` - Orchestration type of the compute environment.
-* `id` - ARN
-* `scheduling_priority` - Scheduling priority for jobs that are submitted with this job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority.
 * `eks_properties` - [Object](#eks_properties) with various properties that are specific to Amazon EKS based jobs. This must not be specified for Amazon ECS based job definitions.
+* `id` - ARN
 * `node_properties` - [Object](#node_properties) with various properties specific to multi-node parallel jobs. If you specify node properties for a job, it becomes a multi-node parallel job. For more information, see Multi-node Parallel Jobs in the AWS Batch User Guide. If the job definition's type parameter is container, then you must specify either containerProperties or nodeProperties.
 * `retry_strategy` - [Retry strategy](#retry_strategy) to use for failed jobs that are submitted with this job definition. Any retry strategy that's specified during a SubmitJob operation overrides the retry strategy defined here. If a job is terminated due to a timeout, it isn't retried.
+* `scheduling_priority` - Scheduling priority for jobs that are submitted with this job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority.
 * `tags` - Map of tags assigned to the resource.
 * `timeout` - [Timeout configuration](#timeout) for jobs that are submitted with this job definition, after which AWS Batch terminates your jobs if they have not finished. If a job is terminated due to a timeout, it isn't retried. The minimum value for the timeout is 60 seconds.
 * `type` - Type of job definition.
@@ -64,9 +64,9 @@ This data source exports the following attributes in addition to the arguments a
 * `dns_policy` - DNS policy for the pod. The default value is ClusterFirst. If the hostNetwork parameter is not specified, the default is ClusterFirstWithHostNet. ClusterFirst indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node.
 * `host_network` - Whether the pod uses the hosts' network IP address. The default value is true. Setting this to false enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
 * `init_containers` - Containers which run before application containers, always runs to completion, and must complete successfully before the next container starts. These containers are registered with the Amazon EKS Connector agent and persists the registration information in the Kubernetes backend data store. See [containers](#container) below.
+* `metadata` - [Metadata](#eks_metadata) about the Kubernetes pod.
 * `service_account_name` - Name of the service account that's used to run the pod.
 * `share_process_namespace` - Whether the processes in a container are shared, or visible, to other containers in the same pod.
-* `metadata` - [Metadata](#eks_metadata) about the Kubernetes pod.
 * `volumes` - Volumes for a job definition that uses Amazon EKS resources. Array of [EksVolume](#eks_volumes) objects.
 
 ### eks_container
@@ -103,8 +103,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_volume_secret
 
-* `secret_name` - Name of the secret. The name must be allowed as a DNS subdomain name
 * `optional` - Whether the secret or the secret's keys must be defined.
+* `secret_name` - Name of the secret. The name must be allowed as a DNS subdomain name
 
 ### eks_environment
 
@@ -139,8 +139,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### node_range_properties
 
-* `target_nodes` - Range of nodes, using node index values. A range of 0:3 indicates nodes with index values of 0 through 3. I
 * `container` - [Container details](#container) for the node range.
+* `target_nodes` - Range of nodes, using node index values. A range of 0:3 indicates nodes with index values of 0 through 3. I
 
 ### container
 
@@ -180,17 +180,17 @@ This data source exports the following attributes in addition to the arguments a
 
 ### linux_parameters
 
+* `devices` - Any of the [host devices](#devices) to expose to the container.
 * `init_process_enabled` - If true, run an init process inside the container that forwards signals and reaps processes.
 * `max_swap` - Total amount of swap memory (in MiB) a container can use.
 * `shared_memory_size` - Value for the size (in MiB) of the `/dev/shm` volume.
 * `swappiness` - You can use this parameter to tune a container's memory swappiness behavior.
-* `devices` - Any of the [host devices](#devices) to expose to the container.
 * `tmpfs` - Container path, mount options, and size (in MiB) of the [tmpfs](#tmpfs) mount.
 
 ### log_configuration
 
-* `options` - Configuration options to send to the log driver.
 * `log_driver` - Log driver to use for the container.
+* `options` - Configuration options to send to the log driver.
 * `secret_options` - Secrets to pass to the log configuration.
 
 ### network_configuration
@@ -231,21 +231,21 @@ This data source exports the following attributes in addition to the arguments a
 
 ### devices
 
-* `host_path` - Path for the device on the host container instance.
 * `container_path` - Path inside the container that's used to expose the host device. By default, the hostPath value is used.
+* `host_path` - Path for the device on the host container instance.
 * `permissions` - Explicit permissions to provide to the container for the device.
 
 ### tmpfs
 
 * `container_path` - Absolute file path in the container where the tmpfs volume is mounted.
-* `size` - Size (in MiB) of the tmpfs volume.
 * `mount_options` - List of tmpfs volume mount options.
+* `size` - Size (in MiB) of the tmpfs volume.
 
 ### volumes
 
-* `name` - Name of the volume.
-* `host` - Contents of the host parameter determine whether your data volume persists on the host container instance and where it's stored.
 * `efs_volume_configuration` - This [parameter](#efs_volume_configuration) is specified when you're using an Amazon Elastic File System file system for job storage.
+* `host` - Contents of the host parameter determine whether your data volume persists on the host container instance and where it's stored.
+* `name` - Name of the volume.
 
 ### host
 
@@ -253,11 +253,11 @@ This data source exports the following attributes in addition to the arguments a
 
 ### efs_volume_configuration
 
+* `authorization_config` - [Authorization configuration](#authorization_config) details for the Amazon EFS file system.
 * `file_system_id` - Amazon EFS file system ID to use.
 * `root_directory` - Directory within the Amazon EFS file system to mount as the root directory inside the host.
 * `transit_encryption` - Determines whether to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server
 * `transit_encryption_port` - Port to use when sending encrypted data between the Amazon ECS host and the Amazon EFS server.
-* `authorization_config` - [Authorization configuration](#authorization_config) details for the Amazon EFS file system.
 
 ### authorization_config
 
