@@ -64,4 +64,11 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-See the [`aws_auditmanager_control` resource](/docs/providers/aws/r/auditmanager_control.html) for details on the returned attributes - they are identical.
+* `action_plan_instructions` - Recommended actions to carry out if the control isn't fulfilled.
+* `action_plan_title` - Title of the action plan for remediating the control.
+* `arn` - ARN of the control.
+* `control_mapping_sources` - Data mapping sources for the control.
+* `description` - Description of the control.
+* `id` - Unique identifier for the control.
+* `tags` - Map of tags assigned to the control.
+* `testing_information` - Steps to follow to determine if the control is satisfied.
