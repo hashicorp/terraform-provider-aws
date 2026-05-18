@@ -19,5 +19,5 @@ var (
 	FindTelemetryEvaluationForOrganization    = findTelemetryEvaluationForOrganization
 	FindTelemetryPipelineByARN                = findTelemetryPipelineByARN
 	FindTelemetryRuleByName                   = findTelemetryRuleByName
-	FindTelemetryRuleForOrganization          = findTelemetryRuleForOrganization
+	FindTelemetryRuleForOrganizationByName    = findTelemetryRuleForOrganizationByName
 )

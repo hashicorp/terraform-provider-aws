@@ -56,7 +56,7 @@ func (l *telemetryRuleForOrganizationListResource) List(ctx context.Context, req
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			ruleName := aws.ToString(item.RuleName)
-			output, err := findTelemetryRuleForOrganization(ctx, conn, ruleName)
+			output, err := findTelemetryRuleForOrganizationByName(ctx, conn, ruleName)
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)

@@ -45,6 +45,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_Identity_basic(t *tes
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccTelemetryRuleForOrganizationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
@@ -135,6 +136,7 @@ func testAccObservabilityAdminTelemetryRuleForOrganization_Identity_regionOverri
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccTelemetryRuleForOrganizationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),

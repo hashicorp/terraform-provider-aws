@@ -7,7 +7,13 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule {
     telemetry_type = "Metrics"
   }
+
+  depends_on = [aws_observabilityadmin_telemetry_evaluation_for_organization.test]
 }
+
+resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {
+}
+
 variable "rName" {
   description = "Name for resource"
   type        = string

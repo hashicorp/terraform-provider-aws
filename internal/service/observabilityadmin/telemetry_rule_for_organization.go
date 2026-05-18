@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -37,6 +36,7 @@ import (
 // @FrameworkResource("aws_observabilityadmin_telemetry_rule_for_organization", name="Telemetry Rule For Organization")
 // @Tags(identifierAttribute="rule_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/observabilityadmin;observabilityadmin;observabilityadmin.GetTelemetryRuleForOrganizationOutput")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(preCheck="testAccTelemetryRuleForOrganizationPreCheck")
 // @IdentityAttribute("rule_name")
 // @Testing(tagsTest=false)
@@ -62,8 +62,7 @@ type telemetryRuleForOrganizationResource struct {
 func (r *telemetryRuleForOrganizationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			"rule_arn":   framework.ARNAttributeComputedOnly(),
+			"rule_arn": framework.ARNAttributeComputedOnly(),
 			"rule_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -79,7 +78,7 @@ func (r *telemetryRuleForOrganizationResource) Schema(ctx context.Context, reque
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrRule: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[telemetryRuleForOrganizationBlockModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[telemetryRuleModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
@@ -123,6 +122,7 @@ func (r *telemetryRuleForOrganizationResource) Create(ctx context.Context, reque
 		return
 	}
 
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateTelemetryRuleForOrganization(ctx, &input)
@@ -131,8 +131,8 @@ func (r *telemetryRuleForOrganizationResource) Create(ctx context.Context, reque
 		return
 	}
 
+	// Set values for unknowns.
 	data.RuleARN = fwflex.StringToFramework(ctx, output.RuleArn)
-	data.setID()
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -147,7 +147,7 @@ func (r *telemetryRuleForOrganizationResource) Read(ctx context.Context, request
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
 	ruleName := fwflex.StringValueFromFramework(ctx, data.RuleName)
-	output, err := findTelemetryRuleForOrganization(ctx, conn, ruleName)
+	output, err := findTelemetryRuleForOrganizationByName(ctx, conn, ruleName)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -163,8 +163,6 @@ func (r *telemetryRuleForOrganizationResource) Read(ctx context.Context, request
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	data.setID()
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -193,6 +191,7 @@ func (r *telemetryRuleForOrganizationResource) Update(ctx context.Context, reque
 			return
 		}
 
+		// Additional fields.
 		input.RuleIdentifier = aws.String(ruleName)
 
 		_, err := conn.UpdateTelemetryRuleForOrganization(ctx, &input)
@@ -215,8 +214,9 @@ func (r *telemetryRuleForOrganizationResource) Delete(ctx context.Context, reque
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
 	ruleName := fwflex.StringValueFromFramework(ctx, data.RuleName)
-	var input observabilityadmin.DeleteTelemetryRuleForOrganizationInput
-	input.RuleIdentifier = aws.String(ruleName)
+	input := observabilityadmin.DeleteTelemetryRuleForOrganizationInput{
+		RuleIdentifier: aws.String(ruleName),
+	}
 
 	_, err := conn.DeleteTelemetryRuleForOrganization(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -228,11 +228,15 @@ func (r *telemetryRuleForOrganizationResource) Delete(ctx context.Context, reque
 	}
 }
 
-func (r *telemetryRuleForOrganizationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("rule_name"), request, response)
+func findTelemetryRuleForOrganizationByName(ctx context.Context, conn *observabilityadmin.Client, name string) (*observabilityadmin.GetTelemetryRuleForOrganizationOutput, error) {
+	input := observabilityadmin.GetTelemetryRuleForOrganizationInput{
+		RuleIdentifier: aws.String(name),
+	}
+
+	return findTelemetryRuleForOrganization(ctx, conn, &input)
 }
 
-func findTelemetryRuleForOrganizationStatus(ctx context.Context, conn *observabilityadmin.Client, input *observabilityadmin.GetTelemetryRuleForOrganizationInput) (*observabilityadmin.GetTelemetryRuleForOrganizationOutput, error) {
+func findTelemetryRuleForOrganization(ctx context.Context, conn *observabilityadmin.Client, input *observabilityadmin.GetTelemetryRuleForOrganizationInput) (*observabilityadmin.GetTelemetryRuleForOrganizationOutput, error) {
 	output, err := conn.GetTelemetryRuleForOrganization(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -252,19 +256,6 @@ func findTelemetryRuleForOrganizationStatus(ctx context.Context, conn *observabi
 	return output, nil
 }
 
-func findTelemetryRuleForOrganization(ctx context.Context, conn *observabilityadmin.Client, name string) (*observabilityadmin.GetTelemetryRuleForOrganizationOutput, error) {
-	input := observabilityadmin.GetTelemetryRuleForOrganizationInput{
-		RuleIdentifier: aws.String(name),
-	}
-
-	output, err := findTelemetryRuleForOrganizationStatus(ctx, conn, &input)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
 func (r *telemetryRuleForOrganizationResource) flatten(ctx context.Context, telemetryRule *observabilityadmin.GetTelemetryRuleForOrganizationOutput, data *telemetryRuleForOrganizationResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	diags.Append(fwflex.Flatten(ctx, telemetryRule, data, fwflex.WithFieldNamePrefix("Telemetry"))...)
@@ -273,20 +264,10 @@ func (r *telemetryRuleForOrganizationResource) flatten(ctx context.Context, tele
 
 type telemetryRuleForOrganizationResourceModel struct {
 	framework.WithRegionModel
-	ID       types.String                                                            `tfsdk:"id"`
-	Rule     fwtypes.ListNestedObjectValueOf[telemetryRuleForOrganizationBlockModel] `tfsdk:"rule"`
-	RuleARN  types.String                                                            `tfsdk:"rule_arn"`
-	RuleName types.String                                                            `tfsdk:"rule_name"`
-	Tags     tftags.Map                                                              `tfsdk:"tags"`
-	TagsAll  tftags.Map                                                              `tfsdk:"tags_all"`
-	Timeouts timeouts.Value                                                          `tfsdk:"timeouts"`
-}
-
-func (m *telemetryRuleForOrganizationResourceModel) setID() {
-	m.ID = m.RuleName
-}
-
-type telemetryRuleForOrganizationBlockModel struct {
-	ResourceType  fwtypes.StringEnum[awstypes.ResourceType]  `tfsdk:"resource_type"`
-	TelemetryType fwtypes.StringEnum[awstypes.TelemetryType] `tfsdk:"telemetry_type"`
+	Rule     fwtypes.ListNestedObjectValueOf[telemetryRuleModel] `tfsdk:"rule"`
+	RuleARN  types.String                                        `tfsdk:"rule_arn"`
+	RuleName types.String                                        `tfsdk:"rule_name"`
+	Tags     tftags.Map                                          `tfsdk:"tags"`
+	TagsAll  tftags.Map                                          `tfsdk:"tags_all"`
+	Timeouts timeouts.Value                                      `tfsdk:"timeouts"`
 }

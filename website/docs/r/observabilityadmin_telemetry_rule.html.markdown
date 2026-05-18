@@ -92,7 +92,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_observabilityadmin_telemetry_rule.example
   identity = {
-    "rule_name" = "example-telemetry-rule"
+    rule_name = "example-telemetry-rule"
   }
 }
 
