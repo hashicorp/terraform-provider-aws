@@ -1,12 +1,12 @@
 ---
-name: pr-documentation
+name: reviewdocs
 description: "Review a PR's end user documentation updates."
 ---
 
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
-# Skill: Review PR Documentation Update
+# Skill: Review End User Documentation
 
 Assume the @maintainer persona.
 
