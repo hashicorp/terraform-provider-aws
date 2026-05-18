@@ -184,7 +184,7 @@ func statusTraceSegmentDestination(conn *xray.Client) retry.StateRefreshFunc {
 	}
 }
 
-func waitTraceSegmentDestinationActive(ctx context.Context, conn *xray.Client, timeout time.Duration) (*xray.GetTraceSegmentDestinationOutput, error) {
+func waitTraceSegmentDestinationActive(ctx context.Context, conn *xray.Client, timeout time.Duration) (*xray.GetTraceSegmentDestinationOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TraceSegmentDestinationStatusPending),
 		Target:  enum.Slice(awstypes.TraceSegmentDestinationStatusActive),
