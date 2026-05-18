@@ -58,7 +58,7 @@ type zoneAssociationListResourceModel struct {
 func (l *zoneAssociationListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"vpc_id": listschema.StringAttribute{
+			names.AttrVPCID: listschema.StringAttribute{
 				Required:    true,
 				Description: "ID of the VPC to list hosted zone associations for.",
 			},
