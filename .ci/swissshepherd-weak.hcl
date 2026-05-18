@@ -197,12 +197,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    #"data_source/aws_api_gateway_api_key",
-    #"data_source/aws_api_gateway_domain_name",
-    #"data_source/aws_api_gateway_rest_api",
-    #"data_source/aws_api_gateway_vpc_link",
-    #"data_source/aws_apigatewayv2_api",
-    #"data_source/aws_apigatewayv2_apis",
     "data_source/aws_appconfig_configuration_profile",
     "data_source/aws_appconfig_environment",
     "data_source/aws_appstream_image",
