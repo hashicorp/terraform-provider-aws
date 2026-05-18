@@ -34,9 +34,9 @@ data "aws_batch_job_definition" "name" {
 The following arguments are optional:
 
 * `arn` - (Optional) ARN of the Job Definition.
+* `name` - (Optional) Name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `revision` - (Optional) Revision of the job definition.
-* `name` - (Optional) Name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
 * `status` - (Optional) Status of the job definition.
 
 ## Attribute Reference
