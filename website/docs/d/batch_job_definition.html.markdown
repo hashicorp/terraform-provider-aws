@@ -56,7 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_properties
 
-* `pod_properties` - The [properties](#pod_properties) for the Kubernetes pod resources of a job.
+* `pod_properties` - [Properties](#pod_properties) for the Kubernetes pod resources of a job.
 
 ### pod_properties
 
@@ -103,13 +103,13 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_volume_secret
 
-* `secret_name` - The name of the secret. The name must be allowed as a DNS subdomain name
-* `optional` - Specifies whether the secret or the secret's keys must be defined.
+* `secret_name` - Name of the secret. The name must be allowed as a DNS subdomain name
+* `optional` - Whether the secret or the secret's keys must be defined.
 
 ### eks_environment
 
 * `name` - The name of the environment variable.
-* `value` - The value of the environment variable.
+* `value` - Value of the environment variable.
 
 ### eks_resources
 
@@ -139,13 +139,13 @@ This data source exports the following attributes in addition to the arguments a
 
 ### node_range_properties
 
-* `target_nodes` - The range of nodes, using node index values. A range of 0:3 indicates nodes with index values of 0 through 3. I
-* `container` - The [container details](#container) for the node range.
+* `target_nodes` - Range of nodes, using node index values. A range of 0:3 indicates nodes with index values of 0 through 3. I
+* `container` - [Container details](#container) for the node range.
 
 ### container
 
 * `command` - The command that's passed to the container.
-* `environment` - The [environment](#environment) variables to pass to a container.
+* `environment` - [Environment](#environment) variables to pass to a container.
 * `ephemeral_storage` - The amount of [ephemeral storage](#ephemeral_storage) to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate.
 * `execution_role_arn` - The Amazon Resource Name (ARN) of the execution role that AWS Batch can assume. For jobs that run on Fargate resources, you must provide an execution role.
 * `fargate_platform_configuration` - The [platform configuration](#fargate_platform_configuration) for jobs that are running on Fargate resources. Jobs that are running on EC2 resources must not specify this parameter.
@@ -167,8 +167,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### environment
 
-* `name` - The name of the key-value pair.
-* `value` - The value of the key-value pair.
+* `name` - Name of the key-value pair.
+* `value` - Value of the key-value pair.
 
 ### ephemeral_storage
 
@@ -195,7 +195,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### network_configuration
 
-* `assign_public_ip` - Indicates whether the job has a public IP address.
+* `assign_public_ip` - Whether the job has a public IP address.
 
 ### mount_points
 
@@ -221,8 +221,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### runtime_platform
 
-* `cpu_architecture` - The vCPU architecture. The default value is X86_64. Valid values are X86_64 and ARM64.
-* `operating_system_family` - The operating system for the compute environment. V
+* `cpu_architecture` - vCPU architecture. The default value is X86_64. Valid values are X86_64 and ARM64.
+* `operating_system_family` - Operating system for the compute environment. V
 
 ### secret_options
 
@@ -231,9 +231,9 @@ This data source exports the following attributes in addition to the arguments a
 
 ### devices
 
-* `host_path` - The path for the device on the host container instance.
-* `container_path` - The path inside the container that's used to expose the host device. By default, the hostPath value is used.
-* `permissions` - The explicit permissions to provide to the container for the device.
+* `host_path` - Path for the device on the host container instance.
+* `container_path` - Path inside the container that's used to expose the host device. By default, the hostPath value is used.
+* `permissions` - Explicit permissions to provide to the container for the device.
 
 ### tmpfs
 
@@ -261,7 +261,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### authorization_config
 
-* `access_point_id` - The Amazon EFS access point ID to use.
+* `access_point_id` - Amazon EFS access point ID to use.
 * `iam` - Whether or not to use the AWS Batch job IAM role defined in a job definition when mounting the Amazon EFS file system.
 
 ### retry_strategy
