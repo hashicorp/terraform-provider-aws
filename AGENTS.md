@@ -35,6 +35,7 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 | Skill | Task |
 |---|---|
 | [changelog](./.agents/skills/changelog/SKILL.md) | Add a `.changelog/<PR_NUMBER>.txt` entry from a PR URL, commit, and push (with confirmation). |
+| [fixdocs](./.agents/skills/fixdocs/SKILL.md) | Fix end user documentation with `swissshepherd`. |
 | [Review PR documentation](./.agents/skills/pr-documentation/SKILL.md) | Review a PR's end user documentation updates. |
 | [Review PR for breaking changes](./.agents/skills/breaking-changes/SKILL.md) | Review a PR for possible breaking changes. |
 

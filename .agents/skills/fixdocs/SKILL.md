@@ -1,12 +1,12 @@
 ---
 name: fixdocs
-description: "Fix Terraform provider documentation issues detected by swissshepherd (ss). Removes an ignored target from the config, runs ss, validates findings, fixes the documentation, and commits."
+description: "Fix Terraform provider end user documentation issues detected by swissshepherd (ss). Removes an ignored target from the config, runs ss, validates findings, fixes the documentation, and commits."
 ---
 
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
-# Skill: Fix Documentation with swissshepherd
+# Skill: Fix End User Documentation With `swissshepherd`
 
 Fix Terraform provider documentation issues by removing targets from the swissshepherd ignore list, validating findings against the schema, and correcting the documentation.
 
