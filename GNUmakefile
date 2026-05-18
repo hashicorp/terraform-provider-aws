@@ -245,7 +245,6 @@ clean-tidy: prereq-go ## Clean up tidy
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 	fi ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
-	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
 	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
 	cd skaff && $$gover mod tidy && cd .. ; \
@@ -819,6 +818,14 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 	[ $$count -eq 0 ] || \
 		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
+swissshepherd: ## [CI] Run Swiss Shepherd checks
+	@echo "make: Running Swiss Shepherd checks..."
+	@swissshepherd --config .ci/swissshepherd-weak.hcl
+
+swissshepherd-count: ## [CI] Run Swiss Shepherd checks
+	@echo "make: Count of all Swiss Shepherd checks..."
+	@swissshepherd --config .ci/swissshepherd-full.hcl | grep -E '^(WARN|ERROR)' | wc -l
+
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
@@ -1011,14 +1018,11 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
 		-enable-enhanced-region-check
 
-tfsdk2fw: prereq-go ## Install tfsdk2fw
-	@echo "make: Installing tfsdk2fw..."
-	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
-
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
@@ -1037,7 +1041,6 @@ update: prereq-go ## Update dependencies
 	$(GO_VER) get -u ./...
 	$(GO_VER) mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
-	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
@@ -1263,6 +1266,8 @@ yamllint: ## [CI] YAML Linting / yamllint
 	sweeper-check \
 	sweeper-linked \
 	sweeper-unlinked \
+	swissshepherd \
+	swissshepherd-count \
 	t \
 	test \
 	test-compile \
@@ -1280,7 +1285,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	terraform-fmt \
 	tflint-init \
 	tfproviderdocs \
-	tfsdk2fw \
 	tools \
 	ts \
 	update \

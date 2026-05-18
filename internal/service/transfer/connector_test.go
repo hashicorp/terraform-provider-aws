@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTransferConnector_basic(t *testing.T) {
+func testAccConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -60,7 +60,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_sftpConfig(t *testing.T) {
+func testAccConnector_sftpConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -95,7 +95,7 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_securityPolicyName(t *testing.T) {
+func testAccConnector_securityPolicyName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -130,7 +130,7 @@ func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_disappears(t *testing.T) {
+func testAccConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -158,7 +158,7 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_egressConfig(t *testing.T) {
+func testAccConnector_egressConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -194,7 +194,7 @@ func TestAccTransferConnector_egressConfig(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_egressConfigUpdate(t *testing.T) {
+func testAccConnector_egressConfigUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -233,7 +233,7 @@ func TestAccTransferConnector_egressConfigUpdate(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_tags(t *testing.T) {
+func testAccConnector_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"

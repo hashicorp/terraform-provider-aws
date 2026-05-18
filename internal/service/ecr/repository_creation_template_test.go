@@ -19,6 +19,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// ROOT prefix is a per-registry singleton — only one template with prefix
+// "ROOT" can exist.
+func TestAccECRRepositoryCreationTemplate_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"root":           testAccRepositoryCreationTemplate_root,
+		"rootDataSource": testAccRepositoryCreationTemplateDataSource_root,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
 func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
@@ -176,7 +189,7 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 	})
 }
 
-func TestAccECRRepositoryCreationTemplate_root(t *testing.T) {
+func testAccRepositoryCreationTemplate_root(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecr_repository_creation_template.root"
 

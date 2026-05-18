@@ -94,7 +94,20 @@ func testAccAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAPNSChann
 	return &conf
 }
 
-func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
+// APNS tests share credentials from environment variables tied to a single
+// Apple Developer identity.
+func TestAccPinpointAPNSChannel_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basicCertificate": testAccAPNSChannel_basicCertificate,
+		"basicToken":       testAccAPNSChannel_basicToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAPNSChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
@@ -129,7 +142,7 @@ func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccPinpointAPNSChannel_basicToken(t *testing.T) {
+func testAccAPNSChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"

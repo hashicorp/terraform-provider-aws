@@ -92,7 +92,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 	resourceName := "aws_bedrock_guardrail_version.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var guardrailversion bedrock.GetGuardrailOutput
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
