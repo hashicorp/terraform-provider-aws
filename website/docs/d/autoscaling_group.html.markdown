@@ -65,7 +65,7 @@ This data source exports the following attributes in addition to the arguments a
             * `version` - Template version.
         * `override` - List of properties overriding the same properties in the launch template.
             * `instance_requirements` - List of instance requirements objects.
-                * `accelerator_count - List of objects describing the minimum and maximum number of accelerators for an instance type.
+                * `accelerator_count` - List of objects describing the minimum and maximum number of accelerators for an instance type.
                     * `min` - Minimum.
                     * `max` - Maximum.
                 * `accelerator_manufacturers` - List of accelerator manufacturer names.
