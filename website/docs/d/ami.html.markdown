@@ -46,7 +46,7 @@ This data source supports the following arguments:
 * `most_recent` - (Optional) If more than one result is returned, use the most recent AMI.
 * `executable_users` - (Optional) Limit search to users with *explicit* launch permission on the image. Valid items are the numeric account ID or `self`.
 * `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response. If false, no deprecated AMIs are included in the response. If no value is specified, the default value is false.
-* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-images in the AWS CLI reference][1]. See [`filter`](#filter) below.
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-images in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html). See [`filter`](#filter) below.
 * `allow_unsafe_filter` - (Optional) If true, allow unsafe filter values. With unsafe filters and `most_recent` set to `true`, a third party may introduce a new image which will be returned by this data source. Consider filtering by owner or image ID rather than setting this argument.
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned by AWS. This allows more advanced filtering not supported from the AWS API. This filtering is done locally on what AWS returns, and could have a performance impact if the result is large. Combine this with other options to narrow down the list AWS returns.
 * `uefi_data` - (Optional) Base64 representation of the non-volatile UEFI variable store.
@@ -96,7 +96,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `filter` Block
 
-* `name` - Name of the filter. For a full reference, check out [describe-images in the AWS CLI reference][1].
+* `name` - Name of the filter. For a full reference, check out [describe-images in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
 * `values` - Set of values that are accepted for the given filter.
 
 ### `block_device_mappings`
@@ -133,4 +133,3 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-[1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
