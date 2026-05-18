@@ -10,7 +10,7 @@ description: |-
 
 Manages the destination of data sent to `PutTraceSegments` by AWS X-Ray.
 
-~> **NOTE:** Removing this resource from Terraform has no effect on the destination configuration within AWS X-Ray.
+-> **Note:** Removing this resource from Terraform has no effect on the destination configuration within AWS X-Ray.
 
 ## Example Usage
 
