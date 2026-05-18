@@ -132,4 +132,3 @@ This data source exports the following attributes in addition to the arguments a
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
-

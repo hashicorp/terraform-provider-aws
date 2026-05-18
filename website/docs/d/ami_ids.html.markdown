@@ -46,7 +46,6 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the filter. For a full reference, check out [describe-images in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
 * `values` - Set of values that are accepted for the given filter.
 
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
