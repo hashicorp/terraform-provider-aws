@@ -54,17 +54,20 @@ type emailTemplateResource struct {
 
 func (r *emailTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		DeprecationMessage: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES (aws_ses_template or aws_sesv2_* resources). See the AWS End User Messaging migration guide for details.",
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"template_name": schema.StringAttribute{
-				Required: true,
+				Required:           true,
+				DeprecationMessage: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"email_template": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[emailTemplate](ctx),
+				CustomType:         fwtypes.NewListNestedObjectTypeOf[emailTemplate](ctx),
+				DeprecationMessage: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 				},
