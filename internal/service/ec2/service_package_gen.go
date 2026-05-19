@@ -42,6 +42,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newHostsDataSource,
+			TypeName: "aws_ec2_hosts",
+			Name:     "Hosts",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newServiceLinkVirtualInterfaceDataSource,
 			TypeName: "aws_ec2_service_link_virtual_interface",
 			Name:     "Service Link Virtual Interface",
