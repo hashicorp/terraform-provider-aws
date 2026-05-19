@@ -190,7 +190,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 		createResp.AccessKey.Status = awstypes.StatusTypeInactive
 	}
 
-	resourceAccessKeyReadResult(d, &awstypes.AccessKeyMetadata{
+	resourceAccessKeyFlatten(d, &awstypes.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
 		CreateDate:  createResp.AccessKey.CreateDate,
 		Status:      createResp.AccessKey.Status,
@@ -216,21 +216,12 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading IAM Access Key (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.ToString(key.AccessKeyId))
-
-	if key.CreateDate != nil {
-		d.Set("create_date", aws.ToTime(key.CreateDate).Format(time.RFC3339))
-	} else {
-		d.Set("create_date", nil)
-	}
-
-	d.Set(names.AttrStatus, key.Status)
-	d.Set("user", key.UserName)
+	resourceAccessKeyFlatten(d, key)
 
 	return diags
 }
 
-func resourceAccessKeyReadResult(d *schema.ResourceData, key *awstypes.AccessKeyMetadata) {
+func resourceAccessKeyFlatten(d *schema.ResourceData, key *awstypes.AccessKeyMetadata) {
 	d.SetId(aws.ToString(key.AccessKeyId))
 
 	if key.CreateDate != nil {
