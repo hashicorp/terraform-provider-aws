@@ -84,6 +84,13 @@ terraform-provider-aws/
 └── main.go                 # Entry point
 ```
 
+## Stack
+- Go 1.26+, AWS SDK for Go v2
+- Terraform Plugin Framework + Terraform Plugin SDKv2 ([muxed](https://developer.hashicorp.com/terraform/plugin/mux) provider)
+- Code generators in `internal/generate/`
+- Build system: GNU Make (see `GNUmakefile`)
+- Testing: Go standard `testing` package + [`terraform-plugin-testing` acceptance test framework](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests)
+
 ## Global Rules
 
 ### Non-negotiables
