@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `exclude_data_volume_tags` attributes to `policy_details` parameters configuration block
+```
