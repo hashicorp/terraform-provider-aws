@@ -6,6 +6,7 @@ package iam_test
 import (
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -19,6 +20,8 @@ import (
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+var accessKeyDisplayNameRegex = regexache.MustCompile(`^User: .+ - Access Key: .+$`)
 
 func TestAccIAMAccessKey_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -65,11 +68,11 @@ func TestAccIAMAccessKey_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_iam_access_key.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(accessKeyDisplayNameRegex)),
 					tfquerycheck.ExpectNoResourceObject("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_iam_access_key.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringRegexp(accessKeyDisplayNameRegex)),
 					tfquerycheck.ExpectNoResourceObject("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -117,7 +120,7 @@ func TestAccIAMAccessKey_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_iam_access_key.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(accessKeyDisplayNameRegex)),
 					querycheck.ExpectResourceKnownValues("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("create_date"), knownvalue.NotNull()),
