@@ -131,6 +131,11 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 #### Code generation
 - Run `make gen` after making changes to any annotations (`// @...` comments in Go files), any `internal/service/*/generate.go` source files, or `names/data/names_data.hcl`.
 
+## Error Handling
+- Wrap AWS errors with `fmt.Errorf("reading X (%s): %w", id, err)`.
+- Use `retry.NotFound()` to check for missing resources during Read.
+- Return early on error; don't accumulate diagnostics past the first fatal error.
+
 ### Working In The Repository
 
 #### Running commands
