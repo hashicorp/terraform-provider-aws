@@ -34,43 +34,53 @@ func resourceEmailChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		DeprecationMessage: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES (aws_ses_* or aws_sesv2_* resources). See the AWS End User Messaging migration guide for details.",
+
 		Schema: map[string]*schema.Schema{
 			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Required:   true,
+				ForceNew:   true,
+				Deprecated: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"configuration_set": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    true,
+				Deprecated: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"from_address": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:       schema.TypeString,
+				Required:   true,
+				Deprecated: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"identity": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
+				Deprecated:   "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"orchestration_sending_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+				Deprecated:   "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+				Deprecated:   "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"messages_per_second": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:       schema.TypeInt,
+				Computed:   true,
+				Deprecated: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 		},
 	}
