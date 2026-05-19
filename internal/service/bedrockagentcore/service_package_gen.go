@@ -126,6 +126,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newPolicyResource,
+			TypeName: "aws_bedrockagentcore_policy",
+			Name:     "Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newTokenVaultCMKResource,
 			TypeName: "aws_bedrockagentcore_token_vault_cmk",
 			Name:     "Token Vault CMK",
