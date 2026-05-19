@@ -78,6 +78,16 @@ Open the doc file (path is in the ss output) and apply fixes:
 
 #### Documentation style rules
 
+When adding or editing documentation:
+- Arguments: `* \`name\` - (Required) Description.` or `* \`name\` - (Optional) Description.`
+- Attributes: `* \`name\` - Description.` (no Required/Optional label)
+- Descriptions start with a verb or noun — never "A ", "An ", "The ", "Specifies ", "Indicates "
+- Boolean arguments: start with "Whether to..."
+- Keep alphabetical order within required/optional groups
+- Block sections use heading: `` ### `block_name` Block ``
+- Byline for arguments: "The following arguments are required:" / "The following arguments are optional:"
+- Byline for attributes: "In addition to all arguments above, the following attributes are exported:"
+
 Authoritative reference: [docs/end-user-documentation.md](../../../docs/end-user-documentation.md). When this skill and that document disagree, the document wins.
 
 ### Phase 5: Verify fix
