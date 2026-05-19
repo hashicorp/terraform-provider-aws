@@ -63,6 +63,8 @@ If a finding appears to be a swissshepherd bug (schema says one thing, ss report
 
 ### Phase 4: Fix the documentation
 
+**BOTH WARNINGS AND ERRORS** should be fixed!!
+
 Open the doc file (path is in the ss output) and apply fixes:
 
 | Finding | Fix |
