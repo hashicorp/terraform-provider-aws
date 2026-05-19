@@ -123,7 +123,9 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 ## Additional Guidelines
 
 ### Go language usage
-- TODO some things we always want
+- **GO USES TAB (`\t`) CHARACTERS TO INDENT**
+- **Use elegant Go, modern (Go 1.26+) idioms** (e.g., `slices.Contains()`)
+- **Go nuance**: Don't build single files, **build a package**
 
 ### Code generation
 - Run `make gen` after making changes to any annotations (`// @...` comments in Go files), any `internal/service/*/generate.go` source files, or `names/data/names_data.hcl`.
