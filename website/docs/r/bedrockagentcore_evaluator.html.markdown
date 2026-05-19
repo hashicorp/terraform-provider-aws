@@ -122,48 +122,48 @@ The following arguments are optional:
 * `kms_key_arn` - (Optional, Forces new resource) ARN of a customer-managed KMS key used to encrypt the evaluator's sensitive data. Only symmetric encryption keys are supported.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `evaluator_config`
+### `evaluator_config` Block
 
 Exactly one of `llm_as_a_judge` or `code_based` must be specified.
 
-* `llm_as_a_judge` - (Optional) LLM-as-a-Judge configuration that uses a foundation model to score agent performance. See [`llm_as_a_judge`](#llm_as_a_judge) below.
-* `code_based` - (Optional) Code-based evaluator configuration that delegates evaluation to a customer-managed Lambda function. See [`code_based`](#code_based) below.
+* `code_based` - (Optional) Code-based evaluator configuration that delegates evaluation to a customer-managed Lambda function. See [`code_based`](#code_based-block) below.
+* `llm_as_a_judge` - (Optional) LLM-as-a-Judge configuration that uses a foundation model to score agent performance. See [`llm_as_a_judge`](#llm_as_a_judge-block) below.
 
-### `llm_as_a_judge`
+### `llm_as_a_judge` Block
 
 * `instructions` - (Required) Evaluation instructions that guide the model in assessing agent performance.
-* `rating_scale` - (Required) Rating scale used to score agent performance. See [`rating_scale`](#rating_scale) below.
-* `model_config` - (Required) Model configuration that specifies which foundation model to use. See [`model_config`](#model_config) below.
+* `model_config` - (Required) Model configuration that specifies which foundation model to use. See [`model_config`](#model_config-block) below.
+* `rating_scale` - (Required) Rating scale used to score agent performance. See [`rating_scale`](#rating_scale-block) below.
 
-### `rating_scale`
+### `rating_scale` Block
 
 Exactly one of `numerical` or `categorical` must be specified.
 
-* `numerical` - (Optional) One or more numerical rating scale definitions. Each entry supports `definition`, `value` (>= 0), and `label` (length 1–100).
 * `categorical` - (Optional) One or more categorical rating scale definitions. Each entry supports `definition` and `label` (length 1–100).
+* `numerical` - (Optional) One or more numerical rating scale definitions. Each entry supports `definition`, `value` (>= 0), and `label` (length 1–100).
 
-### `model_config`
+### `model_config` Block
 
-* `bedrock_evaluator_model_config` - (Required) Amazon Bedrock model configuration. See [`bedrock_evaluator_model_config`](#bedrock_evaluator_model_config) below.
+* `bedrock_evaluator_model_config` - (Required) Amazon Bedrock model configuration. See [`bedrock_evaluator_model_config`](#bedrock_evaluator_model_config-block) below.
 
-### `bedrock_evaluator_model_config`
+### `bedrock_evaluator_model_config` Block
 
-* `model_id` - (Required) Identifier of the Amazon Bedrock model to use for evaluation.
 * `additional_model_request_fields` - (Optional) JSON-encoded additional model-specific request fields to customize model behavior beyond the standard inference configuration.
-* `inference_config` - (Optional) Inference configuration parameters that control model behavior during evaluation. See [`inference_config`](#inference_config) below.
+* `inference_config` - (Optional) Inference configuration parameters that control model behavior during evaluation. See [`inference_config`](#inference_config-block) below.
+* `model_id` - (Required) Identifier of the Amazon Bedrock model to use for evaluation.
 
-### `inference_config`
+### `inference_config` Block
 
 * `max_tokens` - (Optional) Maximum number of tokens to generate in the model response. Must be at least 1.
+* `stop_sequences` - (Optional) List of sequences that cause the model to stop generating tokens.
 * `temperature` - (Optional) Temperature value that controls randomness. Range 0–1.
 * `top_p` - (Optional) Top-p sampling parameter. Range 0–1.
-* `stop_sequences` - (Optional) List of sequences that cause the model to stop generating tokens.
 
-### `code_based`
+### `code_based` Block
 
-* `lambda_config` - (Required) Lambda function configuration. See [`lambda_config`](#lambda_config) below.
+* `lambda_config` - (Required) Lambda function configuration. See [`lambda_config`](#lambda_config-block) below.
 
-### `lambda_config`
+### `lambda_config` Block
 
 * `lambda_arn` - (Required) ARN of the Lambda function that implements the evaluation logic.
 * `lambda_timeout_in_seconds` - (Optional) Timeout in seconds for the Lambda function invocation. Defaults to 60. Range 1–300.
@@ -172,13 +172,13 @@ Exactly one of `numerical` or `categorical` must be specified.
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `created_at` - Timestamp when the evaluator was created.
 * `evaluator_arn` - ARN of the evaluator.
 * `evaluator_id` - Unique identifier of the evaluator.
-* `status` - Current status of the evaluator.
-* `created_at` - Timestamp when the evaluator was created.
-* `updated_at` - Timestamp when the evaluator was last updated.
 * `locked_for_modification` - Whether the evaluator is locked for modification due to being referenced by active online evaluation configurations.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `status` - Current status of the evaluator.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `updated_at` - Timestamp when the evaluator was last updated.
 
 ## Timeouts
 

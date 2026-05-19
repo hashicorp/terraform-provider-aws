@@ -345,7 +345,7 @@ func TestAccBedrockAgentCoreEvaluator_kmsKey(t *testing.T) {
 					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_key_arn"), tfknownvalue.RegionalARNRegexp("kms", regexache.MustCompile(`key/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyARN), tfknownvalue.RegionalARNRegexp("kms", regexache.MustCompile(`key/.+`))),
 				},
 			},
 		},
