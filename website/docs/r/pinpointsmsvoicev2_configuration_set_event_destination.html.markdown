@@ -5,106 +5,123 @@ page_title: "AWS: aws_pinpointsmsvoicev2_configuration_set_event_destination"
 description: |-
   Manages an AWS End User Messaging SMS Configuration Set Event Destination.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_pinpointsmsvoicev2_configuration_set_event_destination
 
 Manages an AWS End User Messaging SMS Configuration Set Event Destination.
 
+An event destination is a location where messaging events are published. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured per event destination.
+
 ## Example Usage
 
-### Basic Usage
+### CloudWatch Logs Destination
 
 ```terraform
+resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
+  name = "example-configuration-set"
+}
+
 resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
+  configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.example.name
+  event_destination_name = "example"
+  matching_event_types   = ["ALL"]
+
+  cloudwatch_logs_destination {
+    iam_role_arn  = aws_iam_role.example.arn
+    log_group_arn = aws_cloudwatch_log_group.example.arn
+  }
+}
+```
+
+### Kinesis Firehose Destination
+
+```terraform
+resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
+  name = "example-configuration-set"
+}
+
+resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
+  configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.example.name
+  event_destination_name = "example"
+  matching_event_types   = ["ALL"]
+
+  kinesis_firehose_destination {
+    delivery_stream_arn = aws_kinesis_firehose_delivery_stream.example.arn
+    iam_role_arn        = aws_iam_role.example.arn
+  }
+}
+```
+
+### SNS Destination
+
+```terraform
+resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
+  name = "example-configuration-set"
+}
+
+resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
+  configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.example.name
+  event_destination_name = "example"
+  matching_event_types   = ["ALL"]
+
+  sns_destination {
+    topic_arn = aws_sns_topic.example.arn
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `example_arg` - (Required) Brief description of the required argument.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `configuration_set_name` - (Required) Name of the configuration set this event destination belongs to. Changing this forces a new resource.
+* `event_destination_name` - (Required) Name of the event destination. Changing this forces a new resource.
+* `matching_event_types` - (Required) Event types for which the destination receives records. See the [AWS API reference](https://docs.aws.amazon.com/pinpoint/latest/apireference_smsvoicev2/API_CreateEventDestination.html#pinpoint-CreateEventDestination-request-MatchingEventTypes) for valid values.
+* `enabled` - (Optional) Whether the event destination is enabled. Defaults to `true`.
+* `cloudwatch_logs_destination` - (Optional) Send events to Amazon CloudWatch Logs. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured. See [`cloudwatch_logs_destination` Block](#cloudwatch_logs_destination-block) for details.
+* `kinesis_firehose_destination` - (Optional) Send events to Amazon Data Firehose. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured. See [`kinesis_firehose_destination` Block](#kinesis_firehose_destination-block) for details.
+* `sns_destination` - (Optional) Send events to Amazon SNS. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured. See [`sns_destination` Block](#sns_destination-block) for details.
 
-The following arguments are optional:
+### `cloudwatch_logs_destination` Block
 
-* `optional_arg` - (Optional) Brief description of the optional argument.
+The `cloudwatch_logs_destination` configuration block supports the following arguments:
+
+* `iam_role_arn` - (Required) ARN of the IAM role that End User Messaging SMS assumes to write to the log group.
+* `log_group_arn` - (Required) ARN of the Amazon CloudWatch log group that receives the events.
+
+### `kinesis_firehose_destination` Block
+
+The `kinesis_firehose_destination` configuration block supports the following arguments:
+
+* `delivery_stream_arn` - (Required) ARN of the Amazon Data Firehose delivery stream that receives the events.
+* `iam_role_arn` - (Required) ARN of the IAM role that End User Messaging SMS assumes to write to the delivery stream.
+
+### `sns_destination` Block
+
+The `sns_destination` configuration block supports the following arguments:
+
+* `topic_arn` - (Required) ARN of the Amazon SNS topic that receives the events.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Configuration Set Event Destination.
-* `example_attribute` - Brief description of the attribute.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `configuration_set_arn` - ARN of the parent configuration set.
 
 ## Import
 
-In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an event destination using `configuration_set_name,event_destination_name`. For example:
 
 ```terraform
 import {
   to = aws_pinpointsmsvoicev2_configuration_set_event_destination.example
-  identity = {
-<!---
-Add only required attributes in this example.
---->
-  }
-}
-
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
-  ### Configuration omitted for brevity ###
+  id = "example-configuration-set,example"
 }
 ```
 
-### Identity Schema
-
-#### Required
-<!---
-Required attributes here:
-> ARN Identity:
-* `arn` - ARN of the Configuration Set Event Destination.
-> Parameterized Identity:
-* `example_id_arg` - ID argument of the Configuration Set Event Destination.
-> Singleton Identity: no required attributes.
---->
-
-#### Optional
-<!---
-Optional attributes here:
-> ARN Identity: no optional attributes.
-> Parameterized Identity and Singleton Identity: remove `region` if the resource is global.
---->
-* `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import End User Messaging SMS Configuration Set Event Destination using the `example_id_arg`. For example:
-
-```terraform
-import {
-  to = aws_pinpointsmsvoicev2_configuration_set_event_destination.example
-  id = "configuration_set_event_destination-id-12345678"
-}
-```
-
-Using `terraform import`, import End User Messaging SMS Configuration Set Event Destination using the `example_id_arg`. For example:
+Using `terraform import`, import an event destination using `configuration_set_name,event_destination_name`. For example:
 
 ```console
-% terraform import aws_pinpointsmsvoicev2_configuration_set_event_destination.example configuration_set_event_destination-id-12345678
+% terraform import aws_pinpointsmsvoicev2_configuration_set_event_destination.example "example-configuration-set,example"
 ```

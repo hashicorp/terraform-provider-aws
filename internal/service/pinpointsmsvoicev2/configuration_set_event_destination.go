@@ -68,7 +68,7 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 				},
 			},
 			"configuration_set_name": schema.StringAttribute{
-				Description: "Name of the configuration set this event destination belongs to. Pass the bare name; AWS's CreateEventDestination rejects the ARN form with ResourceNotFoundException.",
+				Description: "Name of the configuration set this event destination belongs to.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -87,7 +87,7 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 				},
 			},
 			"event_destination_name": schema.StringAttribute{
-				Description: "Name of the event destination. Unique within the configuration set.",
+				Description: "Name of the event destination.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -98,7 +98,7 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 				},
 			},
 			"matching_event_types": schema.SetAttribute{
-				Description: "Event types for which the destination receives records. `TEXT_SENT` is not supported and is rejected by the AWS API at apply time.",
+				Description: "Event types for which the destination receives records.",
 				CustomType:  fwtypes.NewSetTypeOf[fwtypes.StringEnum[awstypes.EventType]](ctx),
 				Required:    true,
 				ElementType: fwtypes.StringEnumType[awstypes.EventType](),
@@ -121,7 +121,7 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 							Required:    true,
 						},
 						"log_group_arn": schema.StringAttribute{
-							Description: "ARN of the CloudWatch log group that receives the events.",
+							Description: "ARN of the Amazon CloudWatch log group that receives the events.",
 							CustomType:  fwtypes.ARNType,
 							Required:    true,
 						},
@@ -136,7 +136,7 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"delivery_stream_arn": schema.StringAttribute{
-							Description: "ARN of the Firehose delivery stream that receives the events.",
+							Description: "ARN of the Amazon Data Firehose delivery stream that receives the events.",
 							CustomType:  fwtypes.ARNType,
 							Required:    true,
 						},
@@ -156,7 +156,7 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrTopicARN: schema.StringAttribute{
-							Description: "ARN of the SNS topic that receives the events.",
+							Description: "ARN of the Amazon SNS topic that receives the events.",
 							CustomType:  fwtypes.ARNType,
 							Required:    true,
 						},
