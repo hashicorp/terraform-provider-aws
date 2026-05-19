@@ -5,7 +5,6 @@ package iam
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -15,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
