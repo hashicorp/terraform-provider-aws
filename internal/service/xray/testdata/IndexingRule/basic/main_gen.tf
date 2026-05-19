@@ -1,8 +1,16 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_xray_indexing_rule" "test" {
+  name = var.rName
 
-Missing block "body" in template
+  rule {
+    probabilistic {
+      desired_sampling_percentage = 0.66
+    }
+  }
+}
+
 variable "rName" {
   description = "Name for resource"
   type        = string
