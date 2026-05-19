@@ -35,6 +35,13 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 | [fixdocs](./.agents/skills/fixdocs/SKILL.md) | Fix end user documentation with `swissshepherd`. |
 | [reviewdocs](./.agents/skills/reviewdocs/SKILL.md) | Review a PR's end user documentation updates. |
 
+## Stack
+- Go 1.26+, AWS SDK for Go v2.
+- Terraform Plugin Framework + Terraform Plugin SDKv2 ([muxed](https://developer.hashicorp.com/terraform/plugin/mux) provider).
+- Code generators in `internal/generate/`.
+- Build system: GNU Make (see `GNUmakefile`).
+- Testing: Go standard `testing` package + [`terraform-plugin-testing` acceptance test framework](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests).
+
 ## Code Structure (The important parts)
 
 ```
@@ -83,13 +90,6 @@ terraform-provider-aws/
 ├── GNUmakefile             # Build and test commands
 └── main.go                 # Entry point
 ```
-
-## Stack
-- Go 1.26+, AWS SDK for Go v2.
-- Terraform Plugin Framework + Terraform Plugin SDKv2 ([muxed](https://developer.hashicorp.com/terraform/plugin/mux) provider).
-- Code generators in `internal/generate/`.
-- Build system: GNU Make (see `GNUmakefile`).
-- Testing: Go standard `testing` package + [`terraform-plugin-testing` acceptance test framework](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests).
 
 ## Important: Dual Framework
 
