@@ -8,6 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,7 +58,7 @@ func histogramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bin_count_limit": intBetweenSchema(attrOptional, 0, 1000),
+													"bin_count_limit": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 0, 1000),
 													names.AttrValue: {
 														Type:         schema.TypeFloat,
 														Optional:     true,
@@ -66,7 +67,7 @@ func histogramVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_bin_type": stringEnumSchema[awstypes.HistogramBinType](attrOptional),
+										"selected_bin_type": sdkschema.StringEnumSchema[awstypes.HistogramBinType](sdkschema.AttrOptional),
 										"start_value": {
 											Type:     schema.TypeFloat,
 											Optional: true,
@@ -117,7 +118,7 @@ func histogramVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HistogramConfiguration.html
 					Type:     schema.TypeList,
@@ -148,7 +149,7 @@ func histogramVisualDataSourceSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_bin_type": stringEnumDataSourceSchema[awstypes.HistogramBinType](),
+										"selected_bin_type": sdkschema.StringEnumDataSourceSchema[awstypes.HistogramBinType](),
 										"start_value":       floatComputedOnly(),
 									},
 								},
