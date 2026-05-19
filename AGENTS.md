@@ -204,3 +204,13 @@ New resources use the Terraform Plugin Framework pattern:
 - Do not add new external dependencies without explicit approval.
 - Beware of run acceptance tests (`make testacc`) — they create real AWS resources.
 - The `website/` directory follows different conventions; see `docs/end-user-documentation.md`.
+
+## Verification
+
+Before finishing:
+1. `make build` — must compile cleanly.
+2. `make lint` — zero warnings.
+3. `make test` — all unit tests pass.
+4. `make gen` — if you changed annotations or generators.
+5. `make copyright-fix` — if you added new files.
+6. `make swissshepherd` — if you changed documentation.
