@@ -18,7 +18,7 @@ This project uses specialized personas for different tasks.
 - **`@maintainer`**: [Maintainer Persona](./.agents/maintainer.md) - Steward of the project, responsible for both internal and external quality. Reviews contributions. Maintains provider-level features, including new Terraform language constructs.
 - **`@tcm`**: [TCM Persona](./.agents/tcm.md) - Triages incoming GitHub issues and PRs. Engages with community members to answer technical and process questions. Suggests workarounds and alternatives to reported bugs.
 
-### Global Rules
+### Registry Rules
 - Always use the requested persona for tasks.
 - If no persona is specified, default to `@contributor`.
 - A persona defines a role with a perspective and responsibilities.
@@ -91,9 +91,8 @@ terraform-provider-aws/
 - Build system: GNU Make (see `GNUmakefile`).
 - Testing: Go standard `testing` package + [`terraform-plugin-testing` acceptance test framework](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests).
 
-## Conventions
+## Important: Dual Framework
 
-### Important: Dual Framework
 This provider uses TWO Terraform plugin frameworks simultaneously:
 - **Terraform Plugin SDKv2** (older resources) — uses `schema.Resource`, `d.Set()`, `d.Get()`
 - **Terraform Plugin Framework** (newer resources) — uses `resource.Resource`, plan modifiers, AutoFlex
@@ -101,12 +100,23 @@ This provider uses TWO Terraform plugin frameworks simultaneously:
 When modifying an existing resource, use the SAME framework it already uses.
 When creating a new resource, use the Terraform Plugin Framework.
 
-### Non-negotiables
+## Conventions
+
+### Non-negotiable Rules
 - Verification is a hard exit criterion for every task. Without it, the task is not done.
 - Prefer the boring, obvious solution.
 - Touch only what you’re asked to touch.
+- Code quality must not be compromised.
+  - Every change must build successfully and pass all tests. Use `make test` to run unit tests.
+  - Code must be lint-free. Use `make lint` to check for linting issues.
+- Follow existing conventions.
+  - Consistency is key to maintaining a readable and maintainable codebase.
+  - Before writing any code, analyze the existing codebase to understand and adopt its naming conventions, coding style, and language usage.
+- This repository contains a comprehensive set of utility packages. Look for opportunities to use them before writing new code.
+  - Look in the `internal/` directory (excluding `internal/generate/` and `internal/services/`) for broadly reusable utilities.
+  - Only add new dependencies as a last resort, or when explicitly requested.
 
-### AI Usage Policy
+#### AI usage policy
 
 Per `docs/ai-usage.md`:
 - Disclose AI use in the PR description.
@@ -114,22 +124,7 @@ Per `docs/ai-usage.md`:
 - The human PR author is fully responsible for all submitted code and must understand it completely.
 - Human reviewers own the final code and must understand it fully.
 
-### Guiding Principles
-
-#### Follow existing conventions
-Consistency is key to maintaining a readable and maintainable codebase.
-Before writing any code, analyze the existing codebase to understand and adopt its naming conventions, coding style, and language usage.
-
-#### Avoid code duplication and minimize dependencies
-This repository contains a comprehensive set of utility packages. Look for opportunities to use them before writing new code.
-- Look in the `internal/` directory (excluding `internal/generate/` and `internal/services/`) for broadly reusable utilities
-- Only add new dependencies as a last resort, or when explicitly requested
-
-#### Code quality must not be compromised
-- Every change must build successfully and pass all tests. Use `make test` to run unit tests.
-- Code must be lint-free. Use `make lint` to check for linting issues.
-
-### Additional Guidelines
+### Follow These Conventions
 
 #### Go language usage
 - **GO USES TAB (`\t`) CHARACTERS TO INDENT**
@@ -144,7 +139,7 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 - Use `retry.NotFound()` to check for missing resources during Read.
 - Return early on error; don't accumulate diagnostics past the first fatal error.
 
-### Working In The Repository
+### Guidelines
 
 #### Running commands
 - Confirm that any commands you intend to run are safe before running them.
@@ -155,7 +150,7 @@ This repository contains a comprehensive set of utility packages. Look for oppor
   - Any other commands may be unsafe and should not be run without confirmation.
 
 #### Running tests
-- Every PR must leave tests in a passing state. This is non-negotiable.
+- Every PR must leave tests in a passing state.
 - All existing tests must pass.
   - Use `make test` to run unit tests.
   - If your change breaks an existing test, fix it.
