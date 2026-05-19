@@ -10,6 +10,7 @@ var (
 	ResourceAPIKeyCredentialProvider = newAPIKeyCredentialProviderResource
 	ResourceBrowser                  = newBrowserResource
 	ResourceCodeInterpreter          = newCodeInterpreterResource
+	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayTarget            = newGatewayTargetResource
 	ResourceMemory                   = newMemoryResource
@@ -25,6 +26,7 @@ var (
 	FindAPIKeyCredentialProviderByName   = findAPIKeyCredentialProviderByName
 	FindBrowserByID                      = findBrowserByID
 	FindCodeInterpreterByID              = findCodeInterpreterByID
+	FindEvaluatorByID                    = findEvaluatorByID
 	FindGatewayByID                      = findGatewayByID
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
 	FindMemoryByID                       = findMemoryByID
