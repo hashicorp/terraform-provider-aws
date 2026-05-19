@@ -1,43 +1,45 @@
 ---
 subcategory: "CloudWatch Observability Admin"
 layout: "aws"
-page_title: "AWS: aws_observabilityadmin_telemetry_rule"
+page_title: "AWS: aws_observabilityadmin_telemetry_rule_for_organization"
 description: |-
-  Manages an AWS CloudWatch Observability Admin Telemetry Rule.
+  Manages an AWS CloudWatch Observability Admin Telemetry Rule for Organization.
 ---
 
-# Resource: aws_observabilityadmin_telemetry_rule
+# Resource: aws_observabilityadmin_telemetry_rule_for_organization
 
-Manages an AWS CloudWatch Observability Admin Telemetry Rule.
+Manages an AWS CloudWatch Observability Admin Telemetry Rule for Organization.
 
-~> **NOTE:** Before using this resource, telemetry evaluation must be enabled for your AWS account. You can use the [`aws_observabilityadmin_telemetry_evaluation`](observabilityadmin_telemetry_evaluation.html) or [`aws_observabilityadmin_telemetry_evaluation_for_organization`](observabilityadmin_telemetry_evaluation_for_organization.html) resource to enable it.
+~> **NOTE:** Before using this resource, telemetry evaluation for organization must be enabled for your AWS organization. You can use the [`aws_observabilityadmin_telemetry_evaluation_for_organization`](observabilityadmin_telemetry_evaluation_for_organization.html) resource to enable it.
+
+~> **NOTE:** This resource can only be used in the organization management account.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_observabilityadmin_telemetry_evaluation" "example" {}
+resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "example" {}
 
-resource "aws_observabilityadmin_telemetry_rule" "example" {
-  rule_name = "example-telemetry-rule"
+resource "aws_observabilityadmin_telemetry_rule_for_organization" "example" {
+  rule_name = "example-org-telemetry-rule"
 
   rule {
     telemetry_type = "Logs"
     resource_type  = "AWS::EC2::VPC"
   }
 
-  depends_on = [aws_observabilityadmin_telemetry_evaluation.example]
+  depends_on = [aws_observabilityadmin_telemetry_evaluation_for_organization.example]
 }
 ```
 
 ### With Tags
 
 ```terraform
-resource "aws_observabilityadmin_telemetry_evaluation" "example" {}
+resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "example" {}
 
-resource "aws_observabilityadmin_telemetry_rule" "example" {
-  rule_name = "vpc-logs-rule"
+resource "aws_observabilityadmin_telemetry_rule_for_organization" "example" {
+  rule_name = "vpc-logs-org-rule"
 
   rule {
     telemetry_type = "Logs"
@@ -46,10 +48,10 @@ resource "aws_observabilityadmin_telemetry_rule" "example" {
 
   tags = {
     Environment = "production"
-    Purpose     = "monitoring"
+    Purpose     = "organization-monitoring"
   }
 
-  depends_on = [aws_observabilityadmin_telemetry_evaluation.example]
+  depends_on = [aws_observabilityadmin_telemetry_evaluation_for_organization.example]
 }
 ```
 
@@ -57,7 +59,7 @@ resource "aws_observabilityadmin_telemetry_rule" "example" {
 
 This resource supports the following arguments:
 
-* `rule_name` - (Required) Name of the telemetry rule. Must be between 1 and 100 characters and contain only alphanumeric characters, hyphens, underscores, periods, hash symbols, and forward slashes.
+* `rule_name` - (Required) Name of the telemetry rule for organization. Must be between 1 and 100 characters and contain only alphanumeric characters, hyphens, underscores, periods, hash symbols, and forward slashes.
 * `rule` - (Required) Configuration block for the telemetry rule. See [rule](#rule) below.
 * `region` - (Optional) AWS region. If not specified, the provider region is used.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -73,7 +75,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `rule_arn` - ARN of the telemetry rule.
+* `rule_arn` - ARN of the telemetry rule for organization.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -90,13 +92,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_observabilityadmin_telemetry_rule.example
+  to = aws_observabilityadmin_telemetry_rule_for_organization.example
   identity = {
-    rule_name = "example-telemetry-rule"
+    rule_name = "example-org-telemetry-rule"
   }
 }
 
-resource "aws_observabilityadmin_telemetry_rule" "example" {
+resource "aws_observabilityadmin_telemetry_rule_for_organization" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -112,17 +114,17 @@ resource "aws_observabilityadmin_telemetry_rule" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Admin Telemetry Rules using `rule_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Admin Telemetry Rules for Organization using `rule_name`. For example:
 
 ```terraform
 import {
-  to = aws_observabilityadmin_telemetry_rule.example
-  id = "example-telemetry-rule"
+  to = aws_observabilityadmin_telemetry_rule_for_organization.example
+  id = "example-org-telemetry-rule"
 }
 ```
 
-Using `terraform import`, import CloudWatch Observability Admin Telemetry Rules using `rule_name`. For example:
+Using `terraform import`, import CloudWatch Observability Admin Telemetry Rules for Organization using `rule_name`. For example:
 
 ```console
-% terraform import aws_observabilityadmin_telemetry_rule.example example-telemetry-rule
+% terraform import aws_observabilityadmin_telemetry_rule_for_organization.example example-org-telemetry-rule
 ```
