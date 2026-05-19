@@ -16,10 +16,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.16
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.23
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.18
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.38.3
-	github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.14
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.15
 	github.com/aws/aws-sdk-go-v2/service/amp v1.42.11
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.38.16
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.3
@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.14
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.11
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.73.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.23
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.15
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.14
@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.23
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.3
-	github.com/aws/aws-sdk-go-v2/service/connect v1.173.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.174.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.11
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.15
@@ -106,10 +106,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.302.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.303.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.57.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.15
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.79.1
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.80.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.16
 	github.com/aws/aws-sdk-go-v2/service/eks v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.52.2
@@ -123,7 +123,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.25
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/evs v1.8.1
+	github.com/aws/aws-sdk-go-v2/service/evs v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.33.23
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.16
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.22
@@ -142,7 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.22
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.6
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.16
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/iot v1.73.0
@@ -171,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.91.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.23
-	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.23
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.23
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.16
@@ -206,7 +206,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.109.0
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.110.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.11
 	github.com/aws/aws-sdk-go-v2/service/rds v1.118.2
