@@ -38,6 +38,7 @@ import (
 // @Testing(checkDestroyNoop=true)
 // @Testing(generator=false)
 // @Testing(serialize=true)
+// @Testing(plannableImportAction="Update")
 func newIndexingRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexingRuleResource{}
 
