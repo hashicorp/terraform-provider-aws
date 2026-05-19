@@ -1,3 +1,7 @@
 ```release-note:bug
-resource/aws_s3_bucket: Fix `InvalidRequest: SourceSelectionCriteria cannot be empty` and similar errors on unrelated bucket updates (e.g. `tags`) when replication is managed by the dedicated `aws_s3_bucket_replication_configuration` resource using `replica_modifications`. The bucket resource now defers entirely to the dedicated standalone resources (`aws_s3_bucket_replication_configuration`, `aws_s3_bucket_versioning`, `aws_s3_bucket_logging`, `aws_s3_bucket_lifecycle_configuration`, `aws_s3_bucket_server_side_encryption_configuration`, `aws_s3_bucket_object_lock_configuration`, `aws_s3_bucket_cors_configuration`, `aws_s3_bucket_website_configuration`, `aws_s3_bucket_acl`, `aws_s3_bucket_policy`, `aws_s3_bucket_accelerate_configuration`, `aws_s3_bucket_request_payment_configuration`) when the corresponding deprecated nested attribute is not set in configuration
+resource/aws_s3_bucket: Fix `InvalidRequest: SourceSelectionCriteria cannot be empty` errors on unrelated updates (e.g. `tags`) when replication is managed by the dedicated `aws_s3_bucket_replication_configuration` resource using `replica_modifications`
+```
+
+```release-note:bug
+resource/aws_s3_bucket: Defer to the corresponding dedicated standalone resource for each deprecated nested attribute (`acceleration_status`, `acl`, `cors_rule`, `grant`, `lifecycle_rule`, `logging`, `object_lock_configuration`, `policy`, `replication_configuration`, `request_payer`, `server_side_encryption_configuration`, `versioning`, `website`) when the attribute is not set in configuration, preventing similar fights between the bucket resource and its standalone counterparts
 ```
