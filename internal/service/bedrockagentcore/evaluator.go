@@ -89,7 +89,7 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 				CustomType: fwtypes.StringEnumType[awstypes.EvaluatorLevel](),
 				Required:   true,
 			},
-			"kms_key_arn": schema.StringAttribute{
+			names.AttrKMSKeyARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
@@ -99,7 +99,7 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 			"locked_for_modification": schema.BoolAttribute{
 				Computed: true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
@@ -161,7 +161,7 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 															"definition": schema.StringAttribute{
 																Required: true,
 															},
-															"value": schema.Float64Attribute{
+															names.AttrValue: schema.Float64Attribute{
 																Required: true,
 																Validators: []validator.Float64{
 																	float64validator.AtLeast(0),
