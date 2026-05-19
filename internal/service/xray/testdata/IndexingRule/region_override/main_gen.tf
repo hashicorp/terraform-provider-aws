@@ -4,7 +4,7 @@
 resource "aws_xray_indexing_rule" "test" {
   region = var.region
 
-  name = var.rName
+  name = "Default"
 
   rule {
     probabilistic {
@@ -13,11 +13,6 @@ resource "aws_xray_indexing_rule" "test" {
   }
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"

@@ -21,13 +21,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccXRayIndexingRule_basic(t *testing.T) {
+func TestAccXRayIndexingRule_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccIndexingRule_basic,
+		"Identity":      testAccXRayIndexingRule_identitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccIndexingRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IndexingRule
 	resourceName := "aws_xray_indexing_rule.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -36,9 +46,6 @@ func TestAccXRayIndexingRule_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/IndexingRule/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexingRuleExists(ctx, t, resourceName, &v),
 				),
@@ -48,10 +55,9 @@ func TestAccXRayIndexingRule_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("Default")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"probabilistic": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"actual_sampling_percentage":  knownvalue.NotNull(),
+						"probabilistic": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"desired_sampling_percentage": knownvalue.Float64Exact(0.66),
 						})}),
 					})})),

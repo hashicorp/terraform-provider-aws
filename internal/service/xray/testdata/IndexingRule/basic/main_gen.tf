@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_xray_indexing_rule" "test" {
-  name = var.rName
+  name = "Default"
 
   rule {
     probabilistic {
@@ -11,8 +11,3 @@ resource "aws_xray_indexing_rule" "test" {
   }
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

@@ -1,6 +1,6 @@
 resource "aws_xray_indexing_rule" "test" {
 {{- template "region" }}
-  name = var.rName
+  name = "Default"
 
   rule {
     probabilistic {

@@ -36,6 +36,8 @@ import (
 // @Testing(importStateIdAttribute="name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.IndexingRule")
 // @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
+// @Testing(serialize=true)
 func newIndexingRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexingRuleResource{}
 
