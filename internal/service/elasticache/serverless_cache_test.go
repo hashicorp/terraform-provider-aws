@@ -732,7 +732,7 @@ func TestAccElastiCacheServerlessCache_modifyMultipleParameters_redis(t *testing
 				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_modifyMultipleParameters(rName, tfelasticache.EngineRedis, "7", "test description updated", 5),
+				Config: testAccServerlessCacheConfig_modifyMultipleParametersWithoutLimits(rName, tfelasticache.EngineRedis, "7", "test description updated", 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
@@ -800,7 +800,7 @@ func TestAccElastiCacheServerlessCache_modifyMultipleParameters_valkey(t *testin
 				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_modifyMultipleParameters(rName, tfelasticache.EngineValkey, "7", "test description updated", 5),
+				Config: testAccServerlessCacheConfig_modifyMultipleParametersWithoutLimits(rName, tfelasticache.EngineValkey, "7", "test description updated", 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
@@ -1331,37 +1331,35 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName, tags)
 }
 
-func testAccServerlessCacheConfig_modifyMultipleParameters(rName, engine, majorEngineVersion, description string, snapshotRetention int, cacheUsageLimitOpts ...int) string {
-	dataStorageMax := 0
-	ecpuPerSecMax := 0
-
-	if len(cacheUsageLimitOpts) == 2 {
-		dataStorageMax = cacheUsageLimitOpts[0]
-		ecpuPerSecMax = cacheUsageLimitOpts[1]
-	}
-
-	cacheUsageLimits := ""
-	if dataStorageMax > 0 && ecpuPerSecMax > 0 {
-		cacheUsageLimits = fmt.Sprintf(`
-  cache_usage_limits {
-    data_storage {
-      maximum = %d
-      unit    = "GB"
-    }
-    ecpu_per_second {
-      maximum = %d
-    }
-  }`, dataStorageMax, ecpuPerSecMax)
-	}
-
+func testAccServerlessCacheConfig_modifyMultipleParameters(rName, engine, majorEngineVersion, description string, snapshotRetention, dataStorage, ecpuPerSec int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
   name                     = %[1]q
   engine                   = %[2]q
-  major_engine_version 	   = %[3]q
-  description 		       = %[4]q 
+  major_engine_version     = %[3]q
+  description              = %[4]q
   snapshot_retention_limit = %[5]d
-  %[6]s
+  cache_usage_limits {
+    data_storage {
+      maximum = %[6]d
+      unit    = "GB"
+    }
+    ecpu_per_second {
+      maximum = %[7]d
+    }
+  }
 }
-`, rName, engine, majorEngineVersion, description, snapshotRetention, cacheUsageLimits)
+`, rName, engine, majorEngineVersion, description, snapshotRetention, dataStorage, ecpuPerSec)
+}
+
+func testAccServerlessCacheConfig_modifyMultipleParametersWithoutLimits(rName, engine, majorEngineVersion, description string, snapshotRetention int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  name                     = %[1]q
+  engine                   = %[2]q
+  major_engine_version     = %[3]q
+  description              = %[4]q
+  snapshot_retention_limit = %[5]d
+}
+`, rName, engine, majorEngineVersion, description, snapshotRetention)
 }

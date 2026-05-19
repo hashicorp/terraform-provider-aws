@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_serverless_cache: Fix update to send one field per `ModifyServerlessCache` API call instead of batching multiple fields
+```
