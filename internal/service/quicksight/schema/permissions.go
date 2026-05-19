@@ -43,10 +43,7 @@ func PermissionsDataSourceSchema() *schema.Schema {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrPrincipal: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
+				names.AttrPrincipal: stringComputedOnly(),
 			},
 		},
 	}

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -33,12 +34,20 @@ import (
 )
 
 // @FrameworkResource("aws_opensearchserverless_access_policy", name="Access Policy)
+// @IdentityAttribute("name")
+// @IdentityAttribute("type")
+// @ImportIDHandler("accessPolicyImportID", setIDAttribute=true)
+// @Testing(idAttrDuplicates="id")
+// @Testing(importStateIdFunc="testAccAccessPolicyImportStateIDFunc")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.AccessPolicyDetail")
+// @Testing(preIdentityVersion="v6.39.0")
 func newAccessPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &accessPolicyResource{}, nil
 }
 
 type accessPolicyResource struct {
 	framework.ResourceWithModel[accessPolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *accessPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -129,7 +138,7 @@ func (r *accessPolicyResource) Read(ctx context.Context, request resource.ReadRe
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	name := fwflex.StringValueFromFramework(ctx, data.ID)
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findAccessPolicyByNameAndType(ctx, conn, name, data.Type.ValueString())
 
 	if retry.NotFound(err) {
@@ -203,7 +212,7 @@ func (r *accessPolicyResource) Delete(ctx context.Context, request resource.Dele
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	name := fwflex.StringValueFromFramework(ctx, data.ID)
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := opensearchserverless.DeleteAccessPolicyInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
@@ -222,19 +231,6 @@ func (r *accessPolicyResource) Delete(ctx context.Context, request resource.Dele
 	}
 }
 
-func (r *accessPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, resourceIDSeparator)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", request.ID, resourceIDSeparator)
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[1])...)
-}
-
 type accessPolicyResourceModel struct {
 	framework.WithRegionModel
 	Description   types.String                                  `tfsdk:"description"`
@@ -243,4 +239,30 @@ type accessPolicyResourceModel struct {
 	Policy        jsontypes.Normalized                          `tfsdk:"policy"`
 	PolicyVersion types.String                                  `tfsdk:"policy_version"`
 	Type          fwtypes.StringEnum[awstypes.AccessPolicyType] `tfsdk:"type"`
+}
+
+type accessPolicyImportID struct{}
+
+func (accessPolicyImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, resourceIDSeparator)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", id, resourceIDSeparator)
+	}
+
+	name := parts[0]
+	policyType := parts[1]
+
+	result := map[string]any{
+		names.AttrName: name,
+		names.AttrType: policyType,
+	}
+
+	return name, result, nil
+}
+
+func (accessPolicyImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var name types.String
+	state.GetAttribute(ctx, path.Root(names.AttrName), &name)
+
+	return name.ValueString()
 }

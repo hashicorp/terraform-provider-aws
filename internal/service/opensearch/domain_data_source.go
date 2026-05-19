@@ -52,6 +52,30 @@ func dataSourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"jwt_options": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									names.AttrPublicKey: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"roles_key": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"subject_key": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -254,6 +278,18 @@ func dataSourceDomain() *schema.Resource {
 			"deleted": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"deployment_strategy_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"deployment_strategy": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"domain_endpoint_v2_hosted_zone_id": {
 				Type:     schema.TypeString,
@@ -606,6 +642,9 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
+	}
+	if err := d.Set("deployment_strategy_options", flattenDeploymentStrategyOptions(ds.DeploymentStrategyOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployment_strategy_options: %s", err)
 	}
 
 	if ds.OffPeakWindowOptions != nil {

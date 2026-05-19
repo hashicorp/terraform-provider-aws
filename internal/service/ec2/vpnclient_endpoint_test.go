@@ -162,7 +162,7 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T, semaphore tfsync.Semaphore)
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -201,7 +201,7 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T, semaphore tfsy
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -242,7 +242,7 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T, semaphore tfsync.Semap
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -277,7 +277,7 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T,
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -623,7 +623,7 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T, semaphore tfsync.S
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -851,6 +851,96 @@ func testAccClientVPNEndpoint_trafficIPAddressType(t *testing.T, semaphore tfsyn
 	})
 }
 
+// This test requires a Transit Gateway (with a CIDR block) to be created in advance, outside the test,
+// and its ID must be provided via the "CLIENT_VPN_TGW_ID" environment variable.
+//
+// If a Transit Gateway were created within the test, deleting the Transit Gateway attachment created by
+// the Client VPN endpoint via transit_gateway_configuration would take a long time. This would prevent
+// the Transit Gateway from being deleted within the test, causing the test to time out and fail.
+//
+// Example: Create the Transit Gateway using Terraform before running the test:
+//
+//	resource "aws_ec2_transit_gateway" "test" {
+//	  transit_gateway_cidr_blocks = ["10.0.0.0/16"]
+//	}
+//
+// Note: The Transit Gateway created outside the test must be deleted manually after the Transit Gateway
+// attachment created by the test has been removed. Otherwise, it may incur unexpected costs if it remains
+// in the account.
+func testAccClientVPNEndpoint_transitGatewayConfiguration(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.ClientVpnEndpoint
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+	tgwId := acctest.SkipIfEnvVarNotSet(t, "CLIENT_VPN_TGW_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClientVPNEndpointConfig_transitGatewayConfigurationWithNoAvailabilityZones(t, rName, tgwId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_configuration.0.transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.transit_gateway_id", tgwId),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClientVPNEndpointConfig_transitGatewayConfigurationWithAvailabilityZones(t, rName, tgwId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.availability_zones.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_configuration.0.availability_zones.0", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_configuration.0.transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.transit_gateway_id", tgwId),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+			{
+				Config: testAccClientVPNEndpointConfig_transitGatewayConfigurationWithAvailabilityZoneIds(t, rName, tgwId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.availability_zone_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_configuration.0.availability_zone_ids.0", "data.aws_availability_zones.available", "zone_ids.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_configuration.0.transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.transit_gateway_id", tgwId),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckClientVPNEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -975,7 +1065,7 @@ resource "aws_lambda_function" "test1" {
   function_name = "AWSClientVPN-%[1]s-1"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_lambda_function" "test2" {
@@ -983,7 +1073,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "AWSClientVPN-%[1]s-2"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 locals {
@@ -1523,4 +1613,96 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName))
+}
+
+func testAccClientVPNEndpointConfig_transitGatewayConfigurationWithAvailabilityZones(t *testing.T, rName, tgwId string) string {
+	return acctest.ConfigCompose(
+		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az4", "usgw1-az2"),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+
+  transit_gateway_configuration {
+    availability_zones = [
+      data.aws_availability_zones.available.names[0],
+    ]
+    transit_gateway_id = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, tgwId))
+}
+
+func testAccClientVPNEndpointConfig_transitGatewayConfigurationWithAvailabilityZoneIds(t *testing.T, rName, tgwId string) string {
+	return acctest.ConfigCompose(
+		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az4", "usgw1-az2"),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+
+  transit_gateway_configuration {
+    availability_zone_ids = [
+      data.aws_availability_zones.available.zone_ids[0],
+    ]
+    transit_gateway_id = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, tgwId))
+}
+
+func testAccClientVPNEndpointConfig_transitGatewayConfigurationWithNoAvailabilityZones(t *testing.T, rName, tgwId string) string {
+	return acctest.ConfigCompose(
+		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+
+  transit_gateway_configuration {
+    transit_gateway_id = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, tgwId))
 }

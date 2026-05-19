@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDRTAccessLogBucketAssociation_basic(t *testing.T) {
@@ -27,6 +28,7 @@ func testAccDRTAccessLogBucketAssociation_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckLogBucket(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -61,6 +63,7 @@ func testAccDRTAccessLogBucketAssociation_multiBucket(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckLogBucket(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -86,6 +89,7 @@ func testAccDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckLogBucket(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{

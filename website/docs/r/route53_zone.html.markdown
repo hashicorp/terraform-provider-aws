@@ -119,6 +119,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute to import Route53 Zones. For example:
+
+```terraform
+import {
+  to = aws_route53_zone.myzone
+  identity = {
+    zone_id = "Z1D633PJN98FT9"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `zone_id` (String) The Hosted Zone ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Zones using the zone `id`. For example:
 
 ```terraform

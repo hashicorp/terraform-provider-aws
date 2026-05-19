@@ -26,6 +26,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_oauth2_credential_provider", sweepOAuth2CredentialProviders)
 	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
+	awsv2.Register("aws_bedrockagentcore_harness", sweepHarnesses)
 	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
 	awsv2.Register("aws_bedrockagentcore_online_evaluation_config", sweepOnlineEvaluationConfigs)
 }
@@ -276,6 +277,28 @@ func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		for _, v := range page.Memories {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newMemoryResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepHarnesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListHarnessesInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListHarnessesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Harnesses {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newHarnessResource, client,
+				framework.NewAttribute("harness_id", aws.ToString(v.HarnessId))),
 			)
 		}
 	}

@@ -163,6 +163,7 @@ provider "aws" {
 |CodeDeploy|`deploy`(or `codedeploy`)|`AWS_ENDPOINT_URL_CODEDEPLOY`|`codedeploy`|
 |Detective|`detective`|`AWS_ENDPOINT_URL_DETECTIVE`|`detective`|
 |Device Farm|`devicefarm`|`AWS_ENDPOINT_URL_DEVICE_FARM`|`device_farm`|
+|DevOps Agent|`devopsagent`|`AWS_ENDPOINT_URL_DEVOPS_AGENT`|`devops_agent`|
 |DevOps Guru|`devopsguru`|`AWS_ENDPOINT_URL_DEVOPS_GURU`|`devops_guru`|
 |Direct Connect|`directconnect`|`AWS_ENDPOINT_URL_DIRECT_CONNECT`|`direct_connect`|
 |DLM (Data Lifecycle Manager)|`dlm`|`AWS_ENDPOINT_URL_DLM`|`dlm`|
@@ -297,6 +298,7 @@ provider "aws" {
 |CloudWatch RUM|`rum`(or `cloudwatchrum`)|`AWS_ENDPOINT_URL_RUM`|`rum`|
 |S3 (Simple Storage)|`s3`(or `s3api`)|`AWS_ENDPOINT_URL_S3`|`s3`|
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
+|S3 Files|`s3files`|`AWS_ENDPOINT_URL_S3FILES`|`s3files`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
 |S3 Vectors|`s3vectors`|`AWS_ENDPOINT_URL_S3VECTORS`|`s3vectors`|

@@ -126,7 +126,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					int64planmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Int64{
-					int64validator.Between(60, 3600),
+					int64validator.Between(60, 5400),
 				},
 			},
 			"instruction": schema.StringAttribute{

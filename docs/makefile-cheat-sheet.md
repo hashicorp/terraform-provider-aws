@@ -146,6 +146,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
 | `sane`<sup>D</sup> | Run sane check |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `sanity`<sup>D</sup> | Run sanity check (failures allowed) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
+| `schema-validate` | Validate schemas | | | `GO_VER` |
 | `semgrep`<sup>M</sup> | Run all CI Semgrep checks | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-all`<sup>D</sup> | Run semgrep on all files |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-code-quality`<sup>D</sup> | Semgrep Checks / Code Quality Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
@@ -179,7 +180,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `terraform-fmt` | Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files | ✔️ |  |  |
 | `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
-| `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |

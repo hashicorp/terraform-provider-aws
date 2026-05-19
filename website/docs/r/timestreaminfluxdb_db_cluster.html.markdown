@@ -190,7 +190,7 @@ resource "aws_timestreaminfluxdb_db_cluster" "example" {
 
 ### Usage with InfluxDB V3
 
-For InfluxDB V3 clusters, you can create a cluster without providing `allocated_storage`, `bucket`, `organization`, `username`, `password`, or `deployment_type` by specifying a `db_parameter_group_identifier` such as `"InfluxDBV3Core"`. The following example shows how to create an InfluxDB V3 cluster:
+For InfluxDB V3 clusters, you can create a cluster without providing `allocated_storage`, `bucket`, `organization`, `username`, `password`, or `deployment_type` by specifying a `db_parameter_group_identifier` such as `"InfluxDBV3Core"`. You can also optionally configure a maintenance schedule.
 
 ```terraform
 resource "aws_timestreaminfluxdb_db_cluster" "example" {
@@ -199,6 +199,11 @@ resource "aws_timestreaminfluxdb_db_cluster" "example" {
   db_parameter_group_identifier = "InfluxDBV3Core"
   vpc_subnet_ids                = [aws_subnet.example_1.id, aws_subnet.example_2.id]
   vpc_security_group_ids        = [aws_security_group.example.id]
+
+  maintenance_schedule {
+    preferred_maintenance_window = "Sun:02:00-Sun:06:00"
+    timezone                     = "America/New_York"
+  }
 }
 ```
 
@@ -246,6 +251,7 @@ The following arguments are optional:
 * `deployment_type` - (Default `"MULTI_NODE_READ_REPLICAS"` for InfluxDB V2 clusters) Specifies the type of cluster to create. Valid options are: `"MULTI_NODE_READ_REPLICAS"`. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
 * `failover_mode` - (Default `"AUTOMATIC"`) Specifies the behavior of failure recovery when the primary node of the cluster fails. Valid options are: `"AUTOMATIC"` and `"NO_FAILOVER"`.
 * `log_delivery_configuration` - (Optional) Configuration for sending InfluxDB engine logs to a specified S3 bucket. This argument is updatable.
+* `maintenance_schedule` - (Optional) Maintenance schedule for the DB cluster, including the preferred maintenance window and timezone. This argument is updatable. This field is only supported for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
 * `network_type` - (Optional) Specifies whether the network type of the Timestream for InfluxDB cluster is IPV4, which can communicate over IPv4 protocol only, or DUAL, which can communicate over both IPv4 and IPv6 protocols.
 * `organization` - (Optional) Name of the initial organization for the initial admin user in InfluxDB. An InfluxDB organization is a workspace for a group of users. Along with `bucket`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
 * `password` - (Optional) Password of the initial admin user created in InfluxDB. This password will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `username`, and `organization`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group) as the AWS API rejects it.
@@ -261,12 +267,17 @@ The following arguments are optional:
 
 * `s3_configuration` - (Required) Configuration for S3 bucket log delivery.
 
+#### `maintenance_schedule`
+
+* `preferred_maintenance_window` - (Required) Preferred maintenance window in the format `ddd:HH:MM-ddd:HH:MM`. Day must be one of `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, or `Sun`. Provide an empty string to let the system choose a window.
+* `timezone` - (Required) IANA timezone identifier for the maintenance window. For example, `America/New_York` or `UTC`.
+
 #### `s3_configuration`
 
 * `bucket_name` - (Required) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Indicates whether log delivery to the S3 bucket is enabled.
 
-**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `port`, `db_instance_type`, `failover_mode`, and `tags`. Changes to any other argument after a cluster has been deployed will cause destruction and re-creation of the cluster. Additionally, when `db_parameter_group_identifier` is added to a cluster or modified, the cluster will be updated in-place but if `db_parameter_group_identifier` is removed from a cluster, the cluster will be destroyed and re-created.
+**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `db_instance_type`, `failover_mode`, and `tags`. Changes to any other argument after a cluster has been deployed will cause destruction and re-creation of the cluster. Additionally, when `db_parameter_group_identifier` is added to a cluster or modified, the cluster will be updated in-place but if `db_parameter_group_identifier` is removed from a cluster, the cluster will be destroyed and re-created.
 
 ## Attribute Reference
 
@@ -290,17 +301,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream for InfluxDB cluster using its identifier. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_timestreaminfluxdb_db_cluster.example
-  id = "12345abcde"
+  identity = {
+    id = "hzfuy146ke"
+  }
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Timestream for InfluxDB cluster using its identifier. For example:
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the Timestream for InfluxDB cluster.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream for InfluxDB clusters using `id`. For example:
+
+```terraform
+import {
+  to = aws_timestreaminfluxdb_db_cluster.example
+  id = "hzfuy146ke"
+}
+```
+
+Using `terraform import`, import Timestream for InfluxDB clusters using `id`. For example:
 
 ```console
-% terraform import aws_timestreaminfluxdb_db_cluster.example 12345abcde
+% terraform import aws_timestreaminfluxdb_db_cluster.example hzfuy146ke
 ```

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTransferWorkflow_basic(t *testing.T) {
+func testAccWorkflow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
@@ -58,7 +58,7 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
+func testAccWorkflow_onExceptionSteps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
@@ -105,7 +105,7 @@ func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_description(t *testing.T) {
+func testAccWorkflow_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
@@ -133,7 +133,7 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_tags(t *testing.T) {
+func testAccWorkflow_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
@@ -179,7 +179,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_disappears(t *testing.T) {
+func testAccWorkflow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
@@ -203,7 +203,7 @@ func TestAccTransferWorkflow_disappears(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_allSteps(t *testing.T) {
+func testAccWorkflow_allSteps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
@@ -441,7 +441,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_efs_file_system" "test" {

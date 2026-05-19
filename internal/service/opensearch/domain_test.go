@@ -268,6 +268,8 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.0.deployment_strategy", string(awstypes.DeploymentStrategyDefault)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
@@ -2725,6 +2727,64 @@ func TestAccOpenSearchDomain_identityCenterOptions(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_deploymentStrategyOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName(t)
+	resourceName := "aws_opensearch_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_deploymentStrategyOptions(rName, string(awstypes.DeploymentStrategyCapacityOptimized)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.0.deployment_strategy", string(awstypes.DeploymentStrategyCapacityOptimized)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_deploymentStrategyOptions(rName, string(awstypes.DeploymentStrategyDefault)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.0.deployment_strategy", string(awstypes.DeploymentStrategyDefault)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4986,4 +5046,21 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDomainConfig_deploymentStrategyOptions(rName, deploymentStrategy string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  deployment_strategy_options {
+    deployment_strategy = %[2]q
+  }
+}
+`, rName, deploymentStrategy)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -24,7 +25,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 	var v1, v2 awstypes.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rUserName := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rUserNameUpdated := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
@@ -79,7 +80,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 	var v awstypes.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rUserName := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	orgUnitDN := orgUnitFromDomain("Test", domain)
@@ -97,6 +98,14 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceDirectoryConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -107,7 +116,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 	var v1, v2, v3 awstypes.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rUserName := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	orgUnitDN1 := orgUnitFromDomain("One", domain)
@@ -156,7 +165,7 @@ func TestAccAppStreamDirectoryConfig_CertificateBasedAuthParameters(t *testing.T
 	var v1, v2 awstypes.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rUserName := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rUserNameUpdated := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))

@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_rds_integration: Support in-place update of `data_filter` and `integration_name`
+```
+```release-note:enhancement
+resource/aws_rds_integration: Add `integration_identifier` attribute
+```

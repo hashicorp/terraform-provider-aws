@@ -18,7 +18,7 @@ import (
 
 func TestAccSESV2EmailIdentityFeedbackAttributes_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity_feedback_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
@@ -46,7 +46,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_basic(t *testing.T) {
 
 func TestAccSESV2EmailIdentityFeedbackAttributes_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity_feedback_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
@@ -70,7 +70,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears(t *testing.T) {
 
 func TestAccSESV2EmailIdentityFeedbackAttributes_disappears_emailIdentity(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -93,7 +93,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears_emailIdentity(t *tes
 
 func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity_feedback_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 

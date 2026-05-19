@@ -3253,6 +3253,63 @@ func TestAccDynamoDBTable_GSI_keySchema_removeGSI(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_GSI_rangeKeyExplicitEmptyString(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var table awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy: testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.28.0",
+					},
+				},
+				Config: testAccTableConfig_GSI_rangeKeyExplicitEmptyString(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key":     knownvalue.StringExact(rName + "-hash"),
+							names.AttrName: knownvalue.StringExact(rName + "-index"),
+							"range_key":    knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccTableConfig_GSI_rangeKeyExplicitEmptyString(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &table),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_GSI_validate_rangeKeyConflictsWithKeySchema(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -13181,6 +13238,47 @@ variable "key_schemas" {
   default = [{
     attribute_name = %[1]q
     key_type       = "HASH"
+  }]
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_rangeKeyExplicitEmptyString(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "%[1]s-hash"
+
+  attribute {
+    name = "%[1]s-hash"
+    type = "S"
+  }
+
+  dynamic "global_secondary_index" {
+    for_each = var.global_secondary_index
+    content {
+      name               = global_secondary_index.value.name
+      hash_key           = global_secondary_index.value.hash_key
+      non_key_attributes = lookup(global_secondary_index.value, "non_key_attributes", null)
+      projection_type    = global_secondary_index.value.projection_type
+      range_key          = lookup(global_secondary_index.value, "range_key", null)
+      read_capacity      = global_secondary_index.value.read_capacity
+      write_capacity     = global_secondary_index.value.write_capacity
+    }
+  }
+}
+
+variable "global_secondary_index" {
+  default = [{
+    name               = "%[1]s-index"
+    hash_key           = "%[1]s-hash"
+    range_key          = ""
+    projection_type    = "ALL"
+    non_key_attributes = []
+    read_capacity      = 1
+    write_capacity     = 1
   }]
 }
 `, rName)

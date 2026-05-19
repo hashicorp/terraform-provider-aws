@@ -24,7 +24,7 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	route53ZoneResourceName := "aws_route53_zone.test"
 	resourceName := "aws_route53_key_signing_key.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
@@ -65,7 +65,7 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_key_signing_key.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
@@ -89,7 +89,7 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_key_signing_key.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },

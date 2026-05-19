@@ -76,7 +76,7 @@ func TestAccODBCloudExadataInfrastructureResource_withAllParameters(t *testing.T
 	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
 	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 	resource.ParallelTest(t, resource.TestCase{

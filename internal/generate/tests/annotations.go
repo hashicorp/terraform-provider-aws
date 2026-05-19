@@ -19,6 +19,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+const (
+	acctestImportPath = "github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
+
 type CommonArgs struct {
 	Name           string // Resource Type Name
 	TypeName       string // Terraform Type Name
@@ -212,7 +216,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			stuff.CheckDestroyNoop = b
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -403,7 +407,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
 				},
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -419,7 +423,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			})
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -435,7 +439,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			})
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					Path: acctestImportPath,
 				},
 			)
 		}
@@ -463,12 +467,12 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
 			Code: fmt.Sprintf(
-				`domain := acctest.RandomDomainName()
+				`domain := acctest.RandomDomainName(t)
 %s := acctest.RandomEmailAddress(domain)`, varName),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
@@ -484,11 +488,11 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
+			Code: fmt.Sprintf(`%s := acctest.RandomDomainName(t)`, varName),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
 			GoVarName: varName,
@@ -510,14 +514,14 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := acctest.RandomDomain()`, parentName),
+			Code: fmt.Sprintf(`%s := acctest.RandomDomain(t)`, parentName),
 		})
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
+			Code: fmt.Sprintf(`%s := %s.RandomSubdomain(t)`, varName, parentName),
 		})
 		stuff.AdditionalTfVars_[parentName] = TFVar{
 			GoVarName: fmt.Sprintf("%s.String()", parentName),
@@ -534,7 +538,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		varName := "rBgpAsn"
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
@@ -580,6 +584,49 @@ if err != nil {
 				GoVarName: varName,
 				Type:      TFVarTypeString,
 			}
+		}
+	}
+
+	if attr, ok := args.Keyword["acmRootDomainTfVar"]; ok {
+		varName := "rootDomain"
+		if len(attr) > 0 {
+			varName = attr
+		}
+		stuff.GoImports = append(stuff.GoImports,
+			common.GoImport{
+				Path: acctestImportPath,
+			},
+		)
+		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+			Code: fmt.Sprintf(`%s := acctest.ACMCertificateDomainFromEnv(t)`, varName),
+		})
+		stuff.AdditionalTfVars_[varName] = TFVar{
+			GoVarName: varName,
+			Type:      TFVarTypeString,
+		}
+	}
+
+	if attr, ok := args.Keyword["acmSubdomainTfVar"]; ok {
+		parentName := "rootDomain"
+		varName := "domainName"
+		parts := strings.Split(attr, ";")
+		if len(parts) > 0 && len(parts[0]) > 0 {
+			parentName = parts[0]
+		}
+		if len(parts) > 1 && len(parts[1]) > 0 {
+			varName = parts[1]
+		}
+		stuff.GoImports = append(stuff.GoImports,
+			common.GoImport{
+				Path: acctestImportPath,
+			},
+		)
+		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+			Code: fmt.Sprintf(`%s := acctest.ACMCertificateRandomSubDomain(%s)`, varName, parentName),
+		})
+		stuff.AdditionalTfVars_[varName] = TFVar{
+			GoVarName: varName,
+			Type:      TFVarTypeString,
 		}
 	}
 
@@ -643,7 +690,7 @@ func Configure(d *CommonArgs) error {
 		d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 		d.GoImports = append(d.GoImports,
 			common.GoImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				Path: acctestImportPath,
 			},
 		)
 	}

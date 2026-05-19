@@ -19,7 +19,7 @@ import (
 
 func TestAccSESIdentityPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	resourceName := "aws_ses_identity_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -46,7 +46,7 @@ func TestAccSESIdentityPolicy_basic(t *testing.T) {
 func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
 	ctx := acctest.Context(t)
 	emailPrefix := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	email := fmt.Sprintf("%s@%s", emailPrefix, acctest.RandomDomainName())
+	email := fmt.Sprintf("%s@%s", emailPrefix, acctest.RandomDomainName(t))
 	resourceName := "aws_ses_identity_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -72,7 +72,7 @@ func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
 
 func TestAccSESIdentityPolicy_policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	resourceName := "aws_ses_identity_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -104,7 +104,7 @@ func TestAccSESIdentityPolicy_policy(t *testing.T) {
 
 func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_identity_policy.test"
 

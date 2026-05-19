@@ -12,8 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,8 +28,7 @@ func TestAccEKSAddon_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var addon types.Addon
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	clusterResourceName := "aws_eks_cluster.test"
-	addonResourceName := "aws_eks_addon.test"
+	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -36,19 +40,32 @@ func TestAccEKSAddon_basic(t *testing.T) {
 			{
 				Config: testAccAddonConfig_basic(rName, addonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAddonExists(ctx, t, addonResourceName, &addon),
-					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
-					resource.TestCheckResourceAttrSet(addonResourceName, "addon_version"),
-					acctest.MatchResourceAttrRegionalARN(ctx, addonResourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
-					resource.TestCheckResourceAttrPair(addonResourceName, names.AttrClusterName, clusterResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(addonResourceName, "configuration_values", ""),
-					resource.TestCheckResourceAttr(addonResourceName, "pod_identity_association.#", "0"),
-					resource.TestCheckNoResourceAttr(addonResourceName, "preserve"),
-					resource.TestCheckResourceAttr(addonResourceName, acctest.CtTagsPercent, "0"),
+					testAccCheckAddonExists(ctx, t, resourceName, &addon),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("addon_name"), knownvalue.StringExact(addonName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("addon_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("eks", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName)))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("configuration_values"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("modified_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_config"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("pod_identity_association"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("preserve"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resolve_conflicts_on_create"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resolve_conflicts_on_update"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_account_role_arn"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
-				ResourceName:      addonResourceName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -401,6 +418,45 @@ func TestAccEKSAddon_tags(t *testing.T) {
 	})
 }
 
+func TestAccEKSAddon_namespace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var addon types.Addon
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_addon.test"
+	addonName := "vpc-cni"
+	namespace := "my-namespace"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAddonConfig_namespace(rName, addonName, namespace),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, t, resourceName, &addon),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrNamespace: knownvalue.StringExact(namespace),
+					})})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAddonExists(ctx context.Context, t *testing.T, n string, v *types.Addon) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -408,14 +464,9 @@ func testAccCheckAddonExists(ctx context.Context, t *testing.T, n string, v *typ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		clusterName, addonName, err := tfeks.AddonParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
-		output, err := tfeks.FindAddonByTwoPartKey(ctx, conn, clusterName, addonName)
+		output, err := tfeks.FindAddonByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["addon_name"])
 
 		if err != nil {
 			return err
@@ -436,12 +487,7 @@ func testAccCheckAddonDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				continue
 			}
 
-			clusterName, addonName, err := tfeks.AddonParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfeks.FindAddonByTwoPartKey(ctx, conn, clusterName, addonName)
+			_, err := tfeks.FindAddonByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["addon_name"])
 
 			if retry.NotFound(err) {
 				continue
@@ -702,4 +748,17 @@ resource "aws_eks_addon" "test" {
   resolve_conflicts_on_update = "OVERWRITE"
 }
 `, rName, addonName, configurationValues))
+}
+
+func testAccAddonConfig_namespace(rName, addonName, namespace string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_addon" "test" {
+  cluster_name = aws_eks_cluster.test.name
+  addon_name   = %[2]q
+
+  namespace_config {
+    namespace = %[3]q
+  }
+}
+`, rName, addonName, namespace))
 }

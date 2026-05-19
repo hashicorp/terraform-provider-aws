@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -25,7 +26,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -73,7 +74,7 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -88,6 +89,14 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfacmpca.ResourceCertificateAuthority(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -97,7 +106,7 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -145,7 +154,7 @@ func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -176,7 +185,7 @@ func TestAccACMPCACertificateAuthority_keyStorageSecurityStandard(t *testing.T) 
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -211,7 +220,7 @@ func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -235,7 +244,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -284,7 +293,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	domain := acctest.RandomDomain()
+	domain := acctest.RandomDomain(t)
 	commonName := domain.String()
 	customCName := domain.Subdomain("crl").String()
 	customCName2 := domain.Subdomain("crl2").String()
@@ -375,7 +384,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customPath(t *testing.T) {
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 	customPath1 := "root"
 	customPath2 := "root/ca"
 
@@ -442,7 +451,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -514,7 +523,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -576,7 +585,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 	var certificateAuthority awstypes.CertificateAuthority
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -627,7 +636,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -694,7 +703,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	domain := acctest.RandomDomain()
+	domain := acctest.RandomDomain(t)
 	commonName := domain.String()
 	customCName := domain.Subdomain("ocspl").String()
 	customCName2 := domain.Subdomain("ocsp2").String()

@@ -84,17 +84,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS (Elastic Kubernetes) Pod Identity Association using the `cluster_name` and `association_id` separated by a comma (`,`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_eks_pod_identity_association.example
-  id = "example,a-12345678"
+  identity = {
+    cluster_name   = "example-cluster"
+    association_id = "a-yrpsdroc4ei7k6xps"
+  }
+}
+
+resource "aws_eks_pod_identity_association" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS (Elastic Kubernetes) Pod Identity Association using the `cluster_name` and `association_id` separated by a comma (`,`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `association_id` (String) ID of the association.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pod Identity Associations using `cluster_name` and `association_id` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_eks_pod_identity_association.example
+  id = "example-cluster,a-yrpsdroc4ei7k6xps"
+}
+```
+
+Using `terraform import`, import Pod Identity Associations using `cluster_name` and `association_id` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_eks_pod_identity_association.example example,a-12345678
+% terraform import aws_eks_pod_identity_association.example example-cluster,a-yrpsdroc4ei7k6xps
 ```

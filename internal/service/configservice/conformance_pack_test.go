@@ -531,7 +531,7 @@ func testAccConformancePackConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test]
-  name          = %q
+  name          = %[1]q
   template_body = <<EOT
 Resources:
   IAMPasswordPolicy:
@@ -551,7 +551,7 @@ func testAccConformancePackConfig_update(rName string) string {
 		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test]
-  name          = %q
+  name          = %[1]q
   template_body = <<EOT
 Resources:
   IAMGroupHasUsersCheck:
@@ -571,11 +571,11 @@ func testAccConformancePackConfig_inputParameter(rName, pName, pValue string) st
 		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test]
-  name       = %q
+  name       = %[1]q
 
   input_parameter {
     parameter_name  = %[2]q
-    parameter_value = %q
+    parameter_value = %[3]q
   }
 
   template_body = <<EOT
@@ -684,7 +684,7 @@ EOT
 
 resource "aws_config_conformance_pack" "test" {
   depends_on      = [aws_config_configuration_recorder.test]
-  name            = %q
+  name            = %[2]q
   template_s3_uri = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
 }
 `, bucketName, rName))

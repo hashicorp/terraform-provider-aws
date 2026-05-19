@@ -20,7 +20,7 @@ import (
 
 // @SDKDataSource("aws_api_gateway_domain_name", name="Domain Name")
 // @Tags
-// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain(t)")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
 // @Testing(tagsIdentifierAttribute="arn")
 func dataSourceDomainName() *schema.Resource {

@@ -30,7 +30,7 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 	var flow bedrockagent.GetFlowOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
-	foundationModel := "amazon.titan-text-express-v1"
+	foundationModel := "amazon.nova-micro-v1:0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -91,7 +91,7 @@ func TestAccBedrockAgentFlow_disappears(t *testing.T) {
 	var flow bedrockagent.GetFlowOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
-	foundationModel := "amazon.titan-text-express-v1"
+	foundationModel := "amazon.nova-micro-v1:0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -121,7 +121,7 @@ func TestAccBedrockAgentFlow_withEncryptionKey(t *testing.T) {
 	var flow bedrockagent.GetFlowOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
-	foundationModel := "amazon.titan-text-express-v1"
+	foundationModel := "amazon.nova-micro-v1:0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -165,7 +165,7 @@ func TestAccBedrockAgentFlow_tags(t *testing.T) {
 	var flow bedrockagent.GetFlowOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
-	foundationModel := "amazon.titan-text-express-v1"
+	foundationModel := "amazon.nova-micro-v1:0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -241,7 +241,7 @@ func TestAccBedrockAgentFlow_withDefinition(t *testing.T) {
 	var flow bedrockagent.GetFlowOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
-	foundationModel := "amazon.titan-text-express-v1"
+	foundationModel := "amazon.nova-micro-v1:0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -352,7 +352,7 @@ func TestAccBedrockAgentFlow_withPromptResource(t *testing.T) {
 	flowName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	promptName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
-	foundationModel := "amazon.titan-text-express-v1"
+	foundationModel := "amazon.nova-micro-v1:0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

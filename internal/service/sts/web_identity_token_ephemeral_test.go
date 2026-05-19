@@ -23,6 +23,7 @@ func TestAccSTSWebIdentityTokenEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
+	domain := acctest.RandomDomain(t).String()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -38,7 +39,7 @@ func TestAccSTSWebIdentityTokenEphemeral_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebIdentityTokenEphemeralConfig_basic(),
+				Config: testAccWebIdentityTokenEphemeralConfig_basic(domain),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("web_identity_token"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("expiration"), knownvalue.NotNull()),
@@ -52,6 +53,7 @@ func TestAccSTSWebIdentityTokenEphemeral_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
+	domain1, domain2 := acctest.RandomDomain(t).String(), acctest.RandomDomain(t).String()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -67,7 +69,7 @@ func TestAccSTSWebIdentityTokenEphemeral_full(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebIdentityTokenEphemeralConfig_full(),
+				Config: testAccWebIdentityTokenEphemeralConfig_full(domain1, domain2),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("web_identity_token"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("expiration"), knownvalue.NotNull()),
@@ -95,7 +97,7 @@ func testAccWebIdentityTokenPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccWebIdentityTokenEphemeralConfig_basic() string {
+func testAccWebIdentityTokenEphemeralConfig_basic(domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigWithEchoProvider("ephemeral.aws_sts_web_identity_token.test"),
 		fmt.Sprintf(`
@@ -103,10 +105,10 @@ ephemeral "aws_sts_web_identity_token" "test" {
   audience          = [%[1]q]
   signing_algorithm = "RS256"
 }
-`, acctest.RandomDomain().String()))
+`, domain))
 }
 
-func testAccWebIdentityTokenEphemeralConfig_full() string {
+func testAccWebIdentityTokenEphemeralConfig_full(domain1, domain2 string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigWithEchoProvider("ephemeral.aws_sts_web_identity_token.test"),
 		fmt.Sprintf(`
@@ -120,5 +122,5 @@ ephemeral "aws_sts_web_identity_token" "test" {
     purpose     = "acceptance-testing"
   }
 }
-`, acctest.RandomDomain().String(), acctest.RandomDomain().String()))
+`, domain1, domain2))
 }

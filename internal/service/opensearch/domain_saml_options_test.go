@@ -23,7 +23,7 @@ func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
@@ -58,7 +58,7 @@ func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
@@ -84,7 +84,7 @@ func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
@@ -111,7 +111,7 @@ func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
@@ -146,7 +146,7 @@ func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"

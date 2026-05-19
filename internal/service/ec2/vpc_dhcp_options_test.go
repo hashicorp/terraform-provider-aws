@@ -58,7 +58,7 @@ func TestAccVPCDHCPOptions_full(t *testing.T) {
 	var d awstypes.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

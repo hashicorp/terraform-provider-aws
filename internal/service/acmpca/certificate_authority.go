@@ -43,7 +43,7 @@ const (
 // @V60SDKv2Fix
 // @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority")
-// @Testing(generator="acctest.RandomDomainName()")
+// @Testing(generator="acctest.RandomDomainName(t)")
 // @Testing(importIgnore="permanent_deletion_time_in_days")
 func resourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011

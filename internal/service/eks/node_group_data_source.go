@@ -214,7 +214,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := d.Get("node_group_name").(string)
-	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
+	id := nodeGroupCreateResourceID(clusterName, nodeGroupName)
 	nodeGroup, err := findNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
 	if err != nil {

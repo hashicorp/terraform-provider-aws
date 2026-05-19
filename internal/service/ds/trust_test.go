@@ -27,8 +27,8 @@ func TestAccDSTrust_basic(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -78,8 +78,8 @@ func TestAccDSTrust_disappears(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -107,8 +107,8 @@ func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -146,8 +146,8 @@ func TestAccDSTrust_twoWayBasic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	resourceOtherName := "aws_directory_service_trust.other"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -190,8 +190,8 @@ func TestAccDSTrust_oneWayBasic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	resourceOtherName := "aws_directory_service_trust.other"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -233,8 +233,8 @@ func TestAccDSTrust_SelectiveAuth(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -290,8 +290,8 @@ func TestAccDSTrust_twoWaySelectiveAuth(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -347,8 +347,8 @@ func TestAccDSTrust_TrustType(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -386,8 +386,8 @@ func TestAccDSTrust_TrustTypeSpecifyDefault(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -432,8 +432,8 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -487,8 +487,8 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 	var v awstypes.Trust
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
-	domainName := acctest.RandomDomainName()
-	domainNameOther := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
+	domainNameOther := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

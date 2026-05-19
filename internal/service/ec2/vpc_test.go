@@ -1202,6 +1202,39 @@ func TestAccVPC_ramSharedImport(t *testing.T) {
 	})
 }
 
+func TestAccVPC_GuardDutyDependencies_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	var vpcID string
+	vpcResourceName := "aws_vpc.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_GuardDutyDependencies_basic_setup(),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
+					testAccCaptureVPCIDFromVPC(&vpc, &vpcID),
+					testAccCreateGuardDutyResourcesForVPC(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
+				),
+			},
+			{
+				Config: testAccVPCConfig_GuardDutyDependencies_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCGuardDutySecurityGroupDoesNotExist(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutyEndpointDoesNotExist(ctx, t, &vpcID),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -1258,6 +1291,95 @@ func testAccVPCRegionImportStateIDFunc(n, region string) resource.ImportStateIdF
 		}
 
 		return fmt.Sprintf("%s@%s", rs.Primary.Attributes[names.AttrID], region), nil
+	}
+}
+
+func testAccCreateGuardDutyResourcesForVPC(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCreateGuardDutyResources(ctx, t, aws.ToString(vpcID), []string{})(s)
+	}
+}
+
+func testAccCheckVPCGuardDutySecurityGroupExists(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if id := aws.ToString(vpcID); id != "" {
+			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+			sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, id)
+			if err != nil {
+				return fmt.Errorf("error describing security groups: %w", err)
+			}
+			if len(sgs) == 0 {
+				return fmt.Errorf("expected GuardDuty security group to exist, but none found")
+			}
+
+			return nil
+		}
+		return fmt.Errorf("VPC ID not captured")
+	}
+}
+
+func testAccCheckVPCGuardDutySecurityGroupDoesNotExist(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if id := aws.ToString(vpcID); id != "" {
+			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+			sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, id)
+			if err != nil {
+				return fmt.Errorf("error describing security groups: %w", err)
+			}
+			if len(sgs) != 0 {
+				return fmt.Errorf("expected GuardDuty security group to not exist, but found %d", len(sgs))
+			}
+
+			return nil
+		}
+		return fmt.Errorf("VPC ID not captured")
+	}
+}
+
+func testAccCheckVPCGuardDutyEndpointExists(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if id := aws.ToString(vpcID); id != "" {
+			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+			endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, id)
+			if err != nil {
+				return fmt.Errorf("error describing VPC endpoints: %w", err)
+			}
+			if len(endpoints) == 0 {
+				return fmt.Errorf("expected GuardDuty VPC endpoint to exist, but none found")
+			}
+
+			return nil
+		}
+		return fmt.Errorf("VPC ID not captured")
+	}
+}
+
+func testAccCheckVPCGuardDutyEndpointDoesNotExist(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if id := aws.ToString(vpcID); id != "" {
+			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+			endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, id)
+			if err != nil {
+				return fmt.Errorf("error describing VPC endpoints: %w", err)
+			}
+			if len(endpoints) != 0 {
+				return fmt.Errorf("expected GuardDuty VPC endpoint to not exist, but found %d", len(endpoints))
+			}
+
+			return nil
+		}
+		return fmt.Errorf("VPC ID not captured")
+	}
+}
+
+func testAccCaptureVPCIDFromVPC(vpc *awstypes.Vpc, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		*vpcID = aws.ToString(vpc.VpcId)
+		return nil
 	}
 }
 
@@ -1656,4 +1778,20 @@ import {
   id = aws_subnet.source.vpc_id
 }
 `, acctest.ProviderName))
+}
+
+func testAccVPCConfig_GuardDutyDependencies_basic_setup() string {
+	return `
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+}
+`
+}
+
+func testAccVPCConfig_GuardDutyDependencies_basic() string {
+	return `
+# Intentionally empty
+`
 }

@@ -17,7 +17,7 @@ func TestAccRoute53ZoneDataSource_id(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
-	fqdn := acctest.RandomFQDomainName()
+	fqdn := acctest.RandomFQDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -46,7 +46,7 @@ func TestAccRoute53ZoneDataSource_name(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
-	fqdn := acctest.RandomFQDomainName()
+	fqdn := acctest.RandomFQDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -81,7 +81,7 @@ func TestAccRoute53ZoneDataSource_name_idEmptyString(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
-	fqdn := acctest.RandomFQDomainName()
+	fqdn := acctest.RandomFQDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -109,7 +109,7 @@ func TestAccRoute53ZoneDataSource_tags(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
-	fqdn := acctest.RandomFQDomainName()
+	fqdn := acctest.RandomFQDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -137,7 +137,7 @@ func TestAccRoute53ZoneDataSource_tagsOnly(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
-	fqdn := acctest.RandomFQDomainName()
+	fqdn := acctest.RandomFQDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

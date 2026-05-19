@@ -33,18 +33,16 @@ import (
 )
 
 // @SDKResource("aws_apigatewayv2_api", name="API")
+// @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetApiOutput")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICreate,
 		ReadWithoutTimeout:   resourceAPIRead,
 		UpdateWithoutTimeout: resourceAPIUpdate,
 		DeleteWithoutTimeout: resourceAPIDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"api_endpoint": {
@@ -259,24 +257,32 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", d.Id(), err)
 	}
 
-	d.Set("api_endpoint", output.ApiEndpoint)
-	d.Set("api_key_selection_expression", output.ApiKeySelectionExpression)
-	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	if err := d.Set("cors_configuration", flattenCORS(output.CorsConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
+	if err := resourceAPIFlatten(ctx, meta.(*conns.AWSClient), d, output); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set(names.AttrDescription, output.Description)
-	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
-	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	d.Set(names.AttrIPAddressType, output.IpAddressType)
-	d.Set(names.AttrName, output.Name)
-	d.Set("protocol_type", output.ProtocolType)
-	d.Set("route_selection_expression", output.RouteSelectionExpression)
-	d.Set(names.AttrVersion, output.Version)
-
-	setTagsOut(ctx, output.Tags)
 
 	return diags
+}
+
+func resourceAPIFlatten(ctx context.Context, awsClient *conns.AWSClient, d *schema.ResourceData, api *apigatewayv2.GetApiOutput) error {
+	d.Set("api_endpoint", api.ApiEndpoint)
+	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
+	d.Set(names.AttrARN, apiARN(ctx, awsClient, d.Id()))
+	if err := d.Set("cors_configuration", flattenCORS(api.CorsConfiguration)); err != nil {
+		return fmt.Errorf("setting cors_configuration: %w", err)
+	}
+	d.Set(names.AttrDescription, api.Description)
+	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
+	d.Set("execution_arn", apiInvokeARN(ctx, awsClient, d.Id()))
+	d.Set(names.AttrIPAddressType, api.IpAddressType)
+	d.Set(names.AttrName, api.Name)
+	d.Set("protocol_type", api.ProtocolType)
+	d.Set("route_selection_expression", api.RouteSelectionExpression)
+	d.Set(names.AttrVersion, api.Version)
+
+	setTagsOut(ctx, api.Tags)
+
+	return nil
 }
 
 func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

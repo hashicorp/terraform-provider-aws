@@ -16,10 +16,12 @@ var (
 	ResourceMemoryStrategy           = newResourceMemoryStrategy
 	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
 	ResourceTokenVaultCMK            = newTokenVaultCMKResource
+	ResourceHarness                  = newHarnessResource
 	ResourceOnlineEvaluationConfig   = newOnlineEvaluationConfigResource
 	ResourceWorkloadIdentity         = newWorkloadIdentityResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
+	FindHarnessByID                      = findHarnessByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
 	FindAPIKeyCredentialProviderByName   = findAPIKeyCredentialProviderByName
 	FindBrowserByID                      = findBrowserByID
@@ -27,7 +29,7 @@ var (
 	FindGatewayByID                      = findGatewayByID
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
 	FindMemoryByID                       = findMemoryByID
-	FindMemoryStrategyByID               = findMemoryStrategyByTwoPartKey
+	FindMemoryStrategyByTwoPartKey       = findMemoryStrategyByTwoPartKey
 	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
 	FindOnlineEvaluationConfigByID       = findOnlineEvaluationConfigByID
 	FindTokenVaultByID                   = findTokenVaultByID

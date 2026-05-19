@@ -35,7 +35,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRule")
 // @Testing(preIdentityVersion="v6.10.0")
-// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomDomainName()")
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomDomainName(t)")
 func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,

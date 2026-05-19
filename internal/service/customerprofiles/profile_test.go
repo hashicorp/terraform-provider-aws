@@ -22,12 +22,13 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	accountNumber := acctest.RandString(t, 8)
 	accountNumberUpdated := acctest.RandString(t, 8)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
 	emailUpdated := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -179,11 +180,12 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	accountNumber := acctest.RandString(t, 8)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{

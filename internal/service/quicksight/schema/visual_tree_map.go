@@ -19,9 +19,9 @@ func treeMapVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idSchema(),
+				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -31,7 +31,7 @@ func treeMapVisualSchema() *schema.Schema {
 							"color_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_scale":         colorScaleSchema(),            // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColorScale.html
 							"data_labels":         dataLabelOptionsSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -57,7 +57,7 @@ func treeMapVisualSchema() *schema.Schema {
 							"group_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"legend":              legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"size_label_options":  chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -74,9 +74,69 @@ func treeMapVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":              visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
+func treeMapVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"color_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"color_scale":         colorScaleDataSourceSchema(),
+							"data_labels":         dataLabelOptionsDataSourceSchema(),
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"tree_map_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"colors": measureFieldDataSourceSchema(),
+													"groups": dimensionFieldDataSourceSchema(),
+													"sizes":  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"group_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"legend":              legendOptionsDataSourceSchema(),
+							"size_label_options":  chartAxisLabelOptionsDataSourceSchema(),
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"tree_map_group_items_limit_configuration": itemsLimitConfigurationDataSourceSchema(),
+										"tree_map_sort": fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip": tooltipOptionsDataSourceSchema(),
+						},
+					},
+				},
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -94,7 +154,7 @@ func expandTreeMapVisual(tfList []any) *awstypes.TreeMapVisual {
 
 	apiObject := &awstypes.TreeMapVisual{}
 
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -103,13 +163,13 @@ func expandTreeMapVisual(tfList []any) *awstypes.TreeMapVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandTreeMapConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
@@ -149,7 +209,7 @@ func expandTreeMapConfiguration(tfList []any) *awstypes.TreeMapConfiguration {
 	if v, ok := tfMap["size_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.SizeLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandTreeMapSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
@@ -231,7 +291,7 @@ func flattenTreeMapVisual(apiObject *awstypes.TreeMapVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		attrVisualID: aws.ToString(apiObject.VisualId),
 	}
 
 	if apiObject.Actions != nil {
@@ -241,13 +301,13 @@ func flattenTreeMapVisual(apiObject *awstypes.TreeMapVisual) []any {
 		tfMap["chart_configuration"] = flattenTreeMapConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}
@@ -282,7 +342,7 @@ func flattenTreeMapConfiguration(apiObject *awstypes.TreeMapConfiguration) []any
 		tfMap["size_label_options"] = flattenChartAxisLabelOptions(apiObject.SizeLabelOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenTreeMapSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenTreeMapSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)

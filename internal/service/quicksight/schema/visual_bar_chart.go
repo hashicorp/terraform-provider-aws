@@ -19,9 +19,9 @@ func barCharVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idSchema(),
+				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -34,7 +34,7 @@ func barCharVisualSchema() *schema.Schema {
 							"color_label_options":            chartAxisLabelOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"contribution_analysis_defaults": contributionAnalysisDefaultsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ContributionAnalysisDefault.html
 							"data_labels":                    dataLabelOptionsSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -62,7 +62,7 @@ func barCharVisualSchema() *schema.Schema {
 							"orientation":             stringEnumSchema[awstypes.BarChartOrientation](attrOptionalComputed),
 							"reference_lines":         referenceLineSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -86,9 +86,81 @@ func barCharVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":              visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
+func barChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"visual_id":       idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bars_arrangement":               stringEnumDataSourceSchema[awstypes.BarsArrangement](),
+							"category_axis":                  axisDisplayOptionsDataSourceSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
+							"category_label_options":         chartAxisLabelOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"color_label_options":            chartAxisLabelOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"contribution_analysis_defaults": contributionAnalysisDefaultsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ContributionAnalysisDefault.html
+							"data_labels":                    dataLabelOptionsDataSourceSchema(),             // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bar_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":        dimensionFieldDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"colors":          dimensionFieldDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"small_multiples": dimensionFieldDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues:  measureFieldDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":                  legendOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							"orientation":             stringEnumDataSourceSchema[awstypes.BarChartOrientation](),
+							"reference_lines":         referenceLineDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
+							"small_multiples_options": smallMultiplesOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit":                itemsLimitConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"category_sort":                       fieldSortOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"color_items_limit":                   itemsLimitConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"color_sort":                          fieldSortOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"small_multiples_limit_configuration": itemsLimitConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"small_multiples_sort":                fieldSortOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+									},
+								},
+							},
+							"tooltip":             tooltipOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							"value_axis":          axisDisplayOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
+							"value_label_options": chartAxisLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"visual_palette":      visualPaletteDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
+						},
+					},
+				},
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -106,7 +178,7 @@ func expandBarChartVisual(tfList []any) *awstypes.BarChartVisual {
 
 	apiObject := &awstypes.BarChartVisual{}
 
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -115,13 +187,13 @@ func expandBarChartVisual(tfList []any) *awstypes.BarChartVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandBarChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
@@ -173,7 +245,7 @@ func expandBarChartConfiguration(tfList []any) *awstypes.BarChartConfiguration {
 	if v, ok := tfMap["small_multiples_options"].([]any); ok && len(v) > 0 {
 		apiObject.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandBarChartSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
@@ -279,7 +351,7 @@ func flattenBarChartVisual(apiObject *awstypes.BarChartVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		attrVisualID: aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
@@ -288,13 +360,13 @@ func flattenBarChartVisual(apiObject *awstypes.BarChartVisual) []any {
 		tfMap["chart_configuration"] = flattenBarChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}
@@ -337,7 +409,7 @@ func flattenBarChartConfiguration(apiObject *awstypes.BarChartConfiguration) []a
 		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenBarChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenBarChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)

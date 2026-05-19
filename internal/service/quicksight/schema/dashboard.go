@@ -33,7 +33,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrColumn:             columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
@@ -95,7 +95,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 									},
 								},
 							},
-							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
+							attrTitle: stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},

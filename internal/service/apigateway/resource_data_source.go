@@ -40,7 +40,7 @@ func dataSourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -54,7 +54,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	path := d.Get(names.AttrPath).(string)
 	input := apigateway.GetResourcesInput{
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		RestApiId: aws.String(d.Get(attrRestAPIID).(string)),
 	}
 	match, err := findResource(ctx, conn, &input, func(v *types.Resource) bool {
 		return aws.ToString(v.Path) == path

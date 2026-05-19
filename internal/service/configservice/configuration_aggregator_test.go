@@ -54,7 +54,7 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
+func testAccConfigurationAggregator_organization(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ca types.ConfigurationAggregator
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -85,7 +85,7 @@ func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_switch(t *testing.T) {
+func testAccConfigurationAggregator_switch(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"

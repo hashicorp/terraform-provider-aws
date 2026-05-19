@@ -299,3 +299,19 @@ func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc
 		return out, string(out.TrainingJobStatus), nil
 	}
 }
+
+func statusHyperParameterTuningJob(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findHyperParameterTuningJobByName(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.HyperParameterTuningJobStatus), nil
+	}
+}

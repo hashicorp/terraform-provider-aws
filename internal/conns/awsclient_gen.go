@@ -87,6 +87,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -219,6 +220,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rum"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3files"
 	"github.com/aws/aws-sdk-go-v2/service/s3outposts"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
@@ -599,6 +601,10 @@ func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy.Client {
 
 func (c *AWSClient) DetectiveClient(ctx context.Context) *detective.Client {
 	return errs.Must(client[*detective.Client](ctx, c, names.Detective, make(map[string]any)))
+}
+
+func (c *AWSClient) DevOpsAgentClient(ctx context.Context) *devopsagent.Client {
+	return errs.Must(client[*devopsagent.Client](ctx, c, names.DevOpsAgent, make(map[string]any)))
 }
 
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru.Client {
@@ -1119,6 +1125,10 @@ func (c *AWSClient) S3Client(ctx context.Context) *s3.Client {
 
 func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control.Client {
 	return errs.Must(client[*s3control.Client](ctx, c, names.S3Control, make(map[string]any)))
+}
+
+func (c *AWSClient) S3FilesClient(ctx context.Context) *s3files.Client {
+	return errs.Must(client[*s3files.Client](ctx, c, names.S3Files, make(map[string]any)))
 }
 
 func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts.Client {

@@ -31,7 +31,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Auto Scaling group.
 * `availability_zones` - One or more Availability Zones for the group.
-* `default_cool_down` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
+* `default_cooldown` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `desired_capacity` - Desired size of the group.
 * `desired_capacity_type` - The unit of measurement for the value returned for `desired_capacity`.
 * `enabled_metrics` - List of metrics enabled for collection.
@@ -50,6 +50,7 @@ This data source exports the following attributes in addition to the arguments a
 * `max_instance_lifetime` - Maximum amount of time, in seconds, that an instance can be in service.
 * `max_size` - Maximum size of the group.
 * `min_size` - Minimum size of the group.
+* `new_instances_protected_from_scale_in` - Whether newly launched instances are protected from termination by Amazon EC2 Auto Scaling when scaling in.
 * `mixed_instances_policy` - List of mixed instances policy objects for the group.
     * `instances_distribution` - List of instances distribution objects.
         * `on_demand_allocation_strategy` - Strategy used when launching on-demand instances.
@@ -64,7 +65,7 @@ This data source exports the following attributes in addition to the arguments a
             * `version` - Template version.
         * `override` - List of properties overriding the same properties in the launch template.
             * `instance_requirements` - List of instance requirements objects.
-                * `accelerator_count - List of objects describing the minimum and maximum number of accelerators for an instance type.
+                * `accelerator_count` - List of objects describing the minimum and maximum number of accelerators for an instance type.
                     * `min` - Minimum.
                     * `max` - Maximum.
                 * `accelerator_manufacturers` - List of accelerator manufacturer names.
@@ -122,17 +123,14 @@ This data source exports the following attributes in addition to the arguments a
     * `propagate_at_launch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.
-* `traffic_source` -Traffic sources.
+* `traffic_source` - Traffic sources.
     * `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
     * `type` - Traffic source type.
 * `vpc_zone_identifier` - VPC ID for the group.
 * `warm_pool` - List of warm pool configuration objects.
     * `instance_reuse_policy` - List of instance reuse policy objects.
         * `reuse_on_scale_in` - Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
-    * `max_group_prepared_policy` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+    * `max_group_prepared_capacity` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
     * `min_size` - Minimum number of instances to maintain in the warm pool.
     * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warm_pool_size` - Current size of the warm pool.
-
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
