@@ -154,7 +154,7 @@ Per `docs/ai-usage.md`:
 - All existing tests must pass.
   - Use `make test` to run unit tests.
   - If your change breaks an existing test, fix it.
-- CI is the gate. Run `make ci`.
+- CI is the gate. Run `make ci-quick`.
   - PRs with failing tests do not merge.
 
 #### Documentation checklist
@@ -204,7 +204,7 @@ New resources use the Terraform Plugin Framework pattern:
 
 Before finishing:
 1. `make build` — must compile cleanly.
-2. `make lint` — zero warnings.
+2. `make ci-quick` — zero warnings.
 3. `make test` — all unit tests pass.
 4. `make gen` — if you changed annotations or generators.
 5. `make copyright-fix` — if you added new files.
