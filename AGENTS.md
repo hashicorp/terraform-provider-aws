@@ -9,8 +9,6 @@ This file provides guidance to AI coding agents when working with code in this r
 
 This is the Go-based Terraform AWS Provider (`github.com/hashicorp/terraform-provider-aws`). It maps AWS API resources to Terraform resources, data sources, ephemeral resources and actions (collectively often referred to as just resources). The primary language is Go; HCL appears in acceptance test configurations and website documentation.
 
----
-
 ## Agent Registry
 
 This project uses specialized personas for different tasks.
@@ -26,8 +24,6 @@ This project uses specialized personas for different tasks.
 - A persona defines a role with a perspective and responsibilities.
 - Personas may invoke skills.
 
----
-
 ## Skills
 
 Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step instructions, code patterns, and guardrails for a specific task.
@@ -38,8 +34,6 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 | [changelog](./.agents/skills/changelog/SKILL.md) | Add a `.changelog/<PR_NUMBER>.txt` entry from a PR URL, commit, and push (with confirmation). |
 | [fixdocs](./.agents/skills/fixdocs/SKILL.md) | Fix end user documentation with `swissshepherd`. |
 | [reviewdocs](./.agents/skills/reviewdocs/SKILL.md) | Review a PR's end user documentation updates. |
-
----
 
 ## Code Structure (The important parts)
 
