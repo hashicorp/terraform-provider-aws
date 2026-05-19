@@ -242,6 +242,39 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayRestAPI_securityPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicySecurityPolicyTls1313202509)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicySecurityPolicyTls1313202509)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
+			},
+			{
+				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicyTls12)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2167,6 +2200,15 @@ resource "aws_api_gateway_rest_api" "test" {
   })
 }
 `, rName)
+}
+
+func testAccRestAPIConfig_securityPolicy(rName string, securityPolicy string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name            = %[1]q
+  security_policy = %[2]q
+}
+`, rName, securityPolicy)
 }
 
 func testAccRestAPIConfig_keySource(rName string, apiKeySource string) string {

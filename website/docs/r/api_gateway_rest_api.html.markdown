@@ -160,6 +160,20 @@ resource "aws_api_gateway_stage" "example" {
 }
 ```
 
+### Enhanced Security Policy
+
+```terraform
+resource "aws_api_gateway_rest_api" "example" {
+  name = "example"
+
+  security_policy = "SecurityPolicy_TLS13_1_3_2025_09"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+```
+
 ### Terraform Resources
 
 ```terraform
@@ -234,6 +248,7 @@ This resource supports the following arguments:
 * `parameters` - (Optional) Map of customizations for importing the specification in the `body` argument. For example, to exclude DocumentationParts from an imported API, set `ignore` equal to `documentation`. Additional documentation, including other parameters such as `basepath`, can be found in the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-import-api.html).
 * `policy` - (Optional) JSON formatted policy document that controls access to the API Gateway. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Terraform will only perform drift detection of its value when present in a configuration. We recommend using the [`aws_api_gateway_rest_api_policy` resource](/docs/providers/aws/r/api_gateway_rest_api_policy.html) instead. If importing an OpenAPI specification via the `body` argument, this corresponds to the [`x-amazon-apigateway-policy` extension](https://docs.aws.amazon.com/apigateway/latest/developerguide/openapi-extensions-policy.html). If the argument value is provided and is different than the OpenAPI value, the argument value will override the OpenAPI value.
 * `put_rest_api_mode` - (Optional) Mode of the PutRestApi operation when importing an OpenAPI specification via the `body` argument (create or update operation). Valid values are `merge` and `overwrite`. If unspecificed, defaults to `overwrite` (for backwards compatibility). This corresponds to the [`x-amazon-apigateway-put-integration-method` extension](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions-put-integration-method.html). If the argument value is provided and is different than the OpenAPI value, the argument value will override the OpenAPI value.
+* `security_policy` - (Optional) The TLS version + cipher suite for the REST API's default execute-api endpoint. Must be configured for drift detection. Refer to the [Amazon API Gateway API Reference](https://docs.aws.amazon.com/apigateway/latest/api/API_CreateRestApi.html) for a list of valid security policies.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **Note**: If the `body` argument is provided, the OpenAPI specification will be used to configure the resources, methods and integrations for the Rest API. If this argument is provided, the following resources should not be managed as separate ones, as updates may cause manual resource updates to be overwritten:
