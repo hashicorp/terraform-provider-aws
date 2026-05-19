@@ -143,8 +143,6 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 - All existing tests must pass.
   - Use `make test` to run unit tests.
   - If your change breaks an existing test, fix it.
-- TODO acceptance tests?
-  - New features require new tests.
 - CI is the gate. Run `make ci`.
   - PRs with failing tests do not merge.
 
