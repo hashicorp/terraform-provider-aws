@@ -111,15 +111,15 @@ resource "aws_bedrockagentcore_evaluator" "example" {
 
 The following arguments are required:
 
+* `evaluator_config` - (Required) Configuration that defines how the evaluator assesses agent performance. See [`evaluator_config`](#evaluator_config-block) below.
 * `evaluator_name` - (Required, Forces new resource) Name of the evaluator. Must match the pattern `^[a-zA-Z][a-zA-Z0-9_]{0,47}$`.
 * `level` - (Required) Evaluation level that determines the scope of evaluation. Valid values: `TOOL_CALL`, `TRACE`, `SESSION`.
-* `evaluator_config` - (Required) Configuration that defines how the evaluator assesses agent performance. See [`evaluator_config`](#evaluator_config) below.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the evaluator. Length 1–200.
 * `kms_key_arn` - (Optional, Forces new resource) ARN of a customer-managed KMS key used to encrypt the evaluator's sensitive data. Only symmetric encryption keys are supported.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `evaluator_config` Block
@@ -139,8 +139,19 @@ Exactly one of `llm_as_a_judge` or `code_based` must be specified.
 
 Exactly one of `numerical` or `categorical` must be specified.
 
-* `categorical` - (Optional) One or more categorical rating scale definitions. Each entry supports `definition` and `label` (length 1–100).
-* `numerical` - (Optional) One or more numerical rating scale definitions. Each entry supports `definition`, `value` (>= 0), and `label` (length 1–100).
+* `categorical` - (Optional) One or more categorical rating scale definitions. See [`categorical`](#categorical-block) below.
+* `numerical` - (Optional) One or more numerical rating scale definitions. See [`numerical`](#numerical-block) below.
+
+### `numerical` Block
+
+* `definition` - (Required) Description that explains what this numerical rating represents.
+* `label` - (Required) Label for this numerical rating option. Length 1–100.
+* `value` - (Required) Numerical value for this rating option. Must be at least 0.
+
+### `categorical` Block
+
+* `definition` - (Required) Description that explains what this categorical rating represents.
+* `label` - (Required) Label for this categorical rating option. Length 1–100.
 
 ### `model_config` Block
 
