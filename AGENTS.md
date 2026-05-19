@@ -124,7 +124,7 @@ Per `docs/ai-usage.md`:
 - The human PR author is fully responsible for all submitted code and must understand it completely.
 - Human reviewers own the final code and must understand it fully.
 
-### Follow These Conventions
+### Coding Conventions (Follow These)
 
 #### Go language usage
 - **GO USES TAB (`\t`) CHARACTERS TO INDENT**
