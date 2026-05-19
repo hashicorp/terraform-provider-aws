@@ -57,9 +57,8 @@ rules:
     paths:
       include:
         - "/internal/service/a*/*_test.go"
-        - "/internal/service/bedrockagentcore/*_test.go"
-        - "/internal/service/billing/*_test.go"
-        - "/internal/service/cur/*_test.go"
+        - "/internal/service/b*/*_test.go"
+        - "/internal/service/c*/*_test.go"
         - "/internal/service/networkflowmonitor/*_test.go"
         - "/internal/service/notifications/*_test.go"
         - "/internal/service/notificationscontacts/*_test.go"
