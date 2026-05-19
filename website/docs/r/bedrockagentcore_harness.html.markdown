@@ -143,7 +143,7 @@ The following arguments are optional:
 * `tool` - (Optional) Tool configurations. See [`tool`](#tool) below.
 * `truncation` - (Optional) Truncation configuration for conversation history. See [`truncation`](#truncation) below.
 
-### `model`
+### `model` Block
 
 The `model` block supports exactly one of the following:
 
@@ -151,14 +151,14 @@ The `model` block supports exactly one of the following:
 * `openai_model_config` - (Optional) OpenAI model configuration. See [`openai_model_config`](#openai_model_config) below.
 * `gemini_model_config` - (Optional) Gemini model configuration. See [`gemini_model_config`](#gemini_model_config) below.
 
-### `bedrock_model_config`
+### `bedrock_model_config` Block
 
 * `model_id` - (Required) Bedrock model ID (e.g., `anthropic.claude-sonnet-4-20250514`).
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
 * `top_p` - (Optional) Top-p (nucleus) sampling parameter. Must be between 0 and 1.
 
-### `openai_model_config`
+### `openai_model_config` Block
 
 * `model_id` - (Required) OpenAI model ID.
 * `api_key_arn` - (Required) ARN of the secret containing the API key.
@@ -166,7 +166,7 @@ The `model` block supports exactly one of the following:
 * `temperature` - (Optional) Temperature for sampling.
 * `top_p` - (Optional) Top-p sampling parameter.
 
-### `gemini_model_config`
+### `gemini_model_config` Block
 
 * `model_id` - (Required) Gemini model ID.
 * `api_key_arn` - (Required) ARN of the secret containing the API key.
@@ -175,11 +175,11 @@ The `model` block supports exactly one of the following:
 * `top_p` - (Optional) Top-p sampling parameter.
 * `top_k` - (Optional) Top-k sampling parameter.
 
-### `system_prompt`
+### `system_prompt` Block
 
 * `text` - (Required, Sensitive) Text content of the system prompt.
 
-### `tool`
+### `tool` Block
 
 * `type` - (Required) Type of tool. Valid values: `remote_mcp`, `agentcore_browser`, `agentcore_gateway`, `inline_function`, `agentcore_code_interpreter`.
 * `name` - (Optional) Name of the tool.
@@ -195,21 +195,21 @@ The `config` block supports exactly one of the following:
 * `inline_function` - (Optional) Inline function configuration. See [`inline_function`](#inline_function) below.
 * `agentcore_code_interpreter` - (Optional) AgentCore code interpreter configuration. See [`agentcore_code_interpreter`](#agentcore_code_interpreter) below.
 
-### `remote_mcp`
+### `remote_mcp` Block
 
 * `url` - (Required, Sensitive) URL of the remote MCP server.
 * `headers` - (Optional, Sensitive) Map of HTTP headers to include in requests to the MCP server.
 
-### `agentcore_browser`
+### `agentcore_browser` Block
 
 * `browser_arn` - (Optional) ARN of the AgentCore browser resource.
 
-### `agentcore_gateway`
+### `agentcore_gateway` Block
 
 * `gateway_arn` - (Required) ARN of the AgentCore gateway resource.
 * `outbound_auth` - (Optional) Outbound authentication configuration. See [`outbound_auth`](#outbound_auth) below.
 
-### `outbound_auth`
+### `outbound_auth` Block
 
 Exactly one of the following must be specified:
 
@@ -217,7 +217,7 @@ Exactly one of the following must be specified:
 * `none` - (Optional) Set to `true` to disable authentication.
 * `oauth` - (Optional) OAuth credential provider configuration. See [`oauth`](#oauth) below.
 
-### `oauth`
+### `oauth` Block
 
 * `provider_arn` - (Required) ARN of the OAuth credential provider.
 * `scopes` - (Required) List of OAuth scopes.
@@ -225,20 +225,20 @@ Exactly one of the following must be specified:
 * `grant_type` - (Optional) OAuth grant type.
 * `default_return_url` - (Optional) Default return URL for OAuth flow.
 
-### `agentcore_code_interpreter`
+### `agentcore_code_interpreter` Block
 
 * `code_interpreter_arn` - (Optional) ARN of the AgentCore code interpreter resource.
 
-### `inline_function`
+### `inline_function` Block
 
 * `description` - (Required) Description of the inline function.
 * `input_schema` - (Required, Sensitive) JSON string defining the input schema for the function.
 
-### `skill`
+### `skill` Block
 
 * `path` - (Required) Path to the skill.
 
-### `truncation`
+### `truncation` Block
 
 * `strategy` - (Required) Truncation strategy. Valid values: `sliding_window`, `summarization`, `none`.
 * `config` - (Optional) Strategy-specific configuration. See [`truncation config`](#truncation-config) below.
@@ -250,42 +250,42 @@ The `config` block supports exactly one of the following:
 * `sliding_window` - (Optional) Sliding window truncation configuration. See [`sliding_window`](#sliding_window) below.
 * `summarization` - (Optional) Summarization truncation configuration. See [`summarization`](#summarization) below.
 
-### `sliding_window`
+### `sliding_window` Block
 
 * `messages_count` - (Optional) Number of recent messages to keep in the conversation window.
 
-### `summarization`
+### `summarization` Block
 
 * `summary_ratio` - (Optional) Ratio of the conversation to summarize (0 to 1).
 * `preserve_recent_messages` - (Optional) Number of recent messages to preserve without summarization.
 * `summarization_system_prompt` - (Optional) Custom system prompt for the summarization model.
 
-### `environment`
+### `environment` Block
 
 * `agentcore_runtime_environment` - (Required) AgentCore runtime environment configuration. See [`agentcore_runtime_environment`](#agentcore_runtime_environment) below.
 
-### `agentcore_runtime_environment`
+### `agentcore_runtime_environment` Block
 
 * `lifecycle_configuration` - (Optional) Lifecycle configuration. See [`lifecycle_configuration`](#lifecycle_configuration) below.
 * `network_configuration` - (Optional) Network configuration. See [`network_configuration`](#network_configuration) below.
 * `filesystem_configuration` - (Optional) Filesystem configurations. See [`filesystem_configuration`](#filesystem_configuration) below.
 
-### `lifecycle_configuration`
+### `lifecycle_configuration` Block
 
 * `idle_runtime_session_timeout` - (Optional) Timeout in seconds for idle sessions.
 * `max_lifetime` - (Optional) Maximum lifetime of the instance in seconds.
 
-### `network_configuration`
+### `network_configuration` Block
 
 * `network_mode` - (Required) Network mode. Valid values: `PUBLIC`, `VPC`.
 * `network_mode_config` - (Optional) VPC configuration. See [`network_mode_config`](#network_mode_config) below.
 
-### `network_mode_config`
+### `network_mode_config` Block
 
 * `security_groups` - (Required) Security groups for the VPC.
 * `subnets` - (Required) Subnets for the VPC.
 
-### `filesystem_configuration`
+### `filesystem_configuration` Block
 
 Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
 
@@ -293,41 +293,41 @@ Each `filesystem_configuration` block describes a single filesystem to mount int
 * `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point) below.
 * `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point) below.
 
-### `session_storage`
+### `session_storage` Block
 
 The `session_storage` block supports the following:
 
 * `mount_path` - (Required) Mount path for the session storage filesystem inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
-### `s3_files_access_point`
+### `s3_files_access_point` Block
 
 The `s3_files_access_point` block supports the following:
 
 * `access_point_arn` - (Required) ARN of the Amazon S3 Files access point to mount into the agent runtime.
 * `mount_path` - (Required) Mount path for the S3 Files access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
-### `efs_access_point`
+### `efs_access_point` Block
 
 The `efs_access_point` block supports the following:
 
 * `access_point_arn` - (Required) ARN of the Amazon EFS access point to mount into the agent runtime.
 * `mount_path` - (Required) Mount path for the EFS access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
-### `environment_artifact`
+### `environment_artifact` Block
 
 * `container_configuration` - (Required) Container configuration. See [`container_configuration`](#container_configuration) below.
 
-### `container_configuration`
+### `container_configuration` Block
 
 * `container_uri` - (Required) URI of the container image.
 
-### `authorizer_configuration`
+### `authorizer_configuration` Block
 
 The `authorizer_configuration` block supports the following:
 
 * `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer) below.
 
-### `custom_jwt_authorizer`
+### `custom_jwt_authorizer` Block
 
 The `custom_jwt_authorizer` block supports the following:
 
@@ -337,7 +337,7 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
 
-### `custom_claim`
+### `custom_claim` Block
 
 The `custom_claim` block supports the following:
 
@@ -345,32 +345,32 @@ The `custom_claim` block supports the following:
 * `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
 * `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
 
-### `authorizing_claim_match_value`
+### `authorizing_claim_match_value` Block
 
 The `authorizing_claim_match_value` block supports the following:
 
 * `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
 * `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
 
-### `claim_match_value`
+### `claim_match_value` Block
 
 The `claim_match_value` block supports the following:
 
 * `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 * `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 
-### `memory`
+### `memory` Block
 
 * `agentcore_memory_configuration` - (Required) AgentCore memory configuration. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
 
-### `agentcore_memory_configuration`
+### `agentcore_memory_configuration` Block
 
 * `arn` - (Required) ARN of the AgentCore memory resource.
 * `actor_id` - (Optional) Actor ID for memory sessions.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
 * `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config`](#retrieval_config) below.
 
-### `retrieval_config`
+### `retrieval_config` Block
 
 `retrieval_config` supports the following:
 
