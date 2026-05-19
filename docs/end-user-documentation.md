@@ -26,7 +26,7 @@ Follow these guidelines to keep [provider documentation](https://registry.terraf
 
 ### Examples
 
-Each resource must include a at least one example Terraform configuration.
+Each resource must include at least one example Terraform configuration.
 
 - Examples must be functional.
 - Examples that includes several resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained; if a user run `terraform plan` on the example, no errors should be returned.
