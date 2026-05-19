@@ -10,10 +10,10 @@ resource/aws_xray_resource_policy: Mark `policy_name` as as `ForceNew`
 resource/aws_xray_resource_policy: Changes to `policy_name` now force resource recreation. Technically this is a breaking change but the resource did not function correctly previously; updating `policy_name` would leave an orphaned policy with the old name in AWS
 ```
 
-```release-note:bug
+```release-note:enhancement
 resource/aws_xray_resource_policy: Add Resource Identity support
 ```
 
-```release-note:bug
+```release-note:enhancement
 resource/aws_xray_sampling_rule: Add Resource Identity support
 ```

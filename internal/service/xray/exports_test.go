@@ -5,10 +5,11 @@ package xray
 
 // Exports for use in tests only.
 var (
-	FindEncryptionConfig     = findEncryptionConfig
-	FindGroupByARN           = findGroupByARN
-	FindResourcePolicyByName = findResourcePolicyByName
-	FindSamplingRuleByName   = findSamplingRuleByName
+	FindEncryptionConfig        = findEncryptionConfig
+	FindGroupByARN              = findGroupByARN
+	FindResourcePolicyByName    = findResourcePolicyByName
+	FindSamplingRuleByName      = findSamplingRuleByName
+	FindTraceSegmentDestination = findTraceSegmentDestination
 
 	ResourceEncryptionConfig = resourceEncryptionConfig
 	ResourceGroup            = resourceGroup
