@@ -197,7 +197,7 @@ New resources use the Terraform Plugin Framework pattern:
 - Never edit generated files by hand — modify the generator or annotations, then run `make gen`.
 - Do not modify `go.mod`/`go.sum` without running `go mod tidy`.
 - Do not add new external dependencies without explicit approval.
-- Beware of run acceptance tests (`make testacc`) — they create real AWS resources.
+- Beware of running acceptance tests (`make testacc`) without explicit approval — they create real AWS resources.
 - The `website/` directory follows different conventions; see `docs/end-user-documentation.md`.
 
 ## Verification
