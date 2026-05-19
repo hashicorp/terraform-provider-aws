@@ -149,6 +149,7 @@ Exactly one of `numerical` or `categorical` must be specified.
 ### `bedrock_evaluator_model_config`
 
 * `model_id` - (Required) Identifier of the Amazon Bedrock model to use for evaluation.
+* `additional_model_request_fields` - (Optional) JSON-encoded additional model-specific request fields to customize model behavior beyond the standard inference configuration.
 * `inference_config` - (Optional) Inference configuration parameters that control model behavior during evaluation. See [`inference_config`](#inference_config) below.
 
 ### `inference_config`

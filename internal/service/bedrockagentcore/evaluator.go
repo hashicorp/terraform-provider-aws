@@ -14,6 +14,7 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -39,6 +40,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -220,6 +222,10 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 														Attributes: map[string]schema.Attribute{
 															"model_id": schema.StringAttribute{
 																Required: true,
+															},
+															"additional_model_request_fields": schema.StringAttribute{
+																CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+																Optional:   true,
 															},
 														},
 														Blocks: map[string]schema.Block{
@@ -842,8 +848,84 @@ func (m evaluatorModelConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 }
 
 type bedrockEvaluatorModelConfigModel struct {
-	ModelID         types.String                                                 `tfsdk:"model_id"`
-	InferenceConfig fwtypes.ListNestedObjectValueOf[inferenceConfigurationModel] `tfsdk:"inference_config"`
+	AdditionalModelRequestFields fwtypes.SmithyJSON[document.Interface]                       `tfsdk:"additional_model_request_fields" autoflex:"-"`
+	ModelID                      types.String                                                 `tfsdk:"model_id"`
+	InferenceConfig              fwtypes.ListNestedObjectValueOf[inferenceConfigurationModel] `tfsdk:"inference_config"`
+}
+
+var (
+	_ fwflex.Expander  = bedrockEvaluatorModelConfigModel{}
+	_ fwflex.Flattener = &bedrockEvaluatorModelConfigModel{}
+)
+
+func (m bedrockEvaluatorModelConfigModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var out awstypes.BedrockEvaluatorModelConfig
+	out.ModelId = fwflex.StringFromFramework(ctx, m.ModelID)
+
+	if !m.InferenceConfig.IsNull() {
+		ic, d := m.InferenceConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var icOut awstypes.InferenceConfiguration
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, ic, &icOut))
+		if diags.HasError() {
+			return nil, diags
+		}
+		out.InferenceConfig = &icOut
+	}
+
+	if !m.AdditionalModelRequestFields.IsNull() && !m.AdditionalModelRequestFields.IsUnknown() {
+		doc, err := tfsmithy.DocumentFromJSONString(m.AdditionalModelRequestFields.ValueString(), document.NewLazyDocument)
+		if err != nil {
+			diags.AddError("creating Smithy document", err.Error())
+			return nil, diags
+		}
+		out.AdditionalModelRequestFields = doc
+	}
+
+	return &out, diags
+}
+
+func (m *bedrockEvaluatorModelConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	in, ok := v.(awstypes.BedrockEvaluatorModelConfig)
+	if !ok {
+		if p, pok := v.(*awstypes.BedrockEvaluatorModelConfig); pok && p != nil {
+			in = *p
+		} else {
+			diags.AddError("Unsupported Type", fmt.Sprintf("bedrock evaluator model config flatten: %T", v))
+			return diags
+		}
+	}
+
+	m.ModelID = fwflex.StringToFramework(ctx, in.ModelId)
+
+	if in.InferenceConfig != nil {
+		var ic inferenceConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, in.InferenceConfig, &ic))
+		if diags.HasError() {
+			return diags
+		}
+		m.InferenceConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ic)
+	} else {
+		m.InferenceConfig = fwtypes.NewListNestedObjectValueOfNull[inferenceConfigurationModel](ctx)
+	}
+
+	if in.AdditionalModelRequestFields != nil {
+		s, err := tfsmithy.DocumentToJSONString(in.AdditionalModelRequestFields)
+		if err != nil {
+			diags.AddError("reading Smithy document", err.Error())
+			return diags
+		}
+		m.AdditionalModelRequestFields = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
+	} else {
+		m.AdditionalModelRequestFields = fwtypes.NewSmithyJSONNull[document.Interface]()
+	}
+
+	return diags
 }
 
 type inferenceConfigurationModel struct {
