@@ -59,7 +59,7 @@ func (r *emailTemplateResource) Schema(ctx context.Context, req resource.SchemaR
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"template_name": schema.StringAttribute{
 				Required:           true,
-				DeprecationMessage: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				DeprecationMessage: "template_name is deprecated. Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -67,7 +67,7 @@ func (r *emailTemplateResource) Schema(ctx context.Context, req resource.SchemaR
 		Blocks: map[string]schema.Block{
 			"email_template": schema.ListNestedBlock{
 				CustomType:         fwtypes.NewListNestedObjectTypeOf[emailTemplate](ctx),
-				DeprecationMessage: "Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				DeprecationMessage: "email_template is deprecated. Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 				},

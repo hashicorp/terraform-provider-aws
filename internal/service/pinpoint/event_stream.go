@@ -41,19 +41,19 @@ func resourceEventStream() *schema.Resource {
 				Type:       schema.TypeString,
 				Required:   true,
 				ForceNew:   true,
-				Deprecated: "Amazon Pinpoint event streams are being discontinued on October 30, 2026.",
+				Deprecated: "application_id is deprecated. Amazon Pinpoint event streams are being discontinued on October 30, 2026.",
 			},
 			"destination_stream_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
-				Deprecated:   "Amazon Pinpoint event streams are being discontinued on October 30, 2026.",
+				Deprecated:   "destination_stream_arn is deprecated. Amazon Pinpoint event streams are being discontinued on October 30, 2026.",
 			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
-				Deprecated:   "Amazon Pinpoint event streams are being discontinued on October 30, 2026.",
+				Deprecated:   "role_arn is deprecated. Amazon Pinpoint event streams are being discontinued on October 30, 2026.",
 			},
 		},
 	}
