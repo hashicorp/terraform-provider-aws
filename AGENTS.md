@@ -192,6 +192,17 @@ New resources use the Terraform Plugin Framework pattern:
 - Use AutoFlex for flattening/expanding where possible
 - Use `retry.RetryContext` for eventual consistency
 
+For example:
+```go
+func (r *thingResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+    // 1. Read model from state
+    // 2. Call AWS API
+    // 3. Handle NotFound → remove from state
+    // 4. AutoFlex response into model
+    // 5. Write model to state
+}
+```
+
 ## Boundaries
 - Never edit `CHANGELOG.md` directly — use `.changelog/` entries.
 - Never edit generated files by hand — modify the generator or annotations, then run `make gen`.
