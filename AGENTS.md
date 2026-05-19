@@ -214,9 +214,9 @@ func (r *thingResource) Read(ctx context.Context, req resource.ReadRequest, resp
 ## Verification
 
 Before finishing:
-1. `make build` — must compile cleanly.
-2. `make ci-quick` — zero warnings.
-3. `make test` — all unit tests pass.
-4. `make gen` — if you changed annotations or generators.
-5. `make copyright-fix` — if you added new files.
-6. `make swissshepherd` — if you changed documentation.
+- `make build` — must compile cleanly.
+- `make ci-quick` — zero warnings.
+- `make test` — all unit tests pass.
+- `make gen` — if you changed annotations or generators.
+- `make copyright-fix` — if you added new files.
+- `make swissshepherd` — if you changed documentation.
