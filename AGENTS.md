@@ -91,7 +91,7 @@ terraform-provider-aws/
 - Build system: GNU Make (see `GNUmakefile`).
 - Testing: Go standard `testing` package + [`terraform-plugin-testing` acceptance test framework](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests).
 
-## Global Rules
+## Conventions
 
 ### Non-negotiables
 - Verification is a hard exit criterion for every task. Without it, the task is not done.
@@ -106,32 +106,32 @@ Per `docs/ai-usage.md`:
 - The human PR author is fully responsible for all submitted code and must understand it completely.
 - Human reviewers own the final code and must understand it fully.
 
-## Guiding Principles
+### Guiding Principles
 
-### Follow existing conventions
+#### Follow existing conventions
 Consistency is key to maintaining a readable and maintainable codebase.
 Before writing any code, analyze the existing codebase to understand and adopt its naming conventions, coding style, and language usage.
 
-### Avoid code duplication and minimize dependencies
+#### Avoid code duplication and minimize dependencies
 This repository contains a comprehensive set of utility packages. Look for opportunities to use them before writing new code.
 - Look in the `internal/` directory (excluding `internal/generate/` and `internal/services/`) for broadly reusable utilities
 - Only add new dependencies as a last resort, or when explicitly requested
 
-### Code quality must not be compromised
+#### Code quality must not be compromised
 - Every change must build successfully and pass all tests. Use `make test` to run unit tests.
 - Code must be lint-free. Use `make lint` to check for linting issues.
 
-## Additional Guidelines
+### Additional Guidelines
 
-### Go language usage
+#### Go language usage
 - **GO USES TAB (`\t`) CHARACTERS TO INDENT**
 - **Use elegant Go, modern (Go 1.26+) idioms** (e.g., `slices.Contains()`)
 - **Go nuance**: Don't build single files, **build a package**
 
-### Code generation
+#### Code generation
 - Run `make gen` after making changes to any annotations (`// @...` comments in Go files), any `internal/service/*/generate.go` source files, or `names/data/names_data.hcl`.
 
-### Working in the repository
+### Working In The Repository
 
 #### Running commands
 - Confirm that any commands you intend to run are safe before running them.
@@ -149,25 +149,40 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 - CI is the gate. Run `make ci`.
   - PRs with failing tests do not merge.
 
-### Documentation Checklist
+#### Documentation checklist
 - Authoritative reference: `./docs/end-user-documentation.md`.
 - New features require new documentation.
 - Correct spelling and grammar are important.
 - Run `make swissshepherd` to verify.
 
-### Copyright headers
+#### Copyright headers
 - All applicable files must have a copyright header.
 - Run `make copyright-fix` to ensure headers are correct.
 
-### Commit messages
+#### Commit messages
 - Each commit should be small and address a single change.
 - The commit message describes the change.
 
-### CHANGELOG entries
+#### CHANGELOG entries
 - CHANGELOG entries are required for:
   - New resources, data sources, ephemeral resources, action, list resources and functions.
   - Bug fixes.
   - Enhancements.
+
+### Common Patterns
+
+#### Resource file naming
+- `internal/service/{service}/{thing}.go` — thing resource implementation
+- `internal/service/{service}/{thing}_test.go` — thing resource acceptance tests
+- `internal/service/{service}/{thing}_data_source.go` — thing data source
+- `website/docs/r/{thing}.html.markdown` — thing resource documentation
+- `website/docs/d/{thing}.html.markdown` — thing data source documentation
+
+#### Resource implementation pattern (Framework)
+New resources use the Terraform Plugin Framework pattern:
+- Implement `resource.Resource` interface
+- Use AutoFlex for flattening/expanding where possible
+- Use `retry.RetryContext` for eventual consistency
 
 ## Boundaries
 - Never edit `CHANGELOG.md` directly — use `.changelog/` entries.
