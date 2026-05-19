@@ -893,12 +893,8 @@ func (m *bedrockEvaluatorModelConfigModel) Flatten(ctx context.Context, v any) d
 	var diags diag.Diagnostics
 	in, ok := v.(awstypes.BedrockEvaluatorModelConfig)
 	if !ok {
-		if p, pok := v.(*awstypes.BedrockEvaluatorModelConfig); pok && p != nil {
-			in = *p
-		} else {
-			diags.AddError("Unsupported Type", fmt.Sprintf("bedrock evaluator model config flatten: %T", v))
-			return diags
-		}
+		diags.AddError("Unsupported Type", fmt.Sprintf("bedrock evaluator model config flatten: %T", v))
+		return diags
 	}
 
 	m.ModelID = fwflex.StringToFramework(ctx, in.ModelId)
