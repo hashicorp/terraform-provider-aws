@@ -85,11 +85,11 @@ terraform-provider-aws/
 ```
 
 ## Stack
-- Go 1.26+, AWS SDK for Go v2
-- Terraform Plugin Framework + Terraform Plugin SDKv2 ([muxed](https://developer.hashicorp.com/terraform/plugin/mux) provider)
-- Code generators in `internal/generate/`
-- Build system: GNU Make (see `GNUmakefile`)
-- Testing: Go standard `testing` package + [`terraform-plugin-testing` acceptance test framework](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests)
+- Go 1.26+, AWS SDK for Go v2.
+- Terraform Plugin Framework + Terraform Plugin SDKv2 ([muxed](https://developer.hashicorp.com/terraform/plugin/mux) provider).
+- Code generators in `internal/generate/`.
+- Build system: GNU Make (see `GNUmakefile`).
+- Testing: Go standard `testing` package + [`terraform-plugin-testing` acceptance test framework](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests).
 
 ## Global Rules
 
@@ -168,4 +168,11 @@ This repository contains a comprehensive set of utility packages. Look for oppor
   - New resources, data sources, ephemeral resources, action, list resources and functions.
   - Bug fixes.
   - Enhancements.
-- Do not edit `CHANGELOG.md` directly.
+
+## Boundaries
+- Never edit `CHANGELOG.md` directly — use `.changelog/` entries.
+- Never edit generated files by hand — modify the generator or annotations, then run `make gen`.
+- Do not modify `go.mod`/`go.sum` without running `go mod tidy`.
+- Do not add new external dependencies without explicit approval.
+- Beware of run acceptance tests (`make testacc`) — they create real AWS resources.
+- The `website/` directory follows different conventions; see `docs/end-user-documentation.md`.
