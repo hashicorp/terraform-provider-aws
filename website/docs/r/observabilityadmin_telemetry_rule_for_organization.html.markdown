@@ -59,15 +59,17 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "example" {
 
 This resource supports the following arguments:
 
+* `rule` - (Required) Configuration block for the telemetry rule. See [`rule` Block](#rule-block) below.
 * `rule_name` - (Required) Name of the telemetry rule for organization. Must be between 1 and 100 characters and contain only alphanumeric characters, hyphens, underscores, periods, hash symbols, and forward slashes.
-* `rule` - (Required) Configuration block for the telemetry rule. See [rule](#rule) below.
 * `region` - (Optional) AWS region. If not specified, the provider region is used.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### rule
+### `rule` Block
 
-* `telemetry_type` - (Required) Type of telemetry data. Valid values: `Logs`, `Metrics`, `Traces`.
+The `rule` block supports:
+
 * `resource_type` - (Required) AWS resource type to apply the rule to. Currently supported: `AWS::EC2::VPC` with `Logs`.
+* `telemetry_type` - (Required) Type of telemetry data. Valid values: `Logs`, `Metrics`, `Traces`.
 
 ~> **Note:** This resource is currently in early development. Additional resource types and configuration options will be added in future releases.
 
