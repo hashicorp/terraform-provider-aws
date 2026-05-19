@@ -74,6 +74,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newEvaluatorResource,
+			TypeName: "aws_bedrockagentcore_evaluator",
+			Name:     "Evaluator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "evaluator_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newGatewayResource,
 			TypeName: "aws_bedrockagentcore_gateway",
 			Name:     "Gateway",
