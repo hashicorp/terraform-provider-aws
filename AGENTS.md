@@ -93,6 +93,14 @@ terraform-provider-aws/
 
 ## Conventions
 
+### Important: Dual Framework
+This provider uses TWO Terraform plugin frameworks simultaneously:
+- **Terraform Plugin SDKv2** (older resources) — uses `schema.Resource`, `d.Set()`, `d.Get()`
+- **Terraform Plugin Framework** (newer resources) — uses `resource.Resource`, plan modifiers, AutoFlex
+
+When modifying an existing resource, use the SAME framework it already uses.
+When creating a new resource, use the Terraform Plugin Framework.
+
 ### Non-negotiables
 - Verification is a hard exit criterion for every task. Without it, the task is not done.
 - Prefer the boring, obvious solution.
@@ -131,7 +139,7 @@ This repository contains a comprehensive set of utility packages. Look for oppor
 #### Code generation
 - Run `make gen` after making changes to any annotations (`// @...` comments in Go files), any `internal/service/*/generate.go` source files, or `names/data/names_data.hcl`.
 
-## Error Handling
+#### Error handling
 - Wrap AWS errors with `fmt.Errorf("reading X (%s): %w", id, err)`.
 - Use `retry.NotFound()` to check for missing resources during Read.
 - Return early on error; don't accumulate diagnostics past the first fatal error.
