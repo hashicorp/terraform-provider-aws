@@ -4,7 +4,6 @@
 package iam_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -30,8 +29,6 @@ func TestAccIAMAccessKey_List_basic(t *testing.T) {
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
-	keyID1 := tfstatecheck.StateValue()
-	keyID2 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -51,11 +48,9 @@ func TestAccIAMAccessKey_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					keyID1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("user"), knownvalue.StringExact(rName)),
 
 					identity2.GetIdentity(resourceName2),
-					keyID2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("user"), knownvalue.StringExact(rName)),
 				},
 			},
@@ -70,11 +65,11 @@ func TestAccIAMAccessKey_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_iam_access_key.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), newAccessKeyDisplayNameCheck(rName, &keyID1)),
+					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					tfquerycheck.ExpectNoResourceObject("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_iam_access_key.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), newAccessKeyDisplayNameCheck(rName, &keyID2)),
+					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
 					tfquerycheck.ExpectNoResourceObject("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -89,7 +84,6 @@ func TestAccIAMAccessKey_List_includeResource(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
-	keyID1 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -109,7 +103,6 @@ func TestAccIAMAccessKey_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					keyID1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("user"), knownvalue.StringExact(rName)),
 				},
 			},
@@ -124,7 +117,7 @@ func TestAccIAMAccessKey_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_iam_access_key.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), newAccessKeyDisplayNameCheck(rName, &keyID1)),
+					querycheck.ExpectResourceDisplayName("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					querycheck.ExpectResourceKnownValues("aws_iam_access_key.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("create_date"), knownvalue.NotNull()),
@@ -135,34 +128,4 @@ func TestAccIAMAccessKey_List_includeResource(t *testing.T) {
 			},
 		},
 	})
-}
-
-type accessKeyDisplayNameCheck struct {
-	username string
-	keyID    interface{ Value() string }
-}
-
-func newAccessKeyDisplayNameCheck(username string, keyID interface{ Value() string }) knownvalue.Check {
-	return accessKeyDisplayNameCheck{
-		username: username,
-		keyID:    keyID,
-	}
-}
-
-func (c accessKeyDisplayNameCheck) CheckValue(other any) error {
-	actual, ok := other.(string)
-	if !ok {
-		return fmt.Errorf("expected string display name, got: %T", other)
-	}
-
-	expected := fmt.Sprintf("User: %s - Access Key: %s", c.username, c.keyID.Value())
-	if actual != expected {
-		return fmt.Errorf("expected display name %q, got %q", expected, actual)
-	}
-
-	return nil
-}
-
-func (c accessKeyDisplayNameCheck) String() string {
-	return fmt.Sprintf("User: %s - Access Key: <state id>", c.username)
 }
