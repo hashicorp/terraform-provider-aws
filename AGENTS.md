@@ -183,8 +183,8 @@ Per `docs/ai-usage.md`:
 - `internal/service/{service}/{thing}.go` — thing resource implementation
 - `internal/service/{service}/{thing}_test.go` — thing resource acceptance tests
 - `internal/service/{service}/{thing}_data_source.go` — thing data source
-- `website/docs/r/{thing}.html.markdown` — thing resource documentation
-- `website/docs/d/{thing}.html.markdown` — thing data source documentation
+- `website/docs/r/{service}_{thing}.html.markdown` — thing resource documentation
+- `website/docs/d/{service}_{thing}.html.markdown` — thing data source documentation
 
 #### Resource implementation pattern (Framework)
 New resources use the Terraform Plugin Framework pattern:
