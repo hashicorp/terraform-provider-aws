@@ -120,7 +120,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"cloudwatch_logs": schema.ListNestedBlock{
+						names.AttrCloudWatchLogs: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsInputConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
