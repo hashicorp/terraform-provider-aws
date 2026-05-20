@@ -15,10 +15,12 @@ FEATURES:
 * **New Resource:** `aws_bedrockagentcore_harness` ([#47725](https://github.com/hashicorp/terraform-provider-aws/issues/47725))
 * **New Resource:** `aws_observabilityadmin_telemetry_rule_for_organization` ([#47920](https://github.com/hashicorp/terraform-provider-aws/issues/47920))
 * **New Resource:** `aws_securityhub_automation_rule_v2` ([#47677](https://github.com/hashicorp/terraform-provider-aws/issues/47677))
+* **New Resource:** `aws_xray_indexing_rule` ([#47975](https://github.com/hashicorp/terraform-provider-aws/issues/47975))
 * **New Resource:** `aws_xray_trace_segment_destination` ([#47961](https://github.com/hashicorp/terraform-provider-aws/issues/47961))
 
 ENHANCEMENTS:
 
+* data-source/aws_ec2_local_gateway_virtual_interface: Add `outpost_lag_id` and `local_gateway_virtual_interface_group_id` attributes ([#47974](https://github.com/hashicorp/terraform-provider-aws/issues/47974))
 * data-source/aws_opensearch_domain: Add `jwt_options` block to fix "Invalid address to set" error ([#47874](https://github.com/hashicorp/terraform-provider-aws/issues/47874))
 * resource/aws_bedrockagent_agent: Increase maximum value of `idle_session_ttl_in_seconds` from `3600` to `5400` to match the AWS API limit ([#47890](https://github.com/hashicorp/terraform-provider-aws/issues/47890))
 * resource/aws_bedrockagentcore_agent_runtime: Add `filesystem_configuration` argument for mounting session storage, Amazon S3 Files access points, or Amazon EFS access points into the agent runtime ([#47810](https://github.com/hashicorp/terraform-provider-aws/issues/47810))
