@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -38,7 +39,7 @@ func checkOnlineEvaluationConfigARNAlternateRegion(name string) knownvalue.Check
 
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
 	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
@@ -53,9 +54,12 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOnlineEvaluationConfigConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/OnlineEvaluationConfig/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -70,12 +74,18 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/OnlineEvaluationConfig/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
 				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
-				ImportStateVerifyIgnore:              []string{"enable_on_create"},
+				ImportStateVerifyIgnore: []string{
+					"enable_on_create",
+				},
 			},
 		},
 	})
@@ -83,7 +93,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
 	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
@@ -98,9 +108,12 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOnlineEvaluationConfigConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/OnlineEvaluationConfig/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceOnlineEvaluationConfig, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -119,7 +132,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_disappears(t *testing.T) {
 
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
 	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
@@ -136,7 +149,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_tags(t *testing.T) {
 			{
 				Config: testAccOnlineEvaluationConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -146,16 +159,18 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_tags(t *testing.T) {
 			},
 			{
 				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
 				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
-				ImportStateVerifyIgnore:              []string{"enable_on_create"},
+				ImportStateVerifyIgnore: []string{
+					"enable_on_create",
+				},
 			},
 			{
 				Config: testAccOnlineEvaluationConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -167,7 +182,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_tags(t *testing.T) {
 			{
 				Config: testAccOnlineEvaluationConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -181,7 +196,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_tags(t *testing.T) {
 
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
 	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
@@ -196,15 +211,21 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_update(t *testing.T) {
 		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOnlineEvaluationConfigConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/OnlineEvaluationConfig/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
-				Config: testAccOnlineEvaluationConfigConfig_updated(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/OnlineEvaluationConfig/updated/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -212,21 +233,13 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_update(t *testing.T) {
 					},
 				},
 			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
-				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
-				ImportStateVerifyIgnore:              []string{"enable_on_create"},
-			},
 		},
 	})
 }
 
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_executionStatus(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
 	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
@@ -243,7 +256,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_executionStatus(t *testing.T)
 			{
 				Config: testAccOnlineEvaluationConfigConfig_executionStatus(rName, "DISABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("execution_status"), knownvalue.StringExact("DISABLED")),
@@ -252,7 +265,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_executionStatus(t *testing.T)
 			{
 				Config: testAccOnlineEvaluationConfigConfig_executionStatus(rName, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -266,7 +279,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_executionStatus(t *testing.T)
 			{
 				Config: testAccOnlineEvaluationConfigConfig_executionStatus(rName, "DISABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -283,7 +296,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_executionStatus(t *testing.T)
 
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_filters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
 	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
@@ -300,16 +313,8 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_filters(t *testing.T) {
 			{
 				Config: testAccOnlineEvaluationConfigConfig_filters(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &config),
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
-				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
-				ImportStateVerifyIgnore:              []string{"enable_on_create"},
 			},
 		},
 	})
@@ -461,69 +466,6 @@ resource "aws_cloudwatch_log_group" "test" {
   name = "/aws/agentcore/%[1]s"
 }
 `, rName)
-}
-
-func testAccOnlineEvaluationConfigConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name = %[1]q
-  enable_on_create              = false
-  evaluation_execution_role_arn = aws_iam_role.test.arn
-
-  data_source_config {
-    cloudwatch_logs {
-      log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
-    }
-  }
-
-  evaluator {
-    evaluator_id = "Builtin.Helpfulness"
-  }
-
-  rule {
-    sampling_config {
-      sampling_percentage = 10.0
-    }
-  }
-}
-`, rName))
-}
-
-func testAccOnlineEvaluationConfigConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name = %[1]q
-  description                   = "Updated description"
-  enable_on_create              = false
-  evaluation_execution_role_arn = aws_iam_role.test.arn
-
-  data_source_config {
-    cloudwatch_logs {
-      log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
-    }
-  }
-
-  evaluator {
-    evaluator_id = "Builtin.Helpfulness"
-  }
-
-  evaluator {
-    evaluator_id = "Builtin.GoalSuccessRate"
-  }
-
-  rule {
-    sampling_config {
-      sampling_percentage = 50.0
-    }
-
-    session_config {
-      session_timeout_minutes = 30
-    }
-  }
-}
-`, rName))
 }
 
 func testAccOnlineEvaluationConfigConfig_tags1(rName, tag1Key, tag1Value string) string {

@@ -69,6 +69,9 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_Identity_basic(t *testing.T) 
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
+				ImportStateVerifyIgnore: []string{
+					"enable_on_create",
+				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -83,10 +86,12 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_Identity_basic(t *testing.T) 
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -100,10 +105,12 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_Identity_basic(t *testing.T) 
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -155,6 +162,9 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_Identity_regionOverride(t *te
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
+				ImportStateVerifyIgnore: []string{
+					"enable_on_create",
+				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -170,10 +180,12 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_Identity_regionOverride(t *te
 				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -188,10 +200,12 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_Identity_regionOverride(t *te
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

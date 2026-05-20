@@ -50,6 +50,7 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="online_evaluation_config_id")
+// @Testing(importIgnore="enable_on_create")
 func newOnlineEvaluationConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &onlineEvaluationConfigResource{}
 
