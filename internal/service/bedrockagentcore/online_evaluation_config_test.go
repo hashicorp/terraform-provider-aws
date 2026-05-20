@@ -369,6 +369,10 @@ func testAccPreCheckOnlineEvaluationConfig(ctx context.Context, t *testing.T) {
 
 func testAccOnlineEvaluationConfigConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "test" {
   statement {
     effect  = "Allow"
@@ -391,13 +395,52 @@ resource "aws_iam_role_policy" "test" {
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": [
-      "logs:*"
-    ],
-    "Resource": "*"
-  }
+  "Statement": [
+    {
+      "Sid": "CloudWatchLogReadStatement",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogGroups",
+        "logs:GetQueryResults",
+        "logs:StartQuery"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudWatchLogWriteStatement",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/bedrock-agentcore/evaluations/*"
+    },
+    {
+      "Sid": "CloudWatchIndexPolicyStatement",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeIndexPolicies",
+        "logs:PutIndexPolicy"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:aws/spans",
+        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:aws/spans:*"
+      ]
+    },
+    {
+      "Sid": "BedrockInvokeStatement",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/*",
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:inference-profile/*"
+      ]
+    }
+  ]
 }
 EOF
 }
@@ -418,7 +461,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   data_source_config {
     cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["test_service"]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
     }
   }
 
@@ -446,7 +489,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   data_source_config {
     cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["test_service"]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
     }
   }
 
@@ -481,7 +524,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   data_source_config {
     cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["test_service"]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
     }
   }
 
@@ -512,7 +555,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   data_source_config {
     cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["test_service"]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
     }
   }
 
@@ -545,7 +588,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   data_source_config {
     cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["test_service"]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
     }
   }
 
@@ -572,7 +615,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   data_source_config {
     cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["test_service"]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
     }
   }
 
