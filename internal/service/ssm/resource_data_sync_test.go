@@ -137,7 +137,7 @@ func TestAccSSMResourceDataSync_Update_s3DestinationPrefix(t *testing.T) {
 	})
 }
 
-func TestAccSSMResourceDataSync_destinationDataSharing_sameAccount(t *testing.T) {
+func TestAccSSMResourceDataSync_DestinationDataSharing_sameAccount(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssm_resource_data_sync.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -178,6 +178,92 @@ func TestAccSSMResourceDataSync_destinationDataSharing_sameAccount(t *testing.T)
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"s3_destination.0.destination_data_sharing",
+				},
+			},
+		},
+	})
+}
+
+func TestAccSSMResourceDataSync_DestinationDataSharing_add(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ssm_resource_data_sync.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceDataSyncConfig_destinationDataSharing_add_setup(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"destination_data_sharing": knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccResourceDataSyncConfig_destinationDataSharing_add(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSSMResourceDataSync_DestinationDataSharing_remove(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ssm_resource_data_sync.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceDataSyncConfig_destinationDataSharing_remove_setup(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"destination_data_sharing": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"destination_data_sharing_type": knownvalue.StringExact("Organization"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccResourceDataSyncConfig_destinationDataSharing_remove(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
 				},
 			},
 		},
@@ -341,7 +427,9 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 func testAccResourceDataSyncConfig_destinationDataSharing_sameAccount(rName, bucketName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		fmt.Sprintf(`
 resource "aws_ssm_resource_data_sync" "test" {
   name = %[1]q
 
@@ -349,9 +437,9 @@ resource "aws_ssm_resource_data_sync" "test" {
     bucket_name = aws_s3_bucket.test.bucket
     region      = aws_s3_bucket.test.region
 
-	destination_data_sharing {
-		destination_data_sharing_type = "Organization"
-	}
+    destination_data_sharing {
+      destination_data_sharing_type = "Organization"
+    }
   }
 }
 
@@ -359,9 +447,99 @@ resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
   force_destroy = true
 }
+`, rName, bucketName))
+}
 
-data "aws_partition" "current" {}
+func testAccResourceDataSyncConfig_destinationDataSharing_add_setup(rName, bucketName string) string {
+	return acctest.ConfigCompose(
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		fmt.Sprintf(`
+resource "aws_ssm_resource_data_sync" "test" {
+  name = %[1]q
 
+  s3_destination {
+    bucket_name = aws_s3_bucket.test.bucket
+    region      = aws_s3_bucket.test.region
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+`, rName, bucketName))
+}
+
+func testAccResourceDataSyncConfig_destinationDataSharing_add(rName, bucketName string) string {
+	return acctest.ConfigCompose(
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		fmt.Sprintf(`
+resource "aws_ssm_resource_data_sync" "test" {
+  name = %[1]q
+
+  s3_destination {
+    bucket_name = aws_s3_bucket.test.bucket
+    region      = aws_s3_bucket.test.region
+
+    destination_data_sharing {
+      destination_data_sharing_type = "Organization"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+`, rName, bucketName))
+}
+
+func testAccResourceDataSyncConfig_destinationDataSharing_remove_setup(rName, bucketName string) string {
+	return acctest.ConfigCompose(
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		fmt.Sprintf(`
+resource "aws_ssm_resource_data_sync" "test" {
+  name = %[1]q
+
+  s3_destination {
+    bucket_name = aws_s3_bucket.test.bucket
+    region      = aws_s3_bucket.test.region
+
+    destination_data_sharing {
+      destination_data_sharing_type = "Organization"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+`, rName, bucketName))
+}
+
+func testAccResourceDataSyncConfig_destinationDataSharing_remove(rName, bucketName string) string {
+	return acctest.ConfigCompose(
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		fmt.Sprintf(`
+resource "aws_ssm_resource_data_sync" "test" {
+  name = %[1]q
+
+  s3_destination {
+    bucket_name = aws_s3_bucket.test.bucket
+    region      = aws_s3_bucket.test.region
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+`, rName, bucketName))
+}
+
+func testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy() string {
+	return `
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -409,5 +587,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
       EOF
 }
-`, rName, bucketName)
+
+data "aws_partition" "current" {}
+`
 }
