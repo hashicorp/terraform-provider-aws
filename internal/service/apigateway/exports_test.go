@@ -13,7 +13,7 @@ var (
 	ResourceDocumentationPart           = resourceDocumentationPart
 	ResourceDocumentationVersion        = resourceDocumentationVersion
 	ResourceDomainName                  = resourceDomainName
-	ResourceDomainNameShare             = resourceDomainNameShare
+	ResourceDomainNameShare             = newDomainNameShareResource
 	ResourceDomainNameAccessAssociation = newDomainNameAccessAssociationResource
 	ResourceGatewayResponse             = resourceGatewayResponse
 	ResourceIntegration                 = resourceIntegration

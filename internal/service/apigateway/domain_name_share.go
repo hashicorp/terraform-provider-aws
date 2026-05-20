@@ -9,137 +9,213 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_api_gateway_domain_name_share", name="Domain Name Share")
+// @FrameworkResource("aws_api_gateway_domain_name_share", name="Domain Name Share")
+// @IdentityAttribute("domain_name_id")
+// @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetDomainNameOutput")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain(t)")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
-func resourceDomainNameShare() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceDomainNameShareCreate,
-		ReadWithoutTimeout:   resourceDomainNameShareRead,
-		UpdateWithoutTimeout: resourceDomainNameShareUpdate,
-		DeleteWithoutTimeout: resourceDomainNameShareDelete,
+func newDomainNameShareResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &domainNameShareResource{}, nil
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+type domainNameShareResource struct {
+	framework.ResourceWithModel[domainNameShareResourceModel]
+	framework.WithImportByIdentity
+}
 
-		Schema: map[string]*schema.Schema{
-			"allowed_accounts": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+func (r *domainNameShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"allowed_accounts": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Required:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(validators.AWSAccountID()),
 				},
 			},
-			"domain_name_id": {
-				Type:     schema.TypeString,
+			"domain_name_id": schema.StringAttribute{
 				Required: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("domain_name_id")),
 		},
 	}
 }
 
-func resourceDomainNameShareCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if err := putDomainNameShare(ctx, d, meta); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway Domain Name Share (%s): %s", d.Get("domain_name_id").(string), err)
+func (r *domainNameShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data domainNameShareResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	d.SetId(d.Get("domain_name_id").(string))
+	c := r.Meta()
+	conn := c.APIGatewayClient(ctx)
 
-	return append(diags, resourceDomainNameShareRead(ctx, d, meta)...)
-}
-
-func resourceDomainNameShareRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
-
-	output, err := findDomainNameShareByDomainNameID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] API Gateway Domain Name Share (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	domainNameID := data.DomainNameID.ValueString()
+	if err := putDomainNameShare(ctx, c, conn, domainNameID, fwflex.ExpandFrameworkStringValueSet(ctx, data.AllowedAccounts)); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("creating API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
 	}
 
+	output, err := findDomainNameShareByDomainNameID(ctx, conn, domainNameID)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name Share (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
 	}
 
 	allowedAccounts, err := domainNameShareAllowedAccounts(aws.ToString(output.ManagementPolicy))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name Share (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
 	}
 
+	data.AllowedAccounts = fwflex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, allowedAccounts)
+	data.DomainNameID = fwflex.StringToFramework(ctx, output.DomainNameId)
+	data.ID = data.DomainNameID
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *domainNameShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data domainNameShareResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().APIGatewayClient(ctx)
+
+	domainNameID := data.DomainNameID.ValueString()
+	if domainNameID == "" {
+		domainNameID = data.ID.ValueString()
+	}
+
+	output, err := findDomainNameShareByDomainNameID(ctx, conn, domainNameID)
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("reading API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
+	}
+
+	allowedAccounts, err := domainNameShareAllowedAccounts(aws.ToString(output.ManagementPolicy))
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("reading API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
+	}
 	if len(allowedAccounts) == 0 {
-		log.Printf("[WARN] API Gateway Domain Name Share (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(&retry.NotFoundError{}))
+		resp.State.RemoveResource(ctx)
+		return
 	}
 
-	d.Set("allowed_accounts", allowedAccounts)
-	d.Set("domain_name_id", output.DomainNameId)
+	data.AllowedAccounts = fwflex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, allowedAccounts)
+	data.DomainNameID = fwflex.StringToFramework(ctx, output.DomainNameId)
+	data.ID = data.DomainNameID
 
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func resourceDomainNameShareUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if d.HasChange("allowed_accounts") {
-		if err := putDomainNameShare(ctx, d, meta); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating API Gateway Domain Name Share (%s): %s", d.Id(), err)
-		}
+func (r *domainNameShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data domainNameShareResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	return append(diags, resourceDomainNameShareRead(ctx, d, meta)...)
-}
-
-func resourceDomainNameShareDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
+	c := r.Meta()
 	conn := c.APIGatewayClient(ctx)
 
-	output, err := findDomainNameByID(ctx, conn, d.Id())
-
-	if retry.NotFound(err) {
-		return diags
+	domainNameID := data.DomainNameID.ValueString()
+	if err := putDomainNameShare(ctx, c, conn, domainNameID, fwflex.ExpandFrameworkStringValueSet(ctx, data.AllowedAccounts)); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("updating API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
 	}
 
+	output, err := findDomainNameShareByDomainNameID(ctx, conn, domainNameID)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Domain Name Share (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
+	}
+
+	allowedAccounts, err := domainNameShareAllowedAccounts(aws.ToString(output.ManagementPolicy))
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("reading API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
+	}
+
+	data.AllowedAccounts = fwflex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, allowedAccounts)
+	data.DomainNameID = fwflex.StringToFramework(ctx, output.DomainNameId)
+	data.ID = data.DomainNameID
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *domainNameShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data domainNameShareResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().APIGatewayClient(ctx)
+
+	domainNameID := data.DomainNameID.ValueString()
+	if domainNameID == "" {
+		domainNameID = data.ID.ValueString()
+	}
+
+	output, err := findDomainNameByID(ctx, conn, domainNameID)
+	if retry.NotFound(err) {
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting API Gateway Domain Name Share (%s)", domainNameID), err.Error())
+		return
 	}
 
 	input := apigateway.UpdateDomainNameInput{
 		DomainName:   aws.String(aws.ToString(output.DomainName)),
-		DomainNameId: aws.String(d.Id()),
-		PatchOperations: []types.PatchOperation{
+		DomainNameId: aws.String(domainNameID),
+		PatchOperations: []awstypes.PatchOperation{
 			{
-				Op:   types.OpRemove,
+				Op:   awstypes.OpRemove,
 				Path: aws.String("/managementPolicy"),
 			},
 		},
@@ -147,32 +223,25 @@ func resourceDomainNameShareDelete(ctx context.Context, d *schema.ResourceData, 
 
 	_, err = conn.UpdateDomainName(ctx, &input)
 
-	if errs.IsA[*types.NotFoundException](err) {
-		return diags
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
 	}
 
-	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Invalid patch path") {
-		return diags
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Invalid patch path") {
+		return
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Domain Name Share (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting API Gateway Domain Name Share (%s)", domainNameID), err.Error())
 	}
-
-	return diags
 }
 
-func putDomainNameShare(ctx context.Context, d *schema.ResourceData, meta any) error {
-	c := meta.(*conns.AWSClient)
-	conn := c.APIGatewayClient(ctx)
-
-	domainNameID := d.Get("domain_name_id").(string)
+func putDomainNameShare(ctx context.Context, c *conns.AWSClient, conn *apigateway.Client, domainNameID string, allowedAccounts []string) error {
 	output, err := findDomainNameByID(ctx, conn, domainNameID)
 	if err != nil {
 		return err
 	}
 
-	allowedAccounts := flex.ExpandStringValueSet(d.Get("allowed_accounts").(*schema.Set))
 	managementPolicy, err := domainNameShareManagementPolicy(ctx, c, aws.ToString(output.DomainName), domainNameID, allowedAccounts)
 	if err != nil {
 		return err
@@ -181,9 +250,9 @@ func putDomainNameShare(ctx context.Context, d *schema.ResourceData, meta any) e
 	input := apigateway.UpdateDomainNameInput{
 		DomainName:   aws.String(aws.ToString(output.DomainName)),
 		DomainNameId: aws.String(domainNameID),
-		PatchOperations: []types.PatchOperation{
+		PatchOperations: []awstypes.PatchOperation{
 			{
-				Op:    types.OpReplace,
+				Op:    awstypes.OpReplace,
 				Path:  aws.String("/managementPolicy"),
 				Value: aws.String(managementPolicy),
 			},
@@ -216,7 +285,7 @@ func findDomainNameByID(ctx context.Context, conn *apigateway.Client, domainName
 	for {
 		output, err := conn.GetDomainNames(ctx, &input)
 
-		if errs.IsA[*types.NotFoundException](err) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{LastError: err}
 		}
 
@@ -367,4 +436,11 @@ func domainNameShareStringSlice(v any) []string {
 	default:
 		return nil
 	}
+}
+
+type domainNameShareResourceModel struct {
+	framework.WithRegionModel
+	AllowedAccounts fwtypes.SetOfString `tfsdk:"allowed_accounts"`
+	DomainNameID    types.String        `tfsdk:"domain_name_id"`
+	ID              types.String        `tfsdk:"id"`
 }

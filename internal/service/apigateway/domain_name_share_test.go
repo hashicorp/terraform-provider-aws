@@ -66,7 +66,7 @@ func TestAccAPIGatewayDomainNameShare_disappears(t *testing.T) {
 				Config: testAccDomainNameShareConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameShareExists(ctx, t, resourceName, &v),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceDomainNameShare(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfapigateway.ResourceDomainNameShare, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
