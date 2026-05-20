@@ -62,9 +62,9 @@ linters:
         - retry.RetryContext
         - schema.DefaultTimeout
         - validation.*
-        - floatBetweenSchema
-        - intBetweenSchema
-        - stringLenBetweenSchema
+        - sdkschema.FloatBetweenSchema
+        - sdkschema.IntBetweenSchema
+        - sdkschema.StringLenBetweenSchema
         # Terraform Plugin Framework
         - float32validator.*
         - float64validator.*

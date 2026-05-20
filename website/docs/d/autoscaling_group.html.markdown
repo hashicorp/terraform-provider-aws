@@ -33,15 +33,15 @@ This data source exports the following attributes in addition to the arguments a
 * `availability_zones` - One or more Availability Zones for the group.
 * `default_cooldown` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `desired_capacity` - Desired size of the group.
-* `desired_capacity_type` - The unit of measurement for the value returned for `desired_capacity`.
+* `desired_capacity_type` - Unit of measurement for the value returned for `desired_capacity`.
 * `enabled_metrics` - List of metrics enabled for collection.
-* `health_check_grace_period` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
+* `health_check_grace_period` - Amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `health_check_type` - Service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.
 * `instance_maintenance_policy` - Instance maintenance policy for the group.
     * `min_healthy_percentage` - Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
     * `max_healthy_percentage` - Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
-* `launch_configuration` - The name of the associated launch configuration.
+* `launch_configuration` - Name of the associated launch configuration.
 * `launch_template` - List of launch templates for the group.
     * `id` - ID of the launch template.
     * `name` - Name of the launch template.
@@ -50,7 +50,6 @@ This data source exports the following attributes in addition to the arguments a
 * `max_instance_lifetime` - Maximum amount of time, in seconds, that an instance can be in service.
 * `max_size` - Maximum size of the group.
 * `min_size` - Minimum size of the group.
-* `new_instances_protected_from_scale_in` - Whether newly launched instances are protected from termination by Amazon EC2 Auto Scaling when scaling in.
 * `mixed_instances_policy` - List of mixed instances policy objects for the group.
     * `instances_distribution` - List of instances distribution objects.
         * `on_demand_allocation_strategy` - Strategy used when launching on-demand instances.
@@ -112,6 +111,7 @@ This data source exports the following attributes in addition to the arguments a
                 * `version` - Template version.
             * `weighted_capacity` - Number of capacity units, which gives the instance type a proportional weight to other instance types.
 * `name` - Name of the Auto Scaling Group.
+* `new_instances_protected_from_scale_in` - Whether newly launched instances are protected from termination by Amazon EC2 Auto Scaling when scaling in.
 * `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
 * `predicted_capacity` - Predicted capacity of the group.
 * `service_linked_role_arn` - ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
@@ -122,7 +122,7 @@ This data source exports the following attributes in addition to the arguments a
     * `value` - Value.
     * `propagate_at_launch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
-* `termination_policies` - The termination policies for the group.
+* `termination_policies` - Termination policies for the group.
 * `traffic_source` - Traffic sources.
     * `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
     * `type` - Traffic source type.

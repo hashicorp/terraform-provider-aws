@@ -1,12 +1,12 @@
 ---
 name: fixdocs
-description: "Fix Terraform provider documentation issues detected by swissshepherd (ss). Removes an ignored target from the config, runs ss, validates findings, fixes the documentation, and commits."
+description: "Fix Terraform provider end user documentation issues detected by swissshepherd (ss). Removes an ignored target from the config, runs ss, validates findings, fixes the documentation, and commits."
 ---
 
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
-# Skill: Fix Documentation with swissshepherd
+# Skill: Fix End User Documentation With `swissshepherd`
 
 Fix Terraform provider documentation issues by removing targets from the swissshepherd ignore list, validating findings against the schema, and correcting the documentation.
 
@@ -89,6 +89,8 @@ When adding or editing documentation:
 - Block sections use heading: `` ### `block_name` Block ``
 - Byline for arguments: "The following arguments are required:" / "The following arguments are optional:"
 - Byline for attributes: "In addition to all arguments above, the following attributes are exported:"
+
+Authoritative reference: [docs/end-user-documentation.md](../../../docs/end-user-documentation.md). When this skill and that document disagree, the document wins.
 
 ### Phase 5: Verify fix
 

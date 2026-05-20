@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -71,12 +72,12 @@ func wordCloudVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          stringEnumSchema[awstypes.WordCloudCloudLayout](attrOptional),
-										"maximum_string_length": intBetweenSchema(attrOptional, 1, 100),
-										"word_casing":           stringEnumSchema[awstypes.WordCloudWordCasing](attrOptional),
-										"word_orientation":      stringEnumSchema[awstypes.WordCloudWordOrientation](attrOptional),
-										"word_padding":          stringEnumSchema[awstypes.WordCloudWordPadding](attrOptional),
-										"word_scaling":          stringEnumSchema[awstypes.WordCloudWordScaling](attrOptional),
+										"cloud_layout":          sdkschema.StringEnumSchema[awstypes.WordCloudCloudLayout](sdkschema.AttrOptional),
+										"maximum_string_length": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 100),
+										"word_casing":           sdkschema.StringEnumSchema[awstypes.WordCloudWordCasing](sdkschema.AttrOptional),
+										"word_orientation":      sdkschema.StringEnumSchema[awstypes.WordCloudWordOrientation](sdkschema.AttrOptional),
+										"word_padding":          sdkschema.StringEnumSchema[awstypes.WordCloudWordPadding](sdkschema.AttrOptional),
+										"word_scaling":          sdkschema.StringEnumSchema[awstypes.WordCloudWordScaling](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -97,7 +98,7 @@ func wordCloudVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudChartConfiguration.html
 					Type:     schema.TypeList,
@@ -138,12 +139,12 @@ func wordCloudVisualDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          stringEnumDataSourceSchema[awstypes.WordCloudCloudLayout](),
+										"cloud_layout":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudCloudLayout](),
 										"maximum_string_length": intComputedOnly(),
-										"word_casing":           stringEnumDataSourceSchema[awstypes.WordCloudWordCasing](),
-										"word_orientation":      stringEnumDataSourceSchema[awstypes.WordCloudWordOrientation](),
-										"word_padding":          stringEnumDataSourceSchema[awstypes.WordCloudWordPadding](),
-										"word_scaling":          stringEnumDataSourceSchema[awstypes.WordCloudWordScaling](),
+										"word_casing":           sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordCasing](),
+										"word_orientation":      sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordOrientation](),
+										"word_padding":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordPadding](),
+										"word_scaling":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordScaling](),
 									},
 								},
 							},
