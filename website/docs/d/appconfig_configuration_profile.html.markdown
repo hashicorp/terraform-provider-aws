@@ -36,10 +36,12 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Configuration Profile.
 * `description` - Description of the Configuration Profile.
 * `id` - AppConfig Configuration Profile ID and Application ID separated by a colon `(:)`.
+* `kms_key_identifier` - KMS key identifier for encrypting the configuration data.
 * `location_uri` - Location URI of the Configuration Profile.
 * `name` - Name of the Configuration Profile.
 * `retrieval_role_arn` - ARN of an IAM role with permission to access the configuration at the specified location_uri.
 * `tags` - Map of tags for the resource.
+* `type` - Type of the Configuration Profile.
 * `validator` - Nested list of methods for validating the configuration.
     * `content` - Either the JSON Schema content or the ARN of an AWS Lambda function.
     * `type` - Type of validator. Valid values: JSON_SCHEMA and LAMBDA.
