@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -109,6 +110,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"output_config":   framework.ResourceComputedListOfObjectsAttribute[outputConfigModel](ctx, listplanmodifier.UseStateForUnknown()),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -154,32 +156,6 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.RegexMatches(regexache.MustCompile(`^(Builtin\.[a-zA-Z0-9_-]+|[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10})$`), "must be a builtin evaluator (e.g. Builtin.Helpfulness) or a custom evaluator ID"),
-							},
-						},
-					},
-				},
-			},
-			"output_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[outputConfigModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"cloudwatch_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchOutputConfigModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrLogGroupName: schema.StringAttribute{
-										Computed: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
-										},
-									},
-								},
 							},
 						},
 					},
@@ -411,17 +387,6 @@ func (r *onlineEvaluationConfigResource) Update(ctx context.Context, request res
 
 		if _, err := waitOnlineEvaluationConfigUpdated(ctx, conn, configID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, configID)
-			return
-		}
-
-		config, err := findOnlineEvaluationConfigByID(ctx, conn, configID)
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, configID)
-			return
-		}
-
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, config, &new))
-		if response.Diagnostics.HasError() {
 			return
 		}
 	}
