@@ -136,9 +136,9 @@ This action supports the following arguments:
 
 Each `entry` block supports:
 
-* `source` - (Required) Source identifier for the event (e.g., `mycompany.myapp`).
 * `detail` - (Optional) JSON string (use `jsonencode()`) representing the event detail payload.
 * `detail_type` - (Optional) Free-form string used to decide what fields to expect in the event detail.
 * `event_bus_name` - (Optional) Name or ARN of the event bus. Defaults to the account's default bus.
 * `resources` - (Optional) List of ARNs the event primarily concerns.
+* `source` - (Required) Source identifier for the event (e.g., `mycompany.myapp`).
 * `time` - (Optional) RFC3339 timestamp for the event. If omitted, the receive time is used.
