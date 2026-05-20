@@ -675,7 +675,7 @@ func TestAccS3Bucket_tags_withSystemTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), resourceName), // nosemgrep:disappears-expect-resource-action
 					testAccCheckBucketCreateViaCloudFormation(ctx, t, bucketName, &stackID),
 				),
 			},
