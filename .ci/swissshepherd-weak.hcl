@@ -169,12 +169,12 @@ check "schema_docs" {
 
   byline      = true
   coverage    = true
+  deprecated  = true
   description = true
   format      = true
   heading     = true
   labels      = true
   ordering    = true
-  deprecated  = true
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
