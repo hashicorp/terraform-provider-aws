@@ -47,12 +47,12 @@ data "aws_ec2_hosts" "outpost" {
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeHosts.html) for supported filters. Detailed below.
 * `outpost_arn` - (Optional) ARN of the AWS Outpost. Filters results client-side to only include hosts allocated on this Outpost.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags, each pair of which must exactly match a pair on the desired Dedicated Hosts.
 
-### filter Argument Reference
+### `filter` Block
 
 The `filter` configuration block supports the following arguments:
 
