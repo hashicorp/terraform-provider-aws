@@ -97,9 +97,10 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-## Import
-
+<!-- This note is here because `tfproviderdocs` flags it if it's inside the Import section -->
 **Note:** If `s3_destination.destination_data_sharing` is set, the imported resource will be replaced on the next `terrafrom apply`.
+
+## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM resource data sync using the `name`. For example:
 
