@@ -54,7 +54,6 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`online-evaluation-config/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_name"), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},

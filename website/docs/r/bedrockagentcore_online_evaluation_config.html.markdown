@@ -180,11 +180,9 @@ The `session_config` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `failure_reason` - Reason for failure if the configuration creation or execution failed.
 * `online_evaluation_config_arn` - ARN of the online evaluation configuration.
 * `online_evaluation_config_id` - Unique identifier of the online evaluation configuration.
 * `output_config` - Configuration specifying where evaluation results are written. See [`output_config` Block](#output_config-block) below.
-* `status` - Status of the online evaluation configuration. Values: `ACTIVE`, `CREATING`, `CREATE_FAILED`, `UPDATING`, `UPDATE_FAILED`, `DELETING`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `output_config` Block

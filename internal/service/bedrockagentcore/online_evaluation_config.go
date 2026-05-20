@@ -86,12 +86,6 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"failure_reason": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"online_evaluation_config_arn": framework.ARNAttributeComputedOnly(),
 			"online_evaluation_config_id":  framework.IDAttribute(),
 			"online_evaluation_config_name": schema.StringAttribute{
@@ -101,13 +95,6 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.OnlineEvaluationConfigStatus](),
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -550,13 +537,11 @@ type onlineEvaluationConfigResourceModel struct {
 	EvaluationExecutionRoleArn fwtypes.ARN                                                  `tfsdk:"evaluation_execution_role_arn"`
 	Evaluators                 fwtypes.ListNestedObjectValueOf[evaluatorReferenceModel]     `tfsdk:"evaluator"`
 	ExecutionStatus            fwtypes.StringEnum[awstypes.OnlineEvaluationExecutionStatus] `tfsdk:"execution_status"`
-	FailureReason              types.String                                                 `tfsdk:"failure_reason"`
 	OnlineEvaluationConfigARN  types.String                                                 `tfsdk:"online_evaluation_config_arn"`
 	OnlineEvaluationConfigID   types.String                                                 `tfsdk:"online_evaluation_config_id"`
 	OnlineEvaluationConfigName types.String                                                 `tfsdk:"online_evaluation_config_name"`
 	OutputConfig               fwtypes.ListNestedObjectValueOf[outputConfigModel]           `tfsdk:"output_config"`
 	Rule                       fwtypes.ListNestedObjectValueOf[ruleModel]                   `tfsdk:"rule"`
-	Status                     fwtypes.StringEnum[awstypes.OnlineEvaluationConfigStatus]    `tfsdk:"status"`
 	Tags                       tftags.Map                                                   `tfsdk:"tags"`
 	TagsAll                    tftags.Map                                                   `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                               `tfsdk:"timeouts"`
