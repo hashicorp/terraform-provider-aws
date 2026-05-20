@@ -107,70 +107,70 @@ resource "aws_bedrockagentcore_online_evaluation_config" "filtered" {
 
 The following arguments are required:
 
-* `online_evaluation_config_name` - (Required, Forces new resource) Name of the online evaluation configuration. Must start with a letter and contain only alphanumeric characters and underscores, up to 48 characters.
+* `data_source_config` - (Required) Data source configuration specifying where to read agent traces. See [`data_source_config` Block](#data_source_config-block) below.
 * `enable_on_create` - (Required) Whether to enable the online evaluation configuration immediately upon creation.
 * `evaluation_execution_role_arn` - (Required) ARN of the IAM role that grants permissions to read from CloudWatch logs, write evaluation results, and invoke Amazon Bedrock models for evaluation.
-* `data_source_config` - (Required) Data source configuration specifying where to read agent traces. See [`data_source_config`](#data_source_config) below.
-* `evaluator` - (Required) List of evaluators to apply during online evaluation. Minimum 1, maximum 10. See [`evaluator`](#evaluator) below.
-* `rule` - (Required) Evaluation rule defining sampling configuration, filters, and session detection settings. See [`rule`](#rule) below.
+* `evaluator` - (Required) List of evaluators to apply during online evaluation. Minimum 1, maximum 10. See [`evaluator` Block](#evaluator-block) below.
+* `online_evaluation_config_name` - (Required, Forces new resource) Name of the online evaluation configuration. Must start with a letter and contain only alphanumeric characters and underscores, up to 48 characters.
+* `rule` - (Required) Evaluation rule defining sampling configuration, filters, and session detection settings. See [`rule` Block](#rule-block) below.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the online evaluation configuration.
 * `execution_status` - (Optional) Execution status to enable or disable the online evaluation. Valid values: `ENABLED`, `DISABLED`. Computed on create based on `enable_on_create`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `data_source_config`
+### `data_source_config` Block
 
 The `data_source_config` block supports the following:
 
-* `cloud_watch_logs` - (Optional) CloudWatch logs configuration for reading agent traces. See [`cloud_watch_logs`](#cloud_watch_logs) below.
+* `cloud_watch_logs` - (Optional) CloudWatch logs configuration for reading agent traces. See [`cloud_watch_logs` Block](#cloud_watch_logs-block) below.
 
-### `cloud_watch_logs`
+### `cloud_watch_logs` Block
 
 The `cloud_watch_logs` block supports the following:
 
 * `log_group_names` - (Required) List of CloudWatch log group names to monitor for agent traces. Maximum 5.
 * `service_names` - (Required) List of service names to filter traces within the specified log groups.
 
-### `evaluator`
+### `evaluator` Block
 
 The `evaluator` block supports the following:
 
 * `evaluator_id` - (Required) Unique identifier of the evaluator. Can reference builtin evaluators (e.g., `Builtin.Helpfulness`, `Builtin.GoalSuccessRate`) or custom evaluator IDs.
 
-### `rule`
+### `rule` Block
 
 The `rule` block supports the following:
 
-* `sampling_config` - (Required) Sampling configuration determining what percentage of agent traces to evaluate. See [`sampling_config`](#sampling_config) below.
-* `filter` - (Optional) List of filters determining which agent traces to evaluate. Maximum 5. See [`filter`](#filter) below.
-* `session_config` - (Optional) Session configuration defining timeout settings for detecting when agent sessions are complete. See [`session_config`](#session_config) below.
+* `filter` - (Optional) List of filters determining which agent traces to evaluate. Maximum 5. See [`filter` Block](#filter-block) below.
+* `sampling_config` - (Required) Sampling configuration determining what percentage of agent traces to evaluate. See [`sampling_config` Block](#sampling_config-block) below.
+* `session_config` - (Optional) Session configuration defining timeout settings for detecting when agent sessions are complete. See [`session_config` Block](#session_config-block) below.
 
-### `sampling_config`
+### `sampling_config` Block
 
 The `sampling_config` block supports the following:
 
 * `sampling_percentage` - (Required) Percentage of agent traces to sample for evaluation, from 0.01 to 100.
 
-### `filter`
+### `filter` Block
 
 The `filter` block supports the following:
 
 * `key` - (Required) Key or field name to filter on within the agent trace data.
 * `operator` - (Required) Comparison operator. Valid values: `Equals`, `NotEquals`, `GreaterThan`, `LessThan`, `GreaterThanOrEqual`, `LessThanOrEqual`, `Contains`, `NotContains`.
-* `value` - (Required) Value to compare against. See [`value`](#value) below.
+* `value` - (Required) Value to compare against. See [`value` Block](#value-block) below.
 
-### `value`
+### `value` Block
 
 The `value` block supports the following (exactly one must be specified):
 
-* `string_value` - (Optional) String value for text-based filtering.
 * `boolean_value` - (Optional) Boolean value for true/false filtering.
 * `double_value` - (Optional) Numeric value for numerical filtering.
+* `string_value` - (Optional) String value for text-based filtering.
 
-### `session_config`
+### `session_config` Block
 
 The `session_config` block supports the following:
 
@@ -180,17 +180,20 @@ The `session_config` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `failure_reason` - Reason for failure if the configuration creation or execution failed.
 * `online_evaluation_config_arn` - ARN of the online evaluation configuration.
 * `online_evaluation_config_id` - Unique identifier of the online evaluation configuration.
-* `failure_reason` - Reason for failure if the configuration creation or execution failed.
-* `output_config` - Configuration specifying where evaluation results are written. See [`output_config`](#output_config) below.
+* `output_config` - Configuration specifying where evaluation results are written. See [`output_config` Block](#output_config-block) below.
 * `status` - Status of the online evaluation configuration. Values: `ACTIVE`, `CREATING`, `CREATE_FAILED`, `UPDATING`, `UPDATE_FAILED`, `DELETING`.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### `output_config`
+### `output_config` Block
 
-* `cloud_watch_config` - CloudWatch configuration for evaluation results.
-    * `log_group_name` - Name of the CloudWatch log group where evaluation results are written.
+* `cloud_watch_config` - CloudWatch configuration for evaluation results. See [`cloud_watch_config` Block](#cloud_watch_config-block) below.
+
+### `cloud_watch_config` Block
+
+* `log_group_name` - Name of the CloudWatch log group where evaluation results are written.
 
 ## Timeouts
 
