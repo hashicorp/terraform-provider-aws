@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_opensearch_domain: Add `advanced_security_options.master_user_options.master_user_password_wo` argument to support the write-only variant of `master_user_password`
+```
