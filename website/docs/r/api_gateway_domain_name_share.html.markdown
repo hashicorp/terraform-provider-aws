@@ -44,7 +44,37 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes beyond the arguments above.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_api_gateway_domain_name_share.example
+  identity = {
+    domain_name_id = "abcd1234"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_name_id` (String) Domain name ID of the private custom domain name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain name shares using the `domain_name_id`. For example:
 

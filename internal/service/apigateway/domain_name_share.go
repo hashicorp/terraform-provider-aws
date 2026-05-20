@@ -11,11 +11,13 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -43,11 +45,22 @@ import (
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain(t)")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
 func newDomainNameShareResource(context.Context) (resource.ResourceWithConfigure, error) {
-	return &domainNameShareResource{}, nil
+	r := &domainNameShareResource{}
+
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
 }
+
+const (
+	ResNameDomainNameShare = "Domain Name Share"
+)
 
 type domainNameShareResource struct {
 	framework.ResourceWithModel[domainNameShareResourceModel]
+	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -70,6 +83,13 @@ func (r *domainNameShareResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("domain_name_id")),
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -443,4 +463,5 @@ type domainNameShareResourceModel struct {
 	AllowedAccounts fwtypes.SetOfString `tfsdk:"allowed_accounts"`
 	DomainNameID    types.String        `tfsdk:"domain_name_id"`
 	ID              types.String        `tfsdk:"id"`
+	Timeouts        timeouts.Value      `tfsdk:"timeouts"`
 }
