@@ -8,6 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +23,7 @@ func boxPlotVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -36,8 +37,8 @@ func boxPlotVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"all_data_points_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
-										"outlier_visibility":         stringEnumSchema[awstypes.Visibility](attrOptional),
+										"all_data_points_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"outlier_visibility":         sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 										"style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotStyleOptions.html
 											Type:     schema.TypeList,
 											Optional: true,
@@ -45,7 +46,7 @@ func boxPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"fill_style": stringEnumSchema[awstypes.BoxPlotFillStyle](attrOptional),
+													"fill_style": sdkschema.StringEnumSchema[awstypes.BoxPlotFillStyle](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -54,7 +55,7 @@ func boxPlotVisualSchema() *schema.Schema {
 							},
 							"category_axis":          axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"category_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -80,7 +81,7 @@ func boxPlotVisualSchema() *schema.Schema {
 							"primary_y_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"primary_y_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"reference_lines":                referenceLineSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -98,9 +99,9 @@ func boxPlotVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -112,9 +113,9 @@ func boxPlotVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotChartConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -124,14 +125,14 @@ func boxPlotVisualDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"all_data_points_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
-										"outlier_visibility":         stringEnumDataSourceSchema[awstypes.Visibility](),
+										"all_data_points_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+										"outlier_visibility":         sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 										"style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotStyleOptions.html
 											Type:     schema.TypeList,
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"fill_style": stringEnumDataSourceSchema[awstypes.BoxPlotFillStyle](),
+													"fill_style": sdkschema.StringEnumDataSourceSchema[awstypes.BoxPlotFillStyle](),
 												},
 											},
 										},
@@ -140,7 +141,7 @@ func boxPlotVisualDataSourceSchema() *schema.Schema {
 							},
 							"category_axis":          axisDisplayOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"category_label_options": chartAxisLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -162,7 +163,7 @@ func boxPlotVisualDataSourceSchema() *schema.Schema {
 							"primary_y_axis_display_options": axisDisplayOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"primary_y_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"reference_lines":                referenceLineDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -177,9 +178,9 @@ func boxPlotVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":              visualTitleLabelOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -241,7 +242,7 @@ func expandBoxPlotVisual(tfList []any) *awstypes.BoxPlotVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandBoxPlotChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
@@ -290,7 +291,7 @@ func expandBoxPlotChartConfiguration(tfList []any) *awstypes.BoxPlotChartConfigu
 	if v, ok := tfMap["reference_lines"].([]any); ok && len(v) > 0 {
 		apiObject.ReferenceLines = expandReferenceLines(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandBoxPlotSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
@@ -447,7 +448,7 @@ func flattenBoxPlotVisual(apiObject *awstypes.BoxPlotVisual) []any {
 		tfMap["chart_configuration"] = flattenBoxPlotChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -491,7 +492,7 @@ func flattenBoxPlotChartConfiguration(apiObject *awstypes.BoxPlotChartConfigurat
 		tfMap["reference_lines"] = flattenReferenceLine(apiObject.ReferenceLines)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenBoxPlotSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenBoxPlotSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)

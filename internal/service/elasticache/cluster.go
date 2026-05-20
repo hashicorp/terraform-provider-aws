@@ -970,6 +970,10 @@ func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
+	case engineValkey:
+		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
+			return err // nosemgrep:ci.bare-error-returns
+		}
 	default:
 		setEngineVersionMemcached(d, c.EngineVersion)
 	}

@@ -225,6 +225,101 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Function with S3 Files File System
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "lambda_file_system" {
+  bucket           = "example-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-an"
+  bucket_namespace = "account-regional"
+}
+
+resource "aws_s3_bucket_versioning" "lambda_file_system" {
+  bucket = aws_s3_bucket.lambda_file_system.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3files_file_system" "for_lambda" {
+  bucket = aws_s3_bucket.lambda_file_system.arn
+  # For required IAM permissions to use S3Files file system,
+  # see https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-files-prereq-policies.html#s3-files-prereq-iam
+  role_arn = aws_iam_role.s3files.arn
+
+  depends_on = [
+    aws_s3_bucket_versioning.lambda_file_system
+  ]
+}
+
+resource "aws_s3files_access_point" "for_lambda" {
+  file_system_id = aws_s3files_file_system.for_lambda.id
+
+  root_directory {
+    path = "/lambda"
+    creation_permissions {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "755"
+    }
+  }
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
+}
+
+resource "aws_security_group" "s3files_mount_targets" {
+  name   = "example-s3files-mount-targets-sg"
+  vpc_id = aws_vpc.vpc_for_lambda.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "s3files_mount_targets_nfs" {
+  ip_protocol                  = "tcp"
+  from_port                    = 2049
+  to_port                      = 2049
+  referenced_security_group_id = aws_security_group.lambda_s3files.id
+  security_group_id            = aws_security_group.s3files_mount_targets.id
+}
+
+resource "aws_security_group" "lambda_s3files" {
+  name   = "example-lambda-s3files-sg"
+  vpc_id = aws_vpc.vpc_for_lambda.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "lambda_s3files_nfs" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.lambda_s3files.id
+  from_port                    = 2049
+  to_port                      = 2049
+  referenced_security_group_id = aws_security_group.s3files_mount_targets.id
+}
+
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_s3files_function"
+  # For required IAM permissions to use S3Files with Lambda,
+  # see https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-files-prereq-policies.html#s3-files-prereq-iam
+  role    = aws_iam_role.iam_for_lambda.arn
+  handler = "exports.example"
+  runtime = "nodejs24.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda_az1.id]
+    security_group_ids = [aws_security_group.lambda_s3files.id]
+  }
+
+  file_system_config {
+    arn              = aws_s3files_access_point.for_lambda.arn
+    local_mount_path = "/mnt/s3files"
+  }
+  depends_on = [aws_s3files_mount_target.for_lambda]
+}
+```
+
 ### Function with Advanced Logging
 
 ```terraform
@@ -575,7 +670,7 @@ The following arguments are optional:
 * `durable_config` - (Optional) Configuration block for durable function settings. [See below](#durable_config-configuration-block). `durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
 * `environment` - (Optional) Configuration block for environment variables. [See below](#environment-configuration-block).
 * `ephemeral_storage` - (Optional) Amount of ephemeral storage (`/tmp`) to allocate for the Lambda Function. [See below](#ephemeral_storage-configuration-block).
-* `file_system_config` - (Optional) Configuration block for EFS file system. [See below](#file_system_config-configuration-block).
+* `file_system_config` - (Optional) Configuration block for EFS or S3 Files file system. [See below](#file_system_config-configuration-block).
 * `filename` - (Optional) Path to the function's deployment package within the local filesystem. Conflicts with `image_uri` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
 * `handler` - (Optional) Function entry point in your code. Required if `package_type` is `Zip`.
 * `image_config` - (Optional) Container image configuration values. [See below](#image_config-configuration-block).
@@ -638,7 +733,7 @@ The following arguments are optional:
 
 ### file_system_config Configuration Block
 
-* `arn` - (Required) ARN of the Amazon EFS Access Point.
+* `arn` - (Required) ARN of the Amazon EFS Access Point, or the Amazon S3 Files access point.
 * `local_mount_path` - (Required) Path where the function can access the file system. Must start with `/mnt/`.
 
 ### image_config Configuration Block

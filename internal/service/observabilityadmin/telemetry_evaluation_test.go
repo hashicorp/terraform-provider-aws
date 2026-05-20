@@ -24,18 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAdminTelemetryEvaluation_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccTelemetryEvaluation_basic,
-		acctest.CtDisappears: testAccTelemetryEvaluation_disappears,
-		"Identity":           testAccObservabilityAdminTelemetryEvaluation_identitySerial,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
 func testAccTelemetryEvaluation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_observabilityadmin_telemetry_evaluation.test"

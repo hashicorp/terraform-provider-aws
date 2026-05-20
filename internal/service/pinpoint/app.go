@@ -53,6 +53,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Deprecated:       "campaign_hook is deprecated. Amazon Pinpoint engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"lambda_function_name": {
@@ -81,6 +82,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Deprecated:       "limits is deprecated. Amazon Pinpoint engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"daily": {
@@ -125,6 +127,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Deprecated:       "quiet_time is deprecated. Amazon Pinpoint engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"end": {

@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -212,6 +213,14 @@ func TestAccELBV2LoadBalancer_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceLoadBalancer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -993,7 +1002,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- skipped test, IPAM pools are scarce shared resources
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1025,7 +1034,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- skipped test, IPAM pools are scarce shared resources
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1076,7 +1085,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- skipped test, IPAM pools are scarce shared resources
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

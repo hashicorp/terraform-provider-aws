@@ -21,7 +21,7 @@ func waterfallVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -31,7 +31,7 @@ func waterfallVisualSchema() *schema.Schema {
 							"category_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"category_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"data_labels":                   dataLabelOptionsSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -57,7 +57,7 @@ func waterfallVisualSchema() *schema.Schema {
 							"legend":                         legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"primary_y_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"primary_y_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -88,9 +88,9 @@ func waterfallVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -102,9 +102,9 @@ func waterfallVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -112,7 +112,7 @@ func waterfallVisualDataSourceSchema() *schema.Schema {
 							"category_axis_display_options": axisDisplayOptionsDataSourceSchema(),
 							"category_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
 							"data_labels":                   dataLabelOptionsDataSourceSchema(),
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -134,7 +134,7 @@ func waterfallVisualDataSourceSchema() *schema.Schema {
 							"legend":                         legendOptionsDataSourceSchema(),
 							"primary_y_axis_display_options": axisDisplayOptionsDataSourceSchema(),
 							"primary_y_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WaterfallChartSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -157,9 +157,9 @@ func waterfallVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),
-				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":              visualTitleLabelOptionsDataSourceSchema(),
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -186,7 +186,7 @@ func expandWaterfallVisual(tfList []any) *awstypes.WaterfallVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandWaterfallChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
@@ -232,7 +232,7 @@ func expandWaterfallChartConfiguration(tfList []any) *awstypes.WaterfallChartCon
 	if v, ok := tfMap["primary_y_axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryYAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandWaterfallChartSortConfiguration(v)
 	}
 	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
@@ -346,7 +346,7 @@ func flattenWaterfallVisual(apiObject *awstypes.WaterfallVisual) []any {
 		tfMap["chart_configuration"] = flattenWaterfallChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -387,7 +387,7 @@ func flattenWaterfallChartConfiguration(apiObject *awstypes.WaterfallChartConfig
 		tfMap["primary_y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.PrimaryYAxisLabelOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenWaterfallChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenWaterfallChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.VisualPalette != nil {
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)

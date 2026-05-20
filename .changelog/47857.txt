@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_observabilityadmin_telemetry_rule
+```
+
+```release-note:new-list-resource
+aws_observabilityadmin_telemetry_rule
+```

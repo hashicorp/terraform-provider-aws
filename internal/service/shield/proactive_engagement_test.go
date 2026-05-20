@@ -32,6 +32,7 @@ func testAccProactiveEngagement_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -66,6 +67,7 @@ func testAccProactiveEngagement_disabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -95,6 +97,7 @@ func testAccProactiveEngagement_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{

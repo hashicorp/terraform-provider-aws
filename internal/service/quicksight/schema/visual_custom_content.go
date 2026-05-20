@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,10 +20,10 @@ func customContentVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
 					Type:             schema.TypeList,
 					Optional:         true,
 					MinItems:         1,
@@ -30,14 +31,14 @@ func customContentVisualSchema() *schema.Schema {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrContentType: stringEnumSchema[awstypes.CustomContentType](attrOptional),
-							"content_url":         stringLenBetweenSchema(attrOptional, 1, 2048),
-							"image_scaling":       stringEnumSchema[awstypes.CustomContentImageScalingConfiguration](attrOptional),
+							names.AttrContentType: sdkschema.StringEnumSchema[awstypes.CustomContentType](sdkschema.AttrOptional),
+							"content_url":         sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
+							"image_scaling":       sdkschema.StringEnumSchema[awstypes.CustomContentImageScalingConfiguration](sdkschema.AttrOptional),
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:  visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -50,21 +51,21 @@ func customContentVisualDataSourceSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringComputedOnly(),
-				"visual_id":           idDataSourceSchema(),
+				attrVisualID:          idDataSourceSchema(),
 				names.AttrActions:     visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrContentType: stringEnumDataSourceSchema[awstypes.CustomContentType](),
+							names.AttrContentType: sdkschema.StringEnumDataSourceSchema[awstypes.CustomContentType](),
 							"content_url":         stringComputedOnly(),
-							"image_scaling":       stringEnumDataSourceSchema[awstypes.CustomContentImageScalingConfiguration](),
+							"image_scaling":       sdkschema.StringEnumDataSourceSchema[awstypes.CustomContentImageScalingConfiguration](),
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":    visualTitleLabelOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}

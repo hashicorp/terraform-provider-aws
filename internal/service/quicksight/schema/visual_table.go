@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,7 +24,7 @@ func tableVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -51,8 +52,8 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
-													"custom_label": stringLenBetweenSchema(attrOptional, 1, 2048),
+													attrFieldID:    sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+													"custom_label": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
 													"url_styling": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldURLConfiguration.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -74,7 +75,7 @@ func tableVisualSchema() *schema.Schema {
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"table_cell_image_scaling_configuration": stringEnumSchema[awstypes.TableCellImageScalingConfiguration](attrOptional),
+																						"table_cell_image_scaling_configuration": sdkschema.StringEnumSchema[awstypes.TableCellImageScalingConfiguration](sdkschema.AttrOptional),
 																					},
 																				},
 																			},
@@ -102,7 +103,7 @@ func tableVisualSchema() *schema.Schema {
 																							MaxItems: 1,
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
-																									"icon": stringEnumSchema[awstypes.TableFieldIconSetType](attrOptional),
+																									"icon": sdkschema.StringEnumSchema[awstypes.TableFieldIconSetType](sdkschema.AttrOptional),
 																								},
 																							},
 																						},
@@ -124,14 +125,14 @@ func tableVisualSchema() *schema.Schema {
 																					},
 																				},
 																			},
-																			names.AttrTarget: stringEnumSchema[awstypes.URLTargetConfiguration](attrOptional),
+																			names.AttrTarget: sdkschema.StringEnumSchema[awstypes.URLTargetConfiguration](sdkschema.AttrOptional),
 																		},
 																	},
 																},
 															},
 														},
 													},
-													attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 													"width": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -142,7 +143,7 @@ func tableVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -175,8 +176,8 @@ func tableVisualSchema() *schema.Schema {
 														MaxItems: 200,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-																"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+																attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+																attrFieldID:            sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 																"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 															},
 														},
@@ -194,12 +195,12 @@ func tableVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"overflow_column_header_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
-										"vertical_overflow_visibility":      stringEnumSchema[awstypes.Visibility](attrOptional),
+										"overflow_column_header_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"vertical_overflow_visibility":      sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -214,7 +215,7 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"page_number": intAtLeastSchema(attrRequired, 1),
+													"page_number": sdkschema.IntAtLeastSchema(sdkschema.AttrRequired, 1),
 													"page_size": {
 														Type:     schema.TypeInt,
 														Required: true,
@@ -240,9 +241,9 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":       stringLenBetweenSchema(attrRequired, 1, 512),
-													"negative_color": hexColorSchema(attrOptional),
-													"positive_color": hexColorSchema(attrOptional),
+													attrFieldID:      sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+													"negative_color": hexColorSchema(sdkschema.AttrOptional),
+													"positive_color": hexColorSchema(sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -258,7 +259,7 @@ func tableVisualSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"cell_style":                  tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 										"header_style":                tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"orientation":                 stringEnumSchema[awstypes.TableOrientation](attrOptional),
+										"orientation":                 sdkschema.StringEnumSchema[awstypes.TableOrientation](sdkschema.AttrOptional),
 										"row_alternate_color_options": rowAlternateColorOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RowAlternateColorOptions.html
 									},
 								},
@@ -274,10 +275,10 @@ func tableVisualSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"placement":         stringEnumSchema[awstypes.TableTotalsPlacement](attrOptional),
-										"scroll_status":     stringEnumSchema[awstypes.TableTotalsScrollStatus](attrOptional),
+										"placement":         sdkschema.StringEnumSchema[awstypes.TableTotalsPlacement](sdkschema.AttrOptional),
+										"scroll_status":     sdkschema.StringEnumSchema[awstypes.TableTotalsScrollStatus](sdkschema.AttrOptional),
 										"total_cell_style":  tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"totals_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										"totals_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -305,7 +306,7 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":    stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID:   sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 													"text_format": textConditionalFormatSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextConditionalFormat.html
 												},
 											},
@@ -328,8 +329,8 @@ func tableVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:  visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -341,9 +342,9 @@ func tableVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -363,7 +364,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":     stringComputedOnly(),
+													attrFieldID:    stringComputedOnly(),
 													"custom_label": stringComputedOnly(),
 													"url_styling": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldURLConfiguration.html
 														Type:     schema.TypeList,
@@ -380,7 +381,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 																				Computed: true,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"table_cell_image_scaling_configuration": stringEnumDataSourceSchema[awstypes.TableCellImageScalingConfiguration](),
+																						"table_cell_image_scaling_configuration": sdkschema.StringEnumDataSourceSchema[awstypes.TableCellImageScalingConfiguration](),
 																					},
 																				},
 																			},
@@ -402,7 +403,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 																							Computed: true,
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
-																									"icon": stringEnumDataSourceSchema[awstypes.TableFieldIconSetType](),
+																									"icon": sdkschema.StringEnumDataSourceSchema[awstypes.TableFieldIconSetType](),
 																								},
 																							},
 																						},
@@ -419,22 +420,22 @@ func tableVisualDataSourceSchema() *schema.Schema {
 																					},
 																				},
 																			},
-																			names.AttrTarget: stringEnumDataSourceSchema[awstypes.URLTargetConfiguration](),
+																			names.AttrTarget: sdkschema.StringEnumDataSourceSchema[awstypes.URLTargetConfiguration](),
 																		},
 																	},
 																},
 															},
 														},
 													},
-													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
-													"width":      stringComputedOnly(),
+													attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+													"width":        stringComputedOnly(),
 												},
 											},
 										},
 									},
 								},
 							},
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -459,8 +460,8 @@ func tableVisualDataSourceSchema() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"column":               columnDataSourceSchema(),
-																"field_id":             stringComputedOnly(),
+																attrColumn:             columnDataSourceSchema(),
+																attrFieldID:            stringComputedOnly(),
 																"format_configuration": formatConfigurationDataSourceSchema(),
 															},
 														},
@@ -476,12 +477,12 @@ func tableVisualDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"overflow_column_header_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
-										"vertical_overflow_visibility":      stringEnumDataSourceSchema[awstypes.Visibility](),
+										"overflow_column_header_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+										"vertical_overflow_visibility":      sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -510,7 +511,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":       stringComputedOnly(),
+													attrFieldID:      stringComputedOnly(),
 													"negative_color": stringComputedOnly(),
 													"positive_color": stringComputedOnly(),
 												},
@@ -526,7 +527,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"cell_style":                  tableCellStyleDataSourceSchema(),
 										"header_style":                tableCellStyleDataSourceSchema(),
-										"orientation":                 stringEnumDataSourceSchema[awstypes.TableOrientation](),
+										"orientation":                 sdkschema.StringEnumDataSourceSchema[awstypes.TableOrientation](),
 										"row_alternate_color_options": rowAlternateColorOptionsDataSourceSchema(),
 									},
 								},
@@ -537,10 +538,10 @@ func tableVisualDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"custom_label":      stringComputedOnly(),
-										"placement":         stringEnumDataSourceSchema[awstypes.TableTotalsPlacement](),
-										"scroll_status":     stringEnumDataSourceSchema[awstypes.TableTotalsScrollStatus](),
+										"placement":         sdkschema.StringEnumDataSourceSchema[awstypes.TableTotalsPlacement](),
+										"scroll_status":     sdkschema.StringEnumDataSourceSchema[awstypes.TableTotalsScrollStatus](),
 										"total_cell_style":  tableCellStyleDataSourceSchema(),
-										"totals_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+										"totals_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -562,7 +563,7 @@ func tableVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":    stringComputedOnly(),
+													attrFieldID:   stringComputedOnly(),
 													"text_format": textConditionalFormatDataSourceSchema(),
 												},
 											},
@@ -583,8 +584,8 @@ func tableVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":    visualTitleLabelOptionsDataSourceSchema(),
+				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -645,7 +646,7 @@ func expandTableConfiguration(tfList []any) *awstypes.TableConfiguration {
 	if v, ok := tfMap["paginated_report_options"].([]any); ok && len(v) > 0 {
 		apiObject.PaginatedReportOptions = expandTablePaginatedReportOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandTableSortConfiguration(v)
 	}
 	if v, ok := tfMap["table_inline_visualizations"].([]any); ok && len(v) > 0 {
@@ -1300,7 +1301,7 @@ func flattenTableConfiguration(apiObject *awstypes.TableConfiguration) []any {
 		tfMap["paginated_report_options"] = flattenTablePaginatedReportOptions(apiObject.PaginatedReportOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenTableSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenTableSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.TableInlineVisualizations != nil {
 		tfMap["table_inline_visualizations"] = flattenTableInlineVisualization(apiObject.TableInlineVisualizations)

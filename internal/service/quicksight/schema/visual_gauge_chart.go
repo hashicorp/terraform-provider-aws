@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,7 +21,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -28,7 +29,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"data_labels": dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -58,7 +59,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Optional: true,
 													},
-													"arc_thickness": stringEnumSchema[awstypes.ArcThicknessOptions](attrOptional),
+													"arc_thickness": sdkschema.StringEnumSchema[awstypes.ArcThicknessOptions](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -95,7 +96,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 											},
 										},
 										"comparison":                       comparisonConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComparisonConfiguration.html
-										"primary_value_display_type":       stringEnumSchema[awstypes.PrimaryValueDisplayType](attrOptional),
+										"primary_value_display_type":       sdkschema.StringEnumSchema[awstypes.PrimaryValueDisplayType](sdkschema.AttrOptional),
 										"primary_value_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 									},
 								},
@@ -148,8 +149,8 @@ func gaugeChartVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:  visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -161,15 +162,15 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"data_labels": dataLabelOptionsDataSourceSchema(),
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GaugeChartFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -190,7 +191,7 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"arc_angle":     floatComputedOnly(),
-													"arc_thickness": stringEnumDataSourceSchema[awstypes.ArcThicknessOptions](),
+													"arc_thickness": sdkschema.StringEnumDataSourceSchema[awstypes.ArcThicknessOptions](),
 												},
 											},
 										},
@@ -214,7 +215,7 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 											},
 										},
 										"comparison":                       comparisonConfigurationDataSourceSchema(),
-										"primary_value_display_type":       stringEnumDataSourceSchema[awstypes.PrimaryValueDisplayType](),
+										"primary_value_display_type":       sdkschema.StringEnumDataSourceSchema[awstypes.PrimaryValueDisplayType](),
 										"primary_value_font_configuration": fontConfigurationDataSourceSchema(),
 									},
 								},
@@ -259,8 +260,8 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":    visualTitleLabelOptionsDataSourceSchema(),
+				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}

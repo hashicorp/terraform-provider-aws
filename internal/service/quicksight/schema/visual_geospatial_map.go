@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,14 +21,14 @@ func geospatialMapVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -80,7 +81,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"color": hexColorSchema(attrOptional),
+																			attrColor: hexColorSchema(sdkschema.AttrOptional),
 																		},
 																	},
 																},
@@ -90,7 +91,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_point_style": stringEnumSchema[awstypes.GeospatialSelectedPointStyle](attrOptional),
+										"selected_point_style": sdkschema.StringEnumSchema[awstypes.GeospatialSelectedPointStyle](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -100,9 +101,9 @@ func geospatialMapVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -114,14 +115,14 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapFieldWells.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -162,7 +163,7 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 																	Computed: true,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"color": stringComputedOnly(),
+																			attrColor: stringComputedOnly(),
 																		},
 																	},
 																},
@@ -172,7 +173,7 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_point_style": stringEnumDataSourceSchema[awstypes.GeospatialSelectedPointStyle](),
+										"selected_point_style": sdkschema.StringEnumDataSourceSchema[awstypes.GeospatialSelectedPointStyle](),
 									},
 								},
 							},
@@ -182,9 +183,9 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),
-				"subtitle":           visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":              visualTitleLabelOptionsDataSourceSchema(),
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -211,7 +212,7 @@ func expandGeospatialMapVisual(tfList []any) *awstypes.GeospatialMapVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandGeospatialMapConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
@@ -377,7 +378,7 @@ func expandSimpleClusterMarker(tfList []any) *awstypes.SimpleClusterMarker {
 
 	apiObject := &awstypes.SimpleClusterMarker{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 
@@ -400,7 +401,7 @@ func flattenGeospatialMapVisual(apiObject *awstypes.GeospatialMapVisual) []any {
 		tfMap["chart_configuration"] = flattenGeospatialMapConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -528,7 +529,7 @@ func flattenSimpleClusterMarker(apiObject *awstypes.SimpleClusterMarker) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 
 	return []any{tfMap}

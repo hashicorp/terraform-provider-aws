@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,7 +33,7 @@ const (
 
 type dimensionFieldSchemaIdentity dimensionFieldSize
 
-var dimensionFieldSchemaCache syncMap[dimensionFieldSchemaIdentity, *schema.Schema]
+var dimensionFieldSchemaCache tfsync.Map[dimensionFieldSchemaIdentity, *schema.Schema]
 
 func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 	id := dimensionFieldSchemaIdentity(maxItems)
@@ -59,10 +61,10 @@ func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:            sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 								"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
-								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+								"hierarchy_id":         sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 512),
 							},
 						},
 					},
@@ -73,11 +75,11 @@ func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
-								"date_granularity":     stringEnumSchema[awstypes.TimeGranularity](attrOptional),
+								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:            sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+								"date_granularity":     sdkschema.StringEnumSchema[awstypes.TimeGranularity](sdkschema.AttrOptional),
 								"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
-								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+								"hierarchy_id":         sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 512),
 							},
 						},
 					},
@@ -88,10 +90,10 @@ func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:            sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 								"format_configuration": numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
-								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+								"hierarchy_id":         sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 512),
 							},
 						},
 					},
@@ -113,10 +115,10 @@ var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringComputedOnly(),
+							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:            sdkschema.StringComputedOnly(),
 							"format_configuration": stringFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
-							"hierarchy_id":         stringComputedOnly(),
+							"hierarchy_id":         sdkschema.StringComputedOnly(),
 						},
 					},
 				},
@@ -125,11 +127,11 @@ var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringComputedOnly(),
-							"date_granularity":     stringEnumDataSourceSchema[awstypes.TimeGranularity](),
+							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:            sdkschema.StringComputedOnly(),
+							"date_granularity":     sdkschema.StringEnumDataSourceSchema[awstypes.TimeGranularity](),
 							"format_configuration": dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
-							"hierarchy_id":         stringComputedOnly(),
+							"hierarchy_id":         sdkschema.StringComputedOnly(),
 						},
 					},
 				},
@@ -138,10 +140,10 @@ var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringComputedOnly(),
+							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:            sdkschema.StringComputedOnly(),
 							"format_configuration": numberFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
-							"hierarchy_id":         stringComputedOnly(),
+							"hierarchy_id":         sdkschema.StringComputedOnly(),
 						},
 					},
 				},
@@ -152,7 +154,7 @@ var dimensionFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 
 type meaureFieldSchemaIdentity measureFieldsSize
 
-var measureFieldSchemaCache syncMap[meaureFieldSchemaIdentity, *schema.Schema]
+var measureFieldSchemaCache tfsync.Map[meaureFieldSchemaIdentity, *schema.Schema]
 
 func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 	id := meaureFieldSchemaIdentity(maxItems)
@@ -180,8 +182,8 @@ func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
-								"field_id":           stringLenBetweenSchema(attrRequired, 1, 512),
+								names.AttrExpression: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 4096),
+								attrFieldID:          sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 							},
 						},
 					},
@@ -192,9 +194,9 @@ func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
-								"aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
+								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:            sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+								"aggregation_function": sdkschema.StringEnumSchema[awstypes.CategoricalAggregationFunction](sdkschema.AttrOptional),
 								"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
 							},
 						},
@@ -206,9 +208,9 @@ func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
-								"aggregation_function": stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
+								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:            sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+								"aggregation_function": sdkschema.StringEnumSchema[awstypes.DateAggregationFunction](sdkschema.AttrOptional),
 								"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
 							},
 						},
@@ -220,8 +222,8 @@ func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								attrColumn:             columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								attrFieldID:            sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 								"aggregation_function": numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
 								"format_configuration": numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 							},
@@ -245,8 +247,8 @@ var measureFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrExpression: stringComputedOnly(),
-							"field_id":           stringComputedOnly(),
+							names.AttrExpression: sdkschema.StringComputedOnly(),
+							attrFieldID:          sdkschema.StringComputedOnly(),
 						},
 					},
 				},
@@ -255,9 +257,9 @@ var measureFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringComputedOnly(),
-							"aggregation_function": stringEnumDataSourceSchema[awstypes.CategoricalAggregationFunction](),
+							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:            sdkschema.StringComputedOnly(),
+							"aggregation_function": sdkschema.StringEnumDataSourceSchema[awstypes.CategoricalAggregationFunction](),
 							"format_configuration": stringFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
 						},
 					},
@@ -267,9 +269,9 @@ var measureFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringComputedOnly(),
-							"aggregation_function": stringEnumDataSourceSchema[awstypes.DateAggregationFunction](),
+							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:            sdkschema.StringComputedOnly(),
+							"aggregation_function": sdkschema.StringEnumDataSourceSchema[awstypes.DateAggregationFunction](),
 							"format_configuration": dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
 						},
 					},
@@ -279,8 +281,8 @@ var measureFieldDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringComputedOnly(),
+							attrColumn:             columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrFieldID:            sdkschema.StringComputedOnly(),
 							"aggregation_function": numericalAggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
 							"format_configuration": numberFormatConfigurationDataSourceSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 						},

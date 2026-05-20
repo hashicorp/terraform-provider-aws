@@ -80,7 +80,7 @@ func resourceDocumentationPart() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -93,7 +93,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	input := apigateway.CreateDocumentationPartInput{
 		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]any)),
 		Properties: aws.String(d.Get(names.AttrProperties).(string)),
@@ -135,7 +135,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("documentation_part_id", docPart.Id)
 	d.Set(names.AttrLocation, flattenDocumentationPartLocation(docPart.Location))
 	d.Set(names.AttrProperties, docPart.Properties)
-	d.Set("rest_api_id", apiID)
+	d.Set(attrRestAPIID, apiID)
 
 	return diags
 }

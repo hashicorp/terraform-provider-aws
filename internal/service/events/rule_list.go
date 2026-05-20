@@ -100,16 +100,21 @@ type listRuleModel struct {
 
 func listRules(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListRulesInput) iter.Seq2[awstypes.Rule, error] {
 	return func(yield func(awstypes.Rule, error) bool) {
+		var stopped bool
 		err := listRulesPages(ctx, conn, input, func(page *eventbridge.ListRulesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
 			for _, item := range page.Rules {
 				if !yield(item, nil) {
-					return !lastPage
+					stopped = true
+					return false
 				}
 			}
 			return !lastPage
 		})
-		if err != nil {
-			yield(awstypes.Rule{}, fmt.Errorf("listing EventBridge Rule resources: %w", err))
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Rule](), fmt.Errorf("listing EventBridge Rules: %w", err))
 			return
 		}
 	}

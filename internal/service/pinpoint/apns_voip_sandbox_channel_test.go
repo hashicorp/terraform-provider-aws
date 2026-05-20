@@ -94,7 +94,20 @@ func testAccAPNSVoIPSandboxChannelTokenConfigurationFromEnv(t *testing.T) *testA
 	return &conf
 }
 
-func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
+// APNS tests share credentials from environment variables tied to a single
+// Apple Developer identity.
+func TestAccPinpointAPNSVoIPSandboxChannel_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basicCertificate": testAccAPNSVoIPSandboxChannel_basicCertificate,
+		"basicToken":       testAccAPNSVoIPSandboxChannel_basicToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
@@ -129,7 +142,7 @@ func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccPinpointAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
+func testAccAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"

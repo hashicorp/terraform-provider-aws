@@ -8,6 +8,8 @@ description: |-
 
 # Resource: aws_pinpoint_event_stream
 
+~> **NOTE:** This resource is deprecated. Amazon Pinpoint event streams are being discontinued on October 30, 2026. After that date, this resource will no longer be available. For SMS/Voice event delivery, use [`aws_pinpointsmsvoicev2_configuration_set`](pinpointsmsvoicev2_configuration_set.html) with an event destination.
+
 Provides a Pinpoint Event Stream resource.
 
 ## Example Usage

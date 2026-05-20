@@ -65,12 +65,26 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenIDConnectProvider_Thumbprints_none(t *testing.T) {
+// Thumbprint tests all use the hardcoded accounts.google.com URL. Only one
+// OIDC provider per URL can exist per account.
+func TestAccIAMOpenIDConnectProvider_Thumbprints_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"none":          testAccOpenIDConnectProvider_Thumbprints_none,
+		"withToWithout": testAccOpenIDConnectProvider_Thumbprints_withToWithout,
+		"withoutToWith": testAccOpenIDConnectProvider_Thumbprints_withoutToWith,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccOpenIDConnectProvider_Thumbprints_none(t *testing.T) {
 	ctx := acctest.Context(t)
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -93,12 +107,12 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_none(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
+func testAccOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
 	ctx := acctest.Context(t)
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -138,12 +152,12 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
+func testAccOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
 	ctx := acctest.Context(t)
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
