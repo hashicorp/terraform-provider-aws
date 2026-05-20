@@ -28,9 +28,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/accessanalyzer
-        - /internal/service/account
-        - /internal/service/acm
         - /internal/service/acmpca
         - /internal/service/amp
         - /internal/service/amplify
