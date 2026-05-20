@@ -221,23 +221,21 @@ func flattenResourceDataSyncS3Destination(d *schema.ResourceData, apiObject *aws
 	if apiObject.Prefix != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
 	}
-	tfMap["destination_data_sharing"] = flattenResourceDataSyncDestinationDataSharing(d, apiObject.DestinationDataSharing)
+	tfMap["destination_data_sharing"] = flattenResourceDataSyncDestinationDataSharing(d)
 
 	return []any{tfMap}
 }
 
-func flattenResourceDataSyncDestinationDataSharing(d *schema.ResourceData, apiObject *awstypes.ResourceDataSyncDestinationDataSharing) []any {
+func flattenResourceDataSyncDestinationDataSharing(d *schema.ResourceData) []any {
 	tfMap := make(map[string]any)
 
-	if apiObject == nil {
-		state := d.Get("s3_destination.0.destination_data_sharing.0.destination_data_sharing_type")
-		if state == nil || state.(string) == "" {
-			return nil
-		}
-		tfMap["destination_data_sharing_type"] = state.(string)
-	} else {
-		tfMap["destination_data_sharing_type"] = aws.ToString(apiObject.DestinationDataSharingType)
+	// `DestinationDataSharing` is only used when creating a Data Sync, and is `nil` when reading.
+	// Preserve the value from the state.
+	state := d.Get("s3_destination.0.destination_data_sharing.0.destination_data_sharing_type")
+	if state == nil || state.(string) == "" {
+		return nil
 	}
+	tfMap["destination_data_sharing_type"] = state.(string)
 
 	return []any{tfMap}
 }
