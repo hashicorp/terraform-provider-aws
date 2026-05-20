@@ -205,5 +205,5 @@ The following arguments are optional:
 ### `environment_variables_override` Block
 
 * `name` - (Required) Environment variable name.
-* `value` - (Required) Environment variable value.
 * `type` - (Optional) Environment variable type. Valid values are `PLAINTEXT`, `PARAMETER_STORE`, or `SECRETS_MANAGER`. Defaults to `PLAINTEXT`.
+* `value` - (Required) Environment variable value.
