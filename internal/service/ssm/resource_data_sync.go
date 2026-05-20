@@ -59,6 +59,7 @@ func resourceResourceDataSync() *schema.Resource {
 						"destination_data_sharing": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
