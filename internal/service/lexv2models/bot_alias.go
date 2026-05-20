@@ -5,41 +5,11 @@
 
 package lexv2models
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/lexmodelsv2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
@@ -52,77 +22,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_lexv2models_bot_alias", name="Bot Alias")
 // @Tags(identifierAttribute="arn")
-
-// TIP: ==== RESOURCE IDENTITY ====
-// Identify which attributes can be used to uniquely identify the resource.
-// 
-// * If the AWS APIs for the resource take the ARN as an identifier, use
-// ARN Identity.
-// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
-// * Otherwise, use Parameterized Identity with one or more identity attributes.
-//
-// For more information about resource identity, see
-// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
-//
-// Keep one of the following sets of annotations as appropriate:
-//
-// * ARN Identity
-// @ArnIdentity
-// or
-// @ArnIdentity("arn_attribute")
-//
-// * Singleton Identity
-// @SingletonIdentity
-//
-// * Parameterized Identity
-// @IdentityAttribute("id_attribute")
-// // @IdentityAttribute("another_id_attribute")
-//
-// TIP: ==== GENERATED ACCEPTANCE TESTS ====
-// Resource Identity and tagging make use of automatically generated acceptance tests.
-// For more information about automatically generated acceptance tests, see
-// https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
-//
-// Some common annotations are included below:
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lexmodelsv2;lexmodelsv2.DescribeBotAliasResponse")
-// @Testing(preCheck="testAccPreCheck")
-// @Testing(importIgnore="...;...")
-// @Testing(hasNoPreExistingResource=true)
 func newBotAliasResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &botAliasResource{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -130,119 +47,199 @@ func newBotAliasResource(_ context.Context) (resource.ResourceWithConfigure, err
 	return r, nil
 }
 
-const (
-	ResNameBotAlias = "Bot Alias"
-)
-
 type botAliasResource struct {
 	framework.ResourceWithModel[botAliasResourceModel]
+	framework.WithImportByID
 	framework.WithTimeouts
-	framework.WithImportByIdentity
 }
 
-
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-// * If a user can provide a value ("configure a value") for an
-//   attribute (e.g., instances = 5), we call the attribute an
-//   "argument."
-// * You change the way users interact with attributes using:
-//     - Required
-//     - Optional
-//     - Computed
-// * There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-// 2. Optional only - the user can configure or omit a value; do not
-//    use Default or DefaultFunc
-// Optional: true,
-//
-// 3. Computed only - the provider can provide a value but the user
-//    cannot, i.e., read-only
-// Computed: true,
-//
-// 4. Optional AND Computed - the provider or user can provide a value;
-//    use this combination if you are using Default
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
-func (r *botAliasResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *botAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+			"bot_alias_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK.
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "BotAliasId"
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"bot_alias_name": schema.StringAttribute{
 				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
+			},
+			"bot_id": schema.StringAttribute{
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"bot_version": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+			},
+			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
-				Required: true,
-			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
+			"bot_alias_locale_settings": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[botAliasLocaleSettingsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrEnabled: schema.BoolAttribute{
+							Required: true,
+						},
+						"locale_id": schema.StringAttribute{
+							Required: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"code_hook_specification": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[codeHookSpecificationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"lambda_code_hook": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaCodeHookModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"code_hook_interface_version": schema.StringAttribute{
+													Required: true,
+												},
+												"lambda_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"conversation_log_settings": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[conversationLogSettingsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"audio_log_settings": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[audioLogSettingModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrEnabled: schema.BoolAttribute{
+										Required: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									names.AttrDestination: schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[audioLogDestinationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"s3_bucket": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[s3BucketLogDestinationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"kms_key_arn": schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Optional:   true,
+															},
+															"log_prefix": schema.StringAttribute{
+																Required: true,
+															},
+															"s3_bucket_arn": schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"text_log_settings": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[textLogSettingModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrEnabled: schema.BoolAttribute{
+										Required: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									names.AttrDestination: schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[textLogDestinationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"cloudwatch": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogGroupLogDestinationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"cloudwatch_log_group_arn": schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Required:   true,
+															},
+															"log_prefix": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"sentiment_analysis_settings": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[sentimentAnalysisSettingsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
+						"detect_sentiment": schema.BoolAttribute{
 							Required: true,
-						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 					},
 				},
@@ -256,495 +253,358 @@ func (r *botAliasResource) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *botAliasResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().LexV2ModelsClient(ctx)
-	
-	// TIP: -- 2. Fetch the plan
-	var plan botAliasResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// TIP: -- 3. Populate a Create input structure
-	var input lexmodelsv2.CreateBotAliasInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `BotAliasId`
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("BotAlias")))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	input.Tags = getTagsIn(ctx)
-
-	// TIP: -- 4. Call the AWS Create function
-	out, err := conn.CreateBotAlias(ctx, &input)
-	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil || out.BotAlias == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-		return
-	}
-
-	// TIP: -- 5. Using the output from the create function, set attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// TIP: -- 6. Use a waiter to wait for create to complete
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitBotAliasCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	
-	// TIP: -- 7. Save the request plan to response state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
-}
-
-func (r *botAliasResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().LexV2ModelsClient(ctx)
-	
-	// TIP: -- 2. Fetch the state
-	var state botAliasResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
-	out, err := findBotAliasByID(ctx, conn, state.ID.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
-	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-	
-	// TIP: -- 5. Set the arguments and attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	
-	// TIP: -- 6. Set the state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *botAliasResource) flatten(ctx context.Context, botAlias *awstypes.BotAlias, data *botAliasResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, botAlias, data)...)
-	return diags
-}
-
-func (r *botAliasResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().LexV2ModelsClient(ctx)
-	
-	// TIP: -- 2. Fetch the plan
-	var plan, state botAliasResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	
-	// TIP: -- 3. Get the difference between the plan and state, if any
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
-		var input lexmodelsv2.UpdateBotAliasInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		
-		// TIP: -- 4. Call the AWS modify/update function
-		out, err := conn.UpdateBotAlias(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		if out == nil || out.BotAlias == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
-			return
-		}
-		
-		// TIP: Using the output from the update function, re-set any computed attributes
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	// TIP: -- 5. Use a waiter to wait for update to complete
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitBotAliasUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-		return
-	}
-
-	// TIP: -- 6. Save the request plan to response state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
-}
-
-func (r *botAliasResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().LexV2ModelsClient(ctx)
-	
-	// TIP: -- 2. Fetch the state
-	var state botAliasResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	
-	// TIP: -- 3. Populate a delete input structure
-	input := lexv2models.DeleteBotAliasInput{
-		BotAliasId: state.ID.ValueStringPointer(),
-	}
-	
-	// TIP: -- 4. Call the AWS delete function
-	_, err := conn.DeleteBotAlias(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-	
-	// TIP: -- 5. Use a waiter to wait for delete to complete
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBotAliasDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-}
-
-// TIP: ==== TERRAFORM IMPORTING ====
-// The built-in import function, and Import ID Handler, if any, should handle populating the required
-// attributes from the Import ID or Resource Identity.
-// In some cases, additional attributes must be set when importing.
-// Adding a custom ImportState function can handle those.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/add-resource-identity-support/
-// func (r *botAliasResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	r.WithImportByIdentity.ImportState(ctx, req, resp)
-// 
-// 	// Set needed attribute values here
-// }
-
-
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
 const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
+	botAliasResourceIDPartCount = 2
 )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitBotAliasCreated(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*awstypes.BotAlias, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusBotAlias(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+func (r *botAliasResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data botAliasResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.BotAlias); ok {
-		return out, smarterr.NewError(err)
+	conn := r.Meta().LexV2ModelsClient(ctx)
+
+	var input lexmodelsv2.CreateBotAliasInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	return nil, smarterr.NewError(err)
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
+
+	output, err := conn.CreateBotAlias(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Lex v2 Bot Alias (%s)", data.BotAliasName.ValueString()), err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	botID, botAliasID := aws.ToString(output.BotId), aws.ToString(output.BotAliasId)
+	id, _ := intflex.FlattenResourceId([]string{botID, botAliasID}, botAliasResourceIDPartCount, false)
+	data.ARN = fwflex.StringValueToFramework(ctx, r.botAliasARN(ctx, botID, botAliasID))
+	data.BotAliasID = fwflex.StringValueToFramework(ctx, botAliasID)
+	data.BotVersion = fwflex.StringToFramework(ctx, output.BotVersion)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
+
+	if _, err := waitBotAliasCreated(ctx, conn, botID, botAliasID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot Alias (%s) create", id), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitBotAliasUpdated(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*awstypes.BotAlias, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusBotAlias(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+func (r *botAliasResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data botAliasResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.BotAlias); ok {
-		return out, smarterr.NewError(err)
+	conn := r.Meta().LexV2ModelsClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	parts, err := intflex.ExpandResourceId(id, botAliasResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
 	}
 
-	return nil, smarterr.NewError(err)
+	botID, botAliasID := parts[0], parts[1]
+	output, err := findBotAliasByTwoPartKey(ctx, conn, botID, botAliasID)
+
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Lex v2 Bot Alias (%s)", id), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.ARN = fwflex.StringValueToFramework(ctx, r.botAliasARN(ctx, botID, botAliasID))
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitBotAliasDeleted(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*awstypes.BotAlias, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusBotAlias(conn, id),
-		Timeout: timeout,
+func (r *botAliasResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old botAliasResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.BotAlias); ok {
-		return out, smarterr.NewError(err)
+	conn := r.Meta().LexV2ModelsClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, new.ID)
+	parts, err := intflex.ExpandResourceId(id, botAliasResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
 	}
 
-	return nil, smarterr.NewError(err)
+	botID, botAliasID := parts[0], parts[1]
+
+	if !new.BotAliasLocaleSettings.Equal(old.BotAliasLocaleSettings) ||
+		!new.BotAliasName.Equal(old.BotAliasName) ||
+		!new.BotVersion.Equal(old.BotVersion) ||
+		!new.ConversationLogSettings.Equal(old.ConversationLogSettings) ||
+		!new.Description.Equal(old.Description) ||
+		!new.SentimentAnalysisSettings.Equal(old.SentimentAnalysisSettings) {
+		var input lexmodelsv2.UpdateBotAliasInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateBotAlias(ctx, &input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Lex v2 Bot Alias (%s)", id), err.Error())
+
+			return
+		}
+
+		if _, err := waitBotAliasUpdated(ctx, conn, botID, botAliasID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot Alias (%s) update", id), err.Error())
+
+			return
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-func statusBotAlias(conn *lexv2models.Client, id string) retry.StateRefreshFunc {
+func (r *botAliasResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data botAliasResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().LexV2ModelsClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	parts, err := intflex.ExpandResourceId(id, botAliasResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
+	}
+
+	botID, botAliasID := parts[0], parts[1]
+	input := lexmodelsv2.DeleteBotAliasInput{
+		BotAliasId: aws.String(botAliasID),
+		BotId:      aws.String(botID),
+	}
+	_, err = conn.DeleteBotAlias(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Lex v2 Bot Alias (%s)", id), err.Error())
+
+		return
+	}
+
+	if _, err := waitBotAliasDeleted(ctx, conn, botID, botAliasID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot Alias (%s) delete", id), err.Error())
+
+		return
+	}
+}
+
+func (r *botAliasResource) botAliasARN(ctx context.Context, botID, botAliasID string) string {
+	return r.Meta().RegionalARN(ctx, "lex", fmt.Sprintf("bot-alias/%s/%s", botID, botAliasID))
+}
+
+func findBotAliasByTwoPartKey(ctx context.Context, conn *lexmodelsv2.Client, botID, botAliasID string) (*lexmodelsv2.DescribeBotAliasOutput, error) {
+	input := lexmodelsv2.DescribeBotAliasInput{
+		BotAliasId: aws.String(botAliasID),
+		BotId:      aws.String(botID),
+	}
+	output, err := conn.DescribeBotAlias(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.BotAliasId == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func statusBotAlias(conn *lexmodelsv2.Client, botID, botAliasID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findBotAliasByID(ctx, conn, id)
+		output, err := findBotAliasByTwoPartKey(ctx, conn, botID, botAliasID)
+
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", smarterr.NewError(err)
+			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return output, string(output.BotAliasStatus), nil
 	}
 }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
-func findBotAliasByID(ctx context.Context, conn *lexv2models.Client, id string) (*awstypes.BotAlias, error) {
-	input := lexv2models.GetBotAliasInput{
-		Id: aws.String(id),
+func waitBotAliasCreated(ctx context.Context, conn *lexmodelsv2.Client, botID, botAliasID string, timeout time.Duration) (*lexmodelsv2.DescribeBotAliasOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.BotAliasStatusCreating),
+		Target:                    enum.Slice(awstypes.BotAliasStatusAvailable),
+		Refresh:                   statusBotAlias(conn, botID, botAliasID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
-	out, err := conn.GetBotAlias(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-			})
-		}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-		return nil, smarterr.NewError(err)
+	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotAliasOutput); ok {
+		return output, err
 	}
 
-	if out == nil || out.BotAlias == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
-
-	return out.BotAlias, nil
+	return nil, err
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
+func waitBotAliasUpdated(ctx context.Context, conn *lexmodelsv2.Client, botID, botAliasID string, timeout time.Duration) (*lexmodelsv2.DescribeBotAliasOutput, error) {
+	// The AWS API for Bot Alias does not expose a distinct "Updating" status; once
+	// UpdateBotAlias returns the alias is briefly back in Creating before it
+	// settles on Available. Treat Creating as the pending state and Available as
+	// the target.
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.BotAliasStatusCreating),
+		Target:                    enum.Slice(awstypes.BotAliasStatusAvailable),
+		Refresh:                   statusBotAlias(conn, botID, botAliasID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotAliasOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitBotAliasDeleted(ctx context.Context, conn *lexmodelsv2.Client, botID, botAliasID string, timeout time.Duration) (*lexmodelsv2.DescribeBotAliasOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.BotAliasStatusDeleting),
+		Target:  []string{},
+		Refresh: statusBotAlias(conn, botID, botAliasID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotAliasOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 type botAliasResourceModel struct {
 	framework.WithRegionModel
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
-	Tags            tftags.Map                                            `tfsdk:"tags"`
-	TagsAll         tftags.Map                                            `tfsdk:"tags_all"`
-	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
-	Type            types.String                                          `tfsdk:"type"`
+	ARN                       types.String                                                    `tfsdk:"arn"`
+	BotAliasID                types.String                                                    `tfsdk:"bot_alias_id"`
+	BotAliasLocaleSettings    fwtypes.SetNestedObjectValueOf[botAliasLocaleSettingsModel]     `tfsdk:"bot_alias_locale_settings"`
+	BotAliasName              types.String                                                    `tfsdk:"bot_alias_name"`
+	BotID                     types.String                                                    `tfsdk:"bot_id"`
+	BotVersion                types.String                                                    `tfsdk:"bot_version"`
+	ConversationLogSettings   fwtypes.ListNestedObjectValueOf[conversationLogSettingsModel]   `tfsdk:"conversation_log_settings"`
+	Description               types.String                                                    `tfsdk:"description"`
+	ID                        types.String                                                    `tfsdk:"id"`
+	SentimentAnalysisSettings fwtypes.ListNestedObjectValueOf[sentimentAnalysisSettingsModel] `tfsdk:"sentiment_analysis_settings"`
+	Tags                      tftags.Map                                                      `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                                  `tfsdk:"timeouts"`
 }
 
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+type botAliasLocaleSettingsModel struct {
+	CodeHookSpecification fwtypes.ListNestedObjectValueOf[codeHookSpecificationModel] `tfsdk:"code_hook_specification"`
+	Enabled               types.Bool                                                  `tfsdk:"enabled"`
+	MapBlockKey           types.String                                                `tfsdk:"locale_id"`
 }
 
-
-// TIP: ==== IMPORT ID HANDLER ====
-// When a resource type has a Resource Identity with multiple attributes, it needs a handler to
-// parse the Import ID used for the `terraform import` command or an `import` block with the `id` parameter.
-//
-// The parser takes the string value of the Import ID and returns:
-// * A string value that is typically ignored. See documentation for more details.
-// * A map of the resource attributes derived from the Import ID.
-// * An error value if there are parsing errors.
-//
-// For more information, see https://hashicorp.github.io/terraform-provider-aws/resource-identity/#plugin-framework
-var (
-	_ inttypes.ImportIDParser = botAliasImportID{}
-)
-
-type botAliasImportID struct{}
-
-func (botAliasImportID) Parse(id string) (string, map[string]string, error) {
-	someValue, anotherValue, found := strings.Cut(id, intflex.ResourceIdSeparator)
-	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in the format <some-value>"+intflex.ResourceIdSeparator+"<another-value>", id)
-	}
-
-	result := map[string]string{
-		"some-value":    someValue,
-		"another-value": anotherValue,
-	}
-
-	return id, result, nil
+type codeHookSpecificationModel struct {
+	LambdaCodeHook fwtypes.ListNestedObjectValueOf[lambdaCodeHookModel] `tfsdk:"lambda_code_hook"`
 }
 
+type lambdaCodeHookModel struct {
+	CodeHookInterfaceVersion types.String `tfsdk:"code_hook_interface_version"`
+	LambdaARN                fwtypes.ARN  `tfsdk:"lambda_arn"`
+}
 
-// TIP: ==== SWEEPERS ====
-// When acceptance testing resources, interrupted or failed tests may
-// leave behind orphaned resources in an account. To facilitate cleaning
-// up lingering resources, each resource implementation should include
-// a corresponding "sweeper" function.
-//
-// The sweeper function lists all resources of a given type and sets the
-// appropriate identifers required to delete the resource via the Delete
-// method implemented above.
-//
-// Once the sweeper function is implemented, register it in sweep.go
-// as follows:
-//
-//  awsv2.Register("aws_lexv2models_bot_alias", sweepBotAliass)
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
-func sweepBotAliass(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := lexv2models.ListBotAliassInput{}
-	conn := client.LexV2ModelsClient(ctx)
-	var sweepResources []sweep.Sweepable
+type conversationLogSettingsModel struct {
+	AudioLogSettings fwtypes.SetNestedObjectValueOf[audioLogSettingModel] `tfsdk:"audio_log_settings"`
+	TextLogSettings  fwtypes.SetNestedObjectValueOf[textLogSettingModel]  `tfsdk:"text_log_settings"`
+}
 
-	pages := lexv2models.NewListBotAliassPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
+type audioLogSettingModel struct {
+	Destination fwtypes.ListNestedObjectValueOf[audioLogDestinationModel] `tfsdk:"destination"`
+	Enabled     types.Bool                                                `tfsdk:"enabled"`
+}
 
-		for _, v := range page.BotAliass {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newBotAliasResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.BotAliasId))),
-			)
-		}
-	}
+type audioLogDestinationModel struct {
+	S3Bucket fwtypes.ListNestedObjectValueOf[s3BucketLogDestinationModel] `tfsdk:"s3_bucket"`
+}
 
-	return sweepResources, nil
+type s3BucketLogDestinationModel struct {
+	KmsKeyArn   fwtypes.ARN  `tfsdk:"kms_key_arn"`
+	LogPrefix   types.String `tfsdk:"log_prefix"`
+	S3BucketArn fwtypes.ARN  `tfsdk:"s3_bucket_arn"`
+}
+
+type textLogSettingModel struct {
+	Destination fwtypes.ListNestedObjectValueOf[textLogDestinationModel] `tfsdk:"destination"`
+	Enabled     types.Bool                                               `tfsdk:"enabled"`
+}
+
+type textLogDestinationModel struct {
+	CloudWatch fwtypes.ListNestedObjectValueOf[cloudWatchLogGroupLogDestinationModel] `tfsdk:"cloudwatch"`
+}
+
+type cloudWatchLogGroupLogDestinationModel struct {
+	CloudWatchLogGroupArn fwtypes.ARN  `tfsdk:"cloudwatch_log_group_arn"`
+	LogPrefix             types.String `tfsdk:"log_prefix"`
+}
+
+type sentimentAnalysisSettingsModel struct {
+	DetectSentiment types.Bool `tfsdk:"detect_sentiment"`
 }
