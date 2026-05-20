@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -82,6 +83,7 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 				Description: "Whether the event destination is enabled. Defaults to `true`.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
@@ -176,6 +178,11 @@ func (r *configurationSetEventDestinationResource) Create(ctx context.Context, r
 		return
 	}
 
+	// Capture the user-requested Enabled before AWS overwrites plan via Flatten
+	// below — CreateEventDestinationInput has no Enabled field and it is computed
+	// by AWS Enabled=true on Create.
+	planEnabled := plan.Enabled.ValueBool()
+
 	input := &pinpointsmsvoicev2.CreateEventDestinationInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
 	}
@@ -206,6 +213,24 @@ func (r *configurationSetEventDestinationResource) Create(ctx context.Context, r
 		return
 	}
 	plan.ConfigurationSetARN = fwtypes.ARNValue(aws.ToString(out.ConfigurationSetArn))
+
+	if !planEnabled {
+		updateInput := pinpointsmsvoicev2.UpdateEventDestinationInput{
+			ConfigurationSetName: plan.ConfigurationSetName.ValueStringPointer(),
+			EventDestinationName: plan.EventDestinationName.ValueStringPointer(),
+			Enabled:              aws.Bool(false),
+		}
+		updateOut, err := conn.UpdateEventDestination(ctx, &updateInput)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.EventDestinationName.ValueString())
+			return
+		}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, updateOut.EventDestination, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.ConfigurationSetARN = fwtypes.ARNValue(aws.ToString(updateOut.ConfigurationSetArn))
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
