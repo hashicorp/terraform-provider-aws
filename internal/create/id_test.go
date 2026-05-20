@@ -4,9 +4,7 @@
 package create
 
 import (
-	"fmt"
-	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
-	"regexp"
+	mathrand "math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 	"strings"
 	"testing"
 	"time"
@@ -88,23 +86,18 @@ func TestUniqueId_VCR(t *testing.T) {
 	)
 
 	testCases := []struct {
-		testName       string
-		source         rand.Source
-		expectedRegexp *regexp.Regexp
-		expected       string
+		testName string
+		seed     int64
+		expected string
 	}{
 		{
-			testName:       "standard",
-			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}$", UniqueIDSuffixLength)),
-		},
-		{
 			testName: "go-vcr enabled (1)",
-			source:   rand.NewSource(fixedSeed1),
+			seed:     fixedSeed1,
 			expected: "terraform-0000000000088b5ac78f2059ed",
 		},
 		{
 			testName: "go-vcr enabled (2)",
-			source:   rand.NewSource(fixedSeed2),
+			seed:     fixedSeed2,
 			expected: "terraform-000000000045df53545befa95c",
 		},
 	}
@@ -114,20 +107,54 @@ func TestUniqueId_VCR(t *testing.T) {
 			t.Parallel()
 
 			ctx := t.Context()
-			if testCase.source != nil {
-				ctx = vcr.NewContext(ctx, testCase.source)
+
+			ctx = vcr.NewContext(ctx, mathrand.NewSource(testCase.seed))
+			uniqueId := UniqueId(ctx)
+
+			if testCase.expected != uniqueId {
+				t.Errorf("UniqueId = %v, does not match %s", uniqueId, testCase.expected)
 			}
 
-			got := UniqueId(ctx)
-
-			// Standard (regexp match)
-			if testCase.expectedRegexp != nil && !testCase.expectedRegexp.MatchString(got) {
-				t.Errorf("UniqueId = %v, does not match regexp %s", got, testCase.expectedRegexp)
-			}
-			// Go-VCR enabled (exact match)
-			if testCase.expected != "" && testCase.expected != got {
-				t.Errorf("UniqueId = %v, does not match %s", got, testCase.expected)
+			// test with a new source and the same seed to confirm it gives the same results
+			ctx = vcr.NewContext(ctx, mathrand.NewSource(testCase.seed))
+			randomId := RandomId(ctx)
+			if testCase.expected != randomId {
+				t.Errorf("RandomId = %v, does not match %s", randomId, testCase.expected)
 			}
 		})
+	}
+}
+
+var allB62 = regexache.MustCompile(`^[a-zA-Z0-9]+$`)
+
+func TestRandomId(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	iterations := 10000
+	ids := make(map[string]struct{})
+	for range iterations {
+		id := UniqueId(ctx)
+
+		if _, ok := ids[id]; ok {
+			t.Fatalf("Got duplicated id! %s", id)
+		}
+
+		if !strings.HasPrefix(id, UniqueIdPrefix) {
+			t.Fatalf("Random ID didn't have terraform- prefix! %s", id)
+		}
+
+		random := strings.TrimPrefix(id, UniqueIdPrefix)
+
+		if len(random) != UniqueIDSuffixLength {
+			t.Fatalf("RandomId is out of sync with UniqueIDSuffixLength, post-prefix part has wrong length! %s", random)
+		}
+
+		if !allB62.MatchString(random) {
+			t.Fatalf("Random part not all base62! %s", random)
+		}
+
+		ids[id] = struct{}{}
 	}
 }

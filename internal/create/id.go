@@ -5,8 +5,9 @@ package create
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
+	mathrand "math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 	"strings"
 	"sync"
 	"time"
@@ -43,7 +44,7 @@ func UniqueId(ctx context.Context) string {
 // generation. Otherwise, it generates a time and counter based unique ID.
 func prefixedUniqueId(ctx context.Context, prefix string) string {
 	if s, ok := vcr.FromContext(ctx); ok && s != nil {
-		rng := rand.New(s)
+		rng := mathrand.New(s)
 		// Pad the generated int64 to match the length of the id.PrefixUniqueId (26 characters)
 		return fmt.Sprintf("%s%026x", prefix, rng.Int63())
 	}
@@ -60,4 +61,33 @@ func prefixedUniqueId(ctx context.Context, prefix string) string {
 	defer idMutex.Unlock()
 	idCounter++
 	return fmt.Sprintf("%s%s%08x", prefix, timestamp, idCounter)
+}
+
+const base62alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+// Helper for a resource to generate a random identifier with default prefix
+//
+// This helper is a drop-in replacement for UniqueId().
+// UniqueId() is time- and counter-based, meaning it can generate duplicate IDs
+// during parallel runs. When using VCR, this helper returns the same value
+// as UniqueId() would. Otherwise, it generates a random ID.
+func RandomId(ctx context.Context) string {
+	if s, ok := vcr.FromContext(ctx); ok && s != nil {
+		rng := mathrand.New(s)
+		// Pad the generated int64 to match the length of the id.PrefixUniqueId (26 characters)
+		return fmt.Sprintf("%s%026x", UniqueIdPrefix, rng.Int63())
+	}
+
+	// inspired from crypto/rand.Text()
+	// use base62 instead of base32 and fix length to 26 characters
+
+	src := make([]byte, 26)
+	// Read fills b with cryptographically secure random bytes.
+	// It never returns an error, and always fills b entirely.
+	_, _ = rand.Read(src)
+	for i := range src {
+		src[i] = base62alphabet[src[i]%62]
+	}
+
+	return fmt.Sprintf("%s%s", UniqueIdPrefix, src)
 }
