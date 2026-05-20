@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -112,6 +113,9 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 		Blocks: map[string]schema.Block{
 			"cloudwatch_logs_destination": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsDestinationModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplaceIf(sinkTypeSwapRequiresReplace, sinkTypeSwapReplaceDescription, sinkTypeSwapReplaceDescription),
+				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -132,6 +136,9 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 			},
 			"kinesis_firehose_destination": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[kinesisFirehoseDestinationModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplaceIf(sinkTypeSwapRequiresReplace, sinkTypeSwapReplaceDescription, sinkTypeSwapReplaceDescription),
+				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -152,6 +159,9 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 			},
 			"sns_destination": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[snsDestinationModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplaceIf(sinkTypeSwapRequiresReplace, sinkTypeSwapReplaceDescription, sinkTypeSwapReplaceDescription),
+				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -167,6 +177,14 @@ func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, r
 			},
 		},
 	}
+}
+
+const sinkTypeSwapReplaceDescription = "Replaces the event destination if the sink type changes. AWS's UpdateEventDestination rejects sink-type changes with ConflictException (EVENT_DESTINATION_MISMATCH)."
+
+// sinkTypeSwapRequiresReplace fires on populated to empty transitions of a sink block.
+// Within-sink attribute changes flow through normal Update.
+func sinkTypeSwapRequiresReplace(_ context.Context, req planmodifier.ListRequest, resp *listplanmodifier.RequiresReplaceIfFuncResponse) {
+	resp.RequiresReplace = req.StateValue.IsNull() != req.PlanValue.IsNull()
 }
 
 func (r *configurationSetEventDestinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS End User Messaging SMS Configuration Set Event Destination.
 
-An event destination is a location where messaging events are published. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured per event destination.
+An event destination is a location where messaging events are published. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured per event destination. Changing the sink type (e.g., from `sns_destination` to `cloudwatch_logs_destination`) forces resource replacement — AWS's `UpdateEventDestination` rejects sink-type changes with `ConflictException`.
 
 ## Example Usage
 

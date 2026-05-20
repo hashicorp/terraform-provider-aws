@@ -380,7 +380,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_replaceDestinatio
 				Config: testAccConfigurationSetEventDestinationConfig_CloudwatchLogsDestination1(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -394,7 +394,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_replaceDestinatio
 				Config: testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination1(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -408,7 +408,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_replaceDestinatio
 				Config: testAccConfigurationSetEventDestinationConfig_basic(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
