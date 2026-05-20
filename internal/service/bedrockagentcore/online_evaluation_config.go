@@ -528,7 +528,7 @@ type onlineEvaluationConfigResourceModel struct {
 	Description                types.String                                                 `tfsdk:"description"`
 	EnableOnCreate             types.Bool                                                   `tfsdk:"enable_on_create"`
 	EvaluationExecutionRoleARN fwtypes.ARN                                                  `tfsdk:"evaluation_execution_role_arn"`
-	Evaluators                 fwtypes.ListNestedObjectValueOf[evaluatorReferenceModel]     `tfsdk:"evaluator"`
+	Evaluators                 fwtypes.SetNestedObjectValueOf[evaluatorReferenceModel]      `tfsdk:"evaluator"`
 	ExecutionStatus            fwtypes.StringEnum[awstypes.OnlineEvaluationExecutionStatus] `tfsdk:"execution_status"`
 	OnlineEvaluationConfigARN  types.String                                                 `tfsdk:"online_evaluation_config_arn"`
 	OnlineEvaluationConfigID   types.String                                                 `tfsdk:"online_evaluation_config_id"`
