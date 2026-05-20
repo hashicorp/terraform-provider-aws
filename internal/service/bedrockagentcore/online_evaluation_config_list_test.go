@@ -24,7 +24,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_bedrockagentcore_online_evaluation_config.test[0]"
 	resourceName2 := "aws_bedrockagentcore_online_evaluation_config.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -77,10 +77,8 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_List_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_bedrockagentcore_online_evaluation_config.test[0]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -144,7 +142,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_List_regionOverride(t *testin
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_bedrockagentcore_online_evaluation_config.test[0]"
 	resourceName2 := "aws_bedrockagentcore_online_evaluation_config.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
