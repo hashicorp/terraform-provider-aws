@@ -198,7 +198,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "action/aws_events_put_events",
     "action/aws_lambda_invoke",
     "action/aws_ses_send_email",
     "action/aws_transcribe_start_transcription_job",
