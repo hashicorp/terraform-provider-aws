@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name = var.rName
+  count = var.resource_count
+
+  online_evaluation_config_name = "${var.rName}_${count.index}"
   enable_on_create              = false
   evaluation_execution_role_arn = aws_iam_role.test.arn
 
@@ -22,6 +24,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
       sampling_percentage = 10.0
     }
   }
+
+  tags = var.resource_tags
 }
 
 data "aws_partition" "current" {}
@@ -107,5 +111,17 @@ resource "aws_cloudwatch_log_group" "test" {
 variable "rName" {
   description = "Name for resource"
   type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource"
+  type        = map(string)
   nullable    = false
 }

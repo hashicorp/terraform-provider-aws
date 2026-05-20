@@ -1,6 +1,31 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  region = var.region
+
+  online_evaluation_config_name = var.rName
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+  }
+}
+
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
@@ -83,30 +108,6 @@ resource "aws_cloudwatch_log_group" "test" {
   name = "/aws/agentcore/${var.rName}"
 }
 
-resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  region = var.region
-
-  online_evaluation_config_name = var.rName
-  enable_on_create              = false
-  evaluation_execution_role_arn = aws_iam_role.test.arn
-
-  data_source_config {
-    cloudwatch_logs {
-      log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
-    }
-  }
-
-  evaluator {
-    evaluator_id = "Builtin.Helpfulness"
-  }
-
-  rule {
-    sampling_config {
-      sampling_percentage = 10.0
-    }
-  }
-}
 variable "rName" {
   description = "Name for resource"
   type        = string

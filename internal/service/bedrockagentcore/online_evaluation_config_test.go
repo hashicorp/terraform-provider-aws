@@ -28,6 +28,14 @@ func testAccRandomOnlineEvaluationConfigName(t *testing.T) string {
 	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 }
 
+func checkOnlineEvaluationConfigARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`online-evaluation-config/`+name+`-[a-zA-Z0-9]{10}`))
+}
+
+func checkOnlineEvaluationConfigARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("bedrock-agentcore", regexache.MustCompile(`online-evaluation-config/`+name+`-[a-zA-Z0-9]{10}`))
+}
+
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
@@ -55,7 +63,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`online-evaluation-config/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_arn"), checkOnlineEvaluationConfigARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("online_evaluation_config_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),

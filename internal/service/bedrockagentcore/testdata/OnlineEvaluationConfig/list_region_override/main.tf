@@ -2,7 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name = var.rName
+  count  = var.resource_count
+  region = var.region
+
+  online_evaluation_config_name = "${var.rName}_${count.index}"
   enable_on_create              = false
   evaluation_execution_role_arn = aws_iam_role.test.arn
 
@@ -101,11 +104,25 @@ EOF
 }
 
 resource "aws_cloudwatch_log_group" "test" {
+  region = var.region
+
   name = "/aws/agentcore/${var.rName}"
 }
 
 variable "rName" {
   description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
   type        = string
   nullable    = false
 }
