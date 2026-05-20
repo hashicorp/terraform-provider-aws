@@ -119,7 +119,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_List_includeResource(t *testi
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_online_evaluation_config.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_online_evaluation_config.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_online_evaluation_config.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"_0")),
 					querycheck.ExpectResourceKnownValues("aws_bedrockagentcore_online_evaluation_config.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("online_evaluation_config_arn"), checkOnlineEvaluationConfigARN(rName+"_0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("online_evaluation_config_id"), knownvalue.NotNull()),
