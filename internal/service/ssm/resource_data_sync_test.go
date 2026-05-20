@@ -227,50 +227,6 @@ func testAccCheckResourceDataSyncExists(ctx context.Context, t *testing.T, n str
 
 func testAccResourceDataSyncConfig_basic(rName, bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.bucket
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "SSMBucketPermissionsCheck",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "s3:GetBucketAcl",
-      "Resource": "${aws_s3_bucket.test.arn}"
-    },
-    {
-      "Sid": " SSMBucketDelivery",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "s3:PutObject",
-      "Resource": [
-        "${aws_s3_bucket.test.arn}/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "s3:x-amz-acl": "bucket-owner-full-control"
-        }
-      }
-    }
-  ]
-}
-      EOF
-}
-
 resource "aws_ssm_resource_data_sync" "test" {
   name = %[1]q
 
@@ -279,11 +235,7 @@ resource "aws_ssm_resource_data_sync" "test" {
     region      = aws_s3_bucket.test.region
   }
 }
-`, rName, bucketName)
-}
 
-func testAccResourceDataSyncConfig_update_s3DestinationPrefix(rName, bucketName string) string {
-	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
   force_destroy = true
@@ -327,7 +279,11 @@ resource "aws_s3_bucket_policy" "test" {
 }
       EOF
 }
+`, rName, bucketName)
+}
 
+func testAccResourceDataSyncConfig_update_s3DestinationPrefix(rName, bucketName string) string {
+	return fmt.Sprintf(`
 resource "aws_ssm_resource_data_sync" "test" {
   name = %[1]q
 
@@ -336,6 +292,50 @@ resource "aws_ssm_resource_data_sync" "test" {
     region      = aws_s3_bucket.test.region
     prefix      = "test-"
   }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SSMBucketPermissionsCheck",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "${aws_s3_bucket.test.arn}"
+    },
+    {
+      "Sid": " SSMBucketDelivery",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "s3:PutObject",
+      "Resource": [
+        "${aws_s3_bucket.test.arn}/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
+}
+      EOF
 }
 `, rName, bucketName)
 }
