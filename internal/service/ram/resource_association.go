@@ -139,7 +139,7 @@ func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceDa
 
 func createResourceShareResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) error {
 	input := ram.AssociateResourceShareInput{
-		ClientToken:      aws.String(create.UniqueId(ctx)),
+		ClientToken:      aws.String(create.RandomId(ctx)),
 		ResourceArns:     []string{resourceARN},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -158,7 +158,7 @@ func createResourceShareResourceAssociation(ctx context.Context, conn *ram.Clien
 
 func deleteResourceShareResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) error {
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(create.UniqueId(ctx)),
+		ClientToken:      aws.String(create.RandomId(ctx)),
 		ResourceArns:     []string{resourceARN},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}

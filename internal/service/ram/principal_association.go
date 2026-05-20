@@ -146,7 +146,7 @@ func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceD
 
 func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string, sources ...string) error {
 	input := ram.AssociateResourceShareInput{
-		ClientToken:      aws.String(create.UniqueId(ctx)),
+		ClientToken:      aws.String(create.RandomId(ctx)),
 		Principals:       []string{principal},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -173,7 +173,7 @@ func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Clie
 
 func deleteResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string, sources ...string) error {
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(create.UniqueId(ctx)),
+		ClientToken:      aws.String(create.RandomId(ctx)),
 		Principals:       []string{principal},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}

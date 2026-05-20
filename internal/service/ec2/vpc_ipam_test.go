@@ -389,7 +389,7 @@ func testAccCheckIPAMScopeCreate(ctx context.Context, t *testing.T, ipam *awstyp
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		input := ec2.CreateIpamScopeInput{
-			ClientToken: aws.String(create.UniqueId(ctx)),
+			ClientToken: aws.String(create.RandomId(ctx)),
 			IpamId:      ipam.IpamId,
 		}
 		_, err := conn.CreateIpamScope(ctx, &input)

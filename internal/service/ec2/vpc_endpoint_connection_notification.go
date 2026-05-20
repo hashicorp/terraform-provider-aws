@@ -76,7 +76,7 @@ func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *sch
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVpcEndpointConnectionNotificationInput{
-		ClientToken:               aws.String(create.UniqueId(ctx)),
+		ClientToken:               aws.String(create.RandomId(ctx)),
 		ConnectionEvents:          flex.ExpandStringValueSet(d.Get("connection_events").(*schema.Set)),
 		ConnectionNotificationArn: aws.String(d.Get("connection_notification_arn").(string)),
 	}

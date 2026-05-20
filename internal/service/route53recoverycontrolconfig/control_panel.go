@@ -72,7 +72,7 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	input := &r53rcc.CreateControlPanelInput{
-		ClientToken:      aws.String(create.UniqueId(ctx)),
+		ClientToken:      aws.String(create.RandomId(ctx)),
 		ClusterArn:       aws.String(d.Get("cluster_arn").(string)),
 		ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
 	}

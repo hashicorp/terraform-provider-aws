@@ -191,7 +191,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta a
 	input := grafana.CreateWorkspaceInput{
 		AccountAccessType:       awstypes.AccountAccessType(d.Get("account_access_type").(string)),
 		AuthenticationProviders: flex.ExpandStringyValueList[awstypes.AuthenticationProviderTypes](d.Get("authentication_providers").([]any)),
-		ClientToken:             aws.String(create.UniqueId(ctx)),
+		ClientToken:             aws.String(create.RandomId(ctx)),
 		PermissionType:          awstypes.PermissionType(d.Get("permission_type").(string)),
 		Tags:                    getTagsIn(ctx),
 	}

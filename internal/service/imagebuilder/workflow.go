@@ -113,7 +113,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get(names.AttrName).(string)
 	input := &imagebuilder.CreateWorkflowInput{
-		ClientToken:     aws.String(create.UniqueId(ctx)),
+		ClientToken:     aws.String(create.RandomId(ctx)),
 		Name:            aws.String(name),
 		SemanticVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		Type:            awstypes.WorkflowType(d.Get(names.AttrType).(string)),

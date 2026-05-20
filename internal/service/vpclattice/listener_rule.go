@@ -260,7 +260,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get(names.AttrName).(string)
 	input := vpclattice.CreateRuleInput{
 		Action:             expandRuleActions(d.Get(names.AttrAction).([]any)),
-		ClientToken:        aws.String(create.UniqueId(ctx)),
+		ClientToken:        aws.String(create.RandomId(ctx)),
 		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
 		Match:              expandRuleMatches(d.Get("match").([]any)),
 		Name:               aws.String(name),

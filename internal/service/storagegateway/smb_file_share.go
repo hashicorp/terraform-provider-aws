@@ -217,7 +217,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &storagegateway.CreateSMBFileShareInput{
 		AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
-		ClientToken:            aws.String(create.UniqueId(ctx)),
+		ClientToken:            aws.String(create.RandomId(ctx)),
 		GatewayARN:             aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
 		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),

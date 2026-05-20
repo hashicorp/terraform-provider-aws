@@ -211,7 +211,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta an
 	analyzerName := d.Get("analyzer_name").(string)
 	input := accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(create.UniqueId(ctx)),
+		ClientToken:  aws.String(create.RandomId(ctx)),
 		Tags:         getTagsIn(ctx),
 		Type:         types.Type(d.Get(names.AttrType).(string)),
 	}
@@ -284,7 +284,7 @@ func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta an
 	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
 	input := accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
-		ClientToken:  aws.String(create.UniqueId(ctx)),
+		ClientToken:  aws.String(create.RandomId(ctx)),
 	}
 	_, err := conn.DeleteAnalyzer(ctx, &input)
 

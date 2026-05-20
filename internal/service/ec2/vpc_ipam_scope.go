@@ -85,7 +85,7 @@ func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateIpamScopeInput{
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		IpamId:            aws.String(d.Get("ipam_id").(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamScope),
 	}

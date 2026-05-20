@@ -383,7 +383,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	ipv4PrefixesSpecified := false
 	ipv6PrefixesSpecified := false
 	input := ec2.CreateNetworkInterfaceInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		SubnetId:    aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 

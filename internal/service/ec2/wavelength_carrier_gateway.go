@@ -62,7 +62,7 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateCarrierGatewayInput{
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCarrierGateway),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}

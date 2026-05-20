@@ -527,7 +527,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -631,7 +631,7 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 
 		_, err := conn.UpdateHarness(ctx, &input)
 		if err != nil {

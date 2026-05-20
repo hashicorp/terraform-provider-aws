@@ -156,7 +156,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.AccessDeniedException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {

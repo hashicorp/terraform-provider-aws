@@ -734,7 +734,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	fleetType := awstypes.FleetType(d.Get(names.AttrType).(string))
 	input := ec2.CreateFleetInput{
-		ClientToken:                 aws.String(create.UniqueId(ctx)),
+		ClientToken:                 aws.String(create.RandomId(ctx)),
 		LaunchTemplateConfigs:       expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]any)),
 		TargetCapacitySpecification: expandTargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]any)[0].(map[string]any)),
 		TagSpecifications:           getTagSpecificationsIn(ctx, awstypes.ResourceTypeFleet),

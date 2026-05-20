@@ -184,7 +184,7 @@ func (r *automationRuleV2Resource) Create(ctx context.Context, request resource.
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	criteria, diags := data.Criteria.ToPtr(ctx)

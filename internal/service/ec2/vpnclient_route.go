@@ -85,7 +85,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 	destinationCIDR := d.Get("destination_cidr_block").(string)
 	id := clientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR)
 	input := &ec2.CreateClientVpnRouteInput{
-		ClientToken:          aws.String(create.UniqueId(ctx)),
+		ClientToken:          aws.String(create.RandomId(ctx)),
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),

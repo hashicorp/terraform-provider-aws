@@ -107,7 +107,7 @@ func (r *serviceNetworkResourceAssociationResource) Create(ctx context.Context, 
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.ResourceConfigurationIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationID)
 	input.ServiceNetworkIdentifier = fwflex.StringFromFramework(ctx, data.ServiceNetworkID)
 	input.Tags = getTagsIn(ctx)

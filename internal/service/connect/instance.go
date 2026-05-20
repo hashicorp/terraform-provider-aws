@@ -154,7 +154,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	input := &connect.CreateInstanceInput{
-		ClientToken:            aws.String(create.UniqueId(ctx)),
+		ClientToken:            aws.String(create.RandomId(ctx)),
 		IdentityManagementType: awstypes.DirectoryType(d.Get("identity_management_type").(string)),
 		InboundCallsEnabled:    aws.Bool(d.Get("inbound_calls_enabled").(bool)),
 		OutboundCallsEnabled:   aws.Bool(d.Get("outbound_calls_enabled").(bool)),

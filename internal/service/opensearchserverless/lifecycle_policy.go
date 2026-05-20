@@ -112,7 +112,7 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	output, err := conn.CreateLifecyclePolicy(ctx, &input)
 
@@ -185,7 +185,7 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 		input.PolicyVersion = old.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		output, err := conn.UpdateLifecyclePolicy(ctx, &input)
@@ -214,7 +214,7 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := opensearchserverless.DeleteLifecyclePolicyInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Name:        aws.String(name),
 		Type:        data.Type.ValueEnum(),
 	}

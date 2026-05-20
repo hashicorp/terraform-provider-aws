@@ -974,7 +974,7 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 		return
 	}
 
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateFlow(ctx, &input)

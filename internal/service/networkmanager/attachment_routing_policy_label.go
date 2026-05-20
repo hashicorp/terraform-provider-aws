@@ -86,7 +86,7 @@ func (r *attachmentRoutingPolicyLabelResource) Create(ctx context.Context, req r
 	coreNetworkID, attachmentID := fwflex.StringValueFromFramework(ctx, plan.CoreNetworkID), fwflex.StringValueFromFramework(ctx, plan.AttachmentID)
 	input := networkmanager.PutAttachmentRoutingPolicyLabelInput{
 		AttachmentId:       aws.String(attachmentID),
-		ClientToken:        aws.String(create.UniqueId(ctx)),
+		ClientToken:        aws.String(create.RandomId(ctx)),
 		CoreNetworkId:      aws.String(coreNetworkID),
 		RoutingPolicyLabel: fwflex.StringFromFramework(ctx, plan.RoutingPolicyLabel),
 	}

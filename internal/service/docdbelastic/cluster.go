@@ -198,7 +198,7 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	createOut, err := conn.CreateCluster(ctx, &input)
@@ -304,7 +304,7 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 		input.ClusterArn = plan.ID.ValueStringPointer()
 
 		_, err := conn.UpdateCluster(ctx, &input)

@@ -52,7 +52,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
-		ClientToken:    aws.String(create.UniqueId(ctx)),
+		ClientToken:    aws.String(create.RandomId(ctx)),
 	}
 
 	err := tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {

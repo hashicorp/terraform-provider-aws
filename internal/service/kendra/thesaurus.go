@@ -109,7 +109,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	input := &kendra.CreateThesaurusInput{
-		ClientToken:  aws.String(create.UniqueId(ctx)),
+		ClientToken:  aws.String(create.RandomId(ctx)),
 		IndexId:      aws.String(d.Get("index_id").(string)),
 		Name:         aws.String(d.Get(names.AttrName).(string)),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),

@@ -128,7 +128,7 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorFilterRuleInput{
-		ClientToken:           aws.String(create.UniqueId(ctx)),
+		ClientToken:           aws.String(create.RandomId(ctx)),
 		DestinationCidrBlock:  aws.String(d.Get("destination_cidr_block").(string)),
 		RuleAction:            awstypes.TrafficMirrorRuleAction(d.Get("rule_action").(string)),
 		RuleNumber:            aws.Int32(int32(d.Get("rule_number").(int))),

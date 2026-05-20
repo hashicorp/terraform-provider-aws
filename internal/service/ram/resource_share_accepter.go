@@ -117,7 +117,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	}
 
 	input := ram.AcceptResourceShareInvitationInput{
-		ClientToken:                aws.String(create.UniqueId(ctx)),
+		ClientToken:                aws.String(create.RandomId(ctx)),
 		ResourceShareInvitationArn: aws.String(invitationARN),
 	}
 
@@ -211,7 +211,7 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 	}
 
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(create.UniqueId(ctx)),
+		ClientToken:      aws.String(create.RandomId(ctx)),
 		Principals:       []string{receiverAccountID},
 		ResourceShareArn: aws.String(d.Id()),
 	}

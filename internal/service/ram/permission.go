@@ -120,7 +120,7 @@ func (r *permissionResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreatePermission(ctx, &input)
@@ -194,7 +194,7 @@ func (r *permissionResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 
 		input := ram.CreatePermissionVersionInput{
-			ClientToken:    aws.String(create.UniqueId(ctx)),
+			ClientToken:    aws.String(create.RandomId(ctx)),
 			PermissionArn:  aws.String(arn),
 			PolicyTemplate: fwflex.StringFromFramework(ctx, plan.PolicyTemplate),
 		}

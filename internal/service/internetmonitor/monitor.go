@@ -151,7 +151,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	name := d.Get("monitor_name").(string)
 	input := &internetmonitor.CreateMonitorInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		MonitorName: aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
@@ -191,7 +191,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta any
 	if v, ok := d.GetOk(names.AttrStatus); ok {
 		if v := types.MonitorConfigState(v.(string)); v != types.MonitorConfigStateActive {
 			input := &internetmonitor.UpdateMonitorInput{
-				ClientToken: aws.String(create.UniqueId(ctx)),
+				ClientToken: aws.String(create.RandomId(ctx)),
 				MonitorName: aws.String(d.Id()),
 				Status:      v,
 			}
@@ -251,7 +251,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &internetmonitor.UpdateMonitorInput{
-			ClientToken: aws.String(create.UniqueId(ctx)),
+			ClientToken: aws.String(create.RandomId(ctx)),
 			MonitorName: aws.String(d.Id()),
 		}
 
@@ -306,7 +306,7 @@ func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).InternetMonitorClient(ctx)
 
 	input := &internetmonitor.UpdateMonitorInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		MonitorName: aws.String(d.Id()),
 		Status:      types.MonitorConfigStateInactive,
 	}

@@ -425,7 +425,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get(names.AttrName).(string)
 	input := emrserverless.CreateApplicationInput{
-		ClientToken:  aws.String(create.UniqueId(ctx)),
+		ClientToken:  aws.String(create.RandomId(ctx)),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
@@ -573,7 +573,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
-			ClientToken:   aws.String(create.UniqueId(ctx)),
+			ClientToken:   aws.String(create.RandomId(ctx)),
 		}
 
 		if v, ok := d.GetOk("architecture"); ok {

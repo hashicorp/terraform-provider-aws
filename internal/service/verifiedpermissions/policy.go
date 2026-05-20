@@ -227,7 +227,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	in := &verifiedpermissions.CreatePolicyInput{}
 
-	in.ClientToken = aws.String(create.UniqueId(ctx))
+	in.ClientToken = aws.String(create.RandomId(ctx))
 	in.PolicyStoreId = plan.PolicyStoreID.ValueStringPointer()
 
 	def, diags := plan.Definition.ToPtr(ctx)

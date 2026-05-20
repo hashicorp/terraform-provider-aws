@@ -87,7 +87,7 @@ func (r *userAccessLoggingSettingsResource) Create(ctx context.Context, request 
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateUserAccessLoggingSettings(ctx, &input)
@@ -164,7 +164,7 @@ func (r *userAccessLoggingSettingsResource) Update(ctx context.Context, request 
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 
 		_, err := conn.UpdateUserAccessLoggingSettings(ctx, &input)
 

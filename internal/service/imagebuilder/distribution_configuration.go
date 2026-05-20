@@ -352,7 +352,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 

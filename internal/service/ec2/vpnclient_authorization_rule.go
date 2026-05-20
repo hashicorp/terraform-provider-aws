@@ -83,7 +83,7 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetNetworkCIDR := d.Get("target_network_cidr").(string)
 	input := &ec2.AuthorizeClientVpnIngressInput{
-		ClientToken:         aws.String(create.UniqueId(ctx)),
+		ClientToken:         aws.String(create.RandomId(ctx)),
 		ClientVpnEndpointId: aws.String(endpointID),
 		TargetNetworkCidr:   aws.String(targetNetworkCIDR),
 	}

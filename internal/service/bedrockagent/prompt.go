@@ -489,7 +489,7 @@ func (r *promptResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreatePrompt(ctx, &input)

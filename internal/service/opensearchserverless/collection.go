@@ -196,7 +196,7 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	in.ClientToken = aws.String(create.UniqueId(ctx))
+	in.ClientToken = aws.String(create.RandomId(ctx))
 	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateCollection(ctx, in)
@@ -289,7 +289,7 @@ func (r *collectionResource) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 
 		out, err := conn.UpdateCollection(ctx, input)
 
@@ -321,7 +321,7 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	_, err := conn.DeleteCollection(ctx, &opensearchserverless.DeleteCollectionInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Id:          state.ID.ValueStringPointer(),
 	})
 

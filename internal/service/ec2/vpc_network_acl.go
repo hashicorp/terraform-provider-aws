@@ -171,7 +171,7 @@ func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateNetworkAclInput{
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNetworkAcl),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}

@@ -90,7 +90,7 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 	ipamID := d.Get("ipam_id").(string)
 	ipamResourceDiscoveryID := d.Get("ipam_resource_discovery_id").(string)
 	input := &ec2.AssociateIpamResourceDiscoveryInput{
-		ClientToken:             aws.String(create.UniqueId(ctx)),
+		ClientToken:             aws.String(create.RandomId(ctx)),
 		IpamId:                  aws.String(ipamID),
 		IpamResourceDiscoveryId: aws.String(ipamResourceDiscoveryID),
 		TagSpecifications:       getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamResourceDiscoveryAssociation),

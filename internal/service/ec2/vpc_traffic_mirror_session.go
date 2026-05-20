@@ -91,7 +91,7 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
-		ClientToken:           aws.String(create.UniqueId(ctx)),
+		ClientToken:           aws.String(create.RandomId(ctx)),
 		NetworkInterfaceId:    aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),

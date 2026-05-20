@@ -267,7 +267,7 @@ func (r *resourceConfigurationResource) Create(ctx context.Context, request reso
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.DomainVerificationIdentifier = fwflex.StringFromFramework(ctx, data.DomainVerificationID)
 	input.ResourceConfigurationGroupIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationGroupID)
 	input.ResourceGatewayIdentifier = fwflex.StringFromFramework(ctx, data.ResourceGatewayID)

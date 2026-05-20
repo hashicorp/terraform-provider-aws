@@ -108,7 +108,7 @@ func (r *profilingGroupResource) Create(ctx context.Context, req resource.Create
 	}
 
 	in.ProfilingGroupName = flex.StringFromFramework(ctx, plan.Name)
-	in.ClientToken = aws.String(create.UniqueId(ctx))
+	in.ClientToken = aws.String(create.RandomId(ctx))
 	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateProfilingGroup(ctx, in)

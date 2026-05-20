@@ -136,7 +136,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	input := sagemaker.CreateImageVersionInput{
 		ImageName:   aws.String(name),
 		BaseImage:   aws.String(d.Get("base_image").(string)),
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 	}
 
 	if v, ok := d.GetOk("job_type"); ok {

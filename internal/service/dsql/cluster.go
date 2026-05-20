@@ -151,7 +151,7 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateCluster(ctx, &input)
@@ -272,7 +272,7 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 
 		_, err := conn.UpdateCluster(ctx, &input)
 
@@ -324,7 +324,7 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 		input := dsql.UpdateClusterInput{
 			Identifier:                data.Identifier.ValueStringPointer(),
 			DeletionProtectionEnabled: aws.Bool(false),
-			ClientToken:               aws.String(create.UniqueId(ctx)),
+			ClientToken:               aws.String(create.RandomId(ctx)),
 		}
 		// Changing DeletionProtectionEnabled is instantaneous, no need to wait.
 		if _, err := conn.UpdateCluster(ctx, &input); err != nil {

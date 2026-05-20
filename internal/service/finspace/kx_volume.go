@@ -180,7 +180,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(rID)
 
 	in := &finspace.CreateKxVolumeInput{
-		ClientToken:         aws.String(create.UniqueId(ctx)),
+		ClientToken:         aws.String(create.RandomId(ctx)),
 		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]any)),
 		EnvironmentId:       aws.String(environmentId),
 		VolumeType:          types.KxVolumeType(d.Get(names.AttrType).(string)),

@@ -110,7 +110,7 @@ func (r *vpcRouteServerEndpointResource) Create(ctx context.Context, request res
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeRouteServerEndpoint)
 
 	output, err := conn.CreateRouteServerEndpoint(ctx, &input)

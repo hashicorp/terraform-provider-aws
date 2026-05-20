@@ -158,7 +158,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateFaqInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),

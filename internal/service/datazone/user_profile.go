@@ -124,7 +124,7 @@ func (r *userProfileResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	in.ClientToken = aws.String(create.UniqueId(ctx))
+	in.ClientToken = aws.String(create.RandomId(ctx))
 	out, err := conn.CreateUserProfile(ctx, in)
 	if resp.Diagnostics.HasError() {
 		return

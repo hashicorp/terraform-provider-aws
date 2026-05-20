@@ -93,7 +93,7 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateMonitor(ctx, input)

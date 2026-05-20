@@ -89,7 +89,7 @@ func (r *configurationSetResource) Create(ctx context.Context, request resource.
 
 	name := data.ConfigurationSetName.ValueString()
 	input := &pinpointsmsvoicev2.CreateConfigurationSetInput{
-		ClientToken:          aws.String(create.UniqueId(ctx)),
+		ClientToken:          aws.String(create.RandomId(ctx)),
 		ConfigurationSetName: aws.String(name),
 		Tags:                 getTagsIn(ctx),
 	}

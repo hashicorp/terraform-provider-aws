@@ -158,7 +158,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get(names.AttrName).(string)
 	input := vpclattice.CreateListenerInput{
-		ClientToken:   aws.String(create.UniqueId(ctx)),
+		ClientToken:   aws.String(create.RandomId(ctx)),
 		Name:          aws.String(name),
 		DefaultAction: expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 		Protocol:      types.ListenerProtocol(d.Get(names.AttrProtocol).(string)),

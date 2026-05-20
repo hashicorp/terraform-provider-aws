@@ -174,7 +174,7 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(environmentID),
 		AutoUpdate:    d.Get("auto_update").(bool),
 		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
-		ClientToken:   aws.String(create.UniqueId(ctx)),
+		ClientToken:   aws.String(create.RandomId(ctx)),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -266,7 +266,7 @@ func resourceKxDataviewUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
 		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
-		ClientToken:   aws.String(create.UniqueId(ctx)),
+		ClientToken:   aws.String(create.RandomId(ctx)),
 	}
 
 	if v, ok := d.GetOk("changeset_id"); ok && d.HasChange("changeset_id") && !d.Get("auto_update").(bool) {
@@ -296,7 +296,7 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
 		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
-		ClientToken:   aws.String(create.UniqueId(ctx)),
+		ClientToken:   aws.String(create.RandomId(ctx)),
 	})
 
 	if err != nil {

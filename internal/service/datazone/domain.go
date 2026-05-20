@@ -166,7 +166,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	const (
@@ -272,7 +272,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 		input.Identifier = fwflex.StringFromFramework(ctx, new.ID)
 
 		_, err := conn.UpdateDomain(ctx, &input)
@@ -296,7 +296,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	conn := r.Meta().DataZoneClient(ctx)
 
 	input := datazone.DeleteDomainInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Identifier:  data.ID.ValueStringPointer(),
 	}
 	if !data.SkipDeletionCheck.IsNull() {

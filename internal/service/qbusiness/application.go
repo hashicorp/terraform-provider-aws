@@ -152,7 +152,7 @@ func (r *applicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 	input.Tags = getTagsIn(ctx)
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	out, err := conn.CreateApplication(ctx, input)
 	if err != nil {

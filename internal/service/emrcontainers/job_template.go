@@ -266,7 +266,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get(names.AttrName).(string)
 	input := &emrcontainers.CreateJobTemplateInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}

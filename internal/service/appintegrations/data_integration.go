@@ -117,7 +117,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 
 	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateDataIntegrationInput{
-		ClientToken:    aws.String(create.UniqueId(ctx)),
+		ClientToken:    aws.String(create.RandomId(ctx)),
 		KmsKey:         aws.String(d.Get(names.AttrKMSKey).(string)),
 		Name:           aws.String(name),
 		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]any)),

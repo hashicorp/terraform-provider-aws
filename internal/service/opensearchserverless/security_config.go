@@ -158,7 +158,7 @@ func (r *securityConfigResource) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	out, err := conn.CreateSecurityConfig(ctx, &input)
 	if err != nil {
@@ -239,7 +239,7 @@ func (r *securityConfigResource) Update(ctx context.Context, req resource.Update
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 		input.ConfigVersion = state.ConfigVersion.ValueStringPointer()
 
 		out, err := conn.UpdateSecurityConfig(ctx, &input)
@@ -267,7 +267,7 @@ func (r *securityConfigResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	_, err := conn.DeleteSecurityConfig(ctx, &opensearchserverless.DeleteSecurityConfigInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Id:          state.ID.ValueStringPointer(),
 	})
 	if err != nil {

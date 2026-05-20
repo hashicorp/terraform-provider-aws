@@ -134,7 +134,7 @@ func (r *probeResource) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	input := &networkmonitor.CreateProbeInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		MonitorName: fwflex.StringFromFramework(ctx, data.MonitorName),
 		Probe:       probeInput,
 		Tags:        getTagsIn(ctx),

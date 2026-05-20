@@ -104,7 +104,7 @@ func (r *deploymentResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	output, err := conn.CreateDeployment(ctx, input)
 
@@ -224,7 +224,7 @@ func (r *deploymentResource) Update(ctx context.Context, request resource.Update
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 
 		output, err := conn.CreateDeployment(ctx, input)
 

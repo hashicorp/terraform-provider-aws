@@ -256,7 +256,7 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
-		ClientToken:   aws.String(create.UniqueId(ctx)),
+		ClientToken:   aws.String(create.RandomId(ctx)),
 		AssertionRule: assertionRule,
 	}
 
@@ -298,7 +298,7 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		GatingRule:  gatingRule,
 	}
 

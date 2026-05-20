@@ -103,7 +103,7 @@ func (r *domainVerificationResource) Create(ctx context.Context, request resourc
 	conn := r.Meta().VPCLatticeClient(ctx)
 
 	input := vpclattice.StartDomainVerificationInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		DomainName:  fwflex.StringFromFramework(ctx, data.DomainName),
 		Tags:        getTagsIn(ctx),
 	}

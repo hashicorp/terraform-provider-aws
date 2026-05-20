@@ -72,7 +72,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.EnableMacieInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {

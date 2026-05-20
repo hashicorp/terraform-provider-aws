@@ -129,7 +129,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
 	if err != nil {
@@ -243,7 +243,7 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.UpdateVpcEndpointInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Id:          fwflex.StringFromFramework(ctx, new.ID),
 	}
 
@@ -325,7 +325,7 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	_, err := conn.DeleteVpcEndpoint(ctx, &opensearchserverless.DeleteVpcEndpointInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Id:          fwflex.StringFromFramework(ctx, data.ID),
 	})
 

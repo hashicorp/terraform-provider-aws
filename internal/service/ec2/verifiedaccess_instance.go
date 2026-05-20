@@ -103,7 +103,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateVerifiedAccessInstanceInput{
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessInstance),
 	}
 
@@ -173,7 +173,7 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := ec2.ModifyVerifiedAccessInstanceInput{
-			ClientToken:              aws.String(create.UniqueId(ctx)),
+			ClientToken:              aws.String(create.RandomId(ctx)),
 			VerifiedAccessInstanceId: aws.String(d.Id()),
 		}
 
@@ -201,7 +201,7 @@ func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[INFO] Deleting Verified Access Instance: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessInstanceInput{
-		ClientToken:              aws.String(create.UniqueId(ctx)),
+		ClientToken:              aws.String(create.RandomId(ctx)),
 		VerifiedAccessInstanceId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessInstance(ctx, &input)

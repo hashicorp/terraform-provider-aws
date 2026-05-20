@@ -133,7 +133,7 @@ func (r *collectionGroupResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateCollectionGroup(ctx, &input)
@@ -244,7 +244,7 @@ func (r *collectionGroupResource) Delete(ctx context.Context, request resource.D
 	}
 
 	_, err := conn.DeleteCollectionGroup(ctx, &opensearchserverless.DeleteCollectionGroupInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Id:          state.ID.ValueStringPointer(),
 	})
 

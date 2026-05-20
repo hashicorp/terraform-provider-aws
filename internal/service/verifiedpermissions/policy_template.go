@@ -98,7 +98,7 @@ func (r *policyTemplateResource) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	output, err := conn.CreatePolicyTemplate(ctx, input)
 
