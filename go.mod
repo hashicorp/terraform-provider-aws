@@ -22,8 +22,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.15
 	github.com/aws/aws-sdk-go-v2/service/amp v1.42.11
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.38.16
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.3
-	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.34.3
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.4
+	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.34.4
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.43.15
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.16.23
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.51.14
@@ -65,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.23
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.15
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.16
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.14
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.33.14
 	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.10.22
@@ -96,7 +96,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.18
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.15
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.38.10
-	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.3.2
+	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.40.14
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.17
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.18
@@ -133,10 +133,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.8
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.18
 	github.com/aws/aws-sdk-go-v2/service/glue v1.142.0
-	github.com/aws/aws-sdk-go-v2/service/grafana v1.34.0
+	github.com/aws/aws-sdk-go-v2/service/grafana v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.23
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.75.4
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.76.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.15
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.10
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.7
@@ -233,7 +233,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.14
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.8
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.247.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.248.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.24
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.14
