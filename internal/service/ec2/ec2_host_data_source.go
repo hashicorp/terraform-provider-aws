@@ -239,14 +239,14 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	return diags
 }
 
-func flattenHostInstances(instances []awstypes.HostInstance) []map[string]interface{} {
+func flattenHostInstances(instances []awstypes.HostInstance) []map[string]any {
 	if len(instances) == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, len(instances))
+	result := make([]map[string]any, len(instances))
 	for i, inst := range instances {
-		result[i] = map[string]interface{}{
+		result[i] = map[string]any{
 			names.AttrInstanceID:   aws.ToString(inst.InstanceId),
 			names.AttrInstanceType: aws.ToString(inst.InstanceType),
 			names.AttrOwnerID:      aws.ToString(inst.OwnerId),
@@ -255,26 +255,26 @@ func flattenHostInstances(instances []awstypes.HostInstance) []map[string]interf
 	return result
 }
 
-func flattenAvailableCapacity(capacity *awstypes.AvailableCapacity) []map[string]interface{} {
+func flattenAvailableCapacity(capacity *awstypes.AvailableCapacity) []map[string]any {
 	if capacity == nil {
 		return nil
 	}
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		"available_vcpus":             int(aws.ToInt32(capacity.AvailableVCpus)),
 		"available_instance_capacity": flattenInstanceCapacity(capacity.AvailableInstanceCapacity),
 	}
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func flattenInstanceCapacity(capacities []awstypes.InstanceCapacity) []map[string]interface{} {
+func flattenInstanceCapacity(capacities []awstypes.InstanceCapacity) []map[string]any {
 	if len(capacities) == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, len(capacities))
+	result := make([]map[string]any, len(capacities))
 	for i, cap := range capacities {
-		result[i] = map[string]interface{}{
+		result[i] = map[string]any{
 			"available_capacity":   int(aws.ToInt32(cap.AvailableCapacity)),
 			names.AttrInstanceType: aws.ToString(cap.InstanceType),
 			"total_capacity":       int(aws.ToInt32(cap.TotalCapacity)),
