@@ -45,7 +45,7 @@ The `rule` block supports:
 The `probabilistic` block supports:
 
 * `desired_sampling_percentage` - (Required) Configured sampling percentage of traceIds.
-* `actual_sampling_percentage` - (Computed) Applied sampling percentage of traceIds.
+* `actual_sampling_percentage` - (Optional) Applied sampling percentage of traceIds.
 
 ## Attribute Reference
 
