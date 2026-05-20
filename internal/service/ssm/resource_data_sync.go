@@ -55,6 +55,21 @@ func resourceResourceDataSync() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"destination_data_sharing": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_data_sharing_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										// TODO: Validate: Only "Organization"
+									},
+								},
+							},
+						},
 						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -78,11 +93,6 @@ func resourceResourceDataSync() *schema.Resource {
 							ForceNew:         true,
 							Default:          awstypes.ResourceDataSyncS3FormatJsonSerde,
 							ValidateDiagFunc: enum.Validate[awstypes.ResourceDataSyncS3Format](),
-						},
-						"destination_data_sharing_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -211,21 +221,22 @@ func flattenResourceDataSyncS3Destination(d *schema.ResourceData, apiObject *aws
 	if apiObject.Prefix != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
 	}
-	if apiObject.DestinationDataSharing != nil && apiObject.DestinationDataSharing.DestinationDataSharingType != nil {
-		tfMap["destination_data_sharing_type"] = *apiObject.DestinationDataSharing.DestinationDataSharingType
-	}
+	tfMap["destination_data_sharing"] = flattenResourceDataSyncDestinationDataSharing(d, apiObject.DestinationDataSharing)
 
-	// Since we can't get the destination_data_sharing_type from the API response, we'll use the value from the configuration..
-	if v, ok := d.GetOk("s3_destination"); ok {
-		s3Destination := v.([]any)
+	return []any{tfMap}
+}
 
-		for _, s3DestConfig := range s3Destination {
-			config := s3DestConfig.(map[string]any)
+func flattenResourceDataSyncDestinationDataSharing(d *schema.ResourceData, apiObject *awstypes.ResourceDataSyncDestinationDataSharing) []any {
+	tfMap := make(map[string]any)
 
-			if aws.String(config["destination_data_sharing_type"].(string)) != nil {
-				tfMap["destination_data_sharing_type"] = aws.String(config["destination_data_sharing_type"].(string))
-			}
+	if apiObject == nil {
+		state := d.Get("s3_destination.0.destination_data_sharing.0.destination_data_sharing_type")
+		if state == nil || state.(string) == "" {
+			return nil
 		}
+		tfMap["destination_data_sharing_type"] = state.(string)
+	} else {
+		tfMap["destination_data_sharing_type"] = aws.ToString(apiObject.DestinationDataSharingType)
 	}
 
 	return []any{tfMap}
@@ -246,11 +257,16 @@ func expandResourceDataSyncS3Destination(d *schema.ResourceData) *awstypes.Resou
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
-	if v, ok := tfMap["destination_data_sharing_type"].(string); ok && v != "" {
-		destinationDataSharing := awstypes.ResourceDataSyncDestinationDataSharing{
-			DestinationDataSharingType: aws.String(v),
-		}
-		apiObject.DestinationDataSharing = &destinationDataSharing
-	}
+	apiObject.DestinationDataSharing = expandResourceDataSyncDestinationDataSharing(tfMap["destination_data_sharing"].([]any))
 	return apiObject
+}
+
+func expandResourceDataSyncDestinationDataSharing(tfList []any) *awstypes.ResourceDataSyncDestinationDataSharing {
+	if len(tfList) == 0 {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+	return &awstypes.ResourceDataSyncDestinationDataSharing{
+		DestinationDataSharingType: aws.String(tfMap["destination_data_sharing_type"].(string)),
+	}
 }

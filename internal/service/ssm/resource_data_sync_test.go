@@ -43,12 +43,12 @@ func TestAccSSMResourceDataSync_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrBucketName:            knownvalue.StringExact(bucketName),
-							names.AttrKMSKeyARN:             knownvalue.StringExact(""),
-							names.AttrPrefix:                knownvalue.StringExact(""),
-							names.AttrRegion:                knownvalue.StringExact(acctest.Region()),
-							"sync_format":                   tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
-							"destination_data_sharing_type": knownvalue.StringExact(""),
+							names.AttrBucketName:       knownvalue.StringExact(bucketName),
+							names.AttrKMSKeyARN:        knownvalue.StringExact(""),
+							names.AttrPrefix:           knownvalue.StringExact(""),
+							names.AttrRegion:           knownvalue.StringExact(acctest.Region()),
+							"sync_format":              tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
+							"destination_data_sharing": knownvalue.ListExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -113,12 +113,12 @@ func TestAccSSMResourceDataSync_Update_s3DestinationPrefix(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrBucketName:            knownvalue.StringExact(bucketName),
-							names.AttrKMSKeyARN:             knownvalue.StringExact(""),
-							names.AttrPrefix:                knownvalue.StringExact("test-"),
-							names.AttrRegion:                knownvalue.StringExact(acctest.Region()),
-							"sync_format":                   tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
-							"destination_data_sharing_type": knownvalue.StringExact(""),
+							names.AttrBucketName:       knownvalue.StringExact(bucketName),
+							names.AttrKMSKeyARN:        knownvalue.StringExact(""),
+							names.AttrPrefix:           knownvalue.StringExact("test-"),
+							names.AttrRegion:           knownvalue.StringExact(acctest.Region()),
+							"sync_format":              tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
+							"destination_data_sharing": knownvalue.ListExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -158,12 +158,16 @@ func TestAccSSMResourceDataSync_destinationDataSharing_sameAccount(t *testing.T)
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrBucketName:            knownvalue.StringExact(bucketName),
-							names.AttrKMSKeyARN:             knownvalue.StringExact(""),
-							names.AttrPrefix:                knownvalue.StringExact(""),
-							names.AttrRegion:                knownvalue.StringExact(acctest.Region()),
-							"sync_format":                   tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
-							"destination_data_sharing_type": knownvalue.StringExact("Organization"),
+							names.AttrBucketName: knownvalue.StringExact(bucketName),
+							names.AttrKMSKeyARN:  knownvalue.StringExact(""),
+							names.AttrPrefix:     knownvalue.StringExact(""),
+							names.AttrRegion:     knownvalue.StringExact(acctest.Region()),
+							"sync_format":        tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
+							"destination_data_sharing": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"destination_data_sharing_type": knownvalue.StringExact("Organization"),
+								}),
+							}),
 						}),
 					})),
 				},
@@ -173,7 +177,7 @@ func TestAccSSMResourceDataSync_destinationDataSharing_sameAccount(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"s3_destination.0.destination_data_sharing_type",
+					"s3_destination.0.destination_data_sharing",
 				},
 			},
 		},
@@ -345,7 +349,9 @@ resource "aws_ssm_resource_data_sync" "test" {
     bucket_name = aws_s3_bucket.test.bucket
     region      = aws_s3_bucket.test.region
 
-	destination_data_sharing_type = "Organization"
+	destination_data_sharing {
+		destination_data_sharing_type = "Organization"
+	}
   }
 }
 
