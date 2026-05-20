@@ -4853,6 +4853,23 @@ func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("staticHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("firstKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -4864,18 +4881,73 @@ func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("staticHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("firstKey"),
+							names.AttrType: knownvalue.StringExact("N"),
+						}),
+					})),
+				},
 			},
 			{ // New attribute addition (index update)
 				Config: testAccTableConfig_twoAttributes(rName, "firstKey", "secondKey", "firstKey", "N", "secondKey", "S"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("staticHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("firstKey"),
+							names.AttrType: knownvalue.StringExact("N"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("secondKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+				},
 			},
 			{ // Attribute removal (index update)
 				Config: testAccTableConfig_oneAttribute(rName, "firstKey", "firstKey", "S"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("staticHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("firstKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+				},
 			},
 		},
 	})
