@@ -8,6 +8,8 @@ description: |-
 
 # Resource: aws_pinpoint_email_template
 
+~> **NOTE:** This resource is deprecated. Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES using [`aws_ses_template`](ses_template.html) or [`aws_sesv2_email_identity`](sesv2_email_identity.html) and related SESv2 resources. See the [AWS End User Messaging migration guide](https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html) for details.
+
 Provides a Pinpoint Email Template resource
 
 ## Example Usage
