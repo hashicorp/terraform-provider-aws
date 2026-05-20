@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -144,11 +145,11 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 					},
 				},
 			},
-			"evaluator": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[evaluatorReferenceModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 10),
-					listvalidator.IsRequired(),
+			"evaluator": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[evaluatorReferenceModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 10),
+					setvalidator.IsRequired(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
