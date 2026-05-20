@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -45,7 +44,12 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_online_evaluation_config", name="Online Evaluation Config")
 // @Tags(identifierAttribute="online_evaluation_config_arn")
+// @IdentityAttribute("online_evaluation_config_id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput")
+// @Testing(generator="testAccRandomOnlineEvaluationConfigName(t)")
 // @Testing(tagsTest=false)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="online_evaluation_config_id")
 func newOnlineEvaluationConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &onlineEvaluationConfigResource{}
 
@@ -59,6 +63,7 @@ func newOnlineEvaluationConfigResource(_ context.Context) (resource.ResourceWith
 type onlineEvaluationConfigResource struct {
 	framework.ResourceWithModel[onlineEvaluationConfigResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -449,10 +454,6 @@ func (r *onlineEvaluationConfigResource) Delete(ctx context.Context, request res
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, configID)
 		return
 	}
-}
-
-func (r *onlineEvaluationConfigResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("online_evaluation_config_id"), request, response)
 }
 
 // Waiters.

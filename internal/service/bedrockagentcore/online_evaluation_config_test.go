@@ -24,10 +24,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccRandomOnlineEvaluationConfigName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
+
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -72,7 +76,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_basic(t *testing.T) {
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -108,7 +112,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -170,7 +174,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_tags(t *testing.T) {
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -215,7 +219,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_update(t *testing.T) {
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_executionStatus(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -272,7 +276,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_executionStatus(t *testing.T)
 func TestAccBedrockAgentCoreOnlineEvaluationConfig_filters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomOnlineEvaluationConfigName(t)
 	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
