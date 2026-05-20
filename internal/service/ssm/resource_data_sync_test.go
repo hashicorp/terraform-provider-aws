@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -270,6 +271,71 @@ func TestAccSSMResourceDataSync_DestinationDataSharing_remove(t *testing.T) {
 	})
 }
 
+// TestAccSSMResourceDataSync_DestinationDataSharing_organization tests data sharing with an S3 bucket in a different account
+// The test requires two accounts in the same organization:
+// * The primary account must be a member of an AWS Organization
+// * The alternate account must be the management account of the Organization
+func TestAccSSMResourceDataSync_DestinationDataSharing_organization(t *testing.T) {
+	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
+
+	resourceName := "aws_ssm_resource_data_sync.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccResourceDataSyncConfig_destinationDataSharing_organization_init(),
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				Config: testAccResourceDataSyncConfig_destinationDataSharing_organization(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_destination"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrBucketName: knownvalue.StringExact(bucketName),
+							names.AttrKMSKeyARN:  knownvalue.StringExact(""),
+							names.AttrPrefix:     knownvalue.StringExact(""),
+							names.AttrRegion:     knownvalue.StringExact(acctest.Region()),
+							"sync_format":        tfknownvalue.StringExact(awstypes.ResourceDataSyncS3FormatJsonSerde),
+							"destination_data_sharing": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"destination_data_sharing_type": knownvalue.StringExact("Organization"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"s3_destination.0.destination_data_sharing",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckResourceDataSyncDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
@@ -428,7 +494,7 @@ resource "aws_s3_bucket_policy" "test" {
 
 func testAccResourceDataSyncConfig_destinationDataSharing_sameAccount(rName, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy_sameAccount(),
 		fmt.Sprintf(`
 resource "aws_ssm_resource_data_sync" "test" {
   name = %[1]q
@@ -452,7 +518,7 @@ resource "aws_s3_bucket" "test" {
 
 func testAccResourceDataSyncConfig_destinationDataSharing_add_setup(rName, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy_sameAccount(),
 		fmt.Sprintf(`
 resource "aws_ssm_resource_data_sync" "test" {
   name = %[1]q
@@ -472,7 +538,7 @@ resource "aws_s3_bucket" "test" {
 
 func testAccResourceDataSyncConfig_destinationDataSharing_add(rName, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy_sameAccount(),
 		fmt.Sprintf(`
 resource "aws_ssm_resource_data_sync" "test" {
   name = %[1]q
@@ -496,7 +562,7 @@ resource "aws_s3_bucket" "test" {
 
 func testAccResourceDataSyncConfig_destinationDataSharing_remove_setup(rName, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy_sameAccount(),
 		fmt.Sprintf(`
 resource "aws_ssm_resource_data_sync" "test" {
   name = %[1]q
@@ -520,7 +586,7 @@ resource "aws_s3_bucket" "test" {
 
 func testAccResourceDataSyncConfig_destinationDataSharing_remove(rName, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy(),
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy_sameAccount(),
 		fmt.Sprintf(`
 resource "aws_ssm_resource_data_sync" "test" {
   name = %[1]q
@@ -538,7 +604,7 @@ resource "aws_s3_bucket" "test" {
 `, rName, bucketName))
 }
 
-func testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy() string {
+func testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy_sameAccount() string {
 	return `
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -589,5 +655,101 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 data "aws_partition" "current" {}
+`
+}
+
+func testAccResourceDataSyncConfig_destinationDataSharing_organization_init() string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(), `
+data "aws_caller_identity" "member" {}
+
+data "aws_caller_identity" "management" {
+  provider = awsalternate
+}
+`)
+}
+
+func testAccResourceDataSyncConfig_destinationDataSharing_organization(rName, bucketName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy_organization(),
+		fmt.Sprintf(`
+resource "aws_ssm_resource_data_sync" "test" {
+  name = %[1]q
+
+  s3_destination {
+    bucket_name = aws_s3_bucket.test.bucket
+    region      = aws_s3_bucket.test.region
+
+    destination_data_sharing {
+      destination_data_sharing_type = "Organization"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  provider = awsalternate
+
+  bucket        = %[2]q
+  force_destroy = true
+}
+`, rName, bucketName))
+}
+
+func testAccResourceDataSyncConfig_destinationDataSharingBucketPolicy_organization() string {
+	return `
+resource "aws_s3_bucket_policy" "test" {
+  provider = awsalternate
+
+  bucket = aws_s3_bucket.test.bucket
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SSMBucketPermissionsCheck",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "${aws_s3_bucket.test.arn}"
+    },
+    {
+      "Sid": " SSMBucketDelivery",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "s3:PutObject",
+      "Resource": [
+        "${aws_s3_bucket.test.arn}/*/accountid=*/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    },
+    {
+      "Sid": " SSMBucketDeliveryTagging",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "s3:PutObjectTagging",
+      "Resource": [
+        "${aws_s3_bucket.test.arn}/*/accountid=*/*"
+      ]
+     }
+  ]
+}
+      EOF
+}
+
+data "aws_partition" "current" {
+  provider = awsalternate
+}
 `
 }
