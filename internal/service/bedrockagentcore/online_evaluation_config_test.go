@@ -399,7 +399,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
-    cloud_watch_logs {
+    cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
       service_names   = ["test_service"]
     }
@@ -427,7 +427,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
-    cloud_watch_logs {
+    cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
       service_names   = ["test_service"]
     }
@@ -462,7 +462,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
-    cloud_watch_logs {
+    cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
       service_names   = ["test_service"]
     }
@@ -493,7 +493,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
-    cloud_watch_logs {
+    cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
       service_names   = ["test_service"]
     }
@@ -526,7 +526,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
-    cloud_watch_logs {
+    cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
       service_names   = ["test_service"]
     }
@@ -553,7 +553,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
-    cloud_watch_logs {
+    cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.test.name]
       service_names   = ["test_service"]
     }

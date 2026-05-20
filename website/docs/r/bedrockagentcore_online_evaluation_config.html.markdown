@@ -41,7 +41,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "example" {
   evaluation_execution_role_arn = aws_iam_role.example.arn
 
   data_source_config {
-    cloud_watch_logs {
+    cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.example.name]
       service_names   = ["my_agent_service"]
     }
@@ -72,7 +72,7 @@ resource "aws_bedrockagentcore_online_evaluation_config" "filtered" {
   evaluation_execution_role_arn = aws_iam_role.example.arn
 
   data_source_config {
-    cloud_watch_logs {
+    cloudwatch_logs {
       log_group_names = [aws_cloudwatch_log_group.example.name]
       service_names   = ["my_agent_service"]
     }
@@ -125,11 +125,11 @@ The following arguments are optional:
 
 The `data_source_config` block supports the following:
 
-* `cloud_watch_logs` - (Optional) CloudWatch logs configuration for reading agent traces. See [`cloud_watch_logs` Block](#cloud_watch_logs-block) below.
+* `cloudwatch_logs` - (Optional) CloudWatch logs configuration for reading agent traces. See [`cloudwatch_logs` Block](#cloudwatch_logs-block) below.
 
-### `cloud_watch_logs` Block
+### `cloudwatch_logs` Block
 
-The `cloud_watch_logs` block supports the following:
+The `cloudwatch_logs` block supports the following:
 
 * `log_group_names` - (Required) List of CloudWatch log group names to monitor for agent traces. Maximum 5.
 * `service_names` - (Required) List of service names to filter traces within the specified log groups.
@@ -187,9 +187,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `output_config` Block
 
-* `cloud_watch_config` - CloudWatch configuration for evaluation results. See [`cloud_watch_config` Block](#cloud_watch_config-block) below.
+* `cloudwatch_config` - CloudWatch configuration for evaluation results. See [`cloudwatch_config` Block](#cloudwatch_config-block) below.
 
-### `cloud_watch_config` Block
+### `cloudwatch_config` Block
 
 * `log_group_name` - Name of the CloudWatch log group where evaluation results are written.
 

@@ -5,6 +5,7 @@ package bedrockagentcore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -60,6 +61,10 @@ type onlineEvaluationConfigResource struct {
 }
 
 func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	const (
+		samplingPercentageMin = 0.01
+		samplingPercentageMax = 100.0
+	)
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -109,7 +114,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"cloud_watch_logs": schema.ListNestedBlock{
+						"cloudwatch_logs": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsInputConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -154,7 +159,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"cloud_watch_config": schema.ListNestedBlock{
+						"cloudwatch_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchOutputConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -286,6 +291,7 @@ func (r *onlineEvaluationConfigResource) Create(ctx context.Context, request res
 		return
 	}
 
+	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
@@ -308,6 +314,7 @@ func (r *onlineEvaluationConfigResource) Create(ctx context.Context, request res
 		return
 	}
 
+	// Set values for unknowns.
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, config, &data))
 	if response.Diagnostics.HasError() {
 		return
@@ -370,7 +377,8 @@ func (r *onlineEvaluationConfigResource) Update(ctx context.Context, request res
 			return
 		}
 
-		input.OnlineEvaluationConfigId = aws.String(configID)
+		// Additional fields.
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		_, err := conn.UpdateOnlineEvaluationConfig(ctx, &input)
 		if err != nil {
@@ -443,9 +451,7 @@ func waitOnlineEvaluationConfigCreated(ctx context.Context, conn *bedrockagentco
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput); ok {
-		if out.FailureReason != nil {
-			retry.SetLastError(err, fmt.Errorf("%s", aws.ToString(out.FailureReason)))
-		}
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -463,9 +469,7 @@ func waitOnlineEvaluationConfigUpdated(ctx context.Context, conn *bedrockagentco
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput); ok {
-		if out.FailureReason != nil {
-			retry.SetLastError(err, fmt.Errorf("%s", aws.ToString(out.FailureReason)))
-		}
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -482,9 +486,7 @@ func waitOnlineEvaluationConfigDeleted(ctx context.Context, conn *bedrockagentco
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput); ok {
-		if out.FailureReason != nil {
-			retry.SetLastError(err, fmt.Errorf("%s", aws.ToString(out.FailureReason)))
-		}
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -534,7 +536,7 @@ type onlineEvaluationConfigResourceModel struct {
 	DataSourceConfig           fwtypes.ListNestedObjectValueOf[dataSourceConfigModel]       `tfsdk:"data_source_config"`
 	Description                types.String                                                 `tfsdk:"description"`
 	EnableOnCreate             types.Bool                                                   `tfsdk:"enable_on_create"`
-	EvaluationExecutionRoleArn fwtypes.ARN                                                  `tfsdk:"evaluation_execution_role_arn"`
+	EvaluationExecutionRoleARN fwtypes.ARN                                                  `tfsdk:"evaluation_execution_role_arn"`
 	Evaluators                 fwtypes.ListNestedObjectValueOf[evaluatorReferenceModel]     `tfsdk:"evaluator"`
 	ExecutionStatus            fwtypes.StringEnum[awstypes.OnlineEvaluationExecutionStatus] `tfsdk:"execution_status"`
 	OnlineEvaluationConfigARN  types.String                                                 `tfsdk:"online_evaluation_config_arn"`
@@ -548,7 +550,7 @@ type onlineEvaluationConfigResourceModel struct {
 }
 
 type dataSourceConfigModel struct {
-	CloudWatchLogs fwtypes.ListNestedObjectValueOf[cloudWatchLogsInputConfigModel] `tfsdk:"cloud_watch_logs"`
+	CloudWatchLogs fwtypes.ListNestedObjectValueOf[cloudWatchLogsInputConfigModel] `tfsdk:"cloudwatch_logs"`
 }
 
 var (
@@ -586,7 +588,7 @@ func (m *dataSourceConfigModel) Flatten(ctx context.Context, v any) diag.Diagnos
 		}
 		m.CloudWatchLogs = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	default:
-		diags.AddError("Unsupported Type", fmt.Sprintf("data source config flatten: %T", v))
+		diags.AddError("Unsupported Type", fmt.Sprintf("data_source_config flatten: %T", v))
 	}
 	return diags
 }
@@ -607,9 +609,13 @@ var (
 
 func (m evaluatorReferenceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	return &awstypes.EvaluatorReferenceMemberEvaluatorId{
-		Value: m.EvaluatorID.ValueString(),
-	}, diags
+	switch {
+	case !m.EvaluatorID.IsNull():
+		return &awstypes.EvaluatorReferenceMemberEvaluatorId{
+			Value: m.EvaluatorID.ValueString(),
+		}, diags
+	}
+	return nil, diags
 }
 
 func (m *evaluatorReferenceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
@@ -618,13 +624,13 @@ func (m *evaluatorReferenceModel) Flatten(ctx context.Context, v any) diag.Diagn
 	case awstypes.EvaluatorReferenceMemberEvaluatorId:
 		m.EvaluatorID = types.StringValue(t.Value)
 	default:
-		diags.AddError("Unsupported Type", fmt.Sprintf("evaluator reference flatten: %T", v))
+		diags.AddError("Unsupported Type", fmt.Sprintf("evaluator flatten: %T", v))
 	}
 	return diags
 }
 
 type outputConfigModel struct {
-	CloudWatchConfig fwtypes.ListNestedObjectValueOf[cloudWatchOutputConfigModel] `tfsdk:"cloud_watch_config"`
+	CloudWatchConfig fwtypes.ListNestedObjectValueOf[cloudWatchOutputConfigModel] `tfsdk:"cloudwatch_config"`
 }
 
 type cloudWatchOutputConfigModel struct {
