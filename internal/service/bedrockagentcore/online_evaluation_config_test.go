@@ -385,6 +385,23 @@ resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": [
+      "logs:*"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+
 resource "aws_cloudwatch_log_group" "test" {
   name = "/aws/agentcore/%[1]s"
 }
