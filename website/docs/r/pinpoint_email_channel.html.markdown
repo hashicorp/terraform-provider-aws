@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_pinpoint_email_channel
 
-~> **NOTE:** This resource is deprecated. Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES using [`aws_ses_domain_identity`](ses_domain_identity.html), [`aws_sesv2_email_identity`](sesv2_email_identity.html), and related SES/SESv2 resources. See the [AWS End User Messaging migration guide](https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html) for details.
+~> **NOTE:** This resource is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES using [`aws_ses_domain_identity`](ses_domain_identity.html), [`aws_sesv2_email_identity`](sesv2_email_identity.html), and related SES/SESv2 resources. See the [AWS End User Messaging migration guide](https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html) for details.
 
 Provides an End User Messaging Email Channel resource.
 
@@ -73,7 +73,7 @@ This resource supports the following arguments:
 * `enabled` - (Optional, **Deprecated**) Whether the channel is enabled or disabled. Defaults to `true`.
 * `from_address` - (Required, **Deprecated**) Email address used to send emails from. You can use email only (`user@example.com`) or friendly address (`User <user@example.com>`). This field comply with [RFC 5322](https://www.ietf.org/rfc/rfc5322.txt).
 * `identity` - (Required, **Deprecated**) ARN of an identity verified with SES.
-* `orchestration_sending_role_arn` - (Optional, **Deprecated**) ARN of an IAM role for Amazon Pinpoint to use to send email from your campaigns or journeys through Amazon SES.
+* `orchestration_sending_role_arn` - (Optional, **Deprecated**) ARN of an IAM role for AWS End User Messaging to use to send email from your campaigns or journeys through Amazon SES.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` - (Optional, **Deprecated**) ARN of an IAM Role used to submit events to Mobile Analytics' event ingestion service.
 

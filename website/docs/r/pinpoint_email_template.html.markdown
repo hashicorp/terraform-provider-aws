@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_pinpoint_email_template
 
-~> **NOTE:** This resource is deprecated. Amazon Pinpoint email features are being discontinued on October 30, 2026. Migrate to Amazon SES using [`aws_ses_template`](ses_template.html) or [`aws_sesv2_email_identity`](sesv2_email_identity.html) and related SESv2 resources. See the [AWS End User Messaging migration guide](https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html) for details.
+~> **NOTE:** This resource is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES using [`aws_ses_template`](ses_template.html) or [`aws_sesv2_email_identity`](sesv2_email_identity.html) and related SESv2 resources. See the [AWS End User Messaging migration guide](https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html) for details.
 
 Provides an End User Messaging Email Template resource
 
@@ -43,7 +43,7 @@ This resource supports the following arguments:
 * `description` - (Optional) Custom description of the message template.
 * `header` - (Optional) List of [MessageHeaders](https://docs.aws.amazon.com/pinpoint/latest/apireference/templates-template-name-email.html#templates-template-name-email-model-messageheader) for the email. You can have up to 15 Headers. [See below](#header-block).
 * `html_part` - (Optional) Message body, in HTML format, to use in email messages that are based on the message template. We recommend using HTML format for email clients that render HTML content. You can include links, formatted text, and more in an HTML message.
-* `recommender_id` - (Optional) Unique identifier for the recommender model to use for the message template. Amazon Pinpoint uses this value to determine how to retrieve and process data from a recommender model when it sends messages that use the template, if the template contains message variables for recommendation data.
+* `recommender_id` - (Optional) Unique identifier for the recommender model to use for the message template. AWS End User Messaging uses this value to determine how to retrieve and process data from a recommender model when it sends messages that use the template, if the template contains message variables for recommendation data.
 * `subject` - (Required) Subject line, or title, to use in email messages that are based on the message template.
 * `text_part` - (Optional) Message body, in plain text format, to use in email messages that are based on the message template. We recommend using plain text format for email clients that don't render HTML content and clients that are connected to high-latency networks, such as mobile devices.
 

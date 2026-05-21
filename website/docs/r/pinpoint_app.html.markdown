@@ -10,7 +10,7 @@ description: |-
 
 Provides an End User Messaging App resource.
 
-~> **NOTE:** The `campaign_hook`, `limits`, and `quiet_time` attributes are deprecated. Amazon Pinpoint engagement features, including the Settings API that backs these attributes, are being discontinued on October 30, 2026. See the [AWS End User Messaging migration guide](https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html) for details.
+~> **NOTE:** The `campaign_hook`, `limits`, and `quiet_time` attributes are deprecated. AWS End User Messaging engagement features, including the Settings API that backs these attributes, are being discontinued on October 30, 2026. See the [AWS End User Messaging migration guide](https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html) for details.
 
 ## Example Usage
 

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_pinpoint_event_stream
 
-~> **NOTE:** This resource is deprecated. Amazon Pinpoint event streams are being discontinued on October 30, 2026. After that date, this resource will no longer be available. For SMS/Voice event delivery, use [`aws_pinpointsmsvoicev2_configuration_set`](pinpointsmsvoicev2_configuration_set.html) with an event destination.
+~> **NOTE:** This resource is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026. After that date, this resource will no longer be available. For SMS/Voice event delivery, use [`aws_pinpointsmsvoicev2_configuration_set`](pinpointsmsvoicev2_configuration_set.html) with an event destination.
 
 Provides an End User Messaging Event Stream resource.
 
@@ -71,7 +71,7 @@ This resource supports the following arguments:
 * `application_id` - (Required, **Deprecated**) Application ID.
 * `destination_stream_arn` - (Required, **Deprecated**) Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `role_arn` - (Required, **Deprecated**) IAM role that authorizes Amazon Pinpoint to publish events to the stream in your account.
+* `role_arn` - (Required, **Deprecated**) IAM role that authorizes AWS End User Messaging to publish events to the stream in your account.
 
 ## Attribute Reference
 
