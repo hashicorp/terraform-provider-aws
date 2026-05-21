@@ -137,7 +137,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewTransitVirtualInterface: &awstypes.NewTransitVirtualInterface{
 			AddressFamily:          awstypes.AddressFamily(d.Get("address_family").(string)),
-			Asn:                    int32(d.Get("bgp_asn").(int)),
+			AsnLong:                aws.Int64(int64(d.Get("bgp_asn").(int))),
 			DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
 			EnableSiteLink:         aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                    aws.Int32(int32(d.Get("mtu").(int))),
@@ -202,7 +202,7 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
-	d.Set("bgp_asn", vif.Asn)
+	d.Set("bgp_asn", vif.AsnLong)
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
