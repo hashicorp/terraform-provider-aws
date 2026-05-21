@@ -6620,7 +6620,7 @@ service "pinpoint" {
 
   names {
     provider_name_upper = "Pinpoint"
-    human_friendly      = "Pinpoint"
+    human_friendly      = "End User Messaging"
   }
 
   endpoint_info {
