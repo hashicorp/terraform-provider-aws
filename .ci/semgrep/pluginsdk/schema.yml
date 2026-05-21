@@ -28,7 +28,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/ecs
         - /internal/service/efs
         - /internal/service/eks
         - /internal/service/elasticache
