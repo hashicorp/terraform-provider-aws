@@ -61,7 +61,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail")
 // @Testing(tlsKey=true)
-// @Testing(importIgnore="certificate_body;private_key)
+// @Testing(importIgnore="certificate_body;private_key")
 // @Testing(generator=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
