@@ -1752,7 +1752,6 @@ check "schema_docs" {
     "resource/aws_outposts_capacity_task",
     "resource/aws_paymentcryptography_key_alias",
     "resource/aws_paymentcryptography_key",
-    "resource/aws_pinpoint_apns_voip_sandbox_channel",
     "resource/aws_pinpoint_app",
     "resource/aws_pinpoint_baidu_channel",
     "resource/aws_pinpoint_email_channel",
