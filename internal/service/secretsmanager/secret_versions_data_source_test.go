@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -20,6 +21,7 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resource1Name := "aws_secretsmanager_secret_version.test"
+	resource2Name := "aws_secretsmanager_secret_version.test2"
 	secretName := "aws_secretsmanager_secret.test"
 	dataSourceName := "data.aws_secretsmanager_secret_versions.test"
 
@@ -39,20 +41,23 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), secretName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("secret_arn"), resource1Name, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("secret_id"), resource1Name, tfjsonpath.New("secret_id"), compare.ValuesSame()),
+					// Order is not guaranteed for `versions`
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("versions"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"created_time":       knownvalue.NotNull(),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"created_time":       knownvalue.StringRegexp(regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`)),
 							"last_accessed_date": knownvalue.Null(),
 							"version_id":         knownvalue.NotNull(),
-							"version_stages":     knownvalue.NotNull(),
+							"version_stages":     knownvalue.ListSizeExact(1),
 						}),
-						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"created_time":       knownvalue.NotNull(),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"created_time":       knownvalue.StringRegexp(regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`)),
 							"last_accessed_date": knownvalue.Null(),
 							"version_id":         knownvalue.NotNull(),
-							"version_stages":     knownvalue.NotNull(),
+							"version_stages":     knownvalue.ListSizeExact(1),
 						}),
 					})),
+					statecheck.CompareValueCollection(dataSourceName, []tfjsonpath.Path{tfjsonpath.New("versions"), tfjsonpath.New("version_id")}, resource1Name, tfjsonpath.New("version_id"), compare.ValuesSame()),
+					statecheck.CompareValueCollection(dataSourceName, []tfjsonpath.Path{tfjsonpath.New("versions"), tfjsonpath.New("version_id")}, resource2Name, tfjsonpath.New("version_id"), compare.ValuesSame()),
 				},
 			},
 		},
