@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ import (
 func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var constraints awstypes.SizeConstraintSet
-	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
+	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -62,8 +61,8 @@ func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.SizeConstraintSet
-	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
-	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
+	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(t, 5))
+	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -104,7 +103,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 func TestAccWAFRegionalSizeConstraintSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var constraints awstypes.SizeConstraintSet
-	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
+	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -128,7 +127,7 @@ func TestAccWAFRegionalSizeConstraintSet_disappears(t *testing.T) {
 func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.SizeConstraintSet
-	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
+	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -189,7 +188,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	ctx := acctest.Context(t)
 	var constraints awstypes.SizeConstraintSet
-	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
+	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

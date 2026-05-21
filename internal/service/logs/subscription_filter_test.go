@@ -410,18 +410,7 @@ func testAccCheckSubscriptionFilterExists(ctx context.Context, t *testing.T, n s
 }
 
 func testAccSubscriptionFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		logGroupName := rs.Primary.Attributes[names.AttrLogGroupName]
-		filterNamePrefix := rs.Primary.Attributes[names.AttrName]
-		stateID := fmt.Sprintf("%s|%s", logGroupName, filterNamePrefix)
-
-		return stateID, nil
-	}
+	return acctest.AttrsImportStateIdFunc(resourceName, "|", names.AttrLogGroupName, names.AttrName)
 }
 
 func testAccCheckSubscriptionFilterManyExists(ctx context.Context, t *testing.T, basename string, n int) resource.TestCheckFunc {
@@ -662,7 +651,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   handler       = "exports.handler"
 }
 
@@ -715,7 +704,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-${count.index}"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   handler       = "exports.handler"
 }
 

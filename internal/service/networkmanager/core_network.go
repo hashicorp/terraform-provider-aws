@@ -17,11 +17,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -173,7 +173,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := networkmanager.CreateCoreNetworkInput{
-		ClientToken:     aws.String(sdkid.UniqueId()),
+		ClientToken:     aws.String(create.UniqueId(ctx)),
 		GlobalNetworkId: aws.String(globalNetworkID),
 		Tags:            getTagsIn(ctx),
 	}
@@ -534,7 +534,7 @@ func putAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Cl
 	}
 
 	inputPCNP := networkmanager.PutCoreNetworkPolicyInput{
-		ClientToken:    aws.String(sdkid.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		CoreNetworkId:  aws.String(coreNetworkID),
 		PolicyDocument: aws.String(document),
 	}

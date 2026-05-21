@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_ec2_network_insights_access_scope
+```
+
+```release-note:new-list-resource
+aws_ec2_network_insights_access_scope
+```

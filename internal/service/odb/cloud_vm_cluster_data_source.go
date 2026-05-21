@@ -93,7 +93,7 @@ func (d *dataSourceCloudVmCluster) Schema(ctx context.Context, req datasource.Sc
 			},
 			"gi_version": schema.StringAttribute{
 				Computed:    true,
-				Description: "he software version of the Oracle Grid Infrastructure (GI) for the VM cluster.",
+				Description: "The software version of the Oracle Grid Infrastructure (GI) for the VM cluster.",
 			},
 			"hostname_prefix_computed": schema.StringAttribute{
 				Computed:    true,
@@ -175,7 +175,7 @@ func (d *dataSourceCloudVmCluster) Schema(ctx context.Context, req datasource.Sc
 				Computed:    true,
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
-				Description: "he public key portion of one or more key pairs used for SSH access to the VM cluster.",
+				Description: "The public key portion of one or more key pairs used for SSH access to the VM cluster.",
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType:  statusType,

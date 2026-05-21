@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ import (
 func TestAccWAFRegionalByteMatchSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ByteMatchSet
-	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
+	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -68,8 +67,8 @@ func TestAccWAFRegionalByteMatchSet_basic(t *testing.T) {
 func TestAccWAFRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.ByteMatchSet
-	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
-	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
+	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(t, 5))
+	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -142,7 +141,7 @@ func TestAccWAFRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 func TestAccWAFRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.ByteMatchSet
-	byteMatchSetName := fmt.Sprintf("byte-batch-set-%s", sdkacctest.RandString(5))
+	byteMatchSetName := fmt.Sprintf("byte-batch-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -213,7 +212,7 @@ func TestAccWAFRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 func TestAccWAFRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 	ctx := acctest.Context(t)
 	var byteMatchSet awstypes.ByteMatchSet
-	byteMatchSetName := fmt.Sprintf("byte-batch-set-%s", sdkacctest.RandString(5))
+	byteMatchSetName := fmt.Sprintf("byte-batch-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_byte_match_set.byte_match_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -242,7 +241,7 @@ func TestAccWAFRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 func TestAccWAFRegionalByteMatchSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ByteMatchSet
-	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
+	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

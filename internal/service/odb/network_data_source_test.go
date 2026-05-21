@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -50,7 +51,7 @@ func TestAccODBNetworkDataSource_basic(t *testing.T) {
 		CheckDestroy:             oracleDBNetworkDataSourceTestEntity.testAccCheckNetworkDataSourceDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: oracleDBNetworkDataSourceTestEntity.basicNetworkDataSource(rName),
+				Config: oracleDBNetworkDataSourceTestEntity.basicNetworkDataSource(rName, endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(networkResource, names.AttrID, networkDataSource, names.AttrID),
 				),
@@ -106,21 +107,22 @@ func (oracleDBNetworkDataSourceTest) findNetwork(ctx context.Context, conn *odb.
 	return out.OdbNetwork, nil
 }
 
-func (oracleDBNetworkDataSourceTest) basicNetworkDataSource(rName string) string {
+func (oracleDBNetworkDataSourceTest) basicNetworkDataSource(rName, rRegion string) string {
 	networkRes := fmt.Sprintf(`
 
 
 
 
 resource "aws_odb_network" "test_resource" {
-  display_name         = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access            = "DISABLED"
-  zero_etl_access      = "DISABLED"
-  sts_access           = "DISABLED"
-  kms_access           = "DISABLED"
+  display_name                           = %[1]q
+  availability_zone_id                   = "use1-az6"
+  client_subnet_cidr                     = "10.2.0.0/24"
+  backup_subnet_cidr                     = "10.2.1.0/24"
+  s3_access                              = "DISABLED"
+  zero_etl_access                        = "DISABLED"
+  sts_access                             = "DISABLED"
+  kms_access                             = "DISABLED"
+  cross_region_s3_restore_sources_access = [%[2]q]
   tags = {
     "env" = "dev"
   }
@@ -132,7 +134,7 @@ data "aws_odb_network" "test" {
 }
 
 
-`, rName)
+`, rName, rRegion)
 	return networkRes
 }
 func (oracleDBNetworkDataSourceTest) testAccNetworkDataSourcePreCheck(ctx context.Context, t *testing.T) {

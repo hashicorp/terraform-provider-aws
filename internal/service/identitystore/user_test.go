@@ -57,6 +57,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
+					resource.TestCheckResourceAttr(resourceName, "user_status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "user_type", ""),
 				),
 			},
@@ -195,8 +196,8 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName())
-	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
+	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

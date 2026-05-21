@@ -203,6 +203,10 @@ func TestAccOpenSearchServerlessSecurityPolicy_stringUpdate(t *testing.T) {
 	})
 }
 
+func testAccSecurityPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, "/", names.AttrName, names.AttrType)
+}
+
 func testAccCheckSecurityPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)

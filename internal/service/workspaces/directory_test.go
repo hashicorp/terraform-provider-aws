@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,13 +22,13 @@ import (
 func testAccDirectory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 	directoryResourceName := "aws_directory_service_directory.main"
 	iamRoleDataSourceName := "data.aws_iam_role.workspaces-default"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -99,11 +98,11 @@ func testAccDirectory_basic(t *testing.T) {
 func testAccDirectory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -131,11 +130,11 @@ func testAccDirectory_disappears(t *testing.T) {
 func testAccDirectory_subnetIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -167,11 +166,11 @@ func testAccDirectory_subnetIDs(t *testing.T) {
 func testAccDirectory_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -221,15 +220,15 @@ func testAccDirectory_tags(t *testing.T) {
 func testAccDirectory_SamlProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 
-	domain := acctest.RandomDomainName()
-	rspn := sdkacctest.RandString(8)
-	arspn := sdkacctest.RandString(8)
-	uau := fmt.Sprintf("https://%s/", acctest.RandomDomainName())
-	auau := fmt.Sprintf("https://%s/", acctest.RandomDomainName())
+	domain := acctest.RandomDomainName(t)
+	rspn := acctest.RandString(t, 8)
+	arspn := acctest.RandString(t, 8)
+	uau := fmt.Sprintf("https://%s/", acctest.RandomDomainName(t))
+	auau := fmt.Sprintf("https://%s/", acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -299,11 +298,11 @@ func testAccDirectory_SamlProperties(t *testing.T) {
 func testAccDirectory_CertificateBasedAuthProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	certificateAuthorityID := "12345678-1234-1234-1234-123456789012"
 
@@ -361,11 +360,11 @@ func testAccDirectory_CertificateBasedAuthProperties(t *testing.T) {
 func testAccDirectory_selfServicePermissions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -397,11 +396,11 @@ func testAccDirectory_selfServicePermissions(t *testing.T) {
 func testAccDirectory_workspaceAccessProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -436,12 +435,12 @@ func testAccDirectory_workspaceAccessProperties(t *testing.T) {
 func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 	resourceSecurityGroup := "aws_security_group.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -473,12 +472,12 @@ func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.main"
 	resourceSecurityGroup := "aws_security_group.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -526,11 +525,11 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 func testAccDirectory_ipGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
@@ -1103,7 +1102,7 @@ resource "aws_workspaces_directory" "test" {
 func testAccDirectory_poolsBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.pool"
 
@@ -1141,10 +1140,10 @@ func testAccDirectory_poolsBasic(t *testing.T) {
 func testAccDirectory_poolsADConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.pool"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1180,7 +1179,7 @@ func testAccDirectory_poolsADConfig(t *testing.T) {
 func testAccDirectory_poolsWorkspaceCreation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 
 	resourceName := "aws_workspaces_directory.pool"
 
@@ -1219,8 +1218,8 @@ func testAccDirectory_poolsWorkspaceCreation(t *testing.T) {
 func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_directory.pool"
 
@@ -1259,8 +1258,8 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 func testAccDirectory_tenancy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_directory.main"
 

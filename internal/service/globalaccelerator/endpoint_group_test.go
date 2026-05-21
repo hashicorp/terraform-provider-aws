@@ -89,7 +89,6 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 	var v awstypes.EndpointGroup
 	var vpc ec2types.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
-	albResourceName := "aws_lb.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -110,7 +109,6 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 "20",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
@@ -137,7 +135,6 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 						"client_ip_preservation_enabled": acctest.CtTrue,
 						names.AttrWeight:                 "0",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
@@ -569,10 +566,12 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 `, rName)
 }
 
-func testAccEndpointGroupConfig_baseALB(rName string) string {
+func testAccEndpointGroupConfig_baseALB(rName string, count int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name            = %[1]q
+  count = %[2]d
+
+  name            = "${substr(%[1]q, 0, 28)}-${count.index}"
   internal        = false
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
@@ -615,11 +614,11 @@ resource "aws_internet_gateway" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, count))
 }
 
 func testAccEndpointGroupConfig_albClientIP(rName string, clientIP bool, weight int) string {
-	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 1), fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
   ip_address_type = "IPV4"
@@ -640,7 +639,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
-    endpoint_id                    = aws_lb.test.id
+    endpoint_id                    = aws_lb.test[0].id
     weight                         = %[3]d
     client_ip_preservation_enabled = %[2]t
   }

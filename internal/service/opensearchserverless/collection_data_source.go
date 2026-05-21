@@ -26,6 +26,7 @@ import (
 
 // @FrameworkDataSource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newCollectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &collectionDataSource{}, nil
 }

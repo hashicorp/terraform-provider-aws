@@ -26,7 +26,7 @@ func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -70,7 +70,7 @@ func TestAccServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -95,7 +95,7 @@ func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -143,7 +143,7 @@ func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

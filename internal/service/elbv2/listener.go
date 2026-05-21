@@ -735,6 +735,14 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceListenerFlatten(ctx, meta.(*conns.AWSClient), listener, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceListenerFlatten(ctx context.Context, awsClient *conns.AWSClient, listener *awstypes.Listener, d *schema.ResourceData) error {
 	if len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
@@ -746,11 +754,11 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	sortListenerActions(listener.DefaultActions)
 
 	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
+		return fmt.Errorf("setting default_action: %w", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
 	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
+		return fmt.Errorf("setting mutual_authentication: %w", err)
 	}
 	d.Set(names.AttrPort, listener.Port)
 	d.Set(names.AttrProtocol, listener.Protocol)
@@ -758,16 +766,16 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// DescribeListenerAttributes is not supported for 'TLS' protocol listeners.
 	if listener.Protocol != awstypes.ProtocolEnumTls {
-		attributes, err := findListenerAttributesByARN(ctx, conn, d.Id())
+		attributes, err := findListenerAttributesByARN(ctx, awsClient.ELBV2Client(ctx), d.Id())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+			return fmt.Errorf("reading ELBv2 Listener (%s) attributes: %w", d.Id(), err)
 		}
 
 		listenerAttributes.flatten(d, attributes)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

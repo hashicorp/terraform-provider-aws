@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -24,7 +24,7 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := testAccDomainName()
+	rName := testAccDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -67,7 +67,7 @@ func TestAccCloudSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := testAccDomainName()
+	rName := testAccDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -86,6 +86,14 @@ func TestAccCloudSearchDomain_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudsearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -95,7 +103,7 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := testAccDomainName()
+	rName := testAccDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -171,7 +179,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := testAccDomainName()
+	rName := testAccDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -250,7 +258,7 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := testAccDomainName()
+	rName := testAccDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -317,8 +325,8 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 	})
 }
 
-func testAccDomainName() string {
-	return acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+func testAccDomainName(t *testing.T) string {
+	return acctest.ResourcePrefix + "-" + acctest.RandString(t, 28-(len(acctest.ResourcePrefix)+1))
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {

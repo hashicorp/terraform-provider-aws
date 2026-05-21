@@ -925,6 +925,11 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		return
 	}
 
+	// Serialize operations on this WebACL to prevent intra-provider race conditions.
+	mutex := getWebACLMutex(webACLID)
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	// Get current Web ACL configuration
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
@@ -1366,6 +1371,11 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 		return
 	}
 
+	// Serialize operations on this WebACL to prevent intra-provider race conditions.
+	mutex := getWebACLMutex(webACLID)
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	// Get current Web ACL configuration
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
@@ -1583,6 +1593,11 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 		)
 		return
 	}
+
+	// Serialize operations on this WebACL to prevent intra-provider race conditions.
+	mutex := getWebACLMutex(webACLID)
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	// Get the Web ACL
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)

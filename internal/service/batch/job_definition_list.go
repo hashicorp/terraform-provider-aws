@@ -80,7 +80,7 @@ func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListR
 
 			result.DisplayName = aws.ToString(item.JobDefinitionName)
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

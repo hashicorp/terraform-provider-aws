@@ -19,7 +19,7 @@ import (
 
 func TestAccSESDomainMailFrom_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dn := acctest.RandomDomain()
+	dn := acctest.RandomDomain(t)
 	domain := dn.String()
 	mailFromDomain1 := dn.Subdomain("bounce1").String()
 	mailFromDomain2 := dn.Subdomain("bounce2").String()
@@ -60,7 +60,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 
 func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	dn := acctest.RandomDomain()
+	dn := acctest.RandomDomain(t)
 	domain := dn.String()
 	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_domain_mail_from.test"
@@ -85,7 +85,7 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 
 func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 	ctx := acctest.Context(t)
-	dn := acctest.RandomDomain()
+	dn := acctest.RandomDomain(t)
 	domain := dn.String()
 	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_domain_mail_from.test"
@@ -110,7 +110,7 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 
 func TestAccSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomain().String()
+	domain := acctest.RandomDomain(t).String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

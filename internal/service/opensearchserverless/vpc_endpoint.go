@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -38,6 +37,9 @@ import (
 )
 
 // @FrameworkResource("aws_opensearchserverless_vpc_endpoint", name="VPC Endpoint")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.VpcEndpointDetail")
+// @Testing(preIdentityVersion="v6.39.0")
 func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := vpcEndpointResource{}
 
@@ -55,7 +57,7 @@ const (
 type vpcEndpointResource struct {
 	framework.ResourceWithModel[vpcEndpointResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -127,7 +129,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
 	if err != nil {
@@ -241,7 +243,7 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.UpdateVpcEndpointInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          fwflex.StringFromFramework(ctx, new.ID),
 	}
 
@@ -323,7 +325,7 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	_, err := conn.DeleteVpcEndpoint(ctx, &opensearchserverless.DeleteVpcEndpointInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          fwflex.StringFromFramework(ctx, data.ID),
 	})
 

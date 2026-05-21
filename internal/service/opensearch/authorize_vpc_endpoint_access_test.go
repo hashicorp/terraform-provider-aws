@@ -26,7 +26,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_basic(t *testing.T) {
 	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_authorize_vpc_endpoint_access.test"
-	domainName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -60,7 +60,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_authorize_vpc_endpoint_access.test"
-	domainName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

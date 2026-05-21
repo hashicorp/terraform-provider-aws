@@ -281,10 +281,10 @@ This approach does not work well for complex logic, examining many lines of code
 This example shows using `fmt.Printf()` to output information to the console:
 
 ```go
-func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
     // other code ...
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFlowLogsWithContext(ctx, input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 

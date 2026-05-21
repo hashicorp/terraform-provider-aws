@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,14 +21,15 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	accountNumber := sdkacctest.RandString(8)
-	accountNumberUpdated := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	accountNumber := acctest.RandString(t, 8)
+	accountNumberUpdated := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
 	emailUpdated := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -179,12 +180,13 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	accountNumber := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	accountNumber := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CustomerProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -195,6 +197,14 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcustomerprofiles.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

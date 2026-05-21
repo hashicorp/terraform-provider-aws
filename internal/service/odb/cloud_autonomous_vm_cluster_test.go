@@ -62,7 +62,7 @@ func TestAccODBCloudAutonomousVmCluster_basic(t *testing.T) {
 		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
+				Config: autonomousVMClusterResourceTestEntity.avmcBasic(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudAVMC),
 				),
@@ -115,7 +115,7 @@ func TestAccODBCloudAutonomousVmCluster_usingARN(t *testing.T) {
 	var avmc1, avmc2 odbtypes.CloudAutonomousVmCluster
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 
-	avmcWithoutTag, avmcWithTag := autonomousVMClusterResourceTestEntity.autonomousVmClusterByARN()
+	avmcWithoutTag, avmcWithTag := autonomousVMClusterResourceTestEntity.autonomousVmClusterByARN(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -178,7 +178,7 @@ func TestAccODBCloudAutonomousVmCluster_withAllParams(t *testing.T) {
 		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: autonomousVMClusterResourceTestEntity.avmcAllParamsConfig(),
+				Config: autonomousVMClusterResourceTestEntity.avmcAllParamsConfig(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudAVMC),
 				),
@@ -200,7 +200,7 @@ func TestAccODBCloudAutonomousVmCluster_tagging(t *testing.T) {
 
 	var avmc1, avmc2 odbtypes.CloudAutonomousVmCluster
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
-	withoutTag, withTag := autonomousVMClusterResourceTestEntity.avmcNoTagWithTag()
+	withoutTag, withTag := autonomousVMClusterResourceTestEntity.avmcNoTagWithTag(t)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -260,7 +260,7 @@ func TestAccODBCloudAutonomousVmCluster_disappears(t *testing.T) {
 		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
+				Config: autonomousVMClusterResourceTestEntity.avmcBasic(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudautonomousvmcluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudAutonomousVMCluster, resourceName),
@@ -351,11 +351,11 @@ func (autonomousVMClusterResourceTest) findAVMC(ctx context.Context, conn *odb.C
 	return out.CloudAutonomousVmCluster, nil
 }
 
-func (autonomousVMClusterResourceTest) avmcBasic() string {
+func (autonomousVMClusterResourceTest) avmcBasic(t *testing.T) string {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
 	odbNetRes := autonomousVMClusterResourceTestEntity.oracleDBNetwork(odbNetworkDisplayName)
@@ -394,11 +394,11 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
 	return res
 }
 
-func (autonomousVMClusterResourceTest) avmcNoTagWithTag() (string, string) {
+func (autonomousVMClusterResourceTest) avmcNoTagWithTag(t *testing.T) (string, string) {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
 	odbNetRes := autonomousVMClusterResourceTestEntity.oracleDBNetwork(odbNetworkDisplayName)
@@ -471,11 +471,11 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
 	return noTag, withTag
 }
 
-func (autonomousVMClusterResourceTest) avmcAllParamsConfig() string {
+func (autonomousVMClusterResourceTest) avmcAllParamsConfig(t *testing.T) string {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
 	odbNetRes := autonomousVMClusterResourceTestEntity.oracleDBNetwork(odbNetworkDisplayName)
@@ -599,11 +599,11 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
 `, rName)
 }
 
-func (autonomousVMClusterResourceTest) autonomousVmClusterByARN() (string, string) {
+func (autonomousVMClusterResourceTest) autonomousVmClusterByARN(t *testing.T) (string, string) {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
 	odbNetRes := autonomousVMClusterResourceTestEntity.oracleDBNetwork(odbNetworkDisplayName)

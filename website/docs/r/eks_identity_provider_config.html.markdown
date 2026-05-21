@@ -62,17 +62,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_eks_identity_provider_config.my_identity_provider_config
-  id = "my_cluster:my_identity_provider_config"
+  to = aws_eks_identity_provider_config.example
+  identity = {
+    cluster_name                  = "example-cluster"
+    identity_provider_config_name = "example-config"
+  }
+}
+
+resource "aws_eks_identity_provider_config" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `identity_provider_config_name` (String) Name of the identity provider config.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_eks_identity_provider_config.example
+  id = "example-cluster:example-config"
+}
+```
+
+Using `terraform import`, import Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
 
 ```console
-% terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config
+% terraform import aws_eks_identity_provider_config.example example-cluster:example-config
 ```

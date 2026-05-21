@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - The Amazon Resource Name (ARN) for the  ODB network peering connection.
 * `peer_network_arn` - ARN of the peer network peering connection.
 * `odb_peering_connection_type` - Type of the ODB peering connection.
+* `peer_network_cidrs` - Set of peer network cidrs.
 * `created_at` - Created time of the ODB network peering connection.
 * `percent_progress` - Progress of the ODB network peering connection.
 * `tags` - Tags applied to the resource.  

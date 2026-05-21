@@ -22,7 +22,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// TitanModelsAllowedEnvVar is the environment variable which
+// must be set to run acceptance tests relying on Amazon Titan embedded text
+// models.
+//
+// These models are not currently approved for use in the main HashiCorp
+// test account, and therefore tests depending on these models are skipped
+// by default.
+//
+// See the full list of supported models in the Amazon Bedrock documentation:
+// https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-supported.html#knowledge-base-supported-embeddings
+const TitanModelsAllowedEnvVar = "TF_AWS_BEDROCK_TITAN_MODELS_ALLOWED"
+
 func testAccKnowledgeBase_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -56,6 +70,8 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 }
 
 func testAccKnowledgeBase_tags(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -134,6 +150,8 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
 
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -198,6 +216,8 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
 	var knowledgebase awstypes.KnowledgeBase
@@ -255,6 +275,8 @@ func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -312,6 +334,8 @@ func testAccKnowledgeBase_RDS_supplementalDataStorage(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
+
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
@@ -417,6 +441,8 @@ func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -477,6 +503,8 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

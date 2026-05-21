@@ -7,11 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,6 +22,178 @@ import (
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestExpandNetworkAccessControl(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName          string
+		TFList            []any
+		WantNil           bool
+		WantPrefixListIDs []string
+		WantVpceIDs       []string
+	}{
+		{
+			TestName: "empty list",
+			TFList:   []any{},
+			WantNil:  true,
+		},
+		{
+			TestName: "nil element in list",
+			TFList:   []any{nil},
+			WantNil:  true,
+		},
+		{
+			TestName: "both sets empty",
+			TFList:   buildNetworkAccessTFList(newStringSet(), newStringSet()),
+			WantNil:  true,
+		},
+		{
+			TestName:          "both populated",
+			TFList:            buildNetworkAccessTFList(newStringSet("pl-111"), newStringSet("vpce-aaa")),
+			WantPrefixListIDs: []string{"pl-111"},
+			WantVpceIDs:       []string{"vpce-aaa"},
+		},
+		{
+			TestName:          "only prefix_list_ids",
+			TFList:            buildNetworkAccessTFList(newStringSet("pl-222"), newStringSet()),
+			WantPrefixListIDs: []string{"pl-222"},
+			WantVpceIDs:       []string{},
+		},
+		{
+			TestName:          "only vpce_ids",
+			TFList:            buildNetworkAccessTFList(newStringSet(), newStringSet("vpce-aaa", "vpce-bbb")),
+			WantPrefixListIDs: []string{},
+			WantVpceIDs:       []string{"vpce-aaa", "vpce-bbb"},
+		},
+		{
+			TestName:          "multiple vpce_ids",
+			TFList:            buildNetworkAccessTFList(newStringSet("pl-333"), newStringSet("vpce-x", "vpce-y", "vpce-z")),
+			WantPrefixListIDs: []string{"pl-333"},
+			WantVpceIDs:       []string{"vpce-x", "vpce-y", "vpce-z"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			out := tfgrafana.ExpandNetworkAccessControl(testCase.TFList)
+
+			if testCase.WantNil {
+				if out != nil {
+					t.Errorf("expected nil, got %+v", out)
+				}
+				return
+			}
+
+			if out == nil {
+				t.Fatal("expected non-nil NetworkAccessConfiguration")
+			}
+			if out.PrefixListIds == nil {
+				t.Error("PrefixListIds must not be nil (SDK v2 omitempty would drop a nil slice)")
+			}
+			if out.VpceIds == nil {
+				t.Error("VpceIds must not be nil (SDK v2 omitempty would drop a nil slice)")
+			}
+			gotPrefix := slices.Clone(out.PrefixListIds)
+			slices.Sort(gotPrefix)
+			wantPrefix := slices.Clone(testCase.WantPrefixListIDs)
+			slices.Sort(wantPrefix)
+			if !slices.Equal(gotPrefix, wantPrefix) {
+				t.Errorf("PrefixListIds: got %v, want %v", out.PrefixListIds, testCase.WantPrefixListIDs)
+			}
+			gotVpce := slices.Clone(out.VpceIds)
+			slices.Sort(gotVpce)
+			wantVpce := slices.Clone(testCase.WantVpceIDs)
+			slices.Sort(wantVpce)
+			if !slices.Equal(gotVpce, wantVpce) {
+				t.Errorf("VpceIds: got %v, want %v", out.VpceIds, testCase.WantVpceIDs)
+			}
+		})
+	}
+}
+
+func TestFlattenNetworkAccessControl(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName      string
+		APIObject     *awstypes.NetworkAccessConfiguration
+		WantEmpty     bool
+		WantPrefixIDs []string
+		WantVpceIDs   []string
+	}{
+		{
+			TestName:  "nil input",
+			APIObject: nil,
+			WantEmpty: true,
+		},
+		{
+			TestName: "both fields empty",
+			APIObject: &awstypes.NetworkAccessConfiguration{
+				PrefixListIds: []string{},
+				VpceIds:       []string{},
+			},
+			WantEmpty: true,
+		},
+		{
+			TestName: "both fields populated",
+			APIObject: &awstypes.NetworkAccessConfiguration{
+				PrefixListIds: []string{"pl-abc"},
+				VpceIds:       []string{"vpce-def"},
+			},
+			WantPrefixIDs: []string{"pl-abc"},
+			WantVpceIDs:   []string{"vpce-def"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			out := tfgrafana.FlattenNetworkAccessControl(testCase.APIObject)
+
+			if testCase.WantEmpty {
+				if len(out) != 0 {
+					t.Errorf("expected empty slice, got %v", out)
+				}
+				return
+			}
+
+			if len(out) != 1 {
+				t.Fatalf("expected 1 element, got %d", len(out))
+			}
+			m, ok := out[0].(map[string]any)
+			if !ok {
+				t.Fatalf("element is not map[string]any: %T", out[0])
+			}
+			if pl, ok := m["prefix_list_ids"].([]string); !ok || !slices.Equal(pl, testCase.WantPrefixIDs) {
+				t.Errorf("prefix_list_ids: got %v, want %v", m["prefix_list_ids"], testCase.WantPrefixIDs)
+			}
+			if vp, ok := m["vpce_ids"].([]string); !ok || !slices.Equal(vp, testCase.WantVpceIDs) {
+				t.Errorf("vpce_ids: got %v, want %v", m["vpce_ids"], testCase.WantVpceIDs)
+			}
+		})
+	}
+}
+
+func newStringSet(values ...string) *schema.Set {
+	raw := make([]any, len(values))
+	for i, v := range values {
+		raw[i] = v
+	}
+	return schema.NewSet(schema.HashString, raw)
+}
+
+func buildNetworkAccessTFList(prefixIDs, vpceIDs *schema.Set) []any {
+	return []any{
+		map[string]any{
+			"prefix_list_ids": prefixIDs,
+			"vpce_ids":        vpceIDs,
+		},
+	}
+}
 
 func testAccWorkspace_saml(t *testing.T) {
 	ctx := acctest.Context(t)

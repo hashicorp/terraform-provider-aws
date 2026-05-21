@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -79,7 +79,7 @@ func (r *cidrCollectionResource) Create(ctx context.Context, request resource.Cr
 
 	name := data.Name.ValueString()
 	input := &route53.CreateCidrCollectionInput{
-		CallerReference: aws.String(sdkid.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 		Name:            aws.String(name),
 	}
 

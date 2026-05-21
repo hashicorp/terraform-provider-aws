@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +27,7 @@ func TestAccSSMResourceDataSync_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), sdkacctest.RandString(5)),
+				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 				),
@@ -53,7 +52,7 @@ func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDataSyncDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), sdkacctest.RandString(5)),
+				Config: testAccResourceDataSyncConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceResourceDataSync(), resourceName),
@@ -66,7 +65,7 @@ func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 
 func TestAccSSMResourceDataSync_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(5)
+	rName := acctest.RandString(t, 5)
 	resourceName := "aws_ssm_resource_data_sync.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

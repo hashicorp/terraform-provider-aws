@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -36,7 +35,7 @@ func TestAccWAFRegionalRegexPatternSet_serial(t *testing.T) {
 func testAccRegexPatternSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var patternSet awstypes.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_regex_pattern_set.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -67,7 +66,7 @@ func testAccRegexPatternSet_basic(t *testing.T) {
 func testAccRegexPatternSet_changePatterns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_regex_pattern_set.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -109,7 +108,7 @@ func testAccRegexPatternSet_changePatterns(t *testing.T) {
 func testAccRegexPatternSet_noPatterns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var patternSet awstypes.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_regex_pattern_set.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -138,7 +137,7 @@ func testAccRegexPatternSet_noPatterns(t *testing.T) {
 func testAccRegexPatternSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var patternSet awstypes.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_regex_pattern_set.test"
 
 	acctest.Test(ctx, t, resource.TestCase{

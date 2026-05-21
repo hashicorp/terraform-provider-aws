@@ -25,7 +25,7 @@ import (
 func testAccDomainEntry_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_domain_entry.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	domainEntryName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +69,7 @@ func testAccDomainEntry_basic(t *testing.T, semaphore tfsync.Semaphore) {
 func testAccDomainEntry_underscore(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_domain_entry.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	domainEntryName := "_" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -113,7 +113,7 @@ func testAccDomainEntry_underscore(t *testing.T, semaphore tfsync.Semaphore) {
 func testAccDomainEntry_apex(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_domain_entry.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	domainEntryName := ""
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -157,7 +157,7 @@ func testAccDomainEntry_apex(t *testing.T, semaphore tfsync.Semaphore) {
 func testAccDomainEntry_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_domain_entry.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	domainEntryName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -185,7 +185,7 @@ func testAccDomainEntry_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 func testAccDomainEntry_typeAAAA(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_domain_entry.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	domainEntryName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

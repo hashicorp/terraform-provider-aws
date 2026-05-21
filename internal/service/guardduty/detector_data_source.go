@@ -7,10 +7,8 @@ package guardduty
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -89,12 +87,13 @@ func dataSourceDetector() *schema.Resource {
 
 func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
 	detectorID := d.Get(names.AttrID).(string)
 
 	if detectorID == "" {
-		output, err := FindDetector(ctx, conn)
+		output, err := findDetectorID(ctx, conn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading this account's single GuardDuty Detector: %s", err)
@@ -110,6 +109,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	d.SetId(detectorID)
+	d.Set(names.AttrARN, detectorARN(ctx, c, d.Id()))
 	if gdo.Features != nil {
 		if err := d.Set("features", flattenDetectorFeatureConfigurationResults(gdo.Features)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting features: %s", err)
@@ -117,14 +117,6 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta an
 	} else {
 		d.Set("features", nil)
 	}
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("detector/%s", detectorID),
-	}.String()
-	d.Set(names.AttrARN, arn)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
 	d.Set(names.AttrStatus, gdo.Status)

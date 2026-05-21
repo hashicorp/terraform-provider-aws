@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -20,7 +21,7 @@ func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -52,7 +53,7 @@ func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -67,6 +68,15 @@ func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 					testAccCheckDomainSAMLOptionsExist(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -76,7 +86,7 @@ func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
@@ -93,6 +103,16 @@ func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(esDomainResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(esDomainResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -102,7 +122,7 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -135,7 +155,7 @@ func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "acc-test")
 	rUserName := acctest.RandomWithPrefix(t, "es-master-user")
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

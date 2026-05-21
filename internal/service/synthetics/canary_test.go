@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ import (
 func TestAccSyntheticsCanary_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1, conf2 awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 	runtimeVersionDataSourceName := "data.aws_synthetics_runtime_version.test"
 
@@ -102,7 +101,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -143,7 +142,7 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1 awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -188,7 +187,7 @@ func TestAccSyntheticsCanary_rate(t *testing.T) {
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryConfig_rate(fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)), "rate(1 minute)"),
+				Config: testAccCanaryConfig_rate(fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8)), "rate(1 minute)"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, t, resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
@@ -202,7 +201,7 @@ func TestAccSyntheticsCanary_rate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "run_config.0.environment_variables"},
 			},
 			{
-				Config: testAccCanaryConfig_rate(fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)), "rate(2 minutes)"),
+				Config: testAccCanaryConfig_rate(fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8)), "rate(2 minutes)"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, t, resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "120"),
@@ -210,7 +209,7 @@ func TestAccSyntheticsCanary_rate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCanaryConfig_rate(fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)), "rate(1 hour)"),
+				Config: testAccCanaryConfig_rate(fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8)), "rate(1 hour)"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, t, resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -224,7 +223,7 @@ func TestAccSyntheticsCanary_rate(t *testing.T) {
 func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1, conf2, conf3 awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -273,7 +272,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1, conf2 awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -315,7 +314,7 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 func TestAccSyntheticsCanary_s3(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 	runtimeVersionDataSourceName := "data.aws_synthetics_runtime_version.test"
 
@@ -361,7 +360,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 func TestAccSyntheticsCanary_run(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -408,7 +407,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -451,7 +450,7 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -494,7 +493,7 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 	}
 
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -550,7 +549,7 @@ func TestAccSyntheticsCanary_vpcIPv6AllowedForDualStack(t *testing.T) {
 	}
 
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -612,7 +611,7 @@ func TestAccSyntheticsCanary_vpcIPv6AllowedForDualStack(t *testing.T) {
 func TestAccSyntheticsCanary_runConfigEphemeralStorage(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1, conf2 awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 	runtimeVersionDataSourceName := "data.aws_synthetics_runtime_version.test"
 
@@ -681,7 +680,7 @@ func TestAccSyntheticsCanary_runConfigEphemeralStorage(t *testing.T) {
 func TestAccSyntheticsCanary_scheduleRetryConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1, conf2 awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -734,7 +733,7 @@ func TestAccSyntheticsCanary_scheduleRetryConfig(t *testing.T) {
 func TestAccSyntheticsCanary_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -781,7 +780,7 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 func TestAccSyntheticsCanary_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Canary
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_canary.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

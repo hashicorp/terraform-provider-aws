@@ -139,7 +139,6 @@ func resourceReplicationGroup() *schema.Resource {
 					// practitioners that stricter validation will be enforced in v7.0.0.
 					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
 				),
-				DiffSuppressFunc: suppressDiffIfBelongsToGlobalReplicationGroup,
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -149,7 +148,6 @@ func resourceReplicationGroup() *schema.Resource {
 					validRedisVersionString,
 					validValkeyVersionString,
 				),
-				DiffSuppressFunc: suppressDiffIfBelongsToGlobalReplicationGroup,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -326,9 +324,6 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new, d)
-				},
 			},
 			names.AttrPort: {
 				Type:     schema.TypeInt,
@@ -474,6 +469,7 @@ func resourceReplicationGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
+			suppressDiffIfBelongsToGlobalReplicationGroup,
 			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			authTokenUpdateStrategyValidate,
@@ -767,6 +763,10 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	if rgp.GlobalReplicationGroupInfo != nil && rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil {
 		d.Set("global_replication_group_id", rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
+	} else {
+		if _, ok := d.GetOk("global_replication_group_id"); ok {
+			d.Set("global_replication_group_id", nil)
+		}
 	}
 
 	switch rgp.AutomaticFailover {
@@ -1638,9 +1638,21 @@ func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDif
 	return nil
 }
 
-func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
-	_, has_global_replication_group := d.GetOk("global_replication_group_id")
-	return has_global_replication_group && !d.IsNewResource()
+func suppressDiffIfBelongsToGlobalReplicationGroup(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	val, ok := diff.GetOk("global_replication_group_id")
+	belongs := ok && val.(string) != ""
+
+	if belongs {
+		for _, attr := range []string{names.AttrEngine, names.AttrEngineVersion, names.AttrParameterGroupName} {
+			if diff.HasChange(attr) {
+				old, _ := diff.GetChange(attr)
+				if err := diff.SetNew(attr, old); err != nil {
+					return fmt.Errorf("unable to set %q: %w", attr, err)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {

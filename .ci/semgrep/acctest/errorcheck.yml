@@ -1,0 +1,22 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: testcase-missing-errorcheck
+    languages: [go]
+    message: "All acceptance tests must include an ErrorCheck in the resource.TestCase"
+    severity: ERROR
+    patterns:
+      - pattern: |
+          resource.TestCase{
+            ...,
+          }
+      - pattern-not: |
+          resource.TestCase{
+            ...,
+            ErrorCheck: $ERRORCHECK,
+            ...,
+          }
+    paths:
+      include:
+        - "internal/service/**/*_test.go"

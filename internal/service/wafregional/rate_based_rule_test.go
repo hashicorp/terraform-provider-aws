@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ func TestAccWAFRegionalRateBasedRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
@@ -53,7 +52,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
@@ -98,8 +97,8 @@ func TestAccWAFRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
-	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
+	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
@@ -139,7 +138,7 @@ func TestAccWAFRegionalRateBasedRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
@@ -165,7 +164,7 @@ func TestAccWAFRegionalRateBasedRule_changePredicates(t *testing.T) {
 
 	var before, after awstypes.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
@@ -212,7 +211,7 @@ func TestAccWAFRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	rateLimitBefore := "2000"
 	rateLimitAfter := "2001"
 
@@ -251,7 +250,7 @@ func TestAccWAFRegionalRateBasedRule_noPredicates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },

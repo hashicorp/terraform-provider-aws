@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +23,7 @@ import (
 func testAccCustomLogSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 	var customLogSource types.CustomLogSourceResource
 
 	t.Cleanup(func() {
@@ -75,7 +74,7 @@ func testAccCustomLogSource_basic(t *testing.T) {
 func testAccCustomLogSource_sourceVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 	var customLogSource types.CustomLogSourceResource
 
 	t.Cleanup(func() {
@@ -126,8 +125,8 @@ func testAccCustomLogSource_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
 	resourceName2 := "aws_securitylake_custom_log_source.test2"
-	rName := randomCustomLogSourceName()
-	rName2 := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
+	rName2 := randomCustomLogSourceName(t)
 	var customLogSource, customLogSource2 types.CustomLogSourceResource
 
 	t.Cleanup(func() {
@@ -168,7 +167,7 @@ func testAccCustomLogSource_multiple(t *testing.T) {
 func testAccCustomLogSource_eventClasses(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 	var customLogSource types.CustomLogSourceResource
 
 	t.Cleanup(func() {
@@ -235,7 +234,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 func testAccCustomLogSource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 	var customLogSource types.CustomLogSourceResource
 
 	t.Cleanup(func() {
@@ -264,8 +263,8 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 	})
 }
 
-func randomCustomLogSourceName() string {
-	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(20-(len(acctest.ResourcePrefix)+1)))
+func randomCustomLogSourceName(t *testing.T) string {
+	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 20-(len(acctest.ResourcePrefix)+1)))
 }
 
 func testAccCheckCustomLogSourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

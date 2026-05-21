@@ -1,0 +1,115 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found XML wrapper collapse target",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.fieldname": "Field",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "flex.testXMLWrapperRule2DifferentOrder"
+  },
+  {
+    "@level": "trace",
+    "@message": "Building generic XML wrapper collapse struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder",
+    "target_type": "flex.testXMLWrapperRule2DifferentOrder"
+  },
+  {
+    "@level": "trace",
+    "@message": "Identified main source field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder",
+    "main_source_field": "Field"
+  },
+  {
+    "@level": "trace",
+    "@message": "Detected Rule 2 pattern - delegating to nestedObjectCollectionToXMLWrapper",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding NestedObjectCollection to XML wrapper",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: Checking for Rule 2 pattern",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder",
+    "fromSlice_len": 1,
+    "nested_kind": "ptr"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: Detected Rule 2 - delegating to expandRule2XMLWrapper",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder",
+    "wrapper_field": "Items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding Rule 2 XML wrapper (items + additional fields)",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.BoolValue",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*bool"
+  },
+  {
+    "@level": "trace",
+    "@message": "Skipping field already processed by XML wrapper collapse",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModelDifferentOrder"
+  }
+]

@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -94,7 +93,7 @@ func TestAccSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 
 func TestAccSSMMaintenanceWindowTarget_validation(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

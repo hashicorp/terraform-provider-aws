@@ -91,7 +91,6 @@ resource "aws_sagemaker_domain" "example" {
 The following arguments are required:
 
 * `auth_mode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
-* `default_space_settings` - (Required) The default space settings. See [`default_space_settings` Block](#default_space_settings-block) below.
 * `default_user_settings` - (Required) The default user settings. See [`default_user_settings` Block](#default_user_settings-block) below.
 * `domain_name` - (Required) The domain name.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
@@ -102,6 +101,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_network_access_type` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
 * `app_security_group_management` - (Optional) The entity that creates and manages the required security groups for inter-app communication in `VPCOnly` mode. Valid values are `Service` and `Customer`.
+* `default_space_settings` - (Optional) The default space settings. See [`default_space_settings` Block](#default_space_settings-block) below.
 * `domain_settings` - (Optional) The domain settings. See [`domain_settings` Block](#domain_settings-block) below.
 * `kms_key_id` - (Optional) The AWS KMS customer managed CMK used to encrypt the EFS volume attached to the domain.
 * `retention_policy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [`retention_policy` Block](#retention_policy-block) below.

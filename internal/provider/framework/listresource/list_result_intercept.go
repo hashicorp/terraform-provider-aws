@@ -240,7 +240,7 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 	var diags diag.Diagnostics
 	switch params.When {
 	case Before:
-		if reflect.ValueOf(params.Data).Kind() != reflect.Ptr {
+		if reflect.ValueOf(params.Data).Kind() != reflect.Pointer {
 			diags.AddError(
 				"Internal Error",
 				"data object must be a pointer")
@@ -298,7 +298,7 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 }
 
 func dereferencePointer(value reflect.Value) reflect.Value {
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Pointer {
 		return value.Elem()
 	}
 	return value
@@ -340,6 +340,7 @@ type InterceptorParamsSDK struct {
 	C               *conns.AWSClient
 	IncludeResource bool
 	ResourceData    *schema.ResourceData
+	Result          *list.ListResult
 	When            when
 }
 

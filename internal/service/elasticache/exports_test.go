@@ -46,6 +46,8 @@ var (
 	ValidMemcachedVersionString                       = validMemcachedVersionString
 	ValidRedisVersionString                           = validRedisVersionString
 	ValidValkeyVersionString                          = validValkeyVersionString
+
+	ValidReplicationGroupAuthToken = validReplicationGroupAuthToken
 )
 
 type (

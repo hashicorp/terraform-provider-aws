@@ -116,7 +116,7 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },

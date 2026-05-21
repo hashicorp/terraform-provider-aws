@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -27,7 +26,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 	resourceName := "aws_dx_hosted_private_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
-	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(t, 9))
 	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	vlan := acctest.RandIntRange(t, 2049, 4094)
 
@@ -81,7 +80,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 	resourceName := "aws_dx_hosted_private_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
-	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(t, 9))
 	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	vlan := acctest.RandIntRange(t, 2049, 4094)
 

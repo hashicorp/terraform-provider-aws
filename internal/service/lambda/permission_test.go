@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -485,7 +484,7 @@ func TestAccLambdaPermission_multiplePerms(t *testing.T) {
 	var secondStatementModified tflambda.PolicyStatement
 	var thirdStatement tflambda.PolicyStatement
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_multi_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_multi_%s", rString)
 
@@ -846,7 +845,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_iam_role" "test" {
@@ -968,7 +967,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {

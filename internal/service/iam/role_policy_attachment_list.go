@@ -82,7 +82,7 @@ func (l *rolePolicyAttachmentListResource) List(ctx context.Context, request lis
 					tflog.Warn(ctx, "Resource disappeared during listing, skipping", map[string]any{
 						logging.ResourceAttributeKey(names.AttrRole): aws.ToString(role.RoleName),
 					})
-					continue
+					break
 				}
 				if err != nil {
 					result := fwdiag.NewListResultErrorDiagnostic(err)
@@ -104,7 +104,7 @@ func (l *rolePolicyAttachmentListResource) List(ctx context.Context, request lis
 
 					result.DisplayName = resourceRolePolicyAttachmentDisplayName(role, attachedPolicy)
 
-					l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+					l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 					if result.Diagnostics.HasError() {
 						yield(result)
 						return

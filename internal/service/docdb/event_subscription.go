@@ -338,8 +338,8 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *docdb.Client, name string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusEventSubscription(conn *docdb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEventSubscriptionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -358,7 +358,7 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.Client, name 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -377,7 +377,7 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.Client, name 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusModifying},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -396,7 +396,7 @@ func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.Client, name 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

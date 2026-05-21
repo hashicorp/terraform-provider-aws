@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ import (
 
 func testAccDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", sdkacctest.RandString(5))
+	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", acctest.RandString(t, 5))
 	resourceName := "aws_lightsail_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -48,7 +47,7 @@ func testAccDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 
 func testAccDomain_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", sdkacctest.RandString(5))
+	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", acctest.RandString(t, 5))
 	resourceName := "aws_lightsail_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

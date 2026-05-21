@@ -6,9 +6,11 @@
 package ecs
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -76,10 +78,8 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				},
 			},
 			"current_deployment": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Computed:           true,
+				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -246,6 +246,9 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		return
 	}
 
+	// Set a state value to trigger replacement on error
+	resp.State.SetAttribute(ctx, path.Root("service_arn"), out.Service.ServiceArn)
+
 	serviceARN := aws.ToString(out.Service.ServiceArn)
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	var waitOut *awstypes.ECSExpressGatewayService
@@ -273,10 +276,15 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 
 	// Set values for unknowns.
 	if len(waitOut.ActiveConfigurations) > 0 {
+		// Save plan's env/secret ordering before flattening (API may reorder).
+		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
+
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 	}
 
 	plan.Cluster = fwflex.StringValueToFramework(ctx, cluster)
@@ -315,10 +323,19 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 	}
 
 	if len(out.ActiveConfigurations) > 0 {
+		// Save state's env/secret ordering before flattening (API may reorder).
+		stateEnv, stateSecrets := preservePlanContainerOrdering(ctx, state.PrimaryContainer)
+
+		// Sort alphabetically as canonical ordering (used as default during import).
+		orderExpressGatewayContainerEnvironmentVariables(&out.ActiveConfigurations[0])
+
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.ActiveConfigurations[0], &state))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// Restore state ordering if env vars are unchanged (no-op during import).
+		restoreContainerOrderingIfUnchanged(ctx, &state.PrimaryContainer, stateEnv, stateSecrets)
 	}
 
 	// Set Optional+Computed attributes from API response
@@ -360,8 +377,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 	conn := r.Meta().ECSClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("active_configurations"), fwflex.WithIgnoredField("current_deployment"),
-		fwflex.WithIgnoredField("scaling_target"), fwflex.WithIgnoredField(names.AttrTags), fwflex.WithIgnoredField(names.AttrTags),
-		fwflex.WithIgnoredField(names.AttrTagsAll))
+		fwflex.WithIgnoredField("scaling_target"), fwflex.WithIgnoredField(names.AttrTags), fwflex.WithIgnoredField(names.AttrTagsAll))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -422,10 +438,16 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 
 	// Set values for unknowns.
 	if len(waitOut.ActiveConfigurations) > 0 {
+		// Save plan's env/secret ordering before flattening (API may reorder).
+		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
+
+		orderExpressGatewayContainerEnvironmentVariables(&waitOut.ActiveConfigurations[0])
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 	}
 
 	// Set Optional+Computed attributes from API response
@@ -439,7 +461,9 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		}
 	}
 
-	plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
+	if !plan.CurrentDeployment.IsNull() {
+		plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -463,12 +487,12 @@ func (r *expressGatewayServiceResource) Delete(ctx context.Context, req resource
 	_, err := conn.DeleteExpressGatewayService(ctx, &input)
 	if err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
-			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") ||
-			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Service is in DRAINING status") {
+			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
 			// Service was already deleted/inactive/draining - deletion is already in progress or complete
 			return
-		} else {
-			// Real error occurred
+		} else if !errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Service is in DRAINING status") {
+			// Real error occurred.
+			// If service is in DRAINING status, fall-through to wait for it to become INACTIVE
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 			return
 		}
@@ -529,8 +553,8 @@ func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gate
 
 func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending:    []string{gatewayServiceStatusActive},
-		Target:     []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
+		Pending:    []string{gatewayServiceStatusActive, gatewayServiceStatusDraining},
+		Target:     []string{gatewayServiceStatusInactive},
 		Refresh:    statusExpressGatewayServiceForDeletion(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
@@ -563,15 +587,8 @@ func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Clien
 	return func() (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if err != nil {
-			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
-				errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
-				mockService := &awstypes.ECSExpressGatewayService{
-					ServiceArn: aws.String(gatewayServiceARN),
-					Status: &awstypes.ExpressGatewayServiceStatus{
-						StatusCode: awstypes.ExpressGatewayServiceStatusCodeInactive,
-					},
-				}
-				return mockService, gatewayServiceStatusInactive, nil
+			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
+				return nil, "", nil
 			}
 			return nil, "", smarterr.NewError(err)
 		}
@@ -774,6 +791,149 @@ type ingressPathSummaryModel struct {
 	Endpoint   types.String                            `tfsdk:"endpoint"`
 }
 
+// preservePlanContainerOrdering extracts the environment and secret lists from the plan's
+// primary container so they can be restored after flattening the API response.
+func preservePlanContainerOrdering(ctx context.Context, primaryContainer fwtypes.ListNestedObjectValueOf[expressGatewayContainerModel]) (
+	fwtypes.ListNestedObjectValueOf[keyValuePairModel],
+	fwtypes.ListNestedObjectValueOf[secretModel],
+) {
+	containers, diags := primaryContainer.ToSlice(ctx)
+	if diags.HasError() || len(containers) == 0 {
+		return fwtypes.NewListNestedObjectValueOfNull[keyValuePairModel](ctx),
+			fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx)
+	}
+	return containers[0].Environment, containers[0].Secrets
+}
+
+// restorePlanContainerOrdering restores the environment and secret lists from the plan
+// into the primary container after flattening the API response. This ensures the state
+// after apply matches the plan's ordering, preventing "Provider produced inconsistent
+// result after apply" errors.
+func restorePlanContainerOrdering(
+	ctx context.Context,
+	primaryContainer *fwtypes.ListNestedObjectValueOf[expressGatewayContainerModel],
+	planEnv fwtypes.ListNestedObjectValueOf[keyValuePairModel],
+	planSecrets fwtypes.ListNestedObjectValueOf[secretModel],
+) {
+	containers, diags := primaryContainer.ToSlice(ctx)
+	if diags.HasError() || len(containers) == 0 {
+		return
+	}
+	containers[0].Environment = planEnv
+	containers[0].Secrets = planSecrets
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, containers, nil)
+	if diags.HasError() {
+		return
+	}
+	*primaryContainer = updated
+}
+
+// restoreContainerOrderingIfUnchanged restores the previous state's environment and secret
+// ordering after flattening the API response, but only if the same set of key-value pairs
+// exists. If the environment variables or secrets have actually changed (added/removed/modified),
+// the API response ordering is kept.
+func restoreContainerOrderingIfUnchanged(
+	ctx context.Context,
+	primaryContainer *fwtypes.ListNestedObjectValueOf[expressGatewayContainerModel],
+	prevEnv fwtypes.ListNestedObjectValueOf[keyValuePairModel],
+	prevSecrets fwtypes.ListNestedObjectValueOf[secretModel],
+) {
+	containers, diags := primaryContainer.ToSlice(ctx)
+	if diags.HasError() || len(containers) == 0 {
+		return
+	}
+
+	// Check if environment variables are the same set (just reordered)
+	if envListsEquivalent(ctx, prevEnv, containers[0].Environment) {
+		containers[0].Environment = prevEnv
+	}
+
+	// Check if secrets are the same set (just reordered)
+	if secretListsEquivalent(ctx, prevSecrets, containers[0].Secrets) {
+		containers[0].Secrets = prevSecrets
+	}
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, containers, nil)
+	if diags.HasError() {
+		return
+	}
+	*primaryContainer = updated
+}
+
+// envListsEquivalent returns true if two environment variable lists contain the same
+// set of name/value pairs, regardless of ordering.
+func envListsEquivalent(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[keyValuePairModel]) bool {
+	aSlice, diags := a.ToSlice(ctx)
+	if diags.HasError() {
+		return false
+	}
+	bSlice, diags := b.ToSlice(ctx)
+	if diags.HasError() {
+		return false
+	}
+	if len(aSlice) != len(bSlice) {
+		return false
+	}
+
+	// Build a map from a
+	aMap := make(map[string]string, len(aSlice))
+	for _, item := range aSlice {
+		aMap[item.Name.ValueString()] = item.Value.ValueString()
+	}
+
+	// Check all items in b exist in a with the same value
+	for _, item := range bSlice {
+		if v, ok := aMap[item.Name.ValueString()]; !ok || v != item.Value.ValueString() {
+			return false
+		}
+	}
+	return true
+}
+
+// secretListsEquivalent returns true if two secret lists contain the same
+// set of name/value_from pairs, regardless of ordering.
+func secretListsEquivalent(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[secretModel]) bool {
+	aSlice, diags := a.ToSlice(ctx)
+	if diags.HasError() {
+		return false
+	}
+	bSlice, diags := b.ToSlice(ctx)
+	if diags.HasError() {
+		return false
+	}
+	if len(aSlice) != len(bSlice) {
+		return false
+	}
+
+	aMap := make(map[string]string, len(aSlice))
+	for _, item := range aSlice {
+		aMap[item.Name.ValueString()] = item.ValueFrom.ValueString()
+	}
+
+	for _, item := range bSlice {
+		if v, ok := aMap[item.Name.ValueString()]; !ok || v != item.ValueFrom.ValueString() {
+			return false
+		}
+	}
+	return true
+}
+
+// orderExpressGatewayContainerEnvironmentVariables sorts the environment variables and secrets
+// in an ExpressGatewayServiceConfiguration by name. This prevents spurious diffs when the API
+// returns environment variables in a different order than the Terraform configuration.
+func orderExpressGatewayContainerEnvironmentVariables(config *awstypes.ExpressGatewayServiceConfiguration) {
+	if config == nil || config.PrimaryContainer == nil {
+		return
+	}
+	slices.SortFunc(config.PrimaryContainer.Environment, func(a, b awstypes.KeyValuePair) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
+	})
+	slices.SortFunc(config.PrimaryContainer.Secrets, func(a, b awstypes.Secret) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
+	})
+}
+
 func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateExpressGatewayServiceInput) (*ecs.CreateExpressGatewayServiceOutput, error) {
 	const (
 		serviceCreateTimeout = 2 * time.Minute
@@ -783,14 +943,7 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.CreateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
-				return true, err
-			}
-			return false, err
-		},
+		expressGatewayRetryable,
 	)
 	if err != nil {
 		return nil, err
@@ -807,17 +960,29 @@ func retryExpressGatewayServiceUpdate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.UpdateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
-				return true, err
-			}
-			return false, err
-		},
+		expressGatewayRetryable,
 	)
 	if err != nil {
 		return nil, err
 	}
 	return outputRaw.(*ecs.UpdateExpressGatewayServiceOutput), nil
+}
+
+func expressGatewayRetryable(err error) (bool, error) {
+	if errs.Contains(err, "is not authorized to perform") || // This message can occur with at least AccessDeniedException, ClientException, and InvalidParameterException
+		errs.Contains(err, "AWS was not able to validate the provided access credentials") || // This message can occur with at least ClientException and InvalidParameterException
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
+		errs.IsAErrorMessageContains[*awstypes.ClientException](err, "The security token included in the request is invalid") {
+		return true, err
+	}
+	return false, err
+}
+
+// newListExpressGatewayServicesPaginator returns a new paginator for ListServices that only returns Customer-managed Services.
+func newListExpressGatewayServicesPaginator(conn *ecs.Client, input *ecs.ListServicesInput) *ecs.ListServicesPaginator {
+	return ecs.NewListServicesPaginator(conn, &ecs.ListServicesInput{
+		Cluster:                input.Cluster,
+		LaunchType:             input.LaunchType,
+		ResourceManagementType: awstypes.ResourceManagementTypeEcs,
+	})
 }

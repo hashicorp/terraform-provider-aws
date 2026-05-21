@@ -13,7 +13,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,8 +24,8 @@ import (
 func testAccWorkspace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Workspace
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_workspace.test"
 	directoryResourceName := "aws_workspaces_directory.test"
@@ -77,8 +76,8 @@ func testAccWorkspace_basic(t *testing.T) {
 func testAccWorkspace_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 types.Workspace
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_workspace.test"
 
@@ -131,8 +130,8 @@ func testAccWorkspace_tags(t *testing.T) {
 func testAccWorkspace_workspaceProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 types.Workspace
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_workspace.test"
 
@@ -196,8 +195,8 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 func testAccWorkspace_workspaceProperties_runningModeAutoStopTimeoutInMinutes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 types.Workspace
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_workspace.test"
 
@@ -249,7 +248,7 @@ func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 	var v1 types.Workspace
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_workspace.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -285,8 +284,8 @@ func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 
 func testAccWorkspace_validateRootVolumeSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -304,8 +303,8 @@ func testAccWorkspace_validateRootVolumeSize(t *testing.T) {
 
 func testAccWorkspace_validateUserVolumeSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -324,8 +323,8 @@ func testAccWorkspace_validateUserVolumeSize(t *testing.T) {
 func testAccWorkspace_recreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Workspace
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_workspace.test"
 
@@ -360,8 +359,8 @@ func testAccWorkspace_recreate(t *testing.T) {
 func testAccWorkspace_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Workspace
-	rName := sdkacctest.RandString(8)
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_workspace.test"
 

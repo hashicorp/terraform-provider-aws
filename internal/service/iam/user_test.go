@@ -31,9 +31,6 @@ func TestAccIAMUser_basic(t *testing.T) {
 	var conf awstypes.User
 
 	name1 := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
-	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
-	path1 := "/"
-	path2 := "/path2/"
 	resourceName := "aws_iam_user.user"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -43,10 +40,15 @@ func TestAccIAMUser_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_basic(name1, path1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
-					testAccCheckUserAttributes(&conf, name1, "/"),
+				Config: testAccUserConfig_basic(name1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
 				),
 			},
 			{
@@ -54,14 +56,8 @@ func TestAccIAMUser_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
-			},
-			{
-				Config: testAccUserConfig_basic(name2, path2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
-					testAccCheckUserAttributes(&conf, name2, "/path2/"),
-				),
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -81,7 +77,7 @@ func TestAccIAMUser_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_basic(rName, "/"),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), resourceName),
@@ -355,7 +351,6 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 
 	name1 := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
 	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
-	path := "/"
 	resourceName := "aws_iam_user.user"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -365,9 +360,11 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_basic(name1, path),
+				Config: testAccUserConfig_basic(name1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
 				),
 			},
 			{
@@ -375,13 +372,29 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					names.AttrForceDestroy,
+				},
 			},
 			{
-				Config: testAccUserConfig_basic(name2, path),
+				Config: testAccUserConfig_basic(name2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -403,9 +416,11 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_basic(name, path1),
+				Config: testAccUserConfig_path(name, path1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path1),
 				),
 			},
 			{
@@ -413,13 +428,29 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					names.AttrForceDestroy,
+				},
 			},
 			{
-				Config: testAccUserConfig_basic(name, path2),
+				Config: testAccUserConfig_path(name, path2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -475,7 +506,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			},
 			// Test removal
 			{
-				Config: testAccUserConfig_basic(rName, "/"),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
@@ -632,20 +663,6 @@ func testAccCheckUserExists(ctx context.Context, t *testing.T, n string, v *awst
 		}
 
 		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckUserAttributes(user *awstypes.User, name string, path string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *user.UserName != name {
-			return fmt.Errorf("Bad name: %s", *user.UserName)
-		}
-
-		if *user.Path != path {
-			return fmt.Errorf("Bad path: %s", *user.Path)
-		}
 
 		return nil
 	}
@@ -864,11 +881,19 @@ func testAccCheckUserInlinePolicy(ctx context.Context, t *testing.T, user *awsty
 	}
 }
 
-func testAccUserConfig_basic(rName, path string) string {
+func testAccUserConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-  name = %q
-  path = %q
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccUserConfig_path(rName, path string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "user" {
+  name = %[1]q
+  path = %[2]q
 }
 `, rName, path)
 }
@@ -876,8 +901,8 @@ resource "aws_iam_user" "user" {
 func testAccUserConfig_permissionsBoundary(rName, permissionsBoundary string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-  name                 = %q
-  permissions_boundary = %q
+  name                 = %[1]q
+  permissions_boundary = %[2]q
 }
 `, rName, permissionsBoundary)
 }
@@ -886,7 +911,7 @@ func testAccUserConfig_forceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   force_destroy = true
-  name          = %q
+  name          = %[1]q
 }
 `, rName)
 }

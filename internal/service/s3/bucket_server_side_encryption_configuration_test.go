@@ -46,16 +46,13 @@ func TestAccS3BucketServerSideEncryptionConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
-				},
 			},
 		},
 	})
@@ -85,9 +82,6 @@ func TestAccS3BucketServerSideEncryptionConfiguration_blockedEncryptionTypes(t *
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
-				},
 			},
 			{
 				Config: testAccBucketServerSideEncryptionConfigurationConfig_blockedEncryptionTypes(rName, `["NONE"]`),
@@ -121,7 +115,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySEEByDefault_AES256(t
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAes256)),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -129,7 +123,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySEEByDefault_AES256(t
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 		},
@@ -155,7 +149,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMS(t *t
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -163,7 +157,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMS(t *t
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 		},
@@ -189,7 +183,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSDSSE(
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKmsDsse)),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -197,7 +191,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSDSSE(
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 		},
@@ -222,7 +216,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_UpdateSS
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -230,7 +224,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_UpdateSS
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 			{
@@ -240,16 +234,13 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_UpdateSS
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAes256)),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
-				},
 			},
 		},
 	})
@@ -274,7 +265,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithM
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttrPair(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", "aws_kms_key.test", names.AttrARN),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -282,7 +273,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithM
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 		},
@@ -308,7 +299,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithM
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttrPair(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", "aws_kms_key.test", names.AttrID),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -316,7 +307,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithM
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 		},
@@ -347,6 +338,9 @@ func TestAccS3BucketServerSideEncryptionConfiguration_BucketKeyEnabled(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.blocked_encryption_types",
+				},
 			},
 			{
 				Config: testAccBucketServerSideEncryptionConfigurationConfig_keyEnabled(rName, false),
@@ -361,6 +355,9 @@ func TestAccS3BucketServerSideEncryptionConfiguration_BucketKeyEnabled(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.blocked_encryption_types",
+				},
 			},
 		},
 	})
@@ -410,6 +407,9 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_BucketKe
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.blocked_encryption_types",
+				},
 			},
 		},
 	})
@@ -446,7 +446,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_migrate_noChange(t *testin
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -484,7 +484,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_migrate_withChange(t *test
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAes256)),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -515,9 +515,6 @@ func TestAccS3BucketServerSideEncryptionConfiguration_expectedBucketOwner(t *tes
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
-				},
 			},
 		},
 	})
@@ -561,7 +558,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_expectedBucketOwn
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 
@@ -661,6 +658,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource_
 
 // Resource Identity version 1 was added in version 6.31.0
 func TestAccS3BucketServerSideEncryptionConfiguration_Identity_Upgrade_expectedBucketOwner(t *testing.T) {
+	acctest.Skip(t, "Change to S3 defaults cause drift in older provider versions")
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
@@ -745,9 +743,6 @@ func TestAccS3BucketServerSideEncryptionConfiguration_directoryBucket(t *testing
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
-				},
 			},
 		},
 	})
@@ -801,9 +796,6 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_directoryBucket(t
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
-				},
 			},
 
 			// Step 3: Import block with Import ID

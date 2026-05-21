@@ -56,6 +56,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -1590,6 +1591,11 @@ func NamedProvider(name string, providers map[string]*schema.Provider) *schema.P
 	return p
 }
 
+// NewTestResourceContext bootstaps the testing context for a given resource type
+func NewTestResourceContext(ctx context.Context, rType, region string) context.Context {
+	return conns.NewResourceContext(ctx, "", "", rType, region)
+}
+
 func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
@@ -1638,6 +1644,9 @@ func checkSDKResourceDisappears(ctx context.Context, providerMetaF providerMetaF
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
+
+		// Bootstrap context for resource type
+		ctx = NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 
 		var state terraformsdk.InstanceState
 		err := mapstructure.Decode(rs.Primary, &state)
@@ -1855,6 +1864,10 @@ func PreCheckSkipError(err error) bool {
 	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
+	// sts
+	if tfawserr.ErrCodeEquals(err, "OutboundWebIdentityFederationDisabledException") {
+		return true
+	}
 	// Ignore missing API endpoints
 	if errs.IsA[*net.DNSError](err) {
 		return true
@@ -1878,32 +1891,36 @@ const domainNameTestTopLevelDomain domainName = "test"
 // "<random>.<random>.test"
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomSubdomain() string {
-	return string(RandomDomain().RandomSubdomain())
+func RandomSubdomain(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t).RandomSubdomain(t))
 }
 
 // RandomDomainName creates a random two-level domain name in the form
 // "<random>.test"
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomDomainName() string {
-	return string(RandomDomain())
+func RandomDomainName(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t))
 }
 
 // RandomFQDomainName creates a random fully-qualified two-level domain name in the form
 // "<random>.test."
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomFQDomainName() string {
-	return string(RandomDomain().FQDN())
+func RandomFQDomainName(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t).FQDN())
 }
 
 func (d domainName) Subdomain(name string) domainName {
 	return domainName(fmt.Sprintf("%s.%s", name, d))
 }
 
-func (d domainName) RandomSubdomain() domainName {
-	return d.Subdomain(sdkacctest.RandString(8)) //nolint:mnd // standard length of 8
+func (d domainName) RandomSubdomain(t *testing.T) domainName {
+	t.Helper()
+	return d.Subdomain(RandString(t, 8)) //nolint:mnd // standard length of 8
 }
 
 func (d domainName) FQDN() domainName {
@@ -1914,8 +1931,9 @@ func (d domainName) String() string {
 	return string(d)
 }
 
-func RandomDomain() domainName {
-	return domainNameTestTopLevelDomain.RandomSubdomain()
+func RandomDomain(t *testing.T) domainName {
+	t.Helper()
+	return domainNameTestTopLevelDomain.RandomSubdomain(t)
 }
 
 // DefaultEmailAddress is the default email address to set as a
@@ -1999,7 +2017,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		issueCertInput := acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(caARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(sdkid.UniqueId()),
+			IdempotencyToken:        aws.String(create.UniqueId(ctx)),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
 			Validity: &acmpcatypes.Validity{
@@ -2061,7 +2079,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		issueCertInput := acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCAARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(sdkid.UniqueId()),
+			IdempotencyToken:        aws.String(create.UniqueId(ctx)),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
 			Validity: &acmpcatypes.Validity{

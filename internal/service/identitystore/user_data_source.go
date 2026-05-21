@@ -250,6 +250,10 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"user_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"user_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -322,6 +326,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("title", user.Title)
 	d.Set("user_id", user.UserId)
 	d.Set(names.AttrUserName, user.UserName)
+	d.Set("user_status", user.UserStatus)
 	d.Set("user_type", user.UserType)
 
 	return diags

@@ -27,7 +27,7 @@ func TestAccLightsailCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -62,8 +62,8 @@ func TestAccLightsailCertificate_subjectAlternativeNames(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
-	subjectAlternativeName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
+	subjectAlternativeName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -129,7 +129,7 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -179,7 +179,7 @@ func TestAccLightsailCertificate_keyOnlyTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -229,7 +229,7 @@ func TestAccLightsailCertificate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Certificate
