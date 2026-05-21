@@ -56,7 +56,6 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - (**Deprecated**) The ARN of the secret.
 * `created_date` - Created date of the secret in UTC.
-* `id` - Unique identifier of this version of the secret.
 * `secret_arn` - The ARN of the secret.
 * `secret_string` - Decrypted part of the protected secret information that was originally provided as a string.
 * `secret_binary` - Decrypted part of the protected secret information that was originally provided as a binary.
