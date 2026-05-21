@@ -80,6 +80,9 @@ func (r *multiRegionAccessPointRoutesResource) Schema(ctx context.Context, req r
 						},
 						names.AttrRegion: schema.StringAttribute{
 							Required: true,
+							Validators: []validator.String{
+								fwvalidators.AWSRegion(),
+							},
 						},
 						"traffic_dial_percentage": schema.Int64Attribute{
 							Required: true,
