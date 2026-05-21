@@ -1,5 +1,5 @@
 ---
-subcategory: "Pinpoint"
+subcategory: "End User Messaging"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_apns_voip_sandbox_channel"
 description: |-
