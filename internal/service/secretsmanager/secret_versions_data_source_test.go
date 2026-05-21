@@ -45,13 +45,13 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("versions"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"created_time":       knownvalue.StringRegexp(regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`)),
-							"last_accessed_date": knownvalue.Null(),
+							"last_accessed_date": knownvalue.StringRegexp(regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`)),
 							"version_id":         knownvalue.NotNull(),
 							"version_stages":     knownvalue.ListSizeExact(1),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"created_time":       knownvalue.StringRegexp(regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`)),
-							"last_accessed_date": knownvalue.Null(),
+							"last_accessed_date": knownvalue.StringRegexp(regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`)),
 							"version_id":         knownvalue.NotNull(),
 							"version_stages":     knownvalue.ListSizeExact(1),
 						}),
