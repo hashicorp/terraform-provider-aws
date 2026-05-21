@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appsync_resolver", name="Resolver)
+// @SDKResource("aws_appsync_resolver", name="Resolver")
 func resourceResolver() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResolverCreate,
