@@ -57,138 +57,140 @@ func resourceSubnet() *schema.Resource {
 
 		// Keep in sync with aws_default_subnet's schema.
 		// See notes in vpc_default_subnet.go.
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_ipv6_address_on_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrAvailabilityZone: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"availability_zone_id"},
-			},
-			"availability_zone_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrAvailabilityZone},
-			},
-			names.AttrCIDRBlock: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"map_customer_owned_ip_on_launch", "outpost_arn"},
-			},
-			"enable_dns64": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_lni_at_device_index": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"enable_resource_name_dns_aaaa_record_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_resource_name_dns_a_record_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ipv4_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"customer_owned_ipv4_pool"},
-			},
-			"ipv4_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
-				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
-				RequiredWith:  []string{"ipv4_ipam_pool_id"},
-			},
-			"ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-			},
-			"ipv6_cidr_block_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_ipam_pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"ipv6_native": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"ipv6_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntInSlice(subnetCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-			},
-			"map_customer_owned_ip_on_launch": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				RequiredWith: []string{"customer_owned_ipv4_pool", "outpost_arn"},
-			},
-			"map_public_ip_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_hostname_type_on_launch": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_ipv6_address_on_creation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrAvailabilityZone: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"availability_zone_id"},
+				},
+				"availability_zone_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrAvailabilityZone},
+				},
+				names.AttrCIDRBlock: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+				},
+				"customer_owned_ipv4_pool": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					RequiredWith: []string{"map_customer_owned_ip_on_launch", "outpost_arn"},
+				},
+				"enable_dns64": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_lni_at_device_index": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"enable_resource_name_dns_aaaa_record_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_resource_name_dns_a_record_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"ipv4_ipam_pool_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"customer_owned_ipv4_pool"},
+				},
+				"ipv4_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+					ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+					RequiredWith:  []string{"ipv4_ipam_pool_id"},
+				},
+				"ipv6_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				},
+				"ipv6_cidr_block_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_ipam_pool_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"ipv6_native": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"ipv6_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntInSlice(subnetCIDRValidIPv6Netmasks),
+					ConflictsWith: []string{"ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+				},
+				"map_customer_owned_ip_on_launch": {
+					Type:         schema.TypeBool,
+					Optional:     true,
+					RequiredWith: []string{"customer_owned_ipv4_pool", "outpost_arn"},
+				},
+				"map_public_ip_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"outpost_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_hostname_type_on_launch": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 		CustomizeDiff: customdiff.ForceNewIf("ipv6_cidr_block", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
 			if d.HasChange("ipv6_cidr_block") {

@@ -30,39 +30,41 @@ func dataSourceIPAMPreviewNextCIDR() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cidr": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disallowed_cidrs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						verify.ValidIPv4CIDRNetworkAddress,
-						// Follow the numbers used for netmask_length
-						validation.IsCIDRNetwork(0, 32),
-					),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cidr": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"ipam_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"netmask_length": {
-				// Possible netmask lengths for IPv4 addresses are 0 - 32.
-				// AllocateIpamPoolCidr API
-				//   - If there is no DefaultNetmaskLength allocation rule set on the pool,
-				//   you must specify either the NetmaskLength or the CIDR.
-				//   - If the DefaultNetmaskLength allocation rule is set on the pool,
-				//   you can specify either the NetmaskLength or the CIDR and the
-				//   DefaultNetmaskLength allocation rule will be ignored.
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 32),
-			},
+				"disallowed_cidrs": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							verify.ValidIPv4CIDRNetworkAddress,
+							// Follow the numbers used for netmask_length
+							validation.IsCIDRNetwork(0, 32),
+						),
+					},
+				},
+				"ipam_pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"netmask_length": {
+					// Possible netmask lengths for IPv4 addresses are 0 - 32.
+					// AllocateIpamPoolCidr API
+					//   - If there is no DefaultNetmaskLength allocation rule set on the pool,
+					//   you must specify either the NetmaskLength or the CIDR.
+					//   - If the DefaultNetmaskLength allocation rule is set on the pool,
+					//   you can specify either the NetmaskLength or the CIDR and the
+					//   DefaultNetmaskLength allocation rule will be ignored.
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 32),
+				},
+			}
 		},
 	}
 }
