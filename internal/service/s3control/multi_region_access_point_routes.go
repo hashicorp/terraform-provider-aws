@@ -42,6 +42,7 @@ func newMultiRegionAccessPointRoutesResource(_ context.Context) (resource.Resour
 type multiRegionAccessPointRoutesResource struct {
 	framework.ResourceWithModel[multiRegionAccessPointRoutesResourceModel]
 	framework.WithImportByIdentity
+	framework.WithNoOpDelete
 }
 
 func (r *multiRegionAccessPointRoutesResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -200,11 +201,6 @@ func (r *multiRegionAccessPointRoutesResource) Update(ctx context.Context, req r
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *multiRegionAccessPointRoutesResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Routes cannot be deleted independently of the Multi-Region Access Point.
-	// Delete is a no-op.
 }
 
 func findMultiRegionAccessPointRoutesByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, mrap string) (*s3control.GetMultiRegionAccessPointRoutesOutput, error) {
