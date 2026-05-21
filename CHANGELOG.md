@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_s3control_multi_region_access_point_routes` ([#47994](https://github.com/hashicorp/terraform-provider-aws/issues/47994))
 
+ENHANCEMENTS:
+
+* resource/aws_ssm_resource_data_sync: Add `s3_destination.destination_data_sharing` argument ([#21996](https://github.com/hashicorp/terraform-provider-aws/issues/21996))
+
 ## 6.46.0 (May 20, 2026)
 
 NOTES:
