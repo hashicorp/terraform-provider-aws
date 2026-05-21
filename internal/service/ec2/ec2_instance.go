@@ -508,6 +508,10 @@ func resourceInstance() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"launch_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrLaunchTemplate: {
 				Type:         schema.TypeList,
 				MaxItems:     1,
@@ -3226,6 +3230,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	rd.Set("ami", instance.ImageId)
 	rd.Set(names.AttrInstanceType, instanceType)
 	rd.Set("key_name", instance.KeyName)
+	rd.Set("launch_time", instance.LaunchTime.Format(time.RFC3339))
 	rd.Set("public_dns", instance.PublicDnsName)
 	rd.Set("public_ip", instance.PublicIpAddress)
 	rd.Set("private_dns", instance.PrivateDnsName)
