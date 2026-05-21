@@ -28,7 +28,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/elasticache
         - /internal/service/elasticbeanstalk
         - /internal/service/elasticsearch
         - /internal/service/elastictranscoder
