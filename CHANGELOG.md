@@ -1,5 +1,9 @@
 ## 6.47.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_s3control_multi_region_access_point_routes` ([#47994](https://github.com/hashicorp/terraform-provider-aws/issues/47994))
+
 ## 6.46.0 (May 20, 2026)
 
 NOTES:
