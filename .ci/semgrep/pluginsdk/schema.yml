@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/events
         - /internal/service/evidently
         - /internal/service/finspace
         - /internal/service/firehose
