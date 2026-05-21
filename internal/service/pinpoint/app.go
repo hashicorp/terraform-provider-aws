@@ -72,11 +72,6 @@ func resourceApp() *schema.Resource {
 					},
 				},
 			},
-			//"cloudwatch_metrics_enabled": {
-			//	Type:     schema.TypeBool,
-			//	Optional: true,
-			//	Default:  false,
-			//},
 			"limits": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -170,6 +165,48 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	return append(diags, resourceAppUpdate(ctx, d, meta)...)
 }
 
+// configHasSettings returns true if any of the deprecated settings attributes
+// are present in the user's raw config. Used to gate UpdateApplicationSettings
+// calls so they happen only when the user actively manages these blocks.
+func configHasSettings(d *schema.ResourceData) bool {
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.IsKnown() || rawConfig.IsNull() {
+		return false
+	}
+	for _, attr := range []string{"campaign_hook", "limits", "quiet_time"} {
+		if v := rawConfig.GetAttr(attr); v.IsKnown() && !v.IsNull() && v.LengthInt() > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// shouldFetchSettings returns true if GetApplicationSettings should be called
+// during Read. Returns true when:
+//   - The raw config has settings blocks (normal CRUD case), OR
+//   - This is the first Read after an import.
+//
+// Import detection: ImportStatePassthroughContext sets only the ID, so during
+// the first Read after import, rawConfig is null and rawState has all computed
+// attributes (e.g., arn) as null. Any other Read with rawConfig=null (such as
+// internal SDK refreshes) has arn populated from the prior Read. This lets us
+// fetch settings on import — preserving the user's ability to import an app
+// that has settings configured in their HCL — without fetching during refresh
+// reads when the user has no settings in config.
+func shouldFetchSettings(d *schema.ResourceData) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		return configHasSettings(d)
+	}
+
+	rawState := d.GetRawState()
+	if !rawState.IsKnown() || rawState.IsNull() {
+		return false
+	}
+	arn := rawState.GetAttr(names.AttrARN)
+	return arn.IsKnown() && arn.IsNull()
+}
+
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
@@ -186,24 +223,27 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s): %s", d.Id(), err)
 	}
 
-	settings, err := findAppSettingsByID(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
-	}
-
 	d.Set(names.AttrApplicationID, app.Id)
 	d.Set(names.AttrARN, app.Arn)
-	if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
-	}
-	if err := d.Set("limits", flattenCampaignLimits(settings.Limits)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
-	}
 	d.Set(names.AttrName, app.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(app.Name)))
-	if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
+
+	if shouldFetchSettings(d) {
+		settings, err := findAppSettingsByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
+		}
+
+		if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
+		}
+		if err := d.Set("limits", flattenCampaignLimits(settings.Limits)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
+		}
+		if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
+		}
 	}
 
 	return diags
@@ -213,7 +253,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) && configHasSettings(d) {
 		appSettings := &awstypes.WriteApplicationSettingsRequest{}
 
 		if d.HasChange("campaign_hook") {
@@ -238,7 +278,6 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 
 		_, err := conn.UpdateApplicationSettings(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Pinpoint App (%s) settings: %s", d.Id(), err)
 		}
