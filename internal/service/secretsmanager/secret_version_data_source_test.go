@@ -10,6 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -32,10 +33,17 @@ func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
 				Config: testAccSecretVersionDataSourceConfig_stageDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
+					acctest.CheckResourceAttrRFC3339(datasourceName, names.AttrCreatedDate),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.CompareValuePairs(datasourceName, tfjsonpath.New("secret_arn"), resourceName, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
 					statecheck.CompareValuePairs(datasourceName, tfjsonpath.New(names.AttrARN), datasourceName, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("secret_binary"), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(datasourceName, tfjsonpath.New("secret_arn"), resourceName, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(datasourceName, tfjsonpath.New("secret_id"), resourceName, tfjsonpath.New("secret_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(datasourceName, tfjsonpath.New("secret_string"), resourceName, tfjsonpath.New("secret_string"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(datasourceName, tfjsonpath.New("version_id"), resourceName, tfjsonpath.New("version_id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("version_stage"), knownvalue.StringExact("AWSCURRENT")),
+					statecheck.CompareValuePairs(datasourceName, tfjsonpath.New("version_stages"), resourceName, tfjsonpath.New("version_stages"), compare.ValuesSame()),
 				},
 			},
 		},
