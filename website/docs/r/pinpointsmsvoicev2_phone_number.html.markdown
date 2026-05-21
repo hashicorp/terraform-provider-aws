@@ -27,6 +27,7 @@ resource "aws_pinpointsmsvoicev2_phone_number" "example" {
 ## Argument Reference
 
 This resource supports the following arguments:
+
 * `deletion_protection_enabled` - (Optional) By default this is set to `false`. When set to true the phone number can’t be deleted.
 * `iso_country_code` - (Required) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
 * `message_type` - (Required) Type of message. Valid values are `TRANSACTIONAL` for messages that are critical or time-sensitive and `PROMOTIONAL` for messages that aren’t critical or time-sensitive.
