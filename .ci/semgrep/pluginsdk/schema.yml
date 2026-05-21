@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/emrcontainers
         - /internal/service/emrserverless
         - /internal/service/events
         - /internal/service/evidently
