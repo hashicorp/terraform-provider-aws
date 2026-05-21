@@ -1752,7 +1752,6 @@ check "schema_docs" {
     "resource/aws_outposts_capacity_task",
     "resource/aws_paymentcryptography_key_alias",
     "resource/aws_paymentcryptography_key",
-    "resource/aws_pinpointsmsvoicev2_opt_out_list",
     "resource/aws_pinpointsmsvoicev2_phone_number",
     "resource/aws_pipes_pipe",
     "resource/aws_placement_group",
