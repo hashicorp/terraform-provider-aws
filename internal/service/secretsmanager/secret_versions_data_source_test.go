@@ -7,7 +7,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -16,6 +20,7 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resource1Name := "aws_secretsmanager_secret_version.test"
+	secretName := "aws_secretsmanager_secret.test"
 	dataSourceName := "data.aws_secretsmanager_secret_versions.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -28,16 +33,26 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionsDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "secret_id", resource1Name, "secret_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "versions.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.%"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.created_time"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.version_id"),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), dataSourceName, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("include_deprecated"), knownvalue.Null()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), secretName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("secret_arn"), resource1Name, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("secret_id"), resource1Name, tfjsonpath.New("secret_id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("versions"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"created_time":       knownvalue.NotNull(),
+							"last_accessed_date": knownvalue.Null(),
+							"version_id":         knownvalue.NotNull(),
+							"version_stages":     knownvalue.NotNull(),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"created_time":       knownvalue.NotNull(),
+							"last_accessed_date": knownvalue.Null(),
+							"version_id":         knownvalue.NotNull(),
+							"version_stages":     knownvalue.NotNull(),
+						}),
+					})),
 				},
 			},
 		},
@@ -69,6 +84,15 @@ func TestAccSecretsManagerSecretVersionsDataSource_emptyVer(t *testing.T) {
 
 func testAccSecretVersionsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_secretsmanager_secret_versions" "test" {
+  secret_id  = aws_secretsmanager_secret.test.id
+
+  depends_on = [
+    aws_secretsmanager_secret_version.test,
+    aws_secretsmanager_secret_version.test2,
+  ]
+}
+
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 }
@@ -79,14 +103,10 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test2" {
-  depends_on    = [aws_secretsmanager_secret_version.test]
   secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string2"
-}
 
-data "aws_secretsmanager_secret_versions" "test" {
-  depends_on = [aws_secretsmanager_secret_version.test]
-  secret_id  = aws_secretsmanager_secret.test.id
+  depends_on    = [aws_secretsmanager_secret_version.test]
 }
 `, rName)
 }
