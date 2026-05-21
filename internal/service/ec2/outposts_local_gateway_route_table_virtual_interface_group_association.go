@@ -189,6 +189,7 @@ func (r *localGatewayRouteTableVirtualInterfaceGroupAssociationResource) Delete(
 }
 
 type localGatewayRouteTableVIFGroupAssociationModel struct {
+	framework.WithRegionModel
 	ID                                  types.String `tfsdk:"id"`
 	LocalGatewayId                      types.String `tfsdk:"local_gateway_id"`
 	LocalGatewayRouteTableArn           types.String `tfsdk:"local_gateway_route_table_arn"`
