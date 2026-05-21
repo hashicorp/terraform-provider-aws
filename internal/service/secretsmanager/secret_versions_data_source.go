@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_secretsmanager_secret_versions, name="Secret Versions")
+// @FrameworkDataSource("aws_secretsmanager_secret_versions", name="Secret Versions")
 func newSecretVersionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &secretVersionsDataSource{}, nil
 }
