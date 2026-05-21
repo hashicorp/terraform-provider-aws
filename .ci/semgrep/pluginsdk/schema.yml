@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/elastictranscoder
         - /internal/service/elb
         - /internal/service/elbv2
         - /internal/service/emr
