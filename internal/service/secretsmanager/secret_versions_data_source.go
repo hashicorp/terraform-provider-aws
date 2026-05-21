@@ -10,10 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -39,16 +37,17 @@ func (d *secretVersionsDataSource) Schema(ctx context.Context, req datasource.Sc
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(20, 2048),
-				},
+				Computed:           true,
+				DeprecationMessage: "arn is deprecated. Use secret_arn instead.",
 			},
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
 			"include_deprecated": schema.BoolAttribute{
 				Optional: true,
+			},
+			"secret_arn": schema.StringAttribute{
+				Computed: true,
 			},
 			"secret_id": schema.StringAttribute{
 				Required: true,
@@ -77,7 +76,7 @@ func (d *secretVersionsDataSource) Read(ctx context.Context, req datasource.Read
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.ARN.String(), err),
+				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.SecretID.String(), err),
 				err.Error(),
 			)
 			return
@@ -97,6 +96,7 @@ func (d *secretVersionsDataSource) Read(ctx context.Context, req datasource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	data.SecretARN = data.ARN
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -106,6 +106,7 @@ type secretVersionsDataSourceModel struct {
 	ARN               types.String                                    `tfsdk:"arn"`
 	Name              types.String                                    `tfsdk:"name"`
 	IncludeDeprecated types.Bool                                      `tfsdk:"include_deprecated"`
+	SecretARN         types.String                                    `tfsdk:"secret_arn"`
 	SecretID          types.String                                    `tfsdk:"secret_id"`
 	Versions          fwtypes.ListNestedObjectValueOf[dsVersionsData] `tfsdk:"versions"`
 }

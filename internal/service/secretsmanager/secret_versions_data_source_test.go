@@ -35,6 +35,10 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.created_time"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.version_id"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), dataSourceName, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("secret_arn"), resource1Name, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
+				},
 			},
 		},
 	})
