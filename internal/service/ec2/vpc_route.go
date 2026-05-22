@@ -42,6 +42,7 @@ var routeValidDestinations = []string{
 var routeValidTargets = []string{
 	"carrier_gateway_id",
 	"core_network_arn",
+	"odb_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
 	"local_gateway_id",
@@ -117,6 +118,11 @@ func resourceRoute() *schema.Resource {
 				ConflictsWith: []string{routeDestinationIPv6CIDRBlock}, // IPv4 destinations only.
 			},
 			"core_network_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeValidTargets,
+			},
+			"odb_network_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
@@ -230,6 +236,8 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.CarrierGatewayId = target
 	case "core_network_arn":
 		input.CoreNetworkArn = target
+	case "odb_network_arn":
+		input.OdbNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
@@ -327,6 +335,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
+	d.Set("odb_network_arn", route.OdbNetworkArn)
 	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)
 	d.Set(routeDestinationIPv6CIDRBlock, route.DestinationIpv6CidrBlock)
 	d.Set(routeDestinationPrefixListID, route.DestinationPrefixListId)
@@ -395,6 +404,8 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.CarrierGatewayId = target
 	case "core_network_arn":
 		input.CoreNetworkArn = target
+	case "odb_network_arn":
+		input.OdbNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":

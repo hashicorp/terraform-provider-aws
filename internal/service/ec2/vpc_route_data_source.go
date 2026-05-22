@@ -66,6 +66,11 @@ func dataSourceRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"odb_network_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"egress_only_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -155,6 +160,10 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			continue
 		}
 
+		if v, ok := d.GetOk("odb_network_arn"); ok && aws.ToString(r.OdbNetworkArn) != v.(string) {
+			continue
+		}
+
 		if v, ok := d.GetOk("egress_only_gateway_id"); ok && aws.ToString(r.EgressOnlyInternetGatewayId) != v.(string) {
 			continue
 		}
@@ -210,6 +219,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
+	d.Set("odb_network_arn", route.OdbNetworkArn)
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)

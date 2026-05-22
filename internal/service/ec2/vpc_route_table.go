@@ -39,6 +39,7 @@ var routeTableValidDestinations = []string{
 var routeTableValidTargets = []string{
 	"carrier_gateway_id",
 	"core_network_arn",
+	"odb_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
 	"local_gateway_id",
@@ -115,6 +116,10 @@ func resourceRouteTable() *schema.Resource {
 							Optional: true,
 						},
 						"core_network_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"odb_network_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -416,6 +421,10 @@ func resourceRouteTableHash(v any) int {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
+	if v, ok := m["odb_network_arn"]; ok {
+		fmt.Fprintf(&buf, "%s-", v.(string))
+	}
+
 	if v, ok := m["egress_only_gateway_id"]; ok {
 		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
@@ -676,6 +685,10 @@ func expandCreateRouteInput(tfMap map[string]any) *ec2.CreateRouteInput {
 		apiObject.CoreNetworkArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["odb_network_arn"].(string); ok && v != "" {
+		apiObject.OdbNetworkArn = aws.String(v)
+	}
+
 	if v, ok := tfMap["egress_only_gateway_id"].(string); ok && v != "" {
 		apiObject.EgressOnlyInternetGatewayId = aws.String(v)
 	}
@@ -736,6 +749,10 @@ func expandReplaceRouteInput(tfMap map[string]any) *ec2.ReplaceRouteInput {
 
 	if v, ok := tfMap["core_network_arn"].(string); ok && v != "" {
 		apiObject.CoreNetworkArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["odb_network_arn"].(string); ok && v != "" {
+		apiObject.OdbNetworkArn = aws.String(v)
 	}
 
 	if v, ok := tfMap["egress_only_gateway_id"].(string); ok && v != "" {
@@ -802,6 +819,10 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 
 	if v := apiObject.CoreNetworkArn; v != nil {
 		tfMap["core_network_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.OdbNetworkArn; v != nil {
+		tfMap["odb_network_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.EgressOnlyInternetGatewayId; v != nil {

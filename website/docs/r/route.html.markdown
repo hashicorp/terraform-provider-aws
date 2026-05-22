@@ -62,6 +62,7 @@ One of the following target arguments must be supplied:
 
 * `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
+* `odb_network_arn` - (Optional) The Amazon Resource Name (ARN) of an ODB network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway. Specify `local` when updating a previously [imported](#import) local route.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
