@@ -1826,6 +1826,7 @@ func testAccCheckCertificateExists(ctx context.Context, t *testing.T, n string, 
 		conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
 		output, err := tfacm.FindCertificateByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
