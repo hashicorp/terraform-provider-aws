@@ -28,7 +28,9 @@ func TestEndToEnd_PinpointClient(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, `{"ApplicationResponse":{"Id":"x","Arn":"arn:aws:mobiletargeting:us-east-1:000000000000:apps/x","Name":"x"}}`)
+		if _, err := fmt.Fprintln(w, `{"ApplicationResponse":{"Id":"x","Arn":"arn:aws:mobiletargeting:us-east-1:000000000000:apps/x","Name":"x"}}`); err != nil {
+			t.Errorf("write response: %s", err)
+		}
 	}))
 	t.Cleanup(server.Close)
 
