@@ -399,6 +399,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		output, err := conn.RequestCertificate(ctx, &input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "requesting ACM Certificate (%s): %s", domainName, err)
 		}
@@ -422,6 +423,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		output, err := conn.ImportCertificate(ctx, &input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "importing ACM Certificate: %s", err)
 		}
@@ -535,6 +537,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			_, err := conn.ImportCertificate(ctx, &input)
+
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "importing ACM Certificate (%s): %s", d.Id(), err)
 			}
@@ -544,6 +547,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 			CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
 		}
 		_, err := conn.RenewCertificate(ctx, &input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "renewing ACM Certificate (%s): %s", d.Id(), err)
 		}
@@ -561,6 +565,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		_, err := conn.UpdateCertificateOptions(ctx, &input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ACM Certificate options (%s): %s", d.Id(), err)
 		}
@@ -844,6 +849,7 @@ func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*t
 	}
 
 	output, err := findCertificate(ctx, conn, &input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -859,6 +865,7 @@ func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*t
 
 func findCertificateRenewalByARN(ctx context.Context, conn *acm.Client, arn string) (*types.RenewalSummary, error) {
 	certificate, err := findCertificateByARN(ctx, conn, arn)
+
 	if err != nil {
 		return nil, err
 	}
