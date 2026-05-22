@@ -57,6 +57,10 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - (**Deprecated**) The ARN of the secret.
   Use `secret_arn` instead.
+* `name` - (**Deprecated**) Name of the secret.
+  Use `secret_name` instead.
+* `secret_arn` - The ARN of the secret.
+* `secret_name` - Name of the secret.
 * `versions` - List of the versions of the secret. Attributes are specified below.
 
 ### versions
