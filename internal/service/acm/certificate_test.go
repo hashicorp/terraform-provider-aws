@@ -1539,6 +1539,7 @@ func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
 				Config: testAccCertificateConfig_privateKeyWoUpdate(newCertificate, newKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertficateNotRecreated(&v1, &v2),
 					resource.TestCheckNoResourceAttr(resourceName, tfacm.AttrPrivateKeyWo),
 					resource.TestCheckResourceAttr(resourceName, tfacm.AttrPrivateKeyWoVersion, "2"),
 				),
