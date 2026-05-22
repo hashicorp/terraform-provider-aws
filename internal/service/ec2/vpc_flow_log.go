@@ -15,10 +15,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -216,7 +216,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	input := &ec2.CreateFlowLogsInput{
-		ClientToken:        aws.String(sdkid.UniqueId()),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		LogDestinationType: awstypes.LogDestinationType(d.Get("log_destination_type").(string)),
 		ResourceIds:        []string{resourceID},
 		ResourceType:       resourceType,
@@ -297,7 +297,12 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("destination_options", nil)
 	}
 	d.Set(names.AttrIAMRoleARN, fl.DeliverLogsPermissionArn)
-	d.Set("log_destination", fl.LogDestination)
+	if fl.LogDestinationType == awstypes.LogDestinationTypeCloudWatchLogs && fl.LogDestination == nil {
+		// Legacy usage of LogGroupName. Either importing or migrating from old version of the proivder
+		d.Set("log_destination", cloudwatchLogGroupARNFromName(ctx, c, aws.ToString(fl.LogGroupName)))
+	} else {
+		d.Set("log_destination", fl.LogDestination)
+	}
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
@@ -399,4 +404,12 @@ func flattenDestinationOptionsResponse(apiObject *awstypes.DestinationOptionsRes
 
 func flowLogARN(ctx context.Context, c *conns.AWSClient, flowLogID string) string {
 	return c.RegionalARN(ctx, names.EC2, "vpc-flow-log/"+flowLogID)
+}
+
+func cloudwatchLogGroupARNFromName(ctx context.Context, c regionalARNMaker, logGroupName string) string {
+	return c.RegionalARN(ctx, names.Logs, "log-group:"+logGroupName)
+}
+
+type regionalARNMaker interface {
+	RegionalARN(ctx context.Context, service, resource string) string
 }

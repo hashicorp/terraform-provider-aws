@@ -158,7 +158,7 @@ func testAccContactChannel_deliveryAddress(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 	contactResourceName := "aws_ssmcontacts_contact.test"

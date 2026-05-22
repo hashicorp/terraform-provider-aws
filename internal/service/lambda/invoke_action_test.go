@@ -444,7 +444,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs22.x"
 
   environment {
     variables = {
@@ -489,7 +489,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs22.x"
   publish       = true
 
   environment {
@@ -602,7 +602,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs22.x"
 
   tenancy_config {
     tenant_isolation_mode = "PER_TENANT"

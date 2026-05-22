@@ -329,7 +329,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 		})
 	}
 
-	if errs.IsA[*awstypes.AccountNotFoundException](err) {
+	if errs.IsA[*awstypes.AccountNotFoundException](err) || errs.IsA[*awstypes.AccountAlreadyClosedException](err) {
 		return diags
 	}
 

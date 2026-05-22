@@ -26,6 +26,7 @@ var (
 	ResourceEBSSnapshotCopy                               = resourceEBSSnapshotCopy
 	ResourceEBSSnapshotImport                             = resourceEBSSnapshotImport
 	ResourceEBSVolume                                     = resourceEBSVolume
+	ResourceEBSVolumeCopy                                 = newEBSVolumeCopyResource
 	ResourceEIP                                           = resourceEIP
 	ResourceEIPAssociation                                = resourceEIPAssociation
 	ResourceEIPDomainName                                 = newEIPDomainNameResource
@@ -60,6 +61,7 @@ var (
 	ResourceNetworkACL                                    = resourceNetworkACL
 	ResourceNetworkACLAssociation                         = resourceNetworkACLAssociation
 	ResourceNetworkACLRule                                = resourceNetworkACLRule
+	ResourceNetworkInsightsAccessScope                    = newNetworkInsightsAccessScopeResource
 	ResourceNetworkInsightsAnalysis                       = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                           = resourceNetworkInsightsPath
 	ResourceNetworkInterface                              = resourceNetworkInterface
@@ -141,6 +143,7 @@ var (
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
+	CreateTags                                                  = createTags
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
 	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation
@@ -196,6 +199,7 @@ var (
 	FindNetworkACLAssociationByID                               = findNetworkACLAssociationByID
 	FindNetworkACLByID                                          = findNetworkACLByID
 	FindNetworkACLEntryByThreePartKey                           = findNetworkACLEntryByThreePartKey
+	FindNetworkInsightsAccessScopeByID                          = findNetworkInsightsAccessScopeByID
 	FindNetworkInsightsAnalysisByID                             = findNetworkInsightsAnalysisByID
 	FindNetworkInsightsPathByID                                 = findNetworkInsightsPathByID
 	FindNetworkInterfaceByID                                    = findNetworkInterfaceByID
@@ -292,6 +296,7 @@ var (
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules
 	NetworkACLRuleImportIDSeparator                             = networkACLRuleImportIDSeparator
+	IanaProtocolIToA                                            = ianaProtocolIToA
 	NewAttributeFilterList                                      = newAttributeFilterList
 	NewCustomFilterList                                         = newCustomFilterList
 	NewTagFilterList                                            = newTagFilterList
@@ -317,6 +322,9 @@ var (
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
+	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
+	FindGuardDutySecurityGroupsForVPC                           = findGuardDutySecurityGroupsForVPC
+	GuardDutySecurityGroupNameForVPC                            = guardDutySecurityGroupNameForVPC
 )
 
 type (

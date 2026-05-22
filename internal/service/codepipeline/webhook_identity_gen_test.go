@@ -47,6 +47,7 @@ func TestAccCodePipelineWebhook_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Webhook/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, t, resourceName, &v),
@@ -67,6 +68,7 @@ func TestAccCodePipelineWebhook_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Webhook/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
@@ -79,6 +81,7 @@ func TestAccCodePipelineWebhook_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Webhook/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -97,6 +100,7 @@ func TestAccCodePipelineWebhook_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Webhook/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -138,6 +142,7 @@ func TestAccCodePipelineWebhook_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "codepipeline", "webhook:{name}"),
@@ -156,6 +161,7 @@ func TestAccCodePipelineWebhook_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -170,6 +176,7 @@ func TestAccCodePipelineWebhook_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
@@ -183,6 +190,7 @@ func TestAccCodePipelineWebhook_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -203,6 +211,7 @@ func TestAccCodePipelineWebhook_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -222,6 +231,7 @@ func TestAccCodePipelineWebhook_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -262,6 +272,7 @@ func TestAccCodePipelineWebhook_Identity_ExistingResource_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Webhook/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, t, resourceName, &v),
@@ -276,6 +287,7 @@ func TestAccCodePipelineWebhook_Identity_ExistingResource_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Webhook/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, t, resourceName, &v),
@@ -301,6 +313,7 @@ func TestAccCodePipelineWebhook_Identity_ExistingResource_basic(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Webhook/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -350,6 +363,7 @@ func TestAccCodePipelineWebhook_Identity_ExistingResource_noRefreshNoChange(t *t
 				ConfigDirectory: config.StaticDirectory("testdata/Webhook/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, t, resourceName, &v),
@@ -365,6 +379,7 @@ func TestAccCodePipelineWebhook_Identity_ExistingResource_noRefreshNoChange(t *t
 				ConfigDirectory:          config.StaticDirectory("testdata/Webhook/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"GITHUB_TOKEN":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "GITHUB_TOKEN")),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, t, resourceName, &v),

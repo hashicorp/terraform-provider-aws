@@ -157,7 +157,7 @@ func (r *groupPoliciesExclusiveResource) syncAttachments(ctx context.Context, gr
 		return err
 	}
 
-	create, remove, _ := intflex.DiffSlices(have, want, func(s1, s2 string) bool { return s1 == s2 })
+	create, remove, _ := intflex.DiffSlices(have, want, intflex.Equal)
 
 	for _, name := range create {
 		in := &iam.PutGroupPolicyInput{

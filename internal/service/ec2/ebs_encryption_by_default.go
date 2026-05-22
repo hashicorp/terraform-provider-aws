@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,7 +49,7 @@ func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(sdkid.UniqueId())
+	d.SetId(create.UniqueId(ctx))
 
 	return append(diags, resourceEBSEncryptionByDefaultRead(ctx, d, meta)...)
 }

@@ -69,6 +69,23 @@ func TestAccTransfer_serial(t *testing.T) {
 			"VPCSecurityGroupIDs":                                    testAccServer_vpcSecurityGroupIDs,
 			"Workflow":                                               testAccServer_workflowDetails,
 		},
+		"Connector": {
+			acctest.CtBasic:      testAccConnector_basic,
+			"sftpConfig":         testAccConnector_sftpConfig,
+			"securityPolicyName": testAccConnector_securityPolicyName,
+			acctest.CtDisappears: testAccConnector_disappears,
+			"egressConfig":       testAccConnector_egressConfig,
+			"egressConfigUpdate": testAccConnector_egressConfigUpdate,
+			"tags":               testAccConnector_tags,
+		},
+		"Workflow": {
+			acctest.CtBasic:      testAccWorkflow_basic,
+			"onExceptionSteps":   testAccWorkflow_onExceptionSteps,
+			"description":        testAccWorkflow_description,
+			"tags":               testAccWorkflow_tags,
+			acctest.CtDisappears: testAccWorkflow_disappears,
+			"allSteps":           testAccWorkflow_allSteps,
+		},
 		"SSHKey": {
 			acctest.CtBasic:      testAccSSHKey_basic,
 			acctest.CtDisappears: testAccSSHKey_disappears,

@@ -173,6 +173,49 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 	})
 }
 
+func TestAccODBCloudVmCluster_giVersionTag(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cloudvmcluster1 odbtypes.CloudVmCluster
+	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	resourceName := "aws_odb_cloud_vm_cluster.test"
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	vmcWithGiVersionTag := vmClusterTestEntity.cloudVmClusterConfigWithGiVersionTag(vmcDisplayName, publicKey)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			vmClusterTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: vmcWithGiVersionTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "gi_version_computed", "26.0.0.0"),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccODBCloudVmCluster_real(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -771,4 +814,221 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 `, exaInfra, odbNet, vmClusterDisplayName, sshKey)
 
 	return vmClusterResourceNoTag, vmClusterResourceWithTag
+}
+
+func (cloudVmClusterResourceTest) cloudVmClusterConfigWithGiVersionTag(vmClusterDisplayName, sshKey string) string {
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
+	vmcWithGiVersionTag := fmt.Sprintf(`
+
+
+%s
+
+%s
+
+
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 16
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo-12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+  tags = {
+    "odb:input_gi_version" = "23.0.0.0"
+    "foo"                  = "bar"
+  }
+
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+
+	return vmcWithGiVersionTag
+}
+
+/*
+To ensure fallback works as expected, an additional acceptance tests which creates the cluster with a previous version
+that does not have the GI version tag, then upgrade to the latest version.
+We are using an ExternalProviders block to pin to a previous version of the provider for the first test step.
+*/
+func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cloudvmcluster1 odbtypes.CloudVmCluster
+	var cloudvmcluster2 odbtypes.CloudVmCluster
+	var cloudvmcluster3 odbtypes.CloudVmCluster
+	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	resourceName := "aws_odb_cloud_vm_cluster.test"
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	vmcWithoutGiVersionTag, vmcWithGiVersionTag := vmClusterTestEntity.cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(vmcDisplayName, publicKey)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			vmClusterTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.ODBServiceID),
+		CheckDestroy: vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.43.0",
+					},
+				},
+				Config: vmcWithoutGiVersionTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   vmcWithoutGiVersionTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster2.CloudVmClusterId)) != 0 {
+							return errors.New("Should  not create a new cloud vm cluster")
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   vmcWithGiVersionTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster3),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.odb:input_gi_version", "26.0.0.0"),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster3.CloudVmClusterId)) != 0 {
+							return errors.New("Should  not create a new cloud vm cluster")
+						}
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+func (cloudVmClusterResourceTest) cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(vmClusterDisplayName, sshKey string) (string, string) {
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
+	vmcWithoutGiVersionTag := fmt.Sprintf(`
+
+
+%s
+
+%s
+
+
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 16
+  gi_version                      = "26.0.0.0"
+  hostname_prefix                 = "apollo-12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+  tags = {
+    "foo" = "bar"
+  }
+
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+
+	vmcWithGiVersionTag := fmt.Sprintf(`
+
+
+%s
+
+%s
+
+
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 16
+  gi_version                      = "26.0.0.0"
+  hostname_prefix                 = "apollo-12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+  tags = {
+    "odb:input_gi_version" = "26.0.0.0"
+    "foo"                  = "bar"
+  }
+
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+
+	return vmcWithoutGiVersionTag, vmcWithGiVersionTag
 }

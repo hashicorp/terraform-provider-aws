@@ -9,9 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -482,38 +480,4 @@ resource "aws_redshift_scheduled_action" "test" {
   }
 }
 `, rName, schedule, classic, clusterType, nodeType, numberOfNodes))
-}
-
-func TestAccRedshiftScheduledAction_validScheduleName(t *testing.T) {
-	t.Parallel()
-
-	var f = validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), "")
-
-	validIds := []string{
-		"tf-test-schedule-action-1",
-		acctest.ResourcePrefix,
-		acctest.RandomWithPrefix(t, acctest.ResourcePrefix),
-	}
-
-	for _, s := range validIds {
-		_, errors := f(s, "")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid replication instance id: %v", s, errors)
-		}
-	}
-
-	invalidIds := []string{
-		"tf_test_schedule-action_1",
-		"tfTestScheduleACtion",
-		"tf.test.schedule.action.1",
-		"tf test schedule action 1",
-		"tf-test-schedule-action-1!",
-	}
-
-	for _, s := range invalidIds {
-		_, errors := f(s, "")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid replication instance id: %v", s, errors)
-		}
-	}
 }

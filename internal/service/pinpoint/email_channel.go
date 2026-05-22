@@ -34,43 +34,53 @@ func resourceEmailChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		DeprecationMessage: "AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES (aws_ses_* or aws_sesv2_* resources). See the AWS End User Messaging migration guide for details.",
+
 		Schema: map[string]*schema.Schema{
 			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Required:   true,
+				ForceNew:   true,
+				Deprecated: "application_id is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"configuration_set": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "configuration_set is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    true,
+				Deprecated: "enabled is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"from_address": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:       schema.TypeString,
+				Required:   true,
+				Deprecated: "from_address is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"identity": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
+				Deprecated:   "identity is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"orchestration_sending_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+				Deprecated:   "orchestration_sending_role_arn is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+				Deprecated:   "role_arn is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			"messages_per_second": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:       schema.TypeInt,
+				Computed:   true,
+				Deprecated: "messages_per_second is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 		},
 	}
@@ -107,7 +117,7 @@ func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 
 	_, err := conn.UpdateEmailChannel(ctx, &req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint Email Channel for application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "updating End User Messaging Email Channel for application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -119,18 +129,18 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint Email Channel for application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging Email Channel for application %s", d.Id())
 
 	output, err := findEmailChannelByApplicationId(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint Email Channel (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging Email Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Email Channel (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging Email Channel (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
@@ -149,7 +159,7 @@ func resourceEmailChannelDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint Email Channel for application %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging Email Channel for application %s", d.Id())
 	_, err := conn.DeleteEmailChannel(ctx, &pinpoint.DeleteEmailChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -159,7 +169,7 @@ func resourceEmailChannelDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Email Channel for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging Email Channel for application %s: %s", d.Id(), err)
 	}
 	return diags
 }

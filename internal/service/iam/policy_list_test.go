@@ -68,15 +68,15 @@ func TestAccIAMPolicy_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_iam_policy.test", map[string]knownvalue.Check{
-						names.AttrARN: arn1.Value(),
+						names.AttrARN: arn1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_iam_policy.test", map[string]knownvalue.Check{
-						names.AttrARN: arn2.Value(),
+						names.AttrARN: arn2.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_iam_policy.test", map[string]knownvalue.Check{
-						names.AttrARN: arn3.Value(),
+						names.AttrARN: arn3.ValueCheck(),
 					}),
 				},
 			},
@@ -137,16 +137,16 @@ func TestAccIAMPolicy_List_pathPrefix(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_iam_policy.expected", map[string]knownvalue.Check{
-						names.AttrARN: expected1.Value(),
+						names.AttrARN: expected1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_iam_policy.expected", map[string]knownvalue.Check{
-						names.AttrARN: expected2.Value(),
+						names.AttrARN: expected2.ValueCheck(),
 					}),
 					querycheck.ExpectNoIdentity("aws_iam_policy.expected", map[string]knownvalue.Check{
-						names.AttrARN: notExpected1.Value(),
+						names.AttrARN: notExpected1.ValueCheck(),
 					}),
 					querycheck.ExpectNoIdentity("aws_iam_policy.expected", map[string]knownvalue.Check{
-						names.AttrARN: notExpected2.Value(),
+						names.AttrARN: notExpected2.ValueCheck(),
 					}),
 				},
 			},

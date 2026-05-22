@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,7 +20,7 @@ import (
 
 func testAccFindingAggregator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
+	resourceName := "aws_securityhub_finding_aggregator.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -31,6 +32,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "securityhub", regexache.MustCompile(`finding-aggregator/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS"),
 					resource.TestCheckNoResourceAttr(resourceName, "specified_regions"),
 				),
@@ -69,7 +71,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 
 func testAccFindingAggregator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
+	resourceName := "aws_securityhub_finding_aggregator.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -132,50 +134,50 @@ func testAccCheckFindingAggregatorDestroy(ctx context.Context, t *testing.T) res
 
 func testAccFindingAggregatorConfig_allRegions() string {
 	return `
-resource "aws_securityhub_account" "example" {}
+resource "aws_securityhub_account" "test" {}
 
-resource "aws_securityhub_finding_aggregator" "test_aggregator" {
+resource "aws_securityhub_finding_aggregator" "test" {
   linking_mode = "ALL_REGIONS"
 
-  depends_on = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.test]
 }
 `
 }
 
 func testAccFindingAggregatorConfig_specifiedRegions() string {
 	return fmt.Sprintf(`
-resource "aws_securityhub_account" "example" {}
+resource "aws_securityhub_account" "test" {}
 
-resource "aws_securityhub_finding_aggregator" "test_aggregator" {
+resource "aws_securityhub_finding_aggregator" "test" {
   linking_mode      = "SPECIFIED_REGIONS"
-  specified_regions = ["%s", "%s", "%s"]
+  specified_regions = [%[1]q, %[2]q, %[3]q]
 
-  depends_on = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.test]
 }
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID, endpoints.UsEast1RegionID)
 }
 
 func testAccFindingAggregatorConfig_allRegionsExceptSpecified() string {
 	return fmt.Sprintf(`
-resource "aws_securityhub_account" "example" {}
+resource "aws_securityhub_account" "test" {}
 
-resource "aws_securityhub_finding_aggregator" "test_aggregator" {
+resource "aws_securityhub_finding_aggregator" "test" {
   linking_mode      = "ALL_REGIONS_EXCEPT_SPECIFIED"
-  specified_regions = ["%s", "%s"]
+  specified_regions = [%[1]q, %[2]q]
 
-  depends_on = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.test]
 }
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID)
 }
 
 func testAccFindingAggregatorConfig_NoRegions() string {
 	return `
-resource "aws_securityhub_account" "example" {}
+resource "aws_securityhub_account" "test" {}
 
-resource "aws_securityhub_finding_aggregator" "test_aggregator" {
+resource "aws_securityhub_finding_aggregator" "test" {
   linking_mode = "NO_REGIONS"
 
-  depends_on = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.test]
 }
 `
 }

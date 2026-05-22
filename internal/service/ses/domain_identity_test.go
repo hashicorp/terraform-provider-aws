@@ -20,7 +20,7 @@ import (
 
 func TestAccSESDomainIdentity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	resourceName := "aws_ses_domain_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -45,7 +45,7 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 
 func TestAccSESDomainIdentity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	resourceName := "aws_ses_domain_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -70,7 +70,7 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
 func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomFQDomainName()
+	domain := acctest.RandomFQDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

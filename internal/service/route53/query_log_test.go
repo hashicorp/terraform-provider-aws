@@ -25,7 +25,7 @@ func TestAccRoute53QueryLog_basic(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	var v awstypes.QueryLoggingConfig
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -62,7 +62,7 @@ func TestAccRoute53QueryLog_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_query_log.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	var v awstypes.QueryLoggingConfig
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -88,7 +88,7 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	var v awstypes.QueryLoggingConfig
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

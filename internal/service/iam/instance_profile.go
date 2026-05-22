@@ -35,18 +35,16 @@ const (
 )
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
-// @Tags(identifierAttribute="id", resourceType="InstanceProfile")
+// @Tags(identifierAttribute="name", resourceType="InstanceProfile")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.InstanceProfile")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
 		ReadWithoutTimeout:   resourceInstanceProfileRead,
 		UpdateWithoutTimeout: resourceInstanceProfileUpdate,
 		DeleteWithoutTimeout: resourceInstanceProfileDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

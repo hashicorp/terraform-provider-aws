@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ComputedOnlyFromSchema is a recursive function that converts an
@@ -162,3 +163,13 @@ func jsonDocumentSchemaRequiredForceNewFunc(diffSuppressFunc schema.SchemaDiffSu
 		}
 	}
 }
+
+// RegionOptionalComputed returns the standard schema for an optional, computed AWS Region.
+var RegionOptionalComputed = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: names.ResourceTopLevelRegionAttributeDescription,
+	}
+})

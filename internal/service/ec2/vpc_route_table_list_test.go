@@ -62,12 +62,12 @@ func TestAccVPCRouteTable_List_basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_route_table.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_route_table.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 					}),
 				},
 			},
@@ -115,12 +115,12 @@ func TestAccVPCRouteTable_List_regionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_route_table.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_route_table.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 					}),
 				},
 			},

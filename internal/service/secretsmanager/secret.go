@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -160,7 +159,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &secretsmanager.CreateSecretInput{
-		ClientRequestToken:          aws.String(sdkid.UniqueId()), // Needed because we're handling our own retries
+		ClientRequestToken:          aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		ForceOverwriteReplicaSecret: d.Get("force_overwrite_replica_secret").(bool),
 		Name:                        aws.String(name),
@@ -318,7 +317,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if d.HasChanges(names.AttrDescription, names.AttrKMSKeyID) {
 		input := &secretsmanager.UpdateSecretInput{
-			ClientRequestToken: aws.String(sdkid.UniqueId()), // Needed because we're handling our own retries
+			ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 			Description:        aws.String(d.Get(names.AttrDescription).(string)),
 			SecretId:           aws.String(d.Id()),
 		}

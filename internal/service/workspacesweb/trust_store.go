@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -120,7 +120,7 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	input := workspacesweb.CreateTrustStoreInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -232,7 +232,7 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 
 	if !new.Certificates.Equal(old.Certificates) {
 		input := workspacesweb.UpdateTrustStoreInput{
-			ClientToken:   aws.String(sdkid.UniqueId()),
+			ClientToken:   aws.String(create.UniqueId(ctx)),
 			TrustStoreArn: new.TrustStoreARN.ValueStringPointer(),
 		}
 

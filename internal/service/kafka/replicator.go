@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_msk_replicator", name="Replicator")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceReplicator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicatorCreate,

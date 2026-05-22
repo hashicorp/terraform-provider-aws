@@ -18,10 +18,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -112,7 +112,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	vocabularyName := d.Get(names.AttrName).(string)
 	input := &connect.CreateVocabularyInput{
-		ClientToken:    aws.String(sdkid.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get(names.AttrContent).(string)),
 		LanguageCode:   awstypes.VocabularyLanguageCode(d.Get(names.AttrLanguageCode).(string)),

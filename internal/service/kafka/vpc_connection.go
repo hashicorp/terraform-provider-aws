@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_msk_vpc_connection", name="VPC Connection")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectionCreate,

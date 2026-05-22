@@ -98,13 +98,13 @@ resource "aws_vpc" "test" {
 resource "aws_vpc_ipam_pool" "vpc" {
   address_family      = "ipv4"
   ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
-  locale              = data.aws_region.current.name
+  locale              = data.aws_region.current.region
   source_ipam_pool_id = aws_vpc_ipam_pool.test.id
 
   source_resource {
     resource_id     = aws_vpc.test.id
     resource_owner  = data.aws_caller_identity.current.account_id
-    resource_region = data.aws_region.current.name
+    resource_region = data.aws_region.current.region
     resource_type   = "vpc"
   }
 }

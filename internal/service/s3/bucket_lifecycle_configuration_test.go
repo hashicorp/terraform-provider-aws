@@ -114,6 +114,45 @@ func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
 	})
 }
 
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/46674
+// Verifies that when a resource created with a pre-identity version is deleted outside
+// Terraform, the provider correctly handles the missing identity during refresh
+func TestAccS3BucketLifecycleConfiguration_Identity_disappearsAfterUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create with pre-identity version (simulated by using ExternalProviders)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.32.0",
+					},
+				},
+				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
+				),
+			},
+			// Step 2: Upgrade to current version and delete resource outside Terraform
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketLifecycleConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3.ResourceBucketLifecycleConfiguration, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketLifecycleConfiguration_rule_NoFilterOrPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

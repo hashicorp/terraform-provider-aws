@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -117,7 +117,7 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateAgentRuntimeEndpoint(ctx, &input)
@@ -193,7 +193,7 @@ func (r *agentRuntimeEndpointResource) Update(ctx context.Context, request resou
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		out, err := conn.UpdateAgentRuntimeEndpoint(ctx, &input)
 		if err != nil {
@@ -226,7 +226,7 @@ func (r *agentRuntimeEndpointResource) Delete(ctx context.Context, request resou
 	agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, data.Name)
 	input := bedrockagentcorecontrol.DeleteAgentRuntimeEndpointInput{
 		AgentRuntimeId: aws.String(agentRuntimeID),
-		ClientToken:    aws.String(sdkid.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		EndpointName:   aws.String(name),
 	}
 

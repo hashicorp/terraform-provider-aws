@@ -21,7 +21,7 @@ import (
 func TestAccRolesAnywhereTrustAnchor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	caCommonName := acctest.RandomDomainName()
+	caCommonName := acctest.RandomDomainName(t)
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -55,7 +55,7 @@ func TestAccRolesAnywhereTrustAnchor_basic(t *testing.T) {
 func TestAccRolesAnywhereTrustAnchor_notificationSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	caCommonName := acctest.RandomDomainName()
+	caCommonName := acctest.RandomDomainName(t)
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -99,7 +99,7 @@ func TestAccRolesAnywhereTrustAnchor_notificationSettings(t *testing.T) {
 func TestAccRolesAnywhereTrustAnchor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	caCommonName := acctest.RandomDomainName()
+	caCommonName := acctest.RandomDomainName(t)
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -145,7 +145,7 @@ func TestAccRolesAnywhereTrustAnchor_tags(t *testing.T) {
 func TestAccRolesAnywhereTrustAnchor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	caCommonName := acctest.RandomDomainName()
+	caCommonName := acctest.RandomDomainName(t)
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

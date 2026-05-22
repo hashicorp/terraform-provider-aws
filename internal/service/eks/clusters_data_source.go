@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,22 +34,16 @@ func dataSourceClusters() *schema.Resource {
 
 func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EKSClient(ctx)
 
-	input := &eks.ListClustersInput{}
-	var clusters []string
-	pages := eks.NewListClustersPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing EKS Clusters: %s", err)
-		}
-
-		clusters = append(clusters, page.Clusters...)
+	var input eks.ListClustersInput
+	clusters, err := tfslices.CollectWithError(listClusters(ctx, conn, &input))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.SetId(c.Region(ctx))
 	d.Set(names.AttrNames, clusters)
 
 	return diags

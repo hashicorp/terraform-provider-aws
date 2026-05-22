@@ -1,0 +1,19 @@
+```release-note:new-resource
+aws_opensearchserverless_collection_group
+```
+
+```release-note:new-list-resource
+aws_opensearchserverless_collection_group
+```
+
+```release-note:new-data-source
+aws_opensearchserverless_collection_group
+```
+
+```release-note:new-data-source
+aws_opensearchserverless_collection_groups
+```
+
+```release-notes:enhancement
+resource/aws_opensearchserverless_collection: Add `collection_group_name` and `encryption_config` arguments
+```

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -747,7 +746,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	in := &medialive.CreateChannelInput{
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		RequestId: aws.String(sdkid.UniqueId()),
+		RequestId: aws.String(create.UniqueId(ctx)),
 		Tags:      getTagsIn(ctx),
 	}
 

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,16 +35,16 @@ import (
 // @SDKResource("aws_launch_template", name="Launch Template")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(idAttrDuplicates="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.LaunchTemplate")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchTemplateCreate,
 		ReadWithoutTimeout:   resourceLaunchTemplateRead,
 		UpdateWithoutTimeout: resourceLaunchTemplateUpdate,
 		DeleteWithoutTimeout: resourceLaunchTemplateDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -1108,7 +1107,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := ec2.CreateLaunchTemplateInput{
-		ClientToken:        aws.String(sdkid.UniqueId()),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		LaunchTemplateName: aws.String(name),
 		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeLaunchTemplate),
 	}
@@ -1160,7 +1159,17 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
 
-	d.Set(names.AttrARN, launchTemplateARN(ctx, c, d.Id()))
+	if err := resourceLaunchTemplateFlatten(ctx, conn, c, lt, ltv, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	setTagsOut(ctx, lt.Tags)
+
+	return diags
+}
+
+func resourceLaunchTemplateFlatten(ctx context.Context, conn *ec2.Client, c *conns.AWSClient, lt *awstypes.LaunchTemplate, ltv *awstypes.LaunchTemplateVersion, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, launchTemplateARN(ctx, c, aws.ToString(lt.LaunchTemplateId)))
 	d.Set("default_version", lt.DefaultVersionNumber)
 	d.Set(names.AttrDescription, ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)
@@ -1168,12 +1177,10 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lt.LaunchTemplateName)))
 
 	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
-	setTagsOut(ctx, lt.Tags)
-
-	return diags
+	return nil
 }
 
 func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1217,7 +1224,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges(updateKeys...) {
 		input := ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:      aws.String(sdkid.UniqueId()),
+			ClientToken:      aws.String(create.UniqueId(ctx)),
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 

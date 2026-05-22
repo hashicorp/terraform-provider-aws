@@ -16,9 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -52,11 +52,16 @@ func resourceSecretVersion() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "arn is deprecated. Use secret_arn instead.",
 			},
 			"has_secret_string_wo": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"secret_arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"secret_id": {
@@ -75,7 +80,6 @@ func resourceSecretVersion() *schema.Resource {
 			"secret_string": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{"secret_binary", "secret_string_wo"},
 			},
@@ -90,7 +94,6 @@ func resourceSecretVersion() *schema.Resource {
 			"secret_string_wo_version": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				RequiredWith: []string{"secret_string_wo"},
 			},
 			"version_id": {
@@ -104,6 +107,8 @@ func resourceSecretVersion() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
+
+		CustomizeDiff: secretVersionForceNewCustomDiff,
 	}
 }
 
@@ -113,7 +118,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	secretID := d.Get("secret_id").(string)
 	input := &secretsmanager.PutSecretValueInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()), // Needed because we're handling our own retries
+		ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 		SecretId:           aws.String(secretID),
 	}
 
@@ -216,6 +221,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		d.Set(names.AttrARN, arn)
+		d.Set("secret_arn", arn)
 		d.Set("secret_binary", nil)
 		d.Set("secret_string", nil)
 		d.Set("version_id", versionEntry.VersionId)
@@ -236,6 +242,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrARN, output.ARN)
+	d.Set("secret_arn", output.ARN)
 	d.Set("secret_binary", inttypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
@@ -253,78 +260,80 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	o, n := d.GetChange("version_stages")
-	os, ns := o.(*schema.Set), n.(*schema.Set)
-	add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+	if d.HasChange("version_stages") {
+		o, n := d.GetChange("version_stages")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-	var listedVersionIDs bool
-	for _, stage := range add {
-		inputU := &secretsmanager.UpdateSecretVersionStageInput{
-			MoveToVersionId: aws.String(versionID),
-			SecretId:        aws.String(secretID),
-			VersionStage:    aws.String(stage),
-		}
+		var listedVersionIDs bool
+		for _, stage := range add {
+			inputU := &secretsmanager.UpdateSecretVersionStageInput{
+				MoveToVersionId: aws.String(versionID),
+				SecretId:        aws.String(secretID),
+				VersionStage:    aws.String(stage),
+			}
 
-		if !listedVersionIDs {
-			if stage == secretVersionStageCurrent {
-				inputL := &secretsmanager.ListSecretVersionIdsInput{
-					SecretId: aws.String(secretID),
-				}
-				var versionStageCurrentVersionID string
-
-				paginator := secretsmanager.NewListSecretVersionIdsPaginator(conn, inputL)
-			listVersionIDs:
-				for paginator.HasMorePages() {
-					page, err := paginator.NextPage(ctx)
-
-					if err != nil {
-						return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secret (%s) version IDs: %s", secretID, err)
+			if !listedVersionIDs {
+				if stage == secretVersionStageCurrent {
+					inputL := &secretsmanager.ListSecretVersionIdsInput{
+						SecretId: aws.String(secretID),
 					}
+					var versionStageCurrentVersionID string
 
-					for _, version := range page.Versions {
-						for _, versionStage := range version.VersionStages {
-							if versionStage == secretVersionStageCurrent {
-								versionStageCurrentVersionID = aws.ToString(version.VersionId)
-								break listVersionIDs
+					paginator := secretsmanager.NewListSecretVersionIdsPaginator(conn, inputL)
+				listVersionIDs:
+					for paginator.HasMorePages() {
+						page, err := paginator.NextPage(ctx)
+
+						if err != nil {
+							return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secret (%s) version IDs: %s", secretID, err)
+						}
+
+						for _, version := range page.Versions {
+							for _, versionStage := range version.VersionStages {
+								if versionStage == secretVersionStageCurrent {
+									versionStageCurrentVersionID = aws.ToString(version.VersionId)
+									break listVersionIDs
+								}
 							}
 						}
 					}
-				}
 
-				inputU.RemoveFromVersionId = aws.String(versionStageCurrentVersionID)
-				listedVersionIDs = true
+					inputU.RemoveFromVersionId = aws.String(versionStageCurrentVersionID)
+					listedVersionIDs = true
+				}
+			}
+
+			_, err := conn.UpdateSecretVersionStage(ctx, inputU)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
 			}
 		}
 
-		_, err := conn.UpdateSecretVersionStage(ctx, inputU)
+		for _, stage := range del {
+			// InvalidParameterException: You can only move staging label AWSCURRENT to a different secret version. It can’t be completely removed.
+			if stage == secretVersionStageCurrent {
+				log.Printf("[INFO] Skipping removal of AWSCURRENT staging label for secret %q version %q", secretID, versionID)
+				continue
+			}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
-		}
-	}
+			// If we added AWSCURRENT to this version then any AWSPREVIOUS label will have been moved to another version.
+			if listedVersionIDs && stage == secretVersionStagePrevious {
+				continue
+			}
 
-	for _, stage := range del {
-		// InvalidParameterException: You can only move staging label AWSCURRENT to a different secret version. It can’t be completely removed.
-		if stage == secretVersionStageCurrent {
-			log.Printf("[INFO] Skipping removal of AWSCURRENT staging label for secret %q version %q", secretID, versionID)
-			continue
-		}
+			input := &secretsmanager.UpdateSecretVersionStageInput{
+				RemoveFromVersionId: aws.String(versionID),
+				SecretId:            aws.String(secretID),
+				VersionStage:        aws.String(stage),
+			}
 
-		// If we added AWSCURRENT to this version then any AWSPREVIOUS label will have been moved to another version.
-		if listedVersionIDs && stage == secretVersionStagePrevious {
-			continue
-		}
+			_, err := conn.UpdateSecretVersionStage(ctx, input)
 
-		input := &secretsmanager.UpdateSecretVersionStageInput{
-			RemoveFromVersionId: aws.String(versionID),
-			SecretId:            aws.String(secretID),
-			VersionStage:        aws.String(stage),
-		}
-
-		_, err := conn.UpdateSecretVersionStage(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
+			}
 		}
 	}
 
@@ -504,4 +513,98 @@ func (secretVersionImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	return id, results, nil
+}
+
+func secretVersionForceNewCustomDiff(ctx context.Context, rd *schema.ResourceDiff, meta any) error {
+	return secretVersionForceNewCustomDiffInner(ctx, rd, meta)
+}
+
+type rawDiffer interface {
+	GetRawState() cty.Value
+	GetRawConfig() cty.Value
+	ForceNew(key string) error
+}
+
+func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, meta any) error {
+	rawState := diff.GetRawState()
+	if rawState.IsNull() {
+		return nil
+	}
+
+	rawConfig := diff.GetRawConfig()
+	if rawConfig.IsNull() {
+		return nil
+	}
+
+	stateStringValue := rawState.GetAttr("secret_string")
+	hasStateString := stateStringValue.IsKnown() && !stateStringValue.IsNull()
+	if hasStateString {
+		hasStateString = stateStringValue.AsString() != ""
+	}
+
+	if hasStateString {
+		configStringValue := rawConfig.GetAttr("secret_string")
+		hasConfigString := configStringValue.IsKnown() && !configStringValue.IsNull()
+		if hasConfigString {
+			hasConfigString = configStringValue.AsString() != ""
+		}
+
+		if hasConfigString {
+			stateString := stateStringValue.AsString()
+			configString := configStringValue.AsString()
+			if stateString != configString {
+				if err := diff.ForceNew("secret_string"); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		configStringWOValue := rawConfig.GetAttr("secret_string_wo")
+		hasStateStringWO := configStringWOValue.IsKnown() && !configStringWOValue.IsNull()
+		if hasStateStringWO {
+			stateString := stateStringValue.AsString()
+			configString := configStringWOValue.AsString()
+			if stateString != configString {
+				if err := diff.ForceNew("secret_string"); err != nil {
+					return err
+				}
+				if err := diff.ForceNew("secret_string_wo"); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}
+
+	stateStringWoVersionValue := rawState.GetAttr("secret_string_wo_version")
+	hasStateStringWoVersion := stateStringWoVersionValue.IsKnown() && !stateStringWoVersionValue.IsNull()
+
+	if hasStateStringWoVersion {
+		configStringWoVersionValue := rawConfig.GetAttr("secret_string_wo_version")
+		if !configStringWoVersionValue.IsKnown() {
+			return nil
+		}
+
+		if !configStringWoVersionValue.IsNull() {
+			if configStringWoVersionValue.Equals(stateStringWoVersionValue).False() {
+				if err := diff.ForceNew("secret_string_wo_version"); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		configStringValue := rawConfig.GetAttr("secret_string")
+		if !configStringValue.IsKnown() {
+			return nil
+		}
+		if !configStringValue.IsNull() {
+			if err := diff.ForceNew("secret_string"); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
