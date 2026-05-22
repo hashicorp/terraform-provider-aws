@@ -2542,6 +2542,11 @@ func TestAccEC2Instance_tagsIgnoreChangesEmptyValue(t *testing.T) {
 					}
 				},
 				Config: testAccInstanceConfig_tagsIgnoreChangesEmptyValue(rName, "UpdatedTag"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.Step", "UpdatedTag"),
@@ -2557,6 +2562,11 @@ func TestAccEC2Instance_tagsIgnoreChangesEmptyValue(t *testing.T) {
 					}
 				},
 				Config: testAccInstanceConfig_tagsIgnoreChangesEmptyValue(rName, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAPITagValue(ctx, t, &v, "Step", ""),
@@ -7150,17 +7160,12 @@ func overrideInstanceTag(ctx context.Context, t *testing.T, instance *awstypes.I
 	}
 
 	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
-	input := ec2.CreateTagsInput{
-		Resources: []string{aws.ToString(instance.InstanceId)},
-		Tags: []awstypes.Tag{
-			{
-				Key:   aws.String(key),
-				Value: aws.String(value),
-			},
+	return tfec2.CreateTags(ctx, conn, aws.ToString(instance.InstanceId), []awstypes.Tag{
+		{
+			Key:   aws.String(key),
+			Value: aws.String(value),
 		},
-	}
-	_, err := conn.CreateTags(ctx, &input)
-	return err
+	})
 }
 
 // testAccCheckInstanceAPITagValue verifies that an EC2 instance has the
