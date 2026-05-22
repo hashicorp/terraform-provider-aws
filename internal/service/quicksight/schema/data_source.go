@@ -122,11 +122,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Optional:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							names.AttrRoleARN: {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrRoleARN: sdkschema.ARNStringSchema(sdkschema.AttrOptional),
 						},
 					},
 					ExactlyOneOf: exactlyOneOf,
