@@ -8,6 +8,7 @@ import (
 	"errors"
 	"sync"
 	"testing"
+	"time"
 
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/smithy-go/middleware"
@@ -35,6 +36,39 @@ func TestRecorder_RecordAndCalls(t *testing.T) {
 	}
 	if calls[1].Err == nil || calls[1].Err.Error() != "boom" {
 		t.Errorf("calls[1].Err = %v, want boom", calls[1].Err)
+	}
+}
+
+func TestRecorder_RecordCall(t *testing.T) {
+	t.Parallel()
+
+	r := NewRecorder()
+	at := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	r.RecordCall(Call{
+		Service:   "S3",
+		Operation: "GetObject",
+		Duration:  150 * time.Millisecond,
+		RequestID: "req-abc",
+		At:        at,
+	})
+	// Zero-At case: RecordCall should fill it in.
+	r.RecordCall(Call{Service: "S3", Operation: "PutObject"})
+
+	calls := r.Calls()
+	if len(calls) != 2 {
+		t.Fatalf("len(Calls()) = %d, want 2", len(calls))
+	}
+	if !calls[0].At.Equal(at) {
+		t.Errorf("explicit At not preserved: got %v, want %v", calls[0].At, at)
+	}
+	if calls[0].Duration != 150*time.Millisecond {
+		t.Errorf("Duration = %v, want 150ms", calls[0].Duration)
+	}
+	if calls[0].RequestID != "req-abc" {
+		t.Errorf("RequestID = %q, want req-abc", calls[0].RequestID)
+	}
+	if calls[1].At.IsZero() {
+		t.Error("zero At was not filled in")
 	}
 }
 
@@ -190,6 +224,12 @@ func TestMiddleware_RecordsServiceAndOperation(t *testing.T) {
 	}
 	if calls[0].Err != nil {
 		t.Errorf("Err = %v, want nil", calls[0].Err)
+	}
+	if calls[0].Duration < 0 {
+		t.Errorf("Duration = %s, want >= 0", calls[0].Duration)
+	}
+	if calls[0].At.IsZero() {
+		t.Error("At is zero")
 	}
 }
 
