@@ -159,6 +159,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newLocalGatewayRouteTableResource,
+			TypeName: "aws_ec2_local_gateway_route_table",
+			Name:     "Local Gateway Route Table",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "local_gateway_route_table_id",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newNetworkInsightsAccessScopeResource,
 			TypeName: "aws_ec2_network_insights_access_scope",
 			Name:     "Network Insights Access Scope",
