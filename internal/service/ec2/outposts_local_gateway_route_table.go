@@ -60,7 +60,7 @@ func (r *localGatewayRouteTableResource) Schema(ctx context.Context, request res
 				},
 			},
 			"local_gateway_route_table_id": framework.IDAttribute(),
-			"mode": schema.StringAttribute{
+			names.AttrMode: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.LocalGatewayRouteTableMode](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
