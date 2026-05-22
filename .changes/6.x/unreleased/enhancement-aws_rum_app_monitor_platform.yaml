@@ -1,0 +1,7 @@
+kind: enhancement
+body: ""
+custom:
+  Impact: |
+    resource/aws_rum_app_monitor
+  Body: Add platform argument to support Web, iOS, and Android platforms
+  PullRequest: 48026
