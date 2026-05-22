@@ -105,6 +105,13 @@ func resourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"platform": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "Web",
+				ValidateFunc: validation.StringInSlice([]string{"Web", "iOS", "Android"}, false),
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -189,6 +196,10 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.DomainList = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("platform"); ok {
+		input.Platform = awstypes.AppMonitorPlatform(v.(string))
+	}
+
 	_, err := conn.CreateAppMonitor(ctx, input)
 
 	if err != nil {
@@ -239,6 +250,10 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrDomain, appMon.Domain)
 	d.Set("domain_list", appMon.DomainList)
 	d.Set(names.AttrName, name)
+
+	if appMon.Platform != "" {
+		d.Set("platform", string(appMon.Platform))
+	}
 
 	setTagsOut(ctx, appMon.Tags)
 

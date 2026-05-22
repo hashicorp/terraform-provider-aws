@@ -7,7 +7,9 @@ package rum
 var (
 	ResourceAppMonitor         = resourceAppMonitor
 	ResourceMetricsDestination = resourceMetricsDestination
+	ResourceResourcePolicy     = resourceResourcePolicy
 
 	FindAppMonitorByName         = findAppMonitorByName
 	FindMetricsDestinationByName = findMetricsDestinationByName
+	FindResourcePolicy           = findResourcePolicy
 )

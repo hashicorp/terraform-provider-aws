@@ -372,3 +372,42 @@ resource "aws_rum_app_monitor" "test" {
 }
 `, rName)
 }
+
+func TestAccRUMAppMonitor_Platform(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appMon awstypes.AppMonitor
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rum_app_monitor.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppMonitorConfig_Platform(rName, "iOS"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "iOS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppMonitorConfig_Platform(rName, platform string) string {
+	return fmt.Sprintf(`
+resource "aws_rum_app_monitor" "test" {
+  name     = %[1]q
+  domain   = "localhost"
+  platform = %[2]q
+}
+`, rName, platform)
+}

@@ -49,6 +49,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Metrics Destination",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  resourceResourcePolicy,
+			TypeName: "aws_rum_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
