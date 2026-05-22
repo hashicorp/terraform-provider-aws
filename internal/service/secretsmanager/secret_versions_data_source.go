@@ -41,7 +41,8 @@ func (d *secretVersionsDataSource) Schema(ctx context.Context, req datasource.Sc
 				DeprecationMessage: "arn is deprecated. Use secret_arn instead.",
 			},
 			names.AttrName: schema.StringAttribute{
-				Computed: true,
+				Computed:           true,
+				DeprecationMessage: "name is deprecated. Use secret_name instead.",
 			},
 			"include_deprecated": schema.BoolAttribute{
 				Optional: true,
@@ -51,6 +52,9 @@ func (d *secretVersionsDataSource) Schema(ctx context.Context, req datasource.Sc
 			},
 			"secret_id": schema.StringAttribute{
 				Required: true,
+			},
+			"secret_name": schema.StringAttribute{
+				Computed: true,
 			},
 			"versions": framework.DataSourceComputedListOfObjectAttribute[dsVersionsData](ctx),
 		},
@@ -97,6 +101,7 @@ func (d *secretVersionsDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 	data.SecretARN = data.ARN
+	data.SecretName = data.Name
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -108,6 +113,7 @@ type secretVersionsDataSourceModel struct {
 	IncludeDeprecated types.Bool                                      `tfsdk:"include_deprecated"`
 	SecretARN         types.String                                    `tfsdk:"secret_arn"`
 	SecretID          types.String                                    `tfsdk:"secret_id"`
+	SecretName        types.String                                    `tfsdk:"secret_name"`
 	Versions          fwtypes.ListNestedObjectValueOf[dsVersionsData] `tfsdk:"versions"`
 }
 

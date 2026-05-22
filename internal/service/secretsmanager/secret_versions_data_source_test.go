@@ -38,9 +38,10 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), dataSourceName, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("include_deprecated"), knownvalue.Null()),
-					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), secretName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), dataSourceName, tfjsonpath.New("secret_name"), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("secret_arn"), resource1Name, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("secret_id"), resource1Name, tfjsonpath.New("secret_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("secret_name"), secretName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
 					// Order is not guaranteed for `versions`
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("versions"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
