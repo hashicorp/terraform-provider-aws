@@ -8,6 +8,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -25,6 +26,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -42,6 +44,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -59,6 +62,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -76,6 +80,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern-either:
@@ -102,6 +107,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub/internal/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern-either:
@@ -140,6 +146,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -157,6 +164,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -174,6 +182,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -191,6 +200,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -208,6 +218,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub/internal/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -215,7 +226,7 @@ rules:
             Type:     schema.TypeString,
             Computed: true,
           }
-    fix: stringComputedOnly()
+    fix: sdkschema.StringComputedOnly()
     severity: WARNING
 
   - id: schema-bool-computed-only
@@ -224,6 +235,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -240,6 +252,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -247,7 +260,7 @@ rules:
             Type:     schema.TypeInt,
             Computed: true,
           }
-    fix: intComputedOnly()
+    fix: sdkschema.IntComputedOnly()
     severity: WARNING
 
   - id: schema-float-computed-only
@@ -256,6 +269,7 @@ rules:
     paths:
       include:
         - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |

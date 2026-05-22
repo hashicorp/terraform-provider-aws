@@ -53,7 +53,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Deprecated:       "campaign_hook is deprecated. Amazon Pinpoint engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
+				Deprecated:       "campaign_hook is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"lambda_function_name": {
@@ -77,7 +77,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Deprecated:       "limits is deprecated. Amazon Pinpoint engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
+				Deprecated:       "limits is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"daily": {
@@ -122,7 +122,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Deprecated:       "quiet_time is deprecated. Amazon Pinpoint engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
+				Deprecated:       "quiet_time is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"end": {
@@ -157,7 +157,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	output, err := conn.CreateApp(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Pinpoint App (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating End User Messaging App (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.ApplicationResponse.Id))
@@ -214,13 +214,13 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	app, err := findAppByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging App (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging App (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, app.Id)
@@ -279,7 +279,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 		_, err := conn.UpdateApplicationSettings(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Pinpoint App (%s) settings: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating End User Messaging App (%s) settings: %s", d.Id(), err)
 		}
 	}
 
@@ -290,7 +290,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint App: %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging App: %s", d.Id())
 	_, err := conn.DeleteApp(ctx, &pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -300,7 +300,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint App (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging App (%s): %s", d.Id(), err)
 	}
 
 	return diags

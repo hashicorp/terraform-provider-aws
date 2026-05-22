@@ -86,7 +86,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.15
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.8
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.10
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.59.2
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.39.16
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.41.2
@@ -151,12 +151,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.23
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.6
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.7
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.25
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.10
-	github.com/aws/aws-sdk-go-v2/service/kms v1.51.1
+	github.com/aws/aws-sdk-go-v2/service/kms v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.47.8
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.90.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.14.6
@@ -178,7 +178,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/mpa v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.22
-	github.com/aws/aws-sdk-go-v2/service/mwaa v1.40.0
+	github.com/aws/aws-sdk-go-v2/service/mwaa v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.11
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.44.5
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.23
