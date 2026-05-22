@@ -12,7 +12,9 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Fix `lifecycle.ignore_changes` for individual `tags` elements being bypassed when another tag in the same map is updated to an empty string, to avoid overwriting any out-of-band changes the lifecycle block was meant to preserve. ([#48008](https://github.com/hashicorp/terraform-provider-aws/issues/48008))
 * resource/aws_dynamodb_table: Ensure diffs are shown for GSI hash key type changes ([#47867](https://github.com/hashicorp/terraform-provider-aws/issues/47867))
+* resource/aws_instance: Fix `lifecycle.ignore_changes` for individual `tags` elements being bypassed when another tag in the same map is updated to an empty string, to avoid overwriting any out-of-band changes the lifecycle block was meant to preserve. ([#48008](https://github.com/hashicorp/terraform-provider-aws/issues/48008))
 
 ## 6.46.0 (May 20, 2026)
 
