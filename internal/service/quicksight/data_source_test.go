@@ -392,7 +392,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_public_access_block" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   block_public_acls       = false
   block_public_policy     = false
@@ -401,7 +401,7 @@ resource "aws_s3_bucket_public_access_block" "test" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     object_ownership = "BucketOwnerPreferred"
@@ -414,7 +414,7 @@ resource "aws_s3_bucket_acl" "test" {
     aws_s3_bucket_ownership_controls.test,
   ]
 
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   acl    = "public-read"
 }
 
@@ -473,7 +473,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_public_access_block" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   block_public_acls       = true
   block_public_policy     = true
@@ -498,7 +498,7 @@ resource "aws_s3_object" "test" {
     fileLocations = [
       {
         URIs = [
-          "https://${aws_s3_bucket.test.id}.s3.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/%[1]s-test-data.csv"
+          "https://${aws_s3_bucket.test.bucket}.s3.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/%[1]s-test-data.csv"
         ]
       }
     ]
