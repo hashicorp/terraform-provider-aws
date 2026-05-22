@@ -57,4 +57,7 @@ func TestEndToEnd_PinpointClient(t *testing.T) {
 	if calls[0].Service != "Pinpoint" || calls[0].Operation != "GetApp" || calls[0].Err != nil {
 		t.Errorf("Calls[0] = %+v, want Pinpoint.GetApp with no error", calls[0])
 	}
+	if calls[0].Duration <= 0 {
+		t.Errorf("Duration = %s, want > 0", calls[0].Duration)
+	}
 }
