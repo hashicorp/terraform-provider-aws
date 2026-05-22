@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func TestCheckAPICallMade(t *testing.T) {
@@ -144,7 +145,7 @@ func TestWrapConfigureWithCallRecorder(t *testing.T) {
 	t.Run("tolerates nil meta", func(t *testing.T) {
 		t.Parallel()
 		original := func(_ context.Context, _ *schema.ResourceData) (any, diag.Diagnostics) {
-			return nil, diag.Errorf("configure failed")
+			return nil, sdkdiag.AppendErrorf(nil, "configure failed")
 		}
 		wrapped := wrapConfigureWithCallRecorder(original, rec)
 

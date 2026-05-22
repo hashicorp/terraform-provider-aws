@@ -43,7 +43,8 @@ func TestEndToEnd_PinpointClient(t *testing.T) {
 	}
 
 	client := pinpoint.NewFromConfig(cfg)
-	if _, err := client.GetApp(ctx, &pinpoint.GetAppInput{ApplicationId: aws.String("x")}); err != nil {
+	input := pinpoint.GetAppInput{ApplicationId: aws.String("x")}
+	if _, err := client.GetApp(ctx, &input); err != nil {
 		t.Fatalf("GetApp: %v", err)
 	}
 
