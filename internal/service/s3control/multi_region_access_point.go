@@ -30,15 +30,15 @@ import (
 )
 
 // @SDKResource("aws_s3control_multi_region_access_point", name="Multi-Region Access Point")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3control/types;types.MultiRegionAccessPointReport")
+// @Testing(preIdentityVersion="v6.46.0")
+// @Testing(identityRegionOverrideTest=false)
 func resourceMultiRegionAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiRegionAccessPointCreate,
 		ReadWithoutTimeout:   resourceMultiRegionAccessPointRead,
 		DeleteWithoutTimeout: resourceMultiRegionAccessPointDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -146,6 +146,10 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -170,7 +174,7 @@ func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.Resourc
 		input.Details = expandCreateMultiRegionAccessPointInput_(v.([]any)[0].(map[string]any))
 	}
 
-	id := MultiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
+	id := multiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
 
 	output, err := conn.CreateMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
@@ -194,9 +198,15 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := MultiRegionAccessPointParseResourceID(d.Id())
+	accountID, name, err := multiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	// Import by identity may omit optional account_id. Fall back to caller account ID.
+	if accountID == "" {
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
+		d.SetId(multiRegionAccessPointCreateResourceID(accountID, name))
 	}
 
 	accessPoint, err := findMultiRegionAccessPointByTwoPartKey(ctx, conn, accountID, name)
@@ -226,6 +236,7 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 	}
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
 	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
+	d.Set(names.AttrName, accessPoint.Name)
 	d.Set(names.AttrStatus, accessPoint.Status)
 
 	return diags
@@ -235,7 +246,7 @@ func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := MultiRegionAccessPointParseResourceID(d.Id())
+	accountID, name, err := multiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -369,21 +380,26 @@ func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3con
 
 const multiRegionAccessPointResourceIDSeparator = ":"
 
-func MultiRegionAccessPointCreateResourceID(accountID, accessPointName string) string {
+func multiRegionAccessPointCreateResourceID(accountID, accessPointName string) string {
 	parts := []string{accountID, accessPointName}
 	id := strings.Join(parts, multiRegionAccessPointResourceIDSeparator)
 
 	return id
 }
 
-func MultiRegionAccessPointParseResourceID(id string) (string, string, error) {
+func multiRegionAccessPointParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, multiRegionAccessPointResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, multiRegionAccessPointResourceIDSeparator)
+	// Identity import sets the ID to just the name (no separator).
+	if len(parts) == 1 && parts[0] != "" {
+		return "", parts[0], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name or access-point-name", id, multiRegionAccessPointResourceIDSeparator)
 }
 
 func expandCreateMultiRegionAccessPointInput_(tfMap map[string]any) *types.CreateMultiRegionAccessPointInput {
