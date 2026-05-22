@@ -118,22 +118,16 @@ func (c *AWSClient) SetRandomnessSource(source rand.Source) {
 	c.randomnessSource = source
 }
 
-// CallRecorder returns the API call recorder, or nil if none is attached.
+// CallRecorder returns the attached API call recorder, or nil.
 //
-// The recorder, when non-nil, is plumbed into per-resource request contexts
-// by the SDKv2 and Plugin Framework wrappers so that the apicall Smithy
-// middleware (registered once on the base aws.Config) can record each AWS
-// SDK for Go v2 operation invocation against it.
+// SDKv2 and Plugin Framework wrappers plumb a non-nil recorder onto the
+// per-resource request context, where the apicall middleware (registered
+// once on the base aws.Config) finds it and records each AWS SDK operation.
 func (c *AWSClient) CallRecorder() *apicall.Recorder {
 	return c.callRecorder
 }
 
-// SetCallRecorder attaches an API call recorder to this client.
-//
-// This should only be called from acceptance test setup, typically via the
-// acctest helper that wraps ConfigureContextFunc. Acceptance tests rely on
-// this to assert that resource CRUD operations did or did not make specific
-// AWS API calls.
+// SetCallRecorder attaches r to the client. Acceptance test setup only.
 func (c *AWSClient) SetCallRecorder(r *apicall.Recorder) {
 	c.callRecorder = r
 }

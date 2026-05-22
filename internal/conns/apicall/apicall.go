@@ -1,23 +1,15 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// Package apicall provides a recorder and Smithy middleware that captures
-// every AWS SDK for Go v2 API operation invocation made through the provider's
-// service clients. The recorder is opt-in per request via context: when no
-// recorder is attached to the operation context, the middleware is a no-op.
+// Package apicall captures AWS SDK for Go v2 operation invocations made
+// through the provider's service clients, for use in tests.
 //
-// The package is intended primarily for acceptance tests, where it lets
-// authors assert that a given resource did or did not make a particular API
-// call (for example, "Read must not call GetApplicationSettings when the
-// optional settings block is absent"). It can also be used by tooling to
-// build coverage data over which AWS operations the test suite exercises.
+// The Smithy middleware is opt-in per request: when no Recorder is attached
+// to the operation context (see NewContext), it is a no-op.
 //
-// The middleware runs at the end of the Smithy Initialize stage. By that
-// point the AWS SDK Go v2 RegisterServiceMetadata middleware has populated
-// ServiceID and OperationName on the operation context, and the call to
-// next.HandleInitialize delivers the final post-retry error to the recorder.
-// As a result, each logical SDK operation is recorded exactly once even if
-// the SDK retried the underlying HTTP request multiple times.
+// The middleware runs at the end of Initialize, after RegisterServiceMetadata
+// populates ServiceID and OperationName, and captures the final post-retry
+// error. Each logical SDK operation is recorded once regardless of retries.
 package apicall
 
 import (
@@ -30,40 +22,32 @@ import (
 	"github.com/aws/smithy-go/middleware"
 )
 
-// Call captures a single AWS SDK for Go v2 API operation invocation.
+// Call captures one AWS SDK for Go v2 operation invocation.
 type Call struct {
-	// Service is the Smithy ServiceID, e.g. "Pinpoint", "S3".
-	Service string
-	// Operation is the operation name, e.g. "GetApplicationSettings".
-	Operation string
-	// Err is the final error returned by the SDK call after retries, or nil
-	// on success.
-	Err error
-	// At is the time at which recording occurred, after the SDK call returned.
-	At time.Time
+	Service   string    // Smithy ServiceID, e.g. "Pinpoint".
+	Operation string    // Operation name, e.g. "GetApplicationSettings".
+	Err       error     // Final error after retries, or nil.
+	At        time.Time // Time of recording.
 }
 
-// Cursor is an opaque position into a Recorder's call log, suitable for
-// scoping assertions to a window of operations (typically a single test
-// step).
+// Cursor is an opaque position into a Recorder's call log. Use Mark to obtain
+// one and CallsSince/ContainsSince to scope assertions to a window.
 type Cursor int
 
-// Recorder collects API call records from middleware. The zero value is not
-// usable; construct via NewRecorder.
-//
-// Recorder is safe for concurrent use.
+// Recorder collects API call records. Construct via NewRecorder.
+// Safe for concurrent use.
 type Recorder struct {
 	mu    sync.Mutex
 	calls []Call
 }
 
-// NewRecorder returns a new, empty Recorder.
+// NewRecorder returns an empty Recorder.
 func NewRecorder() *Recorder {
 	return &Recorder{}
 }
 
-// Record appends a call to the log. Intended to be invoked by the middleware
-// or by tests; not generally called by user code directly.
+// Record appends a call to the log. Called by the middleware; tests may also
+// drive it directly.
 func (r *Recorder) Record(service, operation string, err error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -82,15 +66,17 @@ func (r *Recorder) Calls() []Call {
 	return slices.Clone(r.calls)
 }
 
-// Mark returns a cursor pointing at the current end of the call log. Use it
-// with CallsSince/ContainsSince to assert behavior in a window starting now.
+// Mark returns a cursor at the current end of the log.
+//
+// A cursor obtained before Reset points past the end of the post-Reset log;
+// CallsSince and ContainsSince treat that as an empty window.
 func (r *Recorder) Mark() Cursor {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return Cursor(len(r.calls))
 }
 
-// CallsSince returns a snapshot of calls recorded after the given cursor.
+// CallsSince returns calls recorded at or after c.
 func (r *Recorder) CallsSince(c Cursor) []Call {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -110,16 +96,15 @@ func (r *Recorder) Reset() {
 	r.calls = r.calls[:0]
 }
 
-// Contains reports whether the recorder has captured at least one call to the
-// given service operation.
+// Contains reports whether service.operation has been recorded.
 func (r *Recorder) Contains(service, operation string) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return containsLocked(r.calls, service, operation)
 }
 
-// ContainsSince reports whether the recorder has captured at least one call
-// to the given service operation after the given cursor.
+// ContainsSince reports whether service.operation has been recorded at or
+// after c.
 func (r *Recorder) ContainsSince(c Cursor, service, operation string) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -145,12 +130,10 @@ type contextKeyType int
 
 var contextKey contextKeyType
 
-// NewContext returns ctx with r attached. Middleware installed by Middleware
-// will record calls against r when the operation's context descends from the
-// returned context.
+// NewContext returns ctx with r attached. The middleware records against r
+// for any operation whose context descends from the returned context.
 //
-// Passing a nil Recorder returns ctx unchanged so callers can write
-// `ctx = apicall.NewContext(ctx, c.CallRecorder())` without a nil check.
+// A nil r returns ctx unchanged.
 func NewContext(ctx context.Context, r *Recorder) context.Context {
 	if r == nil {
 		return ctx
@@ -164,22 +147,15 @@ func FromContext(ctx context.Context) (*Recorder, bool) {
 	return r, ok
 }
 
-// middlewareID is the stable identifier under which the recorder middleware
-// is registered with the Smithy stack. Exported as a constant for tests and
-// for any code that needs to remove or reference the middleware.
-const middlewareID = "TerraformProviderAWSCallRecorder"
+// MiddlewareID is the Smithy stack identifier of the recording middleware.
+const MiddlewareID = "TerraformProviderAWSCallRecorder"
 
-// recorderMiddleware records the service operation invocation against the
-// Recorder attached to the operation context, if any.
-//
-// It runs at the end of the Smithy Initialize stage so that:
-//   - awsmiddleware.RegisterServiceMetadata has already set ServiceID and
-//     OperationName on the context.
-//   - next.HandleInitialize returns after the rest of the stack (Serialize,
-//     Build, Finalize/retry, Deserialize) has run, giving us the final error.
+// recorderMiddleware records each operation against the Recorder attached
+// to its context. Runs at Initialize.After: after RegisterServiceMetadata
+// populates ctx, and after the rest of the stack returns the final error.
 type recorderMiddleware struct{}
 
-func (recorderMiddleware) ID() string { return middlewareID }
+func (recorderMiddleware) ID() string { return MiddlewareID }
 
 func (recorderMiddleware) HandleInitialize(
 	ctx context.Context,
@@ -195,13 +171,14 @@ func (recorderMiddleware) HandleInitialize(
 	return out, metadata, err
 }
 
-// Middleware returns a stack mutator that registers the call-recording
-// middleware on a Smithy stack. Append it to aws.Config.APIOptions (or to a
-// per-service Options.APIOptions) once at construction time; the middleware
-// itself is the gate, so it imposes no cost on requests whose context has no
-// recorder attached.
+// Middleware returns a stack mutator that registers the recording middleware
+// on a Smithy stack. Idempotent. Append once to aws.Config.APIOptions; the
+// middleware gates itself on a Recorder in the request context.
 func Middleware() func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
+		if _, ok := stack.Initialize.Get(MiddlewareID); ok {
+			return nil
+		}
 		return stack.Initialize.Add(recorderMiddleware{}, middleware.After)
 	}
 }

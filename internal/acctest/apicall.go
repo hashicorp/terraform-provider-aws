@@ -23,16 +23,11 @@ import (
 )
 
 // ProtoV5ProviderFactoriesWithCallRecorder returns ProtoV5 provider
-// factories that, on each Configure, attach a fresh API call recorder to the
-// resulting *conns.AWSClient. Tests can then use the returned recorder with
-// the CheckAPICall* TestCheckFuncs (or directly via the apicall package) to
-// assert which AWS SDK for Go v2 operations a resource did or did not
-// invoke.
+// factories that attach a fresh API call recorder to the *conns.AWSClient
+// produced by each Configure. The same recorder is used across all factory
+// invocations in the test, so plan, apply, and refresh all record to it.
 //
-// The recorder is shared across all factory invocations within the test, so
-// retries, refreshes, and apply-after-plan all record into the same log. Use
-// recorder.Mark / CallsSince / ContainsSince to scope assertions to a window
-// (typically a single resource.TestStep).
+// Use Mark/CallsSince/ContainsSince to scope assertions to a window.
 //
 // Example:
 //
@@ -74,10 +69,8 @@ func ProtoV5ProviderFactoriesWithCallRecorder(ctx context.Context, t *testing.T)
 	return factories, rec
 }
 
-// wrapConfigureWithCallRecorder returns a ConfigureContextFunc that runs the
-// original configure and, if it produced an *conns.AWSClient, attaches the
-// recorder to it. Errors and warnings from the original configure are
-// returned unchanged.
+// wrapConfigureWithCallRecorder runs the original Configure and, if it
+// returned a non-nil *conns.AWSClient, attaches rec to it.
 func wrapConfigureWithCallRecorder(original schema.ConfigureContextFunc, rec *apicall.Recorder) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		v, ds := original(ctx, d)
@@ -88,14 +81,13 @@ func wrapConfigureWithCallRecorder(original schema.ConfigureContextFunc, rec *ap
 	}
 }
 
-// CheckAPICallMade returns a TestCheckFunc that fails if the named AWS API
-// operation was not recorded since the cursor pointed to by since (or, if
-// since is nil, since the start of recording).
+// CheckAPICallMade fails if service.operation was not recorded since the
+// cursor pointed to by since, or since the start of recording when since is
+// nil. The pointer indirection lets PreConfig populate the cursor after the
+// Check slice is built.
 //
-// Service is the Smithy ServiceID (e.g. "Pinpoint", "S3"). Operation is the
-// operation name (e.g. "GetApplicationSettings"). The Smithy ServiceID for a
-// given AWS SDK for Go v2 client is exposed as <package>.ServiceID at the
-// package root.
+// Service is the Smithy ServiceID (e.g. "Pinpoint", exposed as
+// <package>.ServiceID).
 func CheckAPICallMade(rec *apicall.Recorder, since *apicall.Cursor, service, operation string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if rec == nil {
@@ -108,14 +100,14 @@ func CheckAPICallMade(rec *apicall.Recorder, since *apicall.Cursor, service, ope
 		if rec.ContainsSince(cursor, service, operation) {
 			return nil
 		}
-		return fmt.Errorf("expected AWS API call %s.%s to have been made, but it was not; recorded since cursor: %s",
+		return fmt.Errorf("expected AWS API call %s.%s, not made; calls since cursor: %s",
 			service, operation, formatCalls(rec.CallsSince(cursor)))
 	}
 }
 
-// CheckAPICallNotMade returns a TestCheckFunc that fails if the named AWS
-// API operation was recorded since the cursor pointed to by since (or, if
-// since is nil, since the start of recording).
+// CheckAPICallNotMade fails if service.operation was recorded since the
+// cursor pointed to by since, or since the start of recording when since is
+// nil.
 func CheckAPICallNotMade(rec *apicall.Recorder, since *apicall.Cursor, service, operation string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if rec == nil {
@@ -128,13 +120,12 @@ func CheckAPICallNotMade(rec *apicall.Recorder, since *apicall.Cursor, service, 
 		if !rec.ContainsSince(cursor, service, operation) {
 			return nil
 		}
-		return fmt.Errorf("expected AWS API call %s.%s to NOT have been made, but it was; recorded since cursor: %s",
+		return fmt.Errorf("unexpected AWS API call %s.%s; calls since cursor: %s",
 			service, operation, formatCalls(rec.CallsSince(cursor)))
 	}
 }
 
-// formatCalls returns a compact, human-readable rendering of the given calls
-// suitable for inclusion in test failure messages.
+// formatCalls renders calls compactly for failure messages.
 func formatCalls(calls []apicall.Call) string {
 	if len(calls) == 0 {
 		return "(none)"
