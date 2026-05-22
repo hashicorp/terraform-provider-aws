@@ -72,15 +72,18 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" 
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_set_name` - (Required) Name of the configuration set this event destination belongs to. Changing this forces a new resource.
 * `event_destination_name` - (Required) Name of the event destination. Changing this forces a new resource.
 * `matching_event_types` - (Required) Event types for which the destination receives records. See the [AWS API reference](https://docs.aws.amazon.com/pinpoint/latest/apireference_smsvoicev2/API_CreateEventDestination.html#pinpoint-CreateEventDestination-request-MatchingEventTypes) for valid values.
-* `enabled` - (Optional) Whether the event destination is enabled. Defaults to `true`.
+
+The following arguments are optional:
+
 * `cloudwatch_logs_destination` - (Optional) Send events to Amazon CloudWatch Logs. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured. See [`cloudwatch_logs_destination` Block](#cloudwatch_logs_destination-block) for details.
+* `enabled` - (Optional) Whether the event destination is enabled. Defaults to `true`.
 * `kinesis_firehose_destination` - (Optional) Send events to Amazon Data Firehose. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured. See [`kinesis_firehose_destination` Block](#kinesis_firehose_destination-block) for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sns_destination` - (Optional) Send events to Amazon SNS. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured. See [`sns_destination` Block](#sns_destination-block) for details.
 
 ### `cloudwatch_logs_destination` Block
@@ -111,17 +114,44 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an event destination using `configuration_set_name,event_destination_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_pinpointsmsvoicev2_configuration_set_event_destination.example
-  id = "example-configuration-set,example"
+  identity = {
+   configuration_set_name = "example-configuration-set"
+   event_destination_name = "example-event-destination"
+  }
+}
+
+resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import an event destination using `configuration_set_name,event_destination_name`. For example:
+### Identity Schema
+
+#### Required
+* `configuration_set_name` (String) Name of the configuration set this event destination belongs to.
+* `event_destination_name` (String) Name of the event destination.
+
+#### Optional
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import and event destination using the `configuration_set_name` and `event_destination_name`, separated by a comma. For example:
+
+```terraform
+import {
+  to = aws_pinpointsmsvoicev2_configuration_set_event_destination.example
+  id = "example-configuration-set,example-event-destination"
+  }
+}
+```
+
+Using `terraform import`, import an event destination using the `configuration_set_name` and `event_destination_name`, separated by a comma. For example:
 
 ```console
-% terraform import aws_pinpointsmsvoicev2_configuration_set_event_destination.example "example-configuration-set,example"
+% terraform import aws_pinpointsmsvoicev2_configuration_set_event_destination.example "example-configuration-set,example-event-destination"
 ```
