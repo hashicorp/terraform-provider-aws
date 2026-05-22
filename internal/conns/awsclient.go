@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -31,6 +32,7 @@ import (
 type AWSClient struct {
 	accountID                 string
 	awsConfig                 *aws.Config
+	callRecorder              *apicall.Recorder         // For acceptance tests asserting which AWS API operations are made.
 	clients                   map[string]map[string]any // Region -> service package name -> API client.
 	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
@@ -114,6 +116,26 @@ func (c *AWSClient) RandomnessSource() rand.Source {
 // This should only be called during provider configuration for VCR testing.
 func (c *AWSClient) SetRandomnessSource(source rand.Source) {
 	c.randomnessSource = source
+}
+
+// CallRecorder returns the API call recorder, or nil if none is attached.
+//
+// The recorder, when non-nil, is plumbed into per-resource request contexts
+// by the SDKv2 and Plugin Framework wrappers so that the apicall Smithy
+// middleware (registered once on the base aws.Config) can record each AWS
+// SDK for Go v2 operation invocation against it.
+func (c *AWSClient) CallRecorder() *apicall.Recorder {
+	return c.callRecorder
+}
+
+// SetCallRecorder attaches an API call recorder to this client.
+//
+// This should only be called from acceptance test setup, typically via the
+// acctest helper that wraps ConfigureContextFunc. Acceptance tests rely on
+// this to assert that resource CRUD operations did or did not make specific
+// AWS API calls.
+func (c *AWSClient) SetCallRecorder(r *apicall.Recorder) {
+	c.callRecorder = r
 }
 
 // Region returns the ID of the effective AWS Region.
