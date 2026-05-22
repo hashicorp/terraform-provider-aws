@@ -56,7 +56,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `force` - (Optional) Whether to request a forced stop when `state` is `stopped`. Otherwise (_i.e._, `state` is `running`), ignored. When an instance is forced to stop, it does not flush file system caches or file system metadata, and you must subsequently perform file system check and repair. Not recommended for Windows instances. Defaults to `false`.
+* `force` - (Optional) Whether to request a forced stop when `state` is `stopped`. Otherwise (_i.e._, `state` is `running`), ignored. When an instance is forced to stop, it does not flush file system caches or file system metadata, and you must subsequently perform file system check and repair. Not recommended for Windows instances. Defaults to `false`. See [methods for terminating an instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-terminate-methods.html)
+* `skip_os_shutdown` - (Optional) Whether to skip the graceful OS shutdown when `state` is `stopped`.  Otherwise (_i.e._, `state` is `running`), ignored. Bypassing the graceful OS shutdown might result in data loss or corruption (for example, memory contents not flushed to disk or loss of in-flight IOs) or skipped shutdown scripts. Defaults to `false`. See [methods for terminating an instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-terminate-methods.html)
 
 ## Attribute Reference
 
