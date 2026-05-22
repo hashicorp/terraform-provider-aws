@@ -5,3 +5,7 @@ data-source/aws_secretsmanager_secret_versions: Polulates `versions.*.last_acces
 ```release-note:enhancement
 data-source/aws_secretsmanager_secret_versions: Deprecates `arn` in favor of `secret_arn`.
 ```
+
+```release-note:enhancement
+data-source/aws_secretsmanager_secret_versions: Deprecates `name` in favor of `secret_name`.
+```
