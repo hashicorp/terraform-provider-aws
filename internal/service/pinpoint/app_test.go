@@ -92,10 +92,16 @@ func TestAccPinpointApp_noSettingsNoImport(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
+	// Recording provider factories let us assert that the gated settings
+	// API calls are not made when the user's config does not include any of
+	// the deprecated settings blocks. GetApp is asserted as a positive
+	// control to confirm the recorder is wired up.
+	factories, rec := acctest.ProtoV5ProviderFactoriesWithCallRecorder(ctx, t)
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: factories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -107,6 +113,9 @@ func TestAccPinpointApp_noSettingsNoImport(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					acctest.CheckAPICallMade(rec, nil, "Pinpoint", "GetApp"),
+					acctest.CheckAPICallNotMade(rec, nil, "Pinpoint", "GetApplicationSettings"),
+					acctest.CheckAPICallNotMade(rec, nil, "Pinpoint", "UpdateApplicationSettings"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Settings blocks are not configured, so they are not populated in state.
