@@ -40,11 +40,11 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Local Gateway Route Table.
-* `id` - Identifier of the Local Gateway Route Table.
+* `local_gateway_route_table_id` - Identifier of the Local Gateway Route Table.
 * `outpost_arn` - ARN of the Outpost.
 * `owner_id` - AWS account identifier that owns the Local Gateway Route Table.
 * `state` - State of the Local Gateway Route Table.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
