@@ -242,6 +242,11 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_update(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Updated description")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("sampling_config").AtSliceIndex(0).AtMapKey("sampling_percentage"), knownvalue.Float64Exact(50.0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("session_config").AtSliceIndex(0).AtMapKey("session_timeout_minutes"), knownvalue.Int64Exact(30)),
+				},
 			},
 		},
 	})
@@ -325,6 +330,12 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_filters(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("filter").AtSliceIndex(0).AtMapKey("key"), knownvalue.StringExact("environment")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("filter").AtSliceIndex(0).AtMapKey("operator"), knownvalue.StringExact("Equals")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("sampling_config").AtSliceIndex(0).AtMapKey("sampling_percentage"), knownvalue.Float64Exact(25.0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("session_config").AtSliceIndex(0).AtMapKey("session_timeout_minutes"), knownvalue.Int64Exact(20)),
+				},
 			},
 		},
 	})

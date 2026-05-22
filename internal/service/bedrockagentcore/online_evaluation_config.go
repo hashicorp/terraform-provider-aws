@@ -344,7 +344,7 @@ func (r *onlineEvaluationConfigResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -421,12 +421,6 @@ func (r *onlineEvaluationConfigResource) Delete(ctx context.Context, request res
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, configID)
 		return
 	}
-}
-
-func (r *onlineEvaluationConfigResource) flatten(ctx context.Context, onlineEvaluationConfig *bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput, data *onlineEvaluationConfigResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	diags.Append(fwflex.Flatten(ctx, onlineEvaluationConfig, data)...)
-	return diags
 }
 
 // Waiters.
