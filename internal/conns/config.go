@@ -233,11 +233,10 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.tagPolicyConfig = c.TagPolicyConfig
 	client.terraformVersion = c.TerraformVersion
 
-	// Register the apicall recording middleware on the base AWS config.
-	// Every per-service AWS SDK client constructed via NewFromConfig
-	// inherits cfg.APIOptions, so this single registration covers every
-	// service. The middleware is a no-op unless a *apicall.Recorder is
-	// attached to the per-request context (see internal/conns/apicall).
+	// Register the apicall recording middleware on the base aws.Config.
+	// Per-service NewFromConfig() inherits cfg.APIOptions, so this single
+	// registration covers every service. The middleware is a no-op unless a
+	// *apicall.Recorder is attached to the request context.
 	cfg.APIOptions = append(cfg.APIOptions, apicall.Middleware())
 
 	// Used for lazy-loading AWS API clients.

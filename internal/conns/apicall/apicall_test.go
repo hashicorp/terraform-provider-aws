@@ -114,15 +114,12 @@ func TestRecorder_ConcurrentRecord(t *testing.T) {
 	const perGoroutine = 64
 
 	var wg sync.WaitGroup
-	wg.Add(goroutines)
-	for i := range goroutines {
-		go func() {
-			defer wg.Done()
+	for range goroutines {
+		wg.Go(func() {
 			for range perGoroutine {
 				r.Record("S", "Op", nil)
 			}
-			_ = i
-		}()
+		})
 	}
 	wg.Wait()
 
@@ -250,16 +247,129 @@ func TestMiddleware_NoRecorderInContextIsNoop(t *testing.T) {
 // smithyRequestBuilder is a minimal stack request builder. The recording
 // middleware operates on Initialize parameters which can be anything; the
 // request value is irrelevant for these tests.
-func smithyRequestBuilder() interface{} { return nil }
+func smithyRequestBuilder() any { return nil }
 
 type noopHandler struct{}
 
-func (noopHandler) Handle(_ context.Context, _ interface{}) (interface{}, middleware.Metadata, error) {
+func (noopHandler) Handle(_ context.Context, _ any) (any, middleware.Metadata, error) {
 	return nil, middleware.Metadata{}, nil
 }
 
 type failingHandler struct{ err error }
 
-func (h failingHandler) Handle(_ context.Context, _ interface{}) (interface{}, middleware.Metadata, error) {
+func (h failingHandler) Handle(_ context.Context, _ any) (any, middleware.Metadata, error) {
 	return nil, middleware.Metadata{}, h.err
+}
+
+func TestMiddleware_IdempotentDoubleAdd(t *testing.T) {
+	t.Parallel()
+
+	r := NewRecorder()
+	ctx := NewContext(context.Background(), r)
+
+	stack := middleware.NewStack("test", smithyRequestBuilder)
+	if err := stack.Initialize.Add(&awsmiddleware.RegisterServiceMetadata{
+		ServiceID:     "Pinpoint",
+		OperationName: "GetApp",
+	}, middleware.Before); err != nil {
+		t.Fatalf("RegisterServiceMetadata: %v", err)
+	}
+
+	// Adding twice must not error and must not duplicate the middleware.
+	if err := Middleware()(stack); err != nil {
+		t.Fatalf("first Middleware add: %v", err)
+	}
+	if err := Middleware()(stack); err != nil {
+		t.Fatalf("second Middleware add: %v", err)
+	}
+
+	if _, _, err := middleware.DecorateHandler(noopHandler{}, stack).Handle(ctx, nil); err != nil {
+		t.Fatalf("stack.Handle: %v", err)
+	}
+
+	if got, want := len(r.Calls()), 1; got != want {
+		t.Errorf("len(Calls()) = %d, want %d (double-add likely duplicated middleware)", got, want)
+	}
+}
+
+func TestRecorder_ContainsSinceAfterReset(t *testing.T) {
+	t.Parallel()
+
+	r := NewRecorder()
+	r.Record("Pinpoint", "GetApp", nil)
+	mark := r.Mark()
+	r.Record("Pinpoint", "GetApplicationSettings", nil)
+
+	r.Reset()
+
+	// Cursor obtained before Reset is now past end-of-log.
+	if r.ContainsSince(mark, "Pinpoint", "GetApplicationSettings") {
+		t.Error("ContainsSince(pre-reset cursor) returned true after Reset")
+	}
+	if got := r.CallsSince(mark); got != nil {
+		t.Errorf("CallsSince(pre-reset cursor) = %+v, want nil", got)
+	}
+}
+
+func TestRecorder_NegativeCursor(t *testing.T) {
+	t.Parallel()
+
+	r := NewRecorder()
+	r.Record("A", "X", nil)
+
+	if !r.ContainsSince(Cursor(-5), "A", "X") {
+		t.Error("ContainsSince(negative) did not clamp to 0")
+	}
+	if got := r.CallsSince(Cursor(-5)); len(got) != 1 {
+		t.Errorf("CallsSince(negative) returned %d records, want 1", len(got))
+	}
+}
+
+func TestNewContext_OverrideReplacesPrior(t *testing.T) {
+	t.Parallel()
+
+	r1 := NewRecorder()
+	r2 := NewRecorder()
+
+	ctx := NewContext(context.Background(), r1)
+	ctx = NewContext(ctx, r2)
+
+	got, ok := FromContext(ctx)
+	if !ok || got != r2 {
+		t.Errorf("FromContext returned %p, want %p (last-write-wins)", got, r2)
+	}
+}
+
+func TestRecorder_ConcurrentReaderWriter(t *testing.T) {
+	t.Parallel()
+
+	r := NewRecorder()
+	const writes = 200
+
+	var wg sync.WaitGroup
+
+	// Writer: records exactly `writes` calls.
+	wg.Go(func() {
+		for range writes {
+			r.Record("S", "Op", nil)
+		}
+	})
+
+	// Reader: a fixed number of read iterations interleaved with writes.
+	// Relies on -race to surface a data race.
+	wg.Go(func() {
+		for range 1000 {
+			_ = r.Calls()
+			_ = r.Contains("S", "Op")
+			c := r.Mark()
+			_ = r.CallsSince(c)
+			_ = r.ContainsSince(c, "S", "Op")
+		}
+	})
+
+	wg.Wait()
+
+	if got := len(r.Calls()); got != writes {
+		t.Errorf("len(Calls()) = %d, want %d", got, writes)
+	}
 }
