@@ -1,6 +1,0 @@
-kind: feature
-body: ""
-custom:
-  NewType: New Resource
-  Name: aws_rum_resource_policy
-  PullRequest: 48026

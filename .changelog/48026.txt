@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_rum_resource_policy
+```
+
+```release-note:enhancement
+resource/aws_rum_app_monitor: Add platform support
+```
