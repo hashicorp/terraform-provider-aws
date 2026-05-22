@@ -86,7 +86,7 @@ func resourceCertificate() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"certificate_body", names.AttrPrivateKey, "validation_method"},
+				ConflictsWith: []string{"certificate_body", names.AttrPrivateKey, AttrPrivateKeyWo, "validation_method"},
 			},
 			"certificate_body": {
 				Type:          schema.TypeString,
@@ -197,7 +197,6 @@ func resourceCertificate() *schema.Resource {
 			AttrPrivateKeyWoVersion: {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				RequiredWith: []string{AttrPrivateKeyWo},
 			},
 			"renewal_eligibility": {
@@ -407,7 +406,8 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		d.SetId(aws.ToString(output.CertificateArn))
 	} else {
 		privateKey := d.Get(names.AttrPrivateKey).(string)
-		privateKeyWo, _ := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+		privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+		diags = append(diags, di...)
 		if privateKeyWo != "" {
 			privateKey = privateKeyWo
 		}
@@ -512,14 +512,15 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain) {
+	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain, AttrPrivateKeyWoVersion) {
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
 		oCCRaw, nCCRaw := d.GetChange(names.AttrCertificateChain)
 		oPKRaw, nPKRaw := d.GetChange(names.AttrPrivateKey)
 
-		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
+		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) || d.HasChange(AttrPrivateKeyWoVersion) {
 			privateKey := d.Get(names.AttrPrivateKey).(string)
-			privateKeyWo, _ := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+			privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+			diags = append(diags, di...)
 			if privateKeyWo != "" {
 				privateKey = privateKeyWo
 			}
