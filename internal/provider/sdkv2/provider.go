@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -605,6 +606,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
+						ctx = apicall.NewContext(ctx, c.CallRecorder())
 					}
 
 					if getProviderMeta != nil {
@@ -771,6 +773,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						if s := c.RandomnessSource(); s != nil {
 							ctx = vcr.NewContext(ctx, s)
 						}
+						ctx = apicall.NewContext(ctx, c.CallRecorder())
 					}
 
 					if getProviderMeta != nil {
