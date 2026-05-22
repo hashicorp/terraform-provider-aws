@@ -188,7 +188,7 @@ func testAccCheckEmailChannelExists(ctx context.Context, t *testing.T, n string,
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint Email Channel with that application ID exists")
+			return fmt.Errorf("No End User Messaging Email Channel with that application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -224,7 +224,7 @@ func testAccCheckEmailChannelDestroy(ctx context.Context, t *testing.T) resource
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint Email Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging Email Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

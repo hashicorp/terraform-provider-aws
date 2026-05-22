@@ -435,7 +435,7 @@ func testAccCheckAppDestroy(ctx context.Context, t *testing.T) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint App %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging App %s still exists", rs.Primary.ID)
 		}
 
 		return nil
