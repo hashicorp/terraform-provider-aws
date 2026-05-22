@@ -164,6 +164,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(id)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
 
 	if _, err := waitDataSourceCreated(ctx, conn, awsAccountID, dataSourceID); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting from QuickSight Data Source (%s) create: %s", d.Id(), err)
