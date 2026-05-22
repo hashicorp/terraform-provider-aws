@@ -250,16 +250,16 @@ func TestMiddleware_NoRecorderInContextIsNoop(t *testing.T) {
 // smithyRequestBuilder is a minimal stack request builder. The recording
 // middleware operates on Initialize parameters which can be anything; the
 // request value is irrelevant for these tests.
-func smithyRequestBuilder() interface{} { return nil }
+func smithyRequestBuilder() any { return nil }
 
 type noopHandler struct{}
 
-func (noopHandler) Handle(_ context.Context, _ interface{}) (interface{}, middleware.Metadata, error) {
+func (noopHandler) Handle(_ context.Context, _ any) (any, middleware.Metadata, error) {
 	return nil, middleware.Metadata{}, nil
 }
 
 type failingHandler struct{ err error }
 
-func (h failingHandler) Handle(_ context.Context, _ interface{}) (interface{}, middleware.Metadata, error) {
+func (h failingHandler) Handle(_ context.Context, _ any) (any, middleware.Metadata, error) {
 	return nil, middleware.Metadata{}, h.err
 }
