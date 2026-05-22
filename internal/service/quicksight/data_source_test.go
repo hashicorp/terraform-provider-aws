@@ -291,9 +291,9 @@ func TestAccQuickSightDataSource_athenaRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSource awstypes.DataSource
 	resourceName := "aws_quicksight_data_source.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	iamRoleResourceNameUpdated := "aws_iam_role.test2"
 
@@ -301,12 +301,12 @@ func TestAccQuickSightDataSource_athenaRoleARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_athenaRoleARN(rId, rName, rName2, iamRoleResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.0.work_group", rName),
@@ -323,7 +323,7 @@ func TestAccQuickSightDataSource_athenaRoleARN(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_athenaRoleARN(rId, rName, rName2, iamRoleResourceNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.0.work_group", rName),
