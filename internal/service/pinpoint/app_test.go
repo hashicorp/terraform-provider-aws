@@ -113,9 +113,9 @@ func TestAccPinpointApp_noSettingsNoImport(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					acctest.CheckAPICallMade(rec, nil, "Pinpoint", "GetApp"),
-					acctest.CheckAPICallNotMade(rec, nil, "Pinpoint", "GetApplicationSettings"),
-					acctest.CheckAPICallNotMade(rec, nil, "Pinpoint", "UpdateApplicationSettings"),
+					acctest.CheckAPICallMade(rec, nil, "Pinpoint", "GetApp"),                       // only use nil for cursor if there's only 1 step
+					acctest.CheckAPICallNotMade(rec, nil, "Pinpoint", "GetApplicationSettings"),    // only use nil for cursor if there's only 1 step
+					acctest.CheckAPICallNotMade(rec, nil, "Pinpoint", "UpdateApplicationSettings"), // only use nil for cursor if there's only 1 step
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Settings blocks are not configured, so they are not populated in state.
