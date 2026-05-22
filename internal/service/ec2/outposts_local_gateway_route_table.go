@@ -122,12 +122,14 @@ func (r *localGatewayRouteTableResource) Create(ctx context.Context, request res
 	data.ARN = fwflex.StringToFramework(ctx, rt.LocalGatewayRouteTableArn)
 	data.OutpostARN = fwflex.StringToFramework(ctx, rt.OutpostArn)
 	data.OwnerID = fwflex.StringToFramework(ctx, rt.OwnerId)
-	data.State = fwflex.StringToFramework(ctx, rt.State)
 
-	if _, err := waitLocalGatewayRouteTableAvailable(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	waitOutput, err := waitLocalGatewayRouteTableAvailable(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Local Gateway Route Table (%s) create", id), err.Error())
 		return
 	}
+
+	data.State = fwflex.StringToFramework(ctx, waitOutput.State)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
