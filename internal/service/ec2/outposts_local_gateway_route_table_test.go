@@ -6,9 +6,9 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -32,7 +32,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTable_basic(t *testing.T) {
 				Config: testAccLocalGatewayRouteTableConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteTableExists(ctx, t, resourceName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexp.MustCompile(`local-gateway-route-table/lgw-rtb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`local-gateway-route-table/lgw-rtb-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "local_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMode, "direct-vpc-routing"),
 					resource.TestCheckResourceAttrSet(resourceName, "outpost_arn"),
