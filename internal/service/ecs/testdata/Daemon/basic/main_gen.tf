@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ecs_daemon" "test" {
-  name                   = var.rName
-  cluster_arn            = aws_ecs_cluster.test.arn
-  daemon_task_definition = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+  name                       = var.rName
+  cluster_arn                = aws_ecs_cluster.test.arn
+  daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
 }
 
 resource "aws_ecs_cluster" "test" {

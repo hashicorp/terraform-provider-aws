@@ -76,7 +76,7 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 					return
 				}
 
-				data.CapacityProviderArns = fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{})
+				data.CapacityProviderArns = fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{})
 
 				result.Diagnostics.Append(fwflex.Flatten(ctx, daemon, &data)...)
 				data.DaemonName = daemonNameFromARN(data.DaemonArn.ValueString())
@@ -111,19 +111,23 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 
 func listDaemonSummaries(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonsInput) iter.Seq2[awstypes.DaemonSummary, error] {
 	return func(yield func(awstypes.DaemonSummary, error) bool) {
-		err := listDaemonsPages(ctx, conn, input, func(page *ecs.ListDaemonsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+		for {
+			output, err := conn.ListDaemons(ctx, input)
+			if err != nil {
+				yield(awstypes.DaemonSummary{}, err)
+				return
 			}
-			for _, summary := range page.DaemonSummariesList {
+
+			for _, summary := range output.DaemonSummariesList {
 				if !yield(summary, nil) {
-					return false
+					return
 				}
 			}
-			return true
-		})
-		if err != nil {
-			yield(awstypes.DaemonSummary{}, err)
+
+			if output.NextToken == nil {
+				return
+			}
+			input.NextToken = output.NextToken
 		}
 	}
 }

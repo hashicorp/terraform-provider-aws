@@ -186,7 +186,7 @@ The following arguments are optional:
 ### volume
 
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
-* `name` - (Optional) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
+* `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
 
 ### depends_on
 

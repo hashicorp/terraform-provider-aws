@@ -18,7 +18,7 @@ Provides an ECS Daemon resource, which manages a daemon that runs exactly one ta
 resource "aws_ecs_daemon" "example" {
   name                   = "example-daemon"
   cluster_arn            = aws_ecs_cluster.example.arn
-  daemon_task_definition = aws_ecs_daemon_task_definition.example.arn
+  daemon_task_definition_arn = aws_ecs_daemon_task_definition.example.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
 }
 ```
@@ -29,7 +29,7 @@ resource "aws_ecs_daemon" "example" {
 resource "aws_ecs_daemon" "example" {
   name                   = "example-daemon"
   cluster_arn            = aws_ecs_cluster.example.arn
-  daemon_task_definition = aws_ecs_daemon_task_definition.example.arn
+  daemon_task_definition_arn = aws_ecs_daemon_task_definition.example.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
 
   deployment_configuration {
@@ -50,7 +50,7 @@ resource "aws_ecs_daemon" "example" {
 resource "aws_ecs_daemon" "example" {
   name                   = "example-daemon"
   cluster_arn            = aws_ecs_cluster.example.arn
-  daemon_task_definition = aws_ecs_daemon_task_definition.example.arn
+  daemon_task_definition_arn = aws_ecs_daemon_task_definition.example.arn
   capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
 
   tags = {
@@ -64,14 +64,14 @@ resource "aws_ecs_daemon" "example" {
 
 This resource supports the following arguments:
 
-* `capacity_provider_arns` - (Required) List of capacity provider ARNs to use for the daemon.
+* `capacity_provider_arns` - (Required) Set of capacity provider ARNs to use for the daemon.
 * `cluster_arn` - (Optional, Forces new resource) ARN of the ECS cluster where the daemon will run.
-* `daemon_task_definition` - (Required) ARN of the daemon task definition to use for the daemon. Drift is not detected on this attribute because the API may report a stale revision while a deployment is in progress.
+* `daemon_task_definition_arn` - (Required) ARN of the daemon task definition to use for the daemon. Drift is not detected on this attribute because the API may report a stale revision while a deployment is in progress.
 * `deployment_configuration` - (Optional) Configuration for daemon deployments. See [Deployment Configuration](#deployment-configuration) below.
 * `enable_ecs_managed_tags` - (Optional, Write-only) Whether to enable Amazon ECS managed tags for the tasks within the daemon.
 * `enable_execute_command` - (Optional, Write-only) Whether to enable Amazon ECS Exec for the tasks within the daemon.
 * `name` - (Required, Forces new resource) Name of the daemon.
-* `propagate_tags` - (Optional) Whether to propagate tags from the daemon to tasks. Valid values are `DAEMON` or `NONE`.
+* `propagate_tags` - (Optional, Write-only) Whether to propagate tags from the daemon to tasks. Valid values are `DAEMON` or `NONE`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -82,21 +82,22 @@ This resource supports the following arguments:
 The `deployment_configuration` block supports:
 
 * `alarms` - (Optional) Alarm configuration for deployment monitoring. See [Alarms](#alarms) below.
-* `bake_time_in_minutes` - (Optional) Time in minutes to wait before considering a deployment successful. Valid values are between 0 and 1440.
+* `bake_time_in_minutes` - (Optional) Time in minutes to wait before considering a deployment successful. Valid values are between 0 and 1440. Defaults to `0`.
 * `drain_percent` - (Optional) Percentage of tasks to drain during deployment. Valid values are between 0.0 and 100.0.
 
 ### Alarms
 
 The `alarms` block supports:
 
-* `alarm_names` - (Required) Set of CloudWatch alarm names to monitor during deployment.
-* `enable` - (Required) Whether to enable alarm monitoring for deployments.
+* `alarm_names` - (Optional) List of CloudWatch alarm names to monitor during deployment.
+* `enable` - (Optional) Whether to enable alarm monitoring for deployments. Defaults to `false`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the daemon.
+* `deployment_arn` - ARN of the most recent daemon deployment.
 * `status` - Status of the daemon. Valid values are `ACTIVE` or `DELETE_IN_PROGRESS`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

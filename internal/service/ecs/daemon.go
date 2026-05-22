@@ -6,20 +6,24 @@ package ecs
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -38,8 +42,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-const maxDrainPercent = 100.0
 
 // @FrameworkResource("aws_ecs_daemon", name="Daemon")
 // @Tags(identifierAttribute="arn")
@@ -65,26 +67,32 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"capacity_provider_arns": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				Required:    true,
-				ElementType: types.StringType,
+			"capacity_provider_arns": schema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
+				Required:   true,
 			},
 			"cluster_arn": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"daemon_task_definition": schema.StringAttribute{
-				Required: true,
+			"daemon_task_definition_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+			},
+			"deployment_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
 			},
 			"enable_ecs_managed_tags": schema.BoolAttribute{
 				Optional:  true,
@@ -99,16 +107,19 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 255),
+					stringvalidator.RegexMatches(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "must contain only alphanumeric characters, hyphens, and underscores"),
+				},
 			},
 			names.AttrPropagateTags: schema.StringAttribute{
 				Optional:   true,
+				WriteOnly:  true,
 				CustomType: fwtypes.StringEnumType[awstypes.DaemonPropagateTags](),
 			},
 			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.DaemonStatus](),
+				Computed:   true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -123,14 +134,13 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 					Attributes: map[string]schema.Attribute{
 						"bake_time_in_minutes": schema.Int64Attribute{
 							Optional: true,
-							Validators: []validator.Int64{
-								int64validator.Between(0, 1440),
-							},
+							Computed: true,
+							Default:  int64default.StaticInt64(0),
 						},
 						"drain_percent": schema.Float64Attribute{
 							Optional: true,
 							Validators: []validator.Float64{
-								float64validator.Between(0.0, maxDrainPercent),
+								float64validator.Between(0.0, 100.0),
 							},
 						},
 					},
@@ -142,12 +152,14 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"alarm_names": schema.SetAttribute{
-										Required:    true,
-										ElementType: types.StringType,
+									"alarm_names": schema.ListAttribute{
+										CustomType: fwtypes.ListOfStringType,
+										Optional:   true,
 									},
 									"enable": schema.BoolAttribute{
-										Required: true,
+										Optional: true,
+										Computed: true,
+										Default:  booldefault.StaticBool(false),
 									},
 								},
 							},
@@ -184,7 +196,7 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	input.Tags = getTagsIn(ctx)
 
 	// Write-only fields — read from config
-	managedTags, execCmd := expandDaemonWriteOnlyFields(ctx, request.Config, &response.Diagnostics)
+	managedTags, execCmd, propagateTags := expandDaemonWriteOnlyFields(ctx, request.Config, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -194,14 +206,40 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	if !execCmd.IsNull() {
 		input.EnableExecuteCommand = execCmd.ValueBool()
 	}
+	if !propagateTags.IsNull() {
+		input.PropagateTags = awstypes.DaemonPropagateTags(propagateTags.ValueString())
+	}
 
-	output, err := conn.CreateDaemon(ctx, &input)
+	output, err := retryDaemonCreate(ctx, conn, &input)
+
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(r.Meta().Partition(ctx), err) {
+		input.Tags = nil
+		output, err = retryDaemonCreate(ctx, conn, &input)
+	}
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating ECS Daemon (%s)", plan.DaemonName.ValueString()), err.Error())
 		return
 	}
 
-	plan.DaemonArn = types.StringValue(aws.ToString(output.DaemonArn))
+	if output == nil || output.DaemonArn == nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating ECS Daemon (%s)", plan.DaemonName.ValueString()), "empty output from API")
+		return
+	}
+
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		if err := createTags(ctx, conn, aws.ToString(output.DaemonArn), tags); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("setting ECS Daemon (%s) tags", aws.ToString(output.DaemonArn)), err.Error())
+			return
+		}
+	}
+
+	plan.DaemonArn = fwtypes.ARNValue(aws.ToString(output.DaemonArn))
+
+	// Save ARN to state so Terraform can track the resource if the waiter times out.
+	response.State.SetAttribute(ctx, path.Root("arn"), output.DaemonArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	if err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), createTimeout); err != nil {
@@ -210,6 +248,11 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	daemon, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
 		return
@@ -273,8 +316,12 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 
 	conn := r.Meta().ECSClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, plan, state)
-	response.Diagnostics.Append(d...)
+	diff, diags := fwflex.Diff(ctx, plan, state,
+		fwflex.WithIgnoredField("EnableECSManagedTags"),
+		fwflex.WithIgnoredField("EnableExecuteCommand"),
+		fwflex.WithIgnoredField("PropagateTags"),
+	)
+	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -287,7 +334,7 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Write-only fields — read from config, always send
-		managedTags, execCmd := expandDaemonWriteOnlyFields(ctx, request.Config, &response.Diagnostics)
+		managedTags, execCmd, propagateTags := expandDaemonWriteOnlyFields(ctx, request.Config, &response.Diagnostics)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -297,8 +344,11 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		if !execCmd.IsNull() {
 			input.EnableExecuteCommand = execCmd.ValueBool()
 		}
+		if !propagateTags.IsNull() {
+			input.PropagateTags = awstypes.DaemonPropagateTags(propagateTags.ValueString())
+		}
 
-		_, err := conn.UpdateDaemon(ctx, &input)
+		err := retryDaemonUpdate(ctx, conn, &input)
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
 			return
@@ -340,7 +390,6 @@ func (r *daemonResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	conn := r.Meta().ECSClient(ctx)
 
-	log.Printf("[DEBUG] Deleting ECS Daemon: %s", state.DaemonArn.ValueString())
 	_, err := conn.DeleteDaemon(ctx, &ecs.DeleteDaemonInput{
 		DaemonArn: state.DaemonArn.ValueStringPointer(),
 	})
@@ -363,12 +412,27 @@ func (r *daemonResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 }
 
-func daemonNameFromARN(arn string) types.String {
-	arnParts := strings.Split(arn, "/")
-	if len(arnParts) == 3 {
-		return types.StringValue(arnParts[2])
+func daemonNameFromARN(arnStr string) types.String {
+	parsed, err := arn.Parse(arnStr)
+	if err != nil {
+		return types.StringNull()
+	}
+	parts := strings.Split(parsed.Resource, "/")
+	if len(parts) == 3 {
+		return types.StringValue(parts[2])
 	}
 	return types.StringNull()
+}
+
+// expandDaemonWriteOnlyFields reads write-only fields from the Terraform config.
+// These fields are not returned by the API, so they must always be read from config.
+func expandDaemonWriteOnlyFields(ctx context.Context, cfg tfsdk.Config, diags *diag.Diagnostics) (enableManagedTags, enableExecCmd types.Bool, propagateTags fwtypes.StringEnum[awstypes.DaemonPropagateTags]) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
+	var data daemonResourceModel
+	diags.Append(cfg.Get(ctx, &data)...)
+	if diags.HasError() {
+		return
+	}
+	return data.EnableECSManagedTags, data.EnableExecuteCommand, data.PropagateTags
 }
 
 // flattenDaemonRevision populates task definition ARN and capacity
@@ -377,7 +441,7 @@ func daemonNameFromARN(arn string) types.String {
 // the plan value with potentially stale revision data during Create/Update.
 func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevision, revisionDetail awstypes.DaemonRevisionDetail, model *daemonResourceModel) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	if model.DaemonTaskDefinitionArn.IsNull() {
-		model.DaemonTaskDefinitionArn = types.StringPointerValue(revision.DaemonTaskDefinitionArn)
+		model.DaemonTaskDefinitionArn = fwtypes.ARNValue(aws.ToString(revision.DaemonTaskDefinitionArn))
 	}
 
 	if len(revisionDetail.CapacityProviders) > 0 {
@@ -387,7 +451,7 @@ func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevisio
 				cpArns = append(cpArns, aws.ToString(cp.Arn))
 			}
 		}
-		model.CapacityProviderArns = fwflex.FlattenFrameworkStringValueListOfString(ctx, cpArns)
+		model.CapacityProviderArns = fwflex.FlattenFrameworkStringValueSetOfString(ctx, cpArns)
 	}
 }
 
@@ -406,46 +470,53 @@ func flattenDaemonCurrentRevision(ctx context.Context, conn *ecs.Client, daemon 
 	flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], model)
 }
 
-type daemonResourceModel struct {
-	framework.WithRegionModel
-	DaemonArn               types.String                                                  `tfsdk:"arn"`
-	CapacityProviderArns    fwtypes.ListOfString                                          `tfsdk:"capacity_provider_arns"`
-	ClusterArn              types.String                                                  `tfsdk:"cluster_arn"`
-	DaemonTaskDefinitionArn types.String                                                  `tfsdk:"daemon_task_definition"`
-	DeploymentConfiguration fwtypes.ListNestedObjectValueOf[deploymentConfigurationModel] `tfsdk:"deployment_configuration"`
-	EnableECSManagedTags    types.Bool                                                    `tfsdk:"enable_ecs_managed_tags"`
-	EnableExecuteCommand    types.Bool                                                    `tfsdk:"enable_execute_command"`
-	DaemonName              types.String                                                  `tfsdk:"name"`
-	PropagateTags           fwtypes.StringEnum[awstypes.DaemonPropagateTags]              `tfsdk:"propagate_tags"`
-	Status                  types.String                                                  `tfsdk:"status"`
-	Tags                    tftags.Map                                                    `tfsdk:"tags"`
-	TagsAll                 tftags.Map                                                    `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
-}
+func retryDaemonCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateDaemonInput) (*ecs.CreateDaemonOutput, error) {
+	const (
+		daemonCreateTimeout = 2 * time.Minute
+		timeout             = propagationTimeout + daemonCreateTimeout
+	)
+	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
+		func(ctx context.Context) (any, error) {
+			return conn.CreateDaemon(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsA[*awstypes.ClusterNotFoundException](err) {
+				return true, err
+			}
 
-type deploymentConfigurationModel struct {
-	Alarms            fwtypes.ListNestedObjectValueOf[alarmConfigurationModel] `tfsdk:"alarms"`
-	BakeTimeInMinutes types.Int64                                              `tfsdk:"bake_time_in_minutes"`
-	DrainPercent      types.Float64                                            `tfsdk:"drain_percent"`
-}
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Unable to assume the service linked role") {
+				return true, err
+			}
 
-type alarmConfigurationModel struct {
-	AlarmNames fwtypes.SetOfString `tfsdk:"alarm_names"`
-	Enable     types.Bool          `tfsdk:"enable"`
-}
-
-// expandDaemonWriteOnlyFields reads write-only fields from the Terraform config.
-// These fields are not returned by the API, so they must always be read from config.
-func expandDaemonWriteOnlyFields(ctx context.Context, cfg tfsdk.Config, diags *diag.Diagnostics) (enableManagedTags, enableExecCmd types.Bool) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
-	var data daemonResourceModel
-	diags.Append(cfg.Get(ctx, &data)...)
-	if diags.HasError() {
-		return
+			return false, err
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
-	return data.EnableECSManagedTags, data.EnableExecuteCommand
+
+	return outputRaw.(*ecs.CreateDaemonOutput), nil
 }
 
-// Finder, status, and waiter functions.
+func retryDaemonUpdate(ctx context.Context, conn *ecs.Client, input *ecs.UpdateDaemonInput) error {
+	const (
+		daemonUpdateTimeout = 2 * time.Minute
+		timeout             = propagationTimeout + daemonUpdateTimeout
+	)
+	_, err := tfresource.RetryWhen(ctx, timeout,
+		func(ctx context.Context) (any, error) {
+			return conn.UpdateDaemon(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Unable to assume the service linked role") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+	return err
+}
 
 func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonDetail, error) {
 	input := &ecs.DescribeDaemonInput{
@@ -477,6 +548,20 @@ func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstyp
 	}
 
 	return output.Daemon, nil
+}
+
+func findDaemonRevisionByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonRevision, error) {
+	input := &ecs.DescribeDaemonRevisionsInput{
+		DaemonRevisionArns: []string{arn},
+	}
+
+	output, err := conn.DescribeDaemonRevisions(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output.DaemonRevisions)
 }
 
 func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
@@ -521,16 +606,31 @@ func waitDaemonDeleted(ctx context.Context, conn *ecs.Client, arn string, timeou
 	return err
 }
 
-func findDaemonRevisionByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonRevision, error) {
-	input := &ecs.DescribeDaemonRevisionsInput{
-		DaemonRevisionArns: []string{arn},
-	}
+type daemonResourceModel struct {
+	framework.WithRegionModel
+	DaemonArn               fwtypes.ARN                                                   `tfsdk:"arn"`
+	CapacityProviderArns    fwtypes.SetOfString                                           `tfsdk:"capacity_provider_arns"`
+	ClusterArn              fwtypes.ARN                                                   `tfsdk:"cluster_arn"`
+	DaemonTaskDefinitionArn fwtypes.ARN                                                   `tfsdk:"daemon_task_definition_arn"`
+	DeploymentConfiguration fwtypes.ListNestedObjectValueOf[deploymentConfigurationModel] `tfsdk:"deployment_configuration"`
+	DeploymentArn           fwtypes.ARN                                                   `tfsdk:"deployment_arn"`
+	EnableECSManagedTags    types.Bool                                                    `tfsdk:"enable_ecs_managed_tags"`
+	EnableExecuteCommand    types.Bool                                                    `tfsdk:"enable_execute_command"`
+	DaemonName              types.String                                                  `tfsdk:"name"`
+	PropagateTags           fwtypes.StringEnum[awstypes.DaemonPropagateTags]              `tfsdk:"propagate_tags"`
+	Status                  fwtypes.StringEnum[awstypes.DaemonStatus]                     `tfsdk:"status"`
+	Tags                    tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                    `tfsdk:"tags_all"`
+	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
+}
 
-	output, err := conn.DescribeDaemonRevisions(ctx, input)
+type deploymentConfigurationModel struct {
+	Alarms            fwtypes.ListNestedObjectValueOf[alarmConfigurationModel] `tfsdk:"alarms"`
+	BakeTimeInMinutes types.Int64                                              `tfsdk:"bake_time_in_minutes"`
+	DrainPercent      types.Float64                                            `tfsdk:"drain_percent"`
+}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output.DaemonRevisions)
+type alarmConfigurationModel struct {
+	AlarmNames fwtypes.ListOfString `tfsdk:"alarm_names"`
+	Enable     types.Bool           `tfsdk:"enable"`
 }

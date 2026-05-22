@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -130,9 +131,6 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						"cpu": schema.Int64Attribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.Int64{
-								int64planmodifier.UseStateForUnknown(),
-							},
 						},
 						"entry_point": schema.ListAttribute{
 							CustomType: fwtypes.ListOfStringType,
@@ -155,6 +153,10 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						names.AttrName: schema.StringAttribute{
 							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(255),
+								stringvalidator.RegexMatches(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "must contain only alphanumeric characters, hyphens, and underscores"),
+							},
 						},
 						"privileged": schema.BoolAttribute{
 							Optional: true,
@@ -174,9 +176,6 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						"user": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 						"working_directory": schema.StringAttribute{
 							Optional: true,
@@ -202,10 +201,10 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrName: schema.StringAttribute{
-										Required: true,
+										Optional: true,
 									},
 									names.AttrValue: schema.StringAttribute{
-										Required: true,
+										Optional: true,
 									},
 								},
 							},
@@ -227,6 +226,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						"firelens_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[firelensConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"options": schema.MapAttribute{
@@ -243,6 +245,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						names.AttrHealthCheck: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[healthCheckModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"command": schema.ListAttribute{
@@ -257,6 +262,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 									},
 									"retries": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										Default:  int64default.StaticInt64(3),
 										Validators: []validator.Int64{
 											int64validator.Between(1, 10),
 										},
@@ -269,6 +276,8 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 									},
 									names.AttrTimeout: schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										Default:  int64default.StaticInt64(5),
 										Validators: []validator.Int64{
 											int64validator.Between(2, 60),
 										},
@@ -278,6 +287,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						"linux_parameters": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[daemonLinuxParametersModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"init_process_enabled": schema.BoolAttribute{
@@ -287,6 +299,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 								Blocks: map[string]schema.Block{
 									"capabilities": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[kernelCapabilitiesModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"add": schema.ListAttribute{
@@ -339,6 +354,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						"log_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[logConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"log_driver": schema.StringAttribute{
@@ -386,6 +404,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						"repository_credentials": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[repositoryCredentialsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"credentials_parameter": schema.StringAttribute{
@@ -397,6 +418,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						"restart_policy": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[containerRestartPolicyModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrEnabled: schema.BoolAttribute{
@@ -475,7 +499,11 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							Optional: true,
 						},
 						names.AttrName: schema.StringAttribute{
-							Optional: true,
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(255),
+								stringvalidator.RegexMatches(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "must contain only alphanumeric characters, hyphens, and underscores"),
+							},
 						},
 					},
 				},
@@ -511,12 +539,32 @@ func (r *daemonTaskDefinitionResource) Create(ctx context.Context, request resou
 	}
 
 	output, err := conn.RegisterDaemonTaskDefinition(ctx, &input)
+
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(r.Meta().Partition(ctx), err) {
+		input.Tags = nil
+		output, err = conn.RegisterDaemonTaskDefinition(ctx, &input)
+	}
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating ECS Daemon Task Definition (%s)", plan.Family.ValueString()), err.Error())
 		return
 	}
 
+	if output == nil || output.DaemonTaskDefinitionArn == nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating ECS Daemon Task Definition (%s)", plan.Family.ValueString()), "empty output from API")
+		return
+	}
+
 	plan.DaemonTaskDefinitionArn = fwtypes.ARNValue(aws.ToString(output.DaemonTaskDefinitionArn))
+
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		if err := createTags(ctx, conn, aws.ToString(output.DaemonTaskDefinitionArn), tags); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("setting ECS Daemon Task Definition (%s) tags", aws.ToString(output.DaemonTaskDefinitionArn)), err.Error())
+			return
+		}
+	}
 
 	// Read back to populate all computed attributes
 	dtd, err := findDaemonTaskDefinitionByARN(ctx, conn, plan.DaemonTaskDefinitionArn.ValueString())
@@ -574,7 +622,7 @@ func (r *daemonTaskDefinitionResource) Delete(ctx context.Context, request resou
 		DaemonTaskDefinition: state.DaemonTaskDefinitionArn.ValueStringPointer(),
 	})
 
-	if errs.IsA[*awstypes.ClientException](err) {
+	if errs.Contains(err, "DaemonTaskDefinitionNotFoundException") || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "not found") || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "being deleted") {
 		return
 	}
 
@@ -599,6 +647,38 @@ func flattenDaemonTaskDefinition(ctx context.Context, dtd *awstypes.DaemonTaskDe
 	model.Volumes, diags = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, flattenDaemonVolumes(dtd.Volumes))
 
 	return diags
+}
+
+func findDaemonTaskDefinitionByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonTaskDefinition, error) {
+	input := &ecs.DescribeDaemonTaskDefinitionInput{
+		DaemonTaskDefinition: aws.String(arn),
+	}
+
+	output, err := conn.DescribeDaemonTaskDefinition(ctx, input)
+
+	if errs.Contains(err, "DaemonTaskDefinitionNotFoundException") || errs.Contains(err, "not found") {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DaemonTaskDefinition == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	if output.DaemonTaskDefinition.Status == awstypes.DaemonTaskDefinitionStatusDeleteInProgress || output.DaemonTaskDefinition.Status == awstypes.DaemonTaskDefinitionStatusDeleted {
+		return nil, &sdkretry.NotFoundError{
+			Message:     string(output.DaemonTaskDefinition.Status),
+			LastRequest: input,
+		}
+	}
+
+	return output.DaemonTaskDefinition, nil
 }
 
 // flattenDaemonVolumes converts SDK Volume types to the Terraform model.
@@ -775,36 +855,4 @@ type volumeModel struct {
 type daemonSecretModel struct {
 	Name      types.String `tfsdk:"name"`
 	ValueFrom types.String `tfsdk:"value_from"`
-}
-
-func findDaemonTaskDefinitionByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonTaskDefinition, error) {
-	input := &ecs.DescribeDaemonTaskDefinitionInput{
-		DaemonTaskDefinition: aws.String(arn),
-	}
-
-	output, err := conn.DescribeDaemonTaskDefinition(ctx, input)
-
-	if errs.Contains(err, "DaemonTaskDefinitionNotFoundException") || errs.Contains(err, "not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.DaemonTaskDefinition == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	if output.DaemonTaskDefinition.Status == awstypes.DaemonTaskDefinitionStatusDeleteInProgress || output.DaemonTaskDefinition.Status == awstypes.DaemonTaskDefinitionStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(output.DaemonTaskDefinition.Status),
-			LastRequest: input,
-		}
-	}
-
-	return output.DaemonTaskDefinition, nil
 }
