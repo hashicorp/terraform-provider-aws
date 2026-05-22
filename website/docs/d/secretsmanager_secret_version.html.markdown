@@ -55,6 +55,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - (**Deprecated**) The ARN of the secret.
+  Use `secret_arn` instead.
 * `created_date` - Created date of the secret in UTC.
 * `secret_arn` - The ARN of the secret.
 * `secret_string` - Decrypted part of the protected secret information that was originally provided as a string.
