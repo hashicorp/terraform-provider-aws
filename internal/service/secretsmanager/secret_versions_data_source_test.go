@@ -91,7 +91,7 @@ func TestAccSecretsManagerSecretVersionsDataSource_emptyVer(t *testing.T) {
 func testAccSecretVersionsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_secretsmanager_secret_versions" "test" {
-  secret_id  = aws_secretsmanager_secret.test.id
+  secret_id = aws_secretsmanager_secret.test.id
 
   depends_on = [
     aws_secretsmanager_secret_version.test,
@@ -112,7 +112,7 @@ resource "aws_secretsmanager_secret_version" "test2" {
   secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string2"
 
-  depends_on    = [aws_secretsmanager_secret_version.test]
+  depends_on = [aws_secretsmanager_secret_version.test]
 }
 `, rName)
 }
