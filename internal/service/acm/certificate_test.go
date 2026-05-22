@@ -1525,12 +1525,12 @@ func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateKeyWo(certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					resource.TestCheckNoResourceAttr(resourceName, tfacm.AttrPrivateKeyWo),
 					resource.TestCheckResourceAttr(resourceName, tfacm.AttrPrivateKeyWoVersion, "1"),
 				),
@@ -1538,7 +1538,7 @@ func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_privateKeyWoUpdate(newCertificate, newKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertficateNotRecreated(&v1, &v2),
 					resource.TestCheckNoResourceAttr(resourceName, tfacm.AttrPrivateKeyWo),
 					resource.TestCheckResourceAttr(resourceName, tfacm.AttrPrivateKeyWoVersion, "2"),
