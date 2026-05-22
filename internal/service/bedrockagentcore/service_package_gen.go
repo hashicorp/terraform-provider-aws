@@ -126,6 +126,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newOnlineEvaluationConfigResource,
+			TypeName: "aws_bedrockagentcore_online_evaluation_config",
+			Name:     "Online Evaluation Config",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "online_evaluation_config_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTokenVaultCMKResource,
 			TypeName: "aws_bedrockagentcore_token_vault_cmk",
 			Name:     "Token Vault CMK",
@@ -151,6 +164,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("harness_id", true)),
+		},
+		{
+			Factory:  newOnlineEvaluationConfigResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_online_evaluation_config",
+			Name:     "Online Evaluation Config",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "online_evaluation_config_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
 		},
 	})
 }
