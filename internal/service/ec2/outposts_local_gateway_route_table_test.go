@@ -6,9 +6,11 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -30,9 +32,9 @@ func TestAccEC2OutpostsLocalGatewayRouteTable_basic(t *testing.T) {
 				Config: testAccLocalGatewayRouteTableConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteTableExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexp.MustCompile(`local-gateway-route-table/lgw-rtb-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "local_gateway_id"),
-					resource.TestCheckResourceAttr(resourceName, "mode", "direct-vpc-routing"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMode, "direct-vpc-routing"),
 					resource.TestCheckResourceAttrSet(resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "available"),
@@ -65,6 +67,11 @@ func TestAccEC2OutpostsLocalGatewayRouteTable_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceLocalGatewayRouteTable, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
