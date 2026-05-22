@@ -120,8 +120,8 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_pinpointsmsvoicev2_configuration_set_event_destination.example
   identity = {
-   configuration_set_name = "example-configuration-set"
-   event_destination_name = "example-event-destination"
+    configuration_set_name = "example-configuration-set"
+    event_destination_name = "example-event-destination"
   }
 }
 
@@ -133,10 +133,12 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" 
 ### Identity Schema
 
 #### Required
+
 * `configuration_set_name` (String) Name of the configuration set this event destination belongs to.
 * `event_destination_name` (String) Name of the event destination.
 
 #### Optional
+
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
@@ -146,7 +148,6 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 import {
   to = aws_pinpointsmsvoicev2_configuration_set_event_destination.example
   id = "example-configuration-set,example-event-destination"
-  }
 }
 ```
 
