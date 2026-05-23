@@ -1068,7 +1068,7 @@ resource "aws_athena_workgroup" "test" {
       output_location = "s3://${aws_s3_bucket.test.bucket}/output/"
     }
   }
-  
+
   force_destroy = true
 }
 
@@ -1080,14 +1080,14 @@ resource "aws_iam_policy" "test" {
     Version = "2012-10-17",
     Statement = [
       {
-        Action   = [
+        Action = [
           "athena:*QueryExecution"
         ],
         Effect   = "Allow",
         Resource = aws_athena_workgroup.test.arn
       },
       {
-        Action   = [
+        Action = [
           "s3:GetObject",
           "s3:PutObject"
         ],
@@ -1095,7 +1095,7 @@ resource "aws_iam_policy" "test" {
         Resource = "${aws_s3_bucket.test.arn}/output/*"
       },
       {
-        Action   = [
+        Action = [
           "s3:GetBucketLocation",
           "s3:ListBucket",
           "s3:ListBucketMultipartUploads",
