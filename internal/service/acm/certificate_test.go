@@ -1531,8 +1531,8 @@ func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
 				Config: testAccCertificateConfig_privateKeyWo(certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
-					resource.TestCheckNoResourceAttr(resourceName, tfacm.AttrPrivateKeyWo),
-					resource.TestCheckResourceAttr(resourceName, tfacm.AttrPrivateKeyWoVersion, "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
+					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "1"),
 				),
 			},
 			{
@@ -1540,8 +1540,8 @@ func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertficateNotRecreated(&v1, &v2),
-					resource.TestCheckNoResourceAttr(resourceName, tfacm.AttrPrivateKeyWo),
-					resource.TestCheckResourceAttr(resourceName, tfacm.AttrPrivateKeyWoVersion, "2"),
+					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
+					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "2"),
 				),
 			},
 		},
