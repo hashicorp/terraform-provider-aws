@@ -1010,7 +1010,19 @@ func testAccDataSourceConfig_athenaRoleARN(rId, rName, rName2, iamRoleResourceNa
 	return acctest.ConfigCompose(
 		testAccDataSourceConfig_baseNoACL(rName),
 		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+resource "aws_quicksight_data_source" "test" {
+  data_source_id = %[1]q
+  name           = %[2]q
+
+  parameters {
+    athena {
+      work_group = aws_athena_workgroup.test.name
+      role_arn   = %[4]s.arn
+    }
+  }
+
+  type = "ATHENA"
+}
 
 resource "aws_iam_role" "test" {
   name = %[2]q
@@ -1105,20 +1117,6 @@ resource "aws_iam_role_policy_attachment" "test" {
 resource "aws_iam_role_policy_attachment" "test2" {
   policy_arn = aws_iam_policy.test.arn
   role       = aws_iam_role.test2.name
-}
-
-resource "aws_quicksight_data_source" "test" {
-  data_source_id = %[1]q
-  name           = %[2]q
-
-  parameters {
-    athena {
-      work_group = aws_athena_workgroup.test.id
-      role_arn   = %[4]s.arn
-    }
-  }
-
-  type = "ATHENA"
 }
 `, rId, rName, rName2, iamRoleResourceName))
 }
