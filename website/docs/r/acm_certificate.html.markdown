@@ -183,7 +183,7 @@ This resource supports the following arguments:
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
-    * `private_key` - (Required) Certificate's PEM-formatted private key. Conflicts with `private_key_wo`.
+    * `private_key` - (Optional) Certificate's PEM-formatted private key. Conflicts with `private_key_wo`.
     * `private_key_wo` - (Optional, Write-Only) Certificate's PEM-formatted private key. Conflicts with `private_key`. Must be used together with `private_key_wo_version`.
     * `private_key_wo_version` - (Optional) Used together with `private_key_wo` to trigger an update. Increment this value when an update to `private_key_wo` is required.
     * `certificate_body` - (Required) Certificate's PEM-formatted public key
