@@ -1539,7 +1539,7 @@ func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
 				Config: testAccCertificateConfig_privateKeyWoUpdate(newCertificate, newKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
-					testAccCheckCertficateNotRecreated(&v1, &v2),
+					testAccCheckCertificateNotRecreated(&v1, &v2),
 					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
 					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "2"),
 				),
@@ -1582,7 +1582,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				Config: testAccCertificateConfig_privateKey(newCertificate, key, newCaCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
-					testAccCheckCertficateNotRecreated(&v1, &v2),
+					testAccCheckCertificateNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, commonName),
@@ -1592,7 +1592,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				Config: testAccCertificateConfig_privateKeyNoChain(t, withoutChainDomain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
-					testAccCheckCertficateNotRecreated(&v2, &v3),
+					testAccCheckCertificateNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, withoutChainDomain),
@@ -1863,7 +1863,7 @@ func testAccCheckCertificateDestroy(ctx context.Context, t *testing.T) resource.
 	}
 }
 
-func testAccCheckCertficateNotRecreated(v1, v2 *types.CertificateDetail) resource.TestCheckFunc {
+func testAccCheckCertificateNotRecreated(v1, v2 *types.CertificateDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(v1.CertificateArn) != aws.ToString(v2.CertificateArn) {
 			return fmt.Errorf("ACM Certificate recreated")
