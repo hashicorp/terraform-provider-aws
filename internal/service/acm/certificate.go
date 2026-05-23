@@ -56,11 +56,6 @@ const (
 	certificateValidationMethodNone = "NONE"
 )
 
-var (
-	AttrPrivateKeyWo        = fmt.Sprintf("%s_wo", names.AttrPrivateKey)
-	AttrPrivateKeyWoVersion = fmt.Sprintf("%s_wo_version", names.AttrPrivateKey)
-)
-
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
@@ -86,7 +81,7 @@ func resourceCertificate() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"certificate_body", names.AttrPrivateKey, AttrPrivateKeyWo, "validation_method"},
+				ConflictsWith: []string{"certificate_body", names.AttrPrivateKey, "private_key_wo", "validation_method"},
 			},
 			"certificate_body": {
 				Type:          schema.TypeString,
@@ -104,7 +99,7 @@ func resourceCertificate() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey, AttrPrivateKeyWo},
+				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
 				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 			"domain_validation_options": {
@@ -185,19 +180,19 @@ func resourceCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, AttrPrivateKeyWo},
+				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
 			},
-			AttrPrivateKeyWo: {
+			"private_key_wo": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				WriteOnly:    true,
-				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, AttrPrivateKeyWo},
-				RequiredWith: []string{AttrPrivateKeyWoVersion},
+				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
+				RequiredWith: []string{"private_key_wo_version"},
 			},
-			AttrPrivateKeyWoVersion: {
+			"private_key_wo_version": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				RequiredWith: []string{AttrPrivateKeyWo},
+				RequiredWith: []string{"private_key_wo"},
 			},
 			"renewal_eligibility": {
 				Type:     schema.TypeString,
@@ -407,7 +402,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		d.SetId(aws.ToString(output.CertificateArn))
 	} else {
 		privateKey := d.Get(names.AttrPrivateKey).(string)
-		privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+		privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("private_key_wo"))
 		diags = append(diags, di...)
 		if privateKeyWo != "" {
 			privateKey = privateKeyWo
@@ -514,14 +509,14 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain, AttrPrivateKeyWoVersion) {
+	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain, "private_key_wo_version") {
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
 		oCCRaw, nCCRaw := d.GetChange(names.AttrCertificateChain)
 		oPKRaw, nPKRaw := d.GetChange(names.AttrPrivateKey)
 
-		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) || d.HasChange(AttrPrivateKeyWoVersion) {
+		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) || d.HasChange("private_key_wo_version") {
 			privateKey := d.Get(names.AttrPrivateKey).(string)
-			privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+			privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("private_key_wo"))
 			diags = append(diags, di...)
 			if privateKeyWo != "" {
 				privateKey = privateKeyWo
