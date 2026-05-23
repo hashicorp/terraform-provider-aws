@@ -206,14 +206,19 @@ resource "aws_api_gateway_integration_response" "test" {
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
-  rest_api_id       = aws_api_gateway_rest_api.test.id
-  stage_name        = "test"
-  description       = "%[1]s"
-  stage_description = "%[1]s"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = "%[1]s"
 
   variables = {
     "a" = "2"
   }
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  deployment_id = aws_api_gateway_deployment.test.id
+  stage_name    = "test"
+  description   = %[1]q
 }
 
 resource "aws_iam_role" "test" {
