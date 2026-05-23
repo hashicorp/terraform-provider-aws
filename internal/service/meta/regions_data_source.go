@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -40,10 +41,7 @@ func (d *regionsDataSource) Schema(ctx context.Context, request datasource.Schem
 			"all_regions": schema.BoolAttribute{
 				Optional: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID: datasourceattribute.IDAttributeDeprecatedNoReplacement(),
 			names.AttrNames: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
