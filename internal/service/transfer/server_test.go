@@ -1789,15 +1789,21 @@ resource "aws_api_gateway_integration_response" "test" {
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
-  rest_api_id       = aws_api_gateway_rest_api.test.id
-  stage_name        = "test"
-  description       = %[1]q
-  stage_description = %[1]q
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = %[1]q
 
   variables = {
     "a" = "2"
   }
 }
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  deployment_id = aws_api_gateway_deployment.test.id
+  stage_name    = "test"
+  description   = %[1]q
+}
+
 `, rName)
 }
 
@@ -1874,7 +1880,7 @@ func testAccServerConfig_apiGatewayIdentityProviderType(rName string, forceDestr
 	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                    = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
 
@@ -2278,7 +2284,7 @@ func testAccServerConfig_protocols(rName string) string {
 		fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                    = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
   protocols              = ["FTP"]
@@ -2340,7 +2346,7 @@ resource "aws_acm_certificate" "test" {
 
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                    = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
   protocols              = ["FTP", "FTPS"]
@@ -2400,7 +2406,7 @@ func testAccServerConfig_identityProviderType_sftpAuthenticationMethods(rName st
 	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type      = "API_GATEWAY"
-  url                         = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                         = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role             = aws_iam_role.test.arn
   logging_role                = aws_iam_role.test.arn
   sftp_authentication_methods = "PASSWORD"
@@ -2416,7 +2422,7 @@ func testAccServerConfig_identityProviderType_sftpAuthenticationMethods_updated(
 	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type      = "API_GATEWAY"
-  url                         = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                         = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role             = aws_iam_role.test.arn
   logging_role                = aws_iam_role.test.arn
   sftp_authentication_methods = "PUBLIC_KEY_AND_PASSWORD"
