@@ -830,7 +830,7 @@ func TestAccBackupPlan_withIndexAction(t *testing.T) {
 				Config: testAccPlanConfig_withIndexAction(rName, []string{"EBS"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.0.resource_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.index_action.0.resource_types.*", "EBS"),
@@ -851,7 +851,7 @@ func TestAccBackupPlan_withIndexAction(t *testing.T) {
 				Config: testAccPlanConfig_withIndexAction(rName, []string{"EBS", "S3"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.0.resource_types.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.index_action.0.resource_types.*", "EBS"),
@@ -868,7 +868,7 @@ func TestAccBackupPlan_withIndexAction(t *testing.T) {
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
