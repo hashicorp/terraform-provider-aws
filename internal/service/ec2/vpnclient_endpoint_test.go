@@ -104,6 +104,14 @@ func testAccClientVPNEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphor
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceClientVPNEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -162,7 +170,7 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T, semaphore tfsync.Semaphore)
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -201,7 +209,7 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T, semaphore tfsy
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -242,7 +250,7 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T, semaphore tfsync.Semap
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -277,7 +285,7 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T,
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -623,7 +631,7 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T, semaphore tfsync.S
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

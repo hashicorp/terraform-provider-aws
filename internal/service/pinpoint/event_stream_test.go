@@ -89,7 +89,7 @@ func testAccCheckEventStreamExists(ctx context.Context, t *testing.T, n string, 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint event stream with that ID exists")
+			return fmt.Errorf("No End User Messaging event stream with that ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -125,7 +125,7 @@ func testAccCheckEventStreamDestroy(ctx context.Context, t *testing.T) resource.
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint Event Stream %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging Event Stream %s still exists", rs.Primary.ID)
 		}
 
 		return nil

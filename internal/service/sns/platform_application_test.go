@@ -364,7 +364,7 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt(t))
 
-					acctest.Test(ctx, t, resource.TestCase{
+					acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- sequential subtests within parallel platform loop to avoid credential conflicts
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 						ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

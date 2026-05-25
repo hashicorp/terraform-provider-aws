@@ -88,6 +88,14 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfarcregionswitch.ResourcePlan, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -210,7 +218,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -257,8 +265,8 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

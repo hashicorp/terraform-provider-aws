@@ -224,6 +224,8 @@ service/detective:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_detective_'
 service/devicefarm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devicefarm_'
+service/devopsagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsagent_'
 service/devopsguru:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsguru_'
 service/directconnect:

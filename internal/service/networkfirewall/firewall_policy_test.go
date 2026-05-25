@@ -985,7 +985,20 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAct
 	})
 }
 
-func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN(t *testing.T) {
+// Tests which depend on TLS inspection configuration ARN(s) provided
+// via environment variables.
+func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"tlsInspectionConfigurationArn": testAccFirewallPolicy_tlsInspectionConfigurationARN,
+		"enableTLSSessionHolding":       testAccFirewallPolicy_enableTLSSessionHolding,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccFirewallPolicy_tlsInspectionConfigurationARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1019,6 +1032,62 @@ func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN(t *testi
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccFirewallPolicy_enableTLSSessionHolding(t *testing.T) {
+	ctx := acctest.Context(t)
+	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+	arn1 := acctest.SkipIfEnvVarNotSet(t, "AWS_NETWORKFIREWALL_TLS_INSPECTION_CONFIGURATION_ARN_1")
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_enableTLSSessionHolding(rName, arn1, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.enable_tls_session_holding", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallPolicyConfig_enableTLSSessionHolding(rName, arn1, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.enable_tls_session_holding", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
 			},
 		},
 	})
@@ -1196,62 +1265,6 @@ func TestAccNetworkFirewallFirewallPolicy_activeThreatDefense_strictOrder(t *tes
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
-			},
-		},
-	})
-}
-
-func TestAccNetworkFirewallFirewallPolicy_enableTLSSessionHolding(t *testing.T) {
-	ctx := acctest.Context(t)
-	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_networkfirewall_firewall_policy.test"
-	arn1 := acctest.SkipIfEnvVarNotSet(t, "AWS_NETWORKFIREWALL_TLS_INSPECTION_CONFIGURATION_ARN_1")
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFirewallPolicyConfig_enableTLSSessionHolding(rName, arn1, true),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.enable_tls_session_holding", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccFirewallPolicyConfig_enableTLSSessionHolding(rName, arn1, false),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.enable_tls_session_holding", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-				),
 			},
 		},
 	})

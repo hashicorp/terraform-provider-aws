@@ -20,7 +20,7 @@ func TestAccSESV2EmailIdentityPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_email_identity_policy.test"
-	emailIdentity := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	emailIdentity := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -50,7 +50,7 @@ func TestAccSESV2EmailIdentityPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_email_identity_policy.test"
-	emailIdentity := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	emailIdentity := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

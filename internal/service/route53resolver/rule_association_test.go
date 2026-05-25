@@ -25,7 +25,7 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 	ruleResourceName := "aws_route53_resolver_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -56,7 +56,7 @@ func TestAccRoute53ResolverRuleAssociation_disappears(t *testing.T) {
 	var assn awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -82,7 +82,7 @@ func TestAccRoute53ResolverRuleAssociation_Disappears_vpc(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule_association.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

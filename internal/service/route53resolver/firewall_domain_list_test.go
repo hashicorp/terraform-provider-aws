@@ -54,8 +54,8 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 	var v awstypes.FirewallDomainList
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_domain_list.test"
-	domainName1 := acctest.RandomFQDomainName()
-	domainName2 := acctest.RandomFQDomainName()
+	domainName1 := acctest.RandomFQDomainName(t)
+	domainName2 := acctest.RandomFQDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

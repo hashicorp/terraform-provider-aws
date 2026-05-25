@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -83,6 +84,14 @@ func testAccResourceCollection_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfdevopsguru.ResourceResourceCollection, resourceName, resourceCollectionDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

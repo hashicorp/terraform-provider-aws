@@ -28,7 +28,7 @@ func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 	var v awstypes.TrafficPolicyInstance
 	resourceName := "aws_route53_traffic_policy_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTrafficPolicy(t) },
@@ -59,7 +59,7 @@ func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 	var v awstypes.TrafficPolicyInstance
 	resourceName := "aws_route53_traffic_policy_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTrafficPolicy(t) },
@@ -84,7 +84,7 @@ func TestAccRoute53TrafficPolicyInstance_update(t *testing.T) {
 	var v awstypes.TrafficPolicyInstance
 	resourceName := "aws_route53_traffic_policy_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTrafficPolicy(t) },

@@ -650,7 +650,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tlsKey {
 		if len(tlsKeyCN) == 0 {
-			tlsKeyCN = "acctest.RandomDomain().String()"
+			tlsKeyCN = "acctest.RandomDomain(t).String()"
 			d.GoImports = append(d.GoImports,
 				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",

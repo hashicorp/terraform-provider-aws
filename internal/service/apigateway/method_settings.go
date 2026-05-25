@@ -44,7 +44,7 @@ func resourceMethodSettings() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -148,7 +148,7 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	settings, err := findMethodSettingsByThreePartKey(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string), d.Get("method_path").(string))
+	settings, err := findMethodSettingsByThreePartKey(ctx, conn, d.Get(attrRestAPIID).(string), d.Get("stage_name").(string), d.Get("method_path").(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method Settings (%s) not found, removing from state", d.Id())
@@ -246,7 +246,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		})
 	}
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	stageName := d.Get("stage_name").(string)
 	id := apiID + "-" + stageName + "-" + methodPath
 	input := apigateway.UpdateStageInput{
@@ -279,7 +279,7 @@ func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 				Path: aws.String(fmt.Sprintf("/%s", d.Get("method_path").(string))),
 			},
 		},
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		RestApiId: aws.String(d.Get(attrRestAPIID).(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
 	}
 
@@ -309,7 +309,7 @@ func resourceMethodSettingsImport(ctx context.Context, d *schema.ResourceData, m
 	restApiID := idParts[0]
 	stageName := idParts[1]
 	methodPath := idParts[2]
-	d.Set("rest_api_id", restApiID)
+	d.Set(attrRestAPIID, restApiID)
 	d.Set("stage_name", stageName)
 	d.Set("method_path", methodPath)
 	d.SetId(fmt.Sprintf("%s-%s-%s", restApiID, stageName, methodPath))

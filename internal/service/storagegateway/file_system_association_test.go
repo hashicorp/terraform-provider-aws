@@ -26,7 +26,7 @@ func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 	resourceName := "aws_storagegateway_file_system_association.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 	fsxResourceName := "aws_fsx_windows_file_system.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	username := "Admin"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -62,7 +62,7 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	username := "Admin"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -114,7 +114,7 @@ func TestAccStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
 	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	username := "Admin"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -154,7 +154,7 @@ func TestAccStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
 	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	username := "Admin"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -198,7 +198,7 @@ func TestAccStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	username := "Admin"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -224,7 +224,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_storageGateway(t *tes
 	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	username := "Admin"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -252,7 +252,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	username := "Admin"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

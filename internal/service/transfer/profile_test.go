@@ -60,7 +60,7 @@ func TestAccTransferProfile_certificateIDs(t *testing.T) {
 	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

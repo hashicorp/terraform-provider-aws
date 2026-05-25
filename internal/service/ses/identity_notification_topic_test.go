@@ -17,7 +17,7 @@ import (
 
 func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	topicName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_identity_notification_topic.test"
 
@@ -60,7 +60,7 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/36275.
 func TestAccSESIdentityNotificationTopic_Disappears_domainIdentity(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	resourceName := "aws_ses_identity_notification_topic.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
