@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/ivs
         - /internal/service/ivschat
         - /internal/service/kafka
         - /internal/service/kafkaconnect
