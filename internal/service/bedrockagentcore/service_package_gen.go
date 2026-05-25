@@ -156,7 +156,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "policy_engine_arn",
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("policy_engine_arn", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},

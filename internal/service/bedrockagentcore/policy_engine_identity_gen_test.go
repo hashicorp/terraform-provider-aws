@@ -51,9 +51,9 @@ func TestAccBedrockAgentCorePolicyEngine_Identity_basic(t *testing.T) {
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.NotNull(),
+						"policy_engine_arn": knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrID)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("policy_engine_arn")),
 				},
 			},
 
@@ -80,7 +80,7 @@ func TestAccBedrockAgentCorePolicyEngine_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -97,7 +97,7 @@ func TestAccBedrockAgentCorePolicyEngine_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -133,9 +133,9 @@ func TestAccBedrockAgentCorePolicyEngine_Identity_regionOverride(t *testing.T) {
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.NotNull(),
+						"policy_engine_arn": knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrID)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("policy_engine_arn")),
 				},
 			},
 
@@ -166,7 +166,7 @@ func TestAccBedrockAgentCorePolicyEngine_Identity_regionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -184,7 +184,7 @@ func TestAccBedrockAgentCorePolicyEngine_Identity_regionOverride(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
