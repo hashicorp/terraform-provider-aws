@@ -131,9 +131,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Resource Policy",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
-			Factory:  newOnlineEvaluationConfigResource,
     },
 		{
+			Factory:  newOnlineEvaluationConfigResource,
 			TypeName: "aws_bedrockagentcore_online_evaluation_config",
 			Name:     "Online Evaluation Config",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
