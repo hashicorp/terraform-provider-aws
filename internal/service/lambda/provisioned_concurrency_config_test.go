@@ -228,6 +228,49 @@ func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T)
 	})
 }
 
+func TestAccLabdaProvisionedConcurrencyConfig_Qualifier_NNaliasNameNN_versionUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	filename1 := "test-fixtures/lambdapinpoint.zip"
+	filename2 := "test-fixtures/lambdapinpoint_modified.zip"
+	lambdaAliasResourceName := "aws_lambda_alias.test"
+	resourceName := "aws_lambda_provisioned_concurrency_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedConcurrencyConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedConcurrencyConfigConfig_qualifierAliasNameVersionUpdate(rName, filename1, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+				),
+			},
+			{
+				// Simultaneously updating the alias function_version and
+				// provisioned_concurrent_executions in the same apply should succeed.
+				// Before the fix this step fails with:
+				// InvalidParameterValueException: Alias with weights can not be used with Provisioned Concurrency
+				// See https://github.com/hashicorp/terraform-provider-aws/issues/13329
+				Config: testAccProvisionedConcurrencyConfigConfig_qualifierAliasNameVersionUpdate(rName, filename2, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -463,6 +506,25 @@ resource "aws_lambda_provisioned_concurrency_config" "test" {
   qualifier                         = aws_lambda_alias.test.name
 }
 `,
+	)
+}
+
+func testAccProvisionedConcurrencyConfigConfig_qualifierAliasNameVersionUpdate(rName, filename string, provisionedConcurrentExecutions int) string {
+	return acctest.ConfigCompose(
+		testAccProvisionedConcurrencyConfigConfigBase_withFilename(rName, filename),
+		fmt.Sprintf(`
+resource "aws_lambda_alias" "test" {
+  function_name    = aws_lambda_function.test.function_name
+  function_version = aws_lambda_function.test.version
+  name             = "test"
+}
+
+resource "aws_lambda_provisioned_concurrency_config" "test" {
+  function_name                     = aws_lambda_function.test.function_name
+  provisioned_concurrent_executions = %[1]d
+  qualifier                         = aws_lambda_alias.test.name
+}
+`, provisionedConcurrentExecutions),
 	)
 }
 
