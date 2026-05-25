@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/imagebuilder
         - /internal/service/inspector
         - /internal/service/inspector2
         - /internal/service/internetmonitor
