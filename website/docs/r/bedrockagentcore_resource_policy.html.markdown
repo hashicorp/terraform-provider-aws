@@ -42,8 +42,8 @@ data "aws_iam_policy_document" "example" {
 }
 
 resource "aws_bedrockagentcore_resource_policy" "example" {
-  resource_arn = aws_bedrockagentcore_agent_runtime.example.agent_runtime_arn
   policy       = data.aws_iam_policy_document.example.json
+  resource_arn = aws_bedrockagentcore_agent_runtime.example.agent_runtime_arn
 }
 ```
 
