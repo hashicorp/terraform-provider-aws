@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/grafana
         - /internal/service/guardduty
         - /internal/service/iam
         - /internal/service/identitystore
