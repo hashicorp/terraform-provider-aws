@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/internetmonitor
         - /internal/service/iot
         - /internal/service/ivs
         - /internal/service/ivschat
