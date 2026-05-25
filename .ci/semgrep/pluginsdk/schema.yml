@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/fsx
         - /internal/service/gamelift
         - /internal/service/glacier
         - /internal/service/globalaccelerator
