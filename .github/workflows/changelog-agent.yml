@@ -1,7 +1,10 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Changelog automation
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
 
