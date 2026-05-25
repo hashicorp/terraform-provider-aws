@@ -142,15 +142,22 @@ func (r *policyEngineResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	// CreatePolicyEngineOutput has inline fields (no nested .PolicyEngine struct).
-	// Set the computed identifiers before waiting so the waiter can find the resource.
-	plan.PolicyEngineARN = types.StringPointerValue(out.PolicyEngineArn)
-	plan.PolicyEngineID = types.StringPointerValue(out.PolicyEngineId)
+	policyEngineID := aws.ToString(out.PolicyEngineId)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitPolicyEngineCreated(ctx, conn, plan.PolicyEngineID.ValueString(), createTimeout)
+	if _, err := waitPolicyEngineCreated(ctx, conn, policyEngineID, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
+		return
+	}
+
+	policyEngine, err := findPolicyEngineByID(ctx, conn, policyEngineID)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
+		return
+	}
+
+	// Set values for unknowns.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, policyEngine, &plan))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
