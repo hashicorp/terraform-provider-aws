@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/iam
         - /internal/service/identitystore
         - /internal/service/imagebuilder
         - /internal/service/inspector
