@@ -16,7 +16,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
@@ -191,66 +190,6 @@ type awsPrimitiveField[T any] struct {
 
 type awsPrimitivePointerField[T any] struct {
 	Field1 *T
-}
-
-type tfPrimitiveField[T attr.Value] struct {
-	Field1 T `tfsdk:"field1"`
-}
-
-type tfPrimitiveFieldLegacy[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",legacy"`
-}
-
-type tfPrimitiveFieldOmitEmpty[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",omitempty"`
-}
-
-type tfPrimitiveFieldNoExpand[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",noexpand"`
-}
-
-type tfPrimitiveFieldNoFlatten[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",noflatten"`
-}
-
-type tfPrimitiveFieldLegacyOmitEmpty[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",legacy,omitempty"`
-}
-
-type tfPrimitiveFieldLegacyNoExpand[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",legacy,noexpand"`
-}
-
-type tfPrimitiveFieldLegacyNoFlatten[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",legacy,noflatten"`
-}
-
-type tfPrimitiveFieldOmitEmptyNoExpand[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",omitempty,noexpand"`
-}
-
-type tfPrimitiveFieldOmitEmptyNoFlatten[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",omitempty,noflatten"`
-}
-
-type tfPrimitiveFieldNoExpandNoFlatten[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",noexpand,noflatten"`
-}
-
-type tfPrimitiveFieldLegacyOmitEmptyNoExpand[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",legacy,omitempty,noexpand"`
-}
-
-type tfPrimitiveFieldLegacyOmitEmptyNoFlatten[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",legacy,omitempty,noflatten"`
-}
-
-type tfPrimitiveFieldLegacyNoExpandNoFlatten[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",legacy,noexpand,noflatten"`
-}
-
-type tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[T attr.Value] struct {
-	Field1 T `tfsdk:"field1" autoflex:",legacy,omitempty,noexpand,noflatten"`
 }
 
 func TestExpandStringField(t *testing.T) {
