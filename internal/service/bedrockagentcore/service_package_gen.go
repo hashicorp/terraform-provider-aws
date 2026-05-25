@@ -126,13 +126,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  newResourcePolicyResource,
-			TypeName: "aws_bedrockagentcore_resource_policy",
-			Name:     "Resource Policy",
-			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
-    },
-		{
 			Factory:  newOnlineEvaluationConfigResource,
 			TypeName: "aws_bedrockagentcore_online_evaluation_config",
 			Name:     "Online Evaluation Config",
@@ -141,6 +134,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_bedrockagentcore_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
