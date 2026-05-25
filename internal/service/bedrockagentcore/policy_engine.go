@@ -43,7 +43,7 @@ import (
 // @Tags(identifierAttribute="policy_engine_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetPolicyEngineOutput")
 // @Testing(hasNoPreExistingResource=true)
-// @IdentityAttribute("policy_engine_arn")
+// @IdentityAttribute("policy_engine_id")
 func newPolicyEngineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &policyEngineResource{}
 
@@ -99,6 +99,12 @@ func (r *policyEngineResource) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"policy_engine_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -139,11 +145,12 @@ func (r *policyEngineResource) Create(ctx context.Context, req resource.CreateRe
 	// CreatePolicyEngineOutput has inline fields (no nested .PolicyEngine struct).
 	// Set the computed identifiers before waiting so the waiter can find the resource.
 	plan.PolicyEngineARN = types.StringPointerValue(out.PolicyEngineArn)
+	plan.PolicyEngineID = types.StringPointerValue(out.PolicyEngineId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitPolicyEngineCreated(ctx, conn, aws.ToString(out.PolicyEngineId), createTimeout)
+	_, err = waitPolicyEngineCreated(ctx, conn, plan.PolicyEngineID.ValueString(), createTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineID.String())
 		return
 	}
 
@@ -159,14 +166,14 @@ func (r *policyEngineResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	out, err := findPolicyEngineByID(ctx, conn, state.PolicyEngineARN.ValueString())
+	out, err := findPolicyEngineByID(ctx, conn, state.PolicyEngineID.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineID.String())
 		return
 	}
 
@@ -197,18 +204,18 @@ func (r *policyEngineResource) Update(ctx context.Context, req resource.UpdateRe
 		}
 
 		_, err := conn.UpdatePolicyEngine(ctx, &bedrockagentcorecontrol.UpdatePolicyEngineInput{
-			PolicyEngineId: plan.PolicyEngineARN.ValueStringPointer(),
+			PolicyEngineId: plan.PolicyEngineID.ValueStringPointer(),
 			Description:    description,
 		})
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineARN.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineID.String())
 			return
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitPolicyEngineUpdated(ctx, conn, plan.PolicyEngineARN.ValueString(), updateTimeout)
+		_, err = waitPolicyEngineUpdated(ctx, conn, plan.PolicyEngineID.ValueString(), updateTimeout)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineARN.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineID.String())
 			return
 		}
 	}
@@ -226,20 +233,20 @@ func (r *policyEngineResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	_, err := conn.DeletePolicyEngine(ctx, &bedrockagentcorecontrol.DeletePolicyEngineInput{
-		PolicyEngineId: state.PolicyEngineARN.ValueStringPointer(),
+		PolicyEngineId: state.PolicyEngineID.ValueStringPointer(),
 	})
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineID.String())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitPolicyEngineDeleted(ctx, conn, state.PolicyEngineARN.ValueString(), deleteTimeout)
+	_, err = waitPolicyEngineDeleted(ctx, conn, state.PolicyEngineID.ValueString(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineID.String())
 		return
 	}
 }
@@ -343,6 +350,7 @@ type policyEngineResourceModel struct {
 	EncryptionKeyARN fwtypes.ARN    `tfsdk:"encryption_key_arn"`
 	Name             types.String   `tfsdk:"name"`
 	PolicyEngineARN  types.String   `tfsdk:"policy_engine_arn"`
+	PolicyEngineID   types.String   `tfsdk:"policy_engine_id"`
 	Tags             tftags.Map     `tfsdk:"tags"`
 	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
