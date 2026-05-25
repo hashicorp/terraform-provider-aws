@@ -51,8 +51,8 @@ resource "aws_bedrockagentcore_resource_policy" "example" {
 
 The following arguments are required:
 
-* `resource_arn` - (Required) Amazon Resource Name (ARN) of the resource for which to create or update the resource policy.
 * `policy` - (Required) Resource policy definition
+* `resource_arn` - (Required) Amazon Resource Name (ARN) of the resource for which to create or update the resource policy.
 
 The following arguments are optional:
 
