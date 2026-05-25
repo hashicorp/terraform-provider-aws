@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // TestPrimitivesRoundtrip is the proof of concept for string roundtrip testing
@@ -255,515 +256,38 @@ type tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[T attr.Value] struct {
 func TestExpandStringField(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]map[string]map[string]struct {
-		source        any
-		expected      any
-		expectedDiags diag.Diagnostics
-	}{
-		"no options": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveField[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: "test_value"},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveField[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveField[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveField[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("")},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveField[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveField[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"unknown value": {
-				"value target": {
-					source:   &tfPrimitiveField[types.String]{Field1: types.StringUnknown()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveField[types.String]{Field1: types.StringUnknown()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+	valueHandler := stringValueHandler{}
 
-		"legacy": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: "test_value"},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+	testcases := map[string]map[string]map[string]fooTestCase{
+		"no options": expandPrimitiveNoOptionsCases(valueHandler),
 
-		"omitempty": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: "test_value"},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("")},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"legacy": expandPrimitiveLegacyCases(valueHandler),
 
-		"noexpand": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"omitempty": expandPrimitiveOmitEmptyCases(valueHandler),
 
-		"noflatten": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: "test_value"},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("")},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"noexpand": expandPrimitiveNoExpandCases(valueHandler),
 
-		"legacy,omitempty": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: "test_value"},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"noflatten": expandPrimitiveNoFlattenCases(valueHandler),
 
-		"legacy,noexpand": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"legacy,omitempty": expandPrimitiveLegacyOmitEmptyCases(valueHandler),
 
-		"legacy,noflatten": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: "test_value"},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"legacy,noexpand": expandPrimitiveLegacyNoExpandCases(valueHandler),
 
-		"omitempty,noexpand": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoExpand[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"legacy,noflatten": expandPrimitiveLegacyNoFlattenCases(valueHandler),
 
-		"omitempty,noflatten": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: "test_value"},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("")},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldOmitEmptyNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"omitempty,noexpand": expandPrimitiveOmitEmptyNoExpandCases(valueHandler),
 
-		"noexpand,noflatten": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"omitempty,noflatten": expandPrimitiveOmitEmptyNoFlattenCases(valueHandler),
 
-		"legacy,omitempty,noexpand": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpand[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"noexpand,noflatten": expandPrimitiveNoExpandNoFlattenCases(valueHandler),
 
-		"legacy,omitempty,noflatten": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: "test_value"},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"legacy,omitempty,noexpand": expandPrimitiveLegacyOmitEmptyNoExpandCases(valueHandler),
 
-		"legacy,noexpand,noflatten": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"legacy,omitempty,noflatten": expandPrimitiveLegacyOmitEmptyNoFlattenCases(valueHandler),
 
-		"legacy,omitempty,noexpand,noflatten": {
-			"with value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringValue("test_value")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"empty string": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringValue("")},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-			"null value": {
-				"value target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitiveField[string]{Field1: ""},
-				},
-				"pointer target": {
-					source:   &tfPrimitiveFieldLegacyOmitEmptyNoExpandNoFlatten[types.String]{Field1: types.StringNull()},
-					expected: &awsPrimitivePointerField[string]{Field1: nil},
-				},
-			},
-		},
+		"legacy,noexpand,noflatten": expandPrimitiveLegacyNoExpandNoFlattenCases(valueHandler),
+
+		"legacy,omitempty,noexpand,noflatten": expandPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases(valueHandler),
 	}
 
 	for name, tc := range testcases {
@@ -799,448 +323,431 @@ func TestExpandStringField(t *testing.T) {
 	}
 }
 
+func expandPrimitiveNoOptionsCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ""
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveRegularCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveLegacyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveLegacyGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveOmitEmptyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",omitempty"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveOmitEmptyGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveRegularCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveLegacyOmitEmptyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,omitempty"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveLegacyGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveLegacyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveLegacyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveLegacyGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveOmitEmptyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",omitempty,noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveOmitEmptyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",omitempty,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveOmitEmptyGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",noexpand,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveLegacyOmitEmptyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,omitempty,noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveLegacyOmitEmptyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,omitempty,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveLegacyGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveLegacyNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,noexpand,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,omitempty,noexpand,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveRegularCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	return map[string]map[string]fooTestCase{
+		"with value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithValue(),
+			},
+		},
+		"zero value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithZeroValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithZeroValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithZeroValue(),
+			},
+		},
+		"null value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithNullValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithNullValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+		"unknown value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithUnknownValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithUnknownValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+	}
+}
+
+func expandPrimitiveLegacyGenericCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	return map[string]map[string]fooTestCase{
+		"with value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithValue(),
+			},
+		},
+		"zero value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithZeroValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithZeroValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+		"null value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithNullValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithNullValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+		"unknown value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithUnknownValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithUnknownValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+	}
+}
+
+func expandPrimitiveOmitEmptyGenericCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	return map[string]map[string]fooTestCase{
+		"with value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithValue(),
+			},
+		},
+		"zero value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithZeroValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithZeroValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithZeroValue(),
+			},
+		},
+		"null value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithNullValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithNullValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+		"unknown value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithUnknownValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithUnknownValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+	}
+}
+
+func expandPrimitiveNoExpandGenericCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	return map[string]map[string]fooTestCase{
+		"with value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+		"zero value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithZeroValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithZeroValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+		"null value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithNullValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithNullValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+		"unknown value": {
+			"value target": {
+				source:   valueHandler.tfFieldWithUnknownValue(tfStructType),
+				expected: valueHandler.awsScalarFieldWithZeroValue(),
+			},
+			"pointer target": {
+				source:   valueHandler.tfFieldWithUnknownValue(tfStructType),
+				expected: valueHandler.awsPointerFieldWithNilValue(),
+			},
+		},
+	}
+}
+
+func tfStructSetSingleField(v reflect.Value, fieldName string, fieldValue reflect.Value) {
+	field := v.FieldByName(fieldName)
+	field.Set(fieldValue)
+}
+
+func tfStructSingleFieldType(name string, typ reflect.Type, autoflexTag string) reflect.Type {
+	return reflect.StructOf([]reflect.StructField{
+		tfStructField(name, typ, autoflexTag),
+	})
+}
+
+func tfStructField(name string, typ reflect.Type, autoflexTag string) reflect.StructField {
+	return reflect.StructField{
+		Name: name,
+		Type: typ,
+		Tag:  reflect.StructTag(`tfsdk:"` + names.ToSnakeCase(name) + `" autoflex:"` + autoflexTag + `"`),
+	}
+}
+
+type stringValueHandler struct{}
+
+func (h stringValueHandler) nonZeroValue() string {
+	return "test_value"
+}
+
+func (h stringValueHandler) zeroValue() string {
+	return ""
+}
+
+func (h stringValueHandler) tfFieldWithValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.StringValue(h.nonZeroValue())))
+	return p.Interface()
+}
+
+func (h stringValueHandler) tfFieldWithZeroValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.StringValue(h.zeroValue())))
+	return p.Interface()
+}
+
+func (h stringValueHandler) tfFieldWithNullValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.StringNull()))
+	return p.Interface()
+}
+
+func (h stringValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.StringUnknown()))
+	return p.Interface()
+}
+
+func (h stringValueHandler) awsScalarFieldWithValue() any {
+	return &awsPrimitiveField[string]{Field1: h.nonZeroValue()}
+}
+
+func (h stringValueHandler) awsScalarFieldWithZeroValue() any {
+	return &awsPrimitiveField[string]{Field1: h.zeroValue()}
+}
+
+func (h stringValueHandler) awsPointerFieldWithValue() any {
+	return &awsPrimitivePointerField[string]{Field1: aws.String(h.nonZeroValue())}
+}
+
+func (h stringValueHandler) awsPointerFieldWithZeroValue() any {
+	return &awsPrimitivePointerField[string]{Field1: aws.String(h.zeroValue())}
+}
+
+func (h stringValueHandler) awsPointerFieldWithNilValue() any {
+	return &awsPrimitivePointerField[string]{Field1: nil}
+}
+
+type fooTestCase struct {
+	source        any
+	expected      any
+	expectedDiags diag.Diagnostics
+}
+
 func TestFlattenStringField(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]map[string]map[string]struct {
-		expected      any
-		source        any
-		expectedDiags diag.Diagnostics
-	}{
-		"no options": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveField[types.String]{Field1: types.StringValue("test_value")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveField[types.String]{Field1: types.StringValue("test_value")},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveField[types.String]{Field1: types.StringValue("")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveField[types.String]{Field1: types.StringValue("")},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveField[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+	valueHandler := stringValueHandler{}
 
-		"legacy": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
-				},
-			},
-		},
+	const fieldName = "Field1"
+	const autoflexTag = ""
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
 
-		"omitempty": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+	v := reflect.New(tfStructType).Elem()
+	tfStructSetSingleField(v, fieldName, reflect.ValueOf(types.StringValue("test_value")))
 
-		"noexpand": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("test_value")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("test_value")},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringValue("")},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldNoExpand[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+	testcases := map[string]map[string]map[string]fooTestCase{
+		"no options": flattenPrimitiveNoOptionsCases(valueHandler),
 
-		"noflatten": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+		"legacy": flattenPrimitiveLegacyCases(valueHandler),
 
-		"legacy,omitempty": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
-				},
-			},
-		},
+		"omitempty": flattenPrimitiveOmitEmptyCases(valueHandler),
 
-		"legacy,noexpand": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("test_value")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("test_value")},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldLegacyNoExpand[types.String]{Field1: types.StringValue("")},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldLegacyOmitEmpty[types.String]{Field1: types.StringValue("")},
-				},
-			},
-		},
+		"noexpand": flattenPrimitiveNoExpandCases(valueHandler),
 
-		"legacy,noflatten": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+		"noflatten": flattenPrimitiveNoFlattenCases(valueHandler),
 
-		"omitempty,noexpand": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringValue("test_value")},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldOmitEmpty[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+		"legacy,omitempty": flattenPrimitiveLegacyOmitEmptyCases(valueHandler),
 
-		"omitempty,noflatten": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+		"legacy,noexpand": flattenPrimitiveLegacyNoExpandCases(valueHandler),
 
-		"noexpand,noflatten": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+		"legacy,noflatten": flattenPrimitiveLegacyNoFlattenCases(valueHandler),
 
-		"legacy,omitempty,noexpand": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("test_value")},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldLegacy[types.String]{Field1: types.StringValue("")},
-				},
-			},
-		},
+		"omitempty,noexpand": flattenPrimitiveOmitEmptyNoExpandCases(valueHandler),
 
-		"legacy,omitempty,noflatten": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+		"omitempty,noflatten": flattenPrimitiveOmitEmptyNoFlattenCases(valueHandler),
 
-		"legacy,noexpand,noflatten": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+		"noexpand,noflatten": flattenPrimitiveNoExpandNoFlattenCases(valueHandler),
 
-		"legacy,omitempty,noexpand,noflatten": {
-			"with value": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: "test_value"},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("test_value")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"empty string": {
-				"value source": {
-					source:   &awsPrimitiveField[string]{Field1: ""},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: aws.String("")},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-			"null value": {
-				"pointer source": {
-					source:   &awsPrimitivePointerField[string]{Field1: nil},
-					expected: &tfPrimitiveFieldNoFlatten[types.String]{Field1: types.StringNull()},
-				},
-			},
-		},
+		"legacy,omitempty,noexpand": flattenPrimitiveLegacyOmitEmptyNoExpandCases(valueHandler),
+
+		"legacy,omitempty,noflatten": flattenPrimitiveLegacyOmitEmptyNoFlattenCases(valueHandler),
+
+		"legacy,noexpand,noflatten": flattenPrimitiveLegacyNoExpandNoFlattenCases(valueHandler),
+
+		"legacy,omitempty,noexpand,noflatten": flattenPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases(valueHandler),
 	}
 
 	for name, tc := range testcases {
@@ -1273,6 +780,250 @@ func TestFlattenStringField(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+func flattenPrimitiveNoOptionsCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ""
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveRegularCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveLegacyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericLegacyCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveOmitEmptyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",omitempty"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericOmitEmptyCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveRegularCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveLegacyOmitEmptyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,omitempty"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericLegacyCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveLegacyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericLegacyCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveLegacyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveOmitEmptyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",omitempty,noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericOmitEmptyCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveOmitEmptyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",omitempty,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",noexpand,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveLegacyOmitEmptyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,omitempty,noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericLegacyCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveLegacyOmitEmptyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,omitempty,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveLegacyNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,noexpand,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",legacy,omitempty,noexpand,noflatten"
+	tfStructType := tfStructSingleFieldType(fieldName, reflect.TypeFor[types.String](), autoflexTag)
+
+	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveRegularCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	return map[string]map[string]fooTestCase{
+		"with value": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithValue(),
+				expected: valueHandler.tfFieldWithValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithValue(),
+				expected: valueHandler.tfFieldWithValue(tfStructType),
+			},
+		},
+		"empty string": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
+			},
+		},
+		"null value": {
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithNilValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+		},
+	}
+}
+
+func flattenPrimitiveGenericLegacyCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	return map[string]map[string]fooTestCase{
+		"with value": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithValue(),
+				expected: valueHandler.tfFieldWithValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithValue(),
+				expected: valueHandler.tfFieldWithValue(tfStructType),
+			},
+		},
+		"empty string": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
+			},
+		},
+		"null value": {
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithNilValue(),
+				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
+			},
+		},
+	}
+}
+
+func flattenPrimitiveGenericOmitEmptyCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	return map[string]map[string]fooTestCase{
+		"with value": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithValue(),
+				expected: valueHandler.tfFieldWithValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithValue(),
+				expected: valueHandler.tfFieldWithValue(tfStructType),
+			},
+		},
+		"empty string": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+		},
+		"null value": {
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithNilValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+		},
+	}
+}
+
+func flattenPrimitiveGenericNoFlattenCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+	return map[string]map[string]fooTestCase{
+		"with value": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+		},
+		"empty string": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+		},
+		"null value": {
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithNilValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+		},
 	}
 }
 
