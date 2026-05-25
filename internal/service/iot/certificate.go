@@ -30,47 +30,49 @@ func resourceCertificate() *schema.Resource {
 		UpdateWithoutTimeout: resourceCertificateUpdate,
 		DeleteWithoutTimeout: resourceCertificateDelete,
 
-		Schema: map[string]*schema.Schema{
-			"active": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ca_certificate_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ca_pem": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
-			"certificate_pem": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Computed:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
-			"csr": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrPrivateKey: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			names.AttrPublicKey: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ca_certificate_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ca_pem": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					ForceNew:  true,
+					Sensitive: true,
+				},
+				"certificate_pem": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Computed:  true,
+					ForceNew:  true,
+					Sensitive: true,
+				},
+				"csr": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrPrivateKey: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				names.AttrPublicKey: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }
