@@ -854,23 +854,23 @@ resource "aws_msk_replicator" "test" {
 func testAccReplicatorConfig_logDeliveryBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
- name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
- bucket        = "%[1]s-log-delivery"
- force_destroy = true
+  bucket        = "%[1]s-log-delivery"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket" "test_firehose" {
- bucket        = "%[1]s-firehose"
- force_destroy = true
+  bucket        = "%[1]s-firehose"
+  force_destroy = true
 }
 
 resource "aws_iam_role" "firehose_role" {
- name = %[1]q
+  name = %[1]q
 
- assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -888,24 +888,24 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
- name        = %[1]q
- destination = "extended_s3"
+  name        = %[1]q
+  destination = "extended_s3"
 
- extended_s3_configuration {
-   role_arn   = aws_iam_role.firehose_role.arn
-   bucket_arn = aws_s3_bucket.test_firehose.arn
- }
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose_role.arn
+    bucket_arn = aws_s3_bucket.test_firehose.arn
+  }
 
- tags = {
-   LogDeliveryEnabled = "placeholder"
- }
+  tags = {
+    LogDeliveryEnabled = "placeholder"
+  }
 
- lifecycle {
-   ignore_changes = [
-     # Ignore changes to LogDeliveryEnabled tag as API adds this tag when broker log delivery is enabled
-     tags["LogDeliveryEnabled"],
-   ]
- }
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to LogDeliveryEnabled tag as API adds this tag when broker log delivery is enabled
+      tags["LogDeliveryEnabled"],
+    ]
+  }
 }
 `, rName)
 }
@@ -917,64 +917,64 @@ func testAccReplicatorConfig_logDelivery(rName, sourceCluster, targetCluster str
 		testAccReplicatorConfig_logDeliveryBase(rName),
 		fmt.Sprintf(`
 resource "aws_msk_replicator" "test" {
- replicator_name            = %[1]q
- description                = "test-description"
- service_execution_role_arn = aws_iam_role.source.arn
+  replicator_name            = %[1]q
+  description                = "test-description"
+  service_execution_role_arn = aws_iam_role.source.arn
 
- log_delivery {
-   replicator_log_delivery {
-     cloudwatch_logs {
-       enabled   = %[2]t
-       log_group = aws_cloudwatch_log_group.test.name
-     }
-     s3 {
-       enabled   = %[2]t
-       bucket    = aws_s3_bucket.test.bucket
-       prefix    = "test/"
-     }
-     firehose {
-       enabled         = %[2]t
-       delivery_stream = aws_kinesis_firehose_delivery_stream.test.name
-     }
-   }
- }
+  log_delivery {
+    replicator_log_delivery {
+      cloudwatch_logs {
+        enabled   = %[2]t
+        log_group = aws_cloudwatch_log_group.test.name
+      }
+      s3 {
+        enabled = %[2]t
+        bucket  = aws_s3_bucket.test.bucket
+        prefix  = "test/"
+      }
+      firehose {
+        enabled         = %[2]t
+        delivery_stream = aws_kinesis_firehose_delivery_stream.test.name
+      }
+    }
+  }
 
- kafka_cluster {
-   amazon_msk_cluster {
-     msk_cluster_arn = aws_msk_cluster.source.arn
-   }
+  kafka_cluster {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.source.arn
+    }
 
-   vpc_config {
-     subnet_ids          = aws_subnet.source[*].id
-     security_groups_ids = [aws_security_group.source.id]
-   }
- }
+    vpc_config {
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
+    }
+  }
 
- kafka_cluster {
-   amazon_msk_cluster {
-     msk_cluster_arn = aws_msk_cluster.target.arn
-   }
+  kafka_cluster {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.target.arn
+    }
 
-   vpc_config {
-     subnet_ids          = aws_subnet.target[*].id
-     security_groups_ids = [aws_security_group.target.id]
-   }
- }
+    vpc_config {
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
+    }
+  }
 
- replication_info_list {
-   source_kafka_cluster_arn = aws_msk_cluster.source.arn
-   target_kafka_cluster_arn = aws_msk_cluster.target.arn
-   target_compression_type  = "NONE"
+  replication_info_list {
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
+    target_compression_type  = "NONE"
 
 
-   topic_replication {
-     topics_to_replicate = [".*"]
-   }
+    topic_replication {
+      topics_to_replicate = [".*"]
+    }
 
-   consumer_group_replication {
-     consumer_groups_to_replicate = [".*"]
-   }
- }
+    consumer_group_replication {
+      consumer_groups_to_replicate = [".*"]
+    }
+  }
 }
 `, rName, logDeliveryEnabled))
 }
@@ -986,60 +986,60 @@ func testAccReplicatorConfig_logDeliveryDisabled(rName, sourceCluster, targetClu
 		testAccReplicatorConfig_logDeliveryBase(rName),
 		fmt.Sprintf(`
 resource "aws_msk_replicator" "test" {
- replicator_name            = %[1]q
- description                = "test-description"
- service_execution_role_arn = aws_iam_role.source.arn
+  replicator_name            = %[1]q
+  description                = "test-description"
+  service_execution_role_arn = aws_iam_role.source.arn
 
- log_delivery {
-   replicator_log_delivery {
-     cloudwatch_logs {
-       enabled = false
-     }
-     s3 {
-       enabled = false
-     }
-     firehose {
-       enabled = false
-     }
-   }
- }
+  log_delivery {
+    replicator_log_delivery {
+      cloudwatch_logs {
+        enabled = false
+      }
+      s3 {
+        enabled = false
+      }
+      firehose {
+        enabled = false
+      }
+    }
+  }
 
- kafka_cluster {
-   amazon_msk_cluster {
-     msk_cluster_arn = aws_msk_cluster.source.arn
-   }
+  kafka_cluster {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.source.arn
+    }
 
-   vpc_config {
-     subnet_ids          = aws_subnet.source[*].id
-     security_groups_ids = [aws_security_group.source.id]
-   }
- }
+    vpc_config {
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
+    }
+  }
 
- kafka_cluster {
-   amazon_msk_cluster {
-     msk_cluster_arn = aws_msk_cluster.target.arn
-   }
+  kafka_cluster {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.target.arn
+    }
 
-   vpc_config {
-     subnet_ids          = aws_subnet.target[*].id
-     security_groups_ids = [aws_security_group.target.id]
-   }
- }
+    vpc_config {
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
+    }
+  }
 
- replication_info_list {
-   source_kafka_cluster_arn = aws_msk_cluster.source.arn
-   target_kafka_cluster_arn = aws_msk_cluster.target.arn
-   target_compression_type  = "NONE"
+  replication_info_list {
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
+    target_compression_type  = "NONE"
 
 
-   topic_replication {
-     topics_to_replicate = [".*"]
-   }
+    topic_replication {
+      topics_to_replicate = [".*"]
+    }
 
-   consumer_group_replication {
-     consumer_groups_to_replicate = [".*"]
-   }
- }
+    consumer_group_replication {
+      consumer_groups_to_replicate = [".*"]
+    }
+  }
 }
 `, rName))
 }
