@@ -308,7 +308,7 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Optional:      true,
-				ConflictsWith: []string{"encryption_config", "kubernetes_network_config", "remote_network_config"},
+				ConflictsWith: []string{"encryption_config", "kubernetes_network_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"control_plane_instance_type": {
@@ -346,17 +346,16 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"remote_network_config": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"outpost_config"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"remote_node_networks": {
 							Type:     schema.TypeList,
 							MinItems: 1,
 							MaxItems: 1,
-							Required: true,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cidrs": {
@@ -971,8 +970,10 @@ func resourceClusterFlatten(ctx context.Context, cluster *types.Cluster, d *sche
 		return fmt.Errorf("setting outpost_config: %w", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
-	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
-		return fmt.Errorf("setting remote_network_config: %w", err)
+	if cluster.RemoteNetworkConfig != nil {
+		if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
+			return fmt.Errorf("setting remote_network_config: %w", err)
+		}
 	}
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
@@ -1759,11 +1760,16 @@ func flattenVPCConfigResponse(apiObject *types.VpcConfigResponse) []map[string]a
 		return []map[string]any{}
 	}
 
+	securityGroupIds := apiObject.SecurityGroupIds
+	if securityGroupIds == nil {
+		securityGroupIds = []string{}
+	}
+
 	tfMap := map[string]any{
 		"cluster_security_group_id": aws.ToString(apiObject.ClusterSecurityGroupId),
 		"endpoint_private_access":   apiObject.EndpointPrivateAccess,
 		"endpoint_public_access":    apiObject.EndpointPublicAccess,
-		names.AttrSecurityGroupIDs:  apiObject.SecurityGroupIds,
+		names.AttrSecurityGroupIDs:  securityGroupIds,
 		names.AttrSubnetIDs:         apiObject.SubnetIds,
 		"public_access_cidrs":       apiObject.PublicAccessCidrs,
 		names.AttrVPCID:             aws.ToString(apiObject.VpcId),
