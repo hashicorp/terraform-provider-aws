@@ -10,6 +10,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -62,6 +63,63 @@ func TestAccSageMakerComputeQuota_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerComputeQuota_invalid_emptyName(t *testing.T) {
+	ctx := acctest.Context(t)
+	clusterARN := "arn:aws:sagemaker:us-east-1:123456789012:cluster/test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccComputeQuotaConfig_emptyName(clusterARN, testAccComputeQuotaInstanceType()),
+				ExpectError: regexache.MustCompile(`non-whitespace character`),
+			},
+		},
+	})
+}
+
+func TestAccSageMakerComputeQuota_invalid_emptyTeamName(t *testing.T) {
+	ctx := acctest.Context(t)
+	clusterARN := "arn:aws:sagemaker:us-east-1:123456789012:cluster/test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccComputeQuotaConfig_emptyTeamName("test-quota", clusterARN, testAccComputeQuotaInstanceType()),
+				ExpectError: regexache.MustCompile(`non-whitespace character`),
+			},
+		},
+	})
+}
+
+func TestAccSageMakerComputeQuota_invalid_noResourceDimension(t *testing.T) {
+	ctx := acctest.Context(t)
+	clusterARN := "arn:aws:sagemaker:us-east-1:123456789012:cluster/test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccComputeQuotaConfig_noResourceDimension("test-quota", clusterARN, testAccComputeQuotaInstanceType()),
+				ExpectError: regexache.MustCompile(`Missing SageMaker Compute Quota Resource Allocation`),
 			},
 		},
 	})
@@ -177,6 +235,77 @@ resource "aws_sagemaker_compute_quota" "test" {
   compute_quota_config {
     compute_quota_resources {
       count         = 1
+      instance_type = %[3]q
+    }
+
+    resource_sharing_config {
+      strategy = "LendAndBorrow"
+    }
+  }
+
+  compute_quota_target {
+    team_name = %[1]q
+  }
+}
+`, rName, clusterARN, instanceType)
+}
+
+func testAccComputeQuotaConfig_emptyName(clusterARN, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_compute_quota" "test" {
+  cluster_arn = %[1]q
+  name        = " "
+
+  compute_quota_config {
+    compute_quota_resources {
+      count         = 1
+      instance_type = %[2]q
+    }
+
+    resource_sharing_config {
+      strategy = "LendAndBorrow"
+    }
+  }
+
+  compute_quota_target {
+    team_name = "test-team"
+  }
+}
+`, clusterARN, instanceType)
+}
+
+func testAccComputeQuotaConfig_emptyTeamName(rName, clusterARN, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_compute_quota" "test" {
+  cluster_arn = %[2]q
+  name        = %[1]q
+
+  compute_quota_config {
+    compute_quota_resources {
+      count         = 1
+      instance_type = %[3]q
+    }
+
+    resource_sharing_config {
+      strategy = "LendAndBorrow"
+    }
+  }
+
+  compute_quota_target {
+    team_name = " "
+  }
+}
+`, rName, clusterARN, instanceType)
+}
+
+func testAccComputeQuotaConfig_noResourceDimension(rName, clusterARN, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_compute_quota" "test" {
+  cluster_arn = %[2]q
+  name        = %[1]q
+
+  compute_quota_config {
+    compute_quota_resources {
       instance_type = %[3]q
     }
 

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/float32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -100,6 +102,9 @@ func (r *computeQuotaResource) Schema(ctx context.Context, _ resource.SchemaRequ
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`\S`), "must contain at least one non-whitespace character"),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -188,6 +193,9 @@ func (r *computeQuotaResource) Schema(ctx context.Context, _ resource.SchemaRequ
 						},
 						"team_name": schema.StringAttribute{
 							Required: true,
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(regexache.MustCompile(`\S`), "must contain at least one non-whitespace character"),
+							},
 						},
 					},
 				},
@@ -254,6 +262,7 @@ func computeQuotaResourceConfigSchema() map[string]schema.Attribute {
 			Computed: true,
 			Validators: []validator.Float32{
 				float32validator.AtLeast(0),
+				float32validator.NoneOf(0),
 			},
 		},
 		"vcpu": schema.Float32Attribute{
@@ -261,6 +270,7 @@ func computeQuotaResourceConfigSchema() map[string]schema.Attribute {
 			Computed: true,
 			Validators: []validator.Float32{
 				float32validator.AtLeast(0),
+				float32validator.NoneOf(0),
 			},
 		},
 	}
@@ -292,6 +302,10 @@ func (r *computeQuotaResource) Create(ctx context.Context, req resource.CreateRe
 
 	outputWait, err := waitComputeQuotaCreated(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		if cleanupErr := deleteComputeQuotaAfterFailedCreate(ctx, conn, plan.ID.ValueString(), r.DeleteTimeout(ctx, plan.Timeouts)); cleanupErr != nil {
+			err = errors.Join(err, fmt.Errorf("deleting failed SageMaker Compute Quota (%s): %w", plan.ID.ValueString(), cleanupErr))
+		}
+
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Compute Quota (%s) create", plan.ID.ValueString()), err.Error())
 		return
 	}
@@ -522,6 +536,15 @@ func expandComputeQuotaResourceConfigs(ctx context.Context, value fwtypes.ListNe
 			continue
 		}
 
+		if !computeQuotaResourceConfigHasAllocation(model) {
+			diags.AddError(
+				"Missing SageMaker Compute Quota Resource Allocation",
+				"Each compute_quota_resources and absolute_borrow_limits block must set at least one of count, accelerators, vcpu, memory_in_gib, or accelerator_partition.",
+			)
+
+			return nil, diags
+		}
+
 		partition, d := expandAcceleratorPartitionConfig(ctx, model.AcceleratorPartition)
 		diags.Append(d...)
 		if diags.HasError() {
@@ -539,6 +562,14 @@ func expandComputeQuotaResourceConfigs(ctx context.Context, value fwtypes.ListNe
 	}
 
 	return output, diags
+}
+
+func computeQuotaResourceConfigHasAllocation(model *computeQuotaResourceConfigModel) bool {
+	return int32ValueIsConfigured(model.Accelerators) ||
+		int32ValueIsConfigured(model.Count) ||
+		float32ValueIsConfigured(model.MemoryInGiB) ||
+		float32ValueIsConfigured(model.VCpu) ||
+		!model.AcceleratorPartition.IsNull() && !model.AcceleratorPartition.IsUnknown()
 }
 
 func expandAcceleratorPartitionConfig(ctx context.Context, value fwtypes.ListNestedObjectValueOf[acceleratorPartitionConfigModel]) (*awstypes.AcceleratorPartitionConfig, diag.Diagnostics) {
@@ -568,12 +599,20 @@ func int32ValuePointer(value types.Int32) *int32 {
 	return value.ValueInt32Pointer()
 }
 
+func int32ValueIsConfigured(value types.Int32) bool {
+	return !value.IsNull() && !value.IsUnknown()
+}
+
 func float32ValuePointer(value types.Float32) *float32 {
 	if value.IsNull() || value.IsUnknown() {
 		return nil
 	}
 
 	return value.ValueFloat32Pointer()
+}
+
+func float32ValueIsConfigured(value types.Float32) bool {
+	return !value.IsNull() && !value.IsUnknown()
 }
 
 func flattenComputeQuota(ctx context.Context, output *sagemaker.DescribeComputeQuotaOutput, data *computeQuotaResourceModel) diag.Diagnostics {
@@ -749,8 +788,12 @@ func waitComputeQuotaUpdated(ctx context.Context, conn *sagemaker.Client, id str
 func waitComputeQuotaDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
+			awstypes.SchedulerResourceStatusCreateFailed,
+			awstypes.SchedulerResourceStatusCreateRollbackFailed,
 			awstypes.SchedulerResourceStatusCreated,
 			awstypes.SchedulerResourceStatusUpdated,
+			awstypes.SchedulerResourceStatusUpdateFailed,
+			awstypes.SchedulerResourceStatusUpdateRollbackFailed,
 			awstypes.SchedulerResourceStatusDeleting,
 		),
 		Target:  []string{},
@@ -761,6 +804,32 @@ func waitComputeQuotaDeleted(ctx context.Context, conn *sagemaker.Client, id str
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func deleteComputeQuotaAfterFailedCreate(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) error {
+	output, err := findComputeQuotaByID(ctx, conn, id)
+	if retry.NotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	if !isComputeQuotaCreateFailureStatus(output.Status) {
+		return nil
+	}
+
+	_, err = conn.DeleteComputeQuota(ctx, &sagemaker.DeleteComputeQuotaInput{
+		ComputeQuotaId: aws.String(id),
+	})
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	return waitComputeQuotaDeleted(ctx, conn, id, timeout)
 }
 
 func statusComputeQuota(_ context.Context, conn *sagemaker.Client, id string) retry.StateRefreshFunc {
@@ -804,6 +873,11 @@ func isComputeQuotaFailureStatus(status awstypes.SchedulerResourceStatus) bool {
 		status == awstypes.SchedulerResourceStatusUpdateRollbackFailed ||
 		status == awstypes.SchedulerResourceStatusDeleteFailed ||
 		status == awstypes.SchedulerResourceStatusDeleteRollbackFailed
+}
+
+func isComputeQuotaCreateFailureStatus(status awstypes.SchedulerResourceStatus) bool {
+	return status == awstypes.SchedulerResourceStatusCreateFailed ||
+		status == awstypes.SchedulerResourceStatusCreateRollbackFailed
 }
 
 type computeQuotaResourceModel struct {

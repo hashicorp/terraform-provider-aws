@@ -10,6 +10,8 @@ description: |-
 
 Manages a SageMaker AI Compute Quota for a SageMaker HyperPod cluster.
 
+~> Compute quotas require task governance to be configured for the target SageMaker HyperPod cluster.
+
 ## Example Usage
 
 ```terraform
@@ -42,7 +44,7 @@ This resource supports the following arguments:
 * `cluster_arn` - (Required) ARN of the SageMaker HyperPod cluster.
 * `compute_quota_config` - (Required) Compute allocation configuration. See [`compute_quota_config`](#compute_quota_config).
 * `compute_quota_target` - (Required) Target entity for the compute quota. See [`compute_quota_target`](#compute_quota_target).
-* `name` - (Required) Name of the compute quota.
+* `name` - (Required) Name of the compute quota. Must contain at least one non-whitespace character.
 * `activation_state` - (Optional) Whether the compute quota is enabled. Valid values are `Enabled` and `Disabled`. Defaults to `Enabled`.
 * `description` - (Optional) Description of the compute quota.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -53,7 +55,7 @@ The `compute_quota_config` block supports the following arguments:
 
 * `compute_quota_resources` - (Required) Compute resources allocated by instance type. See [`compute_quota_resources`](#compute_quota_resources).
 * `resource_sharing_config` - (Required) Idle compute sharing configuration. See [`resource_sharing_config`](#resource_sharing_config).
-* `preempt_team_tasks` - (Optional) Whether workloads can preempt lower-priority same-team workloads. Valid value is `LowerPriority`. Defaults to `LowerPriority`.
+* `preempt_team_tasks` - (Optional) Whether workloads can preempt lower-priority same-team workloads. Valid values are `LowerPriority` and `Never`. Defaults to `LowerPriority`.
 
 ### compute_quota_resources
 
@@ -63,8 +65,10 @@ The `compute_quota_resources` block supports the following arguments:
 * `accelerator_partition` - (Optional) Fractional GPU allocation configuration. See [`accelerator_partition`](#accelerator_partition).
 * `accelerators` - (Optional) Number of accelerators to allocate.
 * `count` - (Optional) Number of instances to allocate.
-* `memory_in_gib` - (Optional) Amount of memory, in GiB, to allocate.
-* `vcpu` - (Optional) Number of vCPUs to allocate.
+* `memory_in_gib` - (Optional) Amount of memory, in GiB, to allocate. Must be greater than `0` when configured.
+* `vcpu` - (Optional) Number of vCPUs to allocate. Must be greater than `0` when configured.
+
+At least one of `accelerator_partition`, `accelerators`, `count`, `memory_in_gib`, or `vcpu` must be configured.
 
 ### accelerator_partition
 
@@ -85,7 +89,7 @@ The `resource_sharing_config` block supports the following arguments:
 
 The `compute_quota_target` block supports the following arguments:
 
-* `team_name` - (Required) Name of the team to allocate compute resources to.
+* `team_name` - (Required) Name of the team to allocate compute resources to. Must contain at least one non-whitespace character.
 * `fair_share_weight` - (Optional) Fair-share weight assigned to the target. Valid values are between `0` and `100`. Defaults to `0`.
 
 ## Attribute Reference
