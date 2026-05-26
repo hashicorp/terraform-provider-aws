@@ -37,6 +37,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	healthCheckDefaultRetries = 3
+	healthCheckDefaultTimeout = 5
+)
+
 // @FrameworkResource("aws_ecs_daemon_task_definition", name="Daemon Task Definition")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
@@ -138,6 +143,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						},
 						"essential": schema.BoolAttribute{
 							Optional: true,
+							Computed: true,
 						},
 						"image": schema.StringAttribute{
 							Required: true,
@@ -263,7 +269,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 									"retries": schema.Int64Attribute{
 										Optional: true,
 										Computed: true,
-										Default:  int64default.StaticInt64(3),
+										Default:  int64default.StaticInt64(healthCheckDefaultRetries),
 										Validators: []validator.Int64{
 											int64validator.Between(1, 10),
 										},
@@ -277,7 +283,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 									names.AttrTimeout: schema.Int64Attribute{
 										Optional: true,
 										Computed: true,
-										Default:  int64default.StaticInt64(5),
+										Default:  int64default.StaticInt64(healthCheckDefaultTimeout),
 										Validators: []validator.Int64{
 											int64validator.Between(2, 60),
 										},

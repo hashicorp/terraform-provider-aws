@@ -76,6 +76,11 @@ func TestAccECSDaemonTaskDefinition_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceDaemonTaskDefinition, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1181,6 +1186,37 @@ resource "aws_ecs_daemon_task_definition" "test" {
     cpu       = 256
     memory    = 512
     essential = true
+  }
+}
+`, rName)
+}
+
+func TestAccECSDaemonTaskDefinition_bareMinimum(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_bareMinimum(rName),
+			},
+		},
+	})
+}
+
+func testAccDaemonTaskDefinitionConfig_bareMinimum(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+
+  container_definition {
+    name   = "test"
+    image  = "nginx:latest"
+    memory = 128
   }
 }
 `, rName)

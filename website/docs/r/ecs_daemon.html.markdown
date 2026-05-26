@@ -16,10 +16,10 @@ Provides an ECS Daemon resource, which manages a daemon that runs exactly one ta
 
 ```terraform
 resource "aws_ecs_daemon" "example" {
-  name                   = "example-daemon"
-  cluster_arn            = aws_ecs_cluster.example.arn
+  name                       = "example-daemon"
+  cluster_arn                = aws_ecs_cluster.example.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.example.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.example.arn]
 }
 ```
 
@@ -27,10 +27,10 @@ resource "aws_ecs_daemon" "example" {
 
 ```terraform
 resource "aws_ecs_daemon" "example" {
-  name                   = "example-daemon"
-  cluster_arn            = aws_ecs_cluster.example.arn
+  name                       = "example-daemon"
+  cluster_arn                = aws_ecs_cluster.example.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.example.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.example.arn]
 
   deployment_configuration {
     drain_percent        = 50.0
@@ -48,10 +48,10 @@ resource "aws_ecs_daemon" "example" {
 
 ```terraform
 resource "aws_ecs_daemon" "example" {
-  name                   = "example-daemon"
-  cluster_arn            = aws_ecs_cluster.example.arn
+  name                       = "example-daemon"
+  cluster_arn                = aws_ecs_cluster.example.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.example.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.example.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.example.arn]
 
   tags = {
     Environment = "production"
@@ -75,7 +75,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Deployment Configuration
+### `deployment_configuration` Block
 
 ~> **Note:** The `deployment_configuration` block is write-only. The API does not return these values, so Terraform cannot detect drift. Changes to deployment configuration will always show in the plan.
 
@@ -85,7 +85,7 @@ The `deployment_configuration` block supports:
 * `bake_time_in_minutes` - (Optional) Time in minutes to wait before considering a deployment successful. Valid values are between 0 and 1440. Defaults to `0`.
 * `drain_percent` - (Optional) Percentage of tasks to drain during deployment. Valid values are between 0.0 and 100.0.
 
-### Alarms
+### `alarms` Block
 
 The `alarms` block supports:
 

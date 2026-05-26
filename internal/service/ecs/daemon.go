@@ -239,7 +239,7 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	plan.DaemonArn = fwtypes.ARNValue(aws.ToString(output.DaemonArn))
 
 	// Save ARN to state so Terraform can track the resource if the waiter times out.
-	response.State.SetAttribute(ctx, path.Root("arn"), output.DaemonArn)
+	response.State.SetAttribute(ctx, path.Root(names.AttrARN), output.DaemonArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	if err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), createTimeout); err != nil {
@@ -309,6 +309,10 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var plan, state daemonResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return

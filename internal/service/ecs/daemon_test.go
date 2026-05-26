@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -128,6 +129,11 @@ func TestAccECSDaemon_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceDaemon, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -577,10 +583,10 @@ resource "aws_iam_role" "test" {
 func testAccDaemonConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                   = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
 }
 `, rName))
 }
@@ -588,10 +594,10 @@ resource "aws_ecs_daemon" "test" {
 func testAccDaemonConfig_deploymentConfiguration(rName string, drainPercent float64, bakeTime int) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                   = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
 
   deployment_configuration {
     drain_percent        = %[2]f
@@ -604,10 +610,10 @@ resource "aws_ecs_daemon" "test" {
 func testAccDaemonConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                   = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
 
   tags = {
     %[2]q = %[3]q
@@ -619,10 +625,10 @@ resource "aws_ecs_daemon" "test" {
 func testAccDaemonConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                   = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
 
   tags = {
     %[2]q = %[3]q
@@ -635,10 +641,10 @@ resource "aws_ecs_daemon" "test" {
 func testAccDaemonConfig_alarms(rName string, enable bool) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                   = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
 
   deployment_configuration {
     alarms {
@@ -653,11 +659,11 @@ resource "aws_ecs_daemon" "test" {
 func testAccDaemonConfig_enableManagedTags(rName string, enable bool) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                    = %[1]q
-  cluster_arn             = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns  = [aws_ecs_capacity_provider.test.arn]
-  enable_ecs_managed_tags = %[2]t
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
+  enable_ecs_managed_tags    = %[2]t
 }
 `, rName, enable))
 }
@@ -665,11 +671,11 @@ resource "aws_ecs_daemon" "test" {
 func testAccDaemonConfig_enableExecuteCommand(rName string, enable bool) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                   = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
-  enable_execute_command = %[2]t
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
+  enable_execute_command     = %[2]t
 }
 `, rName, enable))
 }
@@ -677,11 +683,11 @@ resource "aws_ecs_daemon" "test" {
 func testAccDaemonConfig_propagateTags(rName string, propagate string) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
-  name                   = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
-  propagate_tags         = %[2]q
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
+  propagate_tags             = %[2]q
 }
 `, rName, propagate))
 }
@@ -797,10 +803,10 @@ resource "aws_ecs_daemon_task_definition" "test" {
 }
 
 resource "aws_ecs_daemon" "test" {
-  name                   = %[1]q
-  cluster_arn            = aws_ecs_cluster.test.arn
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
-  capacity_provider_arns = [aws_ecs_capacity_provider.test.arn]
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
 }
 `, rName, image))
 }

@@ -139,7 +139,7 @@ resource "aws_ecs_daemon_task_definition" "service" {
 The following arguments are required:
 
 * `container_definition` - (Required) One or more container definition blocks. Detailed below.
-* `family` - (Required) A unique name for your daemon task definition.
+* `family` - (Required) Unique name for your daemon task definition.
 
 The following arguments are optional:
 
@@ -151,137 +151,137 @@ The following arguments are optional:
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `volume` - (Optional) Repeatable configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
 
-### container_definition
+### `container_definition` Block
 
-* `image` - (Required) The image used to start a container.
-* `command` - (Optional) The command that is passed to the container.
-* `cpu` - (Optional) The number of cpu units reserved for the container.
-* `depends_on` - (Optional) The dependencies defined for container startup and shutdown. Detailed below.
-* `entry_point` - (Optional) The entry point that is passed to the container.
-* `environment` - (Optional) The environment variables to pass to a container. Detailed below.
-* `environment_file` - (Optional) A list of files containing the environment variables to pass to a container. Detailed below.
+* `command` - (Optional) Command that is passed to the container.
+* `cpu` - (Optional) Number of cpu units reserved for the container.
+* `depends_on` - (Optional) Dependencies defined for container startup and shutdown. Detailed below.
+* `entry_point` - (Optional) Entry point that is passed to the container.
+* `environment` - (Optional) Environment variables to pass to a container. Detailed below.
+* `environment_file` - (Optional) List of files containing the environment variables to pass to a container. Detailed below.
 * `essential` - (Optional) If the essential parameter of a container is marked as true, and that container fails or stops for any reason, all other containers that are part of the task are stopped.
-* `firelens_configuration` - (Optional) The FireLens configuration for the container. Detailed below.
-* `health_check` - (Optional) The container health check command and associated configuration parameters for the container. Detailed below.
+* `firelens_configuration` - (Optional) FireLens configuration for the container. Detailed below.
+* `health_check` - (Optional) Container health check command and associated configuration parameters for the container. Detailed below.
+* `image` - (Required) Image used to start a container.
 * `interactive` - (Optional) When this parameter is true, you can deploy containerized applications that require stdin or a tty to be allocated.
 * `linux_parameters` - (Optional) Linux-specific modifications that are applied to the container. Detailed below.
-* `log_configuration` - (Optional) The log configuration specification for the container. Detailed below.
-* `memory` - (Optional) The amount (in MiB) of memory to present to the container.
-* `memory_reservation` - (Optional) The soft limit (in MiB) of memory to reserve for the container.
-* `mount_point` - (Optional) The mount points for data volumes in your container. Detailed below.
-* `name` - (Optional) The name of a container.
+* `log_configuration` - (Optional) Log configuration specification for the container. Detailed below.
+* `memory` - (Optional) Amount (in MiB) of memory to present to the container.
+* `memory_reservation` - (Optional) Soft limit (in MiB) of memory to reserve for the container.
+* `mount_point` - (Optional) Mount points for data volumes in your container. Detailed below.
+* `name` - (Optional) Name of a container.
 * `privileged` - (Optional) When this parameter is true, the container is given elevated privileges on the host container instance.
 * `pseudo_terminal` - (Optional) When this parameter is true, a TTY is allocated.
 * `readonly_root_filesystem` - (Optional) When this parameter is true, the container is given read-only access to its root file system.
-* `repository_credentials` - (Optional) The private repository authentication credentials to use. Detailed below.
-* `restart_policy` - (Optional) The restart policy for a container. Detailed below.
-* `secret` - (Optional) The secrets to pass to the container. Detailed below.
+* `repository_credentials` - (Optional) Private repository authentication credentials to use. Detailed below.
+* `restart_policy` - (Optional) Restart policy for a container. Detailed below.
+* `secret` - (Optional) Secrets to pass to the container. Detailed below.
 * `start_timeout` - (Optional) Time duration (in seconds) to wait before giving up on resolving dependencies for a container.
 * `stop_timeout` - (Optional) Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own.
-* `system_control` - (Optional) A list of namespaced kernel parameters to set in the container. Detailed below.
-* `ulimit` - (Optional) A list of ulimits to set in the container. Detailed below.
-* `user` - (Optional) The user to use inside the container.
-* `working_directory` - (Optional) The working directory to run commands inside the container.
+* `system_control` - (Optional) List of namespaced kernel parameters to set in the container. Detailed below.
+* `ulimit` - (Optional) List of ulimits to set in the container. Detailed below.
+* `user` - (Optional) User to use inside the container.
+* `working_directory` - (Optional) Working directory to run commands inside the container.
 
-### volume
+### `volume` Block
 
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
 
-### depends_on
+### `depends_on` Block
 
-* `condition` - (Required) The dependency condition of the container. Valid values: `START`, `COMPLETE`, `SUCCESS`, `HEALTHY`.
-* `container_name` - (Required) The name of a container.
+* `condition` - (Required) Dependency condition of the container. Valid values: `START`, `COMPLETE`, `SUCCESS`, `HEALTHY`.
+* `container_name` - (Required) Name of a container.
 
-### environment
+### `environment` Block
 
-* `name` - (Required) The name of the environment variable.
-* `value` - (Required) The value of the environment variable.
+* `name` - (Required) Name of the environment variable.
+* `value` - (Required) Value of the environment variable.
 
-### environment_file
+### `environment_file` Block
 
-* `type` - (Required) The file type to use. The only supported value is `s3`.
-* `value` - (Required) The ARN of the Amazon S3 object containing the environment variable file.
+* `type` - (Required) File type to use. The only supported value is `s3`.
+* `value` - (Required) ARN of the Amazon S3 object containing the environment variable file.
 
-### firelens_configuration
+### `firelens_configuration` Block
 
-* `options` - (Optional) The options to use when configuring the log router.
-* `type` - (Required) The log router to use. Valid values: `fluentd`, `fluentbit`.
+* `options` - (Optional) Options to use when configuring the log router.
+* `type` - (Required) Log router to use. Valid values: `fluentd`, `fluentbit`.
 
-### health_check
+### `health_check` Block
 
-* `command` - (Required) A string array representing the command that the container runs to determine if it is healthy.
-* `interval` - (Optional) The time period in seconds between each health check execution. Valid range: 5–300.
-* `retries` - (Optional) The number of times to retry a failed health check. Valid range: 1–10.
-* `start_period` - (Optional) The grace period in seconds to provide containers time to bootstrap. Valid range: 0–300.
-* `timeout` - (Optional) The time period in seconds to wait for a health check to succeed. Valid range: 2–60.
+* `command` - (Required) String array representing the command that the container runs to determine if it is healthy.
+* `interval` - (Optional) Time period in seconds between each health check execution. Valid range: 5–300.
+* `retries` - (Optional) Number of times to retry a failed health check. Valid range: 1–10.
+* `start_period` - (Optional) Grace period in seconds to provide containers time to bootstrap. Valid range: 0–300.
+* `timeout` - (Optional) Time period in seconds to wait for a health check to succeed. Valid range: 2–60.
 
-### linux_parameters
+### `linux_parameters` Block
 
-* `capabilities` - (Optional) The Linux capabilities for the container. Detailed below.
+* `capabilities` - (Optional) Linux capabilities for the container. Detailed below.
 * `device` - (Optional) Any host devices to expose to the container. Detailed below.
 * `init_process_enabled` - (Optional) Run an init process inside the container that forwards signals and reaps processes.
-* `tmpfs` - (Optional) The container path, mount options, and size of the tmpfs mount. Detailed below.
+* `tmpfs` - (Optional) Container path, mount options, and size of the tmpfs mount. Detailed below.
 
-### capabilities
+### `capabilities` Block
 
-* `add` - (Optional) The Linux capabilities for the container that have been added to the default configuration provided by Docker.
-* `drop` - (Optional) The Linux capabilities for the container that have been removed from the default configuration provided by Docker.
+* `add` - (Optional) Linux capabilities for the container that have been added to the default configuration provided by Docker.
+* `drop` - (Optional) Linux capabilities for the container that have been removed from the default configuration provided by Docker.
 
-### device
+### `device` Block
 
-* `container_path` - (Optional) The path inside the container at which to expose the host device.
-* `host_path` - (Required) The path for the device on the host container instance.
-* `permissions` - (Optional) The explicit permissions to provide to the container for the device. Valid values: `read`, `write`, `mknod`.
+* `container_path` - (Optional) Path inside the container at which to expose the host device.
+* `host_path` - (Required) Path for the device on the host container instance.
+* `permissions` - (Optional) Explicit permissions to provide to the container for the device. Valid values: `read`, `write`, `mknod`.
 
-### tmpfs
+### `tmpfs` Block
 
-* `container_path` - (Required) The absolute file path where the tmpfs volume is to be mounted.
-* `mount_options` - (Optional) The list of tmpfs volume mount options.
-* `size` - (Required) The maximum size (in MiB) of the tmpfs volume.
+* `container_path` - (Required) Absolute file path where the tmpfs volume is to be mounted.
+* `mount_options` - (Optional) List of tmpfs volume mount options.
+* `size` - (Required) Maximum size (in MiB) of the tmpfs volume.
 
-### log_configuration
+### `log_configuration` Block
 
-* `log_driver` - (Required) The log driver to use for the container. Valid values: `json-file`, `syslog`, `journald`, `gelf`, `fluentd`, `awslogs`, `splunk`, `awsfirelens`.
-* `options` - (Optional) The configuration options to send to the log driver.
-* `secret_option` - (Optional) The secrets to pass to the log configuration. Detailed below.
+* `log_driver` - (Required) Log driver to use for the container. Valid values: `json-file`, `syslog`, `journald`, `gelf`, `fluentd`, `awslogs`, `splunk`, `awsfirelens`.
+* `options` - (Optional) Configuration options to send to the log driver.
+* `secret_option` - (Optional) Secrets to pass to the log configuration. Detailed below.
 
-### secret_option
+### `secret_option` Block
 
-* `name` - (Required) The name of the secret.
-* `value_from` - (Required) The secret to expose to the log configuration.
+* `name` - (Required) Name of the secret.
+* `value_from` - (Required) Secret to expose to the log configuration.
 
-### mount_point
+### `mount_point` Block
 
-* `container_path` - (Optional) The path on the container to mount the host volume at.
+* `container_path` - (Optional) Path on the container to mount the host volume at.
 * `read_only` - (Optional) If this value is true, the container has read-only access to the volume.
-* `source_volume` - (Optional) The name of the volume to mount.
+* `source_volume` - (Optional) Name of the volume to mount.
 
-### repository_credentials
+### `repository_credentials` Block
 
-* `credentials_parameter` - (Required) The ARN of the secret containing the private repository credentials.
+* `credentials_parameter` - (Required) ARN of the secret containing the private repository credentials.
 
-### restart_policy
+### `restart_policy` Block
 
-* `enabled` - (Required) Specifies whether a restart policy is enabled for the container.
-* `ignored_exit_codes` - (Optional) A list of exit codes that Amazon ECS will ignore and not attempt a restart on. Maximum of 50.
-* `restart_attempt_period` - (Optional) A period of time (in seconds) that the container must run for before a restart can be attempted. Valid range: 60–1800.
+* `enabled` - (Required) Whether a restart policy is enabled for the container.
+* `ignored_exit_codes` - (Optional) List of exit codes that Amazon ECS will ignore and not attempt a restart on. Maximum of 50.
+* `restart_attempt_period` - (Optional) Period of time (in seconds) that the container must run for before a restart can be attempted. Valid range: 60–1800.
 
-### secret
+### `secret` Block
 
-* `name` - (Required) The name of the secret.
-* `value_from` - (Required) The secret to expose to the container. The supported values are either the full ARN of the Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+* `name` - (Required) Name of the secret.
+* `value_from` - (Required) Secret to expose to the container. The supported values are either the full ARN of the Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
 
-### system_control
+### `system_control` Block
 
-* `namespace` - (Optional) The namespaced kernel parameter to set a value for.
-* `value` - (Optional) The value for the namespaced kernel parameter.
+* `namespace` - (Optional) Namespaced kernel parameter to set a value for.
+* `value` - (Optional) Value for the namespaced kernel parameter.
 
-### ulimit
+### `ulimit` Block
 
-* `hard_limit` - (Required) The hard limit for the ulimit type.
-* `name` - (Required) The type of the ulimit.
-* `soft_limit` - (Required) The soft limit for the ulimit type.
+* `hard_limit` - (Required) Hard limit for the ulimit type.
+* `name` - (Required) Type of the ulimit.
+* `soft_limit` - (Required) Soft limit for the ulimit type.
 
 ## Attribute Reference
 
