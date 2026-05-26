@@ -10,8 +10,6 @@ description: |-
 
 Manages an AWS Bedrock AgentCore Policy Engine. A Policy Engine provides authorization capabilities for AI agents, enabling fine-grained access control over the actions and resources an agent runtime is permitted to use.
 
--> **Note:** Once `description` is set, it cannot be removed without replacing the resource. The AWS API does not support clearing description on an existing policy engine.
-
 ## Example Usage
 
 ### Basic Usage
