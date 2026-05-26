@@ -55,6 +55,15 @@ func resourceServer() *schema.Resource {
 
 				return false
 			}),
+			// When ip_address_type is DUALSTACK, address_allocation_ids cannot be specified.
+			func(ctx context.Context, d *schema.ResourceDiff, i any) error {
+				if v, ok := d.GetOk(names.AttrIPAddressType); ok && v.(string) == string(awstypes.IpAddressTypeDualstack) {
+					if v, ok := d.GetOk("endpoint_details.0.address_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
+						return fmt.Errorf("cannot specify address_allocation_ids when ip_address_type is DUALSTACK")
+					}
+				}
+				return nil
+			},
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -159,6 +168,12 @@ func resourceServer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrIPAddressType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
 			"logging_role": {
 				Type:         schema.TypeString,
@@ -382,6 +397,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.IdentityProviderDetails.InvocationRole = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk("sftp_authentication_methods"); ok {
 		if input.IdentityProviderDetails == nil {
 			input.IdentityProviderDetails = &awstypes.IdentityProviderDetails{}
@@ -532,6 +551,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	} else {
 		d.Set("invocation_role", "")
 	}
+	d.Set(names.AttrIPAddressType, output.IpAddressType)
 	if output.IdentityProviderDetails != nil {
 		d.Set("sftp_authentication_methods", output.IdentityProviderDetails.SftpAuthenticationMethods)
 	} else {
@@ -704,6 +724,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			input.IdentityProviderDetails = identityProviderDetails
+		}
+
+		if d.HasChanges(names.AttrIPAddressType) {
+			input.IpAddressType = awstypes.IpAddressType(d.Get(names.AttrIPAddressType).(string))
+			offlineUpdate = true
 		}
 
 		if d.HasChange("logging_role") {
