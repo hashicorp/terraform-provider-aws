@@ -714,6 +714,102 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 	})
 }
 
+func TestAccARCRegionSwitchPlan_rdsCreateCrossRegionReadReplica(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_rdsCreateCrossRegionReadReplica(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify RdsCreateCrossRegionReplica execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "RdsCreateCrossRegionReplica",
+						names.AttrName:         "rds-create-replica-step",
+					}),
+
+					// Verify config values
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_create_cross_region_read_replica_config.*", map[string]string{
+						"cross_account_role": "arn:aws:iam::123456789012:role/RdsReplicaRole",
+						names.AttrExternalID: "rds-replica-external-id",
+						"timeout_minutes":    "30",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
+func TestAccARCRegionSwitchPlan_rdsPromoteReadReplica(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_rdsPromoteReadReplica(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify RdsPromoteReadReplica execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "RdsPromoteReadReplica",
+						names.AttrName:         "rds-promote-replica-step",
+					}),
+
+					// Verify config values
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_promote_read_replica_config.*", map[string]string{
+						"timeout_minutes": "45",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
 func testAccCheckPlanDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ARCRegionSwitchClient(ctx)
@@ -2168,102 +2264,6 @@ resource "aws_iam_role" "test" {
   })
 }
 `, rName, acctest.AlternateRegion(), acctest.Region(), regionOverride)
-}
-
-func TestAccARCRegionSwitchPlan_rdsCreateCrossRegionReadReplica(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanConfig_rdsCreateCrossRegionReadReplica(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
-					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
-
-					// Verify RdsCreateCrossRegionReplica execution block
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
-						"execution_block_type": "RdsCreateCrossRegionReplica",
-						names.AttrName:         "rds-create-replica-step",
-					}),
-
-					// Verify config values
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_create_cross_region_read_replica_config.*", map[string]string{
-						"cross_account_role": "arn:aws:iam::123456789012:role/RdsReplicaRole",
-						names.AttrExternalID: "rds-replica-external-id",
-						"timeout_minutes":    "30",
-					}),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-			},
-		},
-	})
-}
-
-func TestAccARCRegionSwitchPlan_rdsPromoteReadReplica(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanConfig_rdsPromoteReadReplica(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
-					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
-
-					// Verify RdsPromoteReadReplica execution block
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
-						"execution_block_type": "RdsPromoteReadReplica",
-						names.AttrName:         "rds-promote-replica-step",
-					}),
-
-					// Verify config values
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_promote_read_replica_config.*", map[string]string{
-						"timeout_minutes": "45",
-					}),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-			},
-		},
-	})
 }
 
 func testAccPlanConfig_rdsCreateCrossRegionReadReplica(rName string) string {
