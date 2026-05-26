@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,13 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
+func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var resourcepolicy string
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
@@ -36,7 +33,6 @@ func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +41,7 @@ func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 			{
 				Config: testAccResourcePolicyConfig_runtime(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
@@ -53,20 +49,20 @@ func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "resource_arn",
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "resource_arn"),
+				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 			},
 		},
 	})
 }
 
-func TestAccBedrockAgentCoreResourcePolicy_endpoint_basic(t *testing.T) {
+func TestAccBedrockAgentCoreResourcePolicy_Policy_endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var resourcepolicy string
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
@@ -75,7 +71,6 @@ func TestAccBedrockAgentCoreResourcePolicy_endpoint_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,27 +79,28 @@ func TestAccBedrockAgentCoreResourcePolicy_endpoint_basic(t *testing.T) {
 			{
 				Config: testAccResourcePolicyConfig_endpoint(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, names.AttrPolicy, "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 			},
 		},
 	})
 }
 
-func TestAccBedrockAgentCoreResourcePolicy_gateway_basic(t *testing.T) {
+func TestAccBedrockAgentCoreResourcePolicy_Policy_gateway(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var resourcepolicy string
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
@@ -112,7 +108,6 @@ func TestAccBedrockAgentCoreResourcePolicy_gateway_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -121,15 +116,17 @@ func TestAccBedrockAgentCoreResourcePolicy_gateway_basic(t *testing.T) {
 			{
 				Config: testAccResourcePolicyConfig_gateway(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, names.AttrPolicy, "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 			},
 		},
 	})
@@ -144,12 +141,9 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 				continue
 			}
 
-			// Call GetResourcePolicy directly to verify destruction
-			input := bedrockagentcorecontrol.GetResourcePolicyInput{
-				ResourceArn: aws.String(rs.Primary.ID),
-			}
+			resourceARN := rs.Primary.Attributes[names.AttrResourceARN]
 
-			_, err := conn.GetResourcePolicy(ctx, &input)
+			_, err := tfbedrockagentcore.FindResourcePolicyByARN(ctx, conn, resourceARN)
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -164,51 +158,19 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 	}
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name string, resourcepolicy *string) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameResourcePolicy, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameResourcePolicy, name, errors.New("not set"))
-		}
+		resourceARN := rs.Primary.Attributes[names.AttrResourceARN]
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
+		_, err := tfbedrockagentcore.FindResourcePolicyByARN(ctx, conn, resourceARN)
 
-		input := bedrockagentcorecontrol.GetResourcePolicyInput{
-			ResourceArn: aws.String(rs.Primary.ID),
-		}
-
-		out, err := conn.GetResourcePolicy(ctx, &input)
-		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameResourcePolicy, rs.Primary.ID, err)
-		}
-
-		if out.Policy != nil {
-			*resourcepolicy = aws.ToString(out.Policy)
-		} else {
-			*resourcepolicy = ""
-		}
-
-		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
-
-	// Use ListAgentRuntimes as a lightweight service availability check
-	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
-
-	_, err := conn.ListAgentRuntimes(ctx, &input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
+		return err
 	}
 }
 

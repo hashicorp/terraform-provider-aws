@@ -33,8 +33,9 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_resource_policy", name="Resource Policy")
 // @ArnIdentity("resource_arn")
-// @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
+// Ignore `policy` because JSON is not normalized during attribute comparison
+// @Testing(importIgnore="policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourcePolicyResource{}, nil
 }
@@ -105,7 +106,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	out, err := findResourcePolicy(ctx, conn, state.ResourceARN.ValueString())
+	out, err := findResourcePolicyByARN(ctx, conn, state.ResourceARN.ValueString())
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -190,7 +191,7 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func findResourcePolicy(ctx context.Context, conn *bedrockagentcorecontrol.Client, resourceArn string) (*string, error) {
+func findResourcePolicyByARN(ctx context.Context, conn *bedrockagentcorecontrol.Client, resourceArn string) (*string, error) {
 	input := bedrockagentcorecontrol.GetResourcePolicyInput{
 		ResourceArn: aws.String(resourceArn),
 	}
@@ -249,7 +250,7 @@ func sweepResourcePoliciesForAgentRuntimes(ctx context.Context, client *conns.AW
 		}
 
 		for _, v := range page.AgentRuntimes {
-			policy, err := findResourcePolicy(ctx, conn, *v.AgentRuntimeArn)
+			policy, err := findResourcePolicyByARN(ctx, conn, *v.AgentRuntimeArn)
 			if err != nil {
 				if retry.NotFound(err) {
 					continue
@@ -294,7 +295,7 @@ func sweepResourcePoliciesForAgentRuntimeEndpoints(ctx context.Context, client *
 				}
 
 				for _, v := range page.RuntimeEndpoints {
-					policy, err := findResourcePolicy(ctx, conn, aws.ToString(v.AgentRuntimeEndpointArn))
+					policy, err := findResourcePolicyByARN(ctx, conn, aws.ToString(v.AgentRuntimeEndpointArn))
 					if err != nil {
 						if retry.NotFound(err) {
 							continue
@@ -331,7 +332,7 @@ func sweepResourcePoliciesForGateways(ctx context.Context, client *conns.AWSClie
 			if err != nil {
 				return nil, smarterr.NewError(err)
 			}
-			policy, err := findResourcePolicy(ctx, conn, *gateway.GatewayArn)
+			policy, err := findResourcePolicyByARN(ctx, conn, *gateway.GatewayArn)
 			if err != nil {
 				if retry.NotFound(err) {
 					continue

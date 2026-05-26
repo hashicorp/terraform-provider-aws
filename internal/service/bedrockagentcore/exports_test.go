@@ -33,6 +33,7 @@ var (
 	FindMemoryStrategyByTwoPartKey       = findMemoryStrategyByTwoPartKey
 	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
 	FindOnlineEvaluationConfigByID       = findOnlineEvaluationConfigByID
+	FindResourcePolicyByARN              = findResourcePolicyByARN
 	FindTokenVaultByID                   = findTokenVaultByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 )
