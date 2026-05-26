@@ -40,10 +40,7 @@ func (d *regionsDataSource) Schema(ctx context.Context, request datasource.Schem
 			"all_regions": schema.BoolAttribute{
 				Optional: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID: idAttributeDeprecatedNoReplacement(),
 			names.AttrNames: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
