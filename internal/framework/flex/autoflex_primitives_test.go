@@ -228,6 +228,8 @@ func testExpandField[T any](t *testing.T, valueHandler fieldValueHandler[T]) {
 	testcases := map[string]map[string]map[string]fieldTestCase{
 		"no options": expandPrimitiveNoOptionsCases(valueHandler),
 
+		"ignore": expandPrimitiveIgnoreFieldCases(valueHandler),
+
 		"legacy": expandPrimitiveLegacyCases(valueHandler),
 
 		"omitempty": expandPrimitiveOmitEmptyCases(valueHandler),
@@ -296,6 +298,14 @@ func expandPrimitiveNoOptionsCases[T any](valueHandler fieldValueHandler[T]) map
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
 
 	return expandPrimitiveRegularCases(tfStructType, valueHandler)
+}
+
+func expandPrimitiveIgnoreFieldCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = "-"
+	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
+
+	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
 }
 
 func expandPrimitiveLegacyCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
@@ -1016,6 +1026,8 @@ func TestFlattenStringField(t *testing.T) {
 	testcases := map[string]map[string]map[string]fieldTestCase{
 		"no options": flattenPrimitiveNoOptionsCases(valueHandler),
 
+		"ignore": flattenPrimitiveIgnoreFieldCases(valueHandler),
+
 		"legacy": flattenPrimitiveLegacyCases(valueHandler),
 
 		"omitempty": flattenStringOmitEmptyCases(valueHandler),
@@ -1104,6 +1116,8 @@ func testFlattenField[T any](t *testing.T, valueHandler fieldValueHandler[T]) {
 	testcases := map[string]map[string]map[string]fieldTestCase{
 		"no options": flattenPrimitiveNoOptionsCases(valueHandler),
 
+		"ignore": flattenPrimitiveIgnoreFieldCases(valueHandler),
+
 		"legacy": flattenPrimitiveLegacyCases(valueHandler),
 
 		"omitempty": flattenPrimitiveOmitEmptyCases(valueHandler),
@@ -1172,6 +1186,14 @@ func flattenPrimitiveNoOptionsCases[T any](valueHandler fieldValueHandler[T]) ma
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
 
 	return flattenPrimitiveRegularCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveIgnoreFieldCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = "-"
+	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
+
+	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
 }
 
 func flattenPrimitiveLegacyCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
