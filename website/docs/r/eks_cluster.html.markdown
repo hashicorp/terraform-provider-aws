@@ -25,7 +25,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.35"
 
   vpc_config {
     subnet_ids = [
@@ -81,7 +81,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.35"
 
   bootstrap_self_managed_addons = false
 
@@ -208,7 +208,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.35"
 
   remote_network_config {
     remote_node_networks {
@@ -276,7 +276,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.35"
 
   vpc_config {
     endpoint_private_access = true
