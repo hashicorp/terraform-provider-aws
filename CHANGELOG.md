@@ -8,15 +8,23 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_arn: Deprecates `id` in favor of `arn` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_default_tags: Deprecates `id` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_ip_ranges: Deprecates `id` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_partition: Deprecates `id` in favor of `partition` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_region: Deprecates `id` in favor of `region` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_regions: Deprecates `id` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
 * data-source/aws_route: Add `odb_network_arn` attribute ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
 * data-source/aws_route_table: Add `routes.odb_network_arn` attribute ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
 * data-source/aws_secretsmanager_secret_version: Deprecates `arn` in favor of `secret_arn`. ([#48011](https://github.com/hashicorp/terraform-provider-aws/issues/48011))
 * data-source/aws_secretsmanager_secret_versions: Deprecates `arn` in favor of `secret_arn`. ([#48033](https://github.com/hashicorp/terraform-provider-aws/issues/48033))
 * data-source/aws_secretsmanager_secret_versions: Deprecates `name` in favor of `secret_name`. ([#48033](https://github.com/hashicorp/terraform-provider-aws/issues/48033))
+* data-source/aws_service: Deprecates `id` in favor of `reverse_dns_name` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
 * data-source/aws_transfer_server: Add `ip_address_type` attribute ([#48039](https://github.com/hashicorp/terraform-provider-aws/issues/48039))
 * resource/aws_eks_cluster: Add CGNAT IP address ranges as valid private range ([#47988](https://github.com/hashicorp/terraform-provider-aws/issues/47988))
 * resource/aws_eks_cluster: Make `remote_node_networks` field in `remote_network_config` optional ([#47988](https://github.com/hashicorp/terraform-provider-aws/issues/47988))
 * resource/aws_eks_cluster: Remove conflict between `outpost_config` and `remote_network_config` ([#47988](https://github.com/hashicorp/terraform-provider-aws/issues/47988))
+* resource/aws_quicksight_data_source: Add `parameters.athena.role_arn` argument to allow override an account-wide role for a specific Athena data source ([#44666](https://github.com/hashicorp/terraform-provider-aws/issues/44666))
 * resource/aws_route: Add `odb_network_arn` argument ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
 * resource/aws_route: Add plan-time validation of `core_network_arn` ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
 * resource/aws_route_table: Add `route.odb_network_arn` argument ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
