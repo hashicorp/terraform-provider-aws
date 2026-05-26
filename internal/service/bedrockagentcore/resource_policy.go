@@ -82,19 +82,14 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	out, err := conn.PutResourcePolicy(ctx, &input)
+	out, err := r.putResourcePolicy(ctx, conn, input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
 		return
 	}
-	if out == nil || out.Policy == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ResourceARN.String())
-		return
-	}
+	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out))
 
-	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -125,38 +120,24 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan, state resourcePolicyResourceModel
+	var plan resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	var input bedrockagentcorecontrol.PutResourcePolicyInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if diff.HasChanges() {
-		var input bedrockagentcorecontrol.PutResourcePolicyInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		out, err := conn.PutResourcePolicy(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
-			return
-		}
-		if out == nil || out.Policy == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ResourceARN.String())
-			return
-		}
-
-		plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
+	out, err := r.putResourcePolicy(ctx, conn, input)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+		return
 	}
+	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -183,6 +164,18 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.String())
 		return
 	}
+}
+
+func (r *resourcePolicyResource) putResourcePolicy(ctx context.Context, conn *bedrockagentcorecontrol.Client, input bedrockagentcorecontrol.PutResourcePolicyInput) (*string, error) {
+	out, err := conn.PutResourcePolicy(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	if out == nil || out.Policy == nil {
+		return nil, errors.New("empty output")
+	}
+
+	return out.Policy, nil
 }
 
 func findResourcePolicyByARN(ctx context.Context, conn *bedrockagentcorecontrol.Client, resourceArn string) (*string, error) {
