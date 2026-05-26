@@ -1362,11 +1362,22 @@ func resourceLoadBalancerCustomizeDiff(ctx context.Context, diff *schema.Resourc
 		case awstypes.LoadBalancerTypeEnumApplication:
 			// Nothing to do.
 		case awstypes.LoadBalancerTypeEnumNetwork:
+			var state loadBalancerResourceModel
+			if err := tfcty.ToFramework(ctx, rawState, &state); err != nil {
+				return fmt.Errorf("RawState to framework model: %w", err)
+			}
+
 			// https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-security-groups.html#security-group-considerations
 			// * You can associate security groups with a Network Load Balancer when you create it. If you create a Network Load Balancer without associating any security groups, you can't associate them with the Network Load Balancer later on.
 			// * After you create a Network Load Balancer with associated security groups, you can change the security groups associated with the Network Load Balancer at any time.
+
 			// https://docs.aws.amazon.com/elasticloadbalancing/latest/network/edit-load-balancer-attributes.html#secondary-ip-addresses
 			// After you add secondary IP addresses, you can't remove them. The only way to release the secondary IP addresses is to delete the load balancer.
+			if o, n := state.SecondaryIPsAutoAssignedPerSubnet.ValueInt64(), plan.SecondaryIPsAutoAssignedPerSubnet.ValueInt64(); n < o {
+				if err := diff.ForceNew("secondary_ips_auto_assigned_per_subnet"); err != nil {
+					return err
+				}
+			}
 		case awstypes.LoadBalancerTypeEnumGateway:
 			// Nothing to do.
 		}
@@ -1548,21 +1559,6 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 		if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
 			if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
 				return err
-			}
-		}
-	}
-
-	// Get diff for secondary IPv4 addresses
-	if diff.HasChange("secondary_ips_auto_assigned_per_subnet") {
-		if v := config.GetAttr("secondary_ips_auto_assigned_per_subnet"); v.IsWhollyKnown() {
-			o, n := diff.GetChange("secondary_ips_auto_assigned_per_subnet")
-			oldCount, newCount := o.(int), n.(int)
-
-			// Force new if secondary IPv4 address count is decreased
-			if newCount < oldCount {
-				if err := diff.ForceNew("secondary_ips_auto_assigned_per_subnet"); err != nil {
-					return err
-				}
 			}
 		}
 	}
