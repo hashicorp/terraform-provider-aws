@@ -6,6 +6,7 @@
 package elbv2
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -20,16 +21,20 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -53,6 +58,7 @@ func resourceLoadBalancer() *schema.Resource {
 		DeleteWithoutTimeout: resourceLoadBalancerDelete,
 
 		CustomizeDiff: customdiff.Sequence(
+			resourceLoadBalancerCustomizeDiff,
 			customizeDiffLoadBalancerALB,
 			customizeDiffLoadBalancerNLB,
 			customizeDiffLoadBalancerGWLB,
@@ -1340,6 +1346,89 @@ func suffixFromARN(arn *string) string {
 	}
 
 	return ""
+}
+
+func resourceLoadBalancerCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+	var plan loadBalancerResourceModel
+	if err := tfcty.ToFramework(ctx, diff.GetRawPlan(), &plan); err != nil {
+		return fmt.Errorf("RawPlan to framework model: %w", err)
+	}
+	if plan.LoadBalancerType.IsUnknown() {
+		return nil
+	}
+
+	if rawState := diff.GetRawState(); !rawState.IsNull() { // RawState is null on Create.
+		// RawPlan contains no schema defaults in CustomizeDiff.
+		switch lbType := cmp.Or(plan.LoadBalancerType.ValueEnum(), awstypes.LoadBalancerTypeEnumApplication); lbType {
+		case awstypes.LoadBalancerTypeEnumApplication:
+		case awstypes.LoadBalancerTypeEnumNetwork:
+		}
+	}
+
+	return nil
+}
+
+type loadBalancerResourceModel struct {
+	framework.WithRegionModel
+	AccessLogs                                           fwtypes.ListNestedObjectValueOf[loadBalancerLogsModel]                                `tfsdk:"access_logs"`
+	ARN                                                  types.String                                                                          `tfsdk:"arn"`
+	ARNSuffix                                            types.String                                                                          `tfsdk:"arn_suffix"`
+	ClientKeepAlive                                      types.Int64                                                                           `tfsdk:"client_keep_alive"`
+	ConnectionLogs                                       fwtypes.ListNestedObjectValueOf[loadBalancerLogsModel]                                `tfsdk:"connection_logs"`
+	CustomerOwnedIPv4Pool                                types.String                                                                          `tfsdk:"customer_owned_ipv4_pool"`
+	DesyncMitigationMode                                 types.String                                                                          `tfsdk:"desync_mitigation_mode"`
+	DNSName                                              types.String                                                                          `tfsdk:"dns_name"`
+	DNSRecordClientRoutingPolicy                         types.String                                                                          `tfsdk:"dns_record_client_routing_policy"`
+	DropInvalidHeaderFields                              types.Bool                                                                            `tfsdk:"drop_invalid_header_fields"`
+	EnableCrossZoneLoadBalancing                         types.Bool                                                                            `tfsdk:"enable_cross_zone_load_balancing"`
+	EnableDeletionProtection                             types.Bool                                                                            `tfsdk:"enable_deletion_protection"`
+	EnableHTTP2                                          types.Bool                                                                            `tfsdk:"enable_http2"`
+	EnableTLSVersionAndCipherSuiteHeaders                types.Bool                                                                            `tfsdk:"enable_tls_version_and_cipher_suite_headers"`
+	EnableWAFFailOpen                                    types.Bool                                                                            `tfsdk:"enable_waf_fail_open"`
+	EnableXFFClientPort                                  types.Bool                                                                            `tfsdk:"enable_xff_client_port"`
+	EnableZonalShift                                     types.Bool                                                                            `tfsdk:"enable_zonal_shift"`
+	EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic fwtypes.StringEnum[awstypes.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnum] `tfsdk:"enforce_security_group_inbound_rules_on_private_link_traffic"`
+	HealthCheckLogs                                      fwtypes.ListNestedObjectValueOf[loadBalancerLogsModel]                                `tfsdk:"health_check_logs"`
+	IdleTimeout                                          types.Int64                                                                           `tfsdk:"idle_timeout"`
+	Internal                                             types.Bool                                                                            `tfsdk:"internal"`
+	IPAddressType                                        fwtypes.StringEnum[awstypes.IpAddressType]                                            `tfsdk:"ip_address_type"`
+	IpamPools                                            fwtypes.ListNestedObjectValueOf[ipamPoolsModel]                                       `tfsdk:"ipam_pools"`
+	LoadBalancerType                                     fwtypes.StringEnum[awstypes.LoadBalancerTypeEnum]                                     `tfsdk:"load_balancer_type"`
+	MinimumLoadBalancerCapacity                          fwtypes.ListNestedObjectValueOf[minimumLoadBalancerCapacityModel]                     `tfsdk:"minimum_load_balancer_capacity"`
+	Name                                                 types.String                                                                          `tfsdk:"name"`
+	NamePrefix                                           types.String                                                                          `tfsdk:"name_prefix"`
+	PreserveHostHeader                                   types.Bool                                                                            `tfsdk:"preserve_host_header"`
+	SecondaryIPsAutoAssignedPerSubnet                    types.Int64                                                                           `tfsdk:"secondary_ips_auto_assigned_per_subnet"`
+	SecurityGroups                                       fwtypes.SetOfString                                                                   `tfsdk:"security_groups"`
+	SubnetMappings                                       fwtypes.SetNestedObjectValueOf[subnetMappingModel]                                    `tfsdk:"subnet_mapping"`
+	Subnets                                              fwtypes.SetOfString                                                                   `tfsdk:"subnets"`
+	Tags                                                 tftags.Map                                                                            `tfsdk:"tags"`
+	TagsAll                                              tftags.Map                                                                            `tfsdk:"tags_all"`
+	VPCID                                                types.String                                                                          `tfsdk:"vpc_id"`
+	XFFHeaderProcessingMode                              types.String                                                                          `tfsdk:"xff_header_processing_mode"`
+	ZoneID                                               types.String                                                                          `tfsdk:"zone_id"`
+}
+
+type loadBalancerLogsModel struct {
+	Bucket  types.String `tfsdk:"bucket"`
+	Enabled types.Bool   `tfsdk:"enabled"`
+	Prefix  types.String `tfsdk:"prefix"`
+}
+
+type ipamPoolsModel struct {
+	IPv4IpamPoolID types.String `tfsdk:"ipv4_ipam_pool_id"`
+}
+
+type minimumLoadBalancerCapacityModel struct {
+	CapacityUnits types.Int64 `tfsdk:"capacity_units"`
+}
+
+type subnetMappingModel struct {
+	AllocationID       types.String `tfsdk:"allocation_id"`
+	IPv6Address        types.String `tfsdk:"ipv6_address"`
+	OutpostID          types.String `tfsdk:"outpost_id"`
+	PrivateIPv4Address types.String `tfsdk:"private_ipv4_address"`
+	SubnetID           types.String `tfsdk:"subnet_id"`
 }
 
 // Load balancers of type 'network' cannot have their subnets updated,
