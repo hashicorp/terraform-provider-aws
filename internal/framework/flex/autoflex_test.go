@@ -31,7 +31,6 @@ type autoFlexTestCase struct {
 type autoFlexTestCases map[string]autoFlexTestCase
 
 type runChecks struct {
-	CompareDiags   bool
 	SkipGoldenLogs bool // skip golden snapshots for log comparison
 	PrintLogs      bool // print logs to test output
 }
@@ -99,10 +98,8 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 
 			diags := Expand(ctx, tc.Source, tc.Target, tc.Options...)
 
-			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, tc.ExpectedDiags); diff != "" {
-					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
+			if diff := cmp.Diff(diags, tc.ExpectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
 			if !checks.SkipGoldenLogs {
@@ -152,10 +149,8 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 
 			diags := Flatten(ctx, testCase.Source, testCase.Target, testCase.Options...)
 
-			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
-					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
+			if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
 			if !checks.SkipGoldenLogs {
@@ -220,10 +215,8 @@ func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevel
 			var target Ttarget
 			diags := Flatten(ctx, testCase.source, &target)
 
-			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
-					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
+			if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
 			if !checks.SkipGoldenLogs {

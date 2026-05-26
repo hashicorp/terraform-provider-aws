@@ -168,7 +168,7 @@ func TestExpandXMLWrapperRule1ScalarElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -223,7 +223,7 @@ func TestExpandXMLWrapperRule1StructElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -268,7 +268,7 @@ func TestFlattenXMLWrapperRule1ScalarElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -324,7 +324,7 @@ func TestFlattenXMLWrapperRule1StructElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -512,7 +512,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -555,7 +555,7 @@ func TestFlattenXMLWrapperRule2(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -1177,7 +1177,7 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenXMLWrapperSplit(t *testing.T) {
@@ -1307,7 +1307,7 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandXMLWrapperSplit(t *testing.T) {
@@ -1448,7 +1448,7 @@ func TestExpandXMLWrapperSplit(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true}, cmpopts.IgnoreUnexported(
+	runAutoExpandTestCases(t, testCases, runChecks{}, cmpopts.IgnoreUnexported(
 		awstypes.AllowedMethods{},
 		awstypes.CachedMethods{},
 	))

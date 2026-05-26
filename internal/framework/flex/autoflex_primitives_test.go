@@ -614,11 +614,8 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 	expandedAWS := reflect.New(reflect.TypeOf(tc.AWSStruct).Elem()).Interface()
 	expandDiags := Expand(ctx, tc.TFStruct, expandedAWS, tc.Options...)
 
-	// Check diagnostics if requested
-	if checks.CompareDiags {
-		if diff := cmp.Diff(expandDiags, tc.ExpectedDiags); diff != "" {
-			t.Errorf("unexpected expand diagnostics difference: %s", diff)
-		}
+	if diff := cmp.Diff(expandDiags, tc.ExpectedDiags); diff != "" {
+		t.Errorf("unexpected expand diagnostics difference: %s", diff)
 	}
 
 	if tc.ExpectError {
