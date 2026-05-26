@@ -77,7 +77,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 	}
 
 	var input bedrockagentcorecontrol.PutResourcePolicyInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("ResourcePolicy")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -92,7 +92,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	r.flatten(ctx, out.Policy, &plan)
+	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -117,15 +117,9 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	r.flatten(ctx, out, &state)
+	state.Policy = fwtypes.IAMPolicyValue(aws.ToString(out))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *resourcePolicyResource) flatten(_ context.Context, resourcePolicy *string, data *resourcePolicyResourceModel) {
-	if resourcePolicy != nil {
-		data.Policy = fwtypes.IAMPolicyValue(aws.ToString(resourcePolicy))
-	}
 }
 
 func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -146,7 +140,7 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 
 	if diff.HasChanges() {
 		var input bedrockagentcorecontrol.PutResourcePolicyInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("ResourcePolicy")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -161,7 +155,7 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		r.flatten(ctx, out.Policy, &plan)
+		plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
