@@ -5,7 +5,6 @@ package elbv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -579,7 +578,7 @@ func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -592,28 +591,41 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 			{
 				Config: testAccLoadBalancerConfig_nlbCrossZone(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "load_balancing.cross_zone.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbCrossZone(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "load_balancing.cross_zone.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", acctest.CtFalse),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbCrossZone(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "load_balancing.cross_zone.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", acctest.CtTrue),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -621,7 +633,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateZonalShift(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -634,28 +646,41 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateZonalShift(t *testing.T)
 			{
 				Config: testAccLoadBalancerConfig_nlbZonalShift(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbZonalShift(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "zonal_shift.config.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbZonalShift(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtTrue),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -663,7 +688,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateZonalShift(t *testing.T)
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateZonalShift(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -676,28 +701,41 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateZonalShift(t *testin
 			{
 				Config: testAccLoadBalancerConfig_albZonalShift(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_albZonalShift(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "zonal_shift.config.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_albZonalShift(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtTrue),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -705,7 +743,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateZonalShift(t *testin
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -718,28 +756,41 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 			{
 				Config: testAccLoadBalancerConfig_enableHTTP2(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http2.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_http2", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableHTTP2(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http2.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_http2", acctest.CtTrue),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableHTTP2(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http2.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_http2", acctest.CtFalse),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -747,7 +798,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -760,28 +811,41 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing
 			{
 				Config: testAccLoadBalancerConfig_clientKeepAlive(rName, 3600),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, tfelbv2.LoadBalancerAttributeClientKeepAliveSeconds, "3600"),
 					resource.TestCheckResourceAttr(resourceName, "client_keep_alive", "3600"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_clientKeepAlive(rName, 7200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, tfelbv2.LoadBalancerAttributeClientKeepAliveSeconds, "7200"),
 					resource.TestCheckResourceAttr(resourceName, "client_keep_alive", "7200"),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_clientKeepAlive(rName, 14400),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, tfelbv2.LoadBalancerAttributeClientKeepAliveSeconds, "14400"),
 					resource.TestCheckResourceAttr(resourceName, "client_keep_alive", "14400"),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -789,7 +853,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFields(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -802,28 +866,41 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.drop_invalid_header_fields.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "drop_invalid_header_fields", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.drop_invalid_header_fields.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "drop_invalid_header_fields", acctest.CtTrue),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.drop_invalid_header_fields.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "drop_invalid_header_fields", acctest.CtFalse),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -831,7 +908,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -844,28 +921,41 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 			{
 				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.preserve_host_header.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "preserve_host_header", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.preserve_host_header.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "preserve_host_header", acctest.CtTrue),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.preserve_host_header.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "preserve_host_header", acctest.CtFalse),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -873,7 +963,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -886,28 +976,41 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 			{
 				Config: testAccLoadBalancerConfig_enableDeletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "deletion_protection.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableDeletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "deletion_protection.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtTrue),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableDeletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "deletion_protection.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -915,7 +1018,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -928,9 +1031,14 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 			{
 				Config: testAccLoadBalancerConfig_enableWAFFailOpen(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -940,18 +1048,26 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 			{
 				Config: testAccLoadBalancerConfig_enableWAFFailOpen(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", acctest.CtTrue),
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableWAFFailOpen(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", acctest.CtFalse),
-					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -959,7 +1075,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 
 func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -972,23 +1088,38 @@ func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_ipAddressType(rName, "ipv4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_ipAddressType(rName, "dualstack"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_ipAddressType(rName, "dualstack-without-public-ipv4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack-without-public-ipv4"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -998,7 +1129,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
 
 	ctx := acctest.Context(t)
-	var lb awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1011,7 +1142,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 			{
 				Config: testAccLoadBalancerConfig_IPAMPools_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pools.0.ipv4_ipam_pool_id"),
 				),
@@ -1030,7 +1161,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
 
 	ctx := acctest.Context(t)
-	var lb awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1044,7 +1175,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 			{ // Create the load balancer with an IPAM pool
 				Config: testAccLoadBalancerConfig_IPAMPools_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pools.0.ipv4_ipam_pool_id"),
 				),
@@ -1057,7 +1188,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 			{ // Replace the IPAM pool
 				Config: testAccLoadBalancerConfig_IPAMPools_modify(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pools.0.ipv4_ipam_pool_id"),
 				),
@@ -1081,7 +1212,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
 
 	ctx := acctest.Context(t)
-	var lb awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1094,7 +1225,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 			{
 				Config: testAccLoadBalancerConfig_IPAMPools_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pools.0.ipv4_ipam_pool_id"),
 				),
@@ -1107,7 +1238,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 			{
 				Config: testAccLoadBalancerConfig_IPAMPools_unassign(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "ipam_pools.0.ipv4_ipam_pool_id"),
 				),
@@ -1129,7 +1260,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1146,19 +1277,28 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 			{
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_albUpdateSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
-					testAccCheckLoadBalancerNotRecreated(&pre, &post),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1166,7 +1306,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1183,19 +1323,28 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					testAccCheckLoadBalancerNotRecreated(&pre, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1203,7 +1352,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1220,19 +1369,28 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 			{
 				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					testAccCheckLoadBalancerNotRecreated(&pre, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1240,7 +1398,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1257,19 +1415,28 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testin
 			{
 				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					testAccCheckLoadBalancerNotRecreated(&pre, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1277,7 +1444,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testin
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1294,19 +1461,28 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *tes
 			{
 				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					testAccCheckLoadBalancerNotRecreated(&pre, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1940,7 +2116,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateDNSRecordClientRoutingPo
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var lb1, lb2, lb3, lb4 awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1953,37 +2129,54 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb1),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb2),
-					testAccCheckLoadBalancerRecreated(&lb2, &lb1),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb3),
-					testAccCheckLoadBalancerNotRecreated(&lb3, &lb2),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb4),
-					testAccCheckLoadBalancerRecreated(&lb4, &lb3),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -1991,7 +2184,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t *testing.T) {
 	ctx := acctest.Context(t)
-	var lb1, lb2 awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -2005,9 +2198,14 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t
 				// Create NLB without security groups.
 				Config: testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb1),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				// Add a security group whose ID is unknown at plan time.
@@ -2015,10 +2213,14 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t
 				// adding security groups after creation.
 				Config: testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb2),
-					testAccCheckLoadBalancerRecreated(&lb2, &lb1),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -2026,7 +2228,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.T) {
 	ctx := acctest.Context(t)
-	var lb awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -2045,7 +2247,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroupsEnforcePrivateLink(rName, 1, "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off")),
 			},
@@ -2058,7 +2260,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off"),
 				),
@@ -2066,7 +2268,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroupsEnforcePrivateLink(rName, 1, "on"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "on"),
 				),
@@ -2074,7 +2276,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroupsEnforcePrivateLink(rName, 1, "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off"),
 				),
@@ -2082,7 +2284,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off"),
 				),
@@ -2093,7 +2295,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -2110,17 +2312,26 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnet(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnetCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnetCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					testAccCheckLoadBalancerNotRecreated(&post, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -2128,7 +2339,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnet(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -2145,17 +2356,26 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnetCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnetCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					testAccCheckLoadBalancerRecreated(&post, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -2163,7 +2383,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -2180,19 +2400,28 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T)
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					testAccCheckLoadBalancerNotRecreated(&pre, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -2200,7 +2429,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T)
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -2217,19 +2446,28 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					testAccCheckLoadBalancerRecreated(&pre, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -2237,7 +2475,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_secondaryIPAddresses(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -2254,18 +2492,27 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_secondaryIPAddresses(t *testin
 			{
 				Config: testAccLoadBalancerConfig_nlbBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "secondary_ips_auto_assigned_per_subnet", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSecondaryIPAddresses(rName, 3, 7),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
-					// Increasing secondary IP count should not force recreation
-					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "secondary_ips_auto_assigned_per_subnet", "7"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// Increasing secondary IP count should not force recreation
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -2275,11 +2522,15 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_secondaryIPAddresses(t *testin
 			{
 				Config: testAccLoadBalancerConfig_nlbSecondaryIPAddresses(rName, 3, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
-					// Decreasing secondary IP count should force recreation
-					testAccCheckLoadBalancerRecreated(&mid, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "secondary_ips_auto_assigned_per_subnet", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// Decreasing secondary IP count should force recreation
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -2287,7 +2538,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_secondaryIPAddresses(t *testin
 
 func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pre, mid, post awstypes.LoadBalancer
+	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -2300,10 +2551,15 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_desyncMitigationMode(rName, "strictest"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &pre),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.desync_mitigation_mode", "strictest"),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "strictest"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -2313,18 +2569,28 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_desyncMitigationMode(rName, "monitor"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &mid),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.desync_mitigation_mode", "monitor"),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "monitor"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_desyncMitigationMode(rName, "defensive"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &post),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.desync_mitigation_mode", "defensive"),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -2526,26 +2792,6 @@ func TestAccELBV2LoadBalancer_albMoreThan20Attributes(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckLoadBalancerNotRecreated(i, j *awstypes.LoadBalancer) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(i.LoadBalancerArn) != aws.ToString(j.LoadBalancerArn) {
-			return errors.New("ELBv2 Load Balancer was recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckLoadBalancerRecreated(i, j *awstypes.LoadBalancer) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(i.LoadBalancerArn) == aws.ToString(j.LoadBalancerArn) {
-			return errors.New("ELBv2 Load Balancer was not recreated")
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckLoadBalancerExists(ctx context.Context, t *testing.T, n string, v *awstypes.LoadBalancer) resource.TestCheckFunc {

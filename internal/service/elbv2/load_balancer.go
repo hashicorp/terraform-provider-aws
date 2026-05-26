@@ -61,7 +61,6 @@ func resourceLoadBalancer() *schema.Resource {
 			resourceLoadBalancerCustomizeDiff,
 			customizeDiffLoadBalancerALB,
 			customizeDiffLoadBalancerNLB,
-			customizeDiffLoadBalancerGWLB,
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -1361,7 +1360,15 @@ func resourceLoadBalancerCustomizeDiff(ctx context.Context, diff *schema.Resourc
 		// RawPlan contains no schema defaults in CustomizeDiff.
 		switch lbType := cmp.Or(plan.LoadBalancerType.ValueEnum(), awstypes.LoadBalancerTypeEnumApplication); lbType {
 		case awstypes.LoadBalancerTypeEnumApplication:
+			// Nothing to do.
 		case awstypes.LoadBalancerTypeEnumNetwork:
+			// https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-security-groups.html#security-group-considerations
+			// * You can associate security groups with a Network Load Balancer when you create it. If you create a Network Load Balancer without associating any security groups, you can't associate them with the Network Load Balancer later on.
+			// * After you create a Network Load Balancer with associated security groups, you can change the security groups associated with the Network Load Balancer at any time.
+			// https://docs.aws.amazon.com/elasticloadbalancing/latest/network/edit-load-balancer-attributes.html#secondary-ip-addresses
+			// After you add secondary IP addresses, you can't remove them. The only way to release the secondary IP addresses is to delete the load balancer.
+		case awstypes.LoadBalancerTypeEnumGateway:
+			// Nothing to do.
 		}
 	}
 
@@ -1614,18 +1621,6 @@ func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, 
 		if err := diff.SetNewComputed("subnet_mapping"); err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func customizeDiffLoadBalancerGWLB(_ context.Context, diff *schema.ResourceDiff, v any) error {
-	if lbType := awstypes.LoadBalancerTypeEnum(diff.Get("load_balancer_type").(string)); lbType != awstypes.LoadBalancerTypeEnumGateway {
-		return nil
-	}
-
-	if diff.Id() == "" {
-		return nil
 	}
 
 	return nil
