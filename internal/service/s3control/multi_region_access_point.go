@@ -221,23 +221,9 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading S3 Multi-Region Access Point (%s): %s", d.Id(), err)
 	}
 
-	alias := aws.ToString(accessPoint.Alias)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "s3",
-		AccountID: accountID,
-		Resource:  fmt.Sprintf("accesspoint/%s", alias),
-	}.String()
-	d.Set(names.AttrAccountID, accountID)
-	d.Set(names.AttrAlias, alias)
-	d.Set(names.AttrARN, arn)
-	if err := d.Set("details", []any{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting details: %s", err)
+	if err := resourceMultiRegionAccessPointFlatten(ctx, meta.(*conns.AWSClient), accountID, accessPoint, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
-	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
-	d.Set(names.AttrName, accessPoint.Name)
-	d.Set(names.AttrStatus, accessPoint.Status)
 
 	return diags
 }
@@ -572,4 +558,26 @@ func flattenRegionReports(apiObjects []types.RegionReport) []any {
 	}
 
 	return tfList
+}
+
+func resourceMultiRegionAccessPointFlatten(ctx context.Context, awsClient *conns.AWSClient, accountID string, accessPoint *types.MultiRegionAccessPointReport, d *schema.ResourceData) error {
+	alias := aws.ToString(accessPoint.Alias)
+	arn := arn.ARN{
+		Partition: awsClient.Partition(ctx),
+		Service:   "s3",
+		AccountID: accountID,
+		Resource:  fmt.Sprintf("accesspoint/%s", alias),
+	}.String()
+	d.Set(names.AttrAccountID, accountID)
+	d.Set(names.AttrAlias, alias)
+	d.Set(names.AttrARN, arn)
+	if err := d.Set("details", []any{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
+		return fmt.Errorf("setting details: %w", err)
+	}
+	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
+	d.Set(names.AttrDomainName, awsClient.PartitionHostname(ctx, alias+".accesspoint.s3-global"))
+	d.Set(names.AttrName, accessPoint.Name)
+	d.Set(names.AttrStatus, accessPoint.Status)
+
+	return nil
 }
