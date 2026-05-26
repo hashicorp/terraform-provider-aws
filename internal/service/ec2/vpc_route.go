@@ -42,12 +42,12 @@ var routeValidDestinations = []string{
 var routeValidTargets = []string{
 	"carrier_gateway_id",
 	"core_network_arn",
-	"odb_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
 	"local_gateway_id",
 	"nat_gateway_id",
 	names.AttrNetworkInterfaceID,
+	"odb_network_arn",
 	names.AttrTransitGatewayID,
 	names.AttrVPCEndpointID,
 	"vpc_peering_connection_id",
@@ -120,11 +120,7 @@ func resourceRoute() *schema.Resource {
 			"core_network_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: routeValidTargets,
-			},
-			"odb_network_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: routeValidTargets,
 			},
 			"egress_only_gateway_id": {
@@ -152,6 +148,12 @@ func resourceRoute() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ExactlyOneOf: routeValidTargets,
+			},
+			"odb_network_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: routeValidTargets,
 			},
 			names.AttrTransitGatewayID: {
@@ -211,7 +213,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
-	input := &ec2.CreateRouteInput{
+	input := ec2.CreateRouteInput{
 		RouteTableId: aws.String(routeTableID),
 	}
 
@@ -236,8 +238,6 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.CarrierGatewayId = target
 	case "core_network_arn":
 		input.CoreNetworkArn = target
-	case "odb_network_arn":
-		input.OdbNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
@@ -248,6 +248,8 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.NatGatewayId = target
 	case "network_interface_id":
 		input.NetworkInterfaceId = target
+	case "odb_network_arn":
+		input.OdbNetworkArn = target
 	case "transit_gateway_id":
 		input.TransitGatewayId = target
 	case "vpc_endpoint_id":
@@ -272,7 +274,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func(ctx context.Context) (any, error) {
-			return conn.CreateRoute(ctx, input)
+			return conn.CreateRoute(ctx, &input)
 		},
 		errCodeInvalidParameterException,
 		errCodeInvalidTransitGatewayIDNotFound,
@@ -335,7 +337,6 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
-	d.Set("odb_network_arn", route.OdbNetworkArn)
 	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)
 	d.Set(routeDestinationIPv6CIDRBlock, route.DestinationIpv6CidrBlock)
 	d.Set(routeDestinationPrefixListID, route.DestinationPrefixListId)
@@ -353,6 +354,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
 	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
+	d.Set("odb_network_arn", route.OdbNetworkArn)
 	d.Set("origin", route.Origin)
 	d.Set(names.AttrState, route.State)
 	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
@@ -378,7 +380,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
-	input := &ec2.ReplaceRouteInput{
+	input := ec2.ReplaceRouteInput{
 		RouteTableId: aws.String(routeTableID),
 	}
 
@@ -404,8 +406,6 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.CarrierGatewayId = target
 	case "core_network_arn":
 		input.CoreNetworkArn = target
-	case "odb_network_arn":
-		input.OdbNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
@@ -420,6 +420,8 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.NatGatewayId = target
 	case "network_interface_id":
 		input.NetworkInterfaceId = target
+	case "odb_network_arn":
+		input.OdbNetworkArn = target
 	case "transit_gateway_id":
 		input.TransitGatewayId = target
 	case "vpc_endpoint_id":
@@ -430,8 +432,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "updating Route: unexpected route target attribute: %q", targetAttributeKey)
 	}
 
-	log.Printf("[DEBUG] Updating Route: %v", input)
-	_, err = conn.ReplaceRoute(ctx, input)
+	_, err = conn.ReplaceRoute(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
@@ -455,7 +456,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
-	input := &ec2.DeleteRouteInput{
+	input := ec2.DeleteRouteInput{
 		RouteTableId: aws.String(routeTableID),
 	}
 
@@ -478,7 +479,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	log.Printf("[DEBUG] Deleting Route: %v", input)
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func(ctx context.Context) (any, error) {
-			return conn.DeleteRoute(ctx, input)
+			return conn.DeleteRoute(ctx, &input)
 		},
 		errCodeInvalidParameterException,
 	)
