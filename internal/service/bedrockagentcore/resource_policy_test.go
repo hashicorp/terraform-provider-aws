@@ -148,10 +148,10 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameResourcePolicy, rs.Primary.ID, err)
+				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameResourcePolicy, resourceARN, err)
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameResourcePolicy, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameResourcePolicy, resourceARN, errors.New("not destroyed"))
 		}
 
 		return nil
