@@ -32,7 +32,6 @@ type autoFlexTestCases map[string]autoFlexTestCase
 
 type runChecks struct {
 	CompareDiags   bool
-	CompareTarget  bool
 	SkipGoldenLogs bool // skip golden snapshots for log comparison
 	PrintLogs      bool // print logs to test output
 }
@@ -130,7 +129,7 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 				}
 			}
 
-			if checks.CompareTarget && !diags.HasError() {
+			if !diags.HasError() {
 				if diff := cmp.Diff(tc.Target, tc.WantTarget, opts...); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
@@ -183,7 +182,7 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 				}
 			}
 
-			if checks.CompareTarget && !diags.HasError() {
+			if !diags.HasError() {
 				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
 				if diff := cmp.Diff(testCase.Target, testCase.WantTarget, append(opts, cmpopts.SortSlices(less))...); diff != "" {
 					if !testCase.WantDiff {
@@ -239,7 +238,7 @@ func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevel
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
 
-			if checks.CompareTarget && !diags.HasError() {
+			if !diags.HasError() {
 				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
 				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
