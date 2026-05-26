@@ -73,3 +73,48 @@ The following arguments are optional:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_control_association.example
+  identity = {
+    security_control_id = "IAM.1"
+    standards_arn       = "arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
+  }
+}
+
+resource "aws_securityhub_standards_control_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `security_control_id` (String) Security control ID.
+* `standards_arn` (String) Standards ARN.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards control associations using `security_control_id` and `standards_arn` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_control_association.example
+  id = "IAM.1,arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
+}
+```
+
+Using `terraform import`, import Security Hub standards control associations using `security_control_id` and `standards_arn` separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_securityhub_standards_control_association.example IAM.1,arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10
+```

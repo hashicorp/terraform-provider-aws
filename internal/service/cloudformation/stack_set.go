@@ -74,6 +74,14 @@ func resourceStackSet() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"depends_on_stack_sets": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -669,6 +677,9 @@ func expandAutoDeployment(l []any) *awstypes.AutoDeployment {
 	}
 
 	if enabled {
+		if v, ok := m["depends_on_stack_sets"].([]any); ok && len(v) > 0 {
+			autoDeployment.DependsOn = flex.ExpandStringValueList(v)
+		}
 		autoDeployment.RetainStacksOnAccountRemoval = aws.Bool(m["retain_stacks_on_account_removal"].(bool))
 	}
 
@@ -695,6 +706,7 @@ func flattenStackSetAutoDeploymentResponse(autoDeployment *awstypes.AutoDeployme
 	}
 
 	m := map[string]any{
+		"depends_on_stack_sets":            autoDeployment.DependsOn,
 		names.AttrEnabled:                  aws.ToBool(autoDeployment.Enabled),
 		"retain_stacks_on_account_removal": aws.ToBool(autoDeployment.RetainStacksOnAccountRemoval),
 	}

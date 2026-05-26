@@ -238,6 +238,49 @@ func resourceClientVPNEndpoint() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TrafficIpAddressType](),
 			},
+			"transit_gateway_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				ForceNew: true,
+				ConflictsWith: []string{
+					names.AttrSecurityGroupIDs,
+					names.AttrVPCID,
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAvailabilityZones: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							ConflictsWith: []string{
+								"transit_gateway_configuration.0.availability_zone_ids",
+							},
+						},
+						"availability_zone_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							ConflictsWith: []string{
+								"transit_gateway_configuration.0.availability_zones",
+							},
+						},
+						names.AttrTransitGatewayAttachmentID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrTransitGatewayID: {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"transport_protocol": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -332,6 +375,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.TrafficIpAddressType = awstypes.TrafficIpAddressType(v.(string))
 	}
 
+	if v, ok := d.GetOk("transit_gateway_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TransitGatewayConfiguration = expandTransitGatewayConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		input.VpcId = aws.String(v.(string))
 	}
@@ -343,6 +390,19 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(aws.ToString(output.ClientVpnEndpointId))
+
+	if input.TransitGatewayConfiguration != nil {
+		ep, err := findClientVPNEndpointByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "finding EC2 Client VPN Endpoint: %s", err)
+		}
+		if ep.TransitGatewayConfiguration == nil {
+			return sdkdiag.AppendErrorf(diags, "finding EC2 Client VPN Endpoint TransitGatewayConfiguration: %s", err)
+		}
+		if _, err := waitTransitGatewayAttachmentAccepted(ctx, conn, aws.ToString(ep.TransitGatewayConfiguration.TransitGatewayAttachmentId), d.Timeout(schema.TimeoutDefault)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for transit gateway configuration to be available for EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceClientVPNEndpointRead(ctx, d, meta)...)
 }
@@ -413,6 +473,9 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
+	if err := d.Set("transit_gateway_configuration", []any{flattenTransitGatewayConfiguration(ep.TransitGatewayConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting transit_gateway_configuration: %s", err)
+	}
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
@@ -811,6 +874,48 @@ func flattenClientRouteEnforcementOptions(apiObject *awstypes.ClientRouteEnforce
 		tfMap["enforced"] = v
 	}
 
+	return tfMap
+}
+
+func expandTransitGatewayConfiguration(tfMap map[string]any) *awstypes.TransitGatewayConfigurationInputStructure {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.TransitGatewayConfigurationInputStructure{}
+
+	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
+		apiObject.TransitGatewayId = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrAvailabilityZones]; ok {
+		apiObject.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["availability_zone_ids"]; ok {
+		apiObject.AvailabilityZoneIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	return apiObject
+}
+
+func flattenTransitGatewayConfiguration(apiObject *awstypes.TransitGatewayConfigurationDescribeEndpointStructure) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{}
+	if v := apiObject.AvailabilityZones; len(v) > 0 {
+		tfMap[names.AttrAvailabilityZones] = flex.FlattenStringValueSet(v)
+	}
+	if v := apiObject.AvailabilityZoneIds; len(v) > 0 {
+		tfMap["availability_zone_ids"] = flex.FlattenStringValueSet(v)
+	}
+	if v := apiObject.TransitGatewayAttachmentId; v != nil {
+		tfMap[names.AttrTransitGatewayAttachmentID] = aws.ToString(v)
+	}
+	if v := apiObject.TransitGatewayId; v != nil {
+		tfMap[names.AttrTransitGatewayID] = aws.ToString(v)
+	}
 	return tfMap
 }
 

@@ -30,22 +30,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_node_group", name="Node Group")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("node_group_name")
+// @ImportIDHandler("nodeGroupImportID")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Nodegroup")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNodeGroupCreate,
 		ReadWithoutTimeout:   resourceNodeGroupRead,
 		UpdateWithoutTimeout: resourceNodeGroupUpdate,
 		DeleteWithoutTimeout: resourceNodeGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -385,8 +388,8 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := create.Name(ctx, d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
-	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	input := &eks.CreateNodegroupInput{
+	groupID := nodeGroupCreateResourceID(clusterName, nodeGroupName)
+	input := eks.CreateNodegroupInput{
 		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
@@ -447,7 +450,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Version = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateNodegroup(ctx, input)
+	_, err := conn.CreateNodegroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EKS Node Group (%s): %s", groupID, err)
@@ -467,7 +470,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -542,14 +545,14 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Do any version update first.
 	if d.HasChanges(names.AttrLaunchTemplate, "release_version", names.AttrVersion) {
-		input := &eks.UpdateNodegroupVersionInput{
+		input := eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			ClusterName:        aws.String(clusterName),
 			Force:              d.Get("force_update_version").(bool),
@@ -584,7 +587,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			input.Version = aws.String(v.(string))
 		}
 
-		output, err := conn.UpdateNodegroupVersion(ctx, input)
+		output, err := conn.UpdateNodegroupVersion(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Node Group (%s) version: %s", d.Id(), err)
@@ -601,7 +604,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
-		input := &eks.UpdateNodegroupConfigInput{
+		input := eks.UpdateNodegroupConfigInput{
 			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			ClusterName:        aws.String(clusterName),
 			Labels:             expandUpdateLabelsPayload(ctx, oldLabelsRaw, newLabelsRaw),
@@ -627,7 +630,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		}
 
-		output, err := conn.UpdateNodegroupConfig(ctx, input)
+		output, err := conn.UpdateNodegroupConfig(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Node Group (%s) config: %s", d.Id(), err)
@@ -648,16 +651,17 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Node Group: %s", d.Id())
-	_, err = conn.DeleteNodegroup(ctx, &eks.DeleteNodegroupInput{
+	input := eks.DeleteNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
-	})
+	}
+	_, err = conn.DeleteNodegroup(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -1287,4 +1291,47 @@ func flattenTaints(apiObjects []types.Taint) []any {
 	}
 
 	return tfList
+}
+
+const nodeGroupResourceIDSeparator = ":"
+
+func nodeGroupCreateResourceID(clusterName, nodeGroupName string) string {
+	parts := []string{clusterName, nodeGroupName}
+	id := strings.Join(parts, nodeGroupResourceIDSeparator)
+
+	return id
+}
+
+func nodeGroupParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, nodeGroupResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]snode-group-name", id, nodeGroupResourceIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = nodeGroupImportID{}
+)
+
+type nodeGroupImportID struct{}
+
+func (nodeGroupImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrClusterName: clusterName,
+		"node_group_name":     nodeGroupName,
+	}
+
+	return id, result, nil
+}
+
+func (nodeGroupImportID) Create(d *schema.ResourceData) string {
+	return nodeGroupCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("node_group_name").(string))
 }

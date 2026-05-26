@@ -29,6 +29,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
 			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -67,6 +68,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_disappears(t *testing.T) {
 			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{

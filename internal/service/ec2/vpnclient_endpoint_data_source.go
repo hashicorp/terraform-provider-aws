@@ -186,6 +186,32 @@ func dataSourceClientVPNEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"transit_gateway_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAvailabilityZones: {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"availability_zone_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrTransitGatewayAttachmentID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrTransitGatewayID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"transport_protocol": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -280,6 +306,9 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
+	if err := d.Set("transit_gateway_configuration", []any{flattenTransitGatewayConfiguration(ep.TransitGatewayConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting transit_gateway_configuration: %s", err)
+	}
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
 	d.Set(names.AttrVPCID, ep.VpcId)

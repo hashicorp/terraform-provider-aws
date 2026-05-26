@@ -46,6 +46,10 @@ func dataSourceFirewallPolicy() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"enable_tls_session_holding": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 							"policy_variables": {
 								Type:     schema.TypeList,
 								Computed: true,

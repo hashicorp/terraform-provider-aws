@@ -657,3 +657,132 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID)
 }
+
+func TestAccObservabilityAdminCentralizationRuleForOrganization_dataSourceSelectionCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/logs-centralization.observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_dataSourceSelectionCriteria(rName, "DataSourceName = 'amazon_eks' AND DataSourceType = 'api_server'", endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", `organization-centralization-rule/`+rName)),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrSource).AtSliceIndex(0).
+							AtMapKey("source_logs_configuration").AtSliceIndex(0).
+							AtMapKey("data_source_selection_criteria"),
+						knownvalue.StringExact("DataSourceName = 'amazon_eks' AND DataSourceType = 'api_server'")),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrSource).AtSliceIndex(0).
+							AtMapKey("source_logs_configuration").AtSliceIndex(0).
+							AtMapKey("log_group_selection_criteria"),
+						knownvalue.StringExact("*")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_dataSourceSelectionCriteria(rName, "DataSourceName = 'amazon_eks'", endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrSource).AtSliceIndex(0).
+							AtMapKey("source_logs_configuration").AtSliceIndex(0).
+							AtMapKey("data_source_selection_criteria"),
+						knownvalue.StringExact("DataSourceName = 'amazon_eks'")),
+				},
+			},
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrSource).AtSliceIndex(0).
+							AtMapKey("source_logs_configuration").AtSliceIndex(0).
+							AtMapKey("data_source_selection_criteria"),
+						knownvalue.StringExact("*")),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrSource).AtSliceIndex(0).
+							AtMapKey("source_logs_configuration").AtSliceIndex(0).
+							AtMapKey("log_group_selection_criteria"),
+						knownvalue.StringExact("*")),
+				},
+			},
+		},
+	})
+}
+
+func testAccCentralizationRuleForOrganizationConfig_dataSourceSelectionCriteria(rName, dataSourceSelectionCriteria, dstRegion string, srcRegions ...string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_organizations_organization" "current" {}
+
+resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
+  rule_name = %[1]q
+
+  rule {
+    destination {
+      region  = %[2]q
+      account = data.aws_caller_identity.current.account_id
+    }
+
+    source {
+      regions = [%[4]s]
+      scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
+
+      source_logs_configuration {
+        encrypted_log_group_strategy   = "SKIP"
+        data_source_selection_criteria = %[3]q
+      }
+    }
+  }
+}
+`, rName, dstRegion, dataSourceSelectionCriteria, acctest.ListOfStrings(srcRegions...))
+}

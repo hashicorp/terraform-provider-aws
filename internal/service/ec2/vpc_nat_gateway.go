@@ -33,16 +33,16 @@ import (
 // @SDKResource("aws_nat_gateway", name="NAT Gateway")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.NatGateway")
+// @Testing(idAttrDuplicates="id")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceNATGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNATGatewayCreate,
 		ReadWithoutTimeout:   resourceNATGatewayRead,
 		UpdateWithoutTimeout: resourceNATGatewayUpdate,
 		DeleteWithoutTimeout: resourceNATGatewayDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -355,6 +355,16 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceNATGatewayFlatten(d, natGateway); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	setTagsOut(ctx, natGateway.Tags)
+
+	return diags
+}
+
+func resourceNATGatewayFlatten(d *schema.ResourceData, natGateway *awstypes.NatGateway) error {
 	d.Set("availability_mode", natGateway.AvailabilityMode)
 	d.Set("connectivity_type", natGateway.ConnectivityType)
 	d.Set(names.AttrVPCID, natGateway.VpcId)
@@ -380,6 +390,9 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 				}
 			}
 		}
+		if err := d.Set("regional_nat_gateway_address", nil); err != nil {
+			return fmt.Errorf("setting regional_nat_gateway_address: %w", err)
+		}
 		d.Set("secondary_allocation_ids", secondaryAllocationIDs)
 		d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 		d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
@@ -391,19 +404,17 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 		if natGateway.AutoProvisionZones == awstypes.AutoProvisionZonesStateEnabled {
 			d.Set("availability_zone_address", nil)
 		} else if err := d.Set("availability_zone_address", flattenNATGatewayAvailabilityZoneAddresses(natGateway.NatGatewayAddresses)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting availability_zone_address: %s", err)
+			return fmt.Errorf("setting availability_zone_address: %w", err)
 		}
 
 		if err := d.Set("regional_nat_gateway_address", flattenRegionalNATGatewayAddress(natGateway.NatGatewayAddresses)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting regional_nat_gateway_address: %s", err)
+			return fmt.Errorf("setting regional_nat_gateway_address: %w", err)
 		}
 		d.Set("regional_nat_gateway_auto_mode", natGateway.AutoProvisionZones)
 		d.Set("route_table_id", natGateway.RouteTableId)
 	}
 
-	setTagsOut(ctx, natGateway.Tags)
-
-	return diags
+	return nil
 }
 
 func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

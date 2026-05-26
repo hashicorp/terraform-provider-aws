@@ -561,7 +561,7 @@ func TestExpandExpander(t *testing.T) {
 }
 
 func testFlexAWSInterfaceInterfacePtr(v awsInterfaceInterface) *awsInterfaceInterface { // nosemgrep:ci.aws-in-func-name
-	return &v
+	return new(v)
 }
 
 func TestExpandInterface(t *testing.T) {

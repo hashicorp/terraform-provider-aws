@@ -20,7 +20,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 	datasourceName := "data.aws_fsx_windows_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

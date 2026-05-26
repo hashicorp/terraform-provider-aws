@@ -14,16 +14,16 @@ internet gateway or virtual private gateway.
 ## Example Usage
 
 ```terraform
-resource "aws_route_table_association" "a" {
-  subnet_id      = aws_subnet.foo.id
-  route_table_id = aws_route_table.bar.id
+resource "aws_route_table_association" "example" {
+  subnet_id      = aws_subnet.example.id
+  route_table_id = aws_route_table.example.id
 }
 ```
 
 ```terraform
-resource "aws_route_table_association" "b" {
-  gateway_id     = aws_internet_gateway.foo.id
-  route_table_id = aws_route_table.bar.id
+resource "aws_route_table_association" "example" {
+  gateway_id     = aws_internet_gateway.example.id
+  route_table_id = aws_route_table.example.id
 }
 ```
 
@@ -42,7 +42,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the association
+* `id` - ID of the association
 
 ## Timeouts
 
@@ -54,6 +54,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route_table_association.example
+  identity = {
+    id = "rtbassoc-1234567890abcdef1"
+  }
+}
+
+resource "aws_route_table_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the association.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Route Table Associations using the associated resource ID and Route Table ID separated by a forward slash (`/`). For example:
 
 ~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either is already associated, will result in an error (e.g., `Resource.AlreadyAssociated: the specified association for route table rtb-4176657279 conflicts with an existing association`) unless you first import the original association.
@@ -62,7 +88,7 @@ With EC2 Subnets:
 
 ```terraform
 import {
-  to = aws_route_table_association.assoc
+  to = aws_route_table_association.example
   id = "subnet-6777656e646f6c796e/rtb-656c65616e6f72"
 }
 ```
@@ -71,7 +97,7 @@ With EC2 Internet Gateways:
 
 ```terraform
 import {
-  to = aws_route_table_association.assoc
+  to = aws_route_table_association.example
   id = "igw-01b3a60780f8d034a/rtb-656c65616e6f72"
 }
 ```
@@ -81,11 +107,11 @@ import {
 With EC2 Subnets:
 
 ```console
-% terraform import aws_route_table_association.assoc subnet-6777656e646f6c796e/rtb-656c65616e6f72
+% terraform import aws_route_table_association.example subnet-6777656e646f6c796e/rtb-656c65616e6f72
 ```
 
 With EC2 Internet Gateways:
 
 ```console
-% terraform import aws_route_table_association.assoc igw-01b3a60780f8d034a/rtb-656c65616e6f72
+% terraform import aws_route_table_association.example igw-01b3a60780f8d034a/rtb-656c65616e6f72
 ```

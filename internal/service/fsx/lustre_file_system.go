@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -156,7 +157,6 @@ func resourceLustreFileSystem() *schema.Resource {
 			},
 			"file_system_type_version": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Computed: true,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -345,6 +345,7 @@ func resourceLustreFileSystem() *schema.Resource {
 			resourceLustreFileSystemStorageCapacityCustomizeDiff,
 			resourceLustreFileSystemMetadataConfigCustomizeDiff,
 			resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff,
+			resourceLustreFileSystemTypeVersionCustomizeDiff,
 		),
 	}
 }
@@ -428,6 +429,25 @@ func resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff(_ context.C
 						return fmt.Errorf("File systems with throughput capacity of %d MB/s support a minimum read cache size of %d GiB and maximum read cache size of %d GiB", throughputCapacity, minSize, maxSize)
 					}
 				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceLustreFileSystemTypeVersionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	// The FSx API supports in-place upgrades of file_system_type_version (e.g. 2.10 -> 2.12 -> 2.15)
+	// but does not support downgrades. Force replacement on downgrade so Terraform can still converge
+	// by destroying and recreating the file system.
+	if d.HasChange("file_system_type_version") {
+		o, n := d.GetChange("file_system_type_version")
+		oldVersion := o.(string)
+		newVersion := n.(string)
+
+		if semver.LessThan(newVersion, oldVersion) {
+			if err := d.ForceNew("file_system_type_version"); err != nil {
+				return err
 			}
 		}
 	}
@@ -663,7 +683,31 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	updated := false
-	// First, update the metadata configuration if it has changed.
+
+	// First, update the file system type version if it has changed.
+	// Version upgrades (e.g. 2.10 -> 2.12) must be performed as an isolated update
+	// before any other configuration changes.
+	if d.HasChange("file_system_type_version") {
+		input := &fsx.UpdateFileSystemInput{
+			ClientRequestToken:    aws.String(create.UniqueId(ctx)),
+			FileSystemId:          aws.String(d.Id()),
+			FileSystemTypeVersion: aws.String(d.Get("file_system_type_version").(string)),
+		}
+
+		startTime := time.Now()
+		_, err := conn.UpdateFileSystem(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating FSx for Lustre File System (%s) file_system_type_version: %s", d.Id(), err)
+		}
+
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) file_system_type_version update: %s", d.Id(), err)
+		}
+		updated = true
+	}
+
+	// Next, update the metadata configuration if it has changed.
 	// Sometimes it is necessary to increase IOPS before increasing storage_capacity.
 	if d.HasChange("metadata_configuration") {
 		input := &fsx.UpdateFileSystemInput{
@@ -688,6 +732,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChangesExcept(
+		"file_system_type_version",
 		"final_backup_tags",
 		"skip_final_backup",
 		"metadata_configuration",

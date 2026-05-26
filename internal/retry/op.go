@@ -5,7 +5,6 @@ package retry
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
@@ -100,15 +99,11 @@ func (op opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 			}
 		}
 
-		if err == nil {
-			if l.Remaining() == 0 || errors.Is(err, context.Cause(ctx)) {
-				err = &TimeoutError{
-					// LastError must be nil for `TimedOut` to return true.
-					// LastError:     err,
-					LastState:     "retryableerror",
-					Timeout:       timeout,
-					ExpectedState: []string{"success"},
-				}
+		if err == nil && l.Remaining() == 0 {
+			err = &TimeoutError{
+				LastState:     "retryableerror",
+				Timeout:       timeout,
+				ExpectedState: []string{"success"},
 			}
 		}
 

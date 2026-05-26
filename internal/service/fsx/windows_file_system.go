@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -257,7 +258,24 @@ func resourceWindowsFileSystem() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 256),
 							ConflictsWith: []string{
 								"self_managed_active_directory.0.domain_join_service_account_secret",
+								"self_managed_active_directory.0.password_wo",
 							},
+						},
+						"password_wo": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							WriteOnly: true,
+							Sensitive: true,
+							ConflictsWith: []string{
+								"self_managed_active_directory.0.domain_join_service_account_secret",
+								"self_managed_active_directory.0.password",
+							},
+							RequiredWith: []string{"self_managed_active_directory.0.password_wo_version"},
+						},
+						"password_wo_version": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							RequiredWith: []string{"self_managed_active_directory.0.password_wo"},
 						},
 						names.AttrUsername: {
 							Type:         schema.TypeString,
@@ -393,8 +411,15 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("self_managed_active_directory"); ok {
-		inputCFS.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(v.([]any))
-		inputCFSFB.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(v.([]any))
+		// get write-only value from configuration
+		passwordWO, getWODiags := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("self_managed_active_directory").IndexInt(0).GetAttr("password_wo"))
+		diags = append(diags, getWODiags...)
+		if diags.HasError() {
+			return diags
+		}
+
+		inputCFS.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(v.([]any), passwordWO)
+		inputCFSFB.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(v.([]any), passwordWO)
 	}
 
 	if v, ok := d.GetOk(names.AttrStorageType); ok {
@@ -591,7 +616,17 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("self_managed_active_directory") {
-			input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfigurationUpdates(d.Get("self_managed_active_directory").([]any))
+			var passwordWO string
+			var getWODiags diag.Diagnostics
+			if d.HasChange("self_managed_active_directory.0.password_wo_version") {
+				passwordWO, getWODiags = flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("self_managed_active_directory").IndexInt(0).GetAttr("password_wo"))
+				diags = append(diags, getWODiags...)
+				if diags.HasError() {
+					return diags
+				}
+			}
+
+			input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfigurationUpdates(d.Get("self_managed_active_directory").([]any), passwordWO)
 		}
 
 		if d.HasChange("storage_capacity") {
@@ -665,7 +700,7 @@ func expandAliases(apiObjects []awstypes.Alias) []string {
 	})
 }
 
-func expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(tfList []any) *awstypes.SelfManagedActiveDirectoryConfiguration {
+func expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(tfList []any, passwordWO string) *awstypes.SelfManagedActiveDirectoryConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -692,6 +727,10 @@ func expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(tfList []any
 		apiObject.Password = aws.String(v)
 	}
 
+	if passwordWO != "" {
+		apiObject.Password = aws.String(passwordWO)
+	}
+
 	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
 		apiObject.UserName = aws.String(v)
 	}
@@ -699,7 +738,7 @@ func expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(tfList []any
 	return apiObject
 }
 
-func expandWindowsFileSystemSelfManagedActiveDirectoryConfigurationUpdates(tfList []any) *awstypes.SelfManagedActiveDirectoryConfigurationUpdates {
+func expandWindowsFileSystemSelfManagedActiveDirectoryConfigurationUpdates(tfList []any, passwordWO string) *awstypes.SelfManagedActiveDirectoryConfigurationUpdates {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -717,6 +756,10 @@ func expandWindowsFileSystemSelfManagedActiveDirectoryConfigurationUpdates(tfLis
 
 	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
 		apiObject.Password = aws.String(v)
+	}
+
+	if passwordWO != "" {
+		apiObject.Password = aws.String(passwordWO)
 	}
 
 	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
@@ -744,6 +787,7 @@ func flattenWindowsFileSystemSelfManagedActiveDirectoryAttributes(d *schema.Reso
 		"file_system_administrators_group":       aws.ToString(apiObject.FileSystemAdministratorsGroup),
 		"organizational_unit_distinguished_name": aws.ToString(apiObject.OrganizationalUnitDistinguishedName),
 		names.AttrPassword:                       d.Get("self_managed_active_directory.0.password").(string),
+		"password_wo_version":                    d.Get("self_managed_active_directory.0.password_wo_version").(int),
 		names.AttrUsername:                       aws.ToString(apiObject.UserName),
 	}
 

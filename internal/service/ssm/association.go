@@ -8,13 +8,13 @@ package ssm
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -261,9 +261,10 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.SSMClient(ctx)
 
-	association, err := findAssociationByID(ctx, conn, d.Id())
+	out, err := findAssociationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Association %s not found, removing from state", d.Id())
@@ -275,34 +276,8 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading SSM Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "association/" + aws.ToString(association.AssociationId),
-	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrAssociationID, association.AssociationId)
-	d.Set("association_name", association.AssociationName)
-	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
-	d.Set("calendar_names", association.CalendarNames)
-	d.Set("compliance_severity", association.ComplianceSeverity)
-	d.Set("document_version", association.DocumentVersion)
-	d.Set("max_concurrency", association.MaxConcurrency)
-	d.Set("max_errors", association.MaxErrors)
-	d.Set(names.AttrName, association.Name)
-	if err := d.Set("output_location", flattenAssociationOutputLocation(association.OutputLocation)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting output_location: %s", err)
-	}
-	if err := d.Set(names.AttrParameters, flattenParameters(association.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
-	}
-	d.Set(names.AttrScheduleExpression, association.ScheduleExpression)
-	d.Set("sync_compliance", association.SyncCompliance)
-	if err := d.Set("targets", flattenTargets(association.Targets)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting targets: %s", err)
+	if err := resourceAssociationFlatten(ctx, awsClient, out, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening SSM Association (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -521,4 +496,31 @@ func flattenAssociationOutputLocation(apiObject *awstypes.InstanceAssociationOut
 	tfList = append(tfList, tfMap)
 
 	return tfList
+}
+
+func resourceAssociationFlatten(ctx context.Context, awsClient *conns.AWSClient, out *awstypes.AssociationDescription, d *schema.ResourceData) error {
+	d.Set("apply_only_at_cron_interval", out.ApplyOnlyAtCronInterval)
+	d.Set(names.AttrARN, awsClient.RegionalARN(ctx, "ssm", "association/"+d.Id()))
+	d.Set(names.AttrAssociationID, out.AssociationId)
+	d.Set("association_name", out.AssociationName)
+	d.Set("automation_target_parameter_name", out.AutomationTargetParameterName)
+	d.Set("calendar_names", out.CalendarNames)
+	d.Set("compliance_severity", out.ComplianceSeverity)
+	d.Set("document_version", out.DocumentVersion)
+	d.Set("max_concurrency", out.MaxConcurrency)
+	d.Set("max_errors", out.MaxErrors)
+	d.Set(names.AttrName, out.Name)
+	if err := d.Set("output_location", flattenAssociationOutputLocation(out.OutputLocation)); err != nil {
+		return fmt.Errorf("setting output_location: %w", err)
+	}
+	if err := d.Set(names.AttrParameters, flattenParameters(out.Parameters)); err != nil {
+		return fmt.Errorf("setting parameters: %w", err)
+	}
+	d.Set(names.AttrScheduleExpression, out.ScheduleExpression)
+	d.Set("sync_compliance", out.SyncCompliance)
+	if err := d.Set("targets", flattenTargets(out.Targets)); err != nil {
+		return fmt.Errorf("setting targets: %w", err)
+	}
+
+	return nil
 }

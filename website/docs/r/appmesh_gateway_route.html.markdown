@@ -52,104 +52,111 @@ This resource supports the following arguments:
 * `spec` - (Required) Gateway route specification to apply.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `spec` object supports the following:
+### `spec` Block
 
-* `grpc_route` - (Optional) Specification of a gRPC gateway route.
-* `http_route` - (Optional) Specification of an HTTP gateway route.
-* `http2_route` - (Optional) Specification of an HTTP/2 gateway route.
+* `grpc_route` - (Optional) Specification of a gRPC gateway route. See [`grpc_route` Block](#grpc_route-block) for details.
+* `http2_route` - (Optional) Specification of an HTTP/2 gateway route. See [`http2_route` Block](#http2_route-block) for details.
+* `http_route` - (Optional) Specification of an HTTP gateway route. See [`http_route` Block](#http_route-block) for details.
 * `priority` - (Optional) Priority for the gateway route, between `0` and `1000`.
 
-The `grpc_route`, `http_route` and `http2_route` objects supports the following:
+### `grpc_route` Block
 
-* `action` - (Required) Action to take if a match is determined.
-* `match` - (Required) Criteria for determining a request match.
+* `action` - (Required) Action to take if a match is determined. See [`action` Block](#action-block) for details.
+* `match` - (Required) Criteria for determining a request match. See [`match` Block](#match-block) for details.
 
-The `grpc_route`, `http_route` and `http2_route`'s `action` object supports the following:
+### `http_route` Block
 
-* `target` - (Required) Target that traffic is routed to when a request matches the gateway route.
+* `action` - (Required) Action to take if a match is determined. See [`action` Block](#action-block) for details.
+* `match` - (Required) Criteria for determining a request match. See [`match` Block](#match-block) for details.
 
-The `target` object supports the following:
+### `http2_route` Block
+
+* `action` - (Required) Action to take if a match is determined. See [`action` Block](#action-block) for details.
+* `match` - (Required) Criteria for determining a request match. See [`match` Block](#match-block) for details.
+
+### `action` Block
+
+* `rewrite` - (Optional) Gateway route action to rewrite. See [`rewrite` Block](#rewrite-block) for details.
+* `target` - (Required) Target that traffic is routed to when a request matches the gateway route. See [`target` Block](#target-block) for details.
+
+### `target` Block
 
 * `port` - (Optional) The port number that corresponds to the target for Virtual Service provider port. This is required when the provider (router or node) of the Virtual Service has multiple listeners.
-* `virtual_service` - (Required) Virtual service gateway route target.
+* `virtual_service` - (Required) Virtual service gateway route target. See [`virtual_service` Block](#virtual_service-block) for details.
 
-The `virtual_service` object supports the following:
+### `virtual_service` Block
 
 * `virtual_service_name` - (Required) Name of the virtual service that traffic is routed to. Must be between 1 and 255 characters in length.
 
-The `http_route` and `http2_route`'s `action` object additionally supports the following:
+### `rewrite` Block
 
-* `rewrite` - (Optional) Gateway route action to rewrite.
+* `hostname` - (Optional) Host name to rewrite. See [`hostname` Block](#hostname-block) for details.
+* `path` - (Optional) Exact path to rewrite. See [`path` Block](#path-block) for details.
+* `prefix` - (Optional) Specified beginning characters to rewrite. See [`prefix` Block](#prefix-block) for details.
 
-The `rewrite` object supports the following:
-
-* `hostname` - (Optional) Host name to rewrite.
-* `path` - (Optional) Exact path to rewrite.
-* `prefix` - (Optional) Specified beginning characters to rewrite.
-
-The `hostname` object supports the following:
+### `hostname` Block
 
 * `default_target_hostname` - (Required) Default target host name to write to. Valid values: `ENABLED`, `DISABLED`.
 
-The `path` object supports the following:
+### `path` Block
 
 * `exact` - (Required) Value used to replace matched path.
 
-The `prefix` object supports the following:
+### `prefix` Block
 
 * `default_prefix` - (Optional) Default prefix used to replace the incoming route prefix when rewritten. Valid values: `ENABLED`, `DISABLED`.
 * `value` - (Optional) Value used to replace the incoming route prefix when rewritten.
 
-The `grpc_route`'s `match` object supports the following:
+### `match` Block
 
 * `service_name` - (Required) Fully qualified domain name for the service to match from the request.
 * `port` - (Optional) The port number to match from the request.
 
-The `http_route` and `http2_route`'s `match` object supports the following:
+### `match` Block
 
-* `header` - (Optional) Client request headers to match on.
-* `hostname` - (Optional) Host name to match on.
-* `path` - (Optional) Client request path to match on.
+* `header` - (Optional) Client request headers to match on. See [`header` Block](#header-block) for details.
+* `hostname` - (Optional) Host name to match on. See [`hostname` Block](#hostname-block) for details.
+* `path` - (Optional) Client request path to match on. See [`path` Block](#path-block) for details.
 * `port` - (Optional) The port number to match from the request.
 * `prefix` - (Optional) Path to match requests with. This parameter must always start with `/`, which by itself matches all requests to the virtual service name.
-* `query_parameter` - (Optional) Client request query parameters to match on.
+* `query_parameter` - (Optional) Client request query parameters to match on. See [`query_parameter` Block](#query_parameter-block) for details.
 
-The `header` object supports the following:
+### `header` Block
 
 * `name` - (Required) Name for the HTTP header in the client request that will be matched on.
 * `invert` - (Optional) If `true`, the match is on the opposite of the `match` method and value. Default is `false`.
 * `match` - (Optional) Method and value to match the header value sent with a request. Specify one match method.
 
-The `header`'s `match` object supports the following:
+### `match` Block
 
 * `exact` - (Optional) Header value sent by the client must match the specified value exactly.
 * `prefix` - (Optional) Header value sent by the client must begin with the specified characters.
-* `port`- (Optional) The port number to match from the request.
+* `port` - (Optional) The port number to match from the request.
 * `range`- (Optional) Object that specifies the range of numbers that the header value sent by the client must be included in.
 * `regex` - (Optional) Header value sent by the client must include the specified characters.
 * `suffix` - (Optional) Header value sent by the client must end with the specified characters.
 
-The `range` object supports the following:
+### `range` Block
 
 * `end` - (Required) End of the range.
-* `start` - (Requited) Start of the range.
+* `start` - (Required) Start of the range.
 
-The `hostname` object supports the following:
+### `hostname` Block
 
 * `exact` - (Optional) Exact host name to match on.
 * `suffix` - (Optional) Specified ending characters of the host name to match on.
 
-The `path` object supports the following:
+### `path` Block
 
 * `exact` - (Optional) The exact path to match on.
 * `regex` - (Optional) The regex used to match the path.
 
-The `query_parameter` object supports the following:
+### `query_parameter` Block
 
 * `name` - (Required) Name for the query parameter that will be matched on.
 * `match` - (Optional) The query parameter to match on.
 
-The `query_parameter`'s `match` object supports the following:
+### `match` Block
 
 * `exact` - (Optional) The exact query parameter to match on.
 

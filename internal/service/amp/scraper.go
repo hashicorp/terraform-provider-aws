@@ -150,7 +150,6 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 						"eks": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[eksConfigurationModel](ctx),
 							Validators: []validator.List{
-								listvalidator.IsRequired(),
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
@@ -174,6 +173,42 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 										PlanModifiers: []planmodifier.Set{
 											setplanmodifier.RequiresReplace(),
 											setplanmodifier.UseStateForUnknown(),
+										},
+									},
+									names.AttrSubnetIDs: schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
+										},
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+						"vpc": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrSecurityGroupIDs: schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
+										},
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
 										},
 									},
 									names.AttrSubnetIDs: schema.SetAttribute{
@@ -443,6 +478,7 @@ type ampConfigurationModel struct {
 
 type sourceModel struct {
 	EKS fwtypes.ListNestedObjectValueOf[eksConfigurationModel] `tfsdk:"eks"`
+	VPC fwtypes.ListNestedObjectValueOf[vpcConfigurationModel] `tfsdk:"vpc"`
 }
 
 var (
@@ -467,6 +503,18 @@ func (m sourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 			return nil, diags
 		}
 		v = &apiObject
+	case !m.VPC.IsNull():
+		data, d := m.VPC.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.SourceMemberVpcConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
 	}
 
 	return v, diags
@@ -483,6 +531,13 @@ func (m *sourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 			return diags
 		}
 		m.EKS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.SourceMemberVpcConfiguration:
+		var data vpcConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.VPC = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	}
 
 	return diags
@@ -490,6 +545,11 @@ func (m *sourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 
 type eksConfigurationModel struct {
 	ClusterARN       fwtypes.ARN         `tfsdk:"cluster_arn"`
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
+}
+
+type vpcConfigurationModel struct {
 	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
 	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
 }

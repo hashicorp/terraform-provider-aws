@@ -143,7 +143,7 @@ func testAccIPGroup_MultipleDirectories(t *testing.T) {
 	var d1, d2 types.WorkspaceDirectory
 
 	ipGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_ip_group.test"
 	directoryResourceName1 := "aws_workspaces_directory.test1"

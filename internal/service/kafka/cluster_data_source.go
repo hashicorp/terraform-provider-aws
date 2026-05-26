@@ -83,6 +83,10 @@ func dataSourceCluster() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"network_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 									"vpc_connectivity": {
 										Type:     schema.TypeList,
 										Computed: true,

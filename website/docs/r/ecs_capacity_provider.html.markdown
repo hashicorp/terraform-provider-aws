@@ -59,7 +59,7 @@ resource "aws_ecs_capacity_provider" "example" {
 
     instance_launch_template {
       ec2_instance_profile_arn = aws_iam_instance_profile.ecs_instance.arn
-      monitoring               = "ENABLED"
+      monitoring               = "DETAILED"
 
       network_configuration {
         subnets         = [aws_subnet.example.id]

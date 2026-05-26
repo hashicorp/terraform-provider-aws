@@ -186,7 +186,7 @@ func (r *managedPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.
 		return smarterr.NewError(err)
 	}
 
-	create, remove, _ := intflex.DiffSlices(have, want, func(s1, s2 string) bool { return s1 == s2 })
+	create, remove, _ := intflex.DiffSlices(have, want, intflex.Equal)
 
 	for _, arn := range create {
 		input := &ssoadmin.AttachManagedPolicyToPermissionSetInput{

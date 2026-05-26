@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
@@ -37,7 +38,11 @@ import (
 
 // @SDKResource("aws_api_gateway_rest_api", name="REST API")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetRestApiOutput", importIgnore="put_rest_api_mode")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(plannableImportAction="NoOp")
 func resourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRestAPICreate,
@@ -47,7 +52,12 @@ func resourceRestAPI() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
 				d.Set("put_rest_api_mode", types.PutModeOverwrite)
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -291,6 +301,18 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceRestAPIFlatten(ctx, c, d, api); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if err := resourceRestAPIReadRootResourceID(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, api *apigateway.GetRestApiOutput) error {
 	d.Set("api_key_source", api.ApiKeySource)
 	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
@@ -298,7 +320,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
+		return fmt.Errorf("setting endpoint_configuration: %w", err)
 	}
 	d.Set("execution_arn", apiInvokeARN(ctx, c, d.Id()))
 	if api.MinimumCompressionSize == nil {
@@ -308,6 +330,24 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set(names.AttrName, api.Name)
 
+	policy, err := flattenAPIPolicy(api.Policy)
+	if err != nil {
+		return err
+	}
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
+	if err != nil {
+		return err
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	setTagsOut(ctx, api.Tags)
+
+	return nil
+}
+
+func resourceRestAPIReadRootResourceID(ctx context.Context, conn *apigateway.Client, d *schema.ResourceData) error {
 	input := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
 	}
@@ -321,24 +361,10 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	case retry.NotFound(err):
 		d.Set("root_resource_id", nil)
 	default:
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)
+		return fmt.Errorf("reading API Gateway REST API (%s) root resource: %w", d.Id(), err)
 	}
 
-	policy, err := flattenAPIPolicy(api.Policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
-
-	setTagsOut(ctx, api.Tags)
-
-	return diags
+	return nil
 }
 
 func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

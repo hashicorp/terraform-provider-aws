@@ -8,6 +8,7 @@ package organizations
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -559,20 +561,26 @@ func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.C
 }
 
 func findEnabledServicePrincipals(ctx context.Context, conn *organizations.Client, input *organizations.ListAWSServiceAccessForOrganizationInput) ([]awstypes.EnabledServicePrincipal, error) {
-	var output []awstypes.EnabledServicePrincipal
+	return tfslices.CollectWithError(listEnabledServicePrincipals(ctx, conn, input))
+}
 
-	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+func listEnabledServicePrincipals(ctx context.Context, conn *organizations.Client, input *organizations.ListAWSServiceAccessForOrganizationInput, optFns ...func(*organizations.Options)) iter.Seq2[awstypes.EnabledServicePrincipal, error] {
+	return func(yield func(awstypes.EnabledServicePrincipal, error) bool) {
+		pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.EnabledServicePrincipal](), fmt.Errorf("listing Organizations Service Principals: %w", err))
+				return
+			}
 
-		if err != nil {
-			return nil, err
+			for _, v := range page.EnabledServicePrincipals {
+				if !yield(v, nil) {
+					return
+				}
+			}
 		}
-
-		output = append(output, page.EnabledServicePrincipals...)
 	}
-
-	return output, nil
 }
 
 func findRoots(ctx context.Context, conn *organizations.Client, input *organizations.ListRootsInput) ([]awstypes.Root, error) {
