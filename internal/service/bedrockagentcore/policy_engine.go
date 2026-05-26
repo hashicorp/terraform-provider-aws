@@ -237,21 +237,21 @@ func (r *policyEngineResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
+	policyEngineID := state.PolicyEngineID.ValueString()
+
 	_, err := conn.DeletePolicyEngine(ctx, &bedrockagentcorecontrol.DeletePolicyEngineInput{
-		PolicyEngineId: state.PolicyEngineID.ValueStringPointer(),
+		PolicyEngineId: aws.String(policyEngineID),
 	})
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitPolicyEngineDeleted(ctx, conn, state.PolicyEngineID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineID.String())
+	if _, err := waitPolicyEngineDeleted(ctx, conn, policyEngineID, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
 		return
 	}
 }
@@ -267,9 +267,7 @@ func waitPolicyEngineCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetPolicyEngineOutput); ok {
-		if len(out.StatusReasons) > 0 {
-			retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, ", ")))
-		}
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -287,9 +285,7 @@ func waitPolicyEngineUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetPolicyEngineOutput); ok {
-		if len(out.StatusReasons) > 0 {
-			retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, ", ")))
-		}
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -306,9 +302,7 @@ func waitPolicyEngineDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetPolicyEngineOutput); ok {
-		if len(out.StatusReasons) > 0 {
-			retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, ", ")))
-		}
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
