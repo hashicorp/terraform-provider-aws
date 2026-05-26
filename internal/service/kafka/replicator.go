@@ -340,21 +340,21 @@ func resourceReplicator() *schema.Resource {
 				cloudwatchLogsBlock := "log_delivery.0.replicator_log_delivery.0.cloudwatch_logs.0"
 				firehoseLogBlock := "log_delivery.0.replicator_log_delivery.0.firehose.0"
 				s3LogBlock := "log_delivery.0.replicator_log_delivery.0.s3.0"
-				if v, ok := d.Get(fmt.Sprintf("%s.%s", cloudwatchLogsBlock, "enabled")).(bool); ok && !v {
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", cloudwatchLogsBlock, names.AttrEnabled)).(bool); ok && !v {
 					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", cloudwatchLogsBlock, "log_group")); ok {
 						diags = sdkdiag.AppendErrorf(diags, "cannot specify log_group when CloudWatch Logs logging is disabled")
 					}
 				}
-				if v, ok := d.Get(fmt.Sprintf("%s.%s", firehoseLogBlock, "enabled")).(bool); ok && !v {
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", firehoseLogBlock, names.AttrEnabled)).(bool); ok && !v {
 					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", firehoseLogBlock, "delivery_stream")); ok {
 						diags = sdkdiag.AppendErrorf(diags, "cannot specify delivery_stream when Firehose logging is disabled")
 					}
 				}
-				if v, ok := d.Get(fmt.Sprintf("%s.%s", s3LogBlock, "enabled")).(bool); ok && !v {
-					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", s3LogBlock, "bucket")); ok {
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", s3LogBlock, names.AttrEnabled)).(bool); ok && !v {
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", s3LogBlock, names.AttrBucket)); ok {
 						diags = sdkdiag.AppendErrorf(diags, "cannot specify bucket when S3 logging is disabled")
 					}
-					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", s3LogBlock, "prefix")); ok {
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", s3LogBlock, names.AttrPrefix)); ok {
 						diags = sdkdiag.AppendErrorf(diags, "cannot specify prefix when S3 logging is disabled")
 					}
 				}
