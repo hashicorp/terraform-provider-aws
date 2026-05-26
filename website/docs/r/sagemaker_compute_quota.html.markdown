@@ -29,7 +29,7 @@ resource "aws_sagemaker_compute_quota" "example" {
   }
 
   compute_quota_target {
-    team_name = "research"
+    team_name = "team-a"
   }
 }
 ```
