@@ -2176,39 +2176,45 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(1)),
+				},
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(2)),
 				},
 			},
 			{
@@ -2222,6 +2228,10 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
 				},
 			},
 		},
@@ -2241,31 +2251,34 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				// Create NLB without security groups.
-				Config: testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName, false),
+				Config: testAccLoadBalancerConfig_nlbNoSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				// Add a security group whose ID is unknown at plan time.
 				// The NLB must be recreated because NLBs don't support
 				// adding security groups after creation.
-				Config: testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName, true),
+				Config: testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(1)),
 				},
 			},
 		},
@@ -4202,20 +4215,8 @@ resource "aws_lb" "test" {
 
 // testAccLoadBalancerConfig_nlbSecurityGroupsUnknown returns a config where
 // the security group is created in the same config as the NLB, so its ID is
-// unknown at plan time.  Pass withSG=false for no security group, or
-// withSG=true to create and attach one.
-func testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName string, withSG bool) string {
-	if !withSG {
-		return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-resource "aws_lb" "test" {
-  internal           = true
-  load_balancer_type = "network"
-  name               = %[1]q
-  subnets            = aws_subnet.test[*].id
-}
-`, rName))
-	}
-
+// unknown at plan time.
+func testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q

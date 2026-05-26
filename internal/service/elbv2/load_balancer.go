@@ -22,6 +22,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1370,6 +1371,33 @@ func resourceLoadBalancerCustomizeDiff(ctx context.Context, diff *schema.Resourc
 			// https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-security-groups.html#security-group-considerations
 			// * You can associate security groups with a Network Load Balancer when you create it. If you create a Network Load Balancer without associating any security groups, you can't associate them with the Network Load Balancer later on.
 			// * After you create a Network Load Balancer with associated security groups, you can change the security groups associated with the Network Load Balancer at any time.
+			if o, n := state.SecurityGroups, plan.SecurityGroups; o.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) == 0 {
+				if !n.IsFullyKnown() {
+					// When the new value is unknown at plan time (e.g. a security group
+					// created in the same apply), the SDK sees both old and new as empty
+					// sets, so HasChange and ForceNew both fail. Handle this unknown case
+					// first by injecting a placeholder value so the SDK sees a diff,
+					// calling ForceNew, then restoring the attribute to computed.
+					if err := diff.SetNew(names.AttrSecurityGroups, []string{"unknown"}); err != nil {
+						return err
+					}
+					if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+						return err
+					}
+					if err := diff.SetNewComputed(names.AttrSecurityGroups); err != nil {
+						return err
+					}
+				} else if n.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) > 0 {
+					if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+						return err
+					}
+				}
+			} else if n.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) == 0 {
+				// "ValidationError: A security group must be specified".
+				if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+					return err
+				}
+			}
 
 			// https://docs.aws.amazon.com/elasticloadbalancing/latest/network/edit-load-balancer-attributes.html#secondary-ip-addresses
 			// After you add secondary IP addresses, you can't remove them. The only way to release the secondary IP addresses is to delete the load balancer.
@@ -1537,31 +1565,31 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	//
 	// This first if statement is needed to properly recreate NLBs when a security group is
 	// added, since NLBs don't support adding security groups after creation.
-	if v := config.GetAttr(names.AttrSecurityGroups); !v.IsWhollyKnown() {
-		o, _ := diff.GetChange(names.AttrSecurityGroups)
-		os := o.(*schema.Set)
+	// if v := config.GetAttr(names.AttrSecurityGroups); !v.IsWhollyKnown() {
+	// 	o, _ := diff.GetChange(names.AttrSecurityGroups)
+	// 	os := o.(*schema.Set)
 
-		if os.Len() == 0 && !v.IsNull() {
-			if err := diff.SetNew(names.AttrSecurityGroups, schema.NewSet(schema.HashString, []any{"unknown"})); err != nil {
-				return err
-			}
-			if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
-				return err
-			}
-			if err := diff.SetNewComputed(names.AttrSecurityGroups); err != nil {
-				return err
-			}
-		}
-	} else if diff.HasChange(names.AttrSecurityGroups) {
-		o, n := diff.GetChange(names.AttrSecurityGroups)
-		os, ns := o.(*schema.Set), n.(*schema.Set)
+	// 	if os.Len() == 0 && !v.IsNull() {
+	// 		if err := diff.SetNew(names.AttrSecurityGroups, schema.NewSet(schema.HashString, []any{"unknown"})); err != nil {
+	// 			return err
+	// 		}
+	// 		if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+	// 			return err
+	// 		}
+	// 		if err := diff.SetNewComputed(names.AttrSecurityGroups); err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// } else if diff.HasChange(names.AttrSecurityGroups) {
+	// 	o, n := diff.GetChange(names.AttrSecurityGroups)
+	// 	os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
-			if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
-				return err
-			}
-		}
-	}
+	// 	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
+	// 		if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
 
 	return nil
 }
