@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -50,7 +49,7 @@ func (d *ipRangesDataSource) Schema(ctx context.Context, request datasource.Sche
 			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: datasourceattribute.IDAttributeDeprecatedNoReplacement(),
+			names.AttrID: idAttributeDeprecatedNoReplacement(),
 			"ipv6_cidr_blocks": schema.ListAttribute{
 				ElementType: types.StringType,
 				CustomType:  fwtypes.ListOfStringType,

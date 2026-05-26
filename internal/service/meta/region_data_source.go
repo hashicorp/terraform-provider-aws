@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,7 +46,7 @@ func (d *regionDataSource) Schema(ctx context.Context, request datasource.Schema
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrID: datasourceattribute.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
+			names.AttrID: idAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 			names.AttrName: schema.StringAttribute{
 				Optional:           true,
 				Computed:           true,

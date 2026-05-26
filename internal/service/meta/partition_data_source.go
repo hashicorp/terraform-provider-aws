@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,7 +35,7 @@ func (d *partitionDataSource) Schema(ctx context.Context, request datasource.Sch
 			"dns_suffix": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: datasourceattribute.IDAttributeDeprecatedWithAlternate(path.Root("partition")),
+			names.AttrID: idAttributeDeprecatedWithAlternate(path.Root("partition")),
 			"partition": schema.StringAttribute{
 				Computed: true,
 			},
