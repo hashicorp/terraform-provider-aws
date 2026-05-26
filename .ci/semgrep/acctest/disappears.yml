@@ -70,5 +70,8 @@ rules:
         - "/internal/service/m*/*_test.go"
         - "/internal/service/n*/*_test.go"
         - "/internal/service/o*/*_test.go"
+        - "/internal/service/p*/*_test.go"
+        - "/internal/service/q*/*_test.go"
+        - "/internal/service/r*/*_test.go"
         - "/internal/service/timestreaminfluxdb/*_test.go"
         - "/internal/service/workmail/*_test.go"
