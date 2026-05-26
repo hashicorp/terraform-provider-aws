@@ -43,6 +43,7 @@ import (
 // @Tags(identifierAttribute="policy_engine_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetPolicyEngineOutput")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="policy_engine_id")
 // @IdentityAttribute("policy_engine_id")
 func newPolicyEngineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &policyEngineResource{}
