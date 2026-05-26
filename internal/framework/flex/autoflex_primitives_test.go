@@ -6,15 +6,12 @@ package flex
 // Tests AutoFlex's struct field Flatten and Expand for all primitive types and all `autoflex` struct tag combinations
 
 import (
-	"bytes"
 	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,28 +95,15 @@ func testExpandField[T any](t *testing.T, valueHandler fieldValueHandler[T]) {
 			t.Parallel()
 			for name, tc := range tc {
 				t.Run(name, func(t *testing.T) {
-					t.Parallel()
+					cases := autoFlexTestCases{}
 					for name, tc := range tc {
-						t.Run(name, func(t *testing.T) {
-							t.Parallel()
-							ctx := t.Context()
-
-							var buf bytes.Buffer
-							ctx = tflogtest.RootLogger(ctx, &buf)
-							ctx = registerTestingLogger(ctx)
-
-							actual := reflect.New(reflect.TypeOf(tc.expected).Elem()).Interface()
-
-							diags := Expand(ctx, tc.source, actual)
-							if diff := cmp.Diff(diags, tc.expectedDiags); diff != "" {
-								t.Fatalf("unexpected expand diagnostics difference: %s", diff)
-							}
-
-							if diff := cmp.Diff(actual, tc.expected); diff != "" {
-								t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-							}
-						})
+						cases[name] = autoFlexTestCase{
+							Source:     tc.source,
+							Target:     reflect.New(reflect.TypeOf(tc.expected).Elem()).Interface(),
+							WantTarget: tc.expected,
+						}
 					}
+					runAutoExpandTestCases(t, cases, runChecks{})
 				})
 			}
 		})
@@ -896,28 +880,15 @@ func TestFlattenStringField(t *testing.T) {
 			t.Parallel()
 			for name, tc := range tc {
 				t.Run(name, func(t *testing.T) {
-					t.Parallel()
+					cases := autoFlexTestCases{}
 					for name, tc := range tc {
-						t.Run(name, func(t *testing.T) {
-							t.Parallel()
-							ctx := t.Context()
-
-							var buf bytes.Buffer
-							ctx = tflogtest.RootLogger(ctx, &buf)
-							ctx = registerTestingLogger(ctx)
-
-							actual := reflect.New(reflect.TypeOf(tc.expected).Elem()).Interface()
-
-							diags := Flatten(ctx, tc.source, actual)
-							if diff := cmp.Diff(diags, tc.expectedDiags); diff != "" {
-								t.Fatalf("unexpected expand diagnostics difference: %s", diff)
-							}
-
-							if diff := cmp.Diff(actual, tc.expected); diff != "" {
-								t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-							}
-						})
+						cases[name] = autoFlexTestCase{
+							Source:     tc.source,
+							Target:     reflect.New(reflect.TypeOf(tc.expected).Elem()).Interface(),
+							WantTarget: tc.expected,
+						}
 					}
+					runAutoFlattenTestCases(t, cases, runChecks{})
 				})
 			}
 		})
@@ -986,28 +957,15 @@ func testFlattenField[T any](t *testing.T, valueHandler fieldValueHandler[T]) {
 			t.Parallel()
 			for name, tc := range tc {
 				t.Run(name, func(t *testing.T) {
-					t.Parallel()
+					cases := autoFlexTestCases{}
 					for name, tc := range tc {
-						t.Run(name, func(t *testing.T) {
-							t.Parallel()
-							ctx := t.Context()
-
-							var buf bytes.Buffer
-							ctx = tflogtest.RootLogger(ctx, &buf)
-							ctx = registerTestingLogger(ctx)
-
-							actual := reflect.New(reflect.TypeOf(tc.expected).Elem()).Interface()
-
-							diags := Flatten(ctx, tc.source, actual)
-							if diff := cmp.Diff(diags, tc.expectedDiags); diff != "" {
-								t.Fatalf("unexpected expand diagnostics difference: %s", diff)
-							}
-
-							if diff := cmp.Diff(actual, tc.expected); diff != "" {
-								t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-							}
-						})
+						cases[name] = autoFlexTestCase{
+							Source:     tc.source,
+							Target:     reflect.New(reflect.TypeOf(tc.expected).Elem()).Interface(),
+							WantTarget: tc.expected,
+						}
 					}
+					runAutoFlattenTestCases(t, cases, runChecks{})
 				})
 			}
 		})
