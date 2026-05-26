@@ -483,7 +483,7 @@ func expandResourceSharingConfig(ctx context.Context, value fwtypes.ListNestedOb
 
 	return &awstypes.ResourceSharingConfig{
 		AbsoluteBorrowLimits: limits,
-		BorrowLimit:          model.BorrowLimit.ValueInt32Pointer(),
+		BorrowLimit:          int32ValuePointer(model.BorrowLimit),
 		Strategy:             model.Strategy.ValueEnum(),
 	}, diags
 }
@@ -498,7 +498,7 @@ func expandComputeQuotaTarget(ctx context.Context, value fwtypes.ListNestedObjec
 	}
 
 	return &awstypes.ComputeQuotaTarget{
-		FairShareWeight: model.FairShareWeight.ValueInt32Pointer(),
+		FairShareWeight: int32ValuePointer(model.FairShareWeight),
 		TeamName:        model.TeamName.ValueStringPointer(),
 	}, diags
 }
@@ -530,11 +530,11 @@ func expandComputeQuotaResourceConfigs(ctx context.Context, value fwtypes.ListNe
 
 		output = append(output, awstypes.ComputeQuotaResourceConfig{
 			AcceleratorPartition: partition,
-			Accelerators:         model.Accelerators.ValueInt32Pointer(),
-			Count:                model.Count.ValueInt32Pointer(),
+			Accelerators:         int32ValuePointer(model.Accelerators),
+			Count:                int32ValuePointer(model.Count),
 			InstanceType:         model.InstanceType.ValueEnum(),
-			MemoryInGiB:          model.MemoryInGiB.ValueFloat32Pointer(),
-			VCpu:                 model.VCpu.ValueFloat32Pointer(),
+			MemoryInGiB:          float32ValuePointer(model.MemoryInGiB),
+			VCpu:                 float32ValuePointer(model.VCpu),
 		})
 	}
 
@@ -555,9 +555,25 @@ func expandAcceleratorPartitionConfig(ctx context.Context, value fwtypes.ListNes
 	}
 
 	return &awstypes.AcceleratorPartitionConfig{
-		Count: model.Count.ValueInt32Pointer(),
+		Count: int32ValuePointer(model.Count),
 		Type:  model.Type.ValueEnum(),
 	}, diags
+}
+
+func int32ValuePointer(value types.Int32) *int32 {
+	if value.IsNull() || value.IsUnknown() {
+		return nil
+	}
+
+	return value.ValueInt32Pointer()
+}
+
+func float32ValuePointer(value types.Float32) *float32 {
+	if value.IsNull() || value.IsUnknown() {
+		return nil
+	}
+
+	return value.ValueFloat32Pointer()
 }
 
 func flattenComputeQuota(ctx context.Context, output *sagemaker.DescribeComputeQuotaOutput, data *computeQuotaResourceModel) diag.Diagnostics {
