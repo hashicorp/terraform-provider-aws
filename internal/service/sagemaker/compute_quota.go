@@ -303,6 +303,7 @@ func (r *computeQuotaResource) Create(ctx context.Context, req resource.CreateRe
 	outputWait, err := waitComputeQuotaCreated(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		if cleanupErr := deleteComputeQuotaAfterFailedCreate(ctx, conn, plan.ID.ValueString(), r.DeleteTimeout(ctx, plan.Timeouts)); cleanupErr != nil {
+			resp.State.SetAttribute(ctx, path.Root(names.AttrID), plan.ID) // Set 'id' so as to taint the resource.
 			err = errors.Join(err, fmt.Errorf("deleting failed SageMaker Compute Quota (%s): %w", plan.ID.ValueString(), cleanupErr))
 		}
 

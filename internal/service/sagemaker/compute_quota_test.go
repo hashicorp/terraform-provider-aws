@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -63,6 +64,42 @@ func TestAccSageMakerComputeQuota_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerComputeQuota_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	clusterARN := acctest.SkipIfEnvVarNotSet(t, computeQuotaClusterARNEnvVar)
+
+	var computeQuota sagemaker.DescribeComputeQuotaOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_compute_quota.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeQuotaDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeQuotaConfig_basic(rName, clusterARN, testAccComputeQuotaInstanceType()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckComputeQuotaExists(ctx, t, resourceName, &computeQuota),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsagemaker.ResourceComputeQuota, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -156,6 +193,11 @@ func TestAccSageMakerComputeQuota_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_quota_config.0.resource_sharing_config.0.borrow_limit", "100"),
 					resource.TestCheckResourceAttr(resourceName, "compute_quota_target.0.fair_share_weight", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
