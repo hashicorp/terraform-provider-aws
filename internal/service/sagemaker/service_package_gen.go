@@ -42,6 +42,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newComputeQuotaResource,
+			TypeName: "aws_sagemaker_compute_quota",
+			Name:     "Compute Quota",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newHyperParameterTuningJobResource,
 			TypeName: "aws_sagemaker_hyper_parameter_tuning_job",
 			Name:     "Hyper Parameter Tuning Job",
