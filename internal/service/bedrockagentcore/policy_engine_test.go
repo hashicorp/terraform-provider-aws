@@ -26,44 +26,7 @@ import (
 
 func TestAccBedrockAgentCorePolicyEngine_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := randomPolicyEngineName(t)
-	resourceName := "aws_bedrockagentcore_policy_engine.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckPolicyEngines(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyEngineDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPolicyEngineConfig_basic(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`policy-engine/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCorePolicyEngine_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
+	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
 	rName := randomPolicyEngineName(t)
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
 
@@ -80,22 +43,34 @@ func TestAccBedrockAgentCorePolicyEngine_disappears(t *testing.T) {
 			{
 				Config: testAccPolicyEngineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourcePolicyEngine, resourceName),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName, &policyEngine),
 				),
-				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
+					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`policy-engine/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "policy_engine_id"),
+				ImportStateVerifyIdentifierAttribute: "policy_engine_id",
 			},
 		},
 	})
 }
 
-func TestAccBedrockAgentCorePolicyEngine_description(t *testing.T) {
+func TestAccBedrockAgentCorePolicyEngine_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
 	rName := randomPolicyEngineName(t)
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
 
@@ -110,30 +85,74 @@ func TestAccBedrockAgentCorePolicyEngine_description(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyEngineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyEngineConfig_description(rName, "desc1"),
+				Config: testAccPolicyEngineConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyEngineExists(ctx, t, resourceName, &policyEngine),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourcePolicyEngine, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCorePolicyEngine_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
+	rName := randomPolicyEngineName(t)
+	resourceName := "aws_bedrockagentcore_policy_engine.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPolicyEngines(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyEngineDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyEngineConfig_description(rName, "initial description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyEngineExists(ctx, t, resourceName, &policyEngine),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc1")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("initial description")),
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "policy_engine_id"),
+				ImportStateVerifyIdentifierAttribute: "policy_engine_id",
 			},
 			{
-				Config: testAccPolicyEngineConfig_description(rName, "desc2"),
+				Config: testAccPolicyEngineConfig_description(rName, "updated description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyEngineExists(ctx, t, resourceName, &policyEngine),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc2")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated description")),
 				},
 			},
 		},
@@ -149,22 +168,23 @@ func testAccCheckPolicyEngineDestroy(ctx context.Context, t *testing.T) resource
 				continue
 			}
 
-			_, err := tfbedrockagentcore.FindPolicyEngineByID(ctx, conn, rs.Primary.ID)
+			_, err := tfbedrockagentcore.FindPolicyEngineByID(ctx, conn, rs.Primary.Attributes["policy_engine_id"])
 			if retry.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("Bedrock Agent Core Policy Engine %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Bedrock Agent Core Policy Engine %s still exists", rs.Primary.Attributes["policy_engine_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckPolicyEngineExists(ctx context.Context, t *testing.T, n string, v ...*bedrockagentcorecontrol.GetPolicyEngineOutput) resource.TestCheckFunc {
+func testAccCheckPolicyEngineExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetPolicyEngineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -173,14 +193,12 @@ func testAccCheckPolicyEngineExists(ctx context.Context, t *testing.T, n string,
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
-		out, err := tfbedrockagentcore.FindPolicyEngineByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfbedrockagentcore.FindPolicyEngineByID(ctx, conn, rs.Primary.Attributes["policy_engine_id"])
 		if err != nil {
 			return err
 		}
 
-		if len(v) > 0 && v[0] != nil {
-			*v[0] = *out
-		}
+		*v = *resp
 
 		return nil
 	}
