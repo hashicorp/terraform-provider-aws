@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_bedrockagentcore_policy_engine
 
-Manages an AWS Bedrock AgentCore Policy Engine. A Policy Engine provides authorization capabilities for AI agents, enabling fine-grained access control over the actions and resources an agent runtime is permitted to use.
+Manages an AWS Bedrock AgentCore Policy Engine. A Policy Engine controls what actions and resources an agent runtime can use.
 
 ## Example Usage
 
@@ -53,8 +53,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) Description of the policy engine. Must be between 1 and 4096 characters. Once set, cannot be removed without replacing the resource.
-* `encryption_key_arn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the policy engine. If not provided, AWS managed encryption is used.
+* `description` - (Optional) Description of the policy engine.
+* `encryption_key_arn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the policy engine. If not set, AWS uses an AWS managed key.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+In Terraform v1.12.0 and later, you can use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute. For example:
 
 ```terraform
 import {
@@ -94,14 +94,14 @@ resource "aws_bedrockagentcore_policy_engine" "example" {
 
 #### Required
 
-- `policy_engine_id` (String) ID of the policy engine.
+- `policy_engine_id` (String) Policy engine ID.
 
 #### Optional
 
-* `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS account ID for this resource.
+* `region` (String) AWS Region for this resource.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Policy Engine using the policy engine ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Bedrock AgentCore Policy Engine by policy engine ID. For example:
 
 ```terraform
 import {
@@ -110,7 +110,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Policy Engine using the policy engine ID. For example:
+Using `terraform import`, import a Bedrock AgentCore Policy Engine by policy engine ID. For example:
 
 ```console
 % terraform import aws_bedrockagentcore_policy_engine.example policy-engine-id-12345678
