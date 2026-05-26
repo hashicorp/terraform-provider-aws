@@ -1091,6 +1091,14 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 
 	healthCheckPath := cty.GetAttrPath(names.AttrHealthCheck).IndexInt(0)
 
+	if interval, ok := healthCheck[names.AttrInterval].(int); ok {
+		if timeout, ok := healthCheck[names.AttrTimeout].(int); ok {
+			if err := validateTargetGroupHealthCheckIntervalTimeout(healthCheckPath, interval, timeout); err != nil {
+				return err
+			}
+		}
+	}
+
 	if p, ok := healthCheck[names.AttrProtocol].(string); ok && strings.ToUpper(p) == string(awstypes.ProtocolEnumTcp) {
 		if m := healthCheck["matcher"].(string); m != "" {
 			return sdkdiag.DiagnosticError(errs.NewAttributeConflictsWhenError(
@@ -1125,6 +1133,27 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 
 	if diff.Id() == "" {
 		return nil
+	}
+
+	return nil
+}
+
+func validateTargetGroupHealthCheckIntervalTimeout(healthCheckPath cty.Path, interval, timeout int) error {
+	if timeout == 0 {
+		return nil
+	}
+
+	if interval <= timeout {
+		intervalPath := healthCheckPath.GetAttr(names.AttrInterval)
+		timeoutPath := healthCheckPath.GetAttr(names.AttrTimeout)
+
+		return sdkdiag.DiagnosticError(errs.NewInvalidValueAttributeCombinationError(
+			intervalPath,
+			fmt.Sprintf("Attribute %q must be greater than %q.",
+				errs.PathString(intervalPath),
+				errs.PathString(timeoutPath),
+			),
+		))
 	}
 
 	return nil

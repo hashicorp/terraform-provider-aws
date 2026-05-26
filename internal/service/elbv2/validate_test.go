@@ -4,8 +4,10 @@
 package elbv2
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/go-cty/cty"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -126,5 +128,58 @@ func TestValidTargetGroupNamePrefix(t *testing.T) {
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS LB Target Group Name to trigger a validation error for %q", tc.Value)
 		}
+	}
+}
+
+func TestValidateTargetGroupHealthCheckIntervalTimeout(t *testing.T) {
+	t.Parallel()
+
+	healthCheckPath := cty.GetAttrPath(names.AttrHealthCheck).IndexInt(0)
+
+	testCases := []struct {
+		name     string
+		interval int
+		timeout  int
+		wantErr  string
+	}{
+		{
+			name:     "interval_greater_than_timeout",
+			interval: 6,
+			timeout:  5,
+		},
+		{
+			name:     "interval_equals_timeout",
+			interval: 5,
+			timeout:  5,
+			wantErr:  `Attribute "health_check[0].interval" must be greater than "health_check[0].timeout".`,
+		},
+		{
+			name:     "interval_less_than_timeout",
+			interval: 4,
+			timeout:  5,
+			wantErr:  `Attribute "health_check[0].interval" must be greater than "health_check[0].timeout".`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateTargetGroupHealthCheckIntervalTimeout(healthCheckPath, tc.interval, tc.timeout)
+
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("expected no error, got %v", err)
+				}
+
+				return
+			}
+
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+
+			if got := err.Error(); !strings.Contains(got, tc.wantErr) {
+				t.Fatalf("expected error containing %q, got %q", tc.wantErr, got)
+			}
+		})
 	}
 }
