@@ -175,7 +175,7 @@ func (r *policyEngineResource) Read(ctx context.Context, req resource.ReadReques
 
 	out, err := findPolicyEngineByID(ctx, conn, state.PolicyEngineID.ValueString())
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -315,6 +315,7 @@ func statusPolicyEngine(conn *bedrockagentcorecontrol.Client, id string) retry.S
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
+
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
 		}
@@ -327,12 +328,14 @@ func findPolicyEngineByID(ctx context.Context, conn *bedrockagentcorecontrol.Cli
 	out, err := conn.GetPolicyEngine(ctx, &bedrockagentcorecontrol.GetPolicyEngineInput{
 		PolicyEngineId: aws.String(id),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
 		return nil, smarterr.NewError(err)
 	}
 
