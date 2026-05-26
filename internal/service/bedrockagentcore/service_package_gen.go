@@ -205,6 +205,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 		},
+		{
+			Factory:  newPolicyEngineResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_policy_engine",
+			Name:     "Policy Engine",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "policy_engine_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("policy_engine_id", true)),
+		},
 	})
 }
 
