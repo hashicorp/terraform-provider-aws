@@ -8,6 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -428,11 +429,7 @@ func DataSourceParametersSchema() *schema.Schema {
 									},
 								},
 							},
-							names.AttrRoleARN: {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrRoleARN: sdkschema.ARNStringSchema(sdkschema.AttrOptional),
 						},
 					},
 					ExactlyOneOf: exactlyOneOf,
@@ -596,7 +593,7 @@ func VPCConnectionPropertiesSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"vpc_connection_arn": arnStringSchema(attrRequired),
+				"vpc_connection_arn": sdkschema.ARNStringSchema(sdkschema.AttrRequired),
 			},
 		},
 	}

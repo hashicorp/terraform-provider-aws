@@ -20,7 +20,7 @@ import (
 func TestAccRoute53ZoneAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-	domainName := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -47,7 +47,7 @@ func TestAccRoute53ZoneAssociation_basic(t *testing.T) {
 func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-	domainName := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -72,7 +72,7 @@ func TestAccRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	vpcResourceName := "aws_vpc.bar"
-	domainName := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -97,7 +97,7 @@ func TestAccRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	route53ZoneResourceName := "aws_route53_zone.foo"
-	domainName := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -121,7 +121,7 @@ func TestAccRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 func TestAccRoute53ZoneAssociation_crossAccount(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-	domainName := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -152,7 +152,7 @@ func TestAccRoute53ZoneAssociation_crossAccount(t *testing.T) {
 func TestAccRoute53ZoneAssociation_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-	domainName := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -183,7 +183,7 @@ func TestAccRoute53ZoneAssociation_crossRegion(t *testing.T) {
 func TestAccRoute53ZoneAssociation_crossAccountAndRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-	domainName := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

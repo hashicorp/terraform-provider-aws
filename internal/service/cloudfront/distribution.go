@@ -93,6 +93,19 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cache_tag_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"header_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -856,7 +869,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -888,7 +901,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -1065,6 +1078,9 @@ func resourceDistributionFlatten(ctx context.Context, awsClient *conns.AWSClient
 	d.Set("caller_reference", distributionConfig.CallerReference)
 	if aws.ToString(distributionConfig.Comment) != "" {
 		d.Set(names.AttrComment, distributionConfig.Comment)
+	}
+	if err := d.Set("cache_tag_config", flattenCacheTagConfig(distributionConfig.CacheTagConfig)); err != nil {
+		return fmt.Errorf("setting cache_tag_config: %w", err)
 	}
 	if distributionConfig.ConnectionFunctionAssociation != nil {
 		if err := d.Set("connection_function_association", []any{flattenConnectionFunctionAssociation(distributionConfig.ConnectionFunctionAssociation)}); err != nil {
@@ -1482,6 +1498,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 
 	if v, ok := d.GetOk("caller_reference"); ok {
 		apiObject.CallerReference = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cache_tag_config"); ok {
+		apiObject.CacheTagConfig = expandCacheTagConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("connection_function_association"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -2837,6 +2857,30 @@ func flattenAliases(apiObject *awstypes.Aliases) []any {
 	return []any{}
 }
 
+func expandCacheTagConfig(tfList []any) *awstypes.CacheTagConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.CacheTagConfig{
+		HeaderName: aws.String(tfMap["header_name"].(string)),
+	}
+
+	return apiObject
+}
+
+func flattenCacheTagConfig(apiObject *awstypes.CacheTagConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{
+		"header_name": aws.ToString(apiObject.HeaderName),
+	}
+
+	return []any{tfMap}
+}
+
 func expandRestrictions(tfMap map[string]any) *awstypes.Restrictions {
 	if tfMap == nil {
 		return nil
@@ -2950,7 +2994,7 @@ func flattenActiveTrustedKeyGroups(apiObject *awstypes.ActiveTrustedKeyGroups) [
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenKGKeyPairIDs(apiObject.Items),
+		attrItems:         flattenKGKeyPairIDs(apiObject.Items),
 	}
 
 	return []any{tfMap}
@@ -2978,7 +3022,7 @@ func flattenActiveTrustedSigners(apiObject *awstypes.ActiveTrustedSigners) []any
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenSigners(apiObject.Items),
+		attrItems:         flattenSigners(apiObject.Items),
 	}
 
 	return []any{tfMap}

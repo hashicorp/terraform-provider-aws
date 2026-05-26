@@ -235,6 +235,10 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"user_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrUserName: {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -363,6 +367,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set("title", out.Title)
 	d.Set("user_id", out.UserId)
 	d.Set(names.AttrUserName, out.UserName)
+	d.Set("user_status", out.UserStatus)
 	d.Set("user_type", out.UserType)
 
 	return diags

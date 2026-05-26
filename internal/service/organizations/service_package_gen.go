@@ -40,7 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_organizations_aws_service_access",
 			Name:     "AWS Service Access",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity("service_principal"),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute("service_principal", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -55,7 +55,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			TypeName: "aws_organizations_aws_service_access",
 			Name:     "AWS Service Access",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity("service_principal"),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute("service_principal", true)),
 		},
 	})
 }
@@ -156,7 +156,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
 				CustomImport: true,
 			},
@@ -180,7 +180,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_organizations_organization",
 			Name:     "Organization",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
 				CustomImport: true,
 			},
@@ -193,7 +193,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -206,7 +206,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
 				CustomImport: true,
 			},
@@ -233,7 +233,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},

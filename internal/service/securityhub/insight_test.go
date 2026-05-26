@@ -605,7 +605,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
@@ -628,7 +628,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
@@ -642,18 +642,18 @@ resource "aws_securityhub_account" "test" {}
 resource "aws_securityhub_insight" "test" {
   filters {
     created_at {
-      start = %q
-      end   = %q
+      start = %[2]q
+      end   = %[3]q
     }
   }
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
-`, startDate, endDate, rName)
+`, rName, startDate, endDate)
 }
 
 func testAccInsightConfig_ipFilters(rName string) string {
@@ -669,7 +669,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
@@ -763,17 +763,17 @@ resource "aws_securityhub_account" "test" {}
 resource "aws_securityhub_insight" "test" {
   filters {
     confidence {
-      %s
+      %[2]s
     }
   }
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
-`, value, rName)
+`, rName, value)
 }
 
 func testAccInsightConfig_updateGroupByAttribute(rName string) string {
@@ -790,7 +790,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "CompanyName"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
@@ -811,7 +811,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "WorkflowStatus"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }

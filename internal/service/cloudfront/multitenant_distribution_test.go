@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -20,13 +21,11 @@ import (
 )
 
 func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -72,20 +71,26 @@ func TestAccCloudFrontMultiTenantDistribution_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceMultiTenantDistribution, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
 func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -158,14 +163,12 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 }
 
 func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -192,13 +195,11 @@ func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
 
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46302
 func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponsePagePath(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -228,13 +229,11 @@ func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponse
 }
 
 func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -277,13 +276,11 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46045
 func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -315,13 +312,11 @@ func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
 }
 
 func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -357,7 +352,6 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 }
 
 func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *testing.T) {
-	t.Parallel()
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
 	ctx := acctest.Context(t)
@@ -365,7 +359,7 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -400,7 +394,6 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 }
 
 func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlocks(t *testing.T) {
-	t.Parallel()
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
 	// This test requires creating Lambda@Edge functions which may hang around for hours after distribution
@@ -412,7 +405,7 @@ func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlock
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -1135,7 +1128,7 @@ resource "aws_lambda_function" "viewer_request" {
   function_name = "viewer-request-%[1]s"
   role          = aws_iam_role.lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
   skip_destroy  = true
 }
@@ -1146,7 +1139,7 @@ resource "aws_lambda_function" "viewer_response" {
   function_name = "viewer-response-%[1]s"
   role          = aws_iam_role.lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
   skip_destroy  = true
 }

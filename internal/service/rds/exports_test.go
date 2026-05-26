@@ -61,6 +61,7 @@ var (
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
+	IntegrationIDFromARN                       = integrationIDFromARN
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
 	ParameterChunksForModify                   = parameterChunksForModify

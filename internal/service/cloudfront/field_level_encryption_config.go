@@ -61,7 +61,7 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem: &schema.Resource{
@@ -112,7 +112,7 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"items": {
+									attrItems: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -318,7 +318,7 @@ func expandContentTypeProfiles(tfMap map[string]any) *awstypes.ContentTypeProfil
 
 	apiObject := &awstypes.ContentTypeProfiles{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandContentTypeProfileItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -400,7 +400,7 @@ func expandQueryArgProfiles(tfMap map[string]any) *awstypes.QueryArgProfiles {
 
 	apiObject := &awstypes.QueryArgProfiles{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandQueryArgProfileItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -479,7 +479,7 @@ func flattenContentTypeProfiles(apiObject *awstypes.ContentTypeProfiles) map[str
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenContentTypeProfileItems(v)
+		tfMap[attrItems] = flattenContentTypeProfileItems(v)
 	}
 
 	return tfMap
@@ -547,7 +547,7 @@ func flattenQueryArgProfiles(apiObject *awstypes.QueryArgProfiles) map[string]an
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenQueryArgProfileItems(v)
+		tfMap[attrItems] = flattenQueryArgProfileItems(v)
 	}
 
 	return tfMap

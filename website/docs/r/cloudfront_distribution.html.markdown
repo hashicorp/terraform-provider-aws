@@ -426,6 +426,7 @@ This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `anycast_ip_list_id` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
+* `cache_tag_config` (Optional) -  [Cache tag configuration](#cache-tag-config-arguments) block for cache tag extraction from origin responses (maximum one). See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/invalidation-by-tags.html) for more information about cache tags.
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `connection_function_association` (Optional) - A [connection function association](#connection-function-association-arguments) configuration block (maximum one).
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
@@ -639,6 +640,10 @@ The arguments of `geo_restriction` are:
 * `iam_certificate_id` - IAM certificate identifier of the custom viewer certificate for this distribution if you are using a custom domain. Specify this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 * `minimum_protocol_version` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `TLSv1.2_2019` and `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**: If you are using a custom certificate (specified with `acm_certificate_arn` or `iam_certificate_id`), and have specified `sni-only` in `ssl_support_method`, `TLSv1` or later must be specified. If you have specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be specified. If you have specified `cloudfront_default_certificate`, `TLSv1` must be specified.
 * `ssl_support_method` - How you want CloudFront to serve HTTPS requests. One of `vip`, `sni-only`, or `static-ip`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
+
+#### Cache Tag Config Arguments
+
+* `header_name` (Required) - Name of the HTTP header to extract cache tags. The header value must contain comma-separated tag values.
 
 #### Connection Function Association Arguments
 

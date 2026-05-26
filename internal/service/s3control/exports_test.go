@@ -34,6 +34,7 @@ var (
 	FindDirectoryAccessPointScopeByTwoPartKey              = findDirectoryAccessPointScopeByTwoPartKey
 	FindMultiRegionAccessPointByTwoPartKey                 = findMultiRegionAccessPointByTwoPartKey
 	FindMultiRegionAccessPointPolicyDocumentByTwoPartKey   = findMultiRegionAccessPointPolicyDocumentByTwoPartKey
+	FindMultiRegionAccessPointRoutesByTwoPartKey           = findMultiRegionAccessPointRoutesByTwoPartKey
 	FindObjectLambdaAccessPointAliasByTwoPartKey           = findObjectLambdaAccessPointAliasByTwoPartKey
 	FindObjectLambdaAccessPointConfigurationByTwoPartKey   = findObjectLambdaAccessPointConfigurationByTwoPartKey
 	FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey = findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey

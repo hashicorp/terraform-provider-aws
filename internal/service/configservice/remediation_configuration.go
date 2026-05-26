@@ -7,6 +7,7 @@ package configservice
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"slices"
 	"time"
@@ -219,21 +220,9 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Remediation Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, remediationConfiguration.Arn)
-	d.Set("automatic", remediationConfiguration.Automatic)
-	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
-	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting execution_controls: %s", err)
+	if err := resourceRemediationConfigurationFlatten(ctx, remediationConfiguration, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
-	if err := d.Set(names.AttrParameter, flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
-	}
-	d.Set(names.AttrResourceType, remediationConfiguration.ResourceType)
-	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
-	d.Set("target_id", remediationConfiguration.TargetId)
-	d.Set("target_type", remediationConfiguration.TargetType)
-	d.Set("target_version", remediationConfiguration.TargetVersion)
 
 	return diags
 }
@@ -267,6 +256,26 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	}
 
 	return diags
+}
+
+func resourceRemediationConfigurationFlatten(_ context.Context, remediationConfiguration *types.RemediationConfiguration, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, remediationConfiguration.Arn)
+	d.Set("automatic", remediationConfiguration.Automatic)
+	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
+	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
+		return fmt.Errorf("setting execution_controls: %w", err)
+	}
+	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
+	if err := d.Set(names.AttrParameter, flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
+		return fmt.Errorf("setting parameter: %w", err)
+	}
+	d.Set(names.AttrResourceType, remediationConfiguration.ResourceType)
+	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
+	d.Set("target_id", remediationConfiguration.TargetId)
+	d.Set("target_type", remediationConfiguration.TargetType)
+	d.Set("target_version", remediationConfiguration.TargetVersion)
+
+	return nil
 }
 
 func findRemediationConfigurationByConfigRuleName(ctx context.Context, conn *configservice.Client, name string) (*types.RemediationConfiguration, error) {

@@ -10,7 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -38,6 +40,7 @@ func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "resource_config_dns_resolution", string(awstypes.ResourceConfigDnsResolutionPublic)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
@@ -268,6 +271,62 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeResourceGateway_resourceConfigDNSResolution(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourcegateway vpclattice.GetResourceGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceGatewayConfig_resourceConfigDNSResolution(rName, string(awstypes.ResourceConfigDnsResolutionInVpc)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "resource_config_dns_resolution", string(awstypes.ResourceConfigDnsResolutionInVpc)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccResourceGatewayConfig_resourceConfigDNSResolution(rName, string(awstypes.ResourceConfigDnsResolutionPublic)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "resource_config_dns_resolution", string(awstypes.ResourceConfigDnsResolutionPublic)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
@@ -462,4 +521,16 @@ resource "aws_vpclattice_resource_gateway" "test" {
   ip_address_type    = "IPV4"
 }
 `, rName))
+}
+
+func testAccResourceGatewayConfig_resourceConfigDNSResolution(rName, dnsResolution string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_resource_gateway" "test" {
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = [aws_subnet.test.id]
+
+  resource_config_dns_resolution = %[2]q
+}
+`, rName, dnsResolution))
 }

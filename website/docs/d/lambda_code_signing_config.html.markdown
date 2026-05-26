@@ -44,7 +44,7 @@ resource "aws_lambda_function" "example" {
   function_name           = "secure-function"
   role                    = aws_iam_role.lambda_role.arn
   handler                 = "index.handler"
-  runtime                 = "nodejs20.x"
+  runtime                 = "nodejs24.x"
   code_signing_config_arn = data.aws_lambda_code_signing_config.security_config.arn
 
   tags = {

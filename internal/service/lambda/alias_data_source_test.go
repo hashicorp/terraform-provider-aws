@@ -99,7 +99,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   publish       = true
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_lambda_alias" "test" {

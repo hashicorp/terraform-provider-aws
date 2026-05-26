@@ -3081,7 +3081,7 @@ func waitVolumeCreated(ctx context.Context, conn *ec2.Client, id string, timeout
 	return nil, err
 }
 
-func waitVolumeDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
+func waitVolumeDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VolumeStateDeleting),
 		Target:     []string{},
@@ -3271,23 +3271,20 @@ func waitVPCEndpointConnectionAccepted(ctx context.Context, conn *ec2.Client, se
 	return nil, err
 }
 
-func waitVPCEndpointDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*awstypes.VpcEndpoint, error) {
+func waitVPCEndpointDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(vpcEndpointStateDeleting, vpcEndpointStateDeleted),
-		Target:     []string{},
-		Refresh:    statusVPCEndpoint(conn, vpcEndpointID),
-		Timeout:    timeout,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Pending:                   enum.Slice(vpcEndpointStateDeleting, vpcEndpointStateDeleted),
+		Target:                    []string{},
+		Refresh:                   statusVPCEndpoint(conn, vpcEndpointID),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitVPCEndpointRouteTableAssociationDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) error {

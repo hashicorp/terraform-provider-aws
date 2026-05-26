@@ -177,7 +177,7 @@ func testAccCheckStandardsControlExists(ctx context.Context, t *testing.T, n str
 
 func testAccStandardsControlConfig_basic() string {
 	return acctest.ConfigCompose(testAccStandardsSubscriptionConfig_basic, `
-resource aws_securityhub_standards_control test {
+resource "aws_securityhub_standards_control" "test" {
   standards_control_arn = format("%s/1.10", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
   control_status        = "ENABLED"
 }
@@ -186,7 +186,7 @@ resource aws_securityhub_standards_control test {
 
 func testAccStandardsControlConfig_disabledStatus() string {
 	return acctest.ConfigCompose(testAccStandardsSubscriptionConfig_basic, `
-resource aws_securityhub_standards_control test {
+resource "aws_securityhub_standards_control" "test" {
   standards_control_arn = format("%s/1.11", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
   control_status        = "DISABLED"
   disabled_reason       = "We handle password policies within Okta"
@@ -196,7 +196,7 @@ resource aws_securityhub_standards_control test {
 
 func testAccStandardsControlConfig_enabledStatus() string {
 	return acctest.ConfigCompose(testAccStandardsSubscriptionConfig_basic, `
-resource aws_securityhub_standards_control test {
+resource "aws_securityhub_standards_control" "test" {
   standards_control_arn = format("%s/1.12", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
   control_status        = "ENABLED"
   disabled_reason       = "We handle password policies within Okta"

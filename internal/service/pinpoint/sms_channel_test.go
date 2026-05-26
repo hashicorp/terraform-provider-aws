@@ -145,7 +145,7 @@ func testAccCheckSMSChannelExists(ctx context.Context, t *testing.T, n string, c
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint SMS Channel with that application ID exists")
+			return fmt.Errorf("No End User Messaging SMS Channel with that application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -181,7 +181,7 @@ func testAccCheckSMSChannelDestroy(ctx context.Context, t *testing.T) resource.T
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint SMS Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging SMS Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

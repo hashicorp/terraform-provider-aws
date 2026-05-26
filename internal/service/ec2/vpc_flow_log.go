@@ -297,7 +297,12 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("destination_options", nil)
 	}
 	d.Set(names.AttrIAMRoleARN, fl.DeliverLogsPermissionArn)
-	d.Set("log_destination", fl.LogDestination)
+	if fl.LogDestinationType == awstypes.LogDestinationTypeCloudWatchLogs && fl.LogDestination == nil {
+		// Legacy usage of LogGroupName. Either importing or migrating from old version of the proivder
+		d.Set("log_destination", cloudwatchLogGroupARNFromName(ctx, c, aws.ToString(fl.LogGroupName)))
+	} else {
+		d.Set("log_destination", fl.LogDestination)
+	}
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
@@ -399,4 +404,12 @@ func flattenDestinationOptionsResponse(apiObject *awstypes.DestinationOptionsRes
 
 func flowLogARN(ctx context.Context, c *conns.AWSClient, flowLogID string) string {
 	return c.RegionalARN(ctx, names.EC2, "vpc-flow-log/"+flowLogID)
+}
+
+func cloudwatchLogGroupARNFromName(ctx context.Context, c regionalARNMaker, logGroupName string) string {
+	return c.RegionalARN(ctx, names.Logs, "log-group:"+logGroupName)
+}
+
+type regionalARNMaker interface {
+	RegionalARN(ctx context.Context, service, resource string) string
 }

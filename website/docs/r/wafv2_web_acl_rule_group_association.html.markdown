@@ -458,32 +458,32 @@ None.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 web ACL custom rule group associations using `WebACLARN,RuleGroupARN,RuleName`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 web ACL custom rule group associations using `WebACLARN,RuleName,RuleGroupType,RuleGroupARN`, where `RuleGroupType` is `custom`. For example:
 
 ```terraform
 import {
   to = aws_wafv2_web_acl_rule_group_association.example
-  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/example-rule-group/87654321-4321-4321-4321-210987654321,example-rule-group-rule"
+  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,example-rule-group-rule,custom,arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/example-rule-group/87654321-4321-4321-4321-210987654321"
 }
 ```
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 web ACL managed rule group associations using `WebACLARN,VendorName:RuleGroupName[:Version],RuleName`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 web ACL managed rule group associations using `WebACLARN,RuleName,RuleGroupType,VendorName:RuleGroupName[:Version]`, where `RuleGroupType` is `managed`. For example:
 
 ```terraform
 import {
   to = aws_wafv2_web_acl_rule_group_association.managed_example
-  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,AWS:AWSManagedRulesCommonRuleSet,aws-common-rule-set"
+  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,aws-common-rule-set,managed,AWS:AWSManagedRulesCommonRuleSet"
 }
 ```
 
-Using `terraform import`, import WAFv2 web ACL custom rule group associations using `WebACLARN,RuleGroupARN,RuleName`. For example:
+Using `terraform import`, import WAFv2 web ACL custom rule group associations using `WebACLARN,RuleName,RuleGroupType,RuleGroupARN`, where `RuleGroupType` is `custom`. For example:
 
 ```console
-% terraform import aws_wafv2_web_acl_rule_group_association.example "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/example-rule-group/87654321-4321-4321-4321-210987654321,example-rule-group-rule"
+% terraform import aws_wafv2_web_acl_rule_group_association.example "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,example-rule-group-rule,custom,arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/example-rule-group/87654321-4321-4321-4321-210987654321"
 ```
 
-Using `terraform import`, import WAFv2 web ACL managed rule group associations using `WebACLARN,VendorName:RuleGroupName[:Version],RuleName`. For example:
+Using `terraform import`, import WAFv2 web ACL managed rule group associations using `WebACLARN,RuleName,RuleGroupType,VendorName:RuleGroupName[:Version]`, where `RuleGroupType` is `managed`. For example:
 
 ```console
-% terraform import aws_wafv2_web_acl_rule_group_association.managed_example "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,AWS:AWSManagedRulesCommonRuleSet,aws-common-rule-set"
+% terraform import aws_wafv2_web_acl_rule_group_association.managed_example "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,aws-common-rule-set,managed,AWS:AWSManagedRulesCommonRuleSet"
 ```

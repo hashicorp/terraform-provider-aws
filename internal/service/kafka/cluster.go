@@ -734,7 +734,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		var connectivityInfo types.ConnectivityInfo
-		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0,vpc_connectivity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.vpc_connectivity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			connectivityInfo.VpcConnectivity = expandVPCConnectivity(v.([]any)[0].(map[string]any))
 		}
 		input.ConnectivityInfo = &connectivityInfo

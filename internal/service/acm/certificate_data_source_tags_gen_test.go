@@ -23,7 +23,7 @@ func TestAccACMCertificateDataSource_tags(t *testing.T) {
 
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -57,7 +57,7 @@ func TestAccACMCertificateDataSource_Tags_nullMap(t *testing.T) {
 
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -87,7 +87,7 @@ func TestAccACMCertificateDataSource_Tags_emptyMap(t *testing.T) {
 
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -117,7 +117,7 @@ func TestAccACMCertificateDataSource_Tags_DefaultTags_nonOverlapping(t *testing.
 
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -155,7 +155,7 @@ func TestAccACMCertificateDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testi
 
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -199,7 +199,7 @@ func TestAccACMCertificateDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *test
 
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
