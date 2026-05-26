@@ -271,6 +271,7 @@ func resourceReplicator() *schema.Resource {
 									"topics_to_exclude": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -293,6 +294,7 @@ func resourceReplicator() *schema.Resource {
 									"consumer_groups_to_exclude": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
