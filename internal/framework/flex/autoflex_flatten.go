@@ -53,8 +53,7 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 }
 
 type autoFlattener struct {
-	Options    AutoFlexOptions
-	fieldCache map[reflect.Type]map[string]reflect.StructField
+	Options AutoFlexOptions
 }
 
 // newAutoFlattener initializes an auto-flattener with defaults that can be overridden
@@ -69,8 +68,7 @@ func newAutoFlattener(optFns []AutoFlexOptionsFunc) *autoFlattener {
 	}
 
 	return &autoFlattener{
-		Options:    o,
-		fieldCache: make(map[reflect.Type]map[string]reflect.StructField),
+		Options: o,
 	}
 }
 
