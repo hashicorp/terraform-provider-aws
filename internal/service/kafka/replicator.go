@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -102,6 +103,79 @@ func resourceReplicator() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"log_delivery": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"replicator_log_delivery": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrCloudWatchLogs: {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"log_group": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"firehose": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"delivery_stream": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+									"s3": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrBucket: {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												names.AttrPrefix: {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
 										},
 									},
 								},
@@ -258,6 +332,37 @@ func resourceReplicator() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: customdiff.Sequence(
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				var diags diag.Diagnostics
+				cloudwatchLogsBlock := "log_delivery.0.replicator_log_delivery.0.cloudwatch_logs.0"
+				firehoseLogBlock := "log_delivery.0.replicator_log_delivery.0.firehose.0"
+				s3LogBlock := "log_delivery.0.replicator_log_delivery.0.s3.0"
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", cloudwatchLogsBlock, "enabled")).(bool); ok && !v {
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", cloudwatchLogsBlock, "log_group")); ok {
+						diags = sdkdiag.AppendErrorf(diags, "cannot specify log_group when CloudWatch Logs logging is disabled")
+					}
+				}
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", firehoseLogBlock, "enabled")).(bool); ok && !v {
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", firehoseLogBlock, "delivery_stream")); ok {
+						diags = sdkdiag.AppendErrorf(diags, "cannot specify delivery_stream when Firehose logging is disabled")
+					}
+				}
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", s3LogBlock, "enabled")).(bool); ok && !v {
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", s3LogBlock, "bucket")); ok {
+						diags = sdkdiag.AppendErrorf(diags, "cannot specify bucket when S3 logging is disabled")
+					}
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", s3LogBlock, "prefix")); ok {
+						diags = sdkdiag.AppendErrorf(diags, "cannot specify prefix when S3 logging is disabled")
+					}
+				}
+				if diags.HasError() {
+					return sdkdiag.DiagnosticsError(diags)
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
@@ -276,6 +381,10 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("log_delivery"); ok {
+		input.LogDelivery = expandLogDelivery(v.([]any))
 	}
 
 	output, err := conn.CreateReplicator(ctx, input)
@@ -326,6 +435,9 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("current_version", output.CurrentVersion)
 	d.Set(names.AttrDescription, output.ReplicatorDescription)
 	d.Set("kafka_cluster", flattenKafkaClusterDescriptions(output.KafkaClusters))
+	if err := d.Set("log_delivery", flattenLogDelivery(output.LogDelivery)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_delivery for MSK Replicator (%s): %s", d.Id(), err)
+	}
 	d.Set("replication_info_list", flattenReplicationInfoDescriptions(output.ReplicationInfoList, sourceARN, targetARN))
 	d.Set("replicator_name", output.ReplicatorName)
 	d.Set("service_execution_role_arn", output.ServiceExecutionRoleArn)
@@ -346,6 +458,10 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			ReplicatorArn:         aws.String(d.Id()),
 			SourceKafkaClusterArn: aws.String(d.Get("replication_info_list.0.source_kafka_cluster_arn").(string)),
 			TargetKafkaClusterArn: aws.String(d.Get("replication_info_list.0.target_kafka_cluster_arn").(string)),
+		}
+
+		if d.HasChanges("log_delivery") {
+			input.LogDelivery = expandLogDelivery(d.Get("log_delivery").([]any))
 		}
 
 		if d.HasChanges("replication_info_list.0.consumer_group_replication") {
@@ -696,6 +812,94 @@ func flattenAmazonMSKCluster(apiObject *types.AmazonMskCluster) map[string]any {
 	return tfMap
 }
 
+func flattenLogDelivery(apiObject *types.LogDelivery) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ReplicatorLogDelivery; v != nil {
+		tfMap["replicator_log_delivery"] = flattenReplicatorLogDelivery(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicatorLogDelivery(apiObject *types.ReplicatorLogDelivery) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CloudWatchLogs; v != nil {
+		tfMap[names.AttrCloudWatchLogs] = flattenReplicatorLogDeliveryCloudWatchLogs(v)
+	}
+
+	if v := apiObject.Firehose; v != nil {
+		tfMap["firehose"] = flattenReplicatorLogDeliveryFirehose(v)
+	}
+
+	if v := apiObject.S3; v != nil {
+		tfMap["s3"] = flattenReplicatorLogDeliveryS3(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicatorLogDeliveryCloudWatchLogs(apiObject *types.ReplicatorCloudWatchLogs) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	if v := apiObject.LogGroup; v != nil {
+		tfMap["log_group"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicatorLogDeliveryFirehose(apiObject *types.ReplicatorFirehose) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	if v := apiObject.DeliveryStream; v != nil {
+		tfMap["delivery_stream"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicatorLogDeliveryS3(apiObject *types.ReplicatorS3) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	if v := apiObject.Bucket; v != nil {
+		tfMap[names.AttrBucket] = aws.ToString(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
 func expandConsumerGroupReplicationUpdate(tfMap map[string]any) *types.ConsumerGroupReplicationUpdate {
 	apiObject := &types.ConsumerGroupReplicationUpdate{}
 
@@ -923,6 +1127,125 @@ func expandAmazonMSKCluster(tfMap map[string]any) *types.AmazonMskCluster { // n
 
 	if v, ok := tfMap["msk_cluster_arn"].(string); ok && v != "" {
 		apiObject.MskClusterArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandLogDelivery(tfList []any) *types.LogDelivery {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.LogDelivery{}
+
+	if v, ok := tfMap["replicator_log_delivery"].([]any); ok {
+		apiObject.ReplicatorLogDelivery = expandReplicatorLogDelivery(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorLogDelivery(tfList []any) *types.ReplicatorLogDelivery {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorLogDelivery{}
+
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok {
+		apiObject.CloudWatchLogs = expandReplicatorLogDeliveryCloudWatchLogs(v)
+	}
+
+	if v, ok := tfMap["firehose"].([]any); ok {
+		apiObject.Firehose = expandReplicatorLogDeliveryFirehose(v)
+	}
+
+	if v, ok := tfMap["s3"].([]any); ok {
+		apiObject.S3 = expandReplicatorLogDeliveryS3(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorLogDeliveryCloudWatchLogs(tfList []any) *types.ReplicatorCloudWatchLogs {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorCloudWatchLogs{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+		apiObject.LogGroup = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorLogDeliveryFirehose(tfList []any) *types.ReplicatorFirehose {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorFirehose{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
+		apiObject.DeliveryStream = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorLogDeliveryS3(tfList []any) *types.ReplicatorS3 {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorS3{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
+		apiObject.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
 	}
 
 	return apiObject
