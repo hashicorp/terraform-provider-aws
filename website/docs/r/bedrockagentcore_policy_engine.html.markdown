@@ -63,7 +63,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier of the Policy Engine.
+* `policy_engine_id` - Unique identifier of the Policy Engine.
 * `policy_engine_arn` - ARN of the Policy Engine.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
