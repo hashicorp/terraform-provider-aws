@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -35,11 +34,9 @@ import (
 // @FrameworkResource("aws_bedrockagentcore_resource_policy", name="Resource Policy")
 // @ArnIdentity("resource_arn")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(importIgnore="...;...")
 // @Testing(hasNoPreExistingResource=true)
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePolicyResource{}
-	return r, nil
+	return &resourcePolicyResource{}, nil
 }
 
 const (
@@ -54,7 +51,6 @@ type resourcePolicyResource struct {
 func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -97,8 +93,6 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 
 	r.flatten(ctx, out.Policy, &plan)
 
-	plan.setID()
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -123,8 +117,6 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	r.flatten(ctx, out, &state)
-
-	state.setID()
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -223,13 +215,8 @@ func findResourcePolicy(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 
 type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
-	ID          types.String      `tfsdk:"id"`
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
-}
-
-func (data *resourcePolicyResourceModel) setID() {
-	data.ID = data.ResourceARN.StringValue
 }
 
 func sweepResourcePolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

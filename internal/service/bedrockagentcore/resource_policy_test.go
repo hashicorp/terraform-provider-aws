@@ -50,10 +50,11 @@ func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, names.AttrPolicy, "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "resource_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "resource_arn"),
 			},
 		},
 	})
@@ -210,6 +211,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
+
 func testAccResourcePolicyConfig_runtime(rName string, rImageUri string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, rImageUri), `
 data "aws_iam_policy_document" "resource_policy" {
