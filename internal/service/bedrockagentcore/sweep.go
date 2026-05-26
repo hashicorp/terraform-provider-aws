@@ -276,7 +276,7 @@ func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 
 		for _, v := range out.PolicyEngines {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newPolicyEngineResource, client,
-				framework.NewAttribute(names.AttrID, aws.ToString(v.PolicyEngineId))),
+				framework.NewAttribute("policy_engine_id", aws.ToString(v.PolicyEngineId))),
 			)
 		}
 
