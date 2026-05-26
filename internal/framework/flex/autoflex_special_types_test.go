@@ -221,7 +221,7 @@ func TestFlattenSpecialTypes(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true})
 		})
 	}
 }
