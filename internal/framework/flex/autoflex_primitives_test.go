@@ -184,6 +184,12 @@ func testStringRoundtrip(t *testing.T) {
 	}
 }
 
+type fieldTestCase struct {
+	source        any
+	expected      any
+	expectedDiags diag.Diagnostics
+}
+
 type awsPrimitiveField[T any] struct {
 	Field1 T
 }
@@ -193,11 +199,33 @@ type awsPrimitivePointerField[T any] struct {
 }
 
 func TestExpandStringField(t *testing.T) {
+	testExpandField(t, stringValueHandler{})
+}
+
+func TestExpandBoolField(t *testing.T) {
+	testExpandField(t, boolValueHandler{})
+}
+
+func TestExpandInt64Field(t *testing.T) {
+	testExpandField(t, int64ValueHandler{})
+}
+
+func TestExpandInt32Field(t *testing.T) {
+	testExpandField(t, int32ValueHandler{})
+}
+
+func TestExpandFloat64Field(t *testing.T) {
+	testExpandField(t, float64ValueHandler{})
+}
+
+func TestExpandFloat32Field(t *testing.T) {
+	testExpandField(t, float32ValueHandler{})
+}
+
+func testExpandField[T any](t *testing.T, valueHandler fieldValueHandler[T]) {
 	t.Parallel()
 
-	valueHandler := stringValueHandler{}
-
-	testcases := map[string]map[string]map[string]fooTestCase{
+	testcases := map[string]map[string]map[string]fieldTestCase{
 		"no options": expandPrimitiveNoOptionsCases(valueHandler),
 
 		"legacy": expandPrimitiveLegacyCases(valueHandler),
@@ -262,7 +290,7 @@ func TestExpandStringField(t *testing.T) {
 	}
 }
 
-func expandPrimitiveNoOptionsCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveNoOptionsCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ""
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -270,7 +298,7 @@ func expandPrimitiveNoOptionsCases[T any](valueHandler fooValueHandler[T]) map[s
 	return expandPrimitiveRegularCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveLegacyCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveLegacyCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -278,7 +306,7 @@ func expandPrimitiveLegacyCases[T any](valueHandler fooValueHandler[T]) map[stri
 	return expandPrimitiveLegacyGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveOmitEmptyCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveOmitEmptyCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",omitempty"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -286,7 +314,7 @@ func expandPrimitiveOmitEmptyCases[T any](valueHandler fooValueHandler[T]) map[s
 	return expandPrimitiveOmitEmptyGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveNoExpandCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveNoExpandCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",noexpand"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -294,7 +322,7 @@ func expandPrimitiveNoExpandCases[T any](valueHandler fooValueHandler[T]) map[st
 	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveNoFlattenCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -302,7 +330,7 @@ func expandPrimitiveNoFlattenCases[T any](valueHandler fooValueHandler[T]) map[s
 	return expandPrimitiveRegularCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveLegacyOmitEmptyCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveLegacyOmitEmptyCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,omitempty"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -310,7 +338,7 @@ func expandPrimitiveLegacyOmitEmptyCases[T any](valueHandler fooValueHandler[T])
 	return expandPrimitiveLegacyGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveLegacyNoExpandCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveLegacyNoExpandCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,noexpand"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -318,7 +346,7 @@ func expandPrimitiveLegacyNoExpandCases[T any](valueHandler fooValueHandler[T]) 
 	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveLegacyNoFlattenCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveLegacyNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -326,7 +354,7 @@ func expandPrimitiveLegacyNoFlattenCases[T any](valueHandler fooValueHandler[T])
 	return expandPrimitiveLegacyGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveOmitEmptyNoExpandCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveOmitEmptyNoExpandCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",omitempty,noexpand"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -334,7 +362,7 @@ func expandPrimitiveOmitEmptyNoExpandCases[T any](valueHandler fooValueHandler[T
 	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveOmitEmptyNoFlattenCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveOmitEmptyNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",omitempty,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -342,7 +370,7 @@ func expandPrimitiveOmitEmptyNoFlattenCases[T any](valueHandler fooValueHandler[
 	return expandPrimitiveOmitEmptyGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveNoExpandNoFlattenCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveNoExpandNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",noexpand,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -350,7 +378,7 @@ func expandPrimitiveNoExpandNoFlattenCases[T any](valueHandler fooValueHandler[T
 	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveLegacyOmitEmptyNoExpandCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveLegacyOmitEmptyNoExpandCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,omitempty,noexpand"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -358,7 +386,7 @@ func expandPrimitiveLegacyOmitEmptyNoExpandCases[T any](valueHandler fooValueHan
 	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveLegacyOmitEmptyNoFlattenCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveLegacyOmitEmptyNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,omitempty,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -366,7 +394,7 @@ func expandPrimitiveLegacyOmitEmptyNoFlattenCases[T any](valueHandler fooValueHa
 	return expandPrimitiveLegacyGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveLegacyNoExpandNoFlattenCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveLegacyNoExpandNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,noexpand,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -374,7 +402,7 @@ func expandPrimitiveLegacyNoExpandNoFlattenCases[T any](valueHandler fooValueHan
 	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases[T any](valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
+func expandPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,omitempty,noexpand,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -382,8 +410,8 @@ func expandPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases[T any](valueHandler fo
 	return expandPrimitiveNoExpandGenericCases(tfStructType, valueHandler)
 }
 
-func expandPrimitiveRegularCases[T any](tfStructType reflect.Type, valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
-	return map[string]map[string]fooTestCase{
+func expandPrimitiveRegularCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
 		"with value": {
 			"value target": {
 				source:   valueHandler.tfFieldWithValue(tfStructType),
@@ -427,8 +455,8 @@ func expandPrimitiveRegularCases[T any](tfStructType reflect.Type, valueHandler 
 	}
 }
 
-func expandPrimitiveLegacyGenericCases[T any](tfStructType reflect.Type, valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
-	return map[string]map[string]fooTestCase{
+func expandPrimitiveLegacyGenericCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
 		"with value": {
 			"value target": {
 				source:   valueHandler.tfFieldWithValue(tfStructType),
@@ -472,8 +500,8 @@ func expandPrimitiveLegacyGenericCases[T any](tfStructType reflect.Type, valueHa
 	}
 }
 
-func expandPrimitiveOmitEmptyGenericCases[T any](tfStructType reflect.Type, valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
-	return map[string]map[string]fooTestCase{
+func expandPrimitiveOmitEmptyGenericCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
 		"with value": {
 			"value target": {
 				source:   valueHandler.tfFieldWithValue(tfStructType),
@@ -517,8 +545,8 @@ func expandPrimitiveOmitEmptyGenericCases[T any](tfStructType reflect.Type, valu
 	}
 }
 
-func expandPrimitiveNoExpandGenericCases[T any](tfStructType reflect.Type, valueHandler fooValueHandler[T]) map[string]map[string]fooTestCase {
-	return map[string]map[string]fooTestCase{
+func expandPrimitiveNoExpandGenericCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
 		"with value": {
 			"value target": {
 				source:   valueHandler.tfFieldWithValue(tfStructType),
@@ -581,7 +609,24 @@ func tfStructField(name string, typ reflect.Type, autoflexTag string) reflect.St
 	}
 }
 
+type fieldValueHandler[T any] interface {
+	nonZeroValue() T
+	zeroValue() T
+	fieldType() reflect.Type
+	tfFieldWithValue(typ reflect.Type) any
+	tfFieldWithZeroValue(typ reflect.Type) any
+	tfFieldWithNullValue(typ reflect.Type) any
+	tfFieldWithUnknownValue(typ reflect.Type) any
+	awsScalarFieldWithValue() any
+	awsScalarFieldWithZeroValue() any
+	awsPointerFieldWithValue() any
+	awsPointerFieldWithZeroValue() any
+	awsPointerFieldWithNilValue() any
+}
+
 type stringValueHandler struct{}
+
+var _ fieldValueHandler[string] = stringValueHandler{}
 
 func (h stringValueHandler) nonZeroValue() string {
 	return "test_value"
@@ -643,10 +688,324 @@ func (h stringValueHandler) awsPointerFieldWithNilValue() any {
 	return &awsPrimitivePointerField[string]{Field1: nil}
 }
 
-type fooTestCase struct {
-	source        any
-	expected      any
-	expectedDiags diag.Diagnostics
+type boolValueHandler struct{}
+
+var _ fieldValueHandler[bool] = boolValueHandler{}
+
+func (h boolValueHandler) nonZeroValue() bool {
+	return true
+}
+
+func (h boolValueHandler) zeroValue() bool {
+	return false
+}
+
+func (h boolValueHandler) fieldType() reflect.Type {
+	return reflect.TypeFor[types.Bool]()
+}
+
+func (h boolValueHandler) tfFieldWithValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.BoolValue(h.nonZeroValue())))
+	return p.Interface()
+}
+
+func (h boolValueHandler) tfFieldWithZeroValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.BoolValue(h.zeroValue())))
+	return p.Interface()
+}
+
+func (h boolValueHandler) tfFieldWithNullValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.BoolNull()))
+	return p.Interface()
+}
+
+func (h boolValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.BoolUnknown()))
+	return p.Interface()
+}
+
+func (h boolValueHandler) awsScalarFieldWithValue() any {
+	return &awsPrimitiveField[bool]{Field1: h.nonZeroValue()}
+}
+
+func (h boolValueHandler) awsScalarFieldWithZeroValue() any {
+	return &awsPrimitiveField[bool]{Field1: h.zeroValue()}
+}
+
+func (h boolValueHandler) awsPointerFieldWithValue() any {
+	return &awsPrimitivePointerField[bool]{Field1: aws.Bool(h.nonZeroValue())}
+}
+
+func (h boolValueHandler) awsPointerFieldWithZeroValue() any {
+	return &awsPrimitivePointerField[bool]{Field1: aws.Bool(h.zeroValue())}
+}
+
+func (h boolValueHandler) awsPointerFieldWithNilValue() any {
+	return &awsPrimitivePointerField[bool]{Field1: nil}
+}
+
+type int64ValueHandler struct{}
+
+var _ fieldValueHandler[int64] = int64ValueHandler{}
+
+func (h int64ValueHandler) nonZeroValue() int64 {
+	return 1
+}
+
+func (h int64ValueHandler) zeroValue() int64 {
+	return 0
+}
+
+func (h int64ValueHandler) fieldType() reflect.Type {
+	return reflect.TypeFor[types.Int64]()
+}
+
+func (h int64ValueHandler) tfFieldWithValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Int64Value(h.nonZeroValue())))
+	return p.Interface()
+}
+
+func (h int64ValueHandler) tfFieldWithZeroValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Int64Value(h.zeroValue())))
+	return p.Interface()
+}
+
+func (h int64ValueHandler) tfFieldWithNullValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Int64Null()))
+	return p.Interface()
+}
+
+func (h int64ValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Int64Unknown()))
+	return p.Interface()
+}
+
+func (h int64ValueHandler) awsScalarFieldWithValue() any {
+	return &awsPrimitiveField[int64]{Field1: h.nonZeroValue()}
+}
+
+func (h int64ValueHandler) awsScalarFieldWithZeroValue() any {
+	return &awsPrimitiveField[int64]{Field1: h.zeroValue()}
+}
+
+func (h int64ValueHandler) awsPointerFieldWithValue() any {
+	return &awsPrimitivePointerField[int64]{Field1: aws.Int64(h.nonZeroValue())}
+}
+
+func (h int64ValueHandler) awsPointerFieldWithZeroValue() any {
+	return &awsPrimitivePointerField[int64]{Field1: aws.Int64(h.zeroValue())}
+}
+
+func (h int64ValueHandler) awsPointerFieldWithNilValue() any {
+	return &awsPrimitivePointerField[int64]{Field1: nil}
+}
+
+type int32ValueHandler struct{}
+
+var _ fieldValueHandler[int32] = int32ValueHandler{}
+
+func (h int32ValueHandler) nonZeroValue() int32 {
+	return 1
+}
+
+func (h int32ValueHandler) zeroValue() int32 {
+	return 0
+}
+
+func (h int32ValueHandler) fieldType() reflect.Type {
+	return reflect.TypeFor[types.Int32]()
+}
+
+func (h int32ValueHandler) tfFieldWithValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Int32Value(h.nonZeroValue())))
+	return p.Interface()
+}
+
+func (h int32ValueHandler) tfFieldWithZeroValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Int32Value(h.zeroValue())))
+	return p.Interface()
+}
+
+func (h int32ValueHandler) tfFieldWithNullValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Int32Null()))
+	return p.Interface()
+}
+
+func (h int32ValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Int32Unknown()))
+	return p.Interface()
+}
+
+func (h int32ValueHandler) awsScalarFieldWithValue() any {
+	return &awsPrimitiveField[int32]{Field1: h.nonZeroValue()}
+}
+
+func (h int32ValueHandler) awsScalarFieldWithZeroValue() any {
+	return &awsPrimitiveField[int32]{Field1: h.zeroValue()}
+}
+
+func (h int32ValueHandler) awsPointerFieldWithValue() any {
+	return &awsPrimitivePointerField[int32]{Field1: aws.Int32(h.nonZeroValue())}
+}
+
+func (h int32ValueHandler) awsPointerFieldWithZeroValue() any {
+	return &awsPrimitivePointerField[int32]{Field1: aws.Int32(h.zeroValue())}
+}
+
+func (h int32ValueHandler) awsPointerFieldWithNilValue() any {
+	return &awsPrimitivePointerField[int32]{Field1: nil}
+}
+
+type float64ValueHandler struct{}
+
+var _ fieldValueHandler[float64] = float64ValueHandler{}
+
+func (h float64ValueHandler) nonZeroValue() float64 {
+	return 1
+}
+
+func (h float64ValueHandler) zeroValue() float64 {
+	return 0
+}
+
+func (h float64ValueHandler) fieldType() reflect.Type {
+	return reflect.TypeFor[types.Float64]()
+}
+
+func (h float64ValueHandler) tfFieldWithValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Float64Value(h.nonZeroValue())))
+	return p.Interface()
+}
+
+func (h float64ValueHandler) tfFieldWithZeroValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Float64Value(h.zeroValue())))
+	return p.Interface()
+}
+
+func (h float64ValueHandler) tfFieldWithNullValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Float64Null()))
+	return p.Interface()
+}
+
+func (h float64ValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Float64Unknown()))
+	return p.Interface()
+}
+
+func (h float64ValueHandler) awsScalarFieldWithValue() any {
+	return &awsPrimitiveField[float64]{Field1: h.nonZeroValue()}
+}
+
+func (h float64ValueHandler) awsScalarFieldWithZeroValue() any {
+	return &awsPrimitiveField[float64]{Field1: h.zeroValue()}
+}
+
+func (h float64ValueHandler) awsPointerFieldWithValue() any {
+	return &awsPrimitivePointerField[float64]{Field1: aws.Float64(h.nonZeroValue())}
+}
+
+func (h float64ValueHandler) awsPointerFieldWithZeroValue() any {
+	return &awsPrimitivePointerField[float64]{Field1: aws.Float64(h.zeroValue())}
+}
+
+func (h float64ValueHandler) awsPointerFieldWithNilValue() any {
+	return &awsPrimitivePointerField[float64]{Field1: nil}
+}
+
+type float32ValueHandler struct{}
+
+var _ fieldValueHandler[float32] = float32ValueHandler{}
+
+func (h float32ValueHandler) nonZeroValue() float32 {
+	return 1
+}
+
+func (h float32ValueHandler) zeroValue() float32 {
+	return 0
+}
+
+func (h float32ValueHandler) fieldType() reflect.Type {
+	return reflect.TypeFor[types.Float32]()
+}
+
+func (h float32ValueHandler) tfFieldWithValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Float32Value(h.nonZeroValue())))
+	return p.Interface()
+}
+
+func (h float32ValueHandler) tfFieldWithZeroValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Float32Value(h.zeroValue())))
+	return p.Interface()
+}
+
+func (h float32ValueHandler) tfFieldWithNullValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Float32Null()))
+	return p.Interface()
+}
+
+func (h float32ValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
+	p := reflect.New(typ)
+	v := p.Elem()
+	tfStructSetSingleField(v, "Field1", reflect.ValueOf(types.Float32Unknown()))
+	return p.Interface()
+}
+
+func (h float32ValueHandler) awsScalarFieldWithValue() any {
+	return &awsPrimitiveField[float32]{Field1: h.nonZeroValue()}
+}
+
+func (h float32ValueHandler) awsScalarFieldWithZeroValue() any {
+	return &awsPrimitiveField[float32]{Field1: h.zeroValue()}
+}
+
+func (h float32ValueHandler) awsPointerFieldWithValue() any {
+	return &awsPrimitivePointerField[float32]{Field1: aws.Float32(h.nonZeroValue())}
+}
+
+func (h float32ValueHandler) awsPointerFieldWithZeroValue() any {
+	return &awsPrimitivePointerField[float32]{Field1: aws.Float32(h.zeroValue())}
+}
+
+func (h float32ValueHandler) awsPointerFieldWithNilValue() any {
+	return &awsPrimitivePointerField[float32]{Field1: nil}
 }
 
 func TestFlattenStringField(t *testing.T) {
@@ -654,14 +1013,95 @@ func TestFlattenStringField(t *testing.T) {
 
 	valueHandler := stringValueHandler{}
 
-	const fieldName = "Field1"
-	const autoflexTag = ""
-	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
+	testcases := map[string]map[string]map[string]fieldTestCase{
+		"no options": flattenPrimitiveNoOptionsCases(valueHandler),
 
-	v := reflect.New(tfStructType).Elem()
-	tfStructSetSingleField(v, fieldName, reflect.ValueOf(types.StringValue("test_value")))
+		"legacy": flattenPrimitiveLegacyCases(valueHandler),
 
-	testcases := map[string]map[string]map[string]fooTestCase{
+		"omitempty": flattenStringOmitEmptyCases(valueHandler),
+
+		"noexpand": flattenPrimitiveNoExpandCases(valueHandler),
+
+		"noflatten": flattenPrimitiveNoFlattenCases(valueHandler),
+
+		"legacy,omitempty": flattenPrimitiveLegacyOmitEmptyCases(valueHandler),
+
+		"legacy,noexpand": flattenPrimitiveLegacyNoExpandCases(valueHandler),
+
+		"legacy,noflatten": flattenPrimitiveLegacyNoFlattenCases(valueHandler),
+
+		"omitempty,noexpand": flattenStringOmitEmptyNoExpandCases(valueHandler),
+
+		"omitempty,noflatten": flattenPrimitiveOmitEmptyNoFlattenCases(valueHandler),
+
+		"noexpand,noflatten": flattenPrimitiveNoExpandNoFlattenCases(valueHandler),
+
+		"legacy,omitempty,noexpand": flattenPrimitiveLegacyOmitEmptyNoExpandCases(valueHandler),
+
+		"legacy,omitempty,noflatten": flattenPrimitiveLegacyOmitEmptyNoFlattenCases(valueHandler),
+
+		"legacy,noexpand,noflatten": flattenPrimitiveLegacyNoExpandNoFlattenCases(valueHandler),
+
+		"legacy,omitempty,noexpand,noflatten": flattenPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases(valueHandler),
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			for name, tc := range tc {
+				t.Run(name, func(t *testing.T) {
+					t.Parallel()
+					for name, tc := range tc {
+						t.Run(name, func(t *testing.T) {
+							t.Parallel()
+							ctx := t.Context()
+
+							var buf bytes.Buffer
+							ctx = tflogtest.RootLogger(ctx, &buf)
+							ctx = registerTestingLogger(ctx)
+
+							actual := reflect.New(reflect.TypeOf(tc.expected).Elem()).Interface()
+
+							diags := Flatten(ctx, tc.source, actual)
+							if diff := cmp.Diff(diags, tc.expectedDiags); diff != "" {
+								t.Fatalf("unexpected expand diagnostics difference: %s", diff)
+							}
+
+							if diff := cmp.Diff(actual, tc.expected); diff != "" {
+								t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+							}
+						})
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestFlattenBoolField(t *testing.T) {
+	testFlattenField(t, boolValueHandler{})
+}
+
+func TestFlattenInt64Field(t *testing.T) {
+	testFlattenField(t, int64ValueHandler{})
+}
+
+func TestFlattenInt32Field(t *testing.T) {
+	testFlattenField(t, int32ValueHandler{})
+}
+
+func TestFlattenFloat64Field(t *testing.T) {
+	testFlattenField(t, float64ValueHandler{})
+}
+
+func TestFlattenFloat32Field(t *testing.T) {
+	testFlattenField(t, float32ValueHandler{})
+}
+
+func testFlattenField[T any](t *testing.T, valueHandler fieldValueHandler[T]) {
+	t.Parallel()
+
+	testcases := map[string]map[string]map[string]fieldTestCase{
 		"no options": flattenPrimitiveNoOptionsCases(valueHandler),
 
 		"legacy": flattenPrimitiveLegacyCases(valueHandler),
@@ -726,7 +1166,7 @@ func TestFlattenStringField(t *testing.T) {
 	}
 }
 
-func flattenPrimitiveNoOptionsCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveNoOptionsCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ""
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -734,7 +1174,7 @@ func flattenPrimitiveNoOptionsCases(valueHandler stringValueHandler) map[string]
 	return flattenPrimitiveRegularCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveLegacyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveLegacyCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -742,7 +1182,15 @@ func flattenPrimitiveLegacyCases(valueHandler stringValueHandler) map[string]map
 	return flattenPrimitiveGenericLegacyCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveOmitEmptyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenStringOmitEmptyCases(valueHandler stringValueHandler) map[string]map[string]fieldTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",omitempty"
+	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
+
+	return flattenStringGenericOmitEmptyCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveOmitEmptyCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",omitempty"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -750,7 +1198,7 @@ func flattenPrimitiveOmitEmptyCases(valueHandler stringValueHandler) map[string]
 	return flattenPrimitiveGenericOmitEmptyCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveNoExpandCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",noexpand"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -758,7 +1206,7 @@ func flattenPrimitiveNoExpandCases(valueHandler stringValueHandler) map[string]m
 	return flattenPrimitiveRegularCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -766,7 +1214,7 @@ func flattenPrimitiveNoFlattenCases(valueHandler stringValueHandler) map[string]
 	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveLegacyOmitEmptyCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveLegacyOmitEmptyCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,omitempty"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -774,7 +1222,7 @@ func flattenPrimitiveLegacyOmitEmptyCases(valueHandler stringValueHandler) map[s
 	return flattenPrimitiveGenericLegacyCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveLegacyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveLegacyNoExpandCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,noexpand"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -782,7 +1230,7 @@ func flattenPrimitiveLegacyNoExpandCases(valueHandler stringValueHandler) map[st
 	return flattenPrimitiveGenericLegacyCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveLegacyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveLegacyNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -790,7 +1238,15 @@ func flattenPrimitiveLegacyNoFlattenCases(valueHandler stringValueHandler) map[s
 	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveOmitEmptyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenStringOmitEmptyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fieldTestCase {
+	const fieldName = "Field1"
+	const autoflexTag = ",omitempty,noexpand"
+	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
+
+	return flattenStringGenericOmitEmptyCases(tfStructType, valueHandler)
+}
+
+func flattenPrimitiveOmitEmptyNoExpandCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",omitempty,noexpand"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -798,7 +1254,7 @@ func flattenPrimitiveOmitEmptyNoExpandCases(valueHandler stringValueHandler) map
 	return flattenPrimitiveGenericOmitEmptyCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveOmitEmptyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveOmitEmptyNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",omitempty,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -806,7 +1262,7 @@ func flattenPrimitiveOmitEmptyNoFlattenCases(valueHandler stringValueHandler) ma
 	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveNoExpandNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",noexpand,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -814,7 +1270,7 @@ func flattenPrimitiveNoExpandNoFlattenCases(valueHandler stringValueHandler) map
 	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveLegacyOmitEmptyNoExpandCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveLegacyOmitEmptyNoExpandCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,omitempty,noexpand"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -822,7 +1278,7 @@ func flattenPrimitiveLegacyOmitEmptyNoExpandCases(valueHandler stringValueHandle
 	return flattenPrimitiveGenericLegacyCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveLegacyOmitEmptyNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveLegacyOmitEmptyNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,omitempty,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -830,7 +1286,7 @@ func flattenPrimitiveLegacyOmitEmptyNoFlattenCases(valueHandler stringValueHandl
 	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveLegacyNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveLegacyNoExpandNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,noexpand,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -838,7 +1294,7 @@ func flattenPrimitiveLegacyNoExpandNoFlattenCases(valueHandler stringValueHandle
 	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases(valueHandler stringValueHandler) map[string]map[string]fooTestCase {
+func flattenPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases[T any](valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
 	const fieldName = "Field1"
 	const autoflexTag = ",legacy,omitempty,noexpand,noflatten"
 	tfStructType := tfStructSingleFieldType(fieldName, valueHandler.fieldType(), autoflexTag)
@@ -846,8 +1302,8 @@ func flattenPrimitiveLegacyOmitEmptyNoExpandNoFlattenCases(valueHandler stringVa
 	return flattenPrimitiveGenericNoFlattenCases(tfStructType, valueHandler)
 }
 
-func flattenPrimitiveRegularCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
-	return map[string]map[string]fooTestCase{
+func flattenPrimitiveRegularCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
 		"with value": {
 			"value source": {
 				source:   valueHandler.awsScalarFieldWithValue(),
@@ -858,7 +1314,7 @@ func flattenPrimitiveRegularCases(tfStructType reflect.Type, valueHandler string
 				expected: valueHandler.tfFieldWithValue(tfStructType),
 			},
 		},
-		"empty string": {
+		"zero value": {
 			"value source": {
 				source:   valueHandler.awsScalarFieldWithZeroValue(),
 				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
@@ -877,8 +1333,8 @@ func flattenPrimitiveRegularCases(tfStructType reflect.Type, valueHandler string
 	}
 }
 
-func flattenPrimitiveGenericLegacyCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
-	return map[string]map[string]fooTestCase{
+func flattenPrimitiveGenericLegacyCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
 		"with value": {
 			"value source": {
 				source:   valueHandler.awsScalarFieldWithValue(),
@@ -889,7 +1345,7 @@ func flattenPrimitiveGenericLegacyCases(tfStructType reflect.Type, valueHandler 
 				expected: valueHandler.tfFieldWithValue(tfStructType),
 			},
 		},
-		"empty string": {
+		"zero value": {
 			"value source": {
 				source:   valueHandler.awsScalarFieldWithZeroValue(),
 				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
@@ -908,8 +1364,8 @@ func flattenPrimitiveGenericLegacyCases(tfStructType reflect.Type, valueHandler 
 	}
 }
 
-func flattenPrimitiveGenericOmitEmptyCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
-	return map[string]map[string]fooTestCase{
+func flattenStringGenericOmitEmptyCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
 		"with value": {
 			"value source": {
 				source:   valueHandler.awsScalarFieldWithValue(),
@@ -920,7 +1376,7 @@ func flattenPrimitiveGenericOmitEmptyCases(tfStructType reflect.Type, valueHandl
 				expected: valueHandler.tfFieldWithValue(tfStructType),
 			},
 		},
-		"empty string": {
+		"zero value": {
 			"value source": {
 				source:   valueHandler.awsScalarFieldWithZeroValue(),
 				expected: valueHandler.tfFieldWithNullValue(tfStructType),
@@ -939,8 +1395,39 @@ func flattenPrimitiveGenericOmitEmptyCases(tfStructType reflect.Type, valueHandl
 	}
 }
 
-func flattenPrimitiveGenericNoFlattenCases(tfStructType reflect.Type, valueHandler stringValueHandler) map[string]map[string]fooTestCase {
-	return map[string]map[string]fooTestCase{
+func flattenPrimitiveGenericOmitEmptyCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
+		"with value": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithValue(),
+				expected: valueHandler.tfFieldWithValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithValue(),
+				expected: valueHandler.tfFieldWithValue(tfStructType),
+			},
+		},
+		"zero value": {
+			"value source": {
+				source:   valueHandler.awsScalarFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
+			},
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithZeroValue(),
+				expected: valueHandler.tfFieldWithZeroValue(tfStructType),
+			},
+		},
+		"null value": {
+			"pointer source": {
+				source:   valueHandler.awsPointerFieldWithNilValue(),
+				expected: valueHandler.tfFieldWithNullValue(tfStructType),
+			},
+		},
+	}
+}
+
+func flattenPrimitiveGenericNoFlattenCases[T any](tfStructType reflect.Type, valueHandler fieldValueHandler[T]) map[string]map[string]fieldTestCase {
+	return map[string]map[string]fieldTestCase{
 		"with value": {
 			"value source": {
 				source:   valueHandler.awsScalarFieldWithValue(),
@@ -951,7 +1438,7 @@ func flattenPrimitiveGenericNoFlattenCases(tfStructType reflect.Type, valueHandl
 				expected: valueHandler.tfFieldWithNullValue(tfStructType),
 			},
 		},
-		"empty string": {
+		"zero value": {
 			"value source": {
 				source:   valueHandler.awsScalarFieldWithZeroValue(),
 				expected: valueHandler.tfFieldWithNullValue(tfStructType),
