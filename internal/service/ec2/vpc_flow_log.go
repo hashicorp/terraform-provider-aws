@@ -216,7 +216,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	input := &ec2.CreateFlowLogsInput{
-		ClientToken:        aws.String(create.UniqueId(ctx)),
+		ClientToken:        aws.String(create.RandomId(ctx)),
 		LogDestinationType: awstypes.LogDestinationType(d.Get("log_destination_type").(string)),
 		ResourceIds:        []string{resourceID},
 		ResourceType:       resourceType,

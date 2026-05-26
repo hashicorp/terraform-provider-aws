@@ -103,7 +103,7 @@ func (r *clusterPeeringResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	input := dsql.UpdateClusterInput{
-		ClientToken:           aws.String(create.UniqueId(ctx)),
+		ClientToken:           aws.String(create.RandomId(ctx)),
 		Identifier:            aws.String(id),
 		MultiRegionProperties: new(awstypes.MultiRegionProperties),
 	}

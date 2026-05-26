@@ -123,7 +123,7 @@ func (r *memoryResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -221,7 +221,7 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
 		_, err := conn.UpdateMemory(ctx, &input)

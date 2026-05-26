@@ -1162,7 +1162,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	input := ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
-		ClientToken:                       aws.String(create.UniqueId(ctx)),
+		ClientToken:                       aws.String(create.RandomId(ctx)),
 		CpuOptions:                        instanceOpts.CpuOptions,
 		CreditSpecification:               instanceOpts.CreditSpecification,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
@@ -1757,7 +1757,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]any)[0].(map[string]any))
 			instanceCreditSpecification.InstanceId = aws.String(d.Id())
 			input := ec2.ModifyInstanceCreditSpecificationInput{
-				ClientToken:                  aws.String(create.UniqueId(ctx)),
+				ClientToken:                  aws.String(create.RandomId(ctx)),
 				InstanceCreditSpecifications: []awstypes.InstanceCreditSpecificationRequest{instanceCreditSpecification},
 			}
 

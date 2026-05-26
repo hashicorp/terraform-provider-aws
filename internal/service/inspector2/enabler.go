@@ -109,7 +109,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any
 	in := &inspector2.EnableInput{
 		AccountIds:    accountIDs,
 		ResourceTypes: typeEnable,
-		ClientToken:   aws.String(create.UniqueId(ctx)),
+		ClientToken:   aws.String(create.RandomId(ctx)),
 	}
 
 	id := enablerID(accountIDs, typeEnable)
@@ -274,7 +274,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			in := &inspector2.EnableInput{
 				AccountIds:    acctEnable,
 				ResourceTypes: typeEnable,
-				ClientToken:   aws.String(create.UniqueId(ctx)),
+				ClientToken:   aws.String(create.RandomId(ctx)),
 			}
 
 			out, err := conn.Enable(ctx, in)

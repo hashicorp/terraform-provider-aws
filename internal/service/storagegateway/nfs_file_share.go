@@ -231,7 +231,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &storagegateway.CreateNFSFileShareInput{
 		ClientList:           flex.ExpandStringValueSet(d.Get("client_list").(*schema.Set)),
-		ClientToken:          aws.String(create.UniqueId(ctx)),
+		ClientToken:          aws.String(create.RandomId(ctx)),
 		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 		GatewayARN:           aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),

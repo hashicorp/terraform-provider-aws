@@ -94,7 +94,7 @@ func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta 
 	in := &finspace.CreateKxDatabaseInput{
 		DatabaseName:  aws.String(d.Get(names.AttrName).(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		ClientToken:   aws.String(create.UniqueId(ctx)),
+		ClientToken:   aws.String(create.RandomId(ctx)),
 		Tags:          getTagsIn(ctx),
 	}
 

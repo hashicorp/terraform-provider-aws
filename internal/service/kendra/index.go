@@ -388,7 +388,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateIndexInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:        getTagsIn(ctx),

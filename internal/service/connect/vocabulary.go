@@ -112,7 +112,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	vocabularyName := d.Get(names.AttrName).(string)
 	input := &connect.CreateVocabularyInput{
-		ClientToken:    aws.String(create.UniqueId(ctx)),
+		ClientToken:    aws.String(create.RandomId(ctx)),
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get(names.AttrContent).(string)),
 		LanguageCode:   awstypes.VocabularyLanguageCode(d.Get(names.AttrLanguageCode).(string)),

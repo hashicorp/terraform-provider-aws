@@ -112,7 +112,7 @@ func (r *profileResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	input := &route53profiles.CreateProfileInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Name:        data.Name.ValueStringPointer(),
 		Tags:        getTagsInSlice(ctx),
 	}

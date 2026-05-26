@@ -117,7 +117,7 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateAgentRuntimeEndpoint(ctx, &input)
@@ -193,7 +193,7 @@ func (r *agentRuntimeEndpointResource) Update(ctx context.Context, request resou
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 
 		out, err := conn.UpdateAgentRuntimeEndpoint(ctx, &input)
 		if err != nil {
@@ -226,7 +226,7 @@ func (r *agentRuntimeEndpointResource) Delete(ctx context.Context, request resou
 	agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, data.Name)
 	input := bedrockagentcorecontrol.DeleteAgentRuntimeEndpointInput{
 		AgentRuntimeId: aws.String(agentRuntimeID),
-		ClientToken:    aws.String(create.UniqueId(ctx)),
+		ClientToken:    aws.String(create.RandomId(ctx)),
 		EndpointName:   aws.String(name),
 	}
 

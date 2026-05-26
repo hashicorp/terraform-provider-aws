@@ -271,7 +271,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 
 	memoryID := fwflex.StringValueFromFramework(ctx, plan.MemoryID)
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		MemoryId:    aws.String(memoryID),
 		MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 			AddMemoryStrategies: []awstypes.MemoryStrategyInput{strategyInput},
@@ -391,7 +391,7 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 
 		memoryID, memoryStrategyID := fwflex.StringValueFromFramework(ctx, plan.MemoryID), fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID)
 		input := bedrockagentcorecontrol.UpdateMemoryInput{
-			ClientToken: aws.String(create.UniqueId(ctx)),
+			ClientToken: aws.String(create.RandomId(ctx)),
 			MemoryId:    aws.String(memoryID),
 			MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 				ModifyMemoryStrategies: []awstypes.ModifyMemoryStrategyInput{strategyInput},
@@ -446,7 +446,7 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 
 	memoryID, memoryStrategyID := fwflex.StringValueFromFramework(ctx, state.MemoryID), fwflex.StringValueFromFramework(ctx, state.MemoryStrategyID)
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		MemoryId:    aws.String(memoryID),
 		MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 			DeleteMemoryStrategies: []awstypes.DeleteMemoryStrategyInput{

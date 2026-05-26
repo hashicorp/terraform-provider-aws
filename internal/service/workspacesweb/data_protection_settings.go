@@ -228,7 +228,7 @@ func (r *dataProtectionSettingsResource) Create(ctx context.Context, request res
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateDataProtectionSettings(ctx, &input)
@@ -307,7 +307,7 @@ func (r *dataProtectionSettingsResource) Update(ctx context.Context, request res
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 
 		_, err := conn.UpdateDataProtectionSettings(ctx, &input)
 

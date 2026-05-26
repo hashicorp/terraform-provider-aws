@@ -142,7 +142,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	input := ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVolume),
 	}
 

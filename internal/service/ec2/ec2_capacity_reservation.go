@@ -135,7 +135,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := ec2.CreateCapacityReservationInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		EndDateType:       awstypes.EndDateType(d.Get("end_date_type").(string)),
 		InstanceCount:     aws.Int32(int32(d.Get(names.AttrInstanceCount).(int))),
 		InstancePlatform:  awstypes.CapacityReservationInstancePlatform(d.Get("instance_platform").(string)),

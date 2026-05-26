@@ -281,7 +281,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta any
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)
 	input := &ecs.CreateTaskSetInput{
-		ClientToken:    aws.String(create.UniqueId(ctx)),
+		ClientToken:    aws.String(create.RandomId(ctx)),
 		Cluster:        aws.String(cluster),
 		Service:        aws.String(service),
 		Tags:           getTagsIn(ctx),

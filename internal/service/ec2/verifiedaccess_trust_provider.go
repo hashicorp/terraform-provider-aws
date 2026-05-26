@@ -219,7 +219,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateVerifiedAccessTrustProviderInput{
-		ClientToken:         aws.String(create.UniqueId(ctx)),
+		ClientToken:         aws.String(create.RandomId(ctx)),
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
 		TagSpecifications:   getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessTrustProvider),
 		TrustProviderType:   awstypes.TrustProviderType(d.Get("trust_provider_type").(string)),
@@ -322,7 +322,7 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := ec2.ModifyVerifiedAccessTrustProviderInput{
-			ClientToken:                   aws.String(create.UniqueId(ctx)),
+			ClientToken:                   aws.String(create.RandomId(ctx)),
 			VerifiedAccessTrustProviderId: aws.String(d.Id()),
 		}
 
@@ -358,7 +358,7 @@ func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.Re
 
 	log.Printf("[INFO] Deleting Verified Access Trust Provider: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(create.UniqueId(ctx)),
+		ClientToken:                   aws.String(create.RandomId(ctx)),
 		VerifiedAccessTrustProviderId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &input)

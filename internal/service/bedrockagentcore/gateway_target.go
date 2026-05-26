@@ -768,7 +768,7 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	var (
 		out *bedrockagentcorecontrol.CreateGatewayTargetOutput

@@ -159,7 +159,7 @@ func (r *fileSystemResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateFileSystem(ctx, &input)

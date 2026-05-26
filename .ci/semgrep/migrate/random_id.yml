@@ -1,0 +1,20 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: change-client-token-unique-to-random-struct
+    languages:
+      - go
+    message: "Use create.RandomId(ctx) instead of create.UniqueId(ctx) to generate the ClientToken."
+    severity: WARNING
+    patterns:
+      - pattern: "ClientToken: aws.String(create.UniqueId($CTX))"
+    fix: "ClientToken: aws.String(create.RandomId($CTX))"
+  - id: change-client-token-unique-to-random-obj
+    languages:
+      - go
+    message: "Use create.RandomId(ctx) instead of create.UniqueId(ctx) to generate the ClientToken."
+    severity: WARNING
+    patterns:
+      - pattern: "$OBJ.ClientToken = aws.String(create.UniqueId($CTX))"
+    fix: "$OBJ.ClientToken = aws.String(create.RandomId($CTX))"

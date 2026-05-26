@@ -173,7 +173,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	input := ec2.RequestSpotInstancesInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
 		// Users can get equivalent behavior out of TF's "count" meta-parameter.

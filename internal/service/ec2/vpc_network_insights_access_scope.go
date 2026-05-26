@@ -193,7 +193,7 @@ func (r *networkInsightsAccessScopeResource) Create(ctx context.Context, request
 		return
 	}
 
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeNetworkInsightsAccessScope)
 
 	output, err := conn.CreateNetworkInsightsAccessScope(ctx, &input)

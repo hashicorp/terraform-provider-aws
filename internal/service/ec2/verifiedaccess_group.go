@@ -106,7 +106,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
-		ClientToken:              aws.String(create.UniqueId(ctx)),
+		ClientToken:              aws.String(create.RandomId(ctx)),
 		TagSpecifications:        getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessGroup),
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
@@ -185,7 +185,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 	if d.HasChangesExcept("policy_document", names.AttrTags, names.AttrTagsAll, "sse_configuration") {
 		input := &ec2.ModifyVerifiedAccessGroupInput{
-			ClientToken:           aws.String(create.UniqueId(ctx)),
+			ClientToken:           aws.String(create.RandomId(ctx)),
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
 
@@ -243,7 +243,7 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Deleting Verified Access Group: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessGroupInput{
-		ClientToken:           aws.String(create.UniqueId(ctx)),
+		ClientToken:           aws.String(create.RandomId(ctx)),
 		VerifiedAccessGroupId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessGroup(ctx, &input)

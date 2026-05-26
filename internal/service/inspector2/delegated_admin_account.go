@@ -65,7 +65,7 @@ func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.Resource
 	accountID := d.Get(names.AttrAccountID).(string)
 	input := &inspector2.EnableDelegatedAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(accountID),
-		ClientToken:             aws.String(create.UniqueId(ctx)),
+		ClientToken:             aws.String(create.RandomId(ctx)),
 	}
 
 	_, err := conn.EnableDelegatedAdminAccount(ctx, input)

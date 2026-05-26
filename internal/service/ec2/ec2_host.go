@@ -106,7 +106,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	input := ec2.AllocateHostsInput{
 		AutoPlacement:     awstypes.AutoPlacement(d.Get("auto_placement").(string)),
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		HostRecovery:      awstypes.HostRecovery(d.Get("host_recovery").(string)),
 		Quantity:          aws.Int32(1),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeDedicatedHost),

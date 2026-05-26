@@ -1381,7 +1381,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	schedulingStrategy := awstypes.SchedulingStrategy(d.Get("scheduling_strategy").(string))
 	input := ecs.CreateServiceInput{
 		CapacityProviderStrategy: expandCapacityProviderStrategyItems(d.Get(names.AttrCapacityProviderStrategy).(*schema.Set)),
-		ClientToken:              aws.String(create.UniqueId(ctx)),
+		ClientToken:              aws.String(create.RandomId(ctx)),
 		DeploymentConfiguration:  &awstypes.DeploymentConfiguration{},
 		DeploymentController:     deploymentController,
 		EnableECSManagedTags:     d.Get("enable_ecs_managed_tags").(bool),

@@ -192,7 +192,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 	addressFamily := awstypes.AddressFamily(d.Get("address_family").(string))
 	input := ec2.CreateIpamPoolInput{
 		AddressFamily:     addressFamily,
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		IpamScopeId:       aws.String(scopeID),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamPool),
 	}

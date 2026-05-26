@@ -151,7 +151,7 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateDirectConnectGatewayAttachment(ctx, &input)

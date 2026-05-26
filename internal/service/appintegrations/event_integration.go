@@ -87,7 +87,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateEventIntegrationInput{
-		ClientToken:    aws.String(create.UniqueId(ctx)),
+		ClientToken:    aws.String(create.RandomId(ctx)),
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]any)),
 		Name:           aws.String(name),

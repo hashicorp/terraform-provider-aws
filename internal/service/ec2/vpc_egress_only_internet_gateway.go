@@ -55,7 +55,7 @@ func resourceEgressOnlyInternetGatewayCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateEgressOnlyInternetGatewayInput{
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeEgressOnlyInternetGateway),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}

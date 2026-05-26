@@ -86,7 +86,7 @@ func (r *indexResource) Create(ctx context.Context, request resource.CreateReque
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	input := &resourceexplorer2.CreateIndexInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 

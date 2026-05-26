@@ -213,7 +213,7 @@ func (r *userSettingsResource) Create(ctx context.Context, request resource.Crea
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateUserSettings(ctx, &input)
@@ -300,7 +300,7 @@ func (r *userSettingsResource) Update(ctx context.Context, request resource.Upda
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 
 		_, err := conn.UpdateUserSettings(ctx, &input)
 

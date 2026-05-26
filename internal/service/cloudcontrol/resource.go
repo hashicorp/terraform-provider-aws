@@ -93,7 +93,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	typeName := d.Get("type_name").(string)
 	input := cloudcontrol.CreateResourceInput{
-		ClientToken:  aws.String(create.UniqueId(ctx)),
+		ClientToken:  aws.String(create.RandomId(ctx)),
 		DesiredState: aws.String(d.Get("desired_state").(string)),
 		TypeName:     aws.String(typeName),
 	}
@@ -168,7 +168,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		typeName := d.Get("type_name").(string)
 		input := cloudcontrol.UpdateResourceInput{
-			ClientToken:   aws.String(create.UniqueId(ctx)),
+			ClientToken:   aws.String(create.RandomId(ctx)),
 			Identifier:    aws.String(d.Id()),
 			PatchDocument: aws.String(patchDocument),
 			TypeName:      aws.String(typeName),
@@ -200,7 +200,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	typeName := d.Get("type_name").(string)
 	input := cloudcontrol.DeleteResourceInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Identifier:  aws.String(d.Id()),
 		TypeName:    aws.String(typeName),
 	}

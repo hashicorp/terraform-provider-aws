@@ -70,7 +70,7 @@ func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := vpclattice.CreateServiceNetworkInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}

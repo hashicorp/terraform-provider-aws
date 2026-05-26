@@ -280,7 +280,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateNatGatewayInput{
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNatgateway),
 	}
 

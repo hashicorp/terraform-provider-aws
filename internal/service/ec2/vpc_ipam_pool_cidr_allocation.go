@@ -108,7 +108,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 
 	ipamPoolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.AllocateIpamPoolCidrInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		IpamPoolId:  aws.String(ipamPoolID),
 	}
 

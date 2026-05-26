@@ -1107,7 +1107,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := ec2.CreateLaunchTemplateInput{
-		ClientToken:        aws.String(create.UniqueId(ctx)),
+		ClientToken:        aws.String(create.RandomId(ctx)),
 		LaunchTemplateName: aws.String(name),
 		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeLaunchTemplate),
 	}
@@ -1224,7 +1224,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges(updateKeys...) {
 		input := ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:      aws.String(create.UniqueId(ctx)),
+			ClientToken:      aws.String(create.RandomId(ctx)),
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 

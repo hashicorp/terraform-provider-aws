@@ -120,7 +120,7 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	input := workspacesweb.CreateTrustStoreInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -232,7 +232,7 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 
 	if !new.Certificates.Equal(old.Certificates) {
 		input := workspacesweb.UpdateTrustStoreInput{
-			ClientToken:   aws.String(create.UniqueId(ctx)),
+			ClientToken:   aws.String(create.RandomId(ctx)),
 			TrustStoreArn: new.TrustStoreARN.ValueStringPointer(),
 		}
 

@@ -140,7 +140,7 @@ func (r *queryLoggingConfigurationResource) Create(ctx context.Context, request 
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	_, err := conn.CreateQueryLoggingConfiguration(ctx, &input)
 
@@ -209,7 +209,7 @@ func (r *queryLoggingConfigurationResource) Update(ctx context.Context, request 
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 
 	_, err := conn.UpdateQueryLoggingConfiguration(ctx, &input)
 
@@ -240,7 +240,7 @@ func (r *queryLoggingConfigurationResource) Delete(ctx context.Context, request 
 	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
 	input := amp.DeleteQueryLoggingConfigurationInput{
 		WorkspaceId: aws.String(workspaceID),
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 	}
 	_, err := conn.DeleteQueryLoggingConfiguration(ctx, &input)
 

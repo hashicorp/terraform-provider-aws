@@ -294,7 +294,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImageInput{
-		ClientToken:                  aws.String(create.UniqueId(ctx)),
+		ClientToken:                  aws.String(create.RandomId(ctx)),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
 	}

@@ -177,7 +177,7 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateNetworkInsightsPathInput{
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		Protocol:          awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 		Source:            aws.String(d.Get(names.AttrSource).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNetworkInsightsPath),

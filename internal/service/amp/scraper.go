@@ -253,7 +253,7 @@ func (r *scraperResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
 		Value: []byte(data.ScrapeConfiguration.ValueString()),
 	}
@@ -354,7 +354,7 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.ClientToken = aws.String(create.RandomId(ctx))
 		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
 			Value: []byte(new.ScrapeConfiguration.ValueString()),
 		}
@@ -388,7 +388,7 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 	conn := r.Meta().AMPClient(ctx)
 
 	input := amp.DeleteScraperInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
+		ClientToken: aws.String(create.RandomId(ctx)),
 		ScraperId:   fwflex.StringFromFramework(ctx, data.ID),
 	}
 	_, err := conn.DeleteScraper(ctx, &input)

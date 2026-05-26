@@ -56,7 +56,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Con
 	vatpID := d.Get("verifiedaccess_trust_provider_id").(string)
 	resourceID := verifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID)
 	input := &ec2.AttachVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(create.UniqueId(ctx)),
+		ClientToken:                   aws.String(create.RandomId(ctx)),
 		VerifiedAccessInstanceId:      aws.String(vaiID),
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
 	}
@@ -110,7 +110,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Con
 
 	log.Printf("[INFO] Deleting Verified Access Instance Trust Provider Attachment: %s", d.Id())
 	input := ec2.DetachVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(create.UniqueId(ctx)),
+		ClientToken:                   aws.String(create.RandomId(ctx)),
 		VerifiedAccessInstanceId:      aws.String(vaiID),
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
 	}

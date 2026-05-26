@@ -194,7 +194,7 @@ func (r *applicationResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ClientToken = aws.String(create.RandomId(ctx))
 	input.TagList = getTagsIn(ctx)
 
 	outputCA, err := conn.CreateApplication(ctx, &input)

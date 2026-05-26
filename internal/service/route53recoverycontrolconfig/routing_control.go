@@ -65,7 +65,7 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	input := &r53rcc.CreateRoutingControlInput{
-		ClientToken:        aws.String(create.UniqueId(ctx)),
+		ClientToken:        aws.String(create.RandomId(ctx)),
 		ClusterArn:         aws.String(d.Get("cluster_arn").(string)),
 		RoutingControlName: aws.String(d.Get(names.AttrName).(string)),
 	}

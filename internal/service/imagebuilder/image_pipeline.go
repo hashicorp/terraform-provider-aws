@@ -268,7 +268,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImagePipelineInput{
-		ClientToken:                  aws.String(create.UniqueId(ctx)),
+		ClientToken:                  aws.String(create.RandomId(ctx)),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
 	}
@@ -408,7 +408,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &imagebuilder.UpdateImagePipelineInput{
-			ClientToken:                  aws.String(create.UniqueId(ctx)),
+			ClientToken:                  aws.String(create.RandomId(ctx)),
 			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 			ImagePipelineArn:             aws.String(d.Id()),
 		}

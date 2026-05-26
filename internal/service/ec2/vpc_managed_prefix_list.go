@@ -108,7 +108,7 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 	name := d.Get(names.AttrName).(string)
 	input := &ec2.CreateManagedPrefixListInput{
 		AddressFamily:     aws.String(d.Get("address_family").(string)),
-		ClientToken:       aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.RandomId(ctx)),
 		MaxEntries:        aws.Int32(int32(d.Get("max_entries").(int))),
 		PrefixListName:    aws.String(name),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePrefixList),
