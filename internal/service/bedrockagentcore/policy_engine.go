@@ -219,9 +219,7 @@ func (r *policyEngineResource) Update(ctx context.Context, req resource.UpdateRe
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitPolicyEngineUpdated(ctx, conn, plan.PolicyEngineID.ValueString(), updateTimeout)
-		if err != nil {
+		if _, err := waitPolicyEngineUpdated(ctx, conn, plan.PolicyEngineID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineID.String())
 			return
 		}
