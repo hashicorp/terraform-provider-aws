@@ -203,9 +203,8 @@ func (r *policyEngineResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// UpdatePolicyEngine only supports updating description.
+	// Only description can be updated.
 	// The API does not support clearing description once set (min length 1).
-	// Tags are handled separately by the tag framework.
 	if !plan.Description.Equal(state.Description) && !plan.Description.IsNull() {
 		description := &awstypes.UpdatedDescription{
 			OptionalValue: aws.String(plan.Description.ValueString()),
