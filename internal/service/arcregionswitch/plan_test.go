@@ -301,7 +301,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "report_configuration.*.report_output.*.s3_configuration.*", map[string]string{
 						"bucket_path":  "s3://region-switch-reports",
-						"bucket_owner": "123456789012",
+						"bucket_owner": acctest.Ct12Digit,
 					}),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "arc-region-switch", regexache.MustCompile(`plan/.+$`)),
 
@@ -436,8 +436,8 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -472,7 +472,7 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "report_configuration.*.report_output.*.s3_configuration.*", map[string]string{
 						"bucket_path":  "s3://region-switch-reports",
-						"bucket_owner": "123456789012",
+						"bucket_owner": acctest.Ct12Digit,
 					}),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "arc-region-switch", regexache.MustCompile(`plan/.+$`)),
 
@@ -916,7 +916,7 @@ resource "aws_arcregionswitch_plan" "test" {
   report_configuration {
     report_output {
       s3_configuration {
-        bucket_path = "s3://region-switch-reports"
+        bucket_path  = "s3://region-switch-reports"
         bucket_owner = "123456789012"
       }
     }
@@ -1289,7 +1289,7 @@ resource "aws_arcregionswitch_plan" "test" {
   report_configuration {
     report_output {
       s3_configuration {
-        bucket_path = "s3://region-switch-reports"
+        bucket_path  = "s3://region-switch-reports"
         bucket_owner = "123456789012"
       }
     }
@@ -1564,7 +1564,7 @@ resource "aws_arcregionswitch_plan" "test" {
           %[2]q = "arn:aws:rds:%[2]s:123456789012:db:test-db-primary"
           %[3]q = "arn:aws:rds:%[3]s:123456789012:db:test-db-secondary"
         }
-        timeout_minutes = 45
+        timeout_minutes    = 45
         cross_account_role = "arn:aws:iam::123456789012:role/RdsPromoteReplicaRole"
         external_id        = "rds-promote-replica-external-id"
       }
