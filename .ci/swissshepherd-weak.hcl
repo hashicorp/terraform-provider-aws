@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_default_security_group",
     "resource/aws_devicefarm_project",
     "resource/aws_ec2_transit_gateway_peering_attachment",
     "resource/aws_eip",
