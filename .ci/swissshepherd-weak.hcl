@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_rds_cluster_activity_stream",
     "resource/aws_rds_cluster_endpoint",
     "resource/aws_rds_cluster_instance",
     "resource/aws_rds_cluster",
