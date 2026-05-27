@@ -69,4 +69,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `group_names`
 * `notifications`
 * `topic_arn`
-

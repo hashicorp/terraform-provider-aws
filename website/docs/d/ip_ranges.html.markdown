@@ -63,4 +63,3 @@ This data source exports the following attributes in addition to the arguments a
 * `create_date` - Publication time of the IP ranges (e.g., `2016-08-03-23-46-05`).
 * `sync_token` - Publication time of the IP ranges, in Unix epoch time format
   (e.g., `1470267965`).
-

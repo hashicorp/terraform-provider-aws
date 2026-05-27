@@ -368,4 +368,3 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 ```console
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
-

@@ -31,4 +31,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - The Amazon Resource Name (ARN) that identifies the resource policy.
 * `policy` - The [policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy) for the resource.
-

@@ -100,4 +100,3 @@ Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment` us
 ```console
 % terraform import aws_ec2_transit_gateway_peering_attachment.example tgw-attach-12345678
 ```
-

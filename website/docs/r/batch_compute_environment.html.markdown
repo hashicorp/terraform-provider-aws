@@ -297,4 +297,3 @@ Using `terraform import`, import AWS Batch compute using the `name`. For example
 ```console
 % terraform import aws_batch_compute_environment.sample sample
 ```
-

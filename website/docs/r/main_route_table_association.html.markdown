@@ -54,4 +54,3 @@ the `main_route_table_association` delete to work properly.
 - `create` - (Default `5m`)
 - `update` - (Default `2m`)
 - `delete` - (Default `5m`)
-

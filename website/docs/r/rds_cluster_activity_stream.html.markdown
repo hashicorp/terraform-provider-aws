@@ -87,4 +87,3 @@ Using `terraform import`, import RDS Aurora Cluster Database Activity Streams us
 ```console
 % terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo
 ```
-

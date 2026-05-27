@@ -50,4 +50,3 @@ This data source exports the following attributes in addition to the arguments a
 ### stream_mode_details Configuration Block
 
 * `stream_mode` - Capacity mode of the stream. Either `ON_DEMAND` or `PROVISIONED`.
-

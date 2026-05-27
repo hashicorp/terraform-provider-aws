@@ -85,4 +85,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arns` - Set of ARNs of the matched IAM roles.
 * `names` - Set of Names of the matched IAM roles.
-

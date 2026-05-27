@@ -105,4 +105,3 @@ Using `terraform import`, import DAX Clusters using the `cluster_name`. For exam
 ```console
 % terraform import aws_dax_cluster.my_cluster my_cluster
 ```
-

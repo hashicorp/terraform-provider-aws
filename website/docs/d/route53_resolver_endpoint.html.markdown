@@ -52,4 +52,3 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Current status of the Resolver Endpoint.
 * `target_name_server_metrics_enabled` - Boolean indicating whether target name server metrics are enabled for the outbound Resolver endpoints.
 * `vpc_id` - ID of the Host VPC that the Resolver Endpoint resides in.
-

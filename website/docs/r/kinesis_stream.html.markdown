@@ -91,4 +91,3 @@ Using `terraform import`, import Kinesis Streams using the `name`. For example:
 ```console
 % terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
 ```
-

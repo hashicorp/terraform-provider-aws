@@ -59,4 +59,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - (**Deprecated**) Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
 * `names` - Names of regions that meets the criteria.
-

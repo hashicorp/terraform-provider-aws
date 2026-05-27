@@ -56,4 +56,3 @@ The `filter` block supports the following arguments:
 * `name` - (Required) Name of the filter.
   For a full reference of filter names, see [describe-route-tables in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-route-tables.html).
 * `values` - (Required) One or more values to match.
-

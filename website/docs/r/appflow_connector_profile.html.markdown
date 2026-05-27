@@ -364,4 +364,3 @@ Using `terraform import`, import AppFlow Connector Profile using the connector p
 ```console
 % terraform import aws_appflow_connector_profile.example example-profile
 ```
-

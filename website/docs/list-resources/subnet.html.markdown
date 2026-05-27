@@ -59,4 +59,3 @@ The `filter` block supports the following arguments:
   For a full reference of filter names, see [describe-subnets in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-subnets.html).
   `default-for-az` is not supported.
 * `values` - (Required) One or more values to match.
-

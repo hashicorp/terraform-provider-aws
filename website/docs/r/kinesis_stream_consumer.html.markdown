@@ -60,4 +60,3 @@ Using `terraform import`, import Kinesis Stream Consumers using the Amazon Resou
 ```console
 % terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553
 ```
-

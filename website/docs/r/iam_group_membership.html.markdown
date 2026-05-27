@@ -59,4 +59,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - The name to identify the Group Membership
 * `users` - list of IAM User names
 * `group` - IAM Group name
-

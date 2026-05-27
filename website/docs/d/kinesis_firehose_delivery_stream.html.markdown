@@ -33,4 +33,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ARN of the Kinesis Firehose Delivery Stream.
 * `arn` - ARN of the Kinesis Firehose Delivery Stream (same as `id`).
-

@@ -74,4 +74,3 @@ Using `terraform import`, import Kinesis Streams using the `arn`. For example:
 ```console
 % terraform import aws_kinesis_video_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
 ```
-

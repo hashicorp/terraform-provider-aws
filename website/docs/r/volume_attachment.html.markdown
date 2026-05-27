@@ -83,4 +83,3 @@ Using `terraform import`, import EBS Volume Attachments using `DEVICE_NAME:VOLUM
 ```console
 % terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
 ```
-

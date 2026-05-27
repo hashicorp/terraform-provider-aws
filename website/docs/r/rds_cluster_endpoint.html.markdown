@@ -114,4 +114,3 @@ Using `terraform import`, import RDS Clusters Endpoint using the `cluster_endpoi
 ```console
 % terraform import aws_rds_cluster_endpoint.custom_reader aurora-prod-cluster-custom-reader
 ```
-

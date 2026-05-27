@@ -54,4 +54,3 @@ The `setting` field supports the following format:
 ## Attribute Reference
 
 This resource exports no additional attributes.
-

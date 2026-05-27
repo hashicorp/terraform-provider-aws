@@ -165,4 +165,3 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 ```console
 % terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
 ```
-

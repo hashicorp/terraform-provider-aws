@@ -59,4 +59,3 @@ This data source exports the following attributes in addition to the arguments a
 * `firewall_policy` - The [policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy) for the specified firewall policy.
 * `tags` - Key-value tags for the firewall policy.
 * `update_token` - Token used for optimistic locking.
-

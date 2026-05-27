@@ -69,4 +69,3 @@ Using `terraform import`, import CloudFront Connection Groups using the `id`. Fo
 ```console
 % terraform import aws_cloudfront_connection_group.example CGROUP123EXAMPLE
 ```
-

@@ -377,4 +377,3 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `app_name`, 
 ```console
 % terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
 ```
-

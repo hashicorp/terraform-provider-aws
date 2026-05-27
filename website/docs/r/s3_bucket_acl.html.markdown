@@ -260,4 +260,3 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 ```console
 % terraform import aws_s3_bucket_acl.example bucket-name,123456789012,private
 ```
-

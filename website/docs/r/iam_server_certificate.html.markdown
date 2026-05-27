@@ -142,4 +142,3 @@ Using `terraform import`, import IAM Server Certificates using the `name`. For e
 ```console
 % terraform import aws_iam_server_certificate.certificate example.com-certificate-until-2018
 ```
-

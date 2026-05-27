@@ -37,4 +37,3 @@ This data source exports the following attributes in addition to the arguments a
 * `creation_timestamp` - Approximate timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of when the stream consumer was created.
 * `id` - ARN of the stream consumer.
 * `status` - Current status of the stream consumer.
-

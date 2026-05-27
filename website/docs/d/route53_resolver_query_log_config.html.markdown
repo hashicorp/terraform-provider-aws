@@ -53,4 +53,3 @@ This data source exports the following attributes in addition to the arguments a
 * `owner_id` - The AWS account ID for the account that created the query logging configuration.
 * `share_status` - An indication of whether the query logging configuration is shared with other AWS accounts or was shared with the current account by another AWS account.
 * `tags` - Map of tags to assign to the service.
-

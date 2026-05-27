@@ -193,4 +193,3 @@ Using `terraform import`, import EIPs in a VPC using their Allocation ID. For ex
 ```console
 % terraform import aws_eip.example eipalloc-00a10e96
 ```
-
