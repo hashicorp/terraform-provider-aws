@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "data_source/aws_ebs_snapshot_ids",
     "data_source/aws_ebs_snapshot",
     "data_source/aws_ebs_volume",
     "data_source/aws_ec2_transit_gateway_attachments",
