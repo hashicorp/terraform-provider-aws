@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_cloudhsm_v2_cluster",
     "resource/aws_codedeploy_deployment_group",
     "resource/aws_dax_cluster",
     "resource/aws_default_network_acl",
