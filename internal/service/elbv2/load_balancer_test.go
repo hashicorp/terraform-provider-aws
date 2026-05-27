@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
@@ -2887,7 +2888,7 @@ func TestAccELBV2LoadBalancer_albMoreThan20Attributes(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_enablePrefixipv6SourceNat(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_enablePrefixForIPv6SourceNAT(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2900,7 +2901,7 @@ func TestAccELBV2LoadBalancer_enablePrefixipv6SourceNat(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName, false),
+				Config: testAccLoadBalancerConfig_enablePrefixForIPv6SourceNAT(rName, awstypes.EnablePrefixForIpv6SourceNatEnumOff),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 				),
@@ -2910,11 +2911,11 @@ func TestAccELBV2LoadBalancer_enablePrefixipv6SourceNat(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_prefix_ipv6_source_nat"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_prefix_for_ipv6_source_nat"), tfknownvalue.StringExact(awstypes.EnablePrefixForIpv6SourceNatEnumOff)),
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName, true),
+				Config: testAccLoadBalancerConfig_enablePrefixForIPv6SourceNAT(rName, awstypes.EnablePrefixForIpv6SourceNatEnumOn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 				),
@@ -2924,7 +2925,21 @@ func TestAccELBV2LoadBalancer_enablePrefixipv6SourceNat(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_prefix_ipv6_source_nat"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_prefix_for_ipv6_source_nat"), tfknownvalue.StringExact(awstypes.EnablePrefixForIpv6SourceNatEnumOn)),
+				},
+			},
+			{
+				Config: testAccLoadBalancerConfig_enablePrefixForIPv6SourceNAT(rName, awstypes.EnablePrefixForIpv6SourceNatEnumOff),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_prefix_for_ipv6_source_nat"), tfknownvalue.StringExact(awstypes.EnablePrefixForIpv6SourceNatEnumOff)),
 				},
 			},
 		},
@@ -4459,16 +4474,16 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName string, enablePrefixIpv6SourceNat bool) string {
+func testAccLoadBalancerConfig_enablePrefixForIPv6SourceNAT(rName string, enablePrefix awstypes.EnablePrefixForIpv6SourceNatEnum) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
 
-  ip_address_type               = "dualstack"
-  load_balancer_type            = "network"
-  enable_prefix_ipv6_source_nat = %[2]t
+  ip_address_type                   = "dualstack"
+  load_balancer_type                = "network"
+  enable_prefix_for_ipv6_source_nat = %[2]q
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -4511,5 +4526,5 @@ resource "aws_internet_gateway" "test" {
     Name = %[1]q
   }
 }
-`, rName, enablePrefixIpv6SourceNat))
+`, rName, enablePrefix))
 }

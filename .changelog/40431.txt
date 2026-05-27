@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lb: Add `enable_prefix_for_ipv6_source_nat` argument
+```
