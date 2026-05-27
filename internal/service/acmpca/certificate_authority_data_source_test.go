@@ -89,6 +89,56 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 	})
 }
 
+func TestAccACMPCACertificateAuthorityDataSource_subject(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acmpca_certificate_authority.test"
+	datasourceName := "data.aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName()
+	country := acctest.RandString(t, 2)
+	distinguishedNameQualifier := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	generationQualifier := acctest.RandString(t, 3)
+	givenName := acctest.RandString(t, 10)
+	initials := acctest.RandString(t, 5)
+	locality := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	organization := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	organizationalUnit := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	pseudonym := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	state := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	surname := acctest.RandString(t, 30)
+	title := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistentSubject,
+				ExpectError: regexache.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
+			},
+			{
+				Config: testAccCertificateAuthorityDataSourceConfig_subject(commonName, country, distinguishedNameQualifier, generationQualifier, givenName, initials, locality, organization, organizationalUnit, pseudonym, state, surname, title),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificate, resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificateChain, resourceName, names.AttrCertificateChain),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate_signing_request", resourceName, "certificate_signing_request"),
+					resource.TestCheckResourceAttrPair(datasourceName, "key_storage_security_standard", resourceName, "key_storage_security_standard"),
+					resource.TestCheckResourceAttrPair(datasourceName, "not_after", resourceName, "not_after"),
+					resource.TestCheckResourceAttrPair(datasourceName, "not_before", resourceName, "not_before"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.#", resourceName, "revocation_configuration.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.#", resourceName, "revocation_configuration.0.crl_configuration.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.0.enabled", resourceName, "revocation_configuration.0.crl_configuration.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "serial", resourceName, "serial"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrType, resourceName, names.AttrType),
+					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCertificateAuthorityDataSourceConfig_arn(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
@@ -157,9 +207,66 @@ data "aws_acmpca_certificate_authority" "test" {
 `, commonName)
 }
 
+func testAccCertificateAuthorityDataSourceConfig_subject(commonName, country, distinguishedNameQualifier, generationQualifier, givenName, initials, locality, organization, organizationalUnit, pseudonym, state, surname, title string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+	  country = %[2]q
+	  distinguished_name_qualifier = %[3]q
+	  generation_qualifier = %[4]q
+	  given_name = %[5]q
+	  initials = %[6]q
+	  locality = %[7]q
+	  organization = %[8]q
+	  organizational_unit = %[9]q
+	  pseudonym = %[10]q
+	  state = %[11]q
+	  surname = %[12]q
+	  title = %[13]q
+    }
+  }
+}
+
+data "aws_acmpca_certificate_authority" "test" {
+  subject {
+	common_name = %[1]q
+	country = %[2]q
+	distinguished_name_qualifier = %[3]q
+	generation_qualifier = %[4]q
+	given_name = %[5]q
+	initials = %[6]q
+	locality = %[7]q
+	organization = %[8]q
+	organizational_unit = %[9]q
+	pseudonym = %[10]q
+	state = %[11]q
+	surname = %[12]q
+	title = %[13]q
+  }
+  depends_on = [aws_acmpca_certificate_authority.test]
+}
+`, commonName, country, distinguishedNameQualifier, generationQualifier, givenName, initials, locality, organization, organizationalUnit, pseudonym, state, surname, title)
+}
+
 // lintignore:AWSAT003,AWSAT005
 const testAccCertificateAuthorityDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate_authority" "test" {
   arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/tf-acc-test-does-not-exist"
+}
+`
+
+const testAccCertificateAuthorityDataSourceConfig_nonExistentSubject = `
+data "aws_acmpca_certificate_authority" "test" {
+  subject {
+    common_name = "tf-acc-test-does-not-exist"
+  }
 }
 `
