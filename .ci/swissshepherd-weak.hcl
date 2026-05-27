@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_bedrockagent_data_source",
     "resource/aws_cloudfront_connection_group",
     "resource/aws_cloudfront_distribution",
     "resource/aws_cloudfront_origin_access_identity",
