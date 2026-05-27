@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "list_resource/aws_ebs_volume",
     "list_resource/aws_ec2_secondary_subnet",
     "list_resource/aws_instance",
     "list_resource/aws_internet_gateway",
