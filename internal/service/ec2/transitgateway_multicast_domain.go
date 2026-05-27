@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -17,9 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,8 +37,6 @@ func resourceTransitGatewayMulticastDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -85,7 +84,7 @@ func resourceTransitGatewayMulticastDomain() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -116,14 +115,14 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 	return append(diags, resourceTransitGatewayMulticastDomainRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	multicastDomain, err := findTransitGatewayMulticastDomainByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Multicast Domain %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -145,12 +144,12 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceTransitGatewayMulticastDomainRead(ctx, d, meta)
 }
 
-func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -159,7 +158,7 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		err = nil
 	}
 
@@ -191,7 +190,7 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		err = nil
 	}
 
@@ -212,9 +211,10 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Domain: %s", d.Id())
-	_, err = conn.DeleteTransitGatewayMulticastDomain(ctx, &ec2.DeleteTransitGatewayMulticastDomainInput{
+	input := ec2.DeleteTransitGatewayMulticastDomainInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteTransitGatewayMulticastDomain(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return diags

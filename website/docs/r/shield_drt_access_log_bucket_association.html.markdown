@@ -17,7 +17,7 @@ Up to 10 log buckets can be associated for DRT Access sharing with the Shield Re
 
 ```terraform
 resource "aws_shield_drt_access_role_arn_association" "test" {
-  role_arn = "arn:aws:iam:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.shield_drt_access_role_name}"
+  role_arn = "arn:aws:iam:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:${var.shield_drt_access_role_name}"
 }
 
 resource "aws_shield_drt_access_log_bucket_association" "test" {

@@ -28,7 +28,7 @@ resource "aws_securityhub_standards_subscription" "cis_aws_foundations_benchmark
   depends_on    = [aws_securityhub_account.example]
 }
 
-resource "aws_standards_control_association" "cis_aws_foundations_benchmark_disable_iam_1" {
+resource "aws_securityhub_standards_control_association" "cis_aws_foundations_benchmark_disable_iam_1" {
   standards_arn       = aws_securityhub_standards_subscription.cis_aws_foundations_benchmark.standards_arn
   security_control_id = "IAM.1"
   association_status  = "DISABLED"
@@ -67,8 +67,54 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `updated_reason` - (Optional) The reason for updating the control's enablement status in the standard. Required when `association_status` is `DISABLED`.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_control_association.example
+  identity = {
+    security_control_id = "IAM.1"
+    standards_arn       = "arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
+  }
+}
+
+resource "aws_securityhub_standards_control_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `security_control_id` (String) Security control ID.
+* `standards_arn` (String) Standards ARN.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards control associations using `security_control_id` and `standards_arn` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_control_association.example
+  id = "IAM.1,arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
+}
+```
+
+Using `terraform import`, import Security Hub standards control associations using `security_control_id` and `standards_arn` separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_securityhub_standards_control_association.example IAM.1,arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10
+```

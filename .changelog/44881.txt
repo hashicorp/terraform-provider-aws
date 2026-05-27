@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_osis_pipeline: Updates `pipeline_configuration_body` maximum length validation to 2,621,440 bytes to align with AWS API specification.
+```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -74,7 +76,7 @@ func resourcePublicKey() *schema.Resource {
 	}
 }
 
-func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -82,7 +84,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	input := &cloudfront.CreatePublicKeyInput{
 		PublicKeyConfig: &awstypes.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
@@ -93,7 +95,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("caller_reference"); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+		input.PublicKeyConfig.CallerReference = aws.String(create.UniqueId(ctx))
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
@@ -111,13 +113,13 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
-func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	output, err := findPublicKeyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Public Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -138,7 +140,7 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -154,7 +156,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("caller_reference"); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+		input.PublicKeyConfig.CallerReference = aws.String(create.UniqueId(ctx))
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
@@ -170,15 +172,16 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
-func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Public Key: %s", d.Id())
-	_, err := conn.DeletePublicKey(ctx, &cloudfront.DeletePublicKeyInput{
+	input := cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeletePublicKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
 		return diags
@@ -200,8 +203,7 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) 
 
 	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -210,13 +212,13 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) 
 	}
 
 	if output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func validPublicKeyName(v interface{}, k string) (ws []string, errors []error) {
+func validPublicKeyName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -229,13 +231,13 @@ func validPublicKeyName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validPublicKeyNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validPublicKeyNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
 	}
-	prefixMaxLength := 128 - id.UniqueIDSuffixLength
+	prefixMaxLength := 128 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))

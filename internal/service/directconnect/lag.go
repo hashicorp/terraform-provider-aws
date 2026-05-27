@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -14,16 +16,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,12 +92,10 @@ func resourceLag() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -139,13 +138,13 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceLagRead(ctx, d, meta)...)
 }
 
-func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	lag, err := findLagByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect LAG (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -174,7 +173,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -194,14 +193,14 @@ func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceLagRead(ctx, d, meta)...)
 }
 
-func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if d.Get(names.AttrForceDestroy).(bool) {
 		lag, err := findLagByID(ctx, conn, d.Id())
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return diags
 		}
 
@@ -221,9 +220,10 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Deleting Direct Connect LAG: %s", d.Id())
-	_, err := conn.DeleteLag(ctx, &directconnect.DeleteLagInput{
+	input := directconnect.DeleteLagInput{
 		LagId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLag(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Lag with ID") {
 		return diags
@@ -252,8 +252,7 @@ func findLagByID(ctx context.Context, conn *directconnect.Client, id string) (*a
 
 	if state := output.LagState; state == awstypes.LagStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+			Message: string(state),
 		}
 	}
 
@@ -275,8 +274,7 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Lag with ID") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -285,17 +283,17 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Lags, tfslices.PredicateValue(filter)), nil
 }
 
-func statusLag(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusLag(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLagByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -314,7 +312,7 @@ func waitLagDeleted(ctx context.Context, conn *directconnect.Client, id string) 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LagStateAvailable, awstypes.LagStateRequested, awstypes.LagStatePending, awstypes.LagStateDeleting),
 		Target:  []string{},
-		Refresh: statusLag(ctx, conn, id),
+		Refresh: statusLag(conn, id),
 		Timeout: timeout,
 	}
 

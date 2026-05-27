@@ -144,6 +144,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
@@ -230,17 +231,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_launch_configuration.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_launch_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) name of the launch configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import launch configurations using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_launch_configuration.as_conf
-  id = "terraform-lg-123456"
+  to = aws_launch_configuration.example
+  id = "example"
 }
 ```
 
 Using `terraform import`, import launch configurations using the `name`. For example:
 
 ```console
-% terraform import aws_launch_configuration.as_conf terraform-lg-123456
+% terraform import aws_launch_configuration.example example
 ```

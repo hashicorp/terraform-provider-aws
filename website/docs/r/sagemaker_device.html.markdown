@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_device"
 description: |-
-  Provides a SageMaker Device resource.
+  Provides a SageMaker AI Device resource.
 ---
 
 # Resource: aws_sagemaker_device
 
-Provides a SageMaker Device resource.
+Provides a SageMaker AI Device resource.
 
 ## Example Usage
 
@@ -28,8 +28,9 @@ resource "aws_sagemaker_device" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `device_fleet_name` - (Required) The name of the Device Fleet.
-* `device` - (Required) The device to register with SageMaker Edge Manager. See [Device](#device) details below.
+* `device` - (Required) The device to register with SageMaker AI Edge Manager. See [Device](#device) details below.
 
 ### Device
 
@@ -46,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Devices using the `device-fleet-name/device-name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Devices using the `device-fleet-name/device-name`. For example:
 
 ```terraform
 import {
@@ -55,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Devices using the `device-fleet-name/device-name`. For example:
+Using `terraform import`, import SageMaker AI Devices using the `device-fleet-name/device-name`. For example:
 
 ```console
 % terraform import aws_sagemaker_device.example my-fleet/my-device

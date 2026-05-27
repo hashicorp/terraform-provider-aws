@@ -38,7 +38,6 @@ resource "aws_waf_rule_group" "example" {
 This resource supports the following arguments:
 
 * `name` - (Optional) Name of the rule group. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `metric_name` - (Required) A friendly name for the metrics from the rule group
 * `activated_rule` - (Optional) A list of activated rules, see below
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

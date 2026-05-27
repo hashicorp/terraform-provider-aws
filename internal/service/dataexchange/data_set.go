@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dataexchange
 
@@ -17,20 +19,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dataexchange_data_set", name="Data Set")
 // @Tags(identifierAttribute="arn")
-func ResourceDataSet() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,
 		ReadWithoutTimeout:   resourceDataSetRead,
 		UpdateWithoutTimeout: resourceDataSetUpdate,
 		DeleteWithoutTimeout: resourceDataSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -58,11 +62,10 @@ func ResourceDataSet() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -83,13 +86,13 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
-func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
-	dataSet, err := FindDataSetById(ctx, conn, d.Id())
+	dataSet, err := findDataSetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DataExchange DataSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -109,7 +112,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -136,7 +139,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
-func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -154,4 +157,27 @@ func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func findDataSetByID(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetDataSetOutput, error) {
+	input := dataexchange.GetDataSetInput{
+		DataSetId: aws.String(id),
+	}
+	output, err := conn.GetDataSet(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }

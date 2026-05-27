@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,23 +14,24 @@ import (
 
 func testAccUserDataSource_userID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName4 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName5 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
+	secondaryEmail := acctest.RandomEmailAddress(domain)
 	resourceName := "aws_connect_user.test"
 	datasourceName := "data.aws_connect_user.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig_id(rName, rName2, rName3, rName4, rName5, email),
+				Config: testAccUserDataSourceConfig_id(rName, rName2, rName3, rName4, rName5, email, secondaryEmail),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "directory_user_id", resourceName, "directory_user_id"),
@@ -40,6 +40,7 @@ func testAccUserDataSource_userID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.email", resourceName, "identity_info.0.email"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.first_name", resourceName, "identity_info.0.first_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.last_name", resourceName, "identity_info.0.last_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.secondary_email", resourceName, "identity_info.0.secondary_email"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.#", resourceName, "phone_config.#"),
@@ -62,23 +63,24 @@ func testAccUserDataSource_userID(t *testing.T) {
 
 func testAccUserDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	domain := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName4 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName5 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	domain := acctest.RandomDomainName(t)
 	email := acctest.RandomEmailAddress(domain)
+	secondaryEmail := acctest.RandomEmailAddress(domain)
 	resourceName := "aws_connect_user.test"
 	datasourceName := "data.aws_connect_user.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig_name(rName, rName2, rName3, rName4, rName5, email),
+				Config: testAccUserDataSourceConfig_name(rName, rName2, rName3, rName4, rName5, email, secondaryEmail),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "directory_user_id", resourceName, "directory_user_id"),
@@ -87,6 +89,7 @@ func testAccUserDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.email", resourceName, "identity_info.0.email"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.first_name", resourceName, "identity_info.0.first_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.last_name", resourceName, "identity_info.0.last_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.secondary_email", resourceName, "identity_info.0.secondary_email"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.#", resourceName, "phone_config.#"),
@@ -107,7 +110,7 @@ func testAccUserDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email string) string {
+func testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email, secondaryEmail string) string {
 	return acctest.ConfigCompose(
 		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
@@ -124,9 +127,10 @@ resource "aws_connect_user" "test" {
   ]
 
   identity_info {
-    email      = %[2]q
-    first_name = "example"
-    last_name  = "example2"
+    email           = %[2]q
+    first_name      = "example"
+    last_name       = "example2"
+    secondary_email = %[3]q
   }
 
   phone_config {
@@ -140,12 +144,12 @@ resource "aws_connect_user" "test" {
     "Key1" = "Value1",
   }
 }
-`, rName5, email))
+`, rName5, email, secondaryEmail))
 }
 
-func testAccUserDataSourceConfig_id(rName, rName2, rName3, rName4, rName5, email string) string {
+func testAccUserDataSourceConfig_id(rName, rName2, rName3, rName4, rName5, email, secondaryEmail string) string {
 	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email),
+		testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email, secondaryEmail),
 		`
 data "aws_connect_user" "test" {
   instance_id = aws_connect_instance.test.id
@@ -154,9 +158,9 @@ data "aws_connect_user" "test" {
 `)
 }
 
-func testAccUserDataSourceConfig_name(rName, rName2, rName3, rName4, rName5, email string) string {
+func testAccUserDataSourceConfig_name(rName, rName2, rName3, rName4, rName5, email, secondaryEmail string) string {
 	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email),
+		testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email, secondaryEmail),
 		`
 data "aws_connect_user" "test" {
   instance_id = aws_connect_instance.test.id

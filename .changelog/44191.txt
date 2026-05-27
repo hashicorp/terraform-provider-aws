@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_flow_log: Fix `Error decoding ... from prior state: unsupported attribute "log_group_name"` errors when upgrading from a pre-v6.0.0 provider version
+```

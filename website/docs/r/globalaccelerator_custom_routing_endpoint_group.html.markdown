@@ -14,7 +14,7 @@ Provides a Global Accelerator custom routing endpoint group.
 
 ```terraform
 resource "aws_globalaccelerator_custom_routing_endpoint_group" "example" {
-  listener_arn = aws_globalaccelerator_custom_routing_listener.example.id
+  listener_arn = aws_globalaccelerator_custom_routing_listener.example.arn
 
   destination_configuration {
     from_port = 80
@@ -63,6 +63,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_custom_routing_endpoint_group.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh/listener/0123vxyz/endpoint-group/098765zyxwvu"
+  }
+}
+
+resource "aws_globalaccelerator_custom_routing_endpoint_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator custom routing endpoint group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing endpoint groups using the `id`. For example:
 

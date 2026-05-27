@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -47,7 +49,7 @@ func dataSourceOriginAccessIdentities() *schema.Resource {
 	}
 }
 
-func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -82,7 +84,7 @@ func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.Resourc
 
 	for _, v := range output {
 		id := aws.ToString(v.Id)
-		iamARNs = append(iamARNs, originAccessIdentityARN(ctx, meta.(*conns.AWSClient), id))
+		iamARNs = append(iamARNs, originAccessIdentityIAMUserARN(ctx, meta.(*conns.AWSClient), id))
 		ids = append(ids, id)
 		s3CanonicalUserIDs = append(s3CanonicalUserIDs, aws.ToString(v.S3CanonicalUserId))
 	}

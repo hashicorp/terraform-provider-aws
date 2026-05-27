@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -25,10 +25,12 @@ func TestAccAmplify_serial(t *testing.T) {
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
 			"BuildSpec":                testAccApp_BuildSpec,
 			"CacheConfig":              testAccApp_CacheConfig,
+			"ComputeRole":              testAccApp_ComputeRole,
 			"CustomRules":              testAccApp_CustomRules,
 			"Description":              testAccApp_Description,
 			"EnvironmentVariables":     testAccApp_EnvironmentVariables,
 			"IamServiceRole":           testAccApp_IAMServiceRole,
+			"JobConfig":                testAccApp_JobConfig,
 			"Name":                     testAccApp_Name,
 			"Repository":               testAccApp_Repository,
 		},
@@ -46,10 +48,12 @@ func TestAccAmplify_serial(t *testing.T) {
 			"OptionalArguments":    testAccBranch_OptionalArguments,
 		},
 		"DomainAssociation": {
-			acctest.CtBasic:       testAccDomainAssociation_basic,
-			"certificateSettings": testAccDomainAssociation_certificateSettings,
-			acctest.CtDisappears:  testAccDomainAssociation_disappears,
-			"update":              testAccDomainAssociation_update,
+			acctest.CtBasic:               testAccDomainAssociation_basic,
+			"certificateSettings_Managed": testAccDomainAssociation_certificateSettings_Managed,
+			"certificateSettings_Custom":  testAccDomainAssociation_certificateSettings_Custom,
+			acctest.CtDisappears:          testAccDomainAssociation_disappears,
+			"update":                      testAccDomainAssociation_update,
+			"createWithSubdomain":         testAccDomainAssociation_CreateWithSubdomain,
 		},
 		"Webhook": {
 			acctest.CtBasic:      testAccWebhook_basic,

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
@@ -11,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,15 +62,15 @@ func resourceGroupTag() *schema.Resource {
 	}
 }
 
-func resourceGroupTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+func resourceGroupTagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	identifier := d.Get("autoscaling_group_name").(string)
-	tags := d.Get("tag").([]interface{})
-	key := tags[0].(map[string]interface{})[names.AttrKey].(string)
+	tags := d.Get("tag").([]any)
+	key := tags[0].(map[string]any)[names.AttrKey].(string)
 
-	if err := updateTags(ctx, conn, identifier, TagResourceTypeGroup, nil, tags); err != nil {
+	if err := updateTags(ctx, conn, identifier, tagResourceTypeGroup, nil, tags); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 
@@ -77,7 +79,7 @@ func resourceGroupTagCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceGroupTagRead(ctx, d, meta)...)
 }
 
-func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
@@ -86,9 +88,9 @@ func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 
-	value, err := findTag(ctx, conn, identifier, TagResourceTypeGroup, key)
+	value, err := findTag(ctx, conn, identifier, tagResourceTypeGroup, key)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AutoScaling Group (%s) tag (%s), removing from state", identifier, key)
 		d.SetId("")
 		return diags
@@ -100,7 +102,7 @@ func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("autoscaling_group_name", identifier)
 
-	if err := d.Set("tag", []map[string]interface{}{{
+	if err := d.Set("tag", []map[string]any{{
 		names.AttrKey:         key,
 		names.AttrValue:       value.Value,
 		"propagate_at_launch": value.AdditionalBoolFields["PropagateAtLaunch"],
@@ -111,7 +113,7 @@ func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceGroupTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
@@ -120,14 +122,14 @@ func resourceGroupTagUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "updating AutoScaling Group Tag (%s): %s", d.Id(), err)
 	}
 
-	if err := updateTags(ctx, conn, identifier, TagResourceTypeGroup, nil, d.Get("tag")); err != nil {
+	if err := updateTags(ctx, conn, identifier, tagResourceTypeGroup, nil, d.Get("tag")); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 
 	return append(diags, resourceGroupTagRead(ctx, d, meta)...)
 }
 
-func resourceGroupTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
@@ -136,7 +138,7 @@ func resourceGroupTagDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting AutoScaling Group Tag (%s): %s", d.Id(), err)
 	}
 
-	if err := updateTags(ctx, conn, identifier, TagResourceTypeGroup, d.Get("tag"), nil); err != nil {
+	if err := updateTags(ctx, conn, identifier, tagResourceTypeGroup, d.Get("tag"), nil); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 

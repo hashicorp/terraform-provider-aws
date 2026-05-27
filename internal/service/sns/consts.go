@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns
@@ -51,7 +51,7 @@ const (
 func subscriptionProtocol_Values() []string {
 	return []string{
 		subscriptionProtocolApplication,
-		names.AttrEmail,
+		subscriptionProtocolEmail,
 		subscriptionProtocolEmailJSON,
 		subscriptionProtocolFirehose,
 		subscriptionProtocolHTTP,
@@ -89,6 +89,7 @@ const (
 	topicAttributeNameDeliveryPolicy                       = "DeliveryPolicy"
 	topicAttributeNameDisplayName                          = "DisplayName"
 	topicAttributeNameFIFOTopic                            = "FifoTopic"
+	topicAttributeNameFIFOThroughputScope                  = "FifoThroughputScope"
 	topicAttributeNameFirehoseFailureFeedbackRoleARN       = "FirehoseFailureFeedbackRoleArn"
 	topicAttributeNameFirehoseSuccessFeedbackRoleARN       = "FirehoseSuccessFeedbackRoleArn"
 	topicAttributeNameFirehoseSuccessFeedbackSampleRate    = "FirehoseSuccessFeedbackSampleRate"
@@ -134,5 +135,17 @@ func topicTracingConfig_Values() []string {
 	return []string{
 		topicTracingConfigActive,
 		topicTracingConfigPassThrough,
+	}
+}
+
+const (
+	topicFIFOThroughputScopeTopic        = "Topic"
+	topicFIFOThroughputScopeMessageGroup = "MessageGroup"
+)
+
+func topicFIFOThroughputScope_Values() []string {
+	return []string{
+		topicFIFOThroughputScopeTopic,
+		topicFIFOThroughputScopeMessageGroup,
 	}
 }

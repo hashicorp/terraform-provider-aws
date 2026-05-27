@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `point_in_time_recovery.recovery_period_in_days` argument
+```
+
+```release-note:enhancement
+data-source/aws_dynamodb_table: Add `point_in_time_recovery.recovery_period_in_days` attribute
+```

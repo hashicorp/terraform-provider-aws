@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_appsync_api
+```
+
+```release-note:new-resource
+aws_appsync_channel_namespace
+```

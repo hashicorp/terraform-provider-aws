@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -8,37 +8,36 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var keyvaluestore awstypes.KeyValueStore
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_value_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyValueStoreConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &keyvaluestore),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "key-value-store/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
@@ -48,6 +47,7 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify: true,
 			},
 		},
@@ -56,26 +56,34 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var keyvaluestore awstypes.KeyValueStore
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_value_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyValueStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyValueStore, resourceName),
+					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &keyvaluestore),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceKeyValueStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -83,53 +91,60 @@ func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var keyvaluestore awstypes.KeyValueStore
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_value_store.test"
 	comment1 := "comment1"
 	comment2 := "comment2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyValueStoreConfig_comment(rName, comment1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
+					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &keyvaluestore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, comment1),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccKeyValueStoreConfig_comment(rName, comment2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
+					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &keyvaluestore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, comment2),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckKeyValueStoreDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeyValueStoreDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_key_value_store" {
 				continue
 			}
 
-			_, err := tfcloudfront.FindKeyValueStoreByName(ctx, conn, rs.Primary.ID)
+			_, err := tfcloudfront.FindKeyValueStoreByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -137,29 +152,29 @@ func testAccCheckKeyValueStoreDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			return fmt.Errorf("CloudFront Key Value Store %s still exists", rs.Primary.ID)
+			return fmt.Errorf("CloudFront Key Value Store %q still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckKeyValueStoreExists(ctx context.Context, n string, v *cloudfront.DescribeKeyValueStoreOutput) resource.TestCheckFunc {
+func testAccCheckKeyValueStoreExists(ctx context.Context, t *testing.T, n string, v *awstypes.KeyValueStore) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
-		output, err := tfcloudfront.FindKeyValueStoreByName(ctx, conn, rs.Primary.ID)
+		output, err := tfcloudfront.FindKeyValueStoreByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
 		}
 
-		*v = *output
+		*v = *output.KeyValueStore
 
 		return nil
 	}

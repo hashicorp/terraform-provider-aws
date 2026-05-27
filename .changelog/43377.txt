@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lakeformation_resource: Support `with_privileged_access` argument
+```
+
+```release-note:enhancement
+data-source/aws_lakeformation_resource: Support `hybrid_access_enabled`, `with_federation` and `with_privileged_access` attributes
+```

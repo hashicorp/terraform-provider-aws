@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -8,10 +8,8 @@ import (
 )
 
 const (
-	TableNameAllTables        = "ALL_TABLES"
-	TableTypeTable            = "Table"
-	TableTypeTableWithColumns = "TableWithColumns"
-	IAMAllowedPrincipals      = "IAM_ALLOWED_PRINCIPALS"
+	TableNameAllTables   = "ALL_TABLES"
+	IAMAllowedPrincipals = "IAM_ALLOWED_PRINCIPALS"
 )
 
 const (

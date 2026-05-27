@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_identitystore_user: Add `user_status` attribute
+```
+
+```release-note:enhancement
+data-source/aws_identitystore_user: Add `user_status` attribute
+```
+
+```release-note:enhancement
+data-source/aws_identitystore_users: Add `user_status` attribute
+```

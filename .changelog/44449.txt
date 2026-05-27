@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_servicequotas_service_quota: Fixed a panic that occurred when a non-existing `quota_name` was provided
+```

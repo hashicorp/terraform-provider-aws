@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -25,11 +27,7 @@ func newCapacityBlockOfferingDataSource(_ context.Context) (datasource.DataSourc
 }
 
 type capacityBlockOfferingDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*capacityBlockOfferingDataSource) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ec2_capacity_block_offering"
+	framework.DataSourceWithModel[capacityBlockOfferingDataSourceModel]
 }
 
 func (d *capacityBlockOfferingDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -80,13 +78,13 @@ func (d *capacityBlockOfferingDataSource) Read(ctx context.Context, request data
 
 	conn := d.Meta().EC2Client(ctx)
 
-	input := &ec2.DescribeCapacityBlockOfferingsInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.DescribeCapacityBlockOfferingsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := findCapacityBlockOffering(ctx, conn, input)
+	output, err := findCapacityBlockOffering(ctx, conn, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Capacity Block Offering (%s)", data.InstanceType.ValueString()), err.Error())
@@ -103,6 +101,7 @@ func (d *capacityBlockOfferingDataSource) Read(ctx context.Context, request data
 }
 
 type capacityBlockOfferingDataSourceModel struct {
+	framework.WithRegionModel
 	AvailabilityZone        types.String      `tfsdk:"availability_zone"`
 	CapacityDurationHours   types.Int64       `tfsdk:"capacity_duration_hours"`
 	CurrencyCode            types.String      `tfsdk:"currency_code"`

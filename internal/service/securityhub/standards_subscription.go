@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -14,27 +16,33 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_standards_subscription", name="Standards Subscription")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsSubscription")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
 func resourceStandardsSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStandardsSubscriptionCreate,
 		ReadWithoutTimeout:   resourceStandardsSubscriptionRead,
 		DeleteWithoutTimeout: resourceStandardsSubscriptionDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"standards_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -42,21 +50,25 @@ func resourceStandardsSubscription() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
 	}
 }
 
-func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	standardsARN := d.Get("standards_arn").(string)
-	input := &securityhub.BatchEnableStandardsInput{
+	input := securityhub.BatchEnableStandardsInput{
 		StandardsSubscriptionRequests: []types.StandardsSubscriptionRequest{{
 			StandardsArn: aws.String(standardsARN),
 		}},
 	}
 
-	output, err := conn.BatchEnableStandards(ctx, input)
+	output, err := conn.BatchEnableStandards(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Standards Subscription (%s): %s", standardsARN, err)
@@ -64,20 +76,20 @@ func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(output.StandardsSubscriptions[0].StandardsSubscriptionArn))
 
-	if _, err := waitStandardsSubscriptionCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitStandardsSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Standards Subscription (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceStandardsSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	output, err := findStandardsSubscriptionByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -87,25 +99,27 @@ func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Subscription (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, output.StandardsSubscriptionArn)
 	d.Set("standards_arn", output.StandardsArn)
 
 	return diags
 }
 
-func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Standards Subscription: %s", d.Id())
-	_, err := conn.BatchDisableStandards(ctx, &securityhub.BatchDisableStandardsInput{
+	input := securityhub.BatchDisableStandardsInput{
 		StandardsSubscriptionArns: []string{d.Id()},
-	})
+	}
+	_, err := conn.BatchDisableStandards(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling Security Hub Standard (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStandardsSubscriptionDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitStandardsSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Standards Subscription (%s) delete: %s", d.Id(), err)
 	}
 
@@ -113,11 +127,11 @@ func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.Resource
 }
 
 func findStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
-	input := &securityhub.GetEnabledStandardsInput{
+	input := securityhub.GetEnabledStandardsInput{
 		StandardsSubscriptionArns: []string{arn},
 	}
 
-	output, err := findStandardsSubscription(ctx, conn, input)
+	output, err := findStandardsSubscription(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -125,8 +139,7 @@ func findStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.Clien
 
 	if status := output.StandardsStatus; status == types.StandardsStatusFailed {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
@@ -152,8 +165,7 @@ func findStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, i
 
 		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -167,11 +179,11 @@ func findStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, i
 	return output, nil
 }
 
-func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusStandardsSubscriptionCreate(conn *securityhub.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -183,11 +195,11 @@ func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Cl
 	}
 }
 
-func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusStandardsSubscriptionDelete(conn *securityhub.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -203,14 +215,11 @@ func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Cl
 	}
 }
 
-func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
-	const (
-		timeout = 3 * time.Minute
-	)
+func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Client, arn string, timeout time.Duration) (*types.StandardsSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StandardsStatusPending),
 		Target:  enum.Slice(types.StandardsStatusReady, types.StandardsStatusIncomplete),
-		Refresh: statusStandardsSubscriptionCreate(ctx, conn, arn),
+		Refresh: statusStandardsSubscriptionCreate(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -218,7 +227,7 @@ func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Cli
 
 	if output, ok := outputRaw.(*types.StandardsSubscription); ok {
 		if reason := output.StandardsStatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(string(reason.StatusReasonCode)))
+			retry.SetLastError(err, errors.New(string(reason.StatusReasonCode)))
 		}
 
 		return output, err
@@ -227,14 +236,11 @@ func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Cli
 	return nil, err
 }
 
-func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
-	const (
-		timeout = 3 * time.Minute
-	)
+func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.Client, arn string, timeout time.Duration) (*types.StandardsSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StandardsStatusDeleting),
 		Target:  []string{},
-		Refresh: statusStandardsSubscriptionDelete(ctx, conn, arn),
+		Refresh: statusStandardsSubscriptionDelete(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -242,7 +248,7 @@ func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.Cli
 
 	if output, ok := outputRaw.(*types.StandardsSubscription); ok {
 		if reason := output.StandardsStatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(string(reason.StatusReasonCode)))
+			retry.SetLastError(err, errors.New(string(reason.StatusReasonCode)))
 		}
 
 		return output, err

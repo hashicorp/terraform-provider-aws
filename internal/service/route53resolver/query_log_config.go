@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -66,18 +68,16 @@ func resourceQueryLogConfig() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
-		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
+		CreatorRequestId: aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
 		DestinationArn:   aws.String(d.Get(names.AttrDestinationARN).(string)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
@@ -98,13 +98,13 @@ func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceQueryLogConfigRead(ctx, d, meta)...)
 }
 
-func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	queryLogConfig, err := findResolverQueryLogConfigByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Query Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -123,12 +123,12 @@ func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceQueryLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceQueryLogConfigRead(ctx, d, meta)
 }
 
-func resourceQueryLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -161,8 +161,7 @@ func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.C
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -171,17 +170,17 @@ func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.C
 	}
 
 	if output == nil || output.ResolverQueryLogConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverQueryLogConfig, nil
 }
 
-func statusQueryLogConfig(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusQueryLogConfig(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverQueryLogConfigByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -202,7 +201,7 @@ func waitQueryLogConfigCreated(ctx context.Context, conn *route53resolver.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigStatusCreating),
 		Target:  enum.Slice(awstypes.ResolverQueryLogConfigStatusCreated),
-		Refresh: statusQueryLogConfig(ctx, conn, id),
+		Refresh: statusQueryLogConfig(conn, id),
 		Timeout: queryLogConfigCreatedTimeout,
 	}
 
@@ -219,7 +218,7 @@ func waitQueryLogConfigDeleted(ctx context.Context, conn *route53resolver.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigStatusDeleting),
 		Target:  []string{},
-		Refresh: statusQueryLogConfig(ctx, conn, id),
+		Refresh: statusQueryLogConfig(conn, id),
 		Timeout: queryLogConfigDeletedTimeout,
 	}
 

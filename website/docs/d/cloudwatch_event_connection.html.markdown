@@ -22,16 +22,16 @@ data "aws_cloudwatch_event_connection" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - Name of the connection.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `name` - Name of the connection.
-
-* `arn` - ARN (Amazon Resource Name) for the connection.
-
-* `secret_arn` - ARN (Amazon Resource Name) for the secret created from the authorization parameters specified for the connection.
-
-* `authorization_type` - Type of authorization to use to connect. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
+* `arn` - ARN (Amazon Resource Name) of the connection.
+* `authorization_type` - Type of authorization specified for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt the connection, if one has been specified.
+* `secret_arn` - ARN of the secret created from the authorization parameters specified for the connection.

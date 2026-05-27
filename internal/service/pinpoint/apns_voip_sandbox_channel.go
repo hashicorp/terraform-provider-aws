@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package pinpoint
 
@@ -11,11 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -80,7 +82,7 @@ func resourceAPNSVoIPSandboxChannel() *schema.Resource {
 	}
 }
 
-func resourceAPNSVoIPSandboxChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSVoIPSandboxChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	certificate, certificateOk := d.GetOk(names.AttrCertificate)
 	privateKey, privateKeyOk := d.GetOk(names.AttrPrivateKey)
@@ -118,7 +120,7 @@ func resourceAPNSVoIPSandboxChannelUpsert(ctx context.Context, d *schema.Resourc
 
 	_, err := conn.UpdateApnsVoipSandboxChannel(ctx, &req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint APNS VoIP Sandbox Channel for Application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "updating End User Messaging APNS VoIP Sandbox Channel for Application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -126,22 +128,22 @@ func resourceAPNSVoIPSandboxChannelUpsert(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAPNSVoIPSandboxChannelRead(ctx, d, meta)...)
 }
 
-func resourceAPNSVoIPSandboxChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSVoIPSandboxChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint APNS VoIP Sandbox Channel for Application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging APNS VoIP Sandbox Channel for Application %s", d.Id())
 
 	output, err := findAPNSVoIPSandboxChannelByApplicationId(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Pinpoint APNS VoIP Sandbox Channel (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] End User Messaging APNS VoIP Sandbox Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint APNS VoIP Sandbox Channel (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging APNS VoIP Sandbox Channel (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
@@ -152,11 +154,11 @@ func resourceAPNSVoIPSandboxChannelRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceAPNSVoIPSandboxChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSVoIPSandboxChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint APNS VoIP Sandbox Channel: %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging APNS VoIP Sandbox Channel: %s", d.Id())
 	_, err := conn.DeleteApnsVoipSandboxChannel(ctx, &pinpoint.DeleteApnsVoipSandboxChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -166,7 +168,7 @@ func resourceAPNSVoIPSandboxChannelDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint APNS VoIP Sandbox Channel for Application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging APNS VoIP Sandbox Channel for Application %s: %s", d.Id(), err)
 	}
 	return diags
 }
@@ -179,8 +181,7 @@ func findAPNSVoIPSandboxChannelByApplicationId(ctx context.Context, conn *pinpoi
 	output, err := conn.GetApnsVoipSandboxChannel(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -188,7 +189,7 @@ func findAPNSVoIPSandboxChannelByApplicationId(ctx context.Context, conn *pinpoi
 	}
 
 	if output == nil || output.APNSVoipSandboxChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.APNSVoipSandboxChannelResponse, nil

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -13,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_verifiedaccess_instance_trust_provider_attachment", name="Verified Access Instance Trust Provider Attachment")
@@ -46,7 +48,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
 	}
 }
 
-func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -54,7 +56,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Con
 	vatpID := d.Get("verifiedaccess_trust_provider_id").(string)
 	resourceID := verifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID)
 	input := &ec2.AttachVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(id.UniqueId()),
+		ClientToken:                   aws.String(create.UniqueId(ctx)),
 		VerifiedAccessInstanceId:      aws.String(vaiID),
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
 	}
@@ -70,7 +72,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Con
 	return append(diags, resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -81,7 +83,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Conte
 
 	err = findVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, vaiID, vatpID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Trust Provider Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -97,7 +99,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Conte
 	return diags
 }
 
-func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -107,11 +109,12 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Con
 	}
 
 	log.Printf("[INFO] Deleting Verified Access Instance Trust Provider Attachment: %s", d.Id())
-	_, err = conn.DetachVerifiedAccessTrustProvider(ctx, &ec2.DetachVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(id.UniqueId()),
+	input := ec2.DetachVerifiedAccessTrustProviderInput{
+		ClientToken:                   aws.String(create.UniqueId(ctx)),
 		VerifiedAccessInstanceId:      aws.String(vaiID),
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
-	})
+	}
+	_, err = conn.DetachVerifiedAccessTrustProvider(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) ||
 		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not attached to instance") {

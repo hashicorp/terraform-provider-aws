@@ -123,6 +123,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `egress` - (Optional) Configuration block for an egress rule. Detailed below.
 * `ingress` - (Optional) Configuration block for an ingress rule. Detailed below.
 * `subnet_ids` - (Optional) List of Subnet IDs to apply the ACL to. See the notes above on Managing Subnets in the Default Network ACL
@@ -142,6 +143,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Optional) The CIDR block to match. This must be a valid network mask.
 * `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
 * `icmp_type` - (Optional) The ICMP type to be used. Default 0.

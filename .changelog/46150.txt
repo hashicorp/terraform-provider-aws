@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3tables_table_bucket: Change `encryption_configuration` to Optional and Computed, fixing `unexpected new value: .encryption_configuration: was null, but now cty.ObjectVal(map[string]cty.Value{"kms_key_arn":cty.NullVal(cty.String),"sse_algorithm":cty.StringVal("AES256")})` errors
+```

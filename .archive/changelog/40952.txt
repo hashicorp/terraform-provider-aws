@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ssm_parameter: Add `value_wo` write-only attribute
+```

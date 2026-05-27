@@ -1,10 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
 import (
 	"context"
+	"encoding/base64"
 	"regexp"
 	"strings"
 	"time"
@@ -15,11 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,6 +41,10 @@ func dataSourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"body": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"body_base64": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,6 +70,10 @@ func dataSourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc64nvme": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,6 +104,11 @@ func dataSourceObject() *schema.Resource {
 			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"download_body": {
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"etag": {
 				Type:     schema.TypeString,
@@ -159,21 +177,23 @@ func dataSourceObject() *schema.Resource {
 	}
 }
 
-func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	var optFns []func(*s3.Options)
 
 	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
+
+	var optFns []func(*s3.Options)
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
-	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
+
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
-	input := &s3.HeadObjectInput{
+	input := s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
@@ -187,7 +207,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.VersionId = aws.String(v.(string))
 	}
 
-	output, err := findObject(ctx, conn, input, optFns...)
+	output, err := findObject(ctx, conn, &input, optFns...)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
@@ -213,6 +233,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
 	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_crc64nvme", output.ChecksumCRC64NVME)
 	d.Set("checksum_sha1", output.ChecksumSHA1)
 	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
@@ -244,25 +265,41 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
 
-	if isContentTypeAllowed(output.ContentType) {
+	downloadBody, downloadBodyNull, err := nullable.Bool(d.Get("download_body").(string)).ValueBool()
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+
+	// skip object download if download_body is explicitly set to false
+	if !downloadBodyNull && !downloadBody {
+		return diags
+	}
+
+	if downloadBody || isContentTypeAllowed(output.ContentType) {
 		downloader := manager.NewDownloader(conn, manager.WithDownloaderClientOptions(optFns...))
 		buf := manager.NewWriteAtBuffer(make([]byte, 0))
-		input := &s3.GetObjectInput{
+		inputObjectDownload := s3.GetObjectInput{
 			Bucket:    aws.String(bucket),
 			Key:       aws.String(key),
 			VersionId: output.VersionId,
 		}
 		if v, ok := d.GetOk("range"); ok {
-			input.Range = aws.String(v.(string))
+			inputObjectDownload.Range = aws.String(v.(string))
 		}
 
-		_, err := downloader.Download(ctx, buf, input)
-
+		_, err = downloader.Download(ctx, buf, &inputObjectDownload)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "downloading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 		}
 
-		d.Set("body", string(buf.Bytes()))
+		if downloadBody {
+			base64Body := base64.StdEncoding.EncodeToString(buf.Bytes())
+			d.Set("body_base64", base64Body)
+		}
+
+		if isContentTypeAllowed(output.ContentType) {
+			d.Set("body", string(buf.Bytes()))
+		}
 	}
 
 	return diags
@@ -285,6 +322,7 @@ func isContentTypeAllowed(contentType *string) bool {
 		regexache.MustCompile(`^application/xhtml\+xml$`),
 		regexache.MustCompile(`^application/xml$`),
 		regexache.MustCompile(`^application/x-sql$`),
+		regexache.MustCompile(`^application/yaml$`),
 		regexache.MustCompile(`^text/.+`),
 	}
 	for _, r := range allowedContentTypes {

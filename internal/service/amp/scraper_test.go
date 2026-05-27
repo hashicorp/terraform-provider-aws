@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,23 +28,26 @@ func TestAccAMPScraper_basic(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "scraper/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(scraper.ScraperId))(s)
+					},
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
@@ -69,22 +72,66 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper, resourceName),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceScraper, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_vpcConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_vpcConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.0.subnet_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -98,20 +145,34 @@ func TestAccAMPScraper_alias(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	aliasName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	aliasName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_alias(rName),
+				Config: testAccScraperConfig_alias(rName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, aliasName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_alias(rName, aliasName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, aliasName2),
 				),
 			},
 			{
@@ -131,19 +192,19 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
 				),
 			},
@@ -155,10 +216,59 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 		},
 	})
 }
+func TestAccAMPScraper_roleConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
 
-func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_roleConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					resource.TestCheckResourceAttrSet(resourceName, "role_configuration.0.source_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_configuration.0.target_role_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_alias(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "role_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckScraperDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_scraper" {
@@ -167,7 +277,7 @@ func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -182,14 +292,14 @@ func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckScraperExists(ctx context.Context, n string, v *types.ScraperDescription) resource.TestCheckFunc {
+func testAccCheckScraperExists(ctx context.Context, t *testing.T, n string, v *types.ScraperDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		output, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
 
@@ -204,11 +314,11 @@ func testAccCheckScraperExists(ctx context.Context, n string, v *types.ScraperDe
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
-	input := &amp.ListScrapersInput{}
+	input := amp.ListScrapersInput{}
 
-	_, err := conn.ListScrapers(ctx, input)
+	_, err := conn.ListScrapers(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -373,11 +483,11 @@ resource "aws_prometheus_scraper" "test" {
 `, scrapeConfigBlob))
 }
 
-func testAccScraperConfig_alias(rName string) string {
+func testAccScraperConfig_alias(rName, alias string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-  alias                = %[1]q
-  scrape_configuration = %[2]q
+  alias                = %[2]q
+  scrape_configuration = %[3]q
 
   source {
     eks {
@@ -392,7 +502,7 @@ resource "aws_prometheus_scraper" "test" {
     }
   }
 }
-`, rName, scrapeConfigBlob))
+`, rName, alias, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_securityGroups(rName string) string {
@@ -416,4 +526,187 @@ resource "aws_prometheus_scraper" "test" {
   }
 }
 `, rName, scrapeConfigBlob))
+}
+
+func testAccScraperConfig_roleConfiguration(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), testAccScraperConfig_base(rName), fmt.Sprintf(`
+resource "aws_prometheus_workspace" "target" {
+  provider = "awsalternate"
+
+  alias = %[1]q
+
+  tags = {
+    AMPAgentlessScraper = ""
+  }
+}
+
+resource "aws_iam_role" "source" {
+  name = "%[1]s-source"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "scraper.aps.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role" "target" {
+  provider = "awsalternate"
+
+  name = "%[1]s-target"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.source.arn}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "target" {
+  provider = "awsalternate"
+
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonPrometheusRemoteWriteAccess"
+  role       = aws_iam_role.target.name
+}
+
+resource "aws_prometheus_scraper" "test" {
+  alias                = %[1]q
+  scrape_configuration = %[2]q
+
+  source {
+    eks {
+      cluster_arn = aws_eks_cluster.test.arn
+      subnet_ids  = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.target.arn
+    }
+  }
+
+  role_configuration {
+    source_role_arn = aws_iam_role.source.arn
+    target_role_arn = aws_iam_role.target.arn
+  }
+}
+`, rName, scrapeConfigBlob))
+}
+
+func testAccScraperConfig_vpcConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = "%[1]s.local"
+  vpc  = aws_vpc.test.id
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = %[1]q
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+  }
+}
+
+resource "aws_prometheus_scraper" "test" {
+  alias = %[1]q
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+
+scrape_configs:
+  - job_name: 'test-service'
+    dns_sd_configs:
+      - names: ['${aws_service_discovery_service.test.name}.${aws_service_discovery_private_dns_namespace.test.name}']
+        type: A
+        port: 80
+    metrics_path: '/metrics'
+    relabel_configs:
+      - target_label: service_name
+        replacement: 'test-service'
+      - target_label: discovery_method
+        replacement: 'cloudmap-dns'
+EOT
+
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.test.id]
+      subnet_ids         = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccScraperConfig_baseVPC(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.1.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_prometheus_workspace" "test" {
+  alias = %[1]q
+
+  tags = {
+    AMPAgentlessScraper = ""
+  }
+}
+`, rName))
 }

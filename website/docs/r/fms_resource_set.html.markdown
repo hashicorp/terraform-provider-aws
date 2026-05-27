@@ -25,8 +25,9 @@ resource "aws_fms_resource_set" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_set` - (Required) Details about the resource set to be created or updated. See [`resource_set` Attribute Reference](#resource_set-attribute-reference) below.
 
 ### `resource_set` Attribute Reference
@@ -35,7 +36,7 @@ The following arguments are required:
 * `resource_type_list` - (Required) Determines the resources that can be associated to the resource set. Depending on your setting for max results and the number of resource sets, a single call might not return the full list.
 * `description` - (Optional) Description of the resource set.
 * `last_update_time` - (Optional) Last time that the reosurce set was changed.
-* `resource_set_status` - (Optional) Indicates whether the resource set is in or out of the admin's Region scope. Valid values are `ACTIVE` (Admin can manage and delete the resource set) or `OUT_OF_ADMIN_SCOPE` (Admin can view the resource set, but theyy can't edit or delete the resource set.)
+* `resource_set_status` - (Optional) Indicates whether the resource set is in or out of the admin's Region scope. Valid values are `ACTIVE` (Admin can manage and delete the resource set) or `OUT_OF_ADMIN_SCOPE` (Admin can view the resource set, but they can't edit or delete the resource set.)
 
 ## Attribute Reference
 

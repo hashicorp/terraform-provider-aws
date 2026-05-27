@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesis_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,12 +14,12 @@ import (
 
 func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -33,6 +32,7 @@ func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -41,12 +41,12 @@ func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
 
 func TestAccKinesisStreamConsumerDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -67,12 +67,12 @@ func TestAccKinesisStreamConsumerDataSource_name(t *testing.T) {
 
 func TestAccKinesisStreamConsumerDataSource_arn(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -109,6 +109,10 @@ data "aws_kinesis_stream_consumer" "test" {
 resource "aws_kinesis_stream_consumer" "test" {
   name       = %[1]q
   stream_arn = aws_kinesis_stream.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }

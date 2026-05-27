@@ -22,6 +22,8 @@ data "aws_iam_instance_profile" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly IAM instance profile name to match.
 
 ## Attribute Reference

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package neptune
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -89,7 +91,7 @@ func resourceClusterInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      engineNeptune,
+				Default:      defaultEngine,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			names.AttrEngineVersion: {
@@ -148,7 +150,7 @@ func resourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					if val == nil {
 						return ""
 					}
@@ -186,12 +188,10 @@ func resourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -199,7 +199,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	input := &neptune.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
@@ -235,7 +235,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDBInstance(ctx, input)
 	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -252,13 +252,13 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	db, err := findDBInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -313,7 +313,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -347,7 +347,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PromotionTier = aws.Int32(int32(d.Get("promotion_tier").(int)))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -363,7 +363,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -405,9 +405,7 @@ func findDBInstanceByID(ctx context.Context, conn *neptune.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBInstanceIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -432,8 +430,7 @@ func findDBInstances(ctx context.Context, conn *neptune.Client, input *neptune.D
 
 		if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -459,11 +456,11 @@ func findClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.
 	}))
 }
 
-func statusDBInstance(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDBInstance(conn *neptune.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -493,7 +490,7 @@ func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Client, id strin
 			dbInstanceStatusUpgrading,
 		},
 		Target:     []string{dbInstanceStatusAvailable},
-		Refresh:    statusDBInstance(ctx, conn, id),
+		Refresh:    statusDBInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -515,7 +512,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *neptune.Client, id string,
 			dbInstanceStatusDeleting,
 		},
 		Target:     []string{},
-		Refresh:    statusDBInstance(ctx, conn, id),
+		Refresh:    statusDBInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

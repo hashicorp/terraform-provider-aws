@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -12,13 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,19 +27,19 @@ func TestAccAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -77,19 +76,19 @@ func TestAccAPIGatewayV2Stage_basicHTTP(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_basicHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -126,19 +125,19 @@ func TestAccAPIGatewayV2Stage_defaultHTTPStage(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_defaultHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -175,19 +174,19 @@ func TestAccAPIGatewayV2Stage_autoDeployHTTP(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_autoDeployHTTP(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -211,8 +210,8 @@ func TestAccAPIGatewayV2Stage_autoDeployHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_autoDeployHTTP(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtTrue),
@@ -251,22 +250,30 @@ func TestAccAPIGatewayV2Stage_disappears(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceStage(), resourceName),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -279,19 +286,19 @@ func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	cloudWatchResourceName := "aws_cloudwatch_log_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_accessLogSettings(rName, "$context.identity.sourceIp $context.requestId"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", "$context.identity.sourceIp $context.requestId"),
@@ -323,8 +330,8 @@ func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 			{
 				Config: testAccStageConfig_accessLogSettings(rName, "$context.requestId"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", "$context.requestId"),
@@ -355,19 +362,19 @@ func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	certificateResourceName := "aws_api_gateway_client_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_clientCertificateIdAndDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -397,8 +404,8 @@ func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 			{
 				Config: testAccStageConfig_clientCertificateIdAndDescriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -429,19 +436,19 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_defaultRouteSettingsWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -465,8 +472,8 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_defaultRouteSettingsWebSocketUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -496,8 +503,8 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
@@ -525,19 +532,19 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_defaultRouteSettingsHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -561,8 +568,8 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_defaultRouteSettingsHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -592,8 +599,8 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
@@ -622,19 +629,19 @@ func TestAccAPIGatewayV2Stage_deployment(t *testing.T) {
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	deploymentResourceName := "aws_apigatewayv2_deployment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_deployment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -671,19 +678,19 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_routeSettingsWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -722,8 +729,8 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_routeSettingsWebSocketUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -775,8 +782,8 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
@@ -804,19 +811,19 @@ func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_routeSettingsHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -847,8 +854,8 @@ func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_routeSettingsHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -885,8 +892,8 @@ func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
@@ -914,19 +921,19 @@ func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_routeSettingsHTTPRoute(rName, "GET /first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -957,8 +964,8 @@ func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 			{
 				Config: testAccStageConfig_routeSettingsHTTPRoute(rName, "POST /second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -1002,19 +1009,19 @@ func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 	var v apigatewayv2.GetStageOutput
 	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
+		CheckDestroy:             testAccCheckStageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStageConfig_variables(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, apiResourceName, &api),
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckAPIExists(ctx, t, apiResourceName, &api),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
@@ -1046,7 +1053,7 @@ func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &v),
+					testAccCheckStageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
@@ -1068,9 +1075,9 @@ func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 	})
 }
 
-func testAccCheckStageDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStageDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_stage" {
@@ -1079,7 +1086,7 @@ func testAccCheckStageDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigatewayv2.FindStageByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1094,14 +1101,14 @@ func testAccCheckStageDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckStageExists(ctx context.Context, n string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
+func testAccCheckStageExists(ctx context.Context, t *testing.T, n string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		output, err := tfapigatewayv2.FindStageByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 
@@ -1486,9 +1493,10 @@ resource "aws_apigatewayv2_stage" "test" {
 
 // testAccPreCheckAPIGatewayAccountCloudWatchRoleARN checks whether a CloudWatch role ARN has been configured in the current AWS region.
 func testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
-	output, err := conn.GetAccount(ctx, &apigateway.GetAccountInput{})
+	input := apigateway.GetAccountInput{}
+	output, err := conn.GetAccount(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping tests: %s", err)

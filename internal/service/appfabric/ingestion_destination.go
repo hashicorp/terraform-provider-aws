@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appfabric
 
@@ -26,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -34,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,13 +58,9 @@ func newIngestionDestinationResource(context.Context) (resource.ResourceWithConf
 }
 
 type ingestionDestinationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[ingestionDestinationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*ingestionDestinationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_ingestion_destination"
 }
 
 func (r *ingestionDestinationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -280,7 +278,7 @@ func (r *ingestionDestinationResource) Read(ctx context.Context, request resourc
 
 	output, err := findIngestionDestinationByThreePartKey(ctx, conn, data.AppBundleARN.ValueString(), data.IngestionARN.ValueString(), data.ARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -354,11 +352,12 @@ func (r *ingestionDestinationResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteIngestionDestination(ctx, &appfabric.DeleteIngestionDestinationInput{
+	input := appfabric.DeleteIngestionDestinationInput{
 		AppBundleIdentifier:            data.AppBundleARN.ValueStringPointer(),
 		IngestionDestinationIdentifier: data.ARN.ValueStringPointer(),
 		IngestionIdentifier:            data.IngestionARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteIngestionDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -386,10 +385,6 @@ func (r *ingestionDestinationResource) ConfigValidators(context.Context) []resou
 	}
 }
 
-func (r *ingestionDestinationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) (*awstypes.IngestionDestination, error) {
 	input := &appfabric.GetIngestionDestinationInput{
 		AppBundleIdentifier:            aws.String(appBundleARN),
@@ -401,8 +396,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -411,17 +405,17 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	}
 
 	if output == nil || output.IngestionDestination == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IngestionDestination, nil
 }
 
-func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIngestionDestination(conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -437,14 +431,14 @@ func waitIngestionDestinationActive(ctx context.Context, conn *appfabric.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.IngestionDestinationStatusActive),
-		Refresh: statusIngestionDestination(ctx, conn, appBundleARN, ingestionARN, arn),
+		Refresh: statusIngestionDestination(conn, appBundleARN, ingestionARN, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.IngestionDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -456,14 +450,14 @@ func waitIngestionDestinationDeleted(ctx context.Context, conn *appfabric.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IngestionDestinationStatusActive),
 		Target:  []string{},
-		Refresh: statusIngestionDestination(ctx, conn, appBundleARN, ingestionARN, arn),
+		Refresh: statusIngestionDestination(conn, appBundleARN, ingestionARN, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.IngestionDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -472,6 +466,7 @@ func waitIngestionDestinationDeleted(ctx context.Context, conn *appfabric.Client
 }
 
 type ingestionDestinationResourceModel struct {
+	framework.WithRegionModel
 	AppBundleARN             fwtypes.ARN                                                    `tfsdk:"app_bundle_arn"`
 	ARN                      types.String                                                   `tfsdk:"arn"`
 	DestinationConfiguration fwtypes.ListNestedObjectValueOf[destinationConfigurationModel] `tfsdk:"destination_configuration"`

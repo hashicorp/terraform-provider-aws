@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sqs_queue: Increase upper limit of `max_message_size` from 256 KiB to 1024 KiB
+```

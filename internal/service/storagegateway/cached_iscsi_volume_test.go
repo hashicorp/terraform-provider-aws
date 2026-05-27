@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -10,13 +10,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,19 +79,19 @@ func TestParseVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cachedIscsiVolume awstypes.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
+					testAccCheckCachediSCSIVolumeExists(ctx, t, resourceName, &cachedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "chap_enabled", acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
@@ -121,20 +119,20 @@ func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 func TestAccStorageGatewayCachediSCSIVolume_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cachedIscsiVolume awstypes.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 	keyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_kmsEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
+					testAccCheckCachediSCSIVolumeExists(ctx, t, resourceName, &cachedIscsiVolume),
 					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, keyResourceName, names.AttrARN),
 				),
@@ -151,19 +149,19 @@ func TestAccStorageGatewayCachediSCSIVolume_kms(t *testing.T) {
 func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cachedIscsiVolume awstypes.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
+					testAccCheckCachediSCSIVolumeExists(ctx, t, resourceName, &cachedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -177,7 +175,7 @@ func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 			{
 				Config: testAccCachediSCSIVolumeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
+					testAccCheckCachediSCSIVolumeExists(ctx, t, resourceName, &cachedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -187,7 +185,7 @@ func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 			{
 				Config: testAccCachediSCSIVolumeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
+					testAccCheckCachediSCSIVolumeExists(ctx, t, resourceName, &cachedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -200,19 +198,19 @@ func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 func TestAccStorageGatewayCachediSCSIVolume_snapshotID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cachedIscsiVolume awstypes.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
+					testAccCheckCachediSCSIVolumeExists(ctx, t, resourceName, &cachedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "chap_enabled", acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
@@ -240,19 +238,19 @@ func TestAccStorageGatewayCachediSCSIVolume_sourceVolumeARN(t *testing.T) {
 	acctest.Skip(t, "This test can cause Storage Gateway 2.0.10.0 to enter an irrecoverable state during volume deletion.")
 	ctx := acctest.Context(t)
 	var cachedIscsiVolume awstypes.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_sourceARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
+					testAccCheckCachediSCSIVolumeExists(ctx, t, resourceName, &cachedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)),
@@ -279,20 +277,20 @@ func TestAccStorageGatewayCachediSCSIVolume_sourceVolumeARN(t *testing.T) {
 func TestAccStorageGatewayCachediSCSIVolume_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var storedIscsiVolume awstypes.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckCachediSCSIVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceCachediSCSIVolume(), resourceName),
+					testAccCheckCachediSCSIVolumeExists(ctx, t, resourceName, &storedIscsiVolume),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceCachediSCSIVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -300,14 +298,14 @@ func TestAccStorageGatewayCachediSCSIVolume_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCachediSCSIVolumeExists(ctx context.Context, n string, v *awstypes.CachediSCSIVolume) resource.TestCheckFunc {
+func testAccCheckCachediSCSIVolumeExists(ctx context.Context, t *testing.T, n string, v *awstypes.CachediSCSIVolume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).StorageGatewayClient(ctx)
 
 		output, err := tfstoragegateway.FindCachediSCSIVolumeByARN(ctx, conn, rs.Primary.ID)
 
@@ -321,9 +319,9 @@ func testAccCheckCachediSCSIVolumeExists(ctx context.Context, n string, v *awsty
 	}
 }
 
-func testAccCheckCachediSCSIVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCachediSCSIVolumeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).StorageGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_cached_iscsi_volume" {
@@ -332,7 +330,7 @@ func testAccCheckCachediSCSIVolumeDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfstoragegateway.FindCachediSCSIVolumeByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -408,8 +406,11 @@ func testAccCachediSCSIVolumeConfig_kmsEncrypted(rName string) string {
 		testAccCachediSCSIVolumeConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test %[1]s"
-  policy      = <<POLICY
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
  {
    "Version": "2012-10-17",
    "Id": "kms-tf-1",

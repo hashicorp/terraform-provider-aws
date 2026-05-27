@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
@@ -19,7 +19,8 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
 
 # testAccVPCIngressConnectionConfig_base
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_apprunner_service" "test" {
   service_name = var.rName
@@ -44,7 +45,7 @@ resource "aws_apprunner_service" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.apprunner.requests"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.apprunner.requests"
   vpc_endpoint_type = "Interface"
 
   subnet_ids = aws_subnet.test[*].id
@@ -58,11 +59,9 @@ resource "aws_vpc_endpoint" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = var.rName
-  }
 }
+
+# acctest.ConfigSubnets(rName, 1)
 
 resource "aws_subnet" "test" {
   count = 1
@@ -72,7 +71,7 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
-# acctest.ConfigAvailableAZsNoOptInDefaultExclude()
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
   exclude_zone_ids = local.default_exclude_zone_ids

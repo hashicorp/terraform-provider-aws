@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -7,15 +7,15 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -26,10 +26,12 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_s3_bucket", sweepBuckets,
+		"aws_datazone_domain",
 		"aws_s3_access_point",
 		"aws_s3_object_gp_bucket",
 		"aws_s3control_access_grants_instance",
 		"aws_s3control_multi_region_access_point",
+		"aws_s3files_file_system",
 	)
 
 	awsv2.Register("aws_s3_directory_bucket", sweepDirectoryBuckets)
@@ -74,7 +76,7 @@ func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClie
 
 			var objectLockEnabled bool
 			objLockConfig, err := findObjectLockConfiguration(ctx, conn, bucketName, "")
-			if !tfresource.NotFound(err) {
+			if !retry.NotFound(err) {
 				if err != nil {
 					tflog.Warn(ctx, "Reading S3 Bucket Object Lock Configuration", map[string]any{
 						"error": err.Error(),
@@ -130,7 +132,7 @@ type objectSweeper struct {
 	locked bool
 }
 
-func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (os objectSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
 	tflog.Info(ctx, "Emptying S3 General Purpose Bucket")
 	n, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
@@ -148,7 +150,7 @@ type directoryBucketObjectSweeper struct {
 	bucket string
 }
 
-func (os directoryBucketObjectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (os directoryBucketObjectSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	tflog.Info(ctx, "Emptying S3 Directory Bucket")
 	n, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
 	if err != nil {
@@ -210,7 +212,7 @@ func bucketNameFilter(ctx context.Context, bucket types.Bucket) bool {
 		}
 	}
 
-	defaultNameRegexp := regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
+	defaultNameRegexp := regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, sdkid.UniqueIdPrefix))
 	if defaultNameRegexp.MatchString(name) {
 		return true
 	}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package gamelift
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -239,12 +241,10 @@ func resourceFleet() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -261,7 +261,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("certificate_configuration"); ok {
-		input.CertificateConfiguration = expandCertificateConfiguration(v.([]interface{}))
+		input.CertificateConfiguration = expandCertificateConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -281,7 +281,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("metric_groups"); ok {
-		input.MetricGroups = flex.ExpandStringValueList(v.([]interface{}))
+		input.MetricGroups = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("new_game_session_protection_policy"); ok {
@@ -289,18 +289,18 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("resource_creation_limit_policy"); ok {
-		input.ResourceCreationLimitPolicy = expandResourceCreationLimitPolicy(v.([]interface{}))
+		input.ResourceCreationLimitPolicy = expandResourceCreationLimitPolicy(v.([]any))
 	}
 
 	if v, ok := d.GetOk("runtime_configuration"); ok {
-		input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]interface{}))
+		input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("script_id"); ok {
 		input.ScriptId = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFleet(ctx, input)
 	}, "GameLift is not authorized to perform")
 
@@ -317,13 +317,13 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	fleet, err := findFleetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GameLift Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -371,7 +371,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -379,10 +379,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input := &gamelift.UpdateFleetAttributesInput{
 			Description:                    aws.String(d.Get(names.AttrDescription).(string)),
 			FleetId:                        aws.String(d.Id()),
-			MetricGroups:                   flex.ExpandStringValueList(d.Get("metric_groups").([]interface{})),
+			MetricGroups:                   flex.ExpandStringValueList(d.Get("metric_groups").([]any)),
 			Name:                           aws.String(d.Get(names.AttrName).(string)),
 			NewGameSessionProtectionPolicy: awstypes.ProtectionPolicy(d.Get("new_game_session_protection_policy").(string)),
-			ResourceCreationLimitPolicy:    expandResourceCreationLimitPolicy(d.Get("resource_creation_limit_policy").([]interface{})),
+			ResourceCreationLimitPolicy:    expandResourceCreationLimitPolicy(d.Get("resource_creation_limit_policy").([]any)),
 		}
 
 		_, err := conn.UpdateFleetAttributes(ctx, input)
@@ -411,7 +411,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("runtime_configuration") {
 		input := &gamelift.UpdateRuntimeConfigurationInput{
 			FleetId:              aws.String(d.Id()),
-			RuntimeConfiguration: expandRuntimeConfiguration(d.Get("runtime_configuration").([]interface{})),
+			RuntimeConfiguration: expandRuntimeConfiguration(d.Get("runtime_configuration").([]any)),
 		}
 
 		_, err := conn.UpdateRuntimeConfiguration(ctx, input)
@@ -424,7 +424,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -437,7 +437,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	const (
 		timeout = 60 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteFleet(ctx, &gamelift.DeleteFleetInput{
 			FleetId: aws.String(d.Id()),
 		})
@@ -485,8 +485,7 @@ func findFleets(ctx context.Context, conn *gamelift.Client, input *gamelift.Desc
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -517,8 +516,7 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -536,11 +534,11 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *gamelift.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusFleet(conn *gamelift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -562,7 +560,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 			awstypes.FleetStatusValidating,
 		),
 		Target:  enum.Slice(awstypes.FleetStatusActive),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -570,7 +568,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err
@@ -588,7 +586,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 			awstypes.FleetStatusTerminated,
 		),
 		Target:  []string{},
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -596,7 +594,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err
@@ -647,14 +645,14 @@ func expandIPPermissions(tfSet *schema.Set) []awstypes.IpPermission {
 	apiObjects := make([]awstypes.IpPermission, 0)
 
 	for _, tfMapRaw := range tfSet.List() {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, *expandIPPermission(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandIPPermission(tfMap map[string]interface{}) *awstypes.IpPermission {
+func expandIPPermission(tfMap map[string]any) *awstypes.IpPermission {
 	return &awstypes.IpPermission{
 		FromPort: aws.Int32(int32(tfMap["from_port"].(int))),
 		IpRange:  aws.String(tfMap["ip_range"].(string)),
@@ -663,12 +661,12 @@ func expandIPPermission(tfMap map[string]interface{}) *awstypes.IpPermission {
 	}
 }
 
-func flattenIPPermissions(apiObjects []awstypes.IpPermission) []interface{} {
+func flattenIPPermissions(apiObjects []awstypes.IpPermission) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 	for _, apiObject := range apiObjects {
 		if v := flattenIPPermission(&apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
@@ -678,12 +676,12 @@ func flattenIPPermissions(apiObjects []awstypes.IpPermission) []interface{} {
 	return tfList
 }
 
-func flattenIPPermission(apiObject *awstypes.IpPermission) map[string]interface{} {
+func flattenIPPermission(apiObject *awstypes.IpPermission) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap["from_port"] = aws.ToInt32(apiObject.FromPort)
 	tfMap["to_port"] = aws.ToInt32(apiObject.ToPort)
 	tfMap[names.AttrProtocol] = apiObject.Protocol
@@ -692,13 +690,13 @@ func flattenIPPermission(apiObject *awstypes.IpPermission) map[string]interface{
 	return tfMap
 }
 
-func expandResourceCreationLimitPolicy(tfList []interface{}) *awstypes.ResourceCreationLimitPolicy {
+func expandResourceCreationLimitPolicy(tfList []any) *awstypes.ResourceCreationLimitPolicy {
 	if len(tfList) < 1 {
 		return nil
 	}
 
 	apiObject := &awstypes.ResourceCreationLimitPolicy{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["new_game_sessions_per_creator"]; ok {
 		apiObject.NewGameSessionsPerCreator = aws.Int32(int32(v.(int)))
@@ -711,25 +709,25 @@ func expandResourceCreationLimitPolicy(tfList []interface{}) *awstypes.ResourceC
 	return apiObject
 }
 
-func flattenResourceCreationLimitPolicy(apiObject *awstypes.ResourceCreationLimitPolicy) []interface{} {
+func flattenResourceCreationLimitPolicy(apiObject *awstypes.ResourceCreationLimitPolicy) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap["new_game_sessions_per_creator"] = aws.ToInt32(apiObject.NewGameSessionsPerCreator)
 	tfMap["policy_period_in_minutes"] = aws.ToInt32(apiObject.PolicyPeriodInMinutes)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandRuntimeConfiguration(tfList []interface{}) *awstypes.RuntimeConfiguration {
+func expandRuntimeConfiguration(tfList []any) *awstypes.RuntimeConfiguration {
 	if len(tfList) < 1 {
 		return nil
 	}
 
 	apiObject := &awstypes.RuntimeConfiguration{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["game_session_activation_timeout_seconds"].(int); ok && v > 0 {
 		apiObject.GameSessionActivationTimeoutSeconds = aws.Int32(int32(v))
@@ -740,13 +738,13 @@ func expandRuntimeConfiguration(tfList []interface{}) *awstypes.RuntimeConfigura
 	}
 
 	if v, ok := tfMap["server_process"]; ok {
-		apiObject.ServerProcesses = expandServerProcesses(v.([]interface{}))
+		apiObject.ServerProcesses = expandServerProcesses(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandServerProcesses(tfList []interface{}) []awstypes.ServerProcess {
+func expandServerProcesses(tfList []any) []awstypes.ServerProcess {
 	if len(tfList) < 1 {
 		return []awstypes.ServerProcess{}
 	}
@@ -754,7 +752,7 @@ func expandServerProcesses(tfList []interface{}) []awstypes.ServerProcess {
 	apiObjects := make([]awstypes.ServerProcess, len(tfList))
 
 	for i, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.ServerProcess{
 			ConcurrentExecutions: aws.Int32(int32(tfMap["concurrent_executions"].(int))),
 			LaunchPath:           aws.String(tfMap["launch_path"].(string)),
@@ -770,13 +768,13 @@ func expandServerProcesses(tfList []interface{}) []awstypes.ServerProcess {
 	return apiObjects
 }
 
-func expandCertificateConfiguration(tfList []interface{}) *awstypes.CertificateConfiguration {
+func expandCertificateConfiguration(tfList []any) *awstypes.CertificateConfiguration {
 	if len(tfList) < 1 {
 		return nil
 	}
 
 	apiObject := &awstypes.CertificateConfiguration{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["certificate_type"].(string); ok {
 		apiObject.CertificateType = awstypes.CertificateType(v)
@@ -785,29 +783,29 @@ func expandCertificateConfiguration(tfList []interface{}) *awstypes.CertificateC
 	return apiObject
 }
 
-func flattenCertificateConfiguration(apiObject *awstypes.CertificateConfiguration) []interface{} {
+func flattenCertificateConfiguration(apiObject *awstypes.CertificateConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap["certificate_type"] = string(apiObject.CertificateType)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func diffPortSettings(oldPerms, newPerms []interface{}) (a []awstypes.IpPermission, r []awstypes.IpPermission) {
+func diffPortSettings(oldPerms, newPerms []any) (a []awstypes.IpPermission, r []awstypes.IpPermission) {
 OUTER:
 	for i, op := range oldPerms {
-		oldPerm := op.(map[string]interface{})
+		oldPerm := op.(map[string]any)
 		for j, np := range newPerms {
-			newPerm := np.(map[string]interface{})
+			newPerm := np.(map[string]any)
 
 			// Remove permissions which have not changed so we're not wasting
 			// API calls for removal & subseq. addition of the same ones
 			if reflect.DeepEqual(oldPerm, newPerm) {
-				oldPerms = append(oldPerms[:i], oldPerms[i+1:]...)
-				newPerms = append(newPerms[:j], newPerms[j+1:]...)
+				oldPerms = slices.Delete(oldPerms, i, i+1)
+				newPerms = slices.Delete(newPerms, j, j+1)
 				continue OUTER
 			}
 		}
@@ -817,7 +815,7 @@ OUTER:
 	}
 
 	for _, np := range newPerms {
-		newPerm := np.(map[string]interface{})
+		newPerm := np.(map[string]any)
 		// Add what's left for authorization
 		a = append(a, *expandIPPermission(newPerm))
 	}

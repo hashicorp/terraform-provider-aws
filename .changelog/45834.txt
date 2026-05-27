@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_savingsplans_savings_plan
+```
+
+```release-note:new-data-source
+aws_savingsplans_savings_plan
+```
+
+```release-note:note
+resource/aws_savingsplans_savings_plan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

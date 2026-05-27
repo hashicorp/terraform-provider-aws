@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -9,36 +9,37 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMServerCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cert awstypes.ServerCertificate
+	var v1, v2 awstypes.ServerCertificate
 	resourceName := "aws_iam_server_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v1),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("server-certificate/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "upload_date"),
@@ -56,6 +57,21 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 				ImportStateId:           rName,
 				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
+			{
+				Config: testAccServerCertificateConfig_basic(rNameUpdated, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v2),
+					testAccCheckServerCertficateNotRecreated(&v1, &v2),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("server-certificate/%s", rNameUpdated)),
+					acctest.CheckResourceAttrRFC3339(resourceName, "expiration"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "upload_date"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_body", strings.TrimSpace(certificate)),
+				),
+			},
 		},
 	})
 }
@@ -67,18 +83,18 @@ func TestAccIAMServerCertificate_nameGenerated(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerCertificateConfig_nameGenerated(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &cert),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, sdkid.UniqueIdPrefix),
 				),
 			},
 		},
@@ -87,23 +103,55 @@ func TestAccIAMServerCertificate_nameGenerated(t *testing.T) {
 
 func TestAccIAMServerCertificate_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cert awstypes.ServerCertificate
+	var v1, v2, v3, v4 awstypes.ServerCertificate
 	resourceName := "aws_iam_server_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	namePrefix := "tf-acc-test-prefix-"
+	namePrefixUpdated := "tf-acc-test-prefix-updated-"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_namePrefix("tf-acc-test-prefix-", key, certificate),
+				Config: testAccServerCertificateConfig_namePrefix(namePrefix, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v1),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, namePrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, namePrefix),
+				),
+			},
+			{
+				Config: testAccServerCertificateConfig_namePrefix(namePrefixUpdated, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v2),
+					testAccCheckServerCertficateNotRecreated(&v1, &v2),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, namePrefixUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, namePrefixUpdated),
+				),
+			},
+			// Change from name prefix to name
+			{
+				Config: testAccServerCertificateConfig_basic(rName, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v3),
+					testAccCheckServerCertficateNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+				),
+			},
+			// Change back from name to name prefix
+			{
+				Config: testAccServerCertificateConfig_namePrefix(namePrefix, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v4),
+					testAccCheckServerCertficateNotRecreated(&v4, &v4),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, namePrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, namePrefix),
 				),
 			},
 		},
@@ -114,22 +162,30 @@ func TestAccIAMServerCertificate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cert awstypes.ServerCertificate
 	resourceName := "aws_iam_server_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServerCertificate(), resourceName),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &cert),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServerCertificate(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -139,21 +195,21 @@ func TestAccIAMServerCertificate_disappears(t *testing.T) {
 func TestAccIAMServerCertificate_file(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cert awstypes.ServerCertificate
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	unixFile := "test-fixtures/iam-ssl-unix-line-endings.pem"
 	winFile := "test-fixtures/iam-ssl-windows-line-endings.pem.winfile"
 	resourceName := "aws_iam_server_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerCertificateConfig_file(rName, unixFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &cert),
 				),
 			},
 			{
@@ -166,7 +222,7 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 			{
 				Config: testAccServerCertificateConfig_file(rName, winFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &cert),
 				),
 			},
 		},
@@ -175,23 +231,26 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 
 func TestAccIAMServerCertificate_path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cert awstypes.ServerCertificate
+	var v1, v2, v3 awstypes.ServerCertificate
 	resourceName := "aws_iam_server_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	path := "/test/"
+	pathUpdated := "/test/updated/"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_path(rName, "/test/", key, certificate),
+				Config: testAccServerCertificateConfig_path(rName, path, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test/"),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path),
 				),
 			},
 			{
@@ -201,11 +260,29 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 				ImportStateId:           rName,
 				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
+			{
+				Config: testAccServerCertificateConfig_path(rName, pathUpdated, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v2),
+					testAccCheckServerCertficateNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, pathUpdated),
+				),
+			},
+			// Change both name and path
+			{
+				Config: testAccServerCertificateConfig_path(rNameUpdated, path, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v3),
+					testAccCheckServerCertficateNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path),
+				),
+			},
 		},
 	})
 }
 
-func testAccCheckServerCertificateExists(ctx context.Context, n string, v *awstypes.ServerCertificate) resource.TestCheckFunc {
+func testAccCheckServerCertificateExists(ctx context.Context, t *testing.T, n string, v *awstypes.ServerCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -216,7 +293,7 @@ func testAccCheckServerCertificateExists(ctx context.Context, n string, v *awsty
 			return fmt.Errorf("No IAM Server Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		output, err := tfiam.FindServerCertificateByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
@@ -230,9 +307,9 @@ func testAccCheckServerCertificateExists(ctx context.Context, n string, v *awsty
 	}
 }
 
-func testAccCheckServerCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckServerCertificateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_server_certificate" {
@@ -241,7 +318,7 @@ func testAccCheckServerCertificateDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfiam.FindServerCertificateByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -252,6 +329,15 @@ func testAccCheckServerCertificateDestroy(ctx context.Context) resource.TestChec
 			return fmt.Errorf("IAM Server Certificate %s still exists", rs.Primary.ID)
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckServerCertficateNotRecreated(v1, v2 *awstypes.ServerCertificate) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.ToString(v1.ServerCertificateMetadata.ServerCertificateId) != aws.ToString(v2.ServerCertificateMetadata.ServerCertificateId) {
+			return fmt.Errorf("IAM Server Certificate recreated")
+		}
 		return nil
 	}
 }

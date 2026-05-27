@@ -135,6 +135,7 @@ See the [`value_elicitation_setting` argument reference](#value_elicitation_sett
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the slot.
 * `multiple_values_setting` - (Optional) Whether the slot returns multiple values in one response.
 See the [`multiple_values_setting` argument reference](#multiple_values_setting-argument-reference) below.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrock
 
@@ -15,25 +17,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Inference Profiles")
+// @FrameworkDataSource("aws_bedrock_inference_profiles", name="Inference Profiles")
 func newInferenceProfilesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &inferenceProfilesDataSource{}, nil
 }
 
 type inferenceProfilesDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*inferenceProfilesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_inference_profiles"
+	framework.DataSourceWithModel[inferenceProfilesDataSourceModel]
 }
 
 func (d *inferenceProfilesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"inference_profile_summaries": framework.DataSourceComputedListOfObjectAttribute[inferenceProfileSummaryModel](ctx),
+			names.AttrType: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.InferenceProfileType](),
+				Optional:   true,
+			},
 		},
 	}
 }
@@ -48,6 +51,10 @@ func (d *inferenceProfilesDataSource) Read(ctx context.Context, request datasour
 	conn := d.Meta().BedrockClient(ctx)
 
 	input := &bedrock.ListInferenceProfilesInput{}
+	if !data.Type.IsNull() {
+		input.TypeEquals = awstypes.InferenceProfileType(data.Type.ValueString())
+	}
+
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -72,7 +79,7 @@ func (d *inferenceProfilesDataSource) Read(ctx context.Context, request datasour
 }
 
 func findInferenceProfiles(ctx context.Context, conn *bedrock.Client, input *bedrock.ListInferenceProfilesInput) ([]awstypes.InferenceProfileSummary, error) {
-	var output []awstypes.InferenceProfileSummary
+	var output = make([]awstypes.InferenceProfileSummary, 0)
 
 	pages := bedrock.NewListInferenceProfilesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -89,7 +96,9 @@ func findInferenceProfiles(ctx context.Context, conn *bedrock.Client, input *bed
 }
 
 type inferenceProfilesDataSourceModel struct {
+	framework.WithRegionModel
 	InferenceProfileSummaries fwtypes.ListNestedObjectValueOf[inferenceProfileSummaryModel] `tfsdk:"inference_profile_summaries"`
+	Type                      fwtypes.StringEnum[awstypes.InferenceProfileType]             `tfsdk:"type"`
 }
 
 type inferenceProfileSummaryModel struct {

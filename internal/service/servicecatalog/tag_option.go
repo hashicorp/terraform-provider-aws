@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -61,7 +62,7 @@ func resourceTagOption() *schema.Resource {
 	}
 }
 
-func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -71,25 +72,21 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	var output *servicecatalog.CreateTagOptionOutput
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = conn.CreateTagOption(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateTagOption(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option: %s", err)
@@ -118,7 +115,7 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTagOptionRead(ctx, d, meta)...)
 }
 
-func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -146,7 +143,7 @@ func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -165,23 +162,19 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Value = aws.String(d.Get(names.AttrValue).(string))
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.UpdateTagOption(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateTagOption(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Tag Option (%s): %s", d.Id(), err)
@@ -190,7 +183,7 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTagOptionRead(ctx, d, meta)...)
 }
 
-func resourceTagOptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

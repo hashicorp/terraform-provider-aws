@@ -1,0 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = var.rName
+  rule_type   = "SYSTEM"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}

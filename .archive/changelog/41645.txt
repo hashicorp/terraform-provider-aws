@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_prometheus_rule_group_namespace: Add `tags` argument and `tags_all` attribute
+```
+
+```release-note:enhancement
+resource/aws_prometheus_rule_group_namespace: Add `arn` attribute
+```

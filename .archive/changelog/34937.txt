@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appflow_flow: Add `data_transfer_api` attribute to destination_flow_config_list.destination_connector_properties.salesforce
+```

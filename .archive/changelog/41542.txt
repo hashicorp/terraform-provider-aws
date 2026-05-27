@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Prevents `InvalidRequest` error when `rule.and.object_size_less_than` not set.
+```

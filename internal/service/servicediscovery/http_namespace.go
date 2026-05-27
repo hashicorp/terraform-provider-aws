@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicediscovery
 
@@ -12,17 +14,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,18 +63,16 @@ func resourceHTTPNamespace() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreateHttpNamespaceInput{
-		CreatorRequestId: aws.String(id.UniqueId()),
+		CreatorRequestId: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -99,13 +98,13 @@ func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceHTTPNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	ns, err := findNamespaceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Discovery HTTP Namespace %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -128,12 +127,12 @@ func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceHTTPNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHTTPNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceHTTPNamespaceRead(ctx, d, meta)
 }
 
-func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -141,7 +140,7 @@ func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, me
 	const (
 		timeout = 2 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUse](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUse](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteNamespace(ctx, &servicediscovery.DeleteNamespaceInput{
 			Id: aws.String(d.Id()),
 		})
@@ -230,8 +229,7 @@ func findNamespaceByID(ctx context.Context, conn *servicediscovery.Client, id st
 
 	if errs.IsA[*awstypes.NamespaceNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -240,7 +238,7 @@ func findNamespaceByID(ctx context.Context, conn *servicediscovery.Client, id st
 	}
 
 	if output == nil || output.Namespace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Namespace, nil

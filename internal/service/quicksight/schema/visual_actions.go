@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +45,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 											Required: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"selected_field_option": stringEnumSchema[awstypes.SelectedFieldOptions](attrOptional),
+													"selected_field_option": sdkschema.StringEnumSchema[awstypes.SelectedFieldOptions](sdkschema.AttrOptional),
 													"selected_fields": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -72,7 +73,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"target_visual_option": stringEnumSchema[awstypes.TargetVisualOptions](attrOptional),
+																"target_visual_option": sdkschema.StringEnumSchema[awstypes.TargetVisualOptions](sdkschema.AttrOptional),
 																"target_visuals": {
 																	Type:     schema.TypeSet,
 																	Optional: true,
@@ -193,8 +194,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 																		},
 																	},
 																},
-																"select_all_value_options": stringEnumSchema[awstypes.SelectAllValueOptions](attrOptional),
-																"source_field":             stringLenBetweenSchema(attrOptional, 1, 2048),
+																"select_all_value_options": sdkschema.StringEnumSchema[awstypes.SelectAllValueOptions](sdkschema.AttrOptional),
+																"source_field":             sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
 																"source_parameter_name": {
 																	Type:     schema.TypeString,
 																	Optional: true,
@@ -215,8 +216,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"url_target":   stringEnumSchema[awstypes.URLTargetConfiguration](attrRequired),
-										"url_template": stringLenBetweenSchema(attrRequired, 1, 2048),
+										"url_target":   sdkschema.StringEnumSchema[awstypes.URLTargetConfiguration](sdkschema.AttrRequired),
+										"url_template": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 									},
 								},
 							},
@@ -224,15 +225,174 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 					},
 				},
 				"custom_action_id": idSchema(),
-				names.AttrName:     stringLenBetweenSchema(attrRequired, 1, 256),
-				"trigger":          stringEnumSchema[awstypes.VisualCustomActionTrigger](attrRequired),
-				names.AttrStatus:   stringEnumSchema[awstypes.Status](attrRequired),
+				names.AttrName:     sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 256),
+				"trigger":          sdkschema.StringEnumSchema[awstypes.VisualCustomActionTrigger](sdkschema.AttrRequired),
+				names.AttrStatus:   sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrRequired),
 			},
 		},
 	}
 }
 
-func expandVisualCustomActions(tfList []interface{}) []awstypes.VisualCustomAction {
+func visualCustomActionsDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"action_operations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomActionOperation.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_operation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomActionFilterOperation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"selected_fields_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterOperationSelectedFieldsConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"selected_field_option": sdkschema.StringEnumDataSourceSchema[awstypes.SelectedFieldOptions](),
+													"selected_fields": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+												},
+											},
+										},
+										"target_visuals_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterOperationTargetVisualsConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"same_sheet_target_visual_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SameSheetTargetVisualConfiguration.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"target_visual_option": sdkschema.StringEnumDataSourceSchema[awstypes.TargetVisualOptions](),
+																"target_visuals": {
+																	Type:     schema.TypeSet,
+																	Computed: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"navigation_operation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomActionNavigationOperation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"local_navigation_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LocalNavigationConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_sheet_id": idDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"set_parameters_operation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomActionSetParametersOperation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"parameter_value_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SetParameterValueConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"destination_parameter_name": parameterNameDataSourceSchema(),
+													names.AttrValue: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DestinationParameterValueConfiguration.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"custom_values_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomValuesConfiguration.html
+																	Type:     schema.TypeList,
+																	Computed: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"custom_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomParameterValues.html
+																				Type:     schema.TypeList,
+																				Computed: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						"date_time_values": {
+																							Type:     schema.TypeList,
+																							Computed: true,
+																							Elem:     &schema.Schema{Type: schema.TypeString},
+																						},
+																						"decimal_values": {
+																							Type:     schema.TypeList,
+																							Computed: true,
+																							Elem:     &schema.Schema{Type: schema.TypeFloat},
+																						},
+																						"integer_values": {
+																							Type:     schema.TypeList,
+																							Computed: true,
+																							Elem:     &schema.Schema{Type: schema.TypeInt},
+																						},
+																						"string_values": {
+																							Type:     schema.TypeList,
+																							Computed: true,
+																							Elem:     &schema.Schema{Type: schema.TypeString},
+																						},
+																					},
+																				},
+																			},
+																			"include_null_value": boolComputedOnly(),
+																		},
+																	},
+																},
+																"select_all_value_options": sdkschema.StringEnumDataSourceSchema[awstypes.SelectAllValueOptions](),
+																"source_field":             stringComputedOnly(),
+																"source_parameter_name":    stringComputedOnly(),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"url_operation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomActionURLOperation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"url_target":   sdkschema.StringEnumDataSourceSchema[awstypes.URLTargetConfiguration](),
+										"url_template": stringComputedOnly(),
+									},
+								},
+							},
+						},
+					},
+				},
+				"custom_action_id": idDataSourceSchema(),
+				names.AttrName:     stringComputedOnly(),
+				"trigger":          sdkschema.StringEnumDataSourceSchema[awstypes.VisualCustomActionTrigger](),
+				names.AttrStatus:   sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
+			},
+		},
+	}
+}
+
+func expandVisualCustomActions(tfList []any) []awstypes.VisualCustomAction {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -240,7 +400,7 @@ func expandVisualCustomActions(tfList []interface{}) []awstypes.VisualCustomActi
 	var apiObjects []awstypes.VisualCustomAction
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -256,7 +416,7 @@ func expandVisualCustomActions(tfList []interface{}) []awstypes.VisualCustomActi
 	return apiObjects
 }
 
-func expandVisualCustomAction(tfMap map[string]interface{}) *awstypes.VisualCustomAction {
+func expandVisualCustomAction(tfMap map[string]any) *awstypes.VisualCustomAction {
 	if tfMap == nil {
 		return nil
 	}
@@ -275,14 +435,14 @@ func expandVisualCustomAction(tfMap map[string]interface{}) *awstypes.VisualCust
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = awstypes.WidgetStatus(v)
 	}
-	if v, ok := tfMap["action_operations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["action_operations"].([]any); ok && len(v) > 0 {
 		apiObject.ActionOperations = expandVisualCustomActionOperations(v)
 	}
 
 	return apiObject
 }
 
-func expandVisualCustomActionOperations(tfList []interface{}) []awstypes.VisualCustomActionOperation {
+func expandVisualCustomActionOperations(tfList []any) []awstypes.VisualCustomActionOperation {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -290,7 +450,7 @@ func expandVisualCustomActionOperations(tfList []interface{}) []awstypes.VisualC
 	var apiObjects []awstypes.VisualCustomActionOperation
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -306,57 +466,57 @@ func expandVisualCustomActionOperations(tfList []interface{}) []awstypes.VisualC
 	return apiObjects
 }
 
-func expandVisualCustomActionOperation(tfMap map[string]interface{}) *awstypes.VisualCustomActionOperation {
+func expandVisualCustomActionOperation(tfMap map[string]any) *awstypes.VisualCustomActionOperation {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.VisualCustomActionOperation{}
 
-	if v, ok := tfMap["filter_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["filter_operation"].([]any); ok && len(v) > 0 {
 		apiObject.FilterOperation = expandCustomActionFilterOperation(v)
 	}
-	if v, ok := tfMap["navigation_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["navigation_operation"].([]any); ok && len(v) > 0 {
 		apiObject.NavigationOperation = expandCustomActionNavigationOperation(v)
 	}
-	if v, ok := tfMap["set_parameters_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["set_parameters_operation"].([]any); ok && len(v) > 0 {
 		apiObject.SetParametersOperation = expandCustomActionSetParametersOperation(v)
 	}
-	if v, ok := tfMap["url_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["url_operation"].([]any); ok && len(v) > 0 {
 		apiObject.URLOperation = expandCustomActionURLOperation(v)
 	}
 
 	return apiObject
 }
 
-func expandCustomActionFilterOperation(tfList []interface{}) *awstypes.CustomActionFilterOperation {
+func expandCustomActionFilterOperation(tfList []any) *awstypes.CustomActionFilterOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomActionFilterOperation{}
 
-	if v, ok := tfMap["selected_fields_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["selected_fields_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SelectedFieldsConfiguration = expandFilterOperationSelectedFieldsConfiguration(v)
 	}
-	if v, ok := tfMap["target_visuals_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["target_visuals_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.TargetVisualsConfiguration = expandFilterOperationTargetVisualsConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandFilterOperationSelectedFieldsConfiguration(tfList []interface{}) *awstypes.FilterOperationSelectedFieldsConfiguration {
+func expandFilterOperationSelectedFieldsConfiguration(tfList []any) *awstypes.FilterOperationSelectedFieldsConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -366,38 +526,38 @@ func expandFilterOperationSelectedFieldsConfiguration(tfList []interface{}) *aws
 	if v, ok := tfMap["selected_field_option"].(string); ok && v != "" {
 		apiObject.SelectedFieldOptions = awstypes.SelectedFieldOptions(v)
 	}
-	if v, ok := tfMap["selected_fields"].([]interface{}); ok {
+	if v, ok := tfMap["selected_fields"].([]any); ok {
 		apiObject.SelectedFields = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandFilterOperationTargetVisualsConfiguration(tfList []interface{}) *awstypes.FilterOperationTargetVisualsConfiguration {
+func expandFilterOperationTargetVisualsConfiguration(tfList []any) *awstypes.FilterOperationTargetVisualsConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.FilterOperationTargetVisualsConfiguration{}
 
-	if v, ok := tfMap["same_sheet_target_visual_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["same_sheet_target_visual_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SameSheetTargetVisualConfiguration = expandSameSheetTargetVisualConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandSameSheetTargetVisualConfiguration(tfList []interface{}) *awstypes.SameSheetTargetVisualConfiguration {
+func expandSameSheetTargetVisualConfiguration(tfList []any) *awstypes.SameSheetTargetVisualConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -414,31 +574,31 @@ func expandSameSheetTargetVisualConfiguration(tfList []interface{}) *awstypes.Sa
 	return apiObject
 }
 
-func expandCustomActionNavigationOperation(tfList []interface{}) *awstypes.CustomActionNavigationOperation {
+func expandCustomActionNavigationOperation(tfList []any) *awstypes.CustomActionNavigationOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomActionNavigationOperation{}
 
-	if v, ok := tfMap["local_navigation_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["local_navigation_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.LocalNavigationConfiguration = expandLocalNavigationConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandLocalNavigationConfiguration(tfList []interface{}) *awstypes.LocalNavigationConfiguration {
+func expandLocalNavigationConfiguration(tfList []any) *awstypes.LocalNavigationConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -451,26 +611,26 @@ func expandLocalNavigationConfiguration(tfList []interface{}) *awstypes.LocalNav
 	return apiObject
 }
 
-func expandCustomActionSetParametersOperation(tfList []interface{}) *awstypes.CustomActionSetParametersOperation {
+func expandCustomActionSetParametersOperation(tfList []any) *awstypes.CustomActionSetParametersOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomActionSetParametersOperation{}
 
-	if v, ok := tfMap["parameter_value_configurations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["parameter_value_configurations"].([]any); ok && len(v) > 0 {
 		apiObject.ParameterValueConfigurations = expandSetParameterValueConfigurations(v)
 	}
 
 	return apiObject
 }
 
-func expandSetParameterValueConfigurations(tfList []interface{}) []awstypes.SetParameterValueConfiguration {
+func expandSetParameterValueConfigurations(tfList []any) []awstypes.SetParameterValueConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -478,7 +638,7 @@ func expandSetParameterValueConfigurations(tfList []interface{}) []awstypes.SetP
 	var apiObjects []awstypes.SetParameterValueConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -494,7 +654,7 @@ func expandSetParameterValueConfigurations(tfList []interface{}) []awstypes.SetP
 	return apiObjects
 }
 
-func expandSetParameterValueConfiguration(tfMap map[string]interface{}) *awstypes.SetParameterValueConfiguration {
+func expandSetParameterValueConfiguration(tfMap map[string]any) *awstypes.SetParameterValueConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -504,26 +664,26 @@ func expandSetParameterValueConfiguration(tfMap map[string]interface{}) *awstype
 	if v, ok := tfMap["destination_parameter_name"].(string); ok && v != "" {
 		apiObject.DestinationParameterName = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandDestinationParameterValueConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandDestinationParameterValueConfiguration(tfList []interface{}) *awstypes.DestinationParameterValueConfiguration {
+func expandDestinationParameterValueConfiguration(tfList []any) *awstypes.DestinationParameterValueConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DestinationParameterValueConfiguration{}
 
-	if v, ok := tfMap["custom_values_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_values_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.CustomValuesConfiguration = expandCustomValuesConfiguration(v)
 	}
 	if v, ok := tfMap["select_all_value_options"].(string); ok && v != "" {
@@ -539,19 +699,19 @@ func expandDestinationParameterValueConfiguration(tfList []interface{}) *awstype
 	return apiObject
 }
 
-func expandCustomValuesConfiguration(tfList []interface{}) *awstypes.CustomValuesConfiguration {
+func expandCustomValuesConfiguration(tfList []any) *awstypes.CustomValuesConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomValuesConfiguration{}
 
-	if v, ok := tfMap["custom_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_values"].([]any); ok && len(v) > 0 {
 		apiObject.CustomValues = expandCustomParameterValues(v)
 	}
 	if v, ok := tfMap["include_null_value"].(bool); ok {
@@ -561,40 +721,40 @@ func expandCustomValuesConfiguration(tfList []interface{}) *awstypes.CustomValue
 	return apiObject
 }
 
-func expandCustomParameterValues(tfList []interface{}) *awstypes.CustomParameterValues {
+func expandCustomParameterValues(tfList []any) *awstypes.CustomParameterValues {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomParameterValues{}
 
-	if v, ok := tfMap["date_time_values"].([]interface{}); ok {
+	if v, ok := tfMap["date_time_values"].([]any); ok {
 		apiObject.DateTimeValues = flex.ExpandStringTimeValueList(v, time.RFC3339)
 	}
-	if v, ok := tfMap["decimal_values"].([]interface{}); ok {
+	if v, ok := tfMap["decimal_values"].([]any); ok {
 		apiObject.DecimalValues = flex.ExpandFloat64ValueList(v)
 	}
-	if v, ok := tfMap["integer_values"].([]interface{}); ok {
+	if v, ok := tfMap["integer_values"].([]any); ok {
 		apiObject.IntegerValues = flex.ExpandInt64ValueList(v)
 	}
-	if v, ok := tfMap["string_values"].([]interface{}); ok {
+	if v, ok := tfMap["string_values"].([]any); ok {
 		apiObject.StringValues = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandCustomActionURLOperation(tfList []interface{}) *awstypes.CustomActionURLOperation {
+func expandCustomActionURLOperation(tfList []any) *awstypes.CustomActionURLOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -611,15 +771,15 @@ func expandCustomActionURLOperation(tfList []interface{}) *awstypes.CustomAction
 	return apiObject
 }
 
-func flattenVisualCustomAction(apiObjects []awstypes.VisualCustomAction) []interface{} {
+func flattenVisualCustomAction(apiObjects []awstypes.VisualCustomAction) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"custom_action_id": aws.ToString(apiObject.CustomActionId),
 			names.AttrName:     aws.ToString(apiObject.Name),
 			names.AttrStatus:   apiObject.Status,
@@ -636,15 +796,15 @@ func flattenVisualCustomAction(apiObjects []awstypes.VisualCustomAction) []inter
 	return tfList
 }
 
-func flattenVisualCustomActionOperation(apiObjects []awstypes.VisualCustomActionOperation) []interface{} {
+func flattenVisualCustomActionOperation(apiObjects []awstypes.VisualCustomActionOperation) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.FilterOperation != nil {
 			tfMap["filter_operation"] = flattenCustomActionFilterOperation(apiObject.FilterOperation)
@@ -665,12 +825,12 @@ func flattenVisualCustomActionOperation(apiObjects []awstypes.VisualCustomAction
 	return tfList
 }
 
-func flattenCustomActionFilterOperation(apiObject *awstypes.CustomActionFilterOperation) []interface{} {
+func flattenCustomActionFilterOperation(apiObject *awstypes.CustomActionFilterOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if apiObject.SelectedFieldsConfiguration != nil {
 		tfMap["selected_fields_configuration"] = flattenFilterOperationSelectedFieldsConfiguration(apiObject.SelectedFieldsConfiguration)
 	}
@@ -678,98 +838,98 @@ func flattenCustomActionFilterOperation(apiObject *awstypes.CustomActionFilterOp
 		tfMap["target_visuals_configuration"] = flattenFilterOperationTargetVisualsConfiguration(apiObject.TargetVisualsConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFilterOperationSelectedFieldsConfiguration(apiObject *awstypes.FilterOperationSelectedFieldsConfiguration) []interface{} {
+func flattenFilterOperationSelectedFieldsConfiguration(apiObject *awstypes.FilterOperationSelectedFieldsConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.SelectedFields != nil {
 		tfMap["selected_fields"] = apiObject.SelectedFields
 	}
 	tfMap["selected_field_option"] = apiObject.SelectedFieldOptions
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFilterOperationTargetVisualsConfiguration(apiObject *awstypes.FilterOperationTargetVisualsConfiguration) []interface{} {
+func flattenFilterOperationTargetVisualsConfiguration(apiObject *awstypes.FilterOperationTargetVisualsConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.SameSheetTargetVisualConfiguration != nil {
 		tfMap["same_sheet_target_visual_configuration"] = flattenSameSheetTargetVisualConfiguration(apiObject.SameSheetTargetVisualConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSameSheetTargetVisualConfiguration(apiObject *awstypes.SameSheetTargetVisualConfiguration) []interface{} {
+func flattenSameSheetTargetVisualConfiguration(apiObject *awstypes.SameSheetTargetVisualConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"target_visual_option": apiObject.TargetVisualOptions,
 		"target_visuals":       apiObject.TargetVisuals,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomActionNavigationOperation(apiObject *awstypes.CustomActionNavigationOperation) []interface{} {
+func flattenCustomActionNavigationOperation(apiObject *awstypes.CustomActionNavigationOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.LocalNavigationConfiguration != nil {
 		tfMap["local_navigation_configuration"] = flattenLocalNavigationConfiguration(apiObject.LocalNavigationConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLocalNavigationConfiguration(apiObject *awstypes.LocalNavigationConfiguration) []interface{} {
+func flattenLocalNavigationConfiguration(apiObject *awstypes.LocalNavigationConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"target_sheet_id": aws.ToString(apiObject.TargetSheetId),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomActionSetParametersOperation(apiObject *awstypes.CustomActionSetParametersOperation) []interface{} {
+func flattenCustomActionSetParametersOperation(apiObject *awstypes.CustomActionSetParametersOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"parameter_value_configurations": flattenSetParameterValueConfiguration(apiObject.ParameterValueConfigurations),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSetParameterValueConfiguration(apiObjects []awstypes.SetParameterValueConfiguration) []interface{} {
+func flattenSetParameterValueConfiguration(apiObjects []awstypes.SetParameterValueConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"destination_parameter_name": aws.ToString(apiObject.DestinationParameterName),
 		}
 
@@ -783,12 +943,12 @@ func flattenSetParameterValueConfiguration(apiObjects []awstypes.SetParameterVal
 	return tfList
 }
 
-func flattenDestinationParameterValueConfiguration(apiObject *awstypes.DestinationParameterValueConfiguration) []interface{} {
+func flattenDestinationParameterValueConfiguration(apiObject *awstypes.DestinationParameterValueConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CustomValuesConfiguration != nil {
 		tfMap["custom_values_configuration"] = flattenCustomValuesConfiguration(apiObject.CustomValuesConfiguration)
@@ -801,15 +961,15 @@ func flattenDestinationParameterValueConfiguration(apiObject *awstypes.Destinati
 		tfMap["source_parameter_name"] = aws.ToString(apiObject.SourceParameterName)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomValuesConfiguration(apiObject *awstypes.CustomValuesConfiguration) []interface{} {
+func flattenCustomValuesConfiguration(apiObject *awstypes.CustomValuesConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CustomValues != nil {
 		tfMap["custom_values"] = flattenCustomParameterValues(apiObject.CustomValues)
@@ -818,15 +978,15 @@ func flattenCustomValuesConfiguration(apiObject *awstypes.CustomValuesConfigurat
 		tfMap["include_null_value"] = aws.ToBool(apiObject.IncludeNullValue)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomParameterValues(apiObject *awstypes.CustomParameterValues) []interface{} {
+func flattenCustomParameterValues(apiObject *awstypes.CustomParameterValues) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DateTimeValues != nil {
 		tfMap["date_time_values"] = flex.FlattenTimeStringValueList(apiObject.DateTimeValues, time.RFC3339)
@@ -841,18 +1001,18 @@ func flattenCustomParameterValues(apiObject *awstypes.CustomParameterValues) []i
 		tfMap["string_values"] = apiObject.StringValues
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomActionURLOperation(apiObject *awstypes.CustomActionURLOperation) []interface{} {
+func flattenCustomActionURLOperation(apiObject *awstypes.CustomActionURLOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"url_target":   apiObject.URLTarget,
 		"url_template": aws.ToString(apiObject.URLTemplate),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_timestreaminfluxdb_db_instance: Set new computed value for `secondary_availability_zone` attribute when changing `deployment_type`
+```

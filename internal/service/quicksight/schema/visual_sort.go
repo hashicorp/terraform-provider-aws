@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 )
 
 const fieldSortOptionsMaxItems100 = 100
@@ -28,6 +29,19 @@ var fieldSortOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var fieldSortOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_sort": columnSortDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+				"field_sort":  fieldSortDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+			},
+		},
+	}
+})
+
 var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
 		Type:     schema.TypeList,
@@ -36,9 +50,23 @@ var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringEnumSchema[awstypes.SortDirection](attrRequired),
+				"direction":            sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+			},
+		},
+	}
+})
+
+var columnSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"direction":            sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
+				"sort_by":              columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"aggregation_function": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
 		},
 	}
@@ -52,14 +80,27 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringEnumSchema[awstypes.SortDirection](attrRequired),
-				"field_id":  stringLenBetweenSchema(attrRequired, 1, 512),
+				"direction": sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
+				attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 			},
 		},
 	}
 })
 
-func expandFieldSortOptionsList(tfList []interface{}) []awstypes.FieldSortOptions {
+var fieldSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"direction": sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
+				attrFieldID: stringComputedOnly(),
+			},
+		},
+	}
+})
+
+func expandFieldSortOptionsList(tfList []any) []awstypes.FieldSortOptions {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -67,7 +108,7 @@ func expandFieldSortOptionsList(tfList []interface{}) []awstypes.FieldSortOption
 	var apiObjects []awstypes.FieldSortOptions
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -83,29 +124,29 @@ func expandFieldSortOptionsList(tfList []interface{}) []awstypes.FieldSortOption
 	return apiObjects
 }
 
-func expandFieldSortOptions(tfMap map[string]interface{}) *awstypes.FieldSortOptions {
+func expandFieldSortOptions(tfMap map[string]any) *awstypes.FieldSortOptions {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.FieldSortOptions{}
 
-	if v, ok := tfMap["column_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_sort"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnSort = expandColumnSort(v)
 	}
-	if v, ok := tfMap["field_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_sort"].([]any); ok && len(v) > 0 {
 		apiObject.FieldSort = expandFieldSort(v)
 	}
 
 	return apiObject
 }
 
-func expandColumnSort(tfList []interface{}) *awstypes.ColumnSort {
+func expandColumnSort(tfList []any) *awstypes.ColumnSort {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -115,22 +156,22 @@ func expandColumnSort(tfList []interface{}) *awstypes.ColumnSort {
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
 		apiObject.Direction = awstypes.SortDirection(v)
 	}
-	if v, ok := tfMap["sort_by"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sort_by"].([]any); ok && len(v) > 0 {
 		apiObject.SortBy = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
 
 	return apiObject
 }
 
-func expandFieldSort(tfList []interface{}) *awstypes.FieldSort {
+func expandFieldSort(tfList []any) *awstypes.FieldSort {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}

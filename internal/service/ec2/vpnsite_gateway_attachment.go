@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -14,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,19 +42,19 @@ func resourceVPNGatewayAttachment() *schema.Resource {
 	}
 }
 
-func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcID := d.Get(names.AttrVPCID).(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
-	input := &ec2.AttachVpnGatewayInput{
+	input := ec2.AttachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
 		VpnGatewayId: aws.String(vpnGatewayID),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 VPN Gateway Attachment: %s", vpnGatewayID)
-	_, err := conn.AttachVpnGateway(ctx, input)
+	_, err := conn.AttachVpnGateway(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway (%s) Attachment (%s): %s", vpnGatewayID, vpcID, err)
@@ -69,7 +71,7 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceVPNGatewayAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -78,7 +80,7 @@ func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 	_, err := findVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, vpnGatewayID, vpcID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Gateway (%s) Attachment (%s) not found, removing from state", vpnGatewayID, vpcID)
 		d.SetId("")
 		return diags
@@ -91,7 +93,7 @@ func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -99,10 +101,11 @@ func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
 
 	log.Printf("[INFO] Deleting EC2 VPN Gateway (%s) Attachment (%s)", vpnGatewayID, vpcID)
-	_, err := conn.DetachVpnGateway(ctx, &ec2.DetachVpnGatewayInput{
+	input := ec2.DetachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
 		VpnGatewayId: aws.String(vpnGatewayID),
-	})
+	}
+	_, err := conn.DetachVpnGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayAttachmentNotFound, errCodeInvalidVPNGatewayIDNotFound) {
 		return diags

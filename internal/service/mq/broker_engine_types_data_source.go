@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package mq
 
@@ -10,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,7 +59,7 @@ func dataSourceBrokerEngineTypes() *schema.Resource {
 	}
 }
 
-func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).MQClient(ctx)
 
@@ -84,7 +86,7 @@ func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData
 		input.NextToken = output.NextToken
 	}
 
-	d.SetId(id.UniqueId())
+	d.SetId(create.UniqueId(ctx))
 
 	if err := d.Set("broker_engine_types", flattenBrokerList(engineTypes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting broker_engine_types: %s", err)
@@ -93,9 +95,9 @@ func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func flattenBrokerList(types []types.BrokerEngineType) (brokers []map[string]interface{}) {
+func flattenBrokerList(types []types.BrokerEngineType) (brokers []map[string]any) {
 	for _, broker := range types {
-		brokers = append(brokers, map[string]interface{}{
+		brokers = append(brokers, map[string]any{
 			"engine_type":     broker.EngineType,
 			"engine_versions": flattenEngineVersions(broker.EngineVersions),
 		})

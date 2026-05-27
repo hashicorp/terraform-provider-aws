@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func validCustomAMIID(v interface{}, k string) (ws []string, errors []error) {
+func validCustomAMIID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 256 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
@@ -19,7 +19,7 @@ func validCustomAMIID(v interface{}, k string) (ws []string, errors []error) {
 
 	if !regexache.MustCompile(`^ami\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q must begin with 'ami-' and be comprised of only [0-9a-z]: %v", k, value))
+			"%q must begin with 'ami-' and only contain [0-9a-z]: %v", k, value))
 	}
 
 	return

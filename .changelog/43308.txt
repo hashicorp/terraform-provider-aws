@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_channel: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when configuration blocks are empty
+```

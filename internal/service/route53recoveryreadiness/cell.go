@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53recoveryreadiness
 
@@ -13,15 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,19 +70,17 @@ func resourceCell() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	name := d.Get("cell_name").(string)
 	input := &route53recoveryreadiness.CreateCellInput{
 		CellName: aws.String(name),
-		Cells:    flex.ExpandStringValueList(d.Get("cells").([]interface{})),
+		Cells:    flex.ExpandStringValueList(d.Get("cells").([]any)),
 	}
 
 	output, err := conn.CreateCell(ctx, input)
@@ -99,13 +98,13 @@ func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceCellRead(ctx, d, meta)...)
 }
 
-func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	output, err := findCellByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Recovery Readiness Cell (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -123,14 +122,14 @@ func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateCellInput{
 			CellName: aws.String(d.Id()),
-			Cells:    flex.ExpandStringValueList(d.Get("cells").([]interface{})),
+			Cells:    flex.ExpandStringValueList(d.Get("cells").([]any)),
 		}
 
 		_, err := conn.UpdateCell(ctx, input)
@@ -143,7 +142,7 @@ func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceCellRead(ctx, d, meta)...)
 }
 
-func resourceCellDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCellDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -160,19 +159,17 @@ func resourceCellDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
 	}
 
-	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+	err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
 		_, err := findCellByName(ctx, conn, d.Id())
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
-		return retry.RetryableError(fmt.Errorf("Route 53 Recovery Readiness Cell (%s) still exists", d.Id()))
+		return tfresource.RetryableError(fmt.Errorf("Route 53 Recovery Readiness Cell (%s) still exists", d.Id()))
 	})
-	if tfresource.TimedOut(err) {
-		_, err = findCellByName(ctx, conn, d.Id())
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Recovery Readiness Cell (%s) deletion: %s", d.Id(), err)
 	}
@@ -188,8 +185,7 @@ func findCellByName(ctx context.Context, conn *route53recoveryreadiness.Client, 
 	output, err := conn.GetCell(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -197,7 +193,7 @@ func findCellByName(ctx context.Context, conn *route53recoveryreadiness.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

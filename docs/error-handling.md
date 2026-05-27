@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Error Handling
 
@@ -111,9 +114,6 @@ tfawserr.ErrCodeEquals(err, tf{SERVICE}.ErrCodeInvalidParameterException)
 The Terraform Plugin SDK includes some error types which are used in certain operations and typically preferred over implementing new types:
 
 * [`retry.NotFoundError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#NotFoundError)
-* [`retry.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#TimeoutError)
-    * Returned from [`retry.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#RetryContext) and
-    [`(retry.StateChangeConf).WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForStateContext)
 
 !!! note
     While these helpers currently reside in the Terraform Plugin SDK V2 package, they can be used with Plugin Framework based resources. In the future these functions will likely be migrated into the provider itself, or a standalone library as there is no direct dependency on Plugin SDK functionality.
@@ -227,7 +227,7 @@ To prevent this type of Terraform CLI error, the resource implementation should 
 In the Terraform AWS Provider, an initial fix for the Terraform CLI error will typically look like:
 
 ```go
-func resourceServiceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
  	var diags diag.Diagnostics
 
    /* ... */
@@ -235,7 +235,7 @@ func resourceServiceThingCreate(ctx context.Context, d *schema.ResourceData, met
     return append(diags, resourceServiceThingRead(ctx, d, meta)...)
 }
 
-func resourceServiceThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
   	var diags diag.Diagnostics
 
    /* ... */

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -12,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -53,7 +55,7 @@ func resourceConfig() *schema.Resource {
 	}
 }
 
-func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -78,13 +80,13 @@ func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceConfigRead(ctx, d, meta)...)
 }
 
-func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	resolverConfig, err := findResolverConfigByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -107,7 +109,7 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -140,8 +142,7 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -156,14 +157,14 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
-func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusAutodefinedReverse(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverConfigByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -191,7 +192,7 @@ func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverAutodefinedReverseStatusEnabling),
 		Target:  enum.Slice(awstypes.ResolverAutodefinedReverseStatusEnabled),
-		Refresh: statusAutodefinedReverse(ctx, conn, id),
+		Refresh: statusAutodefinedReverse(conn, id),
 		Timeout: autodefinedReverseUpdatedTimeout,
 	}
 
@@ -208,7 +209,7 @@ func waitAutodefinedReverseDisabled(ctx context.Context, conn *route53resolver.C
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverAutodefinedReverseStatusDisabling),
 		Target:  enum.Slice(awstypes.ResolverAutodefinedReverseStatusDisabled),
-		Refresh: statusAutodefinedReverse(ctx, conn, id),
+		Refresh: statusAutodefinedReverse(conn, id),
 		Timeout: autodefinedReverseUpdatedTimeout,
 	}
 

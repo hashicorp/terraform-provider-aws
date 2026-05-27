@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -17,7 +17,9 @@ func TestAccKMS_serial(t *testing.T) {
 			acctest.CtBasic:      testAccCustomKeyStore_basic,
 			"update":             testAccCustomKeyStore_update,
 			acctest.CtDisappears: testAccCustomKeyStore_disappears,
-			"DataSource_basic":   testAccCustomKeyStoreDataSource_basic,
+		},
+		"CustomKeyStoreDataSource": {
+			acctest.CtBasic: testAccCustomKeyStoreDataSource_basic,
 		},
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -13,6 +13,13 @@ import (
 // DataSourceWithConfigure is a structure to be embedded within a DataSource that implements the DataSourceWithConfigure interface.
 type DataSourceWithConfigure struct {
 	withMeta
+}
+
+// Metadata should return the full name of the resource, such as
+// examplecloud_thing.
+func (*DataSourceWithConfigure) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	// This method is implemented in the wrappers.
+	panic("not implemented") // lintignore:R009
 }
 
 // Configure enables provider-level data or clients to be set in the

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acm_test
@@ -22,9 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,22 +34,24 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic(domain, types.ValidationMethodEmail),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.export", string(types.CertificateExportDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
@@ -80,16 +81,16 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic(domain, types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -127,16 +128,16 @@ func TestAccACMCertificate_root(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic(rootDomain, types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -168,16 +169,16 @@ func TestAccACMCertificate_validationOptions(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_validationOptions(rootDomain, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
@@ -204,20 +205,20 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 	ctx := acctest.Context(t)
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	var v1, v2, v3, v4 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, certificateDomainName),
@@ -244,19 +245,20 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
 				},
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
@@ -272,18 +274,19 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
+					input := acm.RenewCertificateInput{
 						CertificateArn: v1.CertificateArn,
-					})
+					}
+					_, err := conn.RenewCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("renewing ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
 				},
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v3),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
@@ -296,7 +299,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
 					_, err := tfacm.WaitCertificateRenewed(ctx, conn, aws.ToString(v1.CertificateArn), tfacm.CertificateRenewalTimeout)
 					if err != nil {
@@ -305,7 +308,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				},
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v4),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v4),
 					testAccCheckCertificateRenewed(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
@@ -330,20 +333,20 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 	ctx := acctest.Context(t)
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	var v1, v2, v3 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_noRenewalPermission(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, certificateDomainName),
@@ -370,19 +373,20 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
 				},
 				Config: testAccCertificateConfig_privateCertificate_noRenewalPermission(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -397,18 +401,19 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
+					input := acm.RenewCertificateInput{
 						CertificateArn: v1.CertificateArn,
-					})
+					}
+					_, err := conn.RenewCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("renewing ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
 				},
 				Config: testAccCertificateConfig_privateCertificate_noRenewalPermission(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v3),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
@@ -424,7 +429,7 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 				},
 				Config: testAccCertificateConfig_privateCertificate_noRenewalPermission(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v3),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
@@ -447,21 +452,21 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	var v1, v2 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -480,12 +485,13 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -495,7 +501,7 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -521,21 +527,21 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := "P395D"
 	var v1, v2 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -554,12 +560,13 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -569,7 +576,7 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -595,21 +602,21 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	var v1, v2, v3 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -628,12 +635,13 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -642,7 +650,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -663,7 +671,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v3),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
 					testAccCheckCertificateRenewed(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -683,21 +691,21 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	var v1, v2 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -719,7 +727,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *t
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -736,21 +744,21 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *t
 func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (90 * 24 * time.Hour).String()
 	var v1, v2, v3 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -769,12 +777,13 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -783,7 +792,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -804,7 +813,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v3),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
 					testAccCheckCertificateNotRenewed(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -821,22 +830,22 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	durationUpdated := (90 * 24 * time.Hour).String()
 	var v1, v2 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -855,12 +864,13 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -869,7 +879,7 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, durationUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", durationUpdated),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -892,21 +902,21 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	var v1, v2 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -925,12 +935,13 @@ func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
-					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
+					input := acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
 						Passphrase:     []byte("passphrase"),
-					})
+					}
+					_, err := conn.ExportCertificate(ctx, &input)
 					if err != nil {
 						t.Fatalf("exporting ACM Certificate (%s): %s", aws.ToString(v1.CertificateArn), err)
 					}
@@ -939,7 +950,7 @@ func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -966,11 +977,11 @@ func TestAccACMCertificate_Root_trailingPeriod(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := fmt.Sprintf("%s.", rootDomain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateConfig_basic(domain, types.ValidationMethodDns),
@@ -987,16 +998,16 @@ func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_subjectAlternativeNames(rootDomain, strconv.Quote(wildcardDomain), types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -1030,11 +1041,11 @@ func TestAccACMCertificate_SubjectAlternativeNames_emptyString(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(""), types.ValidationMethodDns),
@@ -1052,16 +1063,16 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 	sanDomain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -1099,16 +1110,16 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 	sanDomain2 := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_subjectAlternativeNames(domain, fmt.Sprintf("%q, %q", sanDomain1, sanDomain2), types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "3"),
@@ -1150,16 +1161,16 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile(`certificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -1196,16 +1207,16 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 	sanDomain := rootDomain
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile(`certificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -1241,16 +1252,16 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic(wildcardDomain, types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, wildcardDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -1281,16 +1292,16 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_subjectAlternativeNames(wildcardDomain, strconv.Quote(rootDomain), types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, wildcardDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -1325,16 +1336,16 @@ func TestAccACMCertificate_keyAlgorithm(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_keyAlgorithm(rootDomain, types.ValidationMethodDns, types.KeyAlgorithmEcPrime256v1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -1365,16 +1376,16 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_disableCTLogging(rootDomain, types.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -1406,21 +1417,21 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, types.ValidationMethodDns, "ENABLED"),
-				Check:  testAccCheckCertificateExists(ctx, resourceName, &v),
+				Check:  testAccCheckCertificateExists(ctx, t, resourceName, &v),
 			},
 			// Check the certificate's attributes once the validation has been applied.
 			{
 				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, types.ValidationMethodDns, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -1445,7 +1456,7 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, types.ValidationMethodDns, "DISABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -1470,7 +1481,7 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, types.ValidationMethodDns, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -1496,6 +1507,47 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	commonName := "example.com"
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
+	newCaKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, newCaKey)
+	newKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, newCaKey, newCaCertificate, newKey, commonName)
+	var v1, v2 types.CertificateDetail
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateKeyWo(certificate, key),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
+					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
+					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccCertificateConfig_privateKeyWoUpdate(newCertificate, newKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
+					testAccCheckCertificateNotRecreated(&v1, &v2),
+					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
+					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 // lintignore:AT002
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1508,19 +1560,19 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	newCaKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, newCaKey)
 	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, newCaKey, newCaCertificate, key, commonName)
-	withoutChainDomain := acctest.RandomDomainName()
+	withoutChainDomain := acctest.RandomDomainName(t)
 	var v1, v2, v3 types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateKey(certificate, key, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, commonName),
@@ -1529,8 +1581,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_privateKey(newCertificate, key, newCaCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v2),
-					testAccCheckCertficateNotRecreated(&v1, &v2),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
+					testAccCheckCertificateNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, commonName),
@@ -1539,8 +1591,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_privateKeyNoChain(t, withoutChainDomain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v3),
-					testAccCheckCertficateNotRecreated(&v2, &v3),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
+					testAccCheckCertificateNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, withoutChainDomain),
@@ -1569,16 +1621,16 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateKey(certificate, key, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
@@ -1605,16 +1657,16 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateKeyNoChain(t, "1.2.3.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
@@ -1642,11 +1694,11 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 	certificatePEM2 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM2, "5.6.7.8")
 	var v types.CertificateDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
@@ -1658,7 +1710,7 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1692,7 +1744,7 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM2),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1720,18 +1772,58 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateExists(ctx context.Context, n string, v *types.CertificateDetail) resource.TestCheckFunc {
+func TestAccACMCertificate_optionExport(t *testing.T) {
+	// Issuing an exportable ACM Certificate is expensive.
+	// Skip the test by default and only run if the environment variable is set.
+	acctest.SkipIfEnvVarNotSet(t, "ACM_TEST_CERTIFICATE_EXPORT")
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	var v types.CertificateDetail
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_optionExport(rootDomain, types.ValidationMethodDns, types.CertificateExportEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						names.AttrDomainName:   rootDomain,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.export", string(types.CertificateExportEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckCertificateExists(ctx context.Context, t *testing.T, n string, v *types.CertificateDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ACM Certificate ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
 		output, err := tfacm.FindCertificateByARN(ctx, conn, rs.Primary.ID)
 
@@ -1745,9 +1837,9 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *types.Certi
 	}
 }
 
-func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCertificateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acm_certificate" {
@@ -1756,7 +1848,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfacm.FindCertificateByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1771,7 +1863,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckCertficateNotRecreated(v1, v2 *types.CertificateDetail) resource.TestCheckFunc {
+func testAccCheckCertificateNotRecreated(v1, v2 *types.CertificateDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(v1.CertificateArn) != aws.ToString(v2.CertificateArn) {
 			return fmt.Errorf("ACM Certificate recreated")
@@ -1950,6 +2042,26 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey), acctest.TLSPEMEscapeNewlines(chain))
 }
 
+func testAccCertificateConfig_privateKeyWo(certificate, privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body       = "%[1]s"
+  private_key_wo         = "%[2]s"
+  private_key_wo_version = 1
+}
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey))
+}
+
+func testAccCertificateConfig_privateKeyWoUpdate(certificate, privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body       = "%[1]s"
+  private_key_wo         = "%[2]s"
+  private_key_wo_version = 2
+}
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey))
+}
+
 func testAccCertificateConfig_disableCTLogging(domainName string, validationMethod types.ValidationMethod) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
@@ -2022,4 +2134,17 @@ resource "aws_acm_certificate" "test" {
   key_algorithm     = %[3]q
 }
 `, domainName, validationMethod, keyAlgorithm)
+}
+
+func testAccCertificateConfig_optionExport(domainName string, validationMethod types.ValidationMethod, export types.CertificateExport) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[1]q
+  validation_method = %[2]q
+
+  options {
+    export = %[3]q
+  }
+}
+`, domainName, validationMethod, export)
 }

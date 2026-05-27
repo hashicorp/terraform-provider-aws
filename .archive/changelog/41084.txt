@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ec2_transit_gateway_vpc_attachment: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_vpc_attachment: Add `arn` attribute
+```

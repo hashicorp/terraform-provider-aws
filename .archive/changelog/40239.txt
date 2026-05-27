@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudfront_vpc_origin
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `origin.vpc_origin_config` argument
+```

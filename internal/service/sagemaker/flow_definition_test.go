@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -9,32 +9,30 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccFlowDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_flow_definition.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
+					testAccCheckFlowDefinitionExists(ctx, t, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("flow-definition/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -65,19 +63,19 @@ func testAccFlowDefinition_basic(t *testing.T) {
 func testAccFlowDefinition_humanLoopConfig_publicWorkforce(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_flow_definition.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionConfig_publicWorkforce(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
+					testAccCheckFlowDefinitionExists(ctx, t, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.#", "1"),
@@ -98,19 +96,19 @@ func testAccFlowDefinition_humanLoopConfig_publicWorkforce(t *testing.T) {
 func testAccFlowDefinition_humanLoopRequestSource(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_flow_definition.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionConfig_humanLoopRequestSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
+					testAccCheckFlowDefinitionExists(ctx, t, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.0.aws_managed_human_loop_request_source", "AWS/Textract/AnalyzeDocument/Forms/V1"),
@@ -131,19 +129,19 @@ func testAccFlowDefinition_humanLoopRequestSource(t *testing.T) {
 func testAccFlowDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_flow_definition.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
+					testAccCheckFlowDefinitionExists(ctx, t, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -156,7 +154,7 @@ func testAccFlowDefinition_tags(t *testing.T) {
 			{
 				Config: testAccFlowDefinitionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
+					testAccCheckFlowDefinitionExists(ctx, t, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -165,7 +163,7 @@ func testAccFlowDefinition_tags(t *testing.T) {
 			{
 				Config: testAccFlowDefinitionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
+					testAccCheckFlowDefinitionExists(ctx, t, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -177,20 +175,20 @@ func testAccFlowDefinition_tags(t *testing.T) {
 func testAccFlowDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_flow_definition.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceFlowDefinition(), resourceName),
+					testAccCheckFlowDefinitionExists(ctx, t, resourceName, &flowDefinition),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceFlowDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -198,9 +196,9 @@ func testAccFlowDefinition_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFlowDefinitionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_flow_definition" {
@@ -209,7 +207,7 @@ func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfsagemaker.FindFlowDefinitionByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -217,14 +215,14 @@ func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Flow Definition %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Flow Definition %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFlowDefinitionExists(ctx context.Context, n string, flowDefinition *sagemaker.DescribeFlowDefinitionOutput) resource.TestCheckFunc {
+func testAccCheckFlowDefinitionExists(ctx context.Context, t *testing.T, n string, flowDefinition *sagemaker.DescribeFlowDefinitionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -232,10 +230,10 @@ func testAccCheckFlowDefinitionExists(ctx context.Context, n string, flowDefinit
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Flow Definition ID is set")
+			return fmt.Errorf("No SageMaker AI Flow Definition ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindFlowDefinitionByName(ctx, conn, rs.Primary.ID)
 
@@ -355,7 +353,7 @@ resource "aws_sagemaker_flow_definition" "test" {
     task_count                            = 1
     task_description                      = %[1]q
     task_title                            = %[1]q
-    workteam_arn                          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
+    workteam_arn                          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.region}:394669845002:workteam/public-crowd/default"
 
     public_workforce_task_price {
       amount_in_usd {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -8,6 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -121,6 +122,7 @@ func DataSourceParametersSchema() *schema.Schema {
 								Optional:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
+							names.AttrRoleARN: sdkschema.ARNStringSchema(sdkschema.AttrOptional),
 						},
 					},
 					ExactlyOneOf: exactlyOneOf,
@@ -428,6 +430,7 @@ func DataSourceParametersSchema() *schema.Schema {
 									},
 								},
 							},
+							names.AttrRoleARN: sdkschema.ARNStringSchema(sdkschema.AttrOptional),
 						},
 					},
 					ExactlyOneOf: exactlyOneOf,
@@ -591,18 +594,18 @@ func VPCConnectionPropertiesSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"vpc_connection_arn": arnStringSchema(attrRequired),
+				"vpc_connection_arn": sdkschema.ARNStringSchema(sdkschema.AttrRequired),
 			},
 		},
 	}
 }
 
-func ExpandDataSourceCredentials(tfList []interface{}) *awstypes.DataSourceCredentials {
+func ExpandDataSourceCredentials(tfList []any) *awstypes.DataSourceCredentials {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -613,7 +616,7 @@ func ExpandDataSourceCredentials(tfList []interface{}) *awstypes.DataSourceCrede
 		apiObject.CopySourceArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["credential_pair"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["credential_pair"].([]any); ok && len(v) > 0 {
 		apiObject.CredentialPair = expandCredentialPair(v)
 	}
 
@@ -624,14 +627,14 @@ func ExpandDataSourceCredentials(tfList []interface{}) *awstypes.DataSourceCrede
 	return apiObject
 }
 
-func expandCredentialPair(tfList []interface{}) *awstypes.CredentialPair {
+func expandCredentialPair(tfList []any) *awstypes.CredentialPair {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CredentialPair{}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -647,20 +650,20 @@ func expandCredentialPair(tfList []interface{}) *awstypes.CredentialPair {
 	return apiObject
 }
 
-func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParameters {
+func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	var apiObject awstypes.DataSourceParameters
 
-	if v, ok := tfMap["amazon_elasticsearch"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v, ok := tfMap["amazon_elasticsearch"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberAmazonElasticsearchParameters{}
 
 			if v, ok := tfMap[names.AttrDomain].(string); ok && v != "" {
@@ -671,20 +674,24 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["athena"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["athena"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberAthenaParameters{}
 
 			if v, ok := tfMap["work_group"].(string); ok && v != "" {
 				ps.Value.WorkGroup = aws.String(v)
 			}
 
+			if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+				ps.Value.RoleArn = aws.String(v)
+			}
+
 			apiObject = ps
 		}
 	}
 
-	if v := tfMap["aurora"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["aurora"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberAuroraParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -701,8 +708,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v, ok := tfMap["aurora_postgresql"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v, ok := tfMap["aurora_postgresql"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberAuroraPostgreSqlParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -719,8 +726,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["aws_iot_analytics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["aws_iot_analytics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberAwsIotAnalyticsParameters{}
 
 			if v, ok := tfMap["data_set_name"].(string); ok && v != "" {
@@ -731,8 +738,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["databricks"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["databricks"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberDatabricksParameters{}
 
 			if v, ok := tfMap["host"].(string); ok && v != "" {
@@ -749,8 +756,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["jira"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["jira"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberJiraParameters{}
 
 			if v, ok := tfMap["site_base_url"].(string); ok && v != "" {
@@ -761,8 +768,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["maria_db"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["maria_db"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberMariaDbParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -779,8 +786,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["mysql"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["mysql"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberMySqlParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -797,8 +804,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["oracle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["oracle"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberOracleParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -815,8 +822,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["postgresql"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["postgresql"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberPostgreSqlParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -833,8 +840,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["presto"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["presto"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberPrestoParameters{}
 
 			if v, ok := tfMap["catalog"].(string); ok && v != "" {
@@ -851,8 +858,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["rds"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["rds"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberRdsParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -866,8 +873,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["redshift"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["redshift"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberRedshiftParameters{}
 
 			if v, ok := tfMap["cluster_id"].(string); ok && v != "" {
@@ -887,12 +894,12 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["s3"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberS3Parameters{}
 
-			if v, ok := tfMap["manifest_file_location"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				if tfMap, ok := v[0].(map[string]interface{}); ok {
+			if v, ok := tfMap["manifest_file_location"].([]any); ok && len(v) > 0 && v[0] != nil {
+				if tfMap, ok := v[0].(map[string]any); ok {
 					apiObject := &awstypes.ManifestFileLocation{}
 
 					if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
@@ -906,12 +913,16 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 				}
 			}
 
+			if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+				ps.Value.RoleArn = aws.String(v)
+			}
+
 			apiObject = ps
 		}
 	}
 
-	if v := tfMap["service_now"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["service_now"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberServiceNowParameters{}
 
 			if v, ok := tfMap["site_base_url"].(string); ok && v != "" {
@@ -922,8 +933,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["snowflake"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["snowflake"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberSnowflakeParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -940,8 +951,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["spark"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["spark"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberSparkParameters{}
 
 			if v, ok := tfMap["host"].(string); ok && v != "" {
@@ -955,8 +966,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["sql_server"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["sql_server"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberSqlServerParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -973,8 +984,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["teradata"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["teradata"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberTeradataParameters{}
 
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
@@ -991,8 +1002,8 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 		}
 	}
 
-	if v := tfMap["twitter"].([]interface{}); ok && len(v) > 0 && v != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v := tfMap["twitter"].([]any); ok && len(v) > 0 && v != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberTwitterParameters{}
 
 			if v, ok := tfMap["max_rows"].(int); ok {
@@ -1009,112 +1020,113 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 	return apiObject
 }
 
-func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []interface{} {
+func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	switch v := apiObject.(type) {
 	case *awstypes.DataSourceParametersMemberAmazonElasticsearchParameters:
-		tfMap["amazon_elasticsearch"] = []interface{}{
-			map[string]interface{}{
+		tfMap["amazon_elasticsearch"] = []any{
+			map[string]any{
 				names.AttrDomain: aws.ToString(v.Value.Domain),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberAthenaParameters:
-		tfMap["athena"] = []interface{}{
-			map[string]interface{}{
-				"work_group": aws.ToString(v.Value.WorkGroup),
+		tfMap["athena"] = []any{
+			map[string]any{
+				"work_group":      aws.ToString(v.Value.WorkGroup),
+				names.AttrRoleARN: aws.ToString(v.Value.RoleArn),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberAuroraParameters:
-		tfMap["aurora"] = []interface{}{
-			map[string]interface{}{
+		tfMap["aurora"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberAuroraPostgreSqlParameters:
-		tfMap["aurora_postgresql"] = []interface{}{
-			map[string]interface{}{
+		tfMap["aurora_postgresql"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberAwsIotAnalyticsParameters:
-		tfMap["aws_iot_analytics"] = []interface{}{
-			map[string]interface{}{
+		tfMap["aws_iot_analytics"] = []any{
+			map[string]any{
 				"data_set_name": aws.ToString(v.Value.DataSetName),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberDatabricksParameters:
-		tfMap["databricks"] = []interface{}{
-			map[string]interface{}{
+		tfMap["databricks"] = []any{
+			map[string]any{
 				"host":              aws.ToString(v.Value.Host),
 				names.AttrPort:      aws.ToInt32(v.Value.Port),
 				"sql_endpoint_path": aws.ToString(v.Value.SqlEndpointPath),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberJiraParameters:
-		tfMap["jira"] = []interface{}{
-			map[string]interface{}{
+		tfMap["jira"] = []any{
+			map[string]any{
 				"site_base_url": aws.ToString(v.Value.SiteBaseUrl),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberMariaDbParameters:
-		tfMap["maria_db"] = []interface{}{
-			map[string]interface{}{
+		tfMap["maria_db"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberMySqlParameters:
-		tfMap["mysql"] = []interface{}{
-			map[string]interface{}{
+		tfMap["mysql"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberOracleParameters:
-		tfMap["oracle"] = []interface{}{
-			map[string]interface{}{
+		tfMap["oracle"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberPostgreSqlParameters:
-		tfMap["postgresql"] = []interface{}{
-			map[string]interface{}{
+		tfMap["postgresql"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				names.AttrPort:     aws.ToInt32(v.Value.Port),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberPrestoParameters:
-		tfMap["postgresql"] = []interface{}{
-			map[string]interface{}{
+		tfMap["postgresql"] = []any{
+			map[string]any{
 				"catalog":      aws.ToString(v.Value.Catalog),
 				"host":         aws.ToString(v.Value.Host),
 				names.AttrPort: aws.ToInt32(v.Value.Port),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberRdsParameters:
-		tfMap["rds"] = []interface{}{
-			map[string]interface{}{
+		tfMap["rds"] = []any{
+			map[string]any{
 				names.AttrDatabase:   aws.ToString(v.Value.Database),
 				names.AttrInstanceID: aws.ToString(v.Value.InstanceId),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberRedshiftParameters:
-		tfMap["redshift"] = []interface{}{
-			map[string]interface{}{
+		tfMap["redshift"] = []any{
+			map[string]any{
 				"cluster_id":       aws.ToString(v.Value.ClusterId),
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
@@ -1122,56 +1134,57 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []inte
 			},
 		}
 	case *awstypes.DataSourceParametersMemberS3Parameters:
-		tfMap["s3"] = []interface{}{
-			map[string]interface{}{
-				"manifest_file_location": []interface{}{
-					map[string]interface{}{
+		tfMap["s3"] = []any{
+			map[string]any{
+				"manifest_file_location": []any{
+					map[string]any{
 						names.AttrBucket: aws.ToString(v.Value.ManifestFileLocation.Bucket),
 						names.AttrKey:    aws.ToString(v.Value.ManifestFileLocation.Key),
 					},
 				},
+				names.AttrRoleARN: aws.ToString(v.Value.RoleArn),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberServiceNowParameters:
-		tfMap["service_now"] = []interface{}{
-			map[string]interface{}{
+		tfMap["service_now"] = []any{
+			map[string]any{
 				"site_base_url": aws.ToString(v.Value.SiteBaseUrl),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberSnowflakeParameters:
-		tfMap["snowflake"] = []interface{}{
-			map[string]interface{}{
+		tfMap["snowflake"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				"warehouse":        aws.ToString(v.Value.Warehouse),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberSparkParameters:
-		tfMap["snowflake"] = []interface{}{
-			map[string]interface{}{
+		tfMap["snowflake"] = []any{
+			map[string]any{
 				"host":         aws.ToString(v.Value.Host),
 				names.AttrPort: aws.ToInt32(v.Value.Port),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberSqlServerParameters:
-		tfMap["sql_server"] = []interface{}{
-			map[string]interface{}{
+		tfMap["sql_server"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				names.AttrPort:     v.Value.Port,
 			},
 		}
 	case *awstypes.DataSourceParametersMemberTeradataParameters:
-		tfMap["teradata"] = []interface{}{
-			map[string]interface{}{
+		tfMap["teradata"] = []any{
+			map[string]any{
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
 				names.AttrPort:     v.Value.Port,
 			},
 		}
 	case *awstypes.DataSourceParametersMemberTwitterParameters:
-		tfMap["teradata"] = []interface{}{
-			map[string]interface{}{
+		tfMap["teradata"] = []any{
+			map[string]any{
 				"max_rows": aws.ToInt32(v.Value.MaxRows),
 				"query":    aws.ToString(v.Value.Query),
 			},
@@ -1180,15 +1193,15 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []inte
 		return nil
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func ExpandSSLProperties(tfList []interface{}) *awstypes.SslProperties {
+func ExpandSSLProperties(tfList []any) *awstypes.SslProperties {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1202,24 +1215,24 @@ func ExpandSSLProperties(tfList []interface{}) *awstypes.SslProperties {
 	return apiObject
 }
 
-func FlattenSSLProperties(apiObject *awstypes.SslProperties) []interface{} {
+func FlattenSSLProperties(apiObject *awstypes.SslProperties) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"disable_ssl": apiObject.DisableSsl,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func ExpandVPCConnectionProperties(tfList []interface{}) *awstypes.VpcConnectionProperties {
+func ExpandVPCConnectionProperties(tfList []any) *awstypes.VpcConnectionProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1233,16 +1246,16 @@ func ExpandVPCConnectionProperties(tfList []interface{}) *awstypes.VpcConnection
 	return apiObject
 }
 
-func FlattenVPCConnectionProperties(apiObject *awstypes.VpcConnectionProperties) []interface{} {
+func FlattenVPCConnectionProperties(apiObject *awstypes.VpcConnectionProperties) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.VpcConnectionArn != nil {
 		tfMap["vpc_connection_arn"] = aws.ToString(apiObject.VpcConnectionArn)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

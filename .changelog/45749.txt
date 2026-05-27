@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image: Add `logging_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_image_pipeline: Add `logging_configuration` argument
+```

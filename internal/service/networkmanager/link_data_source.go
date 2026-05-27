@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -69,7 +71,7 @@ func dataSourceLink() *schema.Resource {
 	}
 }
 
-func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -86,7 +88,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(linkID)
 	d.Set(names.AttrARN, link.LinkArn)
 	if link.Bandwidth != nil {
-		if err := d.Set("bandwidth", []interface{}{flattenBandwidth(link.Bandwidth)}); err != nil {
+		if err := d.Set("bandwidth", []any{flattenBandwidth(link.Bandwidth)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting bandwidth: %s", err)
 		}
 	} else {
@@ -99,7 +101,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("site_id", link.SiteId)
 	d.Set(names.AttrType, link.Type)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

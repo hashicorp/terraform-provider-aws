@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -117,7 +120,7 @@ func resourceS3Endpoint() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CannedAclForObjectsValue](),
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					return strings.ToLower(v.(string))
 				},
 			},
@@ -150,7 +153,7 @@ func resourceS3Endpoint() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CompressionTypeValue](),
 				Default:          strings.ToUpper(string(awstypes.CompressionTypeValueNone)),
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					return strings.ToUpper(v.(string))
 				},
 			},
@@ -186,7 +189,7 @@ func resourceS3Endpoint() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionDelimiterValue](),
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					return strings.ToUpper(v.(string))
 				},
 			},
@@ -199,7 +202,7 @@ func resourceS3Endpoint() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionSequenceValue](),
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					return strings.ToLower(v.(string))
 				},
 			},
@@ -240,7 +243,7 @@ func resourceS3Endpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -316,12 +319,10 @@ func resourceS3Endpoint() *schema.Resource {
 				Default:  false,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -353,7 +354,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateEndpoint(ctx, input)
 	})
 
@@ -372,20 +373,20 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceS3EndpointRead(ctx, d, meta)...)
 }
 
-func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	endpoint, err := findEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err == nil && endpoint.S3Settings == nil {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -461,7 +462,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -495,7 +496,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.ModifyEndpoint(ctx, input)
 		})
 
@@ -507,14 +508,15 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceS3EndpointRead(ctx, d, meta)...)
 }
 
-func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
-	_, err := conn.DeleteEndpoint(ctx, &dms.DeleteEndpointInput{
+	input := dms.DeleteEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
-	})
+	}
+	_, err := conn.DeleteEndpoint(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafka
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,7 +39,7 @@ func resourceConfiguration() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("latest_revision", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("latest_revision", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("server_properties")
 			}),
 		),
@@ -76,7 +78,7 @@ func resourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -104,13 +106,13 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	configurationOutput, err := findConfigurationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MSK Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -137,7 +139,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -159,7 +161,7 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -192,8 +194,7 @@ func findConfigurationByARN(ctx context.Context, conn *kafka.Client, arn string)
 
 	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Configuration ARN does not exist") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -202,7 +203,7 @@ func findConfigurationByARN(ctx context.Context, conn *kafka.Client, arn string)
 	}
 
 	if output == nil || output.LatestRevision == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -221,17 +222,17 @@ func findConfigurationRevisionByTwoPartKey(ctx context.Context, conn *kafka.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusConfigurationState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusConfigurationState(conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConfigurationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -250,7 +251,7 @@ func waitConfigurationDeleted(ctx context.Context, conn *kafka.Client, arn strin
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigurationStateDeleting),
 		Target:  []string{},
-		Refresh: statusConfigurationState(ctx, conn, arn),
+		Refresh: statusConfigurationState(conn, arn),
 		Timeout: timeout,
 	}
 

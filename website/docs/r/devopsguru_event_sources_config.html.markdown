@@ -29,8 +29,9 @@ resource "aws_devopsguru_event_sources_config" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `event_sources` - (Required) Configuration information about the integration of DevOps Guru as the Consumer via EventBridge with another AWS Service. See [`event_sources`](#event_sources-argument-reference) below.
 
 ### `event_sources` Argument Reference
@@ -49,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DevOps Guru Event Sources Config using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DevOps Guru Event Sources Config using the region. For example:
 
 ```terraform
 import {
@@ -58,7 +59,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DevOps Guru Event Sources Config using the `id`. For example:
+Using `terraform import`, import DevOps Guru Event Sources Config using the region. For example:
 
 ```console
 % terraform import aws_devopsguru_event_sources_config.example us-east-1

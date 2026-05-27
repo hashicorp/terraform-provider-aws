@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
@@ -742,9 +742,9 @@ func resourceGroupV0() *schema.Resource {
 	}
 }
 
-func GroupStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func GroupStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	if _, ok := rawState["ignore_failed_scaling_activities"]; !ok {

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package grafana
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -109,7 +111,7 @@ func resourceWorkspaceSAMLConfiguration() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -122,11 +124,11 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 
 	authenticationProviders := workspace.Authentication.Providers
 	roleValues := &awstypes.RoleValues{
-		Editor: flex.ExpandStringValueList(d.Get("editor_role_values").([]interface{})),
+		Editor: flex.ExpandStringValueList(d.Get("editor_role_values").([]any)),
 	}
 
 	if v, ok := d.GetOk("admin_role_values"); ok {
-		roleValues.Admin = flex.ExpandStringValueList(v.([]interface{}))
+		roleValues.Admin = flex.ExpandStringValueList(v.([]any))
 	}
 
 	samlConfiguration := &awstypes.SamlConfiguration{
@@ -134,7 +136,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 	}
 
 	if v, ok := d.GetOk("allowed_organizations"); ok {
-		samlConfiguration.AllowedOrganizations = flex.ExpandStringValueList(v.([]interface{}))
+		samlConfiguration.AllowedOrganizations = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("login_validity_duration"); ok {
@@ -232,13 +234,13 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 	return append(diags, resourceWorkspaceSAMLConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
 	saml, err := findSAMLConfigurationByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana Workspace SAML Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -280,8 +282,7 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -290,24 +291,23 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 	}
 
 	if output == nil || output.Authentication == nil || output.Authentication.Saml == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Authentication.Saml.Status; status == awstypes.SamlConfigurationStatusNotConfigured {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output.Authentication.Saml, nil
 }
 
-func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusWorkspaceSAMLConfiguration(conn *grafana.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSAMLConfigurationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -323,7 +323,7 @@ func waitWorkspaceSAMLConfigurationCreated(ctx context.Context, conn *grafana.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.SamlConfigurationStatusConfigured),
-		Refresh: statusWorkspaceSAMLConfiguration(ctx, conn, id),
+		Refresh: statusWorkspaceSAMLConfiguration(conn, id),
 		Timeout: timeout,
 	}
 

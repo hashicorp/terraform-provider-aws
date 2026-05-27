@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -13,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,7 +51,7 @@ func resourceQueryLogConfigAssociation() *schema.Resource {
 	}
 }
 
-func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -73,13 +75,13 @@ func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceQueryLogConfigAssociationRead(ctx, d, meta)...)
 }
 
-func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	queryLogConfigAssociation, err := findResolverQueryLogConfigAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Query Log Config Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -95,7 +97,7 @@ func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceQueryLogConfigAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -129,8 +131,7 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -139,17 +140,17 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	}
 
 	if output == nil || output.ResolverQueryLogConfigAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverQueryLogConfigAssociation, nil
 }
 
-func statusQueryLogConfigAssociation(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusQueryLogConfigAssociation(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverQueryLogConfigAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -170,7 +171,7 @@ func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53reso
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusCreating),
 		Target:  enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusActive),
-		Refresh: statusQueryLogConfigAssociation(ctx, conn, id),
+		Refresh: statusQueryLogConfigAssociation(conn, id),
 		Timeout: queryLogConfigAssociationCreatedTimeout,
 	}
 
@@ -178,7 +179,7 @@ func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53reso
 
 	if output, ok := outputRaw.(*awstypes.ResolverQueryLogConfigAssociation); ok {
 		if status := output.Status; status == awstypes.ResolverQueryLogConfigAssociationStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -191,7 +192,7 @@ func waitQueryLogConfigAssociationDeleted(ctx context.Context, conn *route53reso
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusDeleting),
 		Target:  []string{},
-		Refresh: statusQueryLogConfigAssociation(ctx, conn, id),
+		Refresh: statusQueryLogConfigAssociation(conn, id),
 		Timeout: queryLogConfigAssociationDeletedTimeout,
 	}
 
@@ -199,7 +200,7 @@ func waitQueryLogConfigAssociationDeleted(ctx context.Context, conn *route53reso
 
 	if output, ok := outputRaw.(*awstypes.ResolverQueryLogConfigAssociation); ok {
 		if status := output.Status; status == awstypes.ResolverQueryLogConfigAssociationStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
@@ -24,8 +26,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,23 +35,25 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_group", name="Group")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.AutoScalingGroup")
+// @Testing(importIgnore="force_delete;force_delete_warm_pool;ignore_failed_scaling_activities;wait_for_capacity_timeout")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -78,9 +81,67 @@ func resourceGroup() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"vpc_zone_identifier"},
 			},
+			"availability_zone_distribution": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_distribution_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
+							ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
+						},
+					},
+				},
+			},
 			"capacity_rebalance": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"capacity_reservation_specification": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_reservation_preference": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
+						},
+						"capacity_reservation_target": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_ids": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns"},
+									},
+									"capacity_reservation_resource_group_arns": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids"},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"context": {
 				Type:     schema.TypeString,
@@ -807,7 +868,7 @@ func resourceGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
 				ConflictsWith: []string{names.AttrName},
 			},
 			"placement_group": {
@@ -959,10 +1020,10 @@ func resourceGroup() *schema.Resource {
 
 func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("instance_maintenance_policy")
-	oList, nList := o.([]interface{}), n.([]interface{})
+	oList, nList := o.([]any), n.([]any)
 
 	if len(oList) == 0 && len(nList) != 0 {
-		tfMap := nList[0].(map[string]interface{})
+		tfMap := nList[0].(map[string]any)
 		if int64(tfMap["min_healthy_percentage"].(int)) == -1 || int64(tfMap["max_healthy_percentage"].(int)) == -1 {
 			return true
 		}
@@ -972,16 +1033,16 @@ func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.Resource
 }
 
 func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.CustomizeDiffFunc {
-	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 		if diff.HasChange(subAttribute) {
 			n := diff.Get(baseAttribute)
-			ba, ok := n.([]interface{})
+			ba, ok := n.([]any)
 			if !ok {
 				return nil
 			}
 
 			if baseAttribute == names.AttrLaunchTemplate {
-				launchTemplate := ba[0].(map[string]interface{})
+				launchTemplate := ba[0].(map[string]any)
 				launchTemplate[names.AttrID] = launchTemplateIDUnknown
 
 				if err := diff.SetNew(baseAttribute, ba); err != nil {
@@ -990,8 +1051,8 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 			}
 
 			if baseAttribute == "mixed_instances_policy" && !strings.Contains(subAttribute, "override") {
-				launchTemplate := ba[0].(map[string]interface{})[names.AttrLaunchTemplate].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
-				launchTemplateSpecification := launchTemplate.(map[string]interface{})
+				launchTemplate := ba[0].(map[string]any)[names.AttrLaunchTemplate].([]any)[0].(map[string]any)["launch_template_specification"].([]any)[0]
+				launchTemplateSpecification := launchTemplate.(map[string]any)
 				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
 
 				if err := diff.SetNew(baseAttribute, ba); err != nil {
@@ -1000,13 +1061,13 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 			}
 
 			if baseAttribute == "mixed_instances_policy" && strings.Contains(subAttribute, "override") {
-				launchTemplate := ba[0].(map[string]interface{})[names.AttrLaunchTemplate].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
+				launchTemplate := ba[0].(map[string]any)[names.AttrLaunchTemplate].([]any)[0].(map[string]any)["override"].([]any)
 
 				for i := range launchTemplate {
 					key := fmt.Sprintf("mixed_instances_policy.0.launch_template.0.override.%d.launch_template_specification.0.launch_template_name", i)
 
 					if diff.HasChange(key) {
-						launchTemplateSpecification := launchTemplate[i].(map[string]interface{})["launch_template_specification"].([]interface{})[0].(map[string]interface{})
+						launchTemplateSpecification := launchTemplate[i].(map[string]any)["launch_template_specification"].([]any)[0].(map[string]any)
 						launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
 					}
 				}
@@ -1021,18 +1082,18 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 	}
 }
 
-func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	startTime := time.Now()
 
-	asgName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	inputCASG := &autoscaling.CreateAutoScalingGroupInput{
+	asgName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	inputCASG := autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 	}
-	inputUASG := &autoscaling.UpdateAutoScalingGroupInput{
+	inputUASG := autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
 
@@ -1074,8 +1135,16 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		inputCASG.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		inputCASG.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
 		inputCASG.CapacityRebalance = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		inputCASG.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("context"); ok {
@@ -1099,15 +1168,15 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("instance_maintenance_policy"); ok {
-		inputCASG.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(v.([]interface{}))
+		inputCASG.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(v.([]any))
 	}
 
 	if v, ok := d.GetOk("launch_configuration"); ok {
 		inputCASG.LaunchConfigurationName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		inputCASG.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
+	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		inputCASG.LaunchTemplate = expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any), false)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -1118,8 +1187,8 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		inputCASG.MaxInstanceLifetime = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		inputCASG.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
+	if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		inputCASG.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]any)[0].(map[string]any), true)
 	}
 
 	if v, ok := d.GetOk("placement_group"); ok {
@@ -1131,15 +1200,15 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		inputCASG.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		inputCASG.Tags = svcTags(keyValueTags(ctx, v, asgName, tagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
 		inputCASG.TargetGroupARNs = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
-		inputCASG.TerminationPolicies = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("termination_policies"); ok && len(v.([]any)) > 0 {
+		inputCASG.TerminationPolicies = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("traffic_source"); ok && v.(*schema.Set).Len() > 0 {
@@ -1151,8 +1220,8 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return conn.CreateAutoScalingGroup(ctx, inputCASG)
+		func(ctx context.Context) (any, error) {
+			return conn.CreateAutoScalingGroup(ctx, &inputCASG)
 		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
 		errCodeValidationError, "Invalid IAM Instance Profile")
@@ -1169,7 +1238,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				timeout = 5 * time.Minute
 			)
 			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout,
-				func() (interface{}, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.PutLifecycleHook(ctx, input)
 				},
 				errCodeValidationError, "Unable to publish test message to notification target")
@@ -1179,7 +1248,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		_, err = conn.UpdateAutoScalingGroup(ctx, inputUASG)
+		_, err = conn.UpdateAutoScalingGroup(ctx, &inputUASG)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting Auto Scaling Group (%s) initial capacity: %s", d.Id(), err)
@@ -1218,12 +1287,12 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("suspended_processes"); ok && v.(*schema.Set).Len() > 0 {
-		input := &autoscaling.SuspendProcessesInput{
+		input := autoscaling.SuspendProcessesInput{
 			AutoScalingGroupName: aws.String(d.Id()),
 			ScalingProcesses:     flex.ExpandStringValueSet(v.(*schema.Set)),
 		}
 
-		_, err := conn.SuspendProcesses(ctx, input)
+		_, err := conn.SuspendProcesses(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "suspending Auto Scaling Group (%s) scaling processes: %s", d.Id(), err)
@@ -1231,21 +1300,21 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("enabled_metrics"); ok && v.(*schema.Set).Len() > 0 {
-		input := &autoscaling.EnableMetricsCollectionInput{
+		input := autoscaling.EnableMetricsCollectionInput{
 			AutoScalingGroupName: aws.String(d.Id()),
 			Granularity:          aws.String(d.Get("metrics_granularity").(string)),
 			Metrics:              flex.ExpandStringValueSet(v.(*schema.Set)),
 		}
 
-		_, err := conn.EnableMetricsCollection(ctx, input)
+		_, err := conn.EnableMetricsCollection(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "enabling Auto Scaling Group (%s) metrics collection: %s", d.Id(), err)
 		}
 	}
 
-	if v, ok := d.GetOk("warm_pool"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		_, err := conn.PutWarmPool(ctx, expandPutWarmPoolInput(d.Id(), v.([]interface{})[0].(map[string]interface{})))
+	if v, ok := d.GetOk("warm_pool"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		_, err := conn.PutWarmPool(ctx, expandPutWarmPoolInput(d.Id(), v.([]any)[0].(map[string]any)))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Warm Pool (%s): %s", d.Id(), err)
@@ -1255,14 +1324,14 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	g, err := findGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1274,7 +1343,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
+	d.Set("availability_zone_distribution", []any{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
 	d.Set("capacity_rebalance", g.CapacityRebalance)
+	d.Set("capacity_reservation_specification", []any{flattenCapacityReservationSpecification(g.CapacityReservationSpecification)})
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("default_instance_warmup", g.DefaultInstanceWarmup)
@@ -1294,7 +1365,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 	if g.LaunchTemplate != nil {
-		if err := d.Set(names.AttrLaunchTemplate, []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
+		if err := d.Set(names.AttrLaunchTemplate, []any{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	} else {
@@ -1305,7 +1376,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("max_size", g.MaxSize)
 	d.Set("min_size", g.MinSize)
 	if g.MixedInstancesPolicy != nil {
-		if err := d.Set("mixed_instances_policy", []interface{}{flattenMixedInstancesPolicy(g.MixedInstancesPolicy)}); err != nil {
+		if err := d.Set("mixed_instances_policy", []any{flattenMixedInstancesPolicy(g.MixedInstancesPolicy)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting mixed_instances_policy: %s", err)
 		}
 	} else {
@@ -1336,7 +1407,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("vpc_zone_identifier", nil)
 	}
 	if g.WarmPoolConfiguration != nil {
-		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(g.WarmPoolConfiguration)}); err != nil {
+		if err := d.Set("warm_pool", []any{flattenWarmPoolConfiguration(g.WarmPoolConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting warm_pool: %s", err)
 		}
 	} else {
@@ -1344,14 +1415,14 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("warm_pool_size", g.WarmPoolSize)
 
-	if err := d.Set("tag", listOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	if err := d.Set("tag", listOfMap(keyValueTags(ctx, g.Tags, d.Id(), tagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 
 	return diags
 }
 
-func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -1369,7 +1440,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		"traffic_source",
 		"warm_pool",
 	) {
-		input := &autoscaling.UpdateAutoScalingGroupInput{
+		input := autoscaling.UpdateAutoScalingGroupInput{
 			AutoScalingGroupName:             aws.String(d.Id()),
 			NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 		}
@@ -1380,6 +1451,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
+		if d.HasChange("availability_zone_distribution") {
+			if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]any)[0].(map[string]any))
+			}
+		}
+
 		if d.HasChange("capacity_rebalance") {
 			// If the capacity rebalance field is set to null, we need to explicitly set
 			// it back to "false", or the API won't reset it for us.
@@ -1387,6 +1464,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				input.CapacityRebalance = aws.Bool(v.(bool))
 			} else {
 				input.CapacityRebalance = aws.Bool(false)
+			}
+		}
+
+		if d.HasChange("capacity_reservation_specification") {
+			if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -1422,7 +1505,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("instance_maintenance_policy") {
-			input.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(d.Get("instance_maintenance_policy").([]interface{}))
+			input.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(d.Get("instance_maintenance_policy").([]any))
 		}
 
 		if d.HasChange("launch_configuration") {
@@ -1433,8 +1516,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange(names.AttrLaunchTemplate) {
-			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any), false)
 			}
 			shouldRefreshInstances = true
 		}
@@ -1453,8 +1536,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("mixed_instances_policy") {
-			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
+			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]any)[0].(map[string]any), true)
 			}
 			shouldRefreshInstances = true
 		}
@@ -1470,8 +1553,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if d.HasChange("termination_policies") {
 			// If the termination policy is set to null, we need to explicitly set
 			// it back to "Default", or the API won't reset it for us.
-			if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
-				input.TerminationPolicies = flex.ExpandStringValueList(v.([]interface{}))
+			if v, ok := d.GetOk("termination_policies"); ok && len(v.([]any)) > 0 {
+				input.TerminationPolicies = flex.ExpandStringValueList(v.([]any))
 			} else {
 				input.TerminationPolicies = []string{defaultTerminationPolicy}
 			}
@@ -1482,8 +1565,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate),
-			func() (interface{}, error) {
-				return conn.UpdateAutoScalingGroup(ctx, input)
+			func(ctx context.Context) (any, error) {
+				return conn.UpdateAutoScalingGroup(ctx, &input)
 			},
 			errCodeOperationError, errCodeUpdateASG, errCodeValidationError)
 
@@ -1494,10 +1577,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChanges("tag") {
 		oTagRaw, nTagRaw := d.GetChange("tag")
-		oldTags := Tags(KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
-		newTags := Tags(KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
+		oldTags := svcTags(keyValueTags(ctx, oTagRaw, d.Id(), tagResourceTypeGroup))
+		newTags := svcTags(keyValueTags(ctx, nTagRaw, d.Id(), tagResourceTypeGroup))
 
-		if err := updateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), tagResourceTypeGroup, oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags for Auto Scaling Group (%s): %s", d.Id(), err)
 		}
 	}
@@ -1509,35 +1592,39 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
-			input := &autoscaling.DetachTrafficSourcesInput{
+			input := autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
 			}
 
-			_, err := conn.DetachTrafficSources(ctx, input)
+			_, err := conn.DetachTrafficSources(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
 			}
 
-			if _, err := waitTrafficSourcesDeleted(ctx, conn, d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countTrafficSourcesInState(ctx, conn, d.Id(), "", trafficSourceStateRemoving)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffic sources removed: %s", d.Id(), err)
 			}
 		}
 
 		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
-			input := &autoscaling.AttachTrafficSourcesInput{
+			input := autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
 			}
 
-			_, err := conn.AttachTrafficSources(ctx, input)
+			_, err := conn.AttachTrafficSources(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
 			}
 
-			if _, err := waitTrafficSourcesCreated(ctx, conn, d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countTrafficSourcesInState(ctx, conn, d.Id(), "", trafficSourceStateAdding)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffic sources added: %s", d.Id(), err)
 			}
 		}
@@ -1550,35 +1637,39 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
-			input := &autoscaling.DetachLoadBalancersInput{
+			input := autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
 			}
 
-			_, err := conn.DetachLoadBalancers(ctx, input)
+			_, err := conn.DetachLoadBalancers(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
 			}
 
-			if _, err := waitLoadBalancersRemoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countLoadBalancersInState(ctx, conn, d.Id(), loadBalancerStateRemoving)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers removed: %s", d.Id(), err)
 			}
 		}
 
 		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
-			input := &autoscaling.AttachLoadBalancersInput{
+			input := autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
 			}
 
-			_, err := conn.AttachLoadBalancers(ctx, input)
+			_, err := conn.AttachLoadBalancers(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
 			}
 
-			if _, err := waitLoadBalancersAdded(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countLoadBalancersInState(ctx, conn, d.Id(), loadBalancerStateAdding)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers added: %s", d.Id(), err)
 			}
 		}
@@ -1591,42 +1682,45 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
-			input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
+			input := autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
 			}
 
-			_, err := conn.DetachLoadBalancerTargetGroups(ctx, input)
+			_, err := conn.DetachLoadBalancerTargetGroups(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
 			}
-
-			if _, err := waitLoadBalancerTargetGroupsRemoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countLoadBalancerTargetGroupsInState(ctx, conn, d.Id(), loadBalancerTargetGroupStateRemoving)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
 			}
 		}
 
 		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
-			input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
+			input := autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
 			}
 
-			_, err := conn.AttachLoadBalancerTargetGroups(ctx, input)
+			_, err := conn.AttachLoadBalancerTargetGroups(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
 			}
 
-			if _, err := waitLoadBalancerTargetGroupsAdded(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countLoadBalancerTargetGroupsInState(ctx, conn, d.Id(), loadBalancerTargetGroupStateAdding)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups added: %s", d.Id(), err)
 			}
 		}
 	}
 
-	if v, ok := d.GetOk("instance_refresh"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("instance_refresh"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		if !shouldRefreshInstances {
 			if v, ok := tfMap[names.AttrTriggers].(*schema.Set); ok && v.Len() > 0 {
@@ -1645,14 +1739,14 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if shouldRefreshInstances {
 			var launchTemplate *awstypes.LaunchTemplateSpecification
 
-			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				launchTemplate = expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any), false)
 			}
 
 			var mixedInstancesPolicy *awstypes.MixedInstancesPolicy
 
-			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				mixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
+			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				mixedInstancesPolicy = expandMixedInstancesPolicy(v.([]any)[0].(map[string]any), true)
 			}
 
 			if err := startInstanceRefresh(ctx, conn, expandStartInstanceRefreshInput(d.Id(), tfMap, launchTemplate, mixedInstancesPolicy)); err != nil {
@@ -1662,7 +1756,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("warm_pool") {
-		w := d.Get("warm_pool").([]interface{})
+		w := d.Get("warm_pool").([]any)
 
 		// No warm pool exists in new config. Delete it.
 		if len(w) == 0 || w[0] == nil {
@@ -1672,7 +1766,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		} else {
-			_, err := conn.PutWarmPool(ctx, expandPutWarmPoolInput(d.Id(), w[0].(map[string]interface{})))
+			_, err := conn.PutWarmPool(ctx, expandPutWarmPoolInput(d.Id(), w[0].(map[string]any)))
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Warm Pool (%s): %s", d.Id(), err)
@@ -1715,12 +1809,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if disableMetrics := os.Difference(ns); disableMetrics.Len() != 0 {
-			input := &autoscaling.DisableMetricsCollectionInput{
+			input := autoscaling.DisableMetricsCollectionInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				Metrics:              flex.ExpandStringValueSet(disableMetrics),
 			}
 
-			_, err := conn.DisableMetricsCollection(ctx, input)
+			_, err := conn.DisableMetricsCollection(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling Auto Scaling Group (%s) metrics collection: %s", d.Id(), err)
@@ -1728,13 +1822,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if enableMetrics := ns.Difference(os); enableMetrics.Len() != 0 {
-			input := &autoscaling.EnableMetricsCollectionInput{
+			input := autoscaling.EnableMetricsCollectionInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				Granularity:          aws.String(d.Get("metrics_granularity").(string)),
 				Metrics:              flex.ExpandStringValueSet(enableMetrics),
 			}
 
-			_, err := conn.EnableMetricsCollection(ctx, input)
+			_, err := conn.EnableMetricsCollection(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling Auto Scaling Group (%s) metrics collection: %s", d.Id(), err)
@@ -1747,12 +1841,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if resumeProcesses := os.Difference(ns); resumeProcesses.Len() != 0 {
-			input := &autoscaling.ResumeProcessesInput{
+			input := autoscaling.ResumeProcessesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				ScalingProcesses:     flex.ExpandStringValueSet(resumeProcesses),
 			}
 
-			_, err := conn.ResumeProcesses(ctx, input)
+			_, err := conn.ResumeProcesses(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "resuming Auto Scaling Group (%s) scaling processes: %s", d.Id(), err)
@@ -1760,12 +1854,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if suspendProcesses := ns.Difference(os); suspendProcesses.Len() != 0 {
-			input := &autoscaling.SuspendProcessesInput{
+			input := autoscaling.SuspendProcessesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				ScalingProcesses:     flex.ExpandStringValueSet(suspendProcesses),
 			}
 
-			_, err := conn.SuspendProcesses(ctx, input)
+			_, err := conn.SuspendProcesses(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "suspending Auto Scaling Group (%s) scaling processes: %s", d.Id(), err)
@@ -1776,7 +1870,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -1785,7 +1879,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	group, err := findGroupByName(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -1810,12 +1904,13 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Group: %s", d.Id())
+	input := autoscaling.DeleteAutoScalingGroupInput{
+		AutoScalingGroupName: aws.String(d.Id()),
+		ForceDelete:          aws.Bool(forceDeleteGroup),
+	}
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (interface{}, error) {
-			return conn.DeleteAutoScalingGroup(ctx, &autoscaling.DeleteAutoScalingGroupInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				ForceDelete:          aws.Bool(forceDeleteGroup),
-			})
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteAutoScalingGroup(ctx, &input)
 		},
 		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
 
@@ -1828,7 +1923,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return findGroupByName(ctx, conn, d.Id())
 		})
 
@@ -1840,7 +1935,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, instances []awstypes.Instance, timeout time.Duration) error {
-	input := &autoscaling.UpdateAutoScalingGroupInput{
+	input := autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(name),
 		DesiredCapacity:      aws.Int32(0),
 		MinSize:              aws.Int32(0),
@@ -1848,7 +1943,7 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 	}
 
 	log.Printf("[DEBUG] Draining Auto Scaling Group: %s", name)
-	if _, err := conn.UpdateAutoScalingGroup(ctx, input); err != nil {
+	if _, err := conn.UpdateAutoScalingGroup(ctx, &input); err != nil {
 		return fmt.Errorf("setting Auto Scaling Group (%s) capacity to 0: %w", name, err)
 	}
 
@@ -1869,13 +1964,13 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 	}
 	const batchSize = 50 // API limit.
 	for chunk := range slices.Chunk(instanceIDs, batchSize) {
-		input := &autoscaling.SetInstanceProtectionInput{
+		input := autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceIds:          chunk,
 			ProtectedFromScaleIn: aws.Bool(false),
 		}
 
-		_, err := conn.SetInstanceProtection(ctx, input)
+		_, err := conn.SetInstanceProtection(ctx, &input)
 
 		// Ignore ValidationError when instance is already fully terminated
 		// and is not a part of Auto Scaling Group anymore.
@@ -1888,7 +1983,9 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 		}
 	}
 
-	if _, err := waitGroupDrained(ctx, conn, name, timeout); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
+		return countGroupInstances(ctx, conn, name)
+	}); err != nil {
 		return fmt.Errorf("waiting for Auto Scaling Group (%s) drain: %w", name, err)
 	}
 
@@ -1903,12 +2000,13 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.Client, name string, 
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Warm Pool: %s", name)
+	input := autoscaling.DeleteWarmPoolInput{
+		AutoScalingGroupName: aws.String(name),
+		ForceDelete:          aws.Bool(force),
+	}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (interface{}, error) {
-			return conn.DeleteWarmPool(ctx, &autoscaling.DeleteWarmPoolInput{
-				AutoScalingGroupName: aws.String(name),
-				ForceDelete:          aws.Bool(force),
-			})
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteWarmPool(ctx, &input)
 		},
 		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
 
@@ -1928,18 +2026,20 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.Client, name string, 
 }
 
 func drainWarmPool(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) error {
-	input := &autoscaling.PutWarmPoolInput{
+	input := autoscaling.PutWarmPoolInput{
 		AutoScalingGroupName:     aws.String(name),
 		MaxGroupPreparedCapacity: aws.Int32(0),
 		MinSize:                  aws.Int32(0),
 	}
 
 	log.Printf("[DEBUG] Draining Auto Scaling Warm Pool: %s", name)
-	if _, err := conn.PutWarmPool(ctx, input); err != nil {
+	if _, err := conn.PutWarmPool(ctx, &input); err != nil {
 		return fmt.Errorf("setting Auto Scaling Warm Pool (%s) capacity to 0: %w", name, err)
 	}
 
-	if _, err := waitWarmPoolDrained(ctx, conn, name, timeout); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
+		return countWarmPoolInstances(ctx, conn, name)
+	}); err != nil {
 		return fmt.Errorf("waiting for Auto Scaling Warm Pool (%s) drain: %w", name, err)
 	}
 
@@ -1950,11 +2050,11 @@ func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Clien
 	instanceStates := make(map[string]map[string]string)
 
 	for _, lbName := range g.LoadBalancerNames {
-		input := &elasticloadbalancing.DescribeInstanceHealthInput{
+		input := elasticloadbalancing.DescribeInstanceHealthInput{
 			LoadBalancerName: aws.String(lbName),
 		}
 
-		output, err := conn.DescribeInstanceHealth(ctx, input)
+		output, err := conn.DescribeInstanceHealth(ctx, &input)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading load balancer (%s) instance health: %w", lbName, err)
@@ -1983,11 +2083,11 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 	instanceStates := make(map[string]map[string]string)
 
 	for _, targetGroupARN := range g.TargetGroupARNs {
-		input := &elasticloadbalancingv2.DescribeTargetHealthInput{
+		input := elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: aws.String(targetGroupARN),
 		}
 
-		output, err := conn.DescribeTargetHealth(ctx, input)
+		output, err := conn.DescribeTargetHealth(ctx, &input)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading target group (%s) instance health: %w", targetGroupARN, err)
@@ -2044,11 +2144,11 @@ func findGroups(ctx context.Context, conn *autoscaling.Client, input *autoscalin
 }
 
 func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.AutoScalingGroup, error) {
-	input := &autoscaling.DescribeAutoScalingGroupsInput{
+	input := autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []string{name},
 	}
 
-	output, err := findGroup(ctx, conn, input)
+	output, err := findGroup(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -2056,12 +2156,20 @@ func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.AutoScalingGroupName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
+}
+
+func countGroupInstances(ctx context.Context, conn *autoscaling.Client, name string) (int, error) {
+	output, err := findGroupByName(ctx, conn, name)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(output.Instances), nil
 }
 
 func findInstanceRefresh(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeInstanceRefreshesInput) (*awstypes.InstanceRefresh, error) {
@@ -2083,8 +2191,7 @@ func findInstanceRefreshes(ctx context.Context, conn *autoscaling.Client, input 
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -2098,10 +2205,7 @@ func findInstanceRefreshes(ctx context.Context, conn *autoscaling.Client, input 
 	return output, nil
 }
 
-func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name string) ([]awstypes.LoadBalancerState, error) {
-	input := &autoscaling.DescribeLoadBalancersInput{
-		AutoScalingGroupName: aws.String(name),
-	}
+func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLoadBalancersInput) ([]awstypes.LoadBalancerState, error) {
 	var output []awstypes.LoadBalancerState
 
 	pages := autoscaling.NewDescribeLoadBalancersPaginator(conn, input)
@@ -2110,8 +2214,7 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name 
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -2125,10 +2228,27 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name 
 	return output, nil
 }
 
-func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Client, name string) ([]awstypes.LoadBalancerTargetGroupState, error) {
-	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
-		AutoScalingGroupName: aws.String(name),
+func findLoadBalancerStatesByASGName(ctx context.Context, conn *autoscaling.Client, asgName string) ([]awstypes.LoadBalancerState, error) {
+	input := autoscaling.DescribeLoadBalancersInput{
+		AutoScalingGroupName: aws.String(asgName),
 	}
+
+	return findLoadBalancerStates(ctx, conn, &input)
+}
+
+func countLoadBalancersInState(ctx context.Context, conn *autoscaling.Client, asgName, state string) (int, error) {
+	output, err := findLoadBalancerStatesByASGName(ctx, conn, asgName)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(tfslices.Filter(output, func(v awstypes.LoadBalancerState) bool {
+		return aws.ToString(v.State) == state
+	})), nil
+}
+
+func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLoadBalancerTargetGroupsInput) ([]awstypes.LoadBalancerTargetGroupState, error) {
 	var output []awstypes.LoadBalancerTargetGroupState
 
 	pages := autoscaling.NewDescribeLoadBalancerTargetGroupsPaginator(conn, input)
@@ -2137,8 +2257,7 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Cl
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -2152,6 +2271,26 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Cl
 	return output, nil
 }
 
+func findLoadBalancerTargetGroupStatesByASGName(ctx context.Context, conn *autoscaling.Client, asgName string) ([]awstypes.LoadBalancerTargetGroupState, error) {
+	input := autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+
+	return findLoadBalancerTargetGroupStates(ctx, conn, &input)
+}
+
+func countLoadBalancerTargetGroupsInState(ctx context.Context, conn *autoscaling.Client, asgName, state string) (int, error) {
+	output, err := findLoadBalancerTargetGroupStatesByASGName(ctx, conn, asgName)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(tfslices.Filter(output, func(v awstypes.LoadBalancerTargetGroupState) bool {
+		return aws.ToString(v.State) == state
+	})), nil
+}
+
 func findScalingActivities(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeScalingActivitiesInput, startTime time.Time) ([]awstypes.Activity, error) {
 	var output []awstypes.Activity
 
@@ -2161,8 +2300,7 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.Client, input 
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -2181,11 +2319,11 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.Client, input 
 }
 
 func findScalingActivitiesByName(ctx context.Context, conn *autoscaling.Client, name string, startTime time.Time) ([]awstypes.Activity, error) {
-	input := &autoscaling.DescribeScalingActivitiesInput{
+	input := autoscaling.DescribeScalingActivitiesInput{
 		AutoScalingGroupName: aws.String(name),
 	}
 
-	return findScalingActivities(ctx, conn, input, startTime)
+	return findScalingActivities(ctx, conn, &input, startTime)
 }
 
 func findTrafficSourceStates(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeTrafficSourcesInput) ([]awstypes.TrafficSourceState, error) {
@@ -2197,8 +2335,7 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.Client, inpu
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -2213,14 +2350,26 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.Client, inpu
 }
 
 func findTrafficSourceStatesByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string) ([]awstypes.TrafficSourceState, error) {
-	input := &autoscaling.DescribeTrafficSourcesInput{
+	input := autoscaling.DescribeTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
 	if trafficSourceType != "" {
 		input.TrafficSourceType = aws.String(trafficSourceType)
 	}
 
-	return findTrafficSourceStates(ctx, conn, input)
+	return findTrafficSourceStates(ctx, conn, &input)
+}
+
+func countTrafficSourcesInState(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, state string) (int, error) {
+	output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(tfslices.Filter(output, func(v awstypes.TrafficSourceState) bool {
+		return aws.ToString(v.State) == state
+	})), nil
 }
 
 func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeWarmPoolInput) (*autoscaling.DescribeWarmPoolOutput, error) {
@@ -2232,8 +2381,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscal
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -2249,22 +2397,32 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscal
 	}
 
 	if output == nil || output.WarmPoolConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func findWarmPoolByName(ctx context.Context, conn *autoscaling.Client, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
-	input := &autoscaling.DescribeWarmPoolInput{
-		AutoScalingGroupName: aws.String(name),
+func findWarmPoolByASGName(ctx context.Context, conn *autoscaling.Client, asgName string) (*autoscaling.DescribeWarmPoolOutput, error) {
+	input := autoscaling.DescribeWarmPoolInput{
+		AutoScalingGroupName: aws.String(asgName),
 	}
 
-	return findWarmPool(ctx, conn, input)
+	return findWarmPool(ctx, conn, &input)
 }
 
-func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func countWarmPoolInstances(ctx context.Context, conn *autoscaling.Client, asgName string) (int, error) {
+	output, err := findWarmPoolByASGName(ctx, conn, asgName)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(output.Instances), nil
+}
+
+func statusGroupCapacity(conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		if !ignoreFailedScalingActivities {
 			// Check for fatal error in activity logs.
 			scalingActivities, err := findScalingActivitiesByName(ctx, conn, name, startTime)
@@ -2319,7 +2477,7 @@ func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn 
 				continue
 			}
 
-			if aws.ToString(v.HealthStatus) != InstanceHealthStatusHealthy {
+			if aws.ToString(v.HealthStatus) != instanceHealthStatusHealthy {
 				continue
 			}
 
@@ -2361,39 +2519,23 @@ func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn 
 		err = cb(nASG, nELB)
 
 		if err != nil {
-			return struct{}{}, err.Error(), nil //nolint:nilerr // err is passed via the result State
+			return true, err.Error(), nil //nolint:nilerr // err is passed via the result State
 		}
 
-		return struct{}{}, "ok", nil
+		return true, "ok", nil
 	}
 }
 
-func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findGroupByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, strconv.Itoa(len(output.Instances)), nil
-	}
-}
-
-func statusInstanceRefresh(ctx context.Context, conn *autoscaling.Client, name, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &autoscaling.DescribeInstanceRefreshesInput{
+func statusInstanceRefresh(conn *autoscaling.Client, name, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		input := autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceRefreshIds:   []string{id},
 		}
 
-		output, err := findInstanceRefresh(ctx, conn, input)
+		output, err := findInstanceRefresh(ctx, conn, &input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2405,92 +2547,11 @@ func statusInstanceRefresh(ctx context.Context, conn *autoscaling.Client, name, 
 	}
 }
 
-func statusLoadBalancerInStateCount(ctx context.Context, conn *autoscaling.Client, name string, states ...string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findLoadBalancerStates(ctx, conn, name)
+func statusWarmPool(conn *autoscaling.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findWarmPoolByASGName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var count int
-
-		for _, v := range output {
-			for _, state := range states {
-				if aws.ToString(v.State) == state {
-					count++
-					break
-				}
-			}
-		}
-
-		return output, strconv.Itoa(count), nil
-	}
-}
-
-func statusLoadBalancerTargetGroupInStateCount(ctx context.Context, conn *autoscaling.Client, name string, states ...string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findLoadBalancerTargetGroupStates(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var count int
-
-		for _, v := range output {
-			for _, state := range states {
-				if aws.ToString(v.State) == state {
-					count++
-					break
-				}
-			}
-		}
-
-		return output, strconv.Itoa(count), nil
-	}
-}
-
-func statusTrafficSourcesInStateCount(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string, states ...string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var count int
-
-		for _, v := range output {
-			for _, state := range states {
-				if aws.ToString(v.State) == state {
-					count++
-					break
-				}
-			}
-		}
-
-		return output, strconv.Itoa(count), nil
-	}
-}
-
-func statusWarmPool(ctx context.Context, conn *autoscaling.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findWarmPoolByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2502,148 +2563,20 @@ func statusWarmPool(ctx context.Context, conn *autoscaling.Client, name string) 
 	}
 }
 
-func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findWarmPoolByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, strconv.Itoa(len(output.Instances)), nil
-	}
-}
-
 func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"ok"},
-		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, cb, startTime, ignoreFailedScalingActivities),
+		Refresh: statusGroupCapacity(conn, elbconn, elbv2conn, name, cb, startTime, ignoreFailedScalingActivities),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(struct{ err error }); ok {
-		tfresource.SetLastError(err, output.err)
+		retry.SetLastError(err, output.err)
 	}
 
 	return err
-}
-
-func waitGroupDrained(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) (*awstypes.AutoScalingGroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusGroupInstanceCount(ctx, conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.AutoScalingGroup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLoadBalancersAdded(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusLoadBalancerInStateCount(ctx, conn, name, LoadBalancerStateAdding),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.LoadBalancerState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLoadBalancersRemoved(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusLoadBalancerInStateCount(ctx, conn, name, LoadBalancerStateRemoving),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.LoadBalancerState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLoadBalancerTargetGroupsAdded(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerTargetGroupState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusLoadBalancerTargetGroupInStateCount(ctx, conn, name, LoadBalancerTargetGroupStateAdding),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.LoadBalancerTargetGroupState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLoadBalancerTargetGroupsRemoved(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerTargetGroupState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusLoadBalancerTargetGroupInStateCount(ctx, conn, name, LoadBalancerTargetGroupStateRemoving),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.LoadBalancerTargetGroupState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string, timeout time.Duration) ([]*awstypes.TrafficSourceState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesInStateCount(ctx, conn, asgName, trafficSourceType, TrafficSourceStateAdding),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.TrafficSourceState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string, timeout time.Duration) ([]*awstypes.TrafficSourceState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesInStateCount(ctx, conn, asgName, trafficSourceType, TrafficSourceStateRemoving),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.TrafficSourceState); ok {
-		return output, err
-	}
-
-	return nil, err
 }
 
 const (
@@ -2668,13 +2601,15 @@ func waitInstanceRefreshCancelled(ctx context.Context, conn *autoscaling.Client,
 			awstypes.InstanceRefreshStatusFailed,
 			awstypes.InstanceRefreshStatusSuccessful,
 		),
-		Refresh: statusInstanceRefresh(ctx, conn, name, id),
+		Refresh: statusInstanceRefresh(conn, name, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InstanceRefresh); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
 		return output, err
 	}
 
@@ -2685,7 +2620,7 @@ func waitWarmPoolDeleted(ctx context.Context, conn *autoscaling.Client, name str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WarmPoolStatusPendingDelete),
 		Target:  []string{},
-		Refresh: statusWarmPool(ctx, conn, name),
+		Refresh: statusWarmPool(conn, name),
 		Timeout: timeout,
 	}
 
@@ -2698,23 +2633,7 @@ func waitWarmPoolDeleted(ctx context.Context, conn *autoscaling.Client, name str
 	return nil, err
 }
 
-func waitWarmPoolDrained(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) (*autoscaling.DescribeWarmPoolOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusWarmPoolInstanceCount(ctx, conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*autoscaling.DescribeWarmPoolOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func expandInstancesDistribution(tfMap map[string]interface{}) *awstypes.InstancesDistribution {
+func expandInstancesDistribution(tfMap map[string]any) *awstypes.InstancesDistribution {
 	if tfMap == nil {
 		return nil
 	}
@@ -2748,33 +2667,33 @@ func expandInstancesDistribution(tfMap map[string]interface{}) *awstypes.Instanc
 	return apiObject
 }
 
-func expandLaunchTemplate(tfMap map[string]interface{}, hasDefaultVersion bool) *awstypes.LaunchTemplate {
+func expandLaunchTemplate(tfMap map[string]any, hasDefaultVersion bool) *awstypes.LaunchTemplate {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.LaunchTemplate{}
 
-	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}), hasDefaultVersion)
+	if v, ok := tfMap["launch_template_specification"].([]any); ok && len(v) > 0 {
+		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]any), hasDefaultVersion)
 	}
 
-	if v, ok := tfMap["override"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["override"].([]any); ok && len(v) > 0 {
 		apiObject.Overrides = expandLaunchTemplateOverrideses(v, hasDefaultVersion)
 	}
 
 	return apiObject
 }
 
-func expandLaunchTemplateOverrides(tfMap map[string]interface{}, hasDefaultVersion bool) awstypes.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrides(tfMap map[string]any, hasDefaultVersion bool) awstypes.LaunchTemplateOverrides {
 	apiObject := awstypes.LaunchTemplateOverrides{}
 
-	if v, ok := tfMap["instance_requirements"].([]interface{}); ok && len(v) > 0 {
-		apiObject.InstanceRequirements = expandInstanceRequirements(v[0].(map[string]interface{}))
+	if v, ok := tfMap["instance_requirements"].([]any); ok && len(v) > 0 {
+		apiObject.InstanceRequirements = expandInstanceRequirements(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}), hasDefaultVersion)
+	if v, ok := tfMap["launch_template_specification"].([]any); ok && len(v) > 0 {
+		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]any), hasDefaultVersion)
 	}
 
 	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
@@ -2788,7 +2707,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}, hasDefaultVersi
 	return apiObject
 }
 
-func expandLaunchTemplateOverrideses(tfList []interface{}, hasDefaultVersion bool) []awstypes.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrideses(tfList []any, hasDefaultVersion bool) []awstypes.LaunchTemplateOverrides {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2796,7 +2715,7 @@ func expandLaunchTemplateOverrideses(tfList []interface{}, hasDefaultVersion boo
 	var apiObjects []awstypes.LaunchTemplateOverrides
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -2809,15 +2728,15 @@ func expandLaunchTemplateOverrideses(tfList []interface{}, hasDefaultVersion boo
 	return apiObjects
 }
 
-func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.InstanceRequirements {
+func expandInstanceRequirements(tfMap map[string]any) *awstypes.InstanceRequirements {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.InstanceRequirements{}
 
-	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AcceleratorCount = expandAcceleratorCountRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["accelerator_count"].([]any); ok && len(v) > 0 {
+		apiObject.AcceleratorCount = expandAcceleratorCountRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["accelerator_manufacturers"].(*schema.Set); ok && v.Len() > 0 {
@@ -2828,8 +2747,8 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.AcceleratorNames = flex.ExpandStringyValueSet[awstypes.AcceleratorName](v)
 	}
 
-	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["accelerator_total_memory_mib"].([]any); ok && len(v) > 0 {
+		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["accelerator_types"].(*schema.Set); ok && v.Len() > 0 {
@@ -2844,8 +2763,8 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.BareMetal = awstypes.BareMetal(v)
 	}
 
-	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
-		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]any); ok && len(v) > 0 {
+		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["burstable_performance"].(string); ok && v != "" {
@@ -2876,20 +2795,20 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
-		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["memory_gib_per_vcpu"].([]any); ok && len(v) > 0 {
+		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
-		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["memory_mib"].([]any); ok && len(v) > 0 {
+		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 {
-		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["network_bandwidth_gbps"].([]any); ok && len(v) > 0 {
+		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
-		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCountRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["network_interface_count"].([]any); ok && len(v) > 0 {
+		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCountRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["on_demand_max_price_percentage_over_lowest_price"].(int); ok && v != 0 {
@@ -2904,18 +2823,18 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.SpotMaxPricePercentageOverLowestPrice = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 {
-		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGBRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["total_local_storage_gb"].([]any); ok && len(v) > 0 {
+		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGBRequest(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
-		apiObject.VCpuCount = expandVCPUCountRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["vcpu_count"].([]any); ok && len(v) > 0 {
+		apiObject.VCpuCount = expandVCPUCountRequest(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAcceleratorCountRequest(tfMap map[string]interface{}) *awstypes.AcceleratorCountRequest {
+func expandAcceleratorCountRequest(tfMap map[string]any) *awstypes.AcceleratorCountRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2935,7 +2854,7 @@ func expandAcceleratorCountRequest(tfMap map[string]interface{}) *awstypes.Accel
 	return apiObject
 }
 
-func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *awstypes.AcceleratorTotalMemoryMiBRequest {
+func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]any) *awstypes.AcceleratorTotalMemoryMiBRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2955,7 +2874,7 @@ func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *awsty
 	return apiObject
 }
 
-func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]interface{}) *awstypes.BaselineEbsBandwidthMbpsRequest {
+func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]any) *awstypes.BaselineEbsBandwidthMbpsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2975,7 +2894,7 @@ func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func expandMemoryGiBPerVCPURequest(tfMap map[string]interface{}) *awstypes.MemoryGiBPerVCpuRequest {
+func expandMemoryGiBPerVCPURequest(tfMap map[string]any) *awstypes.MemoryGiBPerVCpuRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2995,7 +2914,7 @@ func expandMemoryGiBPerVCPURequest(tfMap map[string]interface{}) *awstypes.Memor
 	return apiObject
 }
 
-func expandMemoryMiBRequest(tfMap map[string]interface{}) *awstypes.MemoryMiBRequest {
+func expandMemoryMiBRequest(tfMap map[string]any) *awstypes.MemoryMiBRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3015,7 +2934,7 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *awstypes.MemoryMiBReq
 	return apiObject
 }
 
-func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *awstypes.NetworkBandwidthGbpsRequest {
+func expandNetworkBandwidthGbpsRequest(tfMap map[string]any) *awstypes.NetworkBandwidthGbpsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3035,7 +2954,7 @@ func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *awstypes.N
 	return apiObject
 }
 
-func expandNetworkInterfaceCountRequest(tfMap map[string]interface{}) *awstypes.NetworkInterfaceCountRequest {
+func expandNetworkInterfaceCountRequest(tfMap map[string]any) *awstypes.NetworkInterfaceCountRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3055,7 +2974,7 @@ func expandNetworkInterfaceCountRequest(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func expandTotalLocalStorageGBRequest(tfMap map[string]interface{}) *awstypes.TotalLocalStorageGBRequest {
+func expandTotalLocalStorageGBRequest(tfMap map[string]any) *awstypes.TotalLocalStorageGBRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3075,7 +2994,7 @@ func expandTotalLocalStorageGBRequest(tfMap map[string]interface{}) *awstypes.To
 	return apiObject
 }
 
-func expandVCPUCountRequest(tfMap map[string]interface{}) *awstypes.VCpuCountRequest {
+func expandVCPUCountRequest(tfMap map[string]any) *awstypes.VCpuCountRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3095,7 +3014,7 @@ func expandVCPUCountRequest(tfMap map[string]interface{}) *awstypes.VCpuCountReq
 	return apiObject
 }
 
-func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]interface{}, hasDefaultVersion bool) *awstypes.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]any, hasDefaultVersion bool) *awstypes.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -3122,7 +3041,7 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 	return apiObject
 }
 
-func expandLaunchTemplateSpecification(tfMap map[string]interface{}, hasDefaultVersion bool) *awstypes.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(tfMap map[string]any, hasDefaultVersion bool) *awstypes.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -3148,25 +3067,25 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}, hasDefaultV
 	return apiObject
 }
 
-func expandMixedInstancesPolicy(tfMap map[string]interface{}, hasDefaultVersion bool) *awstypes.MixedInstancesPolicy {
+func expandMixedInstancesPolicy(tfMap map[string]any, hasDefaultVersion bool) *awstypes.MixedInstancesPolicy {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.MixedInstancesPolicy{}
 
-	if v, ok := tfMap["instances_distribution"].([]interface{}); ok && len(v) > 0 {
-		apiObject.InstancesDistribution = expandInstancesDistribution(v[0].(map[string]interface{}))
+	if v, ok := tfMap["instances_distribution"].([]any); ok && len(v) > 0 {
+		apiObject.InstancesDistribution = expandInstancesDistribution(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap[names.AttrLaunchTemplate].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]interface{}), hasDefaultVersion)
+	if v, ok := tfMap[names.AttrLaunchTemplate].([]any); ok && len(v) > 0 {
+		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]any), hasDefaultVersion)
 	}
 
 	return apiObject
 }
 
-func expandPutLifecycleHookInput(name string, tfMap map[string]interface{}) *autoscaling.PutLifecycleHookInput {
+func expandPutLifecycleHookInput(name string, tfMap map[string]any) *autoscaling.PutLifecycleHookInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -3206,7 +3125,7 @@ func expandPutLifecycleHookInput(name string, tfMap map[string]interface{}) *aut
 	return apiObject
 }
 
-func expandPutLifecycleHookInputs(name string, tfList []interface{}) []*autoscaling.PutLifecycleHookInput {
+func expandPutLifecycleHookInputs(name string, tfList []any) []*autoscaling.PutLifecycleHookInput {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -3214,7 +3133,7 @@ func expandPutLifecycleHookInputs(name string, tfList []interface{}) []*autoscal
 	var apiObjects []*autoscaling.PutLifecycleHookInput
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -3232,7 +3151,7 @@ func expandPutLifecycleHookInputs(name string, tfList []interface{}) []*autoscal
 	return apiObjects
 }
 
-func expandPutWarmPoolInput(name string, tfMap map[string]interface{}) *autoscaling.PutWarmPoolInput {
+func expandPutWarmPoolInput(name string, tfMap map[string]any) *autoscaling.PutWarmPoolInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -3241,8 +3160,8 @@ func expandPutWarmPoolInput(name string, tfMap map[string]interface{}) *autoscal
 		AutoScalingGroupName: aws.String(name),
 	}
 
-	if v, ok := tfMap["instance_reuse_policy"].([]interface{}); ok && len(v) > 0 {
-		apiObject.InstanceReusePolicy = expandInstanceReusePolicy(v[0].(map[string]interface{}))
+	if v, ok := tfMap["instance_reuse_policy"].([]any); ok && len(v) > 0 {
+		apiObject.InstanceReusePolicy = expandInstanceReusePolicy(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["max_group_prepared_capacity"].(int); ok {
@@ -3260,7 +3179,7 @@ func expandPutWarmPoolInput(name string, tfMap map[string]interface{}) *autoscal
 	return apiObject
 }
 
-func expandInstanceReusePolicy(tfMap map[string]interface{}) *awstypes.InstanceReusePolicy {
+func expandInstanceReusePolicy(tfMap map[string]any) *awstypes.InstanceReusePolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -3274,7 +3193,7 @@ func expandInstanceReusePolicy(tfMap map[string]interface{}) *awstypes.InstanceR
 	return apiObject
 }
 
-func expandStartInstanceRefreshInput(name string, tfMap map[string]interface{}, launchTemplate *awstypes.LaunchTemplateSpecification, mixedInstancesPolicy *awstypes.MixedInstancesPolicy) *autoscaling.StartInstanceRefreshInput {
+func expandStartInstanceRefreshInput(name string, tfMap map[string]any, launchTemplate *awstypes.LaunchTemplateSpecification, mixedInstancesPolicy *awstypes.MixedInstancesPolicy) *autoscaling.StartInstanceRefreshInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -3283,8 +3202,8 @@ func expandStartInstanceRefreshInput(name string, tfMap map[string]interface{}, 
 		AutoScalingGroupName: aws.String(name),
 	}
 
-	if v, ok := tfMap["preferences"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Preferences = expandRefreshPreferences(v[0].(map[string]interface{}))
+	if v, ok := tfMap["preferences"].([]any); ok && len(v) > 0 {
+		apiObject.Preferences = expandRefreshPreferences(v[0].(map[string]any))
 
 		// "The AutoRollback parameter cannot be set to true when the DesiredConfiguration parameter is empty".
 		if aws.ToBool(apiObject.Preferences.AutoRollback) {
@@ -3302,15 +3221,15 @@ func expandStartInstanceRefreshInput(name string, tfMap map[string]interface{}, 
 	return apiObject
 }
 
-func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPreferences {
+func expandRefreshPreferences(tfMap map[string]any) *awstypes.RefreshPreferences {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.RefreshPreferences{}
 
-	if v, ok := tfMap["alarm_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AlarmSpecification = expandAlarmSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["alarm_specification"].([]any); ok && len(v) > 0 {
+		apiObject.AlarmSpecification = expandAlarmSpecification(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["auto_rollback"].(bool); ok {
@@ -3323,7 +3242,7 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 		}
 	}
 
-	if v, ok := tfMap["checkpoint_percentages"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["checkpoint_percentages"].([]any); ok && len(v) > 0 {
 		apiObject.CheckpointPercentages = flex.ExpandInt32ValueList(v)
 	}
 
@@ -3356,21 +3275,21 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 	return apiObject
 }
 
-func expandAlarmSpecification(tfMap map[string]interface{}) *awstypes.AlarmSpecification {
+func expandAlarmSpecification(tfMap map[string]any) *awstypes.AlarmSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.AlarmSpecification{}
 
-	if v, ok := tfMap["alarms"].([]interface{}); ok {
+	if v, ok := tfMap["alarms"].([]any); ok {
 		apiObject.Alarms = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandVPCZoneIdentifiers(tfList []interface{}) *string {
+func expandVPCZoneIdentifiers(tfList []any) *string {
 	vpcZoneIDs := make([]string, len(tfList))
 
 	for i, v := range tfList {
@@ -3380,7 +3299,57 @@ func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 	return aws.String(strings.Join(vpcZoneIDs, ","))
 }
 
-func expandTrafficSourceIdentifier(tfMap map[string]interface{}) awstypes.TrafficSourceIdentifier {
+func expandAvailabilityZoneDistribution(tfMap map[string]any) *awstypes.AvailabilityZoneDistribution {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AvailabilityZoneDistribution{}
+
+	if v, ok := tfMap["capacity_distribution_strategy"].(string); ok && v != "" {
+		apiObject.CapacityDistributionStrategy = awstypes.CapacityDistributionStrategy(v)
+	}
+
+	return apiObject
+}
+
+func expandCapacityReservationSpecification(tfMap map[string]any) *awstypes.CapacityReservationSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CapacityReservationSpecification{}
+
+	if v, ok := tfMap["capacity_reservation_preference"].(string); ok && v != "" {
+		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
+	}
+
+	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandCapacityReservationTarget(tfMap map[string]any) *awstypes.CapacityReservationTarget {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CapacityReservationTarget{}
+
+	if v, ok := tfMap["capacity_reservation_ids"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationIds = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["capacity_reservation_resource_group_arns"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationResourceGroupArns = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
+func expandTrafficSourceIdentifier(tfMap map[string]any) awstypes.TrafficSourceIdentifier {
 	apiObject := awstypes.TrafficSourceIdentifier{}
 
 	if v, ok := tfMap[names.AttrIdentifier].(string); ok && v != "" {
@@ -3394,7 +3363,7 @@ func expandTrafficSourceIdentifier(tfMap map[string]interface{}) awstypes.Traffi
 	return apiObject
 }
 
-func expandTrafficSourceIdentifiers(tfList []interface{}) []awstypes.TrafficSourceIdentifier {
+func expandTrafficSourceIdentifiers(tfList []any) []awstypes.TrafficSourceIdentifier {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -3402,7 +3371,7 @@ func expandTrafficSourceIdentifiers(tfList []interface{}) []awstypes.TrafficSour
 	var apiObjects []awstypes.TrafficSourceIdentifier
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -3413,6 +3382,55 @@ func expandTrafficSourceIdentifiers(tfList []interface{}) []awstypes.TrafficSour
 	}
 
 	return apiObjects
+}
+
+func flattenAvailabilityZoneDistribution(apiObject *awstypes.AvailabilityZoneDistribution) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CapacityDistributionStrategy; v != "" {
+		tfMap["capacity_distribution_strategy"] = v
+	}
+
+	return tfMap
+}
+
+func flattenCapacityReservationSpecification(apiObject *awstypes.CapacityReservationSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.CapacityReservationPreference; v != "" {
+		tfMap["capacity_reservation_preference"] = v
+	}
+
+	if v := apiObject.CapacityReservationTarget; v != nil {
+		tfMap["capacity_reservation_target"] = []any{flattenCapacityReservationTarget(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCapacityReservationTarget(apiObject *awstypes.CapacityReservationTarget) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CapacityReservationIds; len(v) > 0 {
+		tfMap["capacity_reservation_ids"] = v
+	}
+
+	if v := apiObject.CapacityReservationResourceGroupArns; len(v) > 0 {
+		tfMap["capacity_reservation_resource_group_arns"] = v
+	}
+
+	return tfMap
 }
 
 func flattenEnabledMetrics(apiObjects []awstypes.EnabledMetric) []string {
@@ -3427,12 +3445,12 @@ func flattenEnabledMetrics(apiObjects []awstypes.EnabledMetric) []string {
 	return tfList
 }
 
-func flattenLaunchTemplateSpecification(apiObject *awstypes.LaunchTemplateSpecification) map[string]interface{} {
+func flattenLaunchTemplateSpecification(apiObject *awstypes.LaunchTemplateSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
 		tfMap[names.AttrID] = aws.ToString(v)
@@ -3449,30 +3467,30 @@ func flattenLaunchTemplateSpecification(apiObject *awstypes.LaunchTemplateSpecif
 	return tfMap
 }
 
-func flattenMixedInstancesPolicy(apiObject *awstypes.MixedInstancesPolicy) map[string]interface{} {
+func flattenMixedInstancesPolicy(apiObject *awstypes.MixedInstancesPolicy) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.InstancesDistribution; v != nil {
-		tfMap["instances_distribution"] = []interface{}{flattenInstancesDistribution(v)}
+		tfMap["instances_distribution"] = []any{flattenInstancesDistribution(v)}
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {
-		tfMap[names.AttrLaunchTemplate] = []interface{}{flattenLaunchTemplate(v)}
+		tfMap[names.AttrLaunchTemplate] = []any{flattenLaunchTemplate(v)}
 	}
 
 	return tfMap
 }
 
-func flattenInstancesDistribution(apiObject *awstypes.InstancesDistribution) map[string]interface{} {
+func flattenInstancesDistribution(apiObject *awstypes.InstancesDistribution) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.OnDemandAllocationStrategy; v != nil {
 		tfMap["on_demand_allocation_strategy"] = aws.ToString(v)
@@ -3501,7 +3519,7 @@ func flattenInstancesDistribution(apiObject *awstypes.InstancesDistribution) map
 	return tfMap
 }
 
-func expandInstanceMaintenancePolicy(l []interface{}) *awstypes.InstanceMaintenancePolicy {
+func expandInstanceMaintenancePolicy(l []any) *awstypes.InstanceMaintenancePolicy {
 	if len(l) == 0 {
 		//Empty InstanceMaintenancePolicy block will reset already assigned values
 		return &awstypes.InstanceMaintenancePolicy{
@@ -3510,7 +3528,7 @@ func expandInstanceMaintenancePolicy(l []interface{}) *awstypes.InstanceMaintena
 		}
 	}
 
-	tfMap := l[0].(map[string]interface{})
+	tfMap := l[0].(map[string]any)
 
 	return &awstypes.InstanceMaintenancePolicy{
 		MinHealthyPercentage: aws.Int32(int32(tfMap["min_healthy_percentage"].(int))),
@@ -3518,28 +3536,28 @@ func expandInstanceMaintenancePolicy(l []interface{}) *awstypes.InstanceMaintena
 	}
 }
 
-func flattenInstanceMaintenancePolicy(instanceMaintenancePolicy *awstypes.InstanceMaintenancePolicy) []interface{} {
+func flattenInstanceMaintenancePolicy(instanceMaintenancePolicy *awstypes.InstanceMaintenancePolicy) []any {
 	if instanceMaintenancePolicy == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"min_healthy_percentage": instanceMaintenancePolicy.MinHealthyPercentage,
 		"max_healthy_percentage": instanceMaintenancePolicy.MaxHealthyPercentage,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenLaunchTemplate(apiObject *awstypes.LaunchTemplate) map[string]interface{} {
+func flattenLaunchTemplate(apiObject *awstypes.LaunchTemplate) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenLaunchTemplateSpecificationForMixedInstancesPolicy(v)}
+		tfMap["launch_template_specification"] = []any{flattenLaunchTemplateSpecificationForMixedInstancesPolicy(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
@@ -3549,12 +3567,12 @@ func flattenLaunchTemplate(apiObject *awstypes.LaunchTemplate) map[string]interf
 	return tfMap
 }
 
-func flattenLaunchTemplateSpecificationForMixedInstancesPolicy(apiObject *awstypes.LaunchTemplateSpecification) map[string]interface{} {
+func flattenLaunchTemplateSpecificationForMixedInstancesPolicy(apiObject *awstypes.LaunchTemplateSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
 		tfMap["launch_template_id"] = aws.ToString(v)
@@ -3571,11 +3589,11 @@ func flattenLaunchTemplateSpecificationForMixedInstancesPolicy(apiObject *awstyp
 	return tfMap
 }
 
-func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.InstanceRequirements; v != nil {
-		tfMap["instance_requirements"] = []interface{}{flattenInstanceRequirements(v)}
+		tfMap["instance_requirements"] = []any{flattenInstanceRequirements(v)}
 	}
 
 	if v := apiObject.InstanceType; v != nil {
@@ -3583,7 +3601,7 @@ func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) 
 	}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenLaunchTemplateSpecificationForMixedInstancesPolicy(v)}
+		tfMap["launch_template_specification"] = []any{flattenLaunchTemplateSpecificationForMixedInstancesPolicy(v)}
 	}
 
 	if v := apiObject.WeightedCapacity; v != nil {
@@ -3593,12 +3611,12 @@ func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) 
 	return tfMap
 }
 
-func flattenLaunchTemplateOverrideses(apiObjects []awstypes.LaunchTemplateOverrides) []interface{} {
+func flattenLaunchTemplateOverrideses(apiObjects []awstypes.LaunchTemplateOverrides) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchTemplateOverrides(apiObject))
@@ -3607,15 +3625,15 @@ func flattenLaunchTemplateOverrideses(apiObjects []awstypes.LaunchTemplateOverri
 	return tfList
 }
 
-func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[string]interface{} {
+func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AcceleratorCount; v != nil {
-		tfMap["accelerator_count"] = []interface{}{flattenAcceleratorCount(v)}
+		tfMap["accelerator_count"] = []any{flattenAcceleratorCount(v)}
 	}
 
 	if apiObject.AcceleratorManufacturers != nil {
@@ -3627,7 +3645,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.AcceleratorTotalMemoryMiB; v != nil {
-		tfMap["accelerator_total_memory_mib"] = []interface{}{flattenAcceleratorTotalMemoryMiB(v)}
+		tfMap["accelerator_total_memory_mib"] = []any{flattenAcceleratorTotalMemoryMiB(v)}
 	}
 
 	if apiObject.AcceleratorTypes != nil {
@@ -3641,7 +3659,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	tfMap["bare_metal"] = apiObject.BareMetal
 
 	if v := apiObject.BaselineEbsBandwidthMbps; v != nil {
-		tfMap["baseline_ebs_bandwidth_mbps"] = []interface{}{flattenBaselineEBSBandwidthMbps(v)}
+		tfMap["baseline_ebs_bandwidth_mbps"] = []any{flattenBaselineEBSBandwidthMbps(v)}
 	}
 
 	tfMap["burstable_performance"] = apiObject.BurstablePerformance
@@ -3669,19 +3687,19 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.MemoryGiBPerVCpu; v != nil {
-		tfMap["memory_gib_per_vcpu"] = []interface{}{flattenMemoryGiBPerVCPU(v)}
+		tfMap["memory_gib_per_vcpu"] = []any{flattenMemoryGiBPerVCPU(v)}
 	}
 
 	if v := apiObject.MemoryMiB; v != nil {
-		tfMap["memory_mib"] = []interface{}{flattenMemoryMiB(v)}
+		tfMap["memory_mib"] = []any{flattenMemoryMiB(v)}
 	}
 
 	if v := apiObject.NetworkBandwidthGbps; v != nil {
-		tfMap["network_bandwidth_gbps"] = []interface{}{flattenNetworkBandwidthGbps(v)}
+		tfMap["network_bandwidth_gbps"] = []any{flattenNetworkBandwidthGbps(v)}
 	}
 
 	if v := apiObject.NetworkInterfaceCount; v != nil {
-		tfMap["network_interface_count"] = []interface{}{flattenNetworkInterfaceCount(v)}
+		tfMap["network_interface_count"] = []any{flattenNetworkInterfaceCount(v)}
 	}
 
 	if v := apiObject.OnDemandMaxPricePercentageOverLowestPrice; v != nil {
@@ -3697,22 +3715,22 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.TotalLocalStorageGB; v != nil {
-		tfMap["total_local_storage_gb"] = []interface{}{flattentTotalLocalStorageGB(v)}
+		tfMap["total_local_storage_gb"] = []any{flattentTotalLocalStorageGB(v)}
 	}
 
 	if v := apiObject.VCpuCount; v != nil {
-		tfMap["vcpu_count"] = []interface{}{flattenVCPUCount(v)}
+		tfMap["vcpu_count"] = []any{flattenVCPUCount(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAcceleratorCount(apiObject *awstypes.AcceleratorCountRequest) map[string]interface{} {
+func flattenAcceleratorCount(apiObject *awstypes.AcceleratorCountRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -3725,12 +3743,12 @@ func flattenAcceleratorCount(apiObject *awstypes.AcceleratorCountRequest) map[st
 	return tfMap
 }
 
-func flattenAcceleratorTotalMemoryMiB(apiObject *awstypes.AcceleratorTotalMemoryMiBRequest) map[string]interface{} {
+func flattenAcceleratorTotalMemoryMiB(apiObject *awstypes.AcceleratorTotalMemoryMiBRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -3743,12 +3761,12 @@ func flattenAcceleratorTotalMemoryMiB(apiObject *awstypes.AcceleratorTotalMemory
 	return tfMap
 }
 
-func flattenBaselineEBSBandwidthMbps(apiObject *awstypes.BaselineEbsBandwidthMbpsRequest) map[string]interface{} {
+func flattenBaselineEBSBandwidthMbps(apiObject *awstypes.BaselineEbsBandwidthMbpsRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -3761,12 +3779,12 @@ func flattenBaselineEBSBandwidthMbps(apiObject *awstypes.BaselineEbsBandwidthMbp
 	return tfMap
 }
 
-func flattenMemoryGiBPerVCPU(apiObject *awstypes.MemoryGiBPerVCpuRequest) map[string]interface{} {
+func flattenMemoryGiBPerVCPU(apiObject *awstypes.MemoryGiBPerVCpuRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToFloat64(v)
@@ -3779,12 +3797,12 @@ func flattenMemoryGiBPerVCPU(apiObject *awstypes.MemoryGiBPerVCpuRequest) map[st
 	return tfMap
 }
 
-func flattenMemoryMiB(apiObject *awstypes.MemoryMiBRequest) map[string]interface{} {
+func flattenMemoryMiB(apiObject *awstypes.MemoryMiBRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -3797,12 +3815,12 @@ func flattenMemoryMiB(apiObject *awstypes.MemoryMiBRequest) map[string]interface
 	return tfMap
 }
 
-func flattenNetworkBandwidthGbps(apiObject *awstypes.NetworkBandwidthGbpsRequest) map[string]interface{} {
+func flattenNetworkBandwidthGbps(apiObject *awstypes.NetworkBandwidthGbpsRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToFloat64(v)
@@ -3815,12 +3833,12 @@ func flattenNetworkBandwidthGbps(apiObject *awstypes.NetworkBandwidthGbpsRequest
 	return tfMap
 }
 
-func flattenNetworkInterfaceCount(apiObject *awstypes.NetworkInterfaceCountRequest) map[string]interface{} {
+func flattenNetworkInterfaceCount(apiObject *awstypes.NetworkInterfaceCountRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -3833,12 +3851,12 @@ func flattenNetworkInterfaceCount(apiObject *awstypes.NetworkInterfaceCountReque
 	return tfMap
 }
 
-func flattentTotalLocalStorageGB(apiObject *awstypes.TotalLocalStorageGBRequest) map[string]interface{} {
+func flattentTotalLocalStorageGB(apiObject *awstypes.TotalLocalStorageGBRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToFloat64(v)
@@ -3851,8 +3869,8 @@ func flattentTotalLocalStorageGB(apiObject *awstypes.TotalLocalStorageGBRequest)
 	return tfMap
 }
 
-func flattenTrafficSourceIdentifier(apiObject awstypes.TrafficSourceIdentifier) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenTrafficSourceIdentifier(apiObject awstypes.TrafficSourceIdentifier) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Identifier; v != nil {
 		tfMap[names.AttrIdentifier] = aws.ToString(v)
@@ -3865,12 +3883,12 @@ func flattenTrafficSourceIdentifier(apiObject awstypes.TrafficSourceIdentifier) 
 	return tfMap
 }
 
-func flattenTrafficSourceIdentifiers(apiObjects []awstypes.TrafficSourceIdentifier) []interface{} {
+func flattenTrafficSourceIdentifiers(apiObjects []awstypes.TrafficSourceIdentifier) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTrafficSourceIdentifier(apiObject))
@@ -3879,12 +3897,12 @@ func flattenTrafficSourceIdentifiers(apiObjects []awstypes.TrafficSourceIdentifi
 	return tfList
 }
 
-func flattenVCPUCount(apiObject *awstypes.VCpuCountRequest) map[string]interface{} {
+func flattenVCPUCount(apiObject *awstypes.VCpuCountRequest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -3913,15 +3931,15 @@ func flattenSuspendedProcesses(apiObjects []awstypes.SuspendedProcess) []string 
 	return tfList
 }
 
-func flattenWarmPoolConfiguration(apiObject *awstypes.WarmPoolConfiguration) map[string]interface{} {
+func flattenWarmPoolConfiguration(apiObject *awstypes.WarmPoolConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.InstanceReusePolicy; v != nil {
-		tfMap["instance_reuse_policy"] = []interface{}{flattenWarmPoolInstanceReusePolicy(v)}
+		tfMap["instance_reuse_policy"] = []any{flattenWarmPoolInstanceReusePolicy(v)}
 	}
 
 	if v := apiObject.MaxGroupPreparedCapacity; v != nil {
@@ -3939,12 +3957,12 @@ func flattenWarmPoolConfiguration(apiObject *awstypes.WarmPoolConfiguration) map
 	return tfMap
 }
 
-func flattenWarmPoolInstanceReusePolicy(apiObject *awstypes.InstanceReusePolicy) map[string]interface{} {
+func flattenWarmPoolInstanceReusePolicy(apiObject *awstypes.InstanceReusePolicy) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ReuseOnScaleIn; v != nil {
 		tfMap["reuse_on_scale_in"] = aws.ToBool(v)
@@ -3981,7 +3999,7 @@ func startInstanceRefresh(ctx context.Context, conn *autoscaling.Client, input *
 	name := aws.ToString(input.AutoScalingGroupName)
 
 	_, err := tfresource.RetryWhen(ctx, instanceRefreshStartedTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.StartInstanceRefresh(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -4003,7 +4021,7 @@ func startInstanceRefresh(ctx context.Context, conn *autoscaling.Client, input *
 	return nil
 }
 
-func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) diag.Diagnostics {
+func validateGroupInstanceRefreshTriggerFields(i any, path cty.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, ok := i.(string)

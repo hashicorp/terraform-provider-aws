@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package acmpca
 
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,7 +76,7 @@ func resourcePermission() *schema.Resource {
 	}
 }
 
-func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -86,7 +88,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &acmpca.CreatePermissionInput{
+	input := acmpca.CreatePermissionInput{
 		Actions:                 expandPermissionActions(d.Get(names.AttrActions).(*schema.Set)),
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
@@ -96,7 +98,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SourceAccount = aws.String(sourceAccount)
 	}
 
-	if _, err := conn.CreatePermission(ctx, input); err != nil {
+	if _, err := conn.CreatePermission(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ACM PCA Permission (%s): %s", id, err)
 	}
 
@@ -105,7 +107,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }
 
-func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -117,7 +119,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	caARN, principal, sourceAccount := parts[0], parts[1], parts[2]
 	permission, err := findPermissionByThreePartKey(ctx, conn, caARN, principal, sourceAccount)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -136,7 +138,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -146,7 +148,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	caARN, principal, sourceAccount := parts[0], parts[1], parts[2]
-	input := &acmpca.DeletePermissionInput{
+	input := acmpca.DeletePermissionInput{
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
 	}
@@ -156,7 +158,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting ACM PCA Permission: %s", d.Id())
-	_, err = conn.DeletePermission(ctx, input)
+	_, err = conn.DeletePermission(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -170,11 +172,11 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func findPermissionByThreePartKey(ctx context.Context, conn *acmpca.Client, certificateAuthorityARN, principal, sourceAccount string) (*types.Permission, error) {
-	input := &acmpca.ListPermissionsInput{
+	input := acmpca.ListPermissionsInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	return findPermission(ctx, conn, input, func(v *types.Permission) bool {
+	return findPermission(ctx, conn, &input, func(v *types.Permission) bool {
 		return aws.ToString(v.Principal) == principal && (sourceAccount == "" || aws.ToString(v.SourceAccount) == sourceAccount)
 	})
 }
@@ -198,8 +200,7 @@ func findPermissions(ctx context.Context, conn *acmpca.Client, input *acmpca.Lis
 
 		if errs.IsAErrorMessageContains[*types.InvalidStateException](err, "The certificate authority is in the DELETED state") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

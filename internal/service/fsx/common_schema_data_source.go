@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -16,11 +16,11 @@ func newSnapshotFilterList(s *schema.Set) []awstypes.SnapshotFilter {
 		return []awstypes.SnapshotFilter{}
 	}
 
-	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.SnapshotFilter {
-		tfMap := tfList.(map[string]interface{})
+	return tfslices.ApplyToAll(s.List(), func(tfList any) awstypes.SnapshotFilter {
+		tfMap := tfList.(map[string]any)
 		return awstypes.SnapshotFilter{
 			Name:   awstypes.SnapshotFilterName(tfMap[names.AttrName].(string)),
-			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
+			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]any)),
 		}
 	})
 }
@@ -52,11 +52,11 @@ func newStorageVirtualMachineFilterList(s *schema.Set) []awstypes.StorageVirtual
 		return []awstypes.StorageVirtualMachineFilter{}
 	}
 
-	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.StorageVirtualMachineFilter {
-		tfMap := tfList.(map[string]interface{})
+	return tfslices.ApplyToAll(s.List(), func(tfList any) awstypes.StorageVirtualMachineFilter {
+		tfMap := tfList.(map[string]any)
 		return awstypes.StorageVirtualMachineFilter{
 			Name:   awstypes.StorageVirtualMachineFilterName(tfMap[names.AttrName].(string)),
-			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
+			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]any)),
 		}
 	})
 }

@@ -130,8 +130,7 @@
     "MaxFullLoadSubTasks": 8,
     "TransactionConsistencyTimeout": 600,
     "CreatePkAfterFullLoad": false,
-    "TargetTablePrepMode": "DROP_AND_CREATE",
-    "PersistPartitionProgressForResumption": false
+    "TargetTablePrepMode": "DROP_AND_CREATE"
   },
   "TargetMetadata": {
     "ParallelApplyBufferSize": 0,

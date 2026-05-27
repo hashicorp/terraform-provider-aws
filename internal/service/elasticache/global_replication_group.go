@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
@@ -20,12 +22,12 @@ import (
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -90,8 +92,10 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -210,7 +214,8 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade,
-			customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrade,
+			customizeDiffEngineForceNewOnDowngrade(),
+			customizeDiffGlobalReplicationGroupParamGroupNameRequiresEngineOrMajorVersionUpgrade,
 			customdiff.ComputedIf("global_node_groups", diffHasChange("num_node_groups")),
 		),
 	}
@@ -233,15 +238,20 @@ of the Global Replication Group and all Replication Group members. The AWS provi
 Please use the "-replace" option on the terraform plan and apply commands (see https://www.terraform.io/cli/commands/plan#replace-address).`, diff.Id())
 }
 
-func customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrade(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-	return paramGroupNameRequiresMajorVersionUpgrade(diff)
+func customizeDiffGlobalReplicationGroupParamGroupNameRequiresEngineOrMajorVersionUpgrade(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	return paramGroupNameRequiresEngineOrMajorVersionUpgrade(diff)
 }
 
 // parameter_group_name can only be set when doing a major update,
 // but we also should allow it to stay set afterwards
-func paramGroupNameRequiresMajorVersionUpgrade(diff sdkv2.ResourceDiffer) error {
+func paramGroupNameRequiresEngineOrMajorVersionUpgrade(diff sdkv2.ResourceDiffer) error {
 	o, n := diff.GetChange(names.AttrParameterGroupName)
 	if o.(string) == n.(string) {
+		return nil
+	}
+
+	// param group must be able to change on Redis 7.1 to Valkey 7.2 upgrade
+	if diff.HasChange(names.AttrEngine) {
 		return nil
 	}
 
@@ -262,7 +272,7 @@ func paramGroupNameRequiresMajorVersionUpgrade(diff sdkv2.ResourceDiffer) error 
 		if vDiff[0] == 0 && vDiff[1] == 0 {
 			return errors.New("cannot change parameter group name without upgrading major engine version")
 		}
-		if vDiff[0] != 1 {
+		if vDiff[0] == 0 {
 			return fmt.Errorf("cannot change parameter group name on minor engine version upgrade, upgrading from %s to %s", oldVersion.String(), newVersion.String())
 		}
 	}
@@ -318,8 +328,24 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
+	if e, ok := d.GetOk(names.AttrEngine); ok {
+		if e.(string) == aws.ToString(globalReplicationGroup.Engine) {
+			log.Printf("[DEBUG] Not updating ElastiCache Global Replication Group (%s) engine: no change from %q", d.Id(), e)
+		} else {
+			version := d.Get(names.AttrEngineVersion).(string)
+			p := d.Get(names.AttrParameterGroupName).(string)
+			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(e.(string), version, p), names.AttrEngine, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	} else if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		requestedVersion, _ := normalizeEngineVersion(v.(string))
+
+		// backwards-compatibility; imply redis engine if just given engine version
+		engine, ok := d.GetOk(names.AttrEngine)
+		if !ok {
+			engine = engineRedis
+		}
 
 		engineVersion, err := gversion.NewVersion(aws.ToString(globalReplicationGroup.EngineVersion))
 		if err != nil {
@@ -335,7 +361,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		p := d.Get(names.AttrParameterGroupName).(string)
 
 		if diff[0] == 1 {
-			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(v.(string), p), "engine version (major)", d.Timeout(schema.TimeoutCreate)); err != nil {
+			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(engine.(string), v.(string), p), "engine version (major)", d.Timeout(schema.TimeoutCreate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		} else if diff[1] == 1 {
@@ -343,7 +369,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 				return sdkdiag.AppendErrorf(diags, "cannot change parameter group name on minor engine version upgrade, upgrading from %s to %s", engineVersion.String(), requestedVersion.String())
 			}
 			if t, _ := regexp.MatchString(`[6-9]\.x`, v.(string)); !t {
-				if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(v.(string)), "engine version (minor)", d.Timeout(schema.TimeoutCreate)); err != nil {
+				if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(engine.(string), v.(string)), "engine version (minor)", d.Timeout(schema.TimeoutCreate)); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
@@ -376,7 +402,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 
 	globalReplicationGroup, err := findGlobalReplicationGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -440,20 +466,32 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	if d.HasChange(names.AttrEngineVersion) {
+	if d.HasChange(names.AttrEngine) {
+		engine := d.Get(names.AttrEngine).(string)
+		version := d.Get(names.AttrEngineVersion).(string)
+		p := d.Get(names.AttrParameterGroupName).(string)
+		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(engine, version, p), "engine version (major)", d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	} else if d.HasChange(names.AttrEngineVersion) {
 		o, n := d.GetChange(names.AttrEngineVersion)
 
 		newVersion, _ := normalizeEngineVersion(n.(string))
 		oldVersion, _ := gversion.NewVersion(o.(string))
+		// backwards-compatibility; imply redis engine if just given engine version
+		engine, ok := d.GetOk(names.AttrEngine)
+		if !ok {
+			engine = engineRedis
+		}
 
 		diff := diffVersion(newVersion, oldVersion)
 		if diff[0] == 1 {
 			p := d.Get(names.AttrParameterGroupName).(string)
-			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(n.(string), p), "engine version (major)", d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(engine.(string), n.(string), p), "engine version (major)", d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		} else if diff[1] == 1 {
-			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(n.(string)), "engine version (minor)", d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(engine.(string), n.(string)), "engine version (minor)", d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -475,8 +513,8 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			} else if newNodeGroupCount < oldNodeGroupCount {
-				ids := tfslices.ApplyToAll(d.Get("global_node_groups").(*schema.Set).List(), func(tfMapRaw interface{}) string {
-					tfMap := tfMapRaw.(map[string]interface{})
+				ids := tfslices.ApplyToAll(d.Get("global_node_groups").(*schema.Set).List(), func(tfMapRaw any) string {
+					tfMap := tfMapRaw.(map[string]any)
 					return tfMap["global_node_group_id"].(string)
 				})
 				if err := decreaseGlobalReplicationGroupNodeGroupCount(ctx, conn, d.Id(), newNodeGroupCount, ids, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -509,14 +547,16 @@ func globalReplicationGroupDescriptionUpdater(description string) globalReplicat
 	}
 }
 
-func globalReplicationGroupEngineVersionMinorUpdater(version string) globalReplicationGroupUpdater {
+func globalReplicationGroupEngineVersionMinorUpdater(engine, version string) globalReplicationGroupUpdater {
 	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
+		input.Engine = aws.String(engine)
 		input.EngineVersion = aws.String(version)
 	}
 }
 
-func globalReplicationGroupEngineVersionMajorUpdater(version, paramGroupName string) globalReplicationGroupUpdater {
+func globalReplicationGroupEngineVersionMajorUpdater(engine, version, paramGroupName string) globalReplicationGroupUpdater {
 	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
+		input.Engine = aws.String(engine)
 		input.EngineVersion = aws.String(version)
 		input.CacheParameterGroupName = aws.String(paramGroupName)
 	}
@@ -610,7 +650,7 @@ func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalReplicationGroup(ctx, input)
 	})
 
@@ -658,8 +698,7 @@ func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, 
 
 		if errs.IsA[*awstypes.GlobalReplicationGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -677,11 +716,11 @@ func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, 
 	return output, nil
 }
 
-func statusGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusGlobalReplicationGroup(conn *elasticache.Client, globalReplicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -712,7 +751,7 @@ func waitGlobalReplicationGroupAvailable(ctx context.Context, conn *elasticache.
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupStatusCreating, globalReplicationGroupStatusModifying},
 		Target:     []string{globalReplicationGroupStatusAvailable, globalReplicationGroupStatusPrimaryOnly},
-		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
+		Refresh:    statusGlobalReplicationGroup(conn, globalReplicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -736,7 +775,7 @@ func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.Cl
 			globalReplicationGroupStatusDeleting,
 		},
 		Target:     []string{},
-		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
+		Refresh:    statusGlobalReplicationGroup(conn, globalReplicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -759,7 +798,7 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 
 	if len(globalReplicationGroup.Members) == 0 {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range globalReplicationGroup.Members {
@@ -773,11 +812,11 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 }
 
-func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusGlobalReplicationGroupMember(conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, replicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -797,7 +836,7 @@ func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elastic
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupMemberStatusAssociated},
 		Target:     []string{},
-		Refresh:    statusGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID),
+		Refresh:    statusGlobalReplicationGroupMember(conn, globalReplicationGroupID, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -836,7 +875,7 @@ func flattenGlobalNodeGroups(nodeGroups []awstypes.GlobalNodeGroup) []any {
 }
 
 func flattenGlobalNodeGroup(nodeGroup awstypes.GlobalNodeGroup) map[string]any {
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := nodeGroup.GlobalNodeGroupId; v != nil {
 		m["global_node_group_id"] = aws.ToString(v)
@@ -870,7 +909,7 @@ func globalReplicationGroupNodeNumber(id string) int {
 }
 
 func diffHasChange(key ...string) customdiff.ResourceConditionFunc {
-	return func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+	return func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 		return diff.HasChanges(key...)
 	}
 }

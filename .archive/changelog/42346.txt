@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix `malformed version` error when parsing 7.x redis engine versions
+```

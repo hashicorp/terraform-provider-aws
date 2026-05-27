@@ -22,6 +22,8 @@ data "aws_iam_user" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `user_name` - (Required) Friendly IAM user name to match.
 
 ## Attribute Reference

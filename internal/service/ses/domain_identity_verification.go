@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ses
 
@@ -13,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,12 +50,12 @@ func resourceDomainIdentityVerification() *schema.Resource {
 	}
 }
 
-func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	_, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutCreate), awstypes.VerificationStatusSuccess, func() (awstypes.VerificationStatus, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutCreate), awstypes.VerificationStatusSuccess, func(ctx context.Context) (awstypes.VerificationStatus, error) {
 		att, err := findIdentityVerificationAttributesByIdentity(ctx, conn, domainName)
 
 		if err != nil {
@@ -72,7 +74,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceDomainIdentityVerificationRead(ctx, d, meta)...)
 }
 
-func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -86,7 +88,7 @@ func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SES Domain Identity Verification (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

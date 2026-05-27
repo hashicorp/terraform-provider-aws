@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -22,6 +24,7 @@ import (
 func dataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {
 				Type:         schema.TypeString,
@@ -48,7 +51,7 @@ func dataSourceDelegatedServices() *schema.Resource {
 	}
 }
 
-func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -64,15 +67,15 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting delegated_services: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func findDelegatedServicesByAccountID(ctx context.Context, conn *organizations.Client, accountID string) ([]awstypes.DelegatedService, error) {
-	input := &organizations.ListDelegatedServicesForAccountInput{
+	input := organizations.ListDelegatedServicesForAccountInput{
 		AccountId: aws.String(accountID),
 	}
 
-	return findDelegatedServices(ctx, conn, input)
+	return findDelegatedServices(ctx, conn, &input)
 }
 
 func findDelegatedServices(ctx context.Context, conn *organizations.Client, input *organizations.ListDelegatedServicesForAccountInput) ([]awstypes.DelegatedService, error) {
@@ -92,15 +95,15 @@ func findDelegatedServices(ctx context.Context, conn *organizations.Client, inpu
 	return output, nil
 }
 
-func flattenDelegatedServices(apiObjects []awstypes.DelegatedService) []map[string]interface{} {
+func flattenDelegatedServices(apiObjects []awstypes.DelegatedService) []map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []map[string]interface{}
+	var tfList []map[string]any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"delegation_enabled_date": aws.ToTime(apiObject.DelegationEnabledDate).Format(time.RFC3339),
 			"service_principal":       aws.ToString(apiObject.ServicePrincipal),
 		})

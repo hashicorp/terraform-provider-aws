@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -12,8 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,6 +31,7 @@ import (
 
 // @SDKResource("aws_vpclattice_service", name="Service")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
@@ -98,8 +100,6 @@ func resourceService() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -107,12 +107,12 @@ const (
 	ResNameService = "Service"
 )
 
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(d.Get(names.AttrName).(string)),
 		Tags:        getTagsIn(ctx),
 	}
@@ -144,13 +144,13 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findServiceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -165,7 +165,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrCertificateARN, out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
-		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
+		if err := d.Set("dns_entry", []any{flattenDNSEntry(out.DnsEntry)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {
@@ -177,7 +177,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -204,14 +204,15 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPC Lattice Service: %s", d.Id())
-	_, err := conn.DeleteService(ctx, &vpclattice.DeleteServiceInput{
+	input := vpclattice.DeleteServiceInput{
 		ServiceIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteService(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -232,7 +233,7 @@ func waitServiceCreated(ctx context.Context, conn *vpclattice.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ServiceStatusCreateInProgress),
 		Target:                    enum.Slice(types.ServiceStatusActive),
-		Refresh:                   statusService(ctx, conn, id),
+		Refresh:                   statusService(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -250,7 +251,7 @@ func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusDeleteInProgress, types.ServiceStatusActive),
 		Target:  []string{},
-		Refresh: statusService(ctx, conn, id),
+		Refresh: statusService(conn, id),
 		Timeout: timeout,
 	}
 
@@ -262,11 +263,11 @@ func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string,
 	return nil, err
 }
 
-func statusService(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusService(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findServiceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -286,8 +287,7 @@ func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -296,7 +296,7 @@ func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -336,12 +336,12 @@ func findServices(ctx context.Context, conn *vpclattice.Client, filter tfslices.
 	return output, nil
 }
 
-func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
+func flattenDNSEntry(apiObject *types.DnsEntry) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DomainName; v != nil {
 		tfMap[names.AttrDomainName] = aws.ToString(v)

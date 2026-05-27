@@ -10,7 +10,7 @@ description: |-
 
 Terraform data source for managing an AWS Transfer Family Connector.
 
-### Basic Usage
+## Example Usage
 
 ```terraform
 data "aws_transfer_connector" "test" {
@@ -20,8 +20,9 @@ data "aws_transfer_connector" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Unique identifier for connector
 
 ## Attribute Reference
@@ -40,12 +41,16 @@ This data source exports the following attributes in addition to the arguments a
     * `message_subject` - Subject HTTP header attribute in outbound AS2 messages to the connector.
     * `partner_profile_id` - Unique identifier used by connector for partner profile.
     * `signing_algorithm` - Algorithm used for signing AS2 messages sent with the connector.
+* `egress_config` - Egress configuration for the connector. Contains the following attributes:
+    * `vpc_lattice` - VPC Lattice configuration. Contains the following attributes:
+        * `resource_configuration_arn` - ARN of the VPC Lattice Resource Configuration.
+        * `port_number` - Port number for connecting to the SFTP server through VPC Lattice.
 * `logging_role` -  ARN of the IAM role that allows a connector to turn on CLoudwatch logging for Amazon S3 events.
 * `security_policy_name` - Name of security policy.
 * `service_managed_egress_ip_addresses` - List of egress Ip addresses.
 * `sftp_config` - Object containing the following attributes:
     * `trusted_host_keys` - List of the public portions of the host keys that are used to identify the servers the connector is connected to.
-    * `user_secret_id` - Identifer for the secret in AWS Secrets Manager that contains the SFTP user's private key, and/or password.
+    * `user_secret_id` - Identifier for the secret in AWS Secrets Manager that contains the SFTP user's private key, and/or password.
 * `tags` - Object containing the following attributes:
     * `key` - Name of the tag.
     * `value` - Values associated with the tags key.

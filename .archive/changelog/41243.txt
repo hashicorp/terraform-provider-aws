@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Support `us-isof-east-1` and `us-isof-south-1` as valid AWS Regions
+```

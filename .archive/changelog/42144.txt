@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_sagemaker_domain: Allow `default_user_settings.custom_file_system_config` and `default_space_settings.custom_file_system_config` to be removed on Update
+```
+
+```release-note:bug
+resource/aws_sagemaker_user_profile: Allow `user_settings.custom_file_system_config` to be removed on Update
+```

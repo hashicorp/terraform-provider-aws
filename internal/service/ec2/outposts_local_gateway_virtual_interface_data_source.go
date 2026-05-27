@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -48,10 +50,18 @@ func dataSourceLocalGatewayVirtualInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"local_gateway_virtual_interface_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"local_gateway_virtual_interface_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"outpost_lag_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"peer_address": {
 				Type:     schema.TypeString,
@@ -70,7 +80,7 @@ func dataSourceLocalGatewayVirtualInterface() *schema.Resource {
 	}
 }
 
-func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -81,7 +91,7 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -103,6 +113,8 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 	d.Set("local_address", localGatewayVirtualInterface.LocalAddress)
 	d.Set("local_bgp_asn", localGatewayVirtualInterface.LocalBgpAsn)
 	d.Set("local_gateway_id", localGatewayVirtualInterface.LocalGatewayId)
+	d.Set("local_gateway_virtual_interface_group_id", localGatewayVirtualInterface.LocalGatewayVirtualInterfaceGroupId)
+	d.Set("outpost_lag_id", localGatewayVirtualInterface.OutpostLagId)
 	d.Set("peer_address", localGatewayVirtualInterface.PeerAddress)
 	d.Set("peer_bgp_asn", localGatewayVirtualInterface.PeerBgpAsn)
 	d.Set("vlan", localGatewayVirtualInterface.Vlan)

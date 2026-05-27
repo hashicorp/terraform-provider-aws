@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sesv2
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -61,7 +63,7 @@ const (
 	resNameDedicatedIPAssignment = "Dedicated IP Assignment"
 )
 
-func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -83,7 +85,7 @@ func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceDedicatedIPAssignmentRead(ctx, d, meta)...)
 }
 
-func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -94,7 +96,7 @@ func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceDa
 
 	out, err := findDedicatedIPByTwoPartKey(ctx, conn, ip, destinationPoolName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SESV2 DedicatedIPAssignment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -110,7 +112,7 @@ func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -175,9 +177,7 @@ func findDedicatedIPByTwoPartKey(ctx context.Context, conn *sesv2.Client, ip, de
 	}
 
 	if aws.ToString(output.PoolName) != destinationPoolName {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -188,8 +188,7 @@ func findDedicatedIP(ctx context.Context, conn *sesv2.Client, input *sesv2.GetDe
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -198,7 +197,7 @@ func findDedicatedIP(ctx context.Context, conn *sesv2.Client, input *sesv2.GetDe
 	}
 
 	if output == nil || output.DedicatedIp == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DedicatedIp, nil

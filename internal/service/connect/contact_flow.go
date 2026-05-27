@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,8 +45,6 @@ func resourceContactFlow() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -61,7 +61,7 @@ func resourceContactFlow() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				ConflictsWith:    []string{"filename"},
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -100,7 +100,7 @@ func resourceContactFlow() *schema.Resource {
 	}
 }
 
-func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -147,7 +147,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceContactFlowRead(ctx, d, meta)...)
 }
 
-func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -158,7 +158,7 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	contactFlow, err := findContactFlowByTwoPartKey(ctx, conn, instanceID, contactFlowID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Contact Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -181,7 +181,7 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -239,7 +239,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceContactFlowRead(ctx, d, meta)...)
 }
 
-func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -249,10 +249,11 @@ func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Contact Flow: %s", d.Id())
-	_, err = conn.DeleteContactFlow(ctx, &connect.DeleteContactFlowInput{
+	input := connect.DeleteContactFlowInput{
 		ContactFlowId: aws.String(contactFlowID),
 		InstanceId:    aws.String(instanceID),
-	})
+	}
+	_, err = conn.DeleteContactFlow(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -298,8 +299,7 @@ func findContactFlow(ctx context.Context, conn *connect.Client, input *connect.D
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -308,7 +308,7 @@ func findContactFlow(ctx context.Context, conn *connect.Client, input *connect.D
 	}
 
 	if output == nil || output.ContactFlow == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContactFlow, nil

@@ -36,6 +36,31 @@ resource "aws_quicksight_data_set" "example" {
 }
 ```
 
+### With use_as
+
+```terraform
+resource "aws_quicksight_data_set" "example" {
+  data_set_id = "example-id"
+  name        = "example-name"
+  import_mode = "SPICE"
+  use_as      = "RLS_RULES"
+
+  physical_table_map {
+    physical_table_map_id = "example-id"
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.example.arn
+      input_columns {
+        name = "UserName"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+}
+```
+
 ### With Column Level Permission Rules
 
 ```terraform
@@ -167,21 +192,23 @@ The following arguments are required:
 * `data_set_id` - (Required, Forces new resource) Identifier for the data set.
 * `import_mode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `SPICE` and `DIRECT_QUERY`.
 * `name` - (Required) Display name for the dataset.
-* `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `column_groups` - (Optional) Groupings of columns that work together in certain Amazon QuickSight features. Currently, only geospatial hierarchy is supported. See [column_groups](#column_groups).
 * `column_level_permission_rules` - (Optional) A set of 1 or more definitions of a [ColumnLevelPermissionRule](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnLevelPermissionRule.html). See [column_level_permission_rules](#column_level_permission_rules).
 * `data_set_usage_configuration` - (Optional) The usage configuration to apply to child datasets that reference this dataset as a source. See [data_set_usage_configuration](#data_set_usage_configuration).
 * `field_folders` - (Optional) The folder that contains fields and nested subfolders for your dataset. See [field_folders](#field_folders).
 * `logical_table_map` - (Optional) Configures the combination and transformation of the data from the physical tables. Maximum of 1 entry. See [logical_table_map](#logical_table_map).
 * `permissions` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [permissions](#permissions).
+* `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `row_level_permission_data_set` - (Optional) The row-level security configuration for the data that you want to create. See [row_level_permission_data_set](#row_level_permission_data_set).
 * `row_level_permission_tag_configuration` - (Optional) The configuration of tags on a dataset to set row-level security. Row-level security tags are currently supported for anonymous embedding only. See [row_level_permission_tag_configuration](#row_level_permission_tag_configuration).
 * `refresh_properties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `import_mode` is set to `SPICE`. See [refresh_properties](#refresh_properties).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `use_as` - (Optional, Forces new resource) Specifies the purpose of the data set. The only valid value is `RLS_RULES`, which designates this data set as a Row Level Security (RLS) rules dataset. An RLS rules dataset is used to control access to data at the row level in QuickSight analyses and dashboards. See the [AWS documentation](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CreateDataSet.html#API_CreateDataSet_RequestSyntax) for details.
 
 ### physical_table_map
 
@@ -394,7 +421,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
+* `output_columns` - The final set of columns available for use in analyses and dashboards after all data preparation and transformation steps have been applied within the data set.  See [`output_columns` Block](#output_columns-block) below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+### `output_columns` Block
+
+The `output_columns` block has the following attributes.
+
+* `name` - The name of the column.
+* `description` - The description of the column.
+* `type` - The data type of the column.
 
 ## Import
 

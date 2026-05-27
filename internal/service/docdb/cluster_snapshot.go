@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package docdb
 
@@ -12,18 +14,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_docdb_cluster_snapshot")
-func ResourceClusterSnapshot() *schema.Resource {
+// @SDKResource("aws_docdb_cluster_snapshot", name="Cluster Snapshot")
+func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
@@ -99,7 +101,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 	}
 }
 
-func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -124,13 +126,13 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	snapshot, err := findClusterSnapshotByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -157,14 +159,15 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Snapshot: %s", d.Id())
-	_, err := conn.DeleteDBClusterSnapshot(ctx, &docdb.DeleteDBClusterSnapshotInput{
+	input := docdb.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBClusterSnapshot(ctx, &input)
 
 	if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
 		return diags
@@ -189,9 +192,7 @@ func findClusterSnapshotByID(ctx context.Context, conn *docdb.Client, id string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -216,8 +217,7 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.
 
 		if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -226,7 +226,7 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.
 		}
 
 		for _, v := range page.DBClusterSnapshots {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
@@ -235,11 +235,11 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.
 	return output, nil
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusClusterSnapshot(conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -255,7 +255,7 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *docdb.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
-		Refresh:    statusClusterSnapshot(ctx, conn, id),
+		Refresh:    statusClusterSnapshot(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      5 * time.Second,

@@ -22,8 +22,9 @@ data "aws_oam_link" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `link_identifier` - (Required) ARN of the link.
 
 ## Attribute Reference
@@ -31,7 +32,7 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
-* `id` - ARN of the link.
+* `id` - ARN of the link. Use `arn` instead.
 * `label` - Label that is assigned to this link.
 * `label_template` - Human-readable name used to identify this source account when you are viewing data from it in the monitoring account.
 * `link_configuration` - Configuration for creating filters that specify that only some metric namespaces or log groups are to be shared from the source account to the monitoring account. See [`link_configuration` Block](#link_configuration-block) for details.

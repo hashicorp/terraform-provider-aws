@@ -23,6 +23,7 @@ resource "aws_route53_resolver_rule_association" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resolver_rule_id` - (Required) The ID of the resolver rule that you want to associate with the VPC.
 * `vpc_id` - (Required) The ID of the VPC that you want to associate the resolver rule with.
 * `name` - (Optional) A name for the association that you're creating between a resolver rule and a VPC.
@@ -34,6 +35,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the resolver rule association.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route53_resolver_rule_association.example
+  identity = {
+    id = "rslvr-rrassoc-97242eaf88example"
+  }
+}
+
+resource "aws_route53_resolver_rule_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the Route53 Resolver rule association.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rule associations using the `id`. For example:
 

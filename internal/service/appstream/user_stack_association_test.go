@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -8,15 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,23 +21,23 @@ import (
 func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_user_stack_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserStackAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserStackAssociationDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserStackAssociationExists(ctx, resourceName),
+					testAccCheckUserStackAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, "stack_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
@@ -58,26 +55,106 @@ func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_user_stack_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserStackAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserStackAssociationDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUserStackAssociation(), resourceName),
+					testAccCheckUserStackAssociationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceUserStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccAppStreamUserStackAssociation_Disappears_user(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_appstream_user_stack_association.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	authType := "USERPOOL"
+	domain := acctest.RandomDomainName(t)
+	rEmail := acctest.RandomEmailAddress(domain)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserStackAssociationDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserStackAssociationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceUser(), "aws_appstream_user.test"),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccAppStreamUserStackAssociation_Disappears_stack(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_appstream_user_stack_association.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	authType := "USERPOOL"
+	domain := acctest.RandomDomainName(t)
+	rEmail := acctest.RandomEmailAddress(domain)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserStackAssociationDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserStackAssociationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceStack(), "aws_appstream_stack.test"),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -86,30 +163,30 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 func TestAccAppStreamUserStackAssociation_complete(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_user_stack_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	rEmail := acctest.RandomEmailAddress(domain)
 	rEmailUpdated := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserStackAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserStackAssociationDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserStackAssociationExists(ctx, resourceName),
+					testAccCheckUserStackAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmailUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserStackAssociationExists(ctx, resourceName),
+					testAccCheckUserStackAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -121,59 +198,18 @@ func TestAccAppStreamUserStackAssociation_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckUserStackAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckUserStackAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-
-		userName, authType, stackName, err := tfappstream.DecodeUserStackAssociationID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		resp, err := conn.DescribeUserStackAssociations(ctx, &appstream.DescribeUserStackAssociationsInput{
-			AuthenticationType: awstypes.AuthenticationType(authType),
-			StackName:          aws.String(stackName),
-			UserName:           aws.String(userName),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if len(resp.UserStackAssociations) == 0 {
-			return fmt.Errorf("AppStream User Stack Association %q does not exist", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckUserStackAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_user_stack_association" {
 				continue
 			}
 
-			userName, authType, stackName, err := tfappstream.DecodeUserStackAssociationID(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
-			}
+			_, err := tfappstream.FindUserStackAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], awstypes.AuthenticationType(rs.Primary.Attributes["authentication_type"]), rs.Primary.Attributes["stack_name"])
 
-			resp, err := conn.DescribeUserStackAssociations(ctx, &appstream.DescribeUserStackAssociationsInput{
-				AuthenticationType: awstypes.AuthenticationType(authType),
-				StackName:          aws.String(stackName),
-				UserName:           aws.String(userName),
-			})
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -181,12 +217,25 @@ func testAccCheckUserStackAssociationDestroy(ctx context.Context) resource.TestC
 				return err
 			}
 
-			if len(resp.UserStackAssociations) > 0 {
-				return fmt.Errorf("AppStream User Stack Association %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("AppStream User Stack Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckUserStackAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
+
+		_, err := tfappstream.FindUserStackAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], awstypes.AuthenticationType(rs.Primary.Attributes["authentication_type"]), rs.Primary.Attributes["stack_name"])
+
+		return err
 	}
 }
 

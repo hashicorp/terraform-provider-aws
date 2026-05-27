@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -72,7 +74,7 @@ func dataSourceFunction() *schema.Resource {
 	}
 }
 
-func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -96,10 +98,11 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("runtime", outputDF.FunctionSummary.FunctionConfig.Runtime)
 	d.Set(names.AttrStatus, outputDF.FunctionSummary.Status)
 
-	outputGF, err := conn.GetFunction(ctx, &cloudfront.GetFunctionInput{
+	input := cloudfront.GetFunctionInput{
 		Name:  aws.String(name),
 		Stage: stage,
-	})
+	}
+	outputGF, err := conn.GetFunction(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) %s stage code: %s", name, stage, err)

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -17,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_subnets", name "Subnets")
+// @SDKDataSource("aws_subnets", name="Subnets")
 func dataSourceSubnets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetsRead,
@@ -38,7 +40,7 @@ func dataSourceSubnets() *schema.Resource {
 	}
 }
 
-func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -46,7 +48,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 

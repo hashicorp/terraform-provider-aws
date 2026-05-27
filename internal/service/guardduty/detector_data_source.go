@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -11,15 +13,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_guardduty_detector")
-func DataSourceDetector() *schema.Resource {
+// @SDKDataSource("aws_guardduty_detector", name="Detector")
+// @Tags
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceDetector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDetectorRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"features": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -69,18 +80,20 @@ func DataSourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
 	detectorID := d.Get(names.AttrID).(string)
 
 	if detectorID == "" {
-		output, err := FindDetector(ctx, conn)
+		output, err := findDetectorID(ctx, conn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading this account's single GuardDuty Detector: %s", err)
@@ -89,13 +102,14 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 		detectorID = aws.ToString(output)
 	}
 
-	gdo, err := FindDetectorByID(ctx, conn, detectorID)
+	gdo, err := findDetectorByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", detectorID, err)
 	}
 
 	d.SetId(detectorID)
+	d.Set(names.AttrARN, detectorARN(ctx, c, d.Id()))
 	if gdo.Features != nil {
 		if err := d.Set("features", flattenDetectorFeatureConfigurationResults(gdo.Features)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting features: %s", err)
@@ -106,6 +120,8 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
 	d.Set(names.AttrStatus, gdo.Status)
+
+	setTagsOut(ctx, gdo.Tags)
 
 	return diags
 }

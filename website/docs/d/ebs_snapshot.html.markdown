@@ -33,17 +33,12 @@ data "aws_ebs_snapshot" "ebs_volume" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `most_recent` - (Optional) If more than one result is returned, use the most recent snapshot.
-
 * `owners` - (Optional) Returns the snapshots owned by the specified owner id. Multiple owners can be specified.
-
 * `snapshot_ids` - (Optional) Returns information on a specific snapshot_id.
-
 * `restorable_by_user_ids` - (Optional) One or more AWS accounts IDs that can create volumes from the snapshot.
-
-* `filter` - (Optional) One or more name/value pairs to filter off of. There are
-several valid keys, for a full reference, check out
-[describe-snapshots in the AWS CLI reference][1].
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-snapshots in the AWS CLI reference][1].
 
 ## Attribute Reference
 

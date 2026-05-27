@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_link"
 description: |-
-  Creates a link for a site.
+  Manages a Network Manager link.
 ---
 
 # Resource: aws_networkmanager_link
 
-Creates a link for a site.
+Manages a Network Manager link. Use this resource to create a link for a site.
 
 ## Example Usage
 
@@ -28,17 +28,20 @@ resource "aws_networkmanager_link" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `bandwidth` - (Required) The upload speed and download speed in Mbps. Documented below.
-* `description` - (Optional) A description of the link.
-* `global_network_id` - (Required) The ID of the global network.
-* `provider_name` - (Optional) The provider of the link.
-* `site_id` - (Required) The ID of the site.
+* `bandwidth` - (Required) Upload speed and download speed in Mbps. [See below](#bandwidth).
+* `global_network_id` - (Required) ID of the global network.
+* `site_id` - (Required) ID of the site.
+
+The following arguments are optional:
+
+* `description` - (Optional) Description of the link.
+* `provider_name` - (Optional) Provider of the link.
 * `tags` - (Optional) Key-value tags for the link. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) The type of the link.
+* `type` - (Optional) Type of the link.
 
-The `bandwidth` object supports the following:
+### bandwidth
 
 * `download_speed` - (Optional) Download speed in Mbps.
 * `upload_speed` - (Optional) Upload speed in Mbps.
@@ -47,8 +50,16 @@ The `bandwidth` object supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Link Amazon Resource Name (ARN).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - Link ARN.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+* `update` - (Default `10m`)
 
 ## Import
 

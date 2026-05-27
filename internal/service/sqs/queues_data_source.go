@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sqs
 
@@ -14,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_sqs_queues")
+// @SDKDataSource("aws_sqs_queues", name="Queues")
 func dataSourceQueues() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueuesRead,
@@ -33,7 +35,7 @@ func dataSourceQueues() *schema.Resource {
 	}
 }
 
-func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 

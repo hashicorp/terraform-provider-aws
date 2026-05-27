@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -8,6 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +27,7 @@ func PermissionsSchema() *schema.Schema {
 					MaxItems: 20,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrPrincipal: stringLenBetweenSchema(attrRequired, 1, 256),
+				names.AttrPrincipal: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 256),
 			},
 		},
 	}
@@ -43,20 +44,17 @@ func PermissionsDataSourceSchema() *schema.Schema {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrPrincipal: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
+				names.AttrPrincipal: stringComputedOnly(),
 			},
 		},
 	}
 }
 
-func ExpandResourcePermissions(tfList []interface{}) []awstypes.ResourcePermission {
+func ExpandResourcePermissions(tfList []any) []awstypes.ResourcePermission {
 	apiObjects := make([]awstypes.ResourcePermission, len(tfList))
 
 	for i, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.ResourcePermission{
 			Actions:   flex.ExpandStringValueSet(tfMap[names.AttrActions].(*schema.Set)),
@@ -69,15 +67,15 @@ func ExpandResourcePermissions(tfList []interface{}) []awstypes.ResourcePermissi
 	return apiObjects
 }
 
-func FlattenPermissions(apiObjects []awstypes.ResourcePermission) []interface{} {
+func FlattenPermissions(apiObjects []awstypes.ResourcePermission) []any {
 	if len(apiObjects) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		if apiObject.Actions != nil {
 			tfMap[names.AttrActions] = apiObject.Actions
@@ -93,7 +91,7 @@ func FlattenPermissions(apiObjects []awstypes.ResourcePermission) []interface{} 
 	return tfList
 }
 
-func DiffPermissions(o, n []interface{}) ([]awstypes.ResourcePermission, []awstypes.ResourcePermission) {
+func DiffPermissions(o, n []any) ([]awstypes.ResourcePermission, []awstypes.ResourcePermission) {
 	old := ExpandResourcePermissions(o)
 	new := ExpandResourcePermissions(n)
 

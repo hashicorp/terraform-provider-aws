@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftserverless
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -89,7 +91,7 @@ func resourceSnapshot() *schema.Resource {
 	}
 }
 
-func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -117,12 +119,12 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	out, err := findSnapshotByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -146,7 +148,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -163,7 +165,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -196,8 +198,7 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "snapshot") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -206,17 +207,17 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Snapshot, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSnapshot(conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -232,7 +233,7 @@ func waitSnapshotAvailable(ctx context.Context, conn *redshiftserverless.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
 		Target:  enum.Slice(awstypes.SnapshotStatusAvailable),
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: 10 * time.Minute,
 	}
 
@@ -249,7 +250,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *redshiftserverless.Client, n
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusAvailable),
 		Target:  []string{},
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: 10 * time.Minute,
 	}
 

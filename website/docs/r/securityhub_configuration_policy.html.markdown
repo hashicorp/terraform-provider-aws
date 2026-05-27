@@ -121,6 +121,7 @@ resource "aws_securityhub_configuration_policy" "disabled" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_policy` - (Required) Defines how Security Hub is configured. See [below](#configuration_policy).
 * `description` - (Optional) The description of the configuration policy.
 * `name` - (Required) The name of the configuration policy.
@@ -173,7 +174,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an existing Security Hub configuration policy using the universally unique identifier (UUID) of the policy. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_configuration_policy.example
+  identity = {
+    id = "00000000-1111-2222-3333-444444444444"
+  }
+}
+
+resource "aws_securityhub_configuration_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `id` (String) UUID of the configuration policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub configuration policies using `id`. For example:
 
 ```terraform
 import {
@@ -182,8 +209,8 @@ import {
 }
 ```
 
-Using `terraform import`, import an existing Security Hub enabled account using the universally unique identifier (UUID) of the policy. For example:
+Using `terraform import`, import Security Hub configuration policies using `id`. For example:
 
 ```console
-% terraform import aws_securityhub_configuration_policy.example "00000000-1111-2222-3333-444444444444"
+% terraform import aws_securityhub_configuration_policy.example 00000000-1111-2222-3333-444444444444
 ```

@@ -1,13 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Retry Package
 
-The start of musings on a replacement for the Terraform Plugin SDK v2 `helper/retry` package.
-
-### Example Usage
-
-```go
-for r := retry.Begin(); r.Continue(ctx); {
-    if doSomething() {
-        break
-    }
-}
-```
+A replacement for the Terraform Plugin SDK v2 `helper/retry` package.

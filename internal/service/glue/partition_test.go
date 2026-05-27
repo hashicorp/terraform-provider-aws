@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,20 +20,20 @@ import (
 
 func TestAccGluePartition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parValue := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(ctx, resourceName),
+					testAccCheckPartitionExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "1"),
@@ -54,21 +53,21 @@ func TestAccGluePartition_basic(t *testing.T) {
 
 func TestAccGluePartition_multipleValues(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
-	parValue2 := sdkacctest.RandString(11)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parValue := acctest.RandString(t, 10)
+	parValue2 := acctest.RandString(t, 11)
 	resourceName := "aws_glue_partition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_multiplePartValue(rName, parValue, parValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(ctx, resourceName),
+					testAccCheckPartitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.0", parValue),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.1", parValue2),
@@ -85,20 +84,20 @@ func TestAccGluePartition_multipleValues(t *testing.T) {
 
 func TestAccGluePartition_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parValue := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_parameters1(rName, parValue, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(ctx, resourceName),
+					testAccCheckPartitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key1", acctest.CtValue1),
 				),
@@ -111,7 +110,7 @@ func TestAccGluePartition_parameters(t *testing.T) {
 			{
 				Config: testAccPartitionConfig_parameters2(rName, parValue, acctest.CtKey1, "valueUpdated1", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(ctx, resourceName),
+					testAccCheckPartitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key1", "valueUpdated1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key2", acctest.CtValue2),
@@ -120,7 +119,7 @@ func TestAccGluePartition_parameters(t *testing.T) {
 			{
 				Config: testAccPartitionConfig_parameters1(rName, parValue, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(ctx, resourceName),
+					testAccCheckPartitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key2", acctest.CtValue2),
 				),
@@ -129,25 +128,150 @@ func TestAccGluePartition_parameters(t *testing.T) {
 	})
 }
 
-func TestAccGluePartition_disappears(t *testing.T) {
+func TestAccGluePartition_storageDescriptorBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parValue := acctest.RandString(t, 10)
+	parValue2 := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPartitionConfig_storageDescriptorBasic(rName, parValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartitionExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.location", "my_location"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.input_format", "org.apache.hadoop.mapred.TextInputFormat"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.output_format", "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.number_of_buckets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.example", parValue),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.serialization_library", "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPartitionConfig_storageDescriptorBasic(rName, parValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartitionExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.location", "my_location"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.input_format", "org.apache.hadoop.mapred.TextInputFormat"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.output_format", "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.number_of_buckets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.example", parValue2),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.serialization_library", "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGluePartition_storageDescriptorAdditionalLocations(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parValue := acctest.RandString(t, 10)
+	parValue2 := acctest.RandString(t, 10)
+	parValue3 := acctest.RandString(t, 10)
+	resourceName := "aws_glue_partition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPartitionConfig_storageDescriptorAdditionalLocationsSingle(rName, parValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartitionExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", parValue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPartitionConfig_storageDescriptorAdditionalLocationsDouble(rName, parValue, parValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartitionExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", parValue),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.1", parValue2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+				),
+			},
+			{
+				Config: testAccPartitionConfig_storageDescriptorAdditionalLocationsSingle(rName, parValue3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPartitionExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", parValue3),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGluePartition_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parValue := acctest.RandString(t, 10)
+	resourceName := "aws_glue_partition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartition(), resourceName),
+					testAccCheckPartitionExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -155,31 +279,39 @@ func TestAccGluePartition_disappears(t *testing.T) {
 
 func TestAccGluePartition_Disappears_table(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parValue := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					testAccCheckPartitionExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_glue_catalog_table.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_glue_catalog_table.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckPartitionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPartitionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_partition" {
@@ -199,7 +331,7 @@ func testAccCheckPartitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPartitionExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckPartitionExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -210,7 +342,7 @@ func testAccCheckPartitionExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 		out, err := tfglue.FindPartitionByValues(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -424,4 +556,93 @@ resource "aws_glue_partition" "test" {
   partition_values = ["%[2]s", "%[3]s"]
 }
 `, rName, parValue, parValue2)
+}
+
+func testAccPartitionConfig_storageDescriptorBasic(rName, parValue string) string {
+	return testAccPartitionConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_glue_partition" "test" {
+  database_name    = aws_glue_catalog_database.test.name
+  table_name       = aws_glue_catalog_table.test.name
+  partition_values = ["2025"]
+
+  storage_descriptor {
+    location          = "my_location"
+    input_format      = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format     = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+    compressed        = false
+    number_of_buckets = 1
+
+    ser_de_info {
+      name = "ser_de_name"
+
+      parameters = {
+        "example" = %[1]q
+      }
+
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+    }
+  }
+}
+`, parValue)
+}
+
+func testAccPartitionConfig_storageDescriptorAdditionalLocationsSingle(rName, additionalLocation1 string) string {
+	return testAccPartitionConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_glue_partition" "test" {
+  database_name    = aws_glue_catalog_database.test.name
+  table_name       = aws_glue_catalog_table.test.name
+  partition_values = ["2025"]
+
+  storage_descriptor {
+    additional_locations = [%[1]q]
+    location             = "my_location"
+    input_format         = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format        = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+    compressed           = false
+    number_of_buckets    = 1
+
+    ser_de_info {
+      name = "ser_de_name"
+
+      parameters = {
+        "example" = "test"
+      }
+
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+    }
+  }
+}
+`, additionalLocation1)
+}
+
+func testAccPartitionConfig_storageDescriptorAdditionalLocationsDouble(rName, additionalLocation1, additionalLocation2 string) string {
+	return testAccPartitionConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_glue_partition" "test" {
+  database_name    = aws_glue_catalog_database.test.name
+  table_name       = aws_glue_catalog_table.test.name
+  partition_values = ["2025"]
+
+  storage_descriptor {
+    additional_locations = [%[1]q, %[2]q]
+    location             = "my_location"
+    input_format         = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format        = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+    compressed           = false
+    number_of_buckets    = 1
+
+    ser_de_info {
+      name = "ser_de_name"
+
+      parameters = {
+        "example" = "test"
+      }
+
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+    }
+  }
+}
+`, additionalLocation1, additionalLocation2)
 }

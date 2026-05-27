@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -13,36 +13,34 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var defaultpatchbaseline ssm.GetDefaultPatchBaselineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_default_patch_baseline.test"
 	baselineResourceName := "aws_ssm_patch_baseline.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultPatchBaselineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &defaultpatchbaseline),
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
@@ -67,23 +65,23 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 func testAccSSMDefaultPatchBaseline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var defaultpatchbaseline ssm.GetDefaultPatchBaselineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_default_patch_baseline.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultPatchBaselineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceDefaultPatchBaseline(), resourceName),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &defaultpatchbaseline),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceDefaultPatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,23 +92,23 @@ func testAccSSMDefaultPatchBaseline_disappears(t *testing.T) {
 func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var defaultpatchbaseline ssm.GetDefaultPatchBaselineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_default_patch_baseline.test"
 	baselineResourceName := "aws_ssm_patch_baseline.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultPatchBaselineConfig_patchBaselineARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &defaultpatchbaseline),
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
@@ -135,23 +133,23 @@ func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 	ctx := acctest.Context(t)
 	var defaultpatchbaseline ssm.GetDefaultPatchBaselineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_default_patch_baseline.test"
 	baselineResourceName := "aws_ssm_patch_baseline.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, awstypes.OperatingSystemAmazonLinux2022),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &defaultpatchbaseline),
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
@@ -175,16 +173,16 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 
 func testAccSSMDefaultPatchBaseline_wrongOperatingSystem(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName, awstypes.OperatingSystemAmazonLinux2022, awstypes.OperatingSystemUbuntu),
@@ -200,19 +198,19 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 	resourceName := "aws_ssm_default_patch_baseline.test"
 	baselineDataSourceName := "data.aws_ssm_patch_baseline.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultPatchBaselineConfig_systemDefault(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &defaultpatchbaseline),
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineDataSourceName, "operating_system"),
 				),
@@ -237,24 +235,24 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 ssm.GetDefaultPatchBaselineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_default_patch_baseline.test"
 	baselineResourceName := "aws_ssm_patch_baseline.test"
 	baselineUpdatedResourceName := "aws_ssm_patch_baseline.updated"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, awstypes.OperatingSystemWindows),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &v1),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
@@ -262,7 +260,7 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 			{
 				Config: testAccDefaultPatchBaselineConfig_updated(rName, awstypes.OperatingSystemWindows),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &v2),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineUpdatedResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineUpdatedResourceName, "operating_system"),
 				),
@@ -287,13 +285,13 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var main, alternate ssm.GetDefaultPatchBaselineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_default_patch_baseline.test"
 	resourceAlternateName := "aws_ssm_default_patch_baseline.alternate"
 	baselineResourceName := "aws_ssm_patch_baseline.test"
 	baselineAlternateResourceName := "aws_ssm_patch_baseline.alternate"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
@@ -301,16 +299,16 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultPatchBaselineConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &main),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &main),
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 
-					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &alternate),
+					testAccCheckDefaultPatchBaselineExists(ctx, t, resourceName, &alternate),
 					resource.TestCheckResourceAttrPair(resourceAlternateName, "baseline_id", baselineAlternateResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceAlternateName, names.AttrID, baselineAlternateResourceName, "operating_system"),
 				),
@@ -332,9 +330,9 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 	})
 }
 
-func testAccCheckDefaultPatchBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDefaultPatchBaselineDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_default_patch_baseline" {
@@ -350,7 +348,7 @@ func testAccCheckDefaultPatchBaselineDestroy(ctx context.Context) resource.TestC
 			// If the resource has been deleted, the default patch baseline will be the AWS-provided patch baseline for the OS.
 			output, err := tfssm.FindDefaultPatchBaselineByOperatingSystem(ctx, conn, awstypes.OperatingSystem(rs.Primary.ID))
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -369,14 +367,14 @@ func testAccCheckDefaultPatchBaselineDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckDefaultPatchBaselineExists(ctx context.Context, n string, v *ssm.GetDefaultPatchBaselineOutput) resource.TestCheckFunc {
+func testAccCheckDefaultPatchBaselineExists(ctx context.Context, t *testing.T, n string, v *ssm.GetDefaultPatchBaselineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		output, err := tfssm.FindDefaultPatchBaselineByOperatingSystem(ctx, conn, awstypes.OperatingSystem(rs.Primary.ID))
 

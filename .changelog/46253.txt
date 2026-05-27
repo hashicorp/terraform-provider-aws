@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `use_update_lookup` argument to `mongodb_settings` configuration block
+```

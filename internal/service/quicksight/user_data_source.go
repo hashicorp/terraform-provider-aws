@@ -1,17 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package quicksight
 
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,9 +31,9 @@ func dataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDDataSourceSchema(),
+				"custom_permissions_name": {
 					Type:     schema.TypeString,
-					Optional: true,
 					Computed: true,
 				},
 				names.AttrEmail: {
@@ -43,15 +44,7 @@ func dataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrNamespace: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  defaultUserNamespace,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
-					),
-				},
+				names.AttrNamespace: quicksightschema.NamespaceDataSourceSchema(),
 				"principal_id": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -69,7 +62,7 @@ func dataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -91,6 +84,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("active", user.Active)
 	d.Set(names.AttrARN, user.Arn)
 	d.Set(names.AttrAWSAccountID, awsAccountID)
+	d.Set("custom_permissions_name", user.CustomPermissionsName)
 	d.Set(names.AttrEmail, user.Email)
 	d.Set("identity_type", user.IdentityType)
 	d.Set("principal_id", user.PrincipalId)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -13,7 +13,7 @@ import (
 )
 
 type testCase struct {
-	val             interface{}
+	val             any
 	f               schema.SchemaValidateDiagFunc
 	expectedSummary *regexp.Regexp
 	expectedDetail  *regexp.Regexp

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -10,13 +10,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,19 +23,19 @@ func TestAccEMRStudio_sso(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_sso(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
@@ -47,6 +46,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "user_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -58,7 +58,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 			{
 				Config: testAccStudioConfig_sso(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
@@ -69,6 +69,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "user_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -80,18 +81,18 @@ func TestAccEMRStudio_iam(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_iam(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
@@ -100,6 +101,7 @@ func TestAccEMRStudio_iam(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "engine_security_group_id", "aws_security_group.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -116,22 +118,67 @@ func TestAccEMRStudio_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_sso(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudio(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudio(), resourceName),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudio(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudio(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEMRStudio_workspaceStorageEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	var studio awstypes.Studio
+	resourceName := "aws_emr_studio.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStudioConfig_workspaceStorageEncryption(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_key_arn", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -141,18 +188,18 @@ func TestAccEMRStudio_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -165,7 +212,7 @@ func TestAccEMRStudio_tags(t *testing.T) {
 			{
 				Config: testAccStudioConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -174,7 +221,7 @@ func TestAccEMRStudio_tags(t *testing.T) {
 			{
 				Config: testAccStudioConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -183,14 +230,14 @@ func TestAccEMRStudio_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioExists(ctx context.Context, n string, v *awstypes.Studio) resource.TestCheckFunc {
+func testAccCheckStudioExists(ctx context.Context, t *testing.T, n string, v *awstypes.Studio) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		output, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
 
@@ -204,9 +251,9 @@ func testAccCheckStudioExists(ctx context.Context, n string, v *awstypes.Studio)
 	}
 }
 
-func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStudioDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_studio" {
@@ -215,7 +262,7 @@ func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -243,6 +290,15 @@ resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy" "emr" {
+  name = "AmazonEMRServicePolicy_v2"
+}
+
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = aws_iam_role.test.name
+  policy_arn = data.aws_iam_policy.emr.arn
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -321,16 +377,103 @@ resource "aws_emr_studio" "test" {
 `, rName))
 }
 
+func testAccStudioConfig_workspaceStorageEncryption(rName string) string {
+	return acctest.ConfigCompose(testAccStudioConfig_base(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  policy                  = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowEMRStudioServiceRoleAccess",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.test.arn}"
+      },
+      "Action": [
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "kms:ReEncryptFrom",
+        "kms:ReEncryptTo",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:CallerAccount": "${data.aws_caller_identity.current.account_id}",
+          "kms:EncryptionContext:aws:s3:arn": "${aws_s3_bucket.test.arn}",
+          "kms:ViaService": "s3.${data.aws_region.current.region}.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test_kms" {
+  name   = "%[1]s-kms"
+  role   = aws_iam_role.test.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "kms:ReEncryptFrom",
+        "kms:ReEncryptTo",
+        "kms:DescribeKey"
+      ],
+      "Resource": "${aws_kms_key.test.arn}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_emr_studio" "test" {
+  auth_mode                   = "IAM"
+  default_s3_location         = "s3://${aws_s3_bucket.test.bucket}/test"
+  encryption_key_arn          = aws_kms_key.test.arn
+  engine_security_group_id    = aws_security_group.test.id
+  name                        = %[1]q
+  service_role                = aws_iam_role.test.arn
+  subnet_ids                  = aws_subnet.test[*].id
+  vpc_id                      = aws_vpc.test.id
+  workspace_security_group_id = aws_security_group.test.id
+}
+`, rName))
+}
+
 func testAccStudioConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccStudioConfig_base(rName), fmt.Sprintf(`
 resource "aws_emr_studio" "test" {
-  auth_mode                   = "SSO"
+  auth_mode                   = "IAM"
   default_s3_location         = "s3://${aws_s3_bucket.test.bucket}/test"
   engine_security_group_id    = aws_security_group.test.id
   name                        = %[1]q
   service_role                = aws_iam_role.test.arn
   subnet_ids                  = aws_subnet.test[*].id
-  user_role                   = aws_iam_role.test.arn
   vpc_id                      = aws_vpc.test.id
   workspace_security_group_id = aws_security_group.test.id
 
@@ -344,13 +487,12 @@ resource "aws_emr_studio" "test" {
 func testAccStudioConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccStudioConfig_base(rName), fmt.Sprintf(`
 resource "aws_emr_studio" "test" {
-  auth_mode                   = "SSO"
+  auth_mode                   = "IAM"
   default_s3_location         = "s3://${aws_s3_bucket.test.bucket}/test"
   engine_security_group_id    = aws_security_group.test.id
   name                        = %[1]q
   service_role                = aws_iam_role.test.arn
   subnet_ids                  = aws_subnet.test[*].id
-  user_role                   = aws_iam_role.test.arn
   vpc_id                      = aws_vpc.test.id
   workspace_security_group_id = aws_security_group.test.id
 

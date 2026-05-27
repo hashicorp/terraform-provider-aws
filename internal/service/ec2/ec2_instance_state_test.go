@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -10,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,16 +22,16 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 	resourceName := "aws_ec2_instance_state.test"
 	state := "stopped"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, acctest.CtFalse),
+				Config: testAccInstanceStateConfig_basic(state, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStateExists(ctx, resourceName),
+					testAccCheckInstanceStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, state),
 				),
@@ -46,16 +46,16 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 	stateStopped := "stopped"
 	stateRunning := "running"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(stateStopped, acctest.CtFalse),
+				Config: testAccInstanceStateConfig_basic(stateStopped, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStateExists(ctx, resourceName),
+					testAccCheckInstanceStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateStopped),
 				),
@@ -66,9 +66,9 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceStateConfig_basic(stateRunning, acctest.CtFalse),
+				Config: testAccInstanceStateConfig_basic(stateRunning, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStateExists(ctx, resourceName),
+					testAccCheckInstanceStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateRunning),
 				),
@@ -83,25 +83,33 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 	parentResourceName := "aws_instance.test"
 	state := "stopped"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, acctest.CtFalse),
+				Config: testAccInstanceStateConfig_basic(state, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstance(), parentResourceName),
+					testAccCheckInstanceStateExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInstance(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(parentResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(parentResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckInstanceStateExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -112,7 +120,7 @@ func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.Tes
 			return errors.New("No EC2InstanceState ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		out, err := tfec2.FindInstanceStateByID(ctx, conn, rs.Primary.ID)
 
@@ -128,7 +136,7 @@ func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.Tes
 	}
 }
 
-func testAccInstanceStateConfig_basic(state string, force string) string {
+func testAccInstanceStateConfig_basic(state string, force bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
@@ -141,7 +149,7 @@ resource "aws_instance" "test" {
 resource "aws_ec2_instance_state" "test" {
   instance_id = aws_instance.test.id
   state       = %[1]q
-  force       = %[2]s
+  force       = %[2]t
 }
 `, state, force))
 }

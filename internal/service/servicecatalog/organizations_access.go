@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -18,6 +20,7 @@ import (
 )
 
 // @SDKResource("aws_servicecatalog_organizations_access", name="Organizations Access")
+// @Region(global=true)
 func resourceOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationsAccessCreate,
@@ -38,7 +41,7 @@ func resourceOrganizationsAccess() *schema.Resource {
 	}
 }
 
-func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -66,7 +69,7 @@ func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceOrganizationsAccessRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -96,7 +99,7 @@ func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceOrganizationsAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationsAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

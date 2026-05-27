@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}_test
@@ -173,11 +173,11 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy(ctx),
+		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .DataSource }}Exists(ctx, dataSourceName, &{{ .DataSourceLower }}),
 					resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),
@@ -187,7 +187,13 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:+.`)),
+					{{- if .IncludeComments }}
+					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
+					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					// Alternatively, if the data source returns the values for a corresponding resource, use `resource.TestCheckResourceAttrPair` to
+					// check that the values are the same.
+					{{- end }}
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "{{ .ARNNamespace }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
 				),
 			},
 		},

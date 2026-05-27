@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package pinpoint
 
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,6 +53,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Deprecated:       "campaign_hook is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"lambda_function_name": {
@@ -79,6 +82,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Deprecated:       "limits is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"daily": {
@@ -94,7 +98,7 @@ func resourceApp() *schema.Resource {
 						"messages_per_second": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(50, 20000),
+							ValidateFunc: validation.IntBetween(1, 20000),
 						},
 						"total": {
 							Type:         schema.TypeInt,
@@ -123,6 +127,7 @@ func resourceApp() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Deprecated:       "quiet_time is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"end": {
@@ -139,16 +144,14 @@ func resourceApp() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &awstypes.CreateApplicationRequest{
 			Name: aws.String(name),
@@ -159,7 +162,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	output, err := conn.CreateApp(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Pinpoint App (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating End User Messaging App (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.ApplicationResponse.Id))
@@ -167,26 +170,26 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceAppUpdate(ctx, d, meta)...)
 }
 
-func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	app, err := findAppByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] End User Messaging App (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging App (%s): %s", d.Id(), err)
 	}
 
 	settings, err := findAppSettingsByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging App (%s) settings: %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, app.Id)
@@ -206,7 +209,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -214,7 +217,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		appSettings := &awstypes.WriteApplicationSettingsRequest{}
 
 		if d.HasChange("campaign_hook") {
-			appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
+			appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]any))
 		}
 
 		//if d.HasChange("cloudwatch_metrics_enabled") {
@@ -222,11 +225,11 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		//}
 
 		if d.HasChange("limits") {
-			appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
+			appSettings.Limits = expandCampaignLimits(d.Get("limits").([]any))
 		}
 
 		if d.HasChange("quiet_time") {
-			appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
+			appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]any))
 		}
 
 		input := &pinpoint.UpdateApplicationSettingsInput{
@@ -237,18 +240,18 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		_, err := conn.UpdateApplicationSettings(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Pinpoint App (%s) settings: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating End User Messaging App (%s) settings: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint App: %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging App: %s", d.Id())
 	_, err := conn.DeleteApp(ctx, &pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -258,7 +261,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint App (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging App (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -273,8 +276,7 @@ func findAppByID(ctx context.Context, conn *pinpoint.Client, id string) (*awstyp
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -283,7 +285,7 @@ func findAppByID(ctx context.Context, conn *pinpoint.Client, id string) (*awstyp
 	}
 
 	if output == nil || output.ApplicationResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationResponse, nil
@@ -298,8 +300,7 @@ func findAppSettingsByID(ctx context.Context, conn *pinpoint.Client, id string) 
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -308,18 +309,18 @@ func findAppSettingsByID(ctx context.Context, conn *pinpoint.Client, id string) 
 	}
 
 	if output == nil || output.ApplicationSettingsResource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationSettingsResource, nil
 }
 
-func expandCampaignHook(configs []interface{}) *awstypes.CampaignHook {
+func expandCampaignHook(configs []any) *awstypes.CampaignHook {
 	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
-	m := configs[0].(map[string]interface{})
+	m := configs[0].(map[string]any)
 
 	ch := &awstypes.CampaignHook{}
 
@@ -338,10 +339,10 @@ func expandCampaignHook(configs []interface{}) *awstypes.CampaignHook {
 	return ch
 }
 
-func flattenCampaignHook(ch *awstypes.CampaignHook) []interface{} {
-	l := make([]interface{}, 0)
+func flattenCampaignHook(ch *awstypes.CampaignHook) []any {
+	l := make([]any, 0)
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["lambda_function_name"] = aws.ToString(ch.LambdaFunctionName)
 	m[names.AttrMode] = ch.Mode
@@ -352,12 +353,12 @@ func flattenCampaignHook(ch *awstypes.CampaignHook) []interface{} {
 	return l
 }
 
-func expandCampaignLimits(configs []interface{}) *awstypes.CampaignLimits {
+func expandCampaignLimits(configs []any) *awstypes.CampaignLimits {
 	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
-	m := configs[0].(map[string]interface{})
+	m := configs[0].(map[string]any)
 
 	cl := awstypes.CampaignLimits{}
 
@@ -380,10 +381,10 @@ func expandCampaignLimits(configs []interface{}) *awstypes.CampaignLimits {
 	return &cl
 }
 
-func flattenCampaignLimits(cl *awstypes.CampaignLimits) []interface{} {
-	l := make([]interface{}, 0)
+func flattenCampaignLimits(cl *awstypes.CampaignLimits) []any {
+	l := make([]any, 0)
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["daily"] = aws.ToInt32(cl.Daily)
 	m["maximum_duration"] = aws.ToInt32(cl.MaximumDuration)
@@ -395,12 +396,12 @@ func flattenCampaignLimits(cl *awstypes.CampaignLimits) []interface{} {
 	return l
 }
 
-func expandQuietTime(configs []interface{}) *awstypes.QuietTime {
+func expandQuietTime(configs []any) *awstypes.QuietTime {
 	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
-	m := configs[0].(map[string]interface{})
+	m := configs[0].(map[string]any)
 
 	qt := awstypes.QuietTime{}
 
@@ -415,10 +416,10 @@ func expandQuietTime(configs []interface{}) *awstypes.QuietTime {
 	return &qt
 }
 
-func flattenQuietTime(qt *awstypes.QuietTime) []interface{} {
-	l := make([]interface{}, 0)
+func flattenQuietTime(qt *awstypes.QuietTime) []any {
+	l := make([]any, 0)
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["end"] = aws.ToString(qt.End)
 	m["start"] = aws.ToString(qt.Start)

@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_verified_access_endpoint: Support `cidr` and `rds` as valid values for `endpoint_type`
+```
+
+```release-note:enhancement
+resource/aws_verified_access_endpoint: Mark `application_domain`, `domain_certificate_arn` and `endpoint_domain_prefix` as Optional
+```
+
+```release-note:enhancement
+resource/aws_verified_access_endpoint: Add `cidr_options`, `load_balancer.port_range`, `network_interface_options.port_range`, and `rds_options` arguments
+```
+
+```release-note:enhancement
+resource/aws_verified_access_trust_provider: Add `native_application_oidc_options` and `sse_specification` arguments
+```
+
+```release-note:enhancement
+resource/aws_verified_access_instance: Add `cidr_endpoint_custom_subdomain` argument and `name_servers` attribute
+```

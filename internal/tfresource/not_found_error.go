@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
@@ -6,55 +6,61 @@ package tfresource
 import (
 	"errors"
 	"fmt"
+	"iter"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-type EmptyResultError struct {
-	LastRequest interface{}
+type emptyResultError struct {
+	LastRequest any
 }
 
-var ErrEmptyResult = &EmptyResultError{}
+var ErrEmptyResult = &emptyResultError{}
 
-func NewEmptyResultError(lastRequest interface{}) error {
-	return &EmptyResultError{
-		LastRequest: lastRequest,
-	}
+func NewEmptyResultError() error {
+	return &emptyResultError{}
 }
 
-func (e *EmptyResultError) Error() string {
+func (e *emptyResultError) Error() string {
 	return "empty result"
 }
 
-func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError)
+func (e *emptyResultError) Is(err error) bool {
+	_, ok := err.(*emptyResultError)
 	return ok
 }
 
-func (e *EmptyResultError) As(target interface{}) bool {
-	t, ok := target.(**retry.NotFoundError)
-	if !ok {
+func (e *emptyResultError) As(target any) bool {
+	switch v := target.(type) {
+	case **sdkretry.NotFoundError:
+		*v = &sdkretry.NotFoundError{
+			Message:     e.Error(),
+			LastRequest: e.LastRequest,
+		}
+		return true
+
+	case **retry.NotFoundError:
+		*v = &retry.NotFoundError{
+			Message: e.Error(),
+		}
+		return true
+
+	default:
 		return false
 	}
-
-	*t = &retry.NotFoundError{
-		Message:     e.Error(),
-		LastRequest: e.LastRequest,
-	}
-
-	return true
 }
 
 type TooManyResultsError struct {
 	Count       int
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrTooManyResults = &TooManyResultsError{}
 
-func NewTooManyResultsError(count int, lastRequest interface{}) error {
+func NewTooManyResultsError(count int, lastRequest any) error {
 	return &TooManyResultsError{
 		Count:       count,
 		LastRequest: lastRequest,
@@ -70,13 +76,13 @@ func (e *TooManyResultsError) Is(err error) bool {
 	return ok
 }
 
-func (e *TooManyResultsError) As(target interface{}) bool {
-	t, ok := target.(**retry.NotFoundError)
+func (e *TooManyResultsError) As(target any) bool {
+	t, ok := target.(**sdkretry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &retry.NotFoundError{
+	*t = &sdkretry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -86,11 +92,11 @@ func (e *TooManyResultsError) As(target interface{}) bool {
 
 // SingularDataSourceFindError returns a standard error message for a singular data source's non-nil resource find error.
 func SingularDataSourceFindError(resourceType string, err error) error {
-	if NotFound(err) {
-		if errors.Is(err, &TooManyResultsError{}) {
-			return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
-		}
+	if errors.Is(err, &TooManyResultsError{}) {
+		return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
+	}
 
+	if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 		return fmt.Errorf("no matching %[1]s found", resourceType)
 	}
 
@@ -116,25 +122,62 @@ func AssertMaybeSingleValueResult[T any](a []T) (option.Option[T], error) {
 // Returns a `NotFound` error otherwise.
 func AssertSingleValueResult[T any](a []T, fs ...foundFunc[T]) (*T, error) {
 	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	} else if l > 1 {
 		return nil, NewTooManyResultsError(l, nil)
 	} else {
 		v := &a[0]
 		for _, f := range fs {
 			if !f(v) {
-				return nil, NewEmptyResultError(nil)
+				return nil, NewEmptyResultError()
 			}
 		}
 		return v, nil
 	}
 }
 
+// AssertSingleValueResultIterErr returns either a pointer to the single value in the iterator or the error value from the iterator.
+// If there are not exactly one value, returns a `NotFound` error.
+func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
+	next, stop := iter.Pull2(i)
+	defer stop()
+
+	v, err, ok := next()
+	if !ok {
+		return nil, NewEmptyResultError()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err, ok = next()
+	if !ok {
+		return &v, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	n := 2
+	for {
+		_, err, ok = next()
+		if !ok {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		n++
+	}
+	return nil, NewTooManyResultsError(n, nil)
+}
+
 // AssertFirstValueResult returns a pointer to the first value in the specified slice of values.
 // Returns a `NotFound` error otherwise.
 func AssertFirstValueResult[T any](a []T) (*T, error) {
 	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	}
 	return &a[0], nil
 }

@@ -1,0 +1,3 @@
+```release-note:new-ephemeral
+aws_eks_cluster_auth
+```

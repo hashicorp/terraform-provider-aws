@@ -23,6 +23,7 @@ resource "aws_vpc_network_performance_metric_subscription" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination` - (Required) The target Region or Availability Zone that the metric subscription is enabled for. For example, `eu-west-1`.
 * `metric` - (Optional) The metric used for the enabled subscription. Valid values: `aggregate-latency`. Default: `aggregate-latency`.
 * `source` - (Required) The source Region or Availability Zone that the metric subscription is enabled for. For example, `us-east-1`.

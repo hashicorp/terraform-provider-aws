@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicediscovery
 
@@ -11,14 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,18 +58,16 @@ func resourcePublicDNSNamespace() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
-		CreatorRequestId: aws.String(id.UniqueId()),
+		CreatorRequestId: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -94,13 +93,13 @@ func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourcePublicDNSNamespaceRead(ctx, d, meta)...)
 }
 
-func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	ns, err := findNamespaceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Public DNS Namespace %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -123,7 +122,7 @@ func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -133,7 +132,7 @@ func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 			Namespace: &awstypes.PublicDnsNamespaceChange{
 				Description: aws.String(d.Get(names.AttrDescription).(string)),
 			},
-			UpdaterRequestId: aws.String(id.UniqueId()),
+			UpdaterRequestId: aws.String(create.UniqueId(ctx)),
 		}
 
 		output, err := conn.UpdatePublicDnsNamespace(ctx, input)
@@ -152,7 +151,7 @@ func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourcePublicDNSNamespaceRead(ctx, d, meta)...)
 }
 
-func resourcePublicDNSNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicDNSNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 

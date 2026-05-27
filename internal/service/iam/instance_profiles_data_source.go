@@ -1,21 +1,23 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,9 +51,8 @@ func dataSourceInstanceProfiles() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	roleName := d.Get("role_name").(string)
@@ -78,19 +79,18 @@ func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func findInstanceProfilesForRole(ctx context.Context, conn *iam.Client, roleName string) ([]awstypes.InstanceProfile, error) {
-	input := &iam.ListInstanceProfilesForRoleInput{
+	input := iam.ListInstanceProfilesForRoleInput{
 		RoleName: aws.String(roleName),
 	}
 	var output []awstypes.InstanceProfile
 
-	pages := iam.NewListInstanceProfilesForRolePaginator(conn, input)
+	pages := iam.NewListInstanceProfilesForRolePaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -99,7 +99,7 @@ func findInstanceProfilesForRole(ctx context.Context, conn *iam.Client, roleName
 		}
 
 		for _, v := range page.InstanceProfiles {
-			if !reflect.ValueOf(v).IsZero() {
+			if p := &v; !inttypes.IsZero(p) {
 				output = append(output, v)
 			}
 		}

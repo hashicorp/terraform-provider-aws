@@ -70,9 +70,10 @@ EOF
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `error_document` - (Optional, Conflicts with `redirect_all_requests_to`) Name of the error document for the website. [See below](#error_document).
-* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
 * `index_document` - (Optional, Required if `redirect_all_requests_to` is not specified) Name of the index document for the website. [See below](#index_document).
 * `redirect_all_requests_to` - (Optional, Required if `index_document` is not specified) Redirect behavior for every request to this bucket's website endpoint. [See below](#redirect_all_requests_to). Conflicts with `error_document`, `index_document`, and `routing_rule`.
 * `routing_rule` - (Optional, Conflicts with `redirect_all_requests_to` and `routing_rules`) List of rules that define when a redirect is applied and the redirect behavior. [See below](#routing_rule).
@@ -133,6 +134,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `website_endpoint` - Website endpoint.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_website_configuration.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket website configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 

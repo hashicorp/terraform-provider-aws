@@ -1,10 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -12,33 +15,33 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_db_subnet_group", name="DB Subnet Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(tagsTest=false)
+// @Testing(idAttrDuplicates="name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBSubnetGroup")
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(name="Subnet Group")
 func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceSubnetGroupRead,
 		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
 		DeleteWithoutTimeout: resourceSubnetGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -83,16 +86,14 @@ func resourceSubnetGroup() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		DBSubnetGroupName:        aws.String(name),
@@ -111,13 +112,13 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	v, err := findDBSubnetGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -127,20 +128,32 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, v.DBSubnetGroupArn)
-	d.Set(names.AttrDescription, v.DBSubnetGroupDescription)
-	d.Set(names.AttrName, v.DBSubnetGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(v.DBSubnetGroupName)))
-	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
-		return aws.ToString(v.SubnetIdentifier)
-	}))
-	d.Set("supported_network_types", v.SupportedNetworkTypes)
-	d.Set(names.AttrVPCID, v.VpcId)
+	if err := resourceSubnetGroupFlatten(v, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
 
-func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetGroupFlatten(v *types.DBSubnetGroup, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, v.DBSubnetGroupArn)
+	d.Set(names.AttrDescription, v.DBSubnetGroupDescription)
+	d.Set(names.AttrName, v.DBSubnetGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(v.DBSubnetGroupName)))
+	if err := d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
+		return aws.ToString(v.SubnetIdentifier)
+	})); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSubnetIDs, err)
+	}
+	if err := d.Set("supported_network_types", v.SupportedNetworkTypes); err != nil {
+		return fmt.Errorf("setting supported_network_types: %w", err)
+	}
+	d.Set(names.AttrVPCID, v.VpcId)
+
+	return nil
+}
+
+func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -161,7 +174,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -178,7 +191,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting RDS Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func(ctx context.Context) (any, error) {
 		return findDBSubnetGroupByName(ctx, conn, d.Id())
 	})
 
@@ -201,9 +214,7 @@ func findDBSubnetGroupByName(ctx context.Context, conn *rds.Client, name string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBSubnetGroupName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -228,8 +239,7 @@ func findDBSubnetGroups(ctx context.Context, conn *rds.Client, input *rds.Descri
 
 		if errs.IsA[*types.DBSubnetGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

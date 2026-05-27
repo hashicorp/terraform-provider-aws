@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_cloudwatch_log_delivery_source
+```
+
+```release-note:new-resource
+aws_cloudwatch_log_delivery_destination
+```
+
+```release-note:new-resource
+aws_cloudwatch_log_delivery_destination_policy
+```
+
+```release-note:new-resource
+aws_cloudwatch_log_delivery
+```

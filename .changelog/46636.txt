@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_memorydb_cluster: Add `network_type` and `ip_discovery` arguments
+```
+
+```release-note:enhancement
+data-source/aws_memorydb_cluster: Add `network_type` and `ip_discovery` attributes
+```

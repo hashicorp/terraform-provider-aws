@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager
@@ -8,5 +8,5 @@ import (
 )
 
 const (
-	PropagationTimeout = 2 * time.Minute
+	propagationTimeout = 2 * time.Minute
 )

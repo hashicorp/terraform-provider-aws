@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -96,8 +95,8 @@ func main() {
 	}
 }
 
-//go:embed resource.tmpl
+//go:embed resource.go.gtpl
 var resourceTemplateBody string
 
-//go:embed tests.tmpl
+//go:embed tests.go.gtpl
 var resourceTestTemplateBody string

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,14 +15,10 @@ import (
 
 func TestAccVPCLatticeListenerDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpclattice_listener.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -47,16 +42,12 @@ func TestAccVPCLatticeListenerDataSource_basic(t *testing.T) {
 
 func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpclattice_listener.test_tags"
 	tag_name := "tag0"
 	tag_value := "value0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -78,18 +69,13 @@ func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 
 func TestAccVPCLatticeListenerDataSource_forwardMultiTargetGroupHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 	targetGroup1ResourceName := "aws_vpclattice_target_group.test1"
 	dataSourceName := "data.aws_vpclattice_listener.test_multi_target"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -180,7 +166,7 @@ data "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerDataSourceConfig_forwardMultiTargetGroupHTTP(rName string, targetGroupName1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test1" {
   name = %[2]q
   type = "INSTANCE"

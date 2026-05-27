@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -15,12 +17,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,7 +77,7 @@ func resourcePolicy() *schema.Resource {
 	}
 }
 
-func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -104,7 +105,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -115,7 +116,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	policy, err := findLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -135,7 +136,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -148,7 +149,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	err = findPolicyAttachmentByTwoPartKey(ctx, conn, lbName, policyName)
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		// Policy not attached.
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy Attachment (%s/%s): %s", lbName, policyName, err)
@@ -196,7 +197,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -207,7 +208,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	err = findPolicyAttachmentByTwoPartKey(ctx, conn, lbName, policyName)
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		// Policy not attached.
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy Attachment (%s/%s): %s", lbName, policyName, err)
@@ -270,7 +271,7 @@ func unassignPolicy(ctx context.Context, conn *elasticloadbalancing.Client, lbNa
 
 	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return reassignments, nil
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -20,11 +19,11 @@ import (
 
 func TestAccLambdaInvocationEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dp := tfjsonpath.New("data")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.LambdaServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -40,7 +39,7 @@ func TestAccLambdaInvocationEphemeral_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("executed_version"), knownvalue.StringExact("$LATEST")),
 					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("function_name"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("log_result"), knownvalue.Null()),
-					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("result"), knownvalue.StringExact(`{"key1":"value1","key2":"value2"}`)),
+					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("result"), knownvalue.StringExact(`{"output":{"key1":"value1","key2":"value2"}}`)),
 					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey(names.AttrStatusCode), knownvalue.NumberExact(big.NewFloat(200))),
 				},
 			},
@@ -78,11 +77,11 @@ resource "aws_iam_role_policy_attachment" "test" {
 resource "aws_lambda_function" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 
-  filename      = "test-fixtures/lambda_invocation.zip"
+  filename      = "test-fixtures/lambda_invocation_ephemeral.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
-  handler       = "lambda_invocation.handler"
-  runtime       = "nodejs18.x"
+  handler       = "lambda_invocation_ephemeral.handler"
+  runtime       = "nodejs22.x"
 }
 
 ephemeral "aws_lambda_invocation" "test" {

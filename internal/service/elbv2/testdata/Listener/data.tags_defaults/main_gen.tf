@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
@@ -13,12 +13,12 @@ data "aws_lb_listener" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 
@@ -73,11 +73,13 @@ resource "aws_security_group" "test" {
   }
 }
 
-# acctest.ConfigVPCWithSubnets
+# acctest.ConfigVPCWithSubnets(rName, 2)
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
+# acctest.ConfigSubnets(rName, 2)
 
 resource "aws_subnet" "test" {
   count = 2
@@ -87,13 +89,20 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
+
 data "aws_availability_zones" "available" {
-  state = "available"
+  exclude_zone_ids = local.default_exclude_zone_ids
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
   }
+}
+
+locals {
+  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
 
 variable "rName" {

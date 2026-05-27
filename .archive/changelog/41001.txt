@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_connect_user: Add `identity_info.secondary_email` attribute
+```
+
+```release-note:enhancement
+data-source/aws_connect_user: Add `identity_info.secondary_email` attribute
+```

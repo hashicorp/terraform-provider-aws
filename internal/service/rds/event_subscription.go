@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -100,16 +102,14 @@ func resourceEventSubscription() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
@@ -144,13 +144,13 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	sub, err := findEventSubscriptionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -173,7 +173,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -243,7 +243,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -279,9 +279,7 @@ func findEventSubscriptionByID(ctx context.Context, conn *rds.Client, id string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.CustSubscriptionId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -306,8 +304,7 @@ func findEventSubscriptions(ctx context.Context, conn *rds.Client, input *rds.De
 
 		if errs.IsA[*types.SubscriptionNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -325,11 +322,11 @@ func findEventSubscriptions(ctx context.Context, conn *rds.Client, input *rds.De
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusEventSubscription(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEventSubscriptionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -345,7 +342,7 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *rds.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, id),
+		Refresh:    statusEventSubscription(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -364,7 +361,7 @@ func waitEventSubscriptionDeleted(ctx context.Context, conn *rds.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusEventSubscription(ctx, conn, id),
+		Refresh:    statusEventSubscription(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -383,7 +380,7 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *rds.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{eventSubscriptionStatusModifying},
 		Target:                    []string{eventSubscriptionStatusActive},
-		Refresh:                   statusEventSubscription(ctx, conn, id),
+		Refresh:                   statusEventSubscription(conn, id),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		Delay:                     30 * time.Second,

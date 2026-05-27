@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_instance: Remove `cpu_core_count` and `cpu_threads_per_core`. Instead, use `cpu_options`.
+```

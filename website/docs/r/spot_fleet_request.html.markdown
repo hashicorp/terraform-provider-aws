@@ -197,9 +197,9 @@ resource "aws_spot_fleet_request" "foo" {
 
 ## Argument Reference
 
-Most of these arguments directly correspond to the
-[official API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetRequestConfigData.html).
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `iam_fleet_role` - (Required) Grants the Spot fleet permission to terminate
   Spot instances on your behalf when you cancel its Spot fleet request using
 CancelSpotFleetRequests or when the Spot fleet request expires, if you set

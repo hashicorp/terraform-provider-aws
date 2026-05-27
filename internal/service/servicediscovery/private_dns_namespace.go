@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicediscovery
 
@@ -13,14 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +35,7 @@ func resourcePrivateDNSNamespace() *schema.Resource {
 		DeleteWithoutTimeout: resourcePrivateDNSNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected NAMESPACE_ID:VPC_ID", d.Id())
@@ -72,18 +73,16 @@ func resourcePrivateDNSNamespace() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreatePrivateDnsNamespaceInput{
-		CreatorRequestId: aws.String(id.UniqueId()),
+		CreatorRequestId: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 		Vpc:              aws.String(d.Get("vpc").(string)),
@@ -110,13 +109,13 @@ func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourcePrivateDNSNamespaceRead(ctx, d, meta)...)
 }
 
-func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	ns, err := findNamespaceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Private DNS Namespace %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -139,7 +138,7 @@ func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -149,7 +148,7 @@ func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDa
 			Namespace: &awstypes.PrivateDnsNamespaceChange{
 				Description: aws.String(d.Get(names.AttrDescription).(string)),
 			},
-			UpdaterRequestId: aws.String(id.UniqueId()),
+			UpdaterRequestId: aws.String(create.UniqueId(ctx)),
 		}
 
 		output, err := conn.UpdatePrivateDnsNamespace(ctx, input)
@@ -168,7 +167,7 @@ func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourcePrivateDNSNamespaceRead(ctx, d, meta)...)
 }
 
-func resourcePrivateDNSNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrivateDNSNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 

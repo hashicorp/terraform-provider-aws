@@ -1,0 +1,3 @@
+```release-note:bug-fix
+resource/aws_sagemaker_image_version: Prevent `ResourceInUse` error when creating multiple image versions concurrently
+```
