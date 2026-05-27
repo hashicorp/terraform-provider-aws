@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_sns_platform_application",
     "resource/aws_ssm_document",
     "resource/aws_volume_attachment",
     "resource/aws_vpc_peering_connection",
