@@ -1,0 +1,4 @@
+```release-note:new-resource
+aws_cloudtrail_insight_selectors
+```
+
