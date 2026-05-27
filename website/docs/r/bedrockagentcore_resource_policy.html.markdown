@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_bedrockagentcore_resource_policy
 
-Manages an AWS Bedrock AgentCore Resource Policy. Resource-based policies in Amazon Bedrock AgentCore allow you to control which principals (AWS accounts, IAM users, or IAM roles) can invoke and manage your Amazon Bedrock AgentCore Runtime and Gateway resources.
+Manages an AWS Bedrock Agent Core Resource Policy. Resource-based policies in Amazon Bedrock Agent Core allow you to control which principals (AWS accounts, IAM users, or IAM roles) can invoke and manage your Amazon Bedrock Agent Core Runtime and Gateway resources.
 
 ## Example Usage
 
@@ -70,7 +70,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_bedrockagentcore_resource_policy.example
   identity = {
-    resource_arn = "<runtime or gateway ARN>"
+    resource_arn = "arn:aws:bedrock-agentcore:us-west-2:012345678901:runtime/abcd1234"
   }
 }
 
@@ -85,17 +85,17 @@ resource "aws_bedrockagentcore_resource_policy" "example" {
 
 * `resource_arn` - ARN of the resource to which the Resource Policy is attached.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Resource Policy using the `resource_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Agent Core Resource Policy using the `resource_arn`. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_resource_policy.example
-  id = "<runtime or gateway ARN>"
+  id = "arn:aws:bedrock-agentcore:us-west-2:012345678901:runtime/abcd1234"
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Resource Policy using the `resource_arn`. For example:
+Using `terraform import`, import Bedrock Agent Core Resource Policy using the `resource_arn`. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_resource_policy.example <runtime or gateway ARN>
+% terraform import aws_bedrockagentcore_resource_policy.example arn:aws:bedrock-agentcore:us-west-2:012345678901:runtime/abcd1234
 ```
