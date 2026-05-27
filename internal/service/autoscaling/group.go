@@ -164,6 +164,7 @@ func resourceGroup() *schema.Resource {
 			"desired_capacity_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ValidateDiagFunc: enum.Validate[desiredCapacityType](),
 			},
 			"enabled_metrics": {
@@ -1350,7 +1351,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("default_instance_warmup", g.DefaultInstanceWarmup)
 	d.Set("desired_capacity", g.DesiredCapacity)
-	d.Set("desired_capacity_type", g.DesiredCapacityType)
+	if g.DesiredCapacityType != nil {
+		d.Set("desired_capacity_type", g.DesiredCapacityType)
+	}
 	if len(g.EnabledMetrics) > 0 {
 		d.Set("enabled_metrics", flattenEnabledMetrics(g.EnabledMetrics))
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
