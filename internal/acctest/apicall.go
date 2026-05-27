@@ -19,8 +19,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
+
+// APICallRecorderWrapper returns a [ConfigureWrapper] that attaches rec
+// to the *conns.AWSClient produced by Configure, so subsequent AWS SDK
+// operations record into rec. The recorder is the integration point with
+// the apicall middleware: see internal/conns/apicall for the model.
+//
+// Compose with [ProtoV5ProviderFactoriesWithWrappers] alongside other
+// wrappers, or use [ProtoV5ProviderFactoriesWithCallRecorder] for the
+// common case of a single fresh recorder per test.
+func APICallRecorderWrapper(rec *apicall.Recorder) ConfigureWrapper {
+	return func(next schema.ConfigureContextFunc) schema.ConfigureContextFunc {
+		return func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+			v, ds := next(ctx, d)
+			if c, ok := v.(*conns.AWSClient); ok && c != nil {
+				c.SetCallRecorder(rec)
+			}
+			return v, ds
+		}
+	}
+}
 
 // ProtoV5ProviderFactoriesWithCallRecorder returns ProtoV5 provider
 // factories that attach a fresh API call recorder to the *conns.AWSClient
@@ -47,6 +66,10 @@ import (
 //	        },
 //	    },
 //	})
+//
+// To compose the recorder with other ConfigureWrappers, use
+// [ProtoV5ProviderFactoriesWithWrappers] and [APICallRecorderWrapper]
+// directly.
 func ProtoV5ProviderFactoriesWithCallRecorder(ctx context.Context, t *testing.T) (
 	map[string]func() (tfprotov5.ProviderServer, error),
 	*apicall.Recorder,
@@ -54,31 +77,7 @@ func ProtoV5ProviderFactoriesWithCallRecorder(ctx context.Context, t *testing.T)
 	t.Helper()
 
 	rec := apicall.NewRecorder()
-
-	factories := map[string]func() (tfprotov5.ProviderServer, error){
-		ProviderName: func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(ctx)
-			if err != nil {
-				return nil, err
-			}
-			primary.ConfigureContextFunc = wrapConfigureWithCallRecorder(primary.ConfigureContextFunc, rec)
-			return providerServerFactory(), nil
-		},
-	}
-
-	return factories, rec
-}
-
-// wrapConfigureWithCallRecorder runs the original Configure and, if it
-// returned a non-nil *conns.AWSClient, attaches rec to it.
-func wrapConfigureWithCallRecorder(original schema.ConfigureContextFunc, rec *apicall.Recorder) schema.ConfigureContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
-		v, ds := original(ctx, d)
-		if c, ok := v.(*conns.AWSClient); ok && c != nil {
-			c.SetCallRecorder(rec)
-		}
-		return v, ds
-	}
+	return ProtoV5ProviderFactoriesWithWrappers(ctx, APICallRecorderWrapper(rec)), rec
 }
 
 // CheckAPICallMade fails if service.operation was not recorded since the

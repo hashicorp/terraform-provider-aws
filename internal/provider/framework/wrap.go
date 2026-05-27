@@ -18,19 +18,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
-	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
@@ -106,13 +101,7 @@ func (w *wrappedDataSource) context(ctx context.Context, getAttribute getAttribu
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-		ctx = c.RegisterLogger(ctx)
-		if s := c.RandomnessSource(); s != nil {
-			ctx = vcr.NewContext(ctx, s)
-		}
-		ctx = apicall.NewContext(ctx, c.CallRecorder())
-		ctx = fwflex.RegisterLogger(ctx)
+		ctx = c.RequestContext(ctx)
 	}
 
 	if providerMeta != nil {
@@ -272,10 +261,7 @@ func (w *wrappedEphemeralResource) context(ctx context.Context, getAttribute get
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = c.RegisterLogger(ctx)
-		ctx = apicall.NewContext(ctx, c.CallRecorder())
-		ctx = fwflex.RegisterLogger(ctx)
-		ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+		ctx = c.RequestContext(ctx)
 	}
 
 	return ctx, diags
@@ -443,10 +429,7 @@ func (w *wrappedAction) context(ctx context.Context, getAttribute getAttributeFu
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = c.RegisterLogger(ctx)
-		ctx = apicall.NewContext(ctx, c.CallRecorder())
-		ctx = fwflex.RegisterLogger(ctx)
-		ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+		ctx = c.RequestContext(ctx)
 	}
 
 	return ctx, diags
@@ -633,10 +616,7 @@ func (w *wrappedResource) context(ctx context.Context, getAttribute getAttribute
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-		ctx = c.RegisterLogger(ctx)
-		ctx = apicall.NewContext(ctx, c.CallRecorder())
-		ctx = fwflex.RegisterLogger(ctx)
+		ctx = c.RequestContext(ctx)
 	}
 
 	if providerMeta != nil {
@@ -928,10 +908,7 @@ func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-		ctx = c.RegisterLogger(ctx)
-		ctx = apicall.NewContext(ctx, c.CallRecorder())
-		ctx = fwflex.RegisterLogger(ctx)
+		ctx = c.RequestContext(ctx)
 	}
 
 	if overrideRegion != "" {
@@ -1074,10 +1051,7 @@ func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAt
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-		ctx = c.RegisterLogger(ctx)
-		ctx = apicall.NewContext(ctx, c.CallRecorder())
-		ctx = fwflex.RegisterLogger(ctx)
+		ctx = c.RequestContext(ctx)
 	}
 
 	if overrideRegion != "" {
