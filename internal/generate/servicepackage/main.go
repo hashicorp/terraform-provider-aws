@@ -344,7 +344,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		var implementation common.Implementation
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			args, err := common.ParseArgs(m[3])
+			if err != nil {
+				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+				continue
+			}
+			switch annotationName := m[1]; annotationName {
 			case "FrameworkResource":
 				implementation = common.ImplementationFramework
 
@@ -511,7 +516,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			d.FactoryName = v.functionName
 
-			args := common.ParseArgs(m[3])
+			args, err := common.ParseArgs(m[3])
+			if err != nil {
+				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+				continue
+			}
 
 			if attr, ok := args.Keyword["name"]; ok {
 				d.Name = attr
