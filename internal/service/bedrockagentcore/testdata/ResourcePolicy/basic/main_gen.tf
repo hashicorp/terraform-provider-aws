@@ -70,7 +70,6 @@ data "aws_iam_policy_document" "resource_policy" {
   }
 }
 
-
 variable "rName" {
   description = "Name for resource"
   type        = string
