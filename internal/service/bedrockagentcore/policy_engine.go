@@ -203,11 +203,12 @@ func (r *policyEngineResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// Only description can be updated.
+	// Only description can be updated in place.
+	// Description removal is sent to AWS and any API error is surfaced to the user.
 	if !plan.Description.Equal(state.Description) {
-		description := &awstypes.UpdatedDescription{}
-		if !plan.Description.IsNull() {
-			description.OptionalValue = plan.Description.ValueStringPointer()
+		descriptionValue := plan.Description.ValueString()
+		description := &awstypes.UpdatedDescription{
+			OptionalValue: &descriptionValue,
 		}
 
 		input := bedrockagentcorecontrol.UpdatePolicyEngineInput{
