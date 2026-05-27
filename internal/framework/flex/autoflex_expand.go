@@ -113,7 +113,7 @@ func expandGetCachedFieldValue(expander *autoExpander, v reflect.Value, fieldNam
 }
 
 // autoFlexConvert converts `from` to `to` using the specified autoExpander.
-func autoExpandConvert(ctx context.Context, from, to any, flexer *autoExpander) diag.Diagnostics {
+func autoExpandConvert(ctx context.Context, from, to any, expander *autoExpander) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourcePath := path.Empty()
@@ -134,13 +134,13 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer *autoExpander) 
 			!typFrom.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typFrom.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
 			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
-			diags.Append(expandStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
+			diags.Append(expandStruct(ctx, sourcePath, from, targetPath, to, expander)...)
 			return diags
 		}
 	}
 
 	// Anything else.
-	diags.Append(expandConvert(ctx, flexer, sourcePath, valFrom, targetPath, valTo, fieldOpts{})...)
+	diags.Append(expandConvert(ctx, expander, sourcePath, valFrom, targetPath, valTo, fieldOpts{})...)
 	return diags
 }
 
@@ -1359,7 +1359,7 @@ func expandNestedKeyObjectToMap(ctx context.Context, expander *autoExpander, sou
 }
 
 // expandStruct traverses struct `from`, calling `expander` for each exported field.
-func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer *autoExpander) diag.Diagnostics {
+func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, expander *autoExpander) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
@@ -1396,12 +1396,12 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	// Handle XML wrapper collapse patterns where multiple source fields
 	// need to be combined into a single complex target field
 	processedFields := make(map[string]bool)
-	diags.Append(expandHandleXMLWrapperCollapse(ctx, flexer, sourcePath, valFrom, targetPath, valTo, typeFrom, typeTo, processedFields)...)
+	diags.Append(expandHandleXMLWrapperCollapse(ctx, expander, sourcePath, valFrom, targetPath, valTo, typeFrom, typeTo, processedFields)...)
 	if diags.HasError() {
 		return diags
 	}
 
-	for fromField := range expandSourceFields(ctx, typeFrom, flexer.Options) {
+	for fromField := range expandSourceFields(ctx, typeFrom, expander.Options) {
 		fromFieldName := fromField.Name
 		_, fromFieldOpts := autoflexTags(fromField)
 		if fromFieldOpts.NoExpand() {
@@ -1427,7 +1427,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 			continue
 		}
 
-		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer.Options)
+		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, expander.Options)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding target field", map[string]any{
@@ -1458,7 +1458,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 			xmlWrapperField: fromFieldOpts.XMLWrapperField(),
 		}
 
-		diags.Append(expandConvert(ctx, flexer, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
+		diags.Append(expandConvert(ctx, expander, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
 			break
 		}
