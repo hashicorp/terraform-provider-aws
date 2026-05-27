@@ -404,6 +404,9 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		privateKey := d.Get(names.AttrPrivateKey).(string)
 		privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("private_key_wo"))
 		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
 		if privateKeyWo != "" {
 			privateKey = privateKeyWo
 		}
@@ -518,6 +521,9 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 			privateKey := d.Get(names.AttrPrivateKey).(string)
 			privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("private_key_wo"))
 			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
 			if privateKeyWo != "" {
 				privateKey = privateKeyWo
 			}
