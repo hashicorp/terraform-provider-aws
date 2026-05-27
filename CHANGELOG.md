@@ -3,10 +3,12 @@
 FEATURES:
 
 * **New List Resource:** `aws_bedrockagentcore_online_evaluation_config` ([#47209](https://github.com/hashicorp/terraform-provider-aws/issues/47209))
+* **New List Resource:** `aws_bedrockagentcore_policy_engine` ([#47108](https://github.com/hashicorp/terraform-provider-aws/issues/47108))
 * **New List Resource:** `aws_bedrockagentcore_resource_policy` ([#46844](https://github.com/hashicorp/terraform-provider-aws/issues/46844))
 * **New List Resource:** `aws_s3control_multi_region_access_point` ([#48081](https://github.com/hashicorp/terraform-provider-aws/issues/48081))
 * **New List Resource:** `aws_s3control_multi_region_access_point_routes` ([#48081](https://github.com/hashicorp/terraform-provider-aws/issues/48081))
 * **New Resource:** `aws_bedrockagentcore_online_evaluation_config` ([#47209](https://github.com/hashicorp/terraform-provider-aws/issues/47209))
+* **New Resource:** `aws_bedrockagentcore_policy_engine` ([#47108](https://github.com/hashicorp/terraform-provider-aws/issues/47108))
 * **New Resource:** `aws_bedrockagentcore_resource_policy` ([#46844](https://github.com/hashicorp/terraform-provider-aws/issues/46844))
 * **New Resource:** `aws_s3control_multi_region_access_point_routes` ([#47994](https://github.com/hashicorp/terraform-provider-aws/issues/47994))
 
