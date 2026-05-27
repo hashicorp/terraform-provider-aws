@@ -27,13 +27,29 @@ func dataSourceParameter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"data_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"insecure_value": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"tier": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrType: {
 				Type:     schema.TypeString,
@@ -68,13 +84,23 @@ func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter (%s): %s", name, err)
 	}
 
+	paramMetadata, err := findParameterMetadataByName(ctx, conn, name)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter Metadata (%s): %s", name, err)
+	}
+
 	d.SetId(aws.ToString(param.Name))
 	d.Set(names.AttrARN, param.ARN)
+	d.Set("data_type", paramMetadata.DataType)
+	d.Set(names.AttrDescription, paramMetadata.Description)
 	d.Set("insecure_value", nil)
 	if param.Type != awstypes.ParameterTypeSecureString {
 		d.Set("insecure_value", param.Value)
 	}
+	d.Set(names.AttrKeyID, paramMetadata.KeyId)
 	d.Set(names.AttrName, param.Name)
+	d.Set("tier", paramMetadata.Tier)
 	d.Set(names.AttrType, param.Type)
 	d.Set(names.AttrValue, param.Value)
 	d.Set(names.AttrVersion, param.Version)
