@@ -2548,16 +2548,6 @@ check "timeouts_section" {
   enabled = true
 
   ignore_targets = [
-    "aws_quicksight_account_subscription",
-    "aws_route53profiles_profile",
-    "aws_route53profiles_resource_association",
-    "aws_s3control_multi_region_access_point",
-    "aws_spot_fleet_request",
-    "aws_vpclattice_service",
-    "aws_vpclattice_service_network_service_association",
-    "aws_vpclattice_service_network_vpc_association",
-    "aws_vpclattice_target_group",
-    "aws_workspaces_connection_alias",
   ]
 }
 
