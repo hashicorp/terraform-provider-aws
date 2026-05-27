@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_opensearch_domain: Remove hardcoded enum validation for `warm_type` to support newer instance types (e.g., `oi2.large.search`)
