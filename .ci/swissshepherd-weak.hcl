@@ -2548,7 +2548,6 @@ check "timeouts_section" {
   enabled = true
 
   ignore_targets = [
-    "aws_dx_hosted_transit_virtual_interface",
     "aws_eks_access_entry",
     "aws_eks_access_policy_association",
     "aws_fsx_openzfs_snapshot",
