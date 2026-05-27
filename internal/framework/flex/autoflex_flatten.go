@@ -72,19 +72,6 @@ func newAutoFlattener(optFns []AutoFlexOptionsFunc) *autoFlattener {
 	}
 }
 
-// Interface method stubs to satisfy autoFlexer for findField calls.
-func (flattener *autoFlattener) getOptions() AutoFlexOptions {
-	return flattener.Options
-}
-
-func (flattener *autoFlattener) convert(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
-	return flattenConvert(ctx, flattener, sourcePath, vFrom, targetPath, vTo, fieldOpts)
-}
-
-func (flattener *autoFlattener) handleXMLWrapperCollapse(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, valTo reflect.Value, typeFrom, typeTo reflect.Type, processedFields map[string]bool) diag.Diagnostics {
-	return flattenHandleXMLWrapperCollapse(ctx, flattener, sourcePath, valFrom, targetPath, valTo, typeFrom, typeTo, processedFields)
-}
-
 // autoFlattenConvert converts `from` to `to` using the specified autoFlattener.
 func autoFlattenConvert(ctx context.Context, from, to any, flattener *autoFlattener) diag.Diagnostics {
 	var diags diag.Diagnostics
