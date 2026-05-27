@@ -10,7 +10,7 @@ description: |-
 
 Provides details about a Kinesis Stream Consumer.
 
-For more details, see the [Amazon Kinesis Stream Consumer Documentation][1].
+For more details, see the [Amazon Kinesis Stream Consumer Documentation](https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html).
 
 ## Example Usage
 
@@ -38,4 +38,3 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN of the stream consumer.
 * `status` - Current status of the stream consumer.
 
-[1]: https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html
