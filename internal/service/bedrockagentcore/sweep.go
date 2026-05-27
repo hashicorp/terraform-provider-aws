@@ -29,6 +29,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_harness", sweepHarnesses)
 	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
 	awsv2.Register("aws_bedrockagentcore_online_evaluation_config", sweepOnlineEvaluationConfigs)
+	awsv2.Register("aws_bedrockagentcore_policy_engine", sweepPolicyEngines)
 }
 
 func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -255,6 +256,28 @@ func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sw
 		for _, v := range page.WorkloadIdentities {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newWorkloadIdentityResource, client,
 				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListPolicyEnginesInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListPolicyEnginesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.PolicyEngines {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newPolicyEngineResource, client,
+				framework.NewAttribute("policy_engine_id", aws.ToString(v.PolicyEngineId))),
 			)
 		}
 	}
