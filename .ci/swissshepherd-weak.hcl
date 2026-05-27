@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_neptune_cluster_instance",
     "resource/aws_network_interface_sg_attachment",
     "resource/aws_rds_cluster_activity_stream",
     "resource/aws_rds_cluster_endpoint",
