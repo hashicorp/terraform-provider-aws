@@ -2592,7 +2592,6 @@ check "file_check" {
 
   ignore_targets = [
     "resource/aws_autoscaling_notification",
-    "resource/aws_autoscaling_notification",
     "resource/aws_batch_compute_environment",
     "resource/aws_batch_compute_environment",
     "resource/aws_batch_compute_environment",
