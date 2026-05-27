@@ -15,6 +15,8 @@ Terraform resource for maintaining exclusive management of resource record sets 
 
 ~> The default `NS` and `SOA` records created during provisioning of the Route53 Zone __should not be included__ in this resource definition. Adding them will cause persistent drift as the read operation is explicitly configured to ignore writing them to state.
 
+~> **API request limits:** All record set changes produced by a single `apply` are sent in one `ChangeResourceRecordSets` request. AWS limits a single request to **1,000 `ResourceRecord` elements**, however, each element is counted twice when the change action is `UPSERT`. See the [Route 53 API request limits](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html#limits-api-requests) for details. This resource does not split changes across multiple requests, so an apply that exceeds these limits will fail. The limit applies to the diff against the live hosted zone, **not** the total number of records managed. For example, a resource managing 2,000 records where a single `apply` modifies 10 of them will send 10 `UPSERT` changes (20 elements counted) and succeed. Attempting to create all 2,000 records in the initial `apply` sends 2,000 `CREATE` elements in one request and will be **rejected**. Similarly, modifying 600 existing records in a single `apply` produces 600 `UPSERT` changes (counted as 1,200 elements) and will be **rejected**.
+
 ## Example Usage
 
 ### Basic Usage
