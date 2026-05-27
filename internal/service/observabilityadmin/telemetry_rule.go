@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -105,6 +107,9 @@ func (r *telemetryRuleResource) Schema(ctx context.Context, request resource.Sch
 							ElementType: types.StringType,
 							Optional:    true,
 							Computed:    true,
+							Validators: []validator.Set{
+								setvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
+							},
 							PlanModifiers: []planmodifier.Set{
 								setplanmodifier.UseStateForUnknown(),
 							},
