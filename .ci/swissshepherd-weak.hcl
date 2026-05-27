@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "data_source/aws_elastic_beanstalk_solution_stack",
     "data_source/aws_iam_roles",
     "data_source/aws_iam_users",
     "data_source/aws_instance",
