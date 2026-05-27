@@ -118,6 +118,11 @@ func resourceCluster() *schema.Resource {
 													Required: true,
 													ForceNew: true,
 												},
+												names.AttrThroughput: {
+													Type:     schema.TypeInt,
+													Optional: true,
+													ForceNew: true,
+												},
 												names.AttrType: {
 													Type:         schema.TypeString,
 													Required:     true,
