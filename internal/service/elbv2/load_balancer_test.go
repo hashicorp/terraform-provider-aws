@@ -2218,6 +2218,14 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 			},
 			{
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
 				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),

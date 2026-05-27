@@ -1371,8 +1371,8 @@ func resourceLoadBalancerCustomizeDiff(ctx context.Context, diff *schema.Resourc
 			// https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-security-groups.html#security-group-considerations
 			// * You can associate security groups with a Network Load Balancer when you create it. If you create a Network Load Balancer without associating any security groups, you can't associate them with the Network Load Balancer later on.
 			// * After you create a Network Load Balancer with associated security groups, you can change the security groups associated with the Network Load Balancer at any time.
-			if o, n := state.SecurityGroups, plan.SecurityGroups; o.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) == 0 {
-				if !n.IsFullyKnown() {
+			if o, n := state.SecurityGroups, plan.SecurityGroups; !n.IsFullyKnown() {
+				if o.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) == 0 && !n.IsNull() {
 					// When the new value is unknown at plan time (e.g. a security group
 					// created in the same apply), the SDK sees both old and new as empty
 					// sets, so HasChange and ForceNew both fail. Handle this unknown case
@@ -1387,15 +1387,14 @@ func resourceLoadBalancerCustomizeDiff(ctx context.Context, diff *schema.Resourc
 					if err := diff.SetNewComputed(names.AttrSecurityGroups); err != nil {
 						return err
 					}
-				} else if n.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) > 0 {
+				}
+			} else if !n.Equal(o) {
+				// If new value is empty:
+				// "ValidationError: A security group must be specified".
+				if oLen, nLen := o.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}), n.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}); (oLen == 0 && nLen > 0) || (oLen > 0 && nLen == 0) {
 					if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
 						return err
 					}
-				}
-			} else if n.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) == 0 {
-				// "ValidationError: A security group must be specified".
-				if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
-					return err
 				}
 			}
 
@@ -1554,42 +1553,6 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 			return err
 		}
 	}
-
-	// Get diff for security groups.
-	//
-	// When the new value is unknown at plan time (e.g. a security group
-	// created in the same apply), the SDK sees both old and new as empty
-	// sets, so HasChange and ForceNew both fail. Handle this unknown case
-	// first by injecting a placeholder value so the SDK sees a diff,
-	// calling ForceNew, then restoring the attribute to computed.
-	//
-	// This first if statement is needed to properly recreate NLBs when a security group is
-	// added, since NLBs don't support adding security groups after creation.
-	// if v := config.GetAttr(names.AttrSecurityGroups); !v.IsWhollyKnown() {
-	// 	o, _ := diff.GetChange(names.AttrSecurityGroups)
-	// 	os := o.(*schema.Set)
-
-	// 	if os.Len() == 0 && !v.IsNull() {
-	// 		if err := diff.SetNew(names.AttrSecurityGroups, schema.NewSet(schema.HashString, []any{"unknown"})); err != nil {
-	// 			return err
-	// 		}
-	// 		if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
-	// 			return err
-	// 		}
-	// 		if err := diff.SetNewComputed(names.AttrSecurityGroups); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// } else if diff.HasChange(names.AttrSecurityGroups) {
-	// 	o, n := diff.GetChange(names.AttrSecurityGroups)
-	// 	os, ns := o.(*schema.Set), n.(*schema.Set)
-
-	// 	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
-	// 		if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
 
 	return nil
 }
