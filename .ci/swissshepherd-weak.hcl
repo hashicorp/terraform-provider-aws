@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "data_source/aws_networkfirewall_firewall_policy",
     "data_source/aws_networkfirewall_resource_policy",
     "data_source/aws_regions",
     "data_source/aws_route53_resolver_endpoint",
