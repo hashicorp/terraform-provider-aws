@@ -2216,7 +2216,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			continue
 		}
 
-		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer)
+		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer.Options)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding target field", map[string]any{
@@ -2870,7 +2870,7 @@ func flattenHandleXMLWrapperCollapse(ctx context.Context, flattener *autoFlatten
 		// Before splitting, check if there's a direct field match in the target
 		// If the target has a field with the same name that can accept this XML wrapper,
 		// skip the split and let normal field matching handle it
-		targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flattener)
+		targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flattener.Options)
 		if !ok {
 			// Corresponding field not found in target.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding target field", map[string]any{
@@ -2966,7 +2966,7 @@ func flattenHandleXMLWrapperSplit(ctx context.Context, flattener *autoFlattener,
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(sourceStructType))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
-	targetField, found := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}}), typeTo, flattener)
+	targetField, found := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}}), typeTo, flattener.Options)
 	if found { // Redundant, this was already checked in `handleXMLWrapperCollapse`
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(targetField.Type))
 	}
@@ -3110,7 +3110,7 @@ func flattenFindMainTargetFieldForSplit(ctx context.Context, flattener *autoFlat
 
 		// Use fuzzy field finder for proper singular/plural and case matching
 		dummySourceType := reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}})
-		if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, dummySourceType, typeTo, flattener); ok {
+		if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, dummySourceType, typeTo, flattener.Options); ok {
 			return targetField.Name
 		}
 	}

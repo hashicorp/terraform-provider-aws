@@ -75,7 +75,7 @@ type fuzzyFieldFinder struct {
 	suffixRecursionDepth int
 }
 
-func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) { //nolint:unparam
+func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, opts AutoFlexOptions) (reflect.StructField, bool) { //nolint:unparam
 	// first precedence is exact match (case sensitive)
 	if fieldTo, ok := typeTo.FieldByName(fieldNameFrom); ok {
 		return fieldTo, true
@@ -88,7 +88,6 @@ func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string
 	// to make sure fuzzy matches are not in "from".
 
 	// second precedence is exact match (case insensitive)
-	opts := flexer.getOptions()
 	for field := range tfreflect.ExportedStructFields(typeTo) {
 		fieldNameTo := field.Name
 		if opts.isIgnoredField(fieldNameTo) {
@@ -122,12 +121,12 @@ func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string
 			// so it will only recurse once
 			fff.prefixRecursionDepth++
 			if trimmed, ok := strings.CutPrefix(fieldNameFrom, v); ok {
-				if fieldTo, ok := fff.findField(ctx, trimmed, typeFrom, typeTo, flexer); ok {
+				if fieldTo, ok := fff.findField(ctx, trimmed, typeFrom, typeTo, opts); ok {
 					fff.prefixRecursionDepth--
 					return fieldTo, true
 				}
 			} else {
-				if fieldTo, ok := fff.findField(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer); ok {
+				if fieldTo, ok := fff.findField(ctx, v+fieldNameFrom, typeFrom, typeTo, opts); ok {
 					fff.prefixRecursionDepth--
 					return fieldTo, true
 				}
@@ -143,11 +142,11 @@ func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string
 			// so it will only recurse once
 			fff.suffixRecursionDepth++
 			if before, ok := strings.CutSuffix(fieldNameFrom, v); ok {
-				fieldTo, ok := fff.findField(ctx, before, typeFrom, typeTo, flexer)
+				fieldTo, ok := fff.findField(ctx, before, typeFrom, typeTo, opts)
 				fff.suffixRecursionDepth--
 				return fieldTo, ok
 			}
-			fieldTo, ok := fff.findField(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
+			fieldTo, ok := fff.findField(ctx, fieldNameFrom+v, typeFrom, typeTo, opts)
 			fff.suffixRecursionDepth--
 			return fieldTo, ok
 		}
