@@ -44,13 +44,13 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `device_name` - (Required) The device name to expose to the instance (for
-example, `/dev/sdh` or `xvdh`).  See [Device Naming on Linux Instances][1] and [Device Naming on Windows Instances][2] for more information.
+example, `/dev/sdh` or `xvdh`).  See [Device Naming on Linux Instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names) and [Device Naming on Windows Instances](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names) for more information.
 * `instance_id` - (Required) ID of the Instance to attach to
 * `volume_id` - (Required) ID of the Volume to be attached
 * `force_detach` - (Optional, Boolean) Set to `true` if you want to force the
 volume to detach. Useful if previous attempts failed, but use this option only
 as a last resort, as this can result in **data loss**. See
-[Detaching an Amazon EBS Volume from an Instance][3] for more information.
+[Detaching an Amazon EBS Volume from an Instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-detaching-volume.html) for more information.
 * `skip_destroy` - (Optional, Boolean) Set this to true if you do not wish
 to detach the volume from the instance to which it is attached at destroy
 time, and instead just remove the attachment from Terraform state. This is
@@ -84,6 +84,3 @@ Using `terraform import`, import EBS Volume Attachments using `DEVICE_NAME:VOLUM
 % terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
 ```
 
-[1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
-[2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names
-[3]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-detaching-volume.html
