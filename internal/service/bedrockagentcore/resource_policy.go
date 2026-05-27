@@ -34,8 +34,12 @@ import (
 // @FrameworkResource("aws_bedrockagentcore_resource_policy", name="Resource Policy")
 // @ArnIdentity("resource_arn")
 // @Testing(hasNoPreExistingResource=true)
-// Ignore `policy` because JSON is not normalized during attribute comparison
+// Ignore `policy` because JSON is not normalized during attribute comparison.
 // @Testing(importIgnore="policy")
+// Runtime URI environment variable will have a hardcoded region.
+// @Testing(identityRegionOverrideTest=false)
+// @Testing(requireEnvVarValue="AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourcePolicyResource{}, nil
 }

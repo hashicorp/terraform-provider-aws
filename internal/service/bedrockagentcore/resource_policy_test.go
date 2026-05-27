@@ -19,13 +19,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// randomWithPrefixAndUnderscore wraps acctest.RandomWithPrefix, replacing
+// the `-` character separating the prefix and generated suffix with an
+// underscore (`_`).
+//
+// Use this when the resource names do not allow dashes.
+func randomWithPrefixAndUnderscore(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
+
 func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
@@ -49,7 +58,7 @@ func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail
+				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail.
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 			},
@@ -63,7 +72,7 @@ func TestAccBedrockAgentCoreResourcePolicy_Policy_endpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
@@ -87,7 +96,7 @@ func TestAccBedrockAgentCoreResourcePolicy_Policy_endpoint(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail
+				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail.
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 			},
@@ -124,7 +133,7 @@ func TestAccBedrockAgentCoreResourcePolicy_Policy_gateway(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail
+				ImportStateVerifyIgnore:              []string{names.AttrPolicy}, // Whitespace differences cause import comparison to fail.
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 			},
