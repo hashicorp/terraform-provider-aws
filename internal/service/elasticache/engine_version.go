@@ -110,6 +110,40 @@ func customizeDiffEngineVersionForceNewOnDowngrade(_ context.Context, diff *sche
 	return engineVersionForceNewOnDowngrade(diff)
 }
 
+type EnginePair struct {
+	from, to               string
+	fromVersion, toVersion string
+}
+
+var (
+	crossEngineEquivalents = [...]EnginePair{
+		{from: engineValkey, to: engineRedis, fromVersion: "7.2", toVersion: "7.1"},
+	}
+)
+
+func checkCrossEngineEquivalent(diff getChangeDiffer) (bool, error) {
+	o, n := diff.GetChange(names.AttrEngineVersion)
+	oEngine, nEngine := diff.GetChange(names.AttrEngine)
+	oVersion, err := normalizeEngineVersion(o.(string))
+	if err != nil {
+		return false, fmt.Errorf("parsing old engine_version: %w", err)
+	}
+	nVersion, err := normalizeEngineVersion(n.(string))
+	if err != nil {
+		return false, fmt.Errorf("parsing new engine_version: %w", err)
+	}
+
+	for _, current := range crossEngineEquivalents {
+		fVersion, _ := normalizeEngineVersion(current.fromVersion)
+		tVersion, _ := normalizeEngineVersion(current.toVersion)
+		if oVersion.Equal(fVersion) && nVersion.Equal(tVersion) && oEngine.(string) == current.from && nEngine.(string) == current.to {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func customizeDiffEngineForceNewOnDowngrade() schema.CustomizeDiffFunc {
 	return customdiff.ForceNewIf(names.AttrEngine, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 		if _, is_global := diff.GetOk("global_replication_group_id"); is_global {
@@ -119,9 +153,15 @@ func customizeDiffEngineForceNewOnDowngrade() schema.CustomizeDiffFunc {
 		if !diff.HasChange(names.AttrEngine) {
 			return false
 		}
+
 		if old, new := diff.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
 			return false
 		}
+
+		if equivalent, _ := checkCrossEngineEquivalent(diff); equivalent {
+			return false
+		}
+
 		return true
 	})
 }
@@ -160,6 +200,12 @@ func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 	nVersion, err := normalizeEngineVersion(n.(string))
 	if err != nil {
 		return false, fmt.Errorf("parsing new engine_version: %w", err)
+	}
+
+	if oVersion.Segments()[0] == nVersion.Segments()[0] {
+		if equivalent, _ := checkCrossEngineEquivalent(diff); equivalent {
+			return false, nil
+		}
 	}
 
 	return nVersion.LessThan(oVersion), nil
