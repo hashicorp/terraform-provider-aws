@@ -77,7 +77,7 @@ func ProtoV5ProviderFactoriesWithCallRecorder(ctx context.Context, t *testing.T)
 	t.Helper()
 
 	rec := apicall.NewRecorder()
-	return ProtoV5ProviderFactoriesWithWrappers(ctx, APICallRecorderWrapper(rec)), rec
+	return ProtoV5ProviderFactoriesWithWrappers(ctx, t, APICallRecorderWrapper(rec)), rec
 }
 
 // CheckAPICallMade fails if service.operation was not recorded since the
