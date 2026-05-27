@@ -115,9 +115,9 @@ func TestFormatCalls(t *testing.T) {
 	}
 }
 
-// TestWrapConfigureWithCallRecorder verifies the wrapper attaches the recorder
+// TestAPICallRecorderWrapper verifies the wrapper attaches the recorder
 // to a non-nil *conns.AWSClient and tolerates the nil/error return path.
-func TestWrapConfigureWithCallRecorder(t *testing.T) {
+func TestAPICallRecorderWrapper(t *testing.T) {
 	t.Parallel()
 
 	rec := apicall.NewRecorder()
@@ -128,7 +128,7 @@ func TestWrapConfigureWithCallRecorder(t *testing.T) {
 		original := func(_ context.Context, _ *schema.ResourceData) (any, diag.Diagnostics) {
 			return client, nil
 		}
-		wrapped := wrapConfigureWithCallRecorder(original, rec)
+		wrapped := APICallRecorderWrapper(rec)(original)
 
 		v, diags := wrapped(context.Background(), nil)
 		if diags.HasError() {
@@ -147,7 +147,7 @@ func TestWrapConfigureWithCallRecorder(t *testing.T) {
 		original := func(_ context.Context, _ *schema.ResourceData) (any, diag.Diagnostics) {
 			return nil, sdkdiag.AppendErrorf(nil, "configure failed")
 		}
-		wrapped := wrapConfigureWithCallRecorder(original, rec)
+		wrapped := APICallRecorderWrapper(rec)(original)
 
 		v, diags := wrapped(context.Background(), nil)
 		if !diags.HasError() {
@@ -164,7 +164,7 @@ func TestWrapConfigureWithCallRecorder(t *testing.T) {
 		original := func(_ context.Context, _ *schema.ResourceData) (any, diag.Diagnostics) {
 			return typedNil, nil
 		}
-		wrapped := wrapConfigureWithCallRecorder(original, rec)
+		wrapped := APICallRecorderWrapper(rec)(original)
 
 		// Must not panic.
 		_, _ = wrapped(context.Background(), nil)

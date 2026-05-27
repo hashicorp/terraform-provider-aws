@@ -52,11 +52,16 @@ func resourceSecretVersion() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "arn is deprecated. Use secret_arn instead.",
 			},
 			"has_secret_string_wo": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"secret_arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"secret_id": {
@@ -216,6 +221,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		d.Set(names.AttrARN, arn)
+		d.Set("secret_arn", arn)
 		d.Set("secret_binary", nil)
 		d.Set("secret_string", nil)
 		d.Set("version_id", versionEntry.VersionId)
@@ -236,6 +242,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrARN, output.ARN)
+	d.Set("secret_arn", output.ARN)
 	d.Set("secret_binary", inttypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)

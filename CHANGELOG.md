@@ -2,15 +2,55 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_bedrockagentcore_online_evaluation_config` ([#47209](https://github.com/hashicorp/terraform-provider-aws/issues/47209))
+* **New List Resource:** `aws_bedrockagentcore_resource_policy` ([#46844](https://github.com/hashicorp/terraform-provider-aws/issues/46844))
+* **New List Resource:** `aws_s3control_multi_region_access_point` ([#48081](https://github.com/hashicorp/terraform-provider-aws/issues/48081))
+* **New List Resource:** `aws_s3control_multi_region_access_point_routes` ([#48081](https://github.com/hashicorp/terraform-provider-aws/issues/48081))
+* **New Resource:** `aws_bedrockagentcore_online_evaluation_config` ([#47209](https://github.com/hashicorp/terraform-provider-aws/issues/47209))
+* **New Resource:** `aws_bedrockagentcore_resource_policy` ([#46844](https://github.com/hashicorp/terraform-provider-aws/issues/46844))
 * **New Resource:** `aws_s3control_multi_region_access_point_routes` ([#47994](https://github.com/hashicorp/terraform-provider-aws/issues/47994))
 
 ENHANCEMENTS:
 
+* data-source/aws_arn: Deprecates `id` in favor of `arn` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_default_tags: Deprecates `id` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_ip_ranges: Deprecates `id` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_partition: Deprecates `id` in favor of `partition` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_region: Deprecates `id` in favor of `region` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_regions: Deprecates `id` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_route: Add `odb_network_arn` attribute ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
+* data-source/aws_route_table: Add `routes.odb_network_arn` attribute ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
+* data-source/aws_secretsmanager_secret_version: Deprecates `arn` in favor of `secret_arn`. ([#48011](https://github.com/hashicorp/terraform-provider-aws/issues/48011))
+* data-source/aws_secretsmanager_secret_versions: Deprecates `arn` in favor of `secret_arn`. ([#48033](https://github.com/hashicorp/terraform-provider-aws/issues/48033))
+* data-source/aws_secretsmanager_secret_versions: Deprecates `name` in favor of `secret_name`. ([#48033](https://github.com/hashicorp/terraform-provider-aws/issues/48033))
+* data-source/aws_service: Deprecates `id` in favor of `reverse_dns_name` ([#48036](https://github.com/hashicorp/terraform-provider-aws/issues/48036))
+* data-source/aws_transfer_server: Add `ip_address_type` attribute ([#48039](https://github.com/hashicorp/terraform-provider-aws/issues/48039))
+* resource/aws_acm_certificate: Add `private_key_wo` write-only argument and `private_key_wo_version` argument ([#44414](https://github.com/hashicorp/terraform-provider-aws/issues/44414))
+* resource/aws_arcregionswitch_plan: Add `step.rds_promote_read_replica_config`, `step.rds_create_cross_region_read_replica_config`, and `report_configuration` arguments ([#46965](https://github.com/hashicorp/terraform-provider-aws/issues/46965))
+* resource/aws_eks_cluster: Add CGNAT IP address ranges as valid private range ([#47988](https://github.com/hashicorp/terraform-provider-aws/issues/47988))
+* resource/aws_eks_cluster: Make `remote_node_networks` field in `remote_network_config` optional ([#47988](https://github.com/hashicorp/terraform-provider-aws/issues/47988))
+* resource/aws_eks_cluster: Remove conflict between `outpost_config` and `remote_network_config` ([#47988](https://github.com/hashicorp/terraform-provider-aws/issues/47988))
+* resource/aws_msk_replicator: Add support for `log_delivery` configuration block ([#48054](https://github.com/hashicorp/terraform-provider-aws/issues/48054))
+* resource/aws_quicksight_data_source: Add `parameters.athena.role_arn` argument to allow override an account-wide role for a specific Athena data source ([#44666](https://github.com/hashicorp/terraform-provider-aws/issues/44666))
+* resource/aws_route: Add `odb_network_arn` argument ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
+* resource/aws_route: Add plan-time validation of `core_network_arn` ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
+* resource/aws_route_table: Add `route.odb_network_arn` argument ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
+* resource/aws_route_table: Add plan-time validation of `route.core_network_arn` ([#48027](https://github.com/hashicorp/terraform-provider-aws/issues/48027))
+* resource/aws_s3control_multi_region_access_point: Add resource identity support ([#48081](https://github.com/hashicorp/terraform-provider-aws/issues/48081))
+* resource/aws_secretsmanager_secret_version: Deprecates `arn` in favor of `secret_arn`. ([#48011](https://github.com/hashicorp/terraform-provider-aws/issues/48011))
 * resource/aws_ssm_resource_data_sync: Add `s3_destination.destination_data_sharing` argument ([#21996](https://github.com/hashicorp/terraform-provider-aws/issues/21996))
+* resource/aws_transfer_server: Add `ip_address_type` argument ([#48039](https://github.com/hashicorp/terraform-provider-aws/issues/48039))
 
 BUG FIXES:
 
+* data-source/aws_secretsmanager_secret_versions: Polulates `versions.*.last_accessed_date`. ([#48033](https://github.com/hashicorp/terraform-provider-aws/issues/48033))
+* provider: Fix `lifecycle.ignore_changes` for individual `tags` elements being bypassed when another tag in the same map is updated to an empty string, to avoid overwriting any out-of-band changes the lifecycle block was meant to preserve. ([#48008](https://github.com/hashicorp/terraform-provider-aws/issues/48008))
 * resource/aws_dynamodb_table: Ensure diffs are shown for GSI hash key type changes ([#47867](https://github.com/hashicorp/terraform-provider-aws/issues/47867))
+* resource/aws_eks_cluster: Change `securityGroupIds` logic in `flattenVPCConfigResponse()` for Outpost clusters ([#47988](https://github.com/hashicorp/terraform-provider-aws/issues/47988))
+* resource/aws_instance: Fix `lifecycle.ignore_changes` for individual `tags` elements being bypassed when another tag in the same map is updated to an empty string, to avoid overwriting any out-of-band changes the lifecycle block was meant to preserve. ([#48008](https://github.com/hashicorp/terraform-provider-aws/issues/48008))
+* resource/aws_lb: Fix `Provider produced inconsistent final plan` errors and force resource recreation for Network Load Balancers when no security groups were initially configured and updated security groups are unknown at plan-time ([#46695](https://github.com/hashicorp/terraform-provider-aws/issues/46695))
+* resource/aws_msk_replicator: Mark `replication_info_list.consumer_group_replication.consumer_groups_to_exclude` as Computed ([#48054](https://github.com/hashicorp/terraform-provider-aws/issues/48054))
+* resource/aws_msk_replicator: Mark `replication_info_list.topic_replication.topics_to_exclude` as Computed ([#48054](https://github.com/hashicorp/terraform-provider-aws/issues/48054))
 
 ## 6.46.0 (May 20, 2026)
 

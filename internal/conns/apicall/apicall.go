@@ -27,6 +27,7 @@ import (
 
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/smithy-go/middleware"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // Call captures one AWS SDK for Go v2 operation invocation.
@@ -144,9 +145,8 @@ func containsLocked(calls []Call, service, operation string) bool {
 	return false
 }
 
-type contextKeyType int
-
-var contextKey contextKeyType
+// recorderKey is the typed context key under which a *Recorder is stored.
+var recorderKey = inttypes.NewContextKey[*Recorder]()
 
 // NewContext returns ctx with r attached. The middleware records against r
 // for any operation whose context descends from the returned context.
@@ -156,13 +156,13 @@ func NewContext(ctx context.Context, r *Recorder) context.Context {
 	if r == nil {
 		return ctx
 	}
-	return context.WithValue(ctx, contextKey, r)
+	return recorderKey.NewContext(ctx, r)
 }
 
 // FromContext extracts the Recorder attached to ctx, if any.
 func FromContext(ctx context.Context) (*Recorder, bool) {
-	r, ok := ctx.Value(contextKey).(*Recorder)
-	return r, ok
+	r := recorderKey.FromContext(ctx)
+	return r, r != nil
 }
 
 // MiddlewareID is the Smithy stack identifier of the recording middleware.
