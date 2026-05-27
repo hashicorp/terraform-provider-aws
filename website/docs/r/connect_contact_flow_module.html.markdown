@@ -79,6 +79,63 @@ resource "aws_connect_contact_flow_module" "example" {
 }
 ```
 
+### With Settings Parameter
+
+```terraform
+resource "aws_connect_contact_flow_module" "example" {
+  instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
+  name        = "Example"
+  description = "Example Contact Flow Module with Settings"
+
+  content = jsonencode({
+    Version     = "2019-10-30"
+    StartAction = "12345678-1234-1234-1234-123456789012"
+    Actions = [
+      {
+        Identifier = "12345678-1234-1234-1234-123456789012"
+        Parameters = {
+          Text = "Hello contact flow module"
+        }
+        Transitions = {
+          NextAction = "abcdef-abcd-abcd-abcd-abcdefghijkl"
+          Errors     = []
+          Conditions = []
+        }
+        Type = "MessageParticipant"
+      },
+      {
+        Identifier  = "abcdef-abcd-abcd-abcd-abcdefghijkl"
+        Type        = "DisconnectParticipant"
+        Parameters  = {}
+        Transitions = {}
+      }
+    ]
+  })
+
+  settings = jsonencode({
+    resultData = {}
+    transitions = {
+      results = [
+        {
+          name        = "ErrorBranch"
+          description = ""
+        },
+        {
+          name        = "SuccessBranch"
+          description = ""
+        }
+      ]
+    }
+  })
+
+  tags = {
+    "Name"        = "Example Contact Flow Module",
+    "Application" = "Terraform",
+    "Method"      = "Create"
+  }
+}
+```
+
 ### With External Content
 
 Use the AWS CLI to extract Contact Flow Content:
@@ -116,6 +173,7 @@ This resource supports the following arguments:
 * `filename` - (Optional) The path to the Contact Flow Module source within the local filesystem. Conflicts with `content`.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) Specifies the name of the Contact Flow Module.
+* `settings` - (Optional) Configuration settings for the Contact Flow Module, provided as a JSON string. This parameter contains module-level configuration settings that are separate from the flow-level settings embedded within the `content` parameter. Maximum length of 256000 characters.
 * `tags` - (Optional) Tags to apply to the Contact Flow Module. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
