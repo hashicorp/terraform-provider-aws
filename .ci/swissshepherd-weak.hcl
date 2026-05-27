@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_globalaccelerator_custom_routing_accelerator",
     "resource/aws_iam_group_membership",
     "resource/aws_iam_group",
     "resource/aws_iam_instance_profile",
