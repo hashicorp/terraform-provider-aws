@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_iam_server_certificate",
     "resource/aws_iam_user_group_membership",
     "resource/aws_iam_user",
     "resource/aws_kinesis_analytics_application",
