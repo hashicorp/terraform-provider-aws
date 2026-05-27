@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_cloudfront_origin_access_identity",
     "resource/aws_cloudfront_vpc_origin",
     "resource/aws_cloudhsm_v2_cluster",
     "resource/aws_codedeploy_deployment_group",
