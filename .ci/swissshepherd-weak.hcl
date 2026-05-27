@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_acm_certificate",
     "resource/aws_appflow_connector_profile",
     "resource/aws_appflow_connector_profile",
     "resource/aws_appmesh_gateway_route",
