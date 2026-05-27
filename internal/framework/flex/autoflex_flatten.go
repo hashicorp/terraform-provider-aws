@@ -76,8 +76,8 @@ func (flattener autoFlattener) getOptions() AutoFlexOptions {
 	return flattener.Options
 }
 
-// autoFlattenConvert converts `from` to `to` using the specified auto-flexer.
-func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
+// autoFlattenConvert converts `from` to `to` using the specified autoFlattener.
+func autoFlattenConvert(ctx context.Context, from, to any, flexer *autoFlattener) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourcePath := path.Empty()
@@ -1200,7 +1200,7 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, source
 			return diags
 		}
 
-		diags.Append(flattenStruct(ctx, sourcePath, fromInterface, targetPath, target, flattener)...)
+		diags.Append(flattenStruct(ctx, sourcePath, fromInterface, targetPath, target, &flattener)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1338,7 +1338,7 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 			return diags
 		}
 	} else {
-		diags.Append(flattenStruct(ctx, sourcePath, vFrom.Interface(), targetPath, to, flattener)...)
+		diags.Append(flattenStruct(ctx, sourcePath, vFrom.Interface(), targetPath, to, &flattener)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1692,7 +1692,7 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 			return diags
 		}
 
-		diags.Append(flattenStruct(ctx, sourcePath, vFrom.Index(i).Interface(), targetPath, target, flattener)...)
+		diags.Append(flattenStruct(ctx, sourcePath, vFrom.Index(i).Interface(), targetPath, target, &flattener)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -2117,7 +2117,7 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, sour
 
 // flattenStruct traverses struct `from`, calling `flexer` for each exported field.
 // handleXMLWrapperRule1 handles Rule 1: flatten entire source struct to target collection field with xmlwrapper tag
-func handleXMLWrapperRule1(ctx context.Context, sourcePath path.Path, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, targetPath path.Path, flexer autoFlexer) (bool, diag.Diagnostics) {
+func handleXMLWrapperRule1(ctx context.Context, sourcePath path.Path, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, targetPath path.Path, flexer *autoFlattener) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	// Skip if target is a struct - that's Rule 2 where we map fields individually
@@ -2153,11 +2153,7 @@ func handleXMLWrapperRule1(ctx context.Context, sourcePath path.Path, valFrom, v
 				return true, diags
 			}
 
-			if f, ok := flexer.(*autoFlattener); ok {
-				diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, "XXX", valFrom, targetPath, attrVal.Type(ctx), toFieldVal, toOpts)...)
-			} else {
-				diags.Append(DiagFlatteningIncompatibleTypes(valFrom.Type(), reflect.TypeOf(toFieldVal.Interface())))
-			}
+			diags.Append(flexer.xmlWrapperFlatten(ctx, sourcePath, "XXX", valFrom, targetPath, attrVal.Type(ctx), toFieldVal, toOpts)...)
 			return true, diags
 		}
 	}
@@ -2165,7 +2161,7 @@ func handleXMLWrapperRule1(ctx context.Context, sourcePath path.Path, valFrom, v
 	return false, diags
 }
 
-func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
+func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer *autoFlattener) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
@@ -2269,11 +2265,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					break
 				}
 
-				if f, ok := flexer.(*autoFlattener); ok {
-					diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, wrapperField, fromFieldVal, targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
-				} else {
-					diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
-				}
+				diags.Append(flexer.xmlWrapperFlatten(ctx, sourcePath, wrapperField, fromFieldVal, targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
 				if diags.HasError() {
 					break
 				}
@@ -2295,15 +2287,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					break
 				}
 
-				// Try both value and pointer type assertions
-				if f, ok := flexer.(autoFlattener); ok {
-					diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, wrapperField, fromFieldVal.Elem(), targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
-				} else if f, ok := flexer.(*autoFlattener); ok {
-					diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, wrapperField, fromFieldVal.Elem(), targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
-				} else {
-					tflog.SubsystemError(ctx, subsystemName, "Type assertion to autoFlattener failed for wrapper tag")
-					diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
-				}
+				diags.Append(flexer.xmlWrapperFlatten(ctx, sourcePath, wrapperField, fromFieldVal.Elem(), targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
 				if diags.HasError() {
 					break
 				}
@@ -2403,20 +2387,11 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 							logAttrKeyWrapperField:    wrapperFieldName,
 						})
 
-						// Try both value and pointer type assertions
-						if f, ok := flexer.(autoFlattener); ok {
-							diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, wrapperFieldName, fromFieldVal.Elem(), targetPath, targetType, toFieldVal, toFieldOpts)...)
-							if diags.HasError() {
-								break
-							}
-							continue // Successfully handled, skip normal processing
-						} else if f, ok := flexer.(*autoFlattener); ok {
-							diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, wrapperFieldName, fromFieldVal.Elem(), targetPath, targetType, toFieldVal, toFieldOpts)...)
-							if diags.HasError() {
-								break
-							}
-							continue // Successfully handled, skip normal processing
+						diags.Append(flexer.xmlWrapperFlatten(ctx, sourcePath, wrapperFieldName, fromFieldVal.Elem(), targetPath, targetType, toFieldVal, toFieldOpts)...)
+						if diags.HasError() {
+							break
 						}
+						continue // Successfully handled, skip normal processing
 						// If flexer is not autoFlattener, fall through to normal field matching
 					}
 				}
@@ -2475,11 +2450,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 						logAttrKeyWrapperField:    wrapperField,
 					})
 
-					if f, ok := flexer.(*autoFlattener); ok {
-						diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, wrapperField, fromFieldVal, targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
-					} else {
-						diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
-					}
+					diags.Append(flexer.xmlWrapperFlatten(ctx, sourcePath, wrapperField, fromFieldVal, targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
 					if diags.HasError() {
 						break
 					}
@@ -2506,13 +2477,11 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 							"field_count":             sourceStructType.NumField(),
 						})
 
-						if f, ok := flexer.(*autoFlattener); ok {
-							diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, fromFieldName, fromFieldVal2.Elem(), targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
-							if diags.HasError() {
-								break
-							}
-							continue
+						diags.Append(flexer.xmlWrapperFlatten(ctx, sourcePath, fromFieldName, fromFieldVal2.Elem(), targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
+						if diags.HasError() {
+							break
 						}
+						continue
 					}
 
 					// Also check if nested model has xmlwrapper field (original logic)
@@ -2537,13 +2506,11 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 							})
 
 							_ = getXMLWrapperSliceFieldName(fromFieldVal2.Type().Elem())
-							if f, ok := flexer.(*autoFlattener); ok {
-								diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, fromFieldName, fromFieldVal2.Elem(), targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
-								if diags.HasError() {
-									break
-								}
-								continue
+							diags.Append(flexer.xmlWrapperFlatten(ctx, sourcePath, fromFieldName, fromFieldVal2.Elem(), targetPath, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
+							if diags.HasError() {
+								break
 							}
+							continue
 						}
 					}
 				}
@@ -2785,7 +2752,7 @@ func DiagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.E
 }
 
 // handleDirectXMLWrapperStruct handles direct XML wrapper struct to target with xmlwrapper tags
-func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, sourceFieldName string, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, targetPath path.Path, targetFieldName string, flexer autoFlexer) diag.Diagnostics {
+func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, sourceFieldName string, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, targetPath path.Path, targetFieldName string, flexer *autoFlattener) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourceItemsField := valFrom.FieldByName(sourceFieldName)
@@ -2830,21 +2797,16 @@ func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, sou
 
 			// Get the target field as attr.Value for XML wrapper flattening
 			if toAttr, ok := toFieldVal.Interface().(attr.Value); ok {
-				if f, ok := flexer.(*autoFlattener); ok {
-					tflog.SubsystemTrace(ctx, subsystemName, "Calling xmlWrapperFlatten", map[string]any{
-						logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
-						logAttrKeyTargetFieldname: toFieldName,
-					})
+				tflog.SubsystemTrace(ctx, subsystemName, "Calling xmlWrapperFlatten", map[string]any{
+					logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
+					logAttrKeyTargetFieldname: toFieldName,
+				})
 
-					targetPath = targetPath.AtName(toFieldName)
-					typ := sourceItemsField.Type()
-					ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(typ))
-					// Use XML wrapper flattening to convert the source Items field to the target collection
-					diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, sourceFieldName, valFrom, targetPath, toAttr.Type(ctx), toFieldVal, toOpts)...)
-				} else {
-					tflog.SubsystemError(ctx, subsystemName, "Flexer is not autoFlattener")
-					diags.Append(DiagFlatteningIncompatibleTypes(typeFrom, toField.Type))
-				}
+				targetPath = targetPath.AtName(toFieldName)
+				typ := sourceItemsField.Type()
+				ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(typ))
+				// Use XML wrapper flattening to convert the source Items field to the target collection
+				diags.Append(flexer.xmlWrapperFlatten(ctx, sourcePath, sourceFieldName, valFrom, targetPath, toAttr.Type(ctx), toFieldVal, toOpts)...)
 			} else {
 				tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
 			}
