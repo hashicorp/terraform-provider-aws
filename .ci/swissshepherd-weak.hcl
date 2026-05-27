@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_appmesh_virtual_service",
     "resource/aws_autoscaling_notification",
     "resource/aws_autoscaling_notification",
     "resource/aws_batch_compute_environment",
