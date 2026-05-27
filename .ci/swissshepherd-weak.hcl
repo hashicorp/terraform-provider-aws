@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "list_resource/aws_nat_gateway",
     "list_resource/aws_route_table",
     "list_resource/aws_subnet",
     "list_resource/aws_vpc_endpoint",
