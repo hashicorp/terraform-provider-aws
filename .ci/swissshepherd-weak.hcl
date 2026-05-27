@@ -2592,7 +2592,6 @@ check "file_check" {
 
   ignore_targets = [
     "resource/aws_appflow_connector_profile",
-    "resource/aws_appflow_connector_profile",
     "resource/aws_appmesh_gateway_route",
     "resource/aws_appmesh_route",
     "resource/aws_appmesh_virtual_gateway",
