@@ -83,12 +83,16 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	out, err := r.putResourcePolicy(ctx, conn, input)
+	out, err := conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, plan.ResourceARN.String())
 		return
 	}
-	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out))
+	if out == nil || out.Policy == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), names.AttrResourceARN, plan.ResourceARN.String())
+		return
+	}
+	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -109,7 +113,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, state.ResourceARN.String())
 		return
 	}
 
@@ -133,12 +137,16 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	out, err := r.putResourcePolicy(ctx, conn, input)
+	out, err := conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, plan.ResourceARN.String())
 		return
 	}
-	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out))
+	if out == nil || out.Policy == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), names.AttrResourceARN, plan.ResourceARN.String())
+		return
+	}
+	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -162,21 +170,9 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, state.ResourceARN.String())
 		return
 	}
-}
-
-func (r *resourcePolicyResource) putResourcePolicy(ctx context.Context, conn *bedrockagentcorecontrol.Client, input bedrockagentcorecontrol.PutResourcePolicyInput) (*string, error) {
-	out, err := conn.PutResourcePolicy(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
-	if out == nil || out.Policy == nil {
-		return nil, errors.New("empty output")
-	}
-
-	return out.Policy, nil
 }
 
 func findResourcePolicyByARN(ctx context.Context, conn *bedrockagentcorecontrol.Client, resourceArn string) (*string, error) {
