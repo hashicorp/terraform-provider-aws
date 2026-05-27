@@ -2546,9 +2546,6 @@ check "section_presence" {
 
 check "timeouts_section" {
   enabled = true
-
-  ignore_targets = [
-  ]
 }
 
 check "region_argument" {
