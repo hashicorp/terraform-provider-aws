@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -25,8 +24,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -209,135 +206,4 @@ type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
-}
-
-func sweepResourcePolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	runtimeResourcePolicies, err := sweepResourcePoliciesForAgentRuntimes(ctx, client)
-	if err != nil {
-		return nil, smarterr.NewError(err)
-	}
-	gatewayResourcePolicies, err := sweepResourcePoliciesForGateways(ctx, client)
-	if err != nil {
-		return nil, smarterr.NewError(err)
-	}
-	runtimeEndpointResourcePolicies, err := sweepResourcePoliciesForAgentRuntimeEndpoints(ctx, client)
-	if err != nil {
-		return nil, smarterr.NewError(err)
-	}
-	return append(append(runtimeResourcePolicies, gatewayResourcePolicies...), runtimeEndpointResourcePolicies...), nil
-}
-
-func sweepResourcePoliciesForAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	var sweepResources []sweep.Sweepable
-
-	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
-	conn := client.BedrockAgentCoreClient(ctx)
-
-	pages := bedrockagentcorecontrol.NewListAgentRuntimesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.AgentRuntimes {
-			policy, err := findResourcePolicyByARN(ctx, conn, *v.AgentRuntimeArn)
-			if err != nil {
-				if retry.NotFound(err) {
-					continue
-				}
-				return nil, smarterr.NewError(err)
-			}
-
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
-				sweepfw.NewAttribute(names.AttrResourceARN, *v.AgentRuntimeArn),
-				sweepfw.NewAttribute(names.AttrPolicy, *policy),
-			),
-			)
-		}
-	}
-
-	return sweepResources, nil
-}
-
-func sweepResourcePoliciesForAgentRuntimeEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
-	conn := client.BedrockAgentCoreClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := bedrockagentcorecontrol.NewListAgentRuntimesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.AgentRuntimes {
-			agentRuntimeID := aws.ToString(v.AgentRuntimeId)
-			input := bedrockagentcorecontrol.ListAgentRuntimeEndpointsInput{
-				AgentRuntimeId: aws.String(agentRuntimeID),
-			}
-
-			pages := bedrockagentcorecontrol.NewListAgentRuntimeEndpointsPaginator(conn, &input)
-			for pages.HasMorePages() {
-				page, err := pages.NextPage(ctx)
-				if err != nil {
-					return nil, smarterr.NewError(err)
-				}
-
-				for _, v := range page.RuntimeEndpoints {
-					policy, err := findResourcePolicyByARN(ctx, conn, aws.ToString(v.AgentRuntimeEndpointArn))
-					if err != nil {
-						if retry.NotFound(err) {
-							continue
-						}
-						return nil, smarterr.NewError(err)
-					}
-					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
-						sweepfw.NewAttribute(names.AttrResourceARN, aws.ToString(v.AgentRuntimeEndpointArn)),
-						sweepfw.NewAttribute(names.AttrPolicy, *policy),
-					),
-					)
-				}
-			}
-		}
-	}
-
-	return sweepResources, nil
-}
-
-func sweepResourcePoliciesForGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListGatewaysInput{}
-	conn := client.BedrockAgentCoreClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := bedrockagentcorecontrol.NewListGatewaysPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.Items {
-			gateway, err := findGatewayByID(ctx, conn, *v.GatewayId)
-			if err != nil {
-				return nil, smarterr.NewError(err)
-			}
-			policy, err := findResourcePolicyByARN(ctx, conn, *gateway.GatewayArn)
-			if err != nil {
-				if retry.NotFound(err) {
-					continue
-				}
-				return nil, smarterr.NewError(err)
-			}
-
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
-				sweepfw.NewAttribute(names.AttrResourceARN, *gateway.GatewayArn),
-				sweepfw.NewAttribute(names.AttrPolicy, *policy),
-			),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
