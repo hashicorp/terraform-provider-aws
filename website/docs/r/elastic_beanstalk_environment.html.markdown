@@ -48,10 +48,10 @@ This resource supports the following arguments:
   override specific values that are set as defaults. The format is detailed
   below in [Option Settings](#option-settings)
 * `solution_stack_name` - (Optional) A solution stack to base your environment
-off of. Example stacks can be found in the [Amazon API documentation][1]
+off of. Example stacks can be found in the [Amazon API documentation](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html)
 * `template_name` - (Optional) The name of the Elastic Beanstalk Configuration
   template to use in deployment
-* `platform_arn` - (Optional) The [ARN][2] of the Elastic Beanstalk [Platform][3]
+* `platform_arn` - (Optional) The [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) of the Elastic Beanstalk [Platform](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-beanstalk-environment.html#cfn-beanstalk-environment-platformarn)
   to use in deployment
 * `wait_for_ready_timeout` - (Default `20m`) The maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
@@ -127,9 +127,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `triggers` - Autoscaling triggers in use by this Environment.
 * `endpoint_url` - The URL to the Load Balancer for this Environment
 
-[1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
-[2]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
-[3]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-beanstalk-environment.html#cfn-beanstalk-environment-platformarn
 
 ## Import
 
