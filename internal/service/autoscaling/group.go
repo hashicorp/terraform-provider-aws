@@ -334,7 +334,6 @@ func resourceGroup() *schema.Resource {
 									"max_healthy_percentage": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Default:      100,
 										ValidateFunc: validation.IntBetween(100, 200),
 									},
 									"min_healthy_percentage": {
@@ -3252,7 +3251,7 @@ func expandRefreshPreferences(tfMap map[string]any) *awstypes.RefreshPreferences
 		}
 	}
 
-	if v, ok := tfMap["max_healthy_percentage"].(int); ok {
+	if v, ok := tfMap["max_healthy_percentage"].(int); ok && v != 0 {
 		apiObject.MaxHealthyPercentage = aws.Int32(int32(v))
 	}
 
