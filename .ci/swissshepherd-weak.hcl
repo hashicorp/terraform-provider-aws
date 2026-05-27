@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_default_network_acl",
     "resource/aws_default_route_table",
     "resource/aws_default_security_group",
     "resource/aws_devicefarm_project",
