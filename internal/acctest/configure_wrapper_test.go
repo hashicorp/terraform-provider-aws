@@ -5,11 +5,14 @@ package acctest
 
 import (
 	"context"
+	"reflect"
 	"slices"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // TestChainConfigureWrappers verifies that wrappers compose so that the
@@ -103,5 +106,76 @@ func TestChainConfigureWrappers_NoWrappers(t *testing.T) {
 	}
 	if v != "x" {
 		t.Errorf("returned %v, want %q", v, "x")
+	}
+}
+
+// TestProtoV5ProviderFactoriesWithWrappers_NoVCR verifies that with VCR
+// environment variables unset, the auto-wrap marker is not set so the
+// existing acctest.Test/ParallelTest auto-wrap path remains in charge of
+// VCR for legacy callers using bare factories.
+func TestProtoV5ProviderFactoriesWithWrappers_NoVCR(t *testing.T) {
+	t.Setenv("VCR_MODE", "")
+	t.Setenv("VCR_PATH", "")
+
+	factories := ProtoV5ProviderFactoriesWithWrappers(context.Background(), t)
+	if factories == nil {
+		t.Fatal("expected non-nil factories")
+	}
+	if isVCRAutoWrapDisabled(t) {
+		t.Error("VCR auto-wrap should not be disabled when VCR is not enabled")
+	}
+}
+
+// TestProtoV5ProviderFactoriesWithWrappers_VCREnabled_TransparentlyMarksTest
+// verifies that setting the VCR env vars causes the factory builder to
+// transparently disable acctest.Test's auto-wrap, so VCR composes with
+// any inner wrappers (apicall, future OTEL) instead of replacing them.
+func TestProtoV5ProviderFactoriesWithWrappers_VCREnabled_TransparentlyMarksTest(t *testing.T) {
+	t.Setenv("VCR_MODE", "RECORD_ONLY")
+	t.Setenv("VCR_PATH", t.TempDir())
+
+	factories := ProtoV5ProviderFactoriesWithWrappers(context.Background(), t)
+	if factories == nil {
+		t.Fatal("expected non-nil factories")
+	}
+	if !isVCRAutoWrapDisabled(t) {
+		t.Error("VCR auto-wrap should be disabled when factories include VCR transparently")
+	}
+}
+
+// TestDisableVCRAutoWrap_Idempotent verifies that repeated calls leave
+// the marker set without panicking.
+func TestDisableVCRAutoWrap_Idempotent(t *testing.T) {
+	disableVCRAutoWrap(t)
+	disableVCRAutoWrap(t)
+	disableVCRAutoWrap(t)
+	if !isVCRAutoWrapDisabled(t) {
+		t.Error("expected marker to be set after repeated calls")
+	}
+}
+
+// TestVCRTestCase_ShortCircuitsWhenAutoWrapDisabled verifies that
+// vcrTestCase is a no-op when [disableVCRAutoWrap] has been called for
+// the test, so factories that already include VCR via the wrapper API
+// are not double-wrapped.
+func TestVCRTestCase_ShortCircuitsWhenAutoWrapDisabled(t *testing.T) {
+	t.Setenv("VCR_MODE", "RECORD_ONLY")
+	t.Setenv("VCR_PATH", t.TempDir())
+
+	disableVCRAutoWrap(t)
+
+	// Sentinel factory we can recognize after vcrTestCase returns.
+	original := map[string]func() (tfprotov5.ProviderServer, error){
+		ProviderName: func() (tfprotov5.ProviderServer, error) { return nil, nil },
+	}
+	tc := resource.TestCase{ProtoV5ProviderFactories: original}
+
+	if !vcrTestCase(context.Background(), t, &tc) {
+		t.Fatal("vcrTestCase returned false; want true so the test still runs")
+	}
+
+	if reflect.ValueOf(tc.ProtoV5ProviderFactories).Pointer() !=
+		reflect.ValueOf(original).Pointer() {
+		t.Error("vcrTestCase replaced ProtoV5ProviderFactories despite the auto-wrap-disabled marker")
 	}
 }
