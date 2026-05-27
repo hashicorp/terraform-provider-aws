@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_elastic_beanstalk_configuration_template",
     "resource/aws_elastic_beanstalk_environment",
     "resource/aws_globalaccelerator_accelerator",
     "resource/aws_globalaccelerator_custom_routing_accelerator",
