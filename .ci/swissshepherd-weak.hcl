@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "data_source/aws_route53_resolver_query_log_config",
     "data_source/aws_security_groups",
     "list_resource/aws_ebs_volume",
     "list_resource/aws_ec2_secondary_subnet",
