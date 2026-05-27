@@ -237,6 +237,45 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 	})
 }
 
+func TestAccServiceQuotasServiceQuota_Value_updateToSameValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	const dataSourceName = "data.aws_servicequotas_service_quota.test"
+	const resourceName = "aws_servicequotas_service_quota.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "quota_code", setQuotaQuotaCode),
+					resource.TestCheckResourceAttr(resourceName, "service_code", setQuotaServiceCode),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
+					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
+				),
+			},
+			{
+				// Update to the same value - should not open a case
+				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "quota_code", setQuotaQuotaCode),
+					resource.TestCheckResourceAttr(resourceName, "service_code", setQuotaServiceCode),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
+					// Most importantly: no request_id should be created
+					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	ctx := acctest.Context(t)
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -267,7 +306,38 @@ func TestAccServiceQuotasServiceQuota_valueLessThanCurrent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaConfig_valueLessThanCurrent(setQuotaServiceCode, setQuotaQuotaCode),
-				ExpectError: regexache.MustCompile(`requesting Service Quotas Service Quota \([^)]+\) with value less than current`),
+				ExpectError: regexache.MustCompile(`requesting Service Quotas Service Quota \([^)]+\) with value.*less than current`),
+			},
+		},
+	})
+}
+
+func TestAccServiceQuotasServiceQuota_valueLessThanCurrentOnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	const dataSourceName = "data.aws_servicequotas_service_quota.test"
+	const resourceName = "aws_servicequotas_service_quota.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "quota_code", setQuotaQuotaCode),
+					resource.TestCheckResourceAttr(resourceName, "service_code", setQuotaServiceCode),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
+				),
+			},
+			{
+				Config:      testAccServiceQuotaConfig_valueLessThanCurrent(setQuotaServiceCode, setQuotaQuotaCode),
+				ExpectError: regexache.MustCompile(`updating Service Quotas Service Quota \([^)]+\) with value.*less than current`),
 			},
 		},
 	})
@@ -344,4 +414,56 @@ resource "aws_servicequotas_service_quota" "test" {
   value        = data.aws_servicequotas_service_quota.test.value - 1
 }
 `, quotaCode, serviceCode)
+}
+
+func TestAccServiceQuotasServiceQuota_waitForFulfillment(t *testing.T) {
+	ctx := acctest.Context(t)
+	serviceCode := "vpc"
+	quotaCode := "L-F678F1CE"
+
+	if os.Getenv("SERVICEQUOTAS_QUOTA_INCREASE_VALUE") == "" {
+		t.Skip(
+			"Environment Variable SERVICEQUOTAS_QUOTA_INCREASE_VALUE is not set. " +
+				"WARNING: This test will submit a real service quota increase request and wait for it to be fulfilled!")
+	}
+
+	value := os.Getenv("SERVICEQUOTAS_QUOTA_INCREASE_VALUE")
+
+	resourceName := "aws_servicequotas_service_quota.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceQuotaConfig_waitForFulfillment(serviceCode, quotaCode, value, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
+					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_fulfillment", acctest.CtTrue),
+					// If wait_for_fulfillment works, there should not be a pending request_id.
+					resource.TestCheckResourceAttr(resourceName, "request_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func testAccServiceQuotaConfig_waitForFulfillment(serviceCode, quotaCode, value string, waitForFulfillment bool) string {
+	return fmt.Sprintf(`
+resource "aws_servicequotas_service_quota" "test" {
+  quota_code           = %[1]q
+  service_code         = %[2]q
+  value                = %[3]s
+  wait_for_fulfillment = %[4]t
+
+  timeouts {
+    create = "30m"
+    update = "30m"
+  }
+}
+`, quotaCode, serviceCode, value, waitForFulfillment)
 }
