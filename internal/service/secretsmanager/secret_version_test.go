@@ -443,6 +443,14 @@ func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
 				),
 				// Because resource Delete leaves a secret version with a single stage ("AWSCURRENT"), the resource is still there.
 				// ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -468,6 +476,14 @@ func TestAccSecretsManagerSecretVersion_Disappears_secret(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecret(), secretResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
