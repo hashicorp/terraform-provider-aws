@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_arcregionswitch_plan: Add `step.rds_promote_read_replica_config`, `step.rds_create_cross_region_read_replica_config`, and `report_configuration` arguments
+```

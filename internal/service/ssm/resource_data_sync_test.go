@@ -82,6 +82,14 @@ func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceResourceDataSync(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssm_resource_data_sync.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssm_resource_data_sync.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

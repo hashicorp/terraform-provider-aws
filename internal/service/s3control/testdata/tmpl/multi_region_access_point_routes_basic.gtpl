@@ -1,3 +1,19 @@
+resource "aws_s3control_multi_region_access_point_routes" "test" {
+  mrap = aws_s3control_multi_region_access_point.test.arn
+
+  route {
+    bucket                  = aws_s3_bucket.test1.bucket
+    region                  = aws_s3_bucket.test1.bucket_region
+    traffic_dial_percentage = 100
+  }
+
+  route {
+    bucket                  = aws_s3_bucket.test2.bucket
+    region                  = aws_s3_bucket.test2.bucket_region
+    traffic_dial_percentage = 100
+  }
+}
+
 resource "aws_s3_bucket" "test1" {
   bucket        = "${var.rName}-1"
   force_destroy = true
@@ -21,21 +37,5 @@ resource "aws_s3control_multi_region_access_point" "test" {
     region {
       bucket = aws_s3_bucket.test2.bucket
     }
-  }
-}
-
-resource "aws_s3control_multi_region_access_point_routes" "test" {
-  mrap = aws_s3control_multi_region_access_point.test.arn
-
-  route {
-    bucket                  = aws_s3_bucket.test1.bucket
-    region                  = aws_s3_bucket.test1.bucket_region
-    traffic_dial_percentage = 100
-  }
-
-  route {
-    bucket                  = aws_s3_bucket.test2.bucket
-    region                  = aws_s3_bucket.test2.bucket_region
-    traffic_dial_percentage = 100
   }
 }

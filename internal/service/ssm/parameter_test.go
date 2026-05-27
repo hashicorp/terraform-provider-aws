@@ -566,6 +566,14 @@ func TestAccSSMParameter_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceParameter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssm_parameter.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssm_parameter.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
