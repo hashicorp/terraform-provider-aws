@@ -264,26 +264,22 @@ func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sw
 }
 
 func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListPolicyEnginesInput{}
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	input := bedrockagentcorecontrol.ListPolicyEnginesInput{}
-	for {
-		out, err := conn.ListPolicyEngines(ctx, &input)
+	pages := bedrockagentcorecontrol.NewListPolicyEnginesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range out.PolicyEngines {
+		for _, v := range page.PolicyEngines {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newPolicyEngineResource, client,
 				framework.NewAttribute("policy_engine_id", aws.ToString(v.PolicyEngineId))),
 			)
 		}
-
-		if out.NextToken == nil {
-			break
-		}
-		input.NextToken = out.NextToken
 	}
 
 	return sweepResources, nil
