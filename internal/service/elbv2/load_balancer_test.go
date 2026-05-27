@@ -3923,7 +3923,7 @@ func testAccLoadBalancerConfig_albUpdateSecurityGroups(rName string, n int) stri
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
-  security_groups = %[2]d == 1 ? [aws_security_group.test.id] : [aws_security_group.test.id, aws_security_group.test2.id]
+  security_groups = slice([aws_security_group.test.id, aws_security_group.test2.id], 0, %[2]d)
   subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
