@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_rds_cluster_instance",
     "resource/aws_rds_cluster",
     "resource/aws_s3_bucket_acl",
     "resource/aws_sns_platform_application",
