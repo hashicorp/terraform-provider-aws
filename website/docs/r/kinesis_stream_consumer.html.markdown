@@ -12,7 +12,7 @@ Provides a resource to manage a Kinesis Stream Consumer.
 
 -> **Note:** You can register up to 20 consumers per stream. A given consumer can only be registered with one stream at a time.
 
-For more details, see the [Amazon Kinesis Stream Consumer Documentation][1].
+For more details, see the [Amazon Kinesis Stream Consumer Documentation](https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html).
 
 ## Example Usage
 
@@ -61,4 +61,3 @@ Using `terraform import`, import Kinesis Stream Consumers using the Amazon Resou
 % terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553
 ```
 
-[1]: https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html
