@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_iam_user",
     "resource/aws_kinesis_analytics_application",
     "resource/aws_kinesis_firehose_delivery_stream",
     "resource/aws_kinesis_stream_consumer",
