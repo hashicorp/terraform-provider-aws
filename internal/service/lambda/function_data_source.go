@@ -427,7 +427,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
-	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), unqualifiedARN))
 	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
