@@ -2548,7 +2548,6 @@ check "timeouts_section" {
   enabled = true
 
   ignore_targets = [
-    "aws_bedrockagent_agent_action_group",
     "aws_bedrockagent_agent_knowledge_base_association",
     "aws_budgets_budget_action",
     "aws_dx_hosted_private_virtual_interface",
