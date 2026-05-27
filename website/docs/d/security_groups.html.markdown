@@ -52,7 +52,6 @@ This data source exports the following attributes in addition to the arguments a
 * `ids` - IDs of the matches security groups.
 * `vpc_ids` - VPC IDs of the matched security groups. The data source's tag or filter *will span VPCs* unless the `vpc-id` filter is also used.
 
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):

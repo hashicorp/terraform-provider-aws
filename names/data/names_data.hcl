@@ -7201,7 +7201,6 @@ service "resourceexplorer2" {
     human_friendly      = "Resource Explorer"
   }
 
-
   endpoint_info {
     endpoint_api_call = "ListIndexes"
   }
@@ -8917,7 +8916,6 @@ service "transfer" {
     provider_name_upper = "Transfer"
     human_friendly      = "Transfer Family"
   }
-
 
   endpoint_info {
     endpoint_api_call = "ListConnectors"

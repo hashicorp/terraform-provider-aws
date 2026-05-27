@@ -412,7 +412,6 @@ load-balanced across replicas
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `upgrade_rollout_order` - Order in which the clusters are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 
-
 ### master_user_secret
 
 ~> **NOTE:** The `master_user_secret` block is a list. To reference elements, use [index notation](https://developer.hashicorp.com/terraform/language/expressions/types#indices-and-attributes). For example:<br><br>

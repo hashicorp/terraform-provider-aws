@@ -63,7 +63,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `ip_addresses` - A list of IP addresses in the IP address set.
 * `ip_family` - The type of IP addresses included in this IP set.
 
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):

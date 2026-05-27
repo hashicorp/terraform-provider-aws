@@ -103,7 +103,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `performance_insights_kms_key_id` - ARN for the KMS encryption key used by Performance Insights.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):

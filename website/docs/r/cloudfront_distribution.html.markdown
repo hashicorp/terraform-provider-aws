@@ -686,7 +686,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `etag` - Current version of the distribution's information. For example: `E2QWRUHAPOMQZL`.
 * `hosted_zone_id` - CloudFront Route 53 zone ID that can be used to route an [Alias Resource Record Set](http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html) to. This attribute is simply an alias for the zone ID `Z2FDTNDATAQYW2`.
 
-
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

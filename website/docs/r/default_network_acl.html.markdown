@@ -161,7 +161,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` -  ID of the associated VPC
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Default Network ACLs using the `id`. For example:

@@ -39,7 +39,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name of this project
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

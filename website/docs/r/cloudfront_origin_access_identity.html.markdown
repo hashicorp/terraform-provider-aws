@@ -96,7 +96,6 @@ resource "aws_s3_bucket_policy" "example" {
 }
 ```
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Origin Access Identities using the `id`. For example:

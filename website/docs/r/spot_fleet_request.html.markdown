@@ -126,7 +126,6 @@ resource "aws_spot_fleet_request" "example" {
   wait_for_fulfillment                = "true"
   terminate_instances_with_expiration = "true"
 
-
   dynamic "launch_specification" {
     for_each = [for s in var.subnets : {
       subnet_id = s[1]

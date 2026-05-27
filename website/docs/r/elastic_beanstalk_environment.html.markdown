@@ -127,7 +127,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `triggers` - Autoscaling triggers in use by this Environment.
 * `endpoint_url` - The URL to the Load Balancer for this Environment
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Beanstalk Environments using the `id`. For example:

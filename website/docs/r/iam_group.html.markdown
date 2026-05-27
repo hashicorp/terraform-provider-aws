@@ -38,7 +38,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `path` - The path of the group in IAM.
 * `unique_id` - The [unique ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs) assigned by AWS.
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Groups using the `name`. For example:

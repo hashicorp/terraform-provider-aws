@@ -75,7 +75,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ARN of the SNS platform application
 * `arn` - The ARN of the SNS platform application
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS platform applications using the ARN. For example:

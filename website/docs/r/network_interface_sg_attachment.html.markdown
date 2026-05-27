@@ -19,7 +19,6 @@ conjunction with security groups provided in-line in those resources will cause
 conflicts, and will lead to spurious diffs and undefined behavior - please use
 one or the other.
 
-
 ## Example Usage
 
 The following provides a very basic example of setting up an instance (provided
