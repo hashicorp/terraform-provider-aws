@@ -2548,7 +2548,6 @@ check "timeouts_section" {
   enabled = true
 
   ignore_targets = [
-    "aws_globalaccelerator_custom_routing_endpoint_group",
     "aws_oam_sink_policy",
     "aws_quicksight_account_subscription",
     "aws_route53profiles_profile",
