@@ -146,6 +146,8 @@ func TestProtoV5ProviderFactoriesWithWrappers_VCREnabled_TransparentlyMarksTest(
 // TestDisableVCRAutoWrap_Idempotent verifies that repeated calls leave
 // the marker set without panicking.
 func TestDisableVCRAutoWrap_Idempotent(t *testing.T) {
+	t.Parallel()
+
 	disableVCRAutoWrap(t)
 	disableVCRAutoWrap(t)
 	disableVCRAutoWrap(t)
