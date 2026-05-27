@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_vpc_peering_connection",
     "resource/aws_wafv2_web_acl_association",
   ]
 }
