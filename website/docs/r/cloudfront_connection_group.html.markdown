@@ -10,7 +10,7 @@ description: |-
 
 Creates an Amazon CloudFront Connection Group.
 
-For information about CloudFront Connection Groups, see the [AWS CloudFormation Documentation][1].
+For information about CloudFront Connection Groups, see the [AWS CloudFormation Documentation](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-cloudfront-connectiongroup.html).
 
 ## Example Usage
 
@@ -70,4 +70,3 @@ Using `terraform import`, import CloudFront Connection Groups using the `id`. Fo
 % terraform import aws_cloudfront_connection_group.example CGROUP123EXAMPLE
 ```
 
-[1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-cloudfront-connectiongroup.html
