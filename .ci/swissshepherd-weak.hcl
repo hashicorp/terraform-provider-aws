@@ -2584,14 +2584,11 @@ check "region_argument" {
 }
 
 check "file_check" {
-  enabled = true
-  max_file_size = 500000
-  allow_extensions = [".html.markdown"]
+  enabled                   = true
+  max_file_size             = 500000
+  allow_extensions          = [".html.markdown"]
   allow_registry_extensions = [".md"]
-  inline_links = true
-
-  ignore_targets = [
-  ]
+  inline_links              = true
 }
 
 check "file_match" {
