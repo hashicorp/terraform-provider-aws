@@ -102,6 +102,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	}
 }
 
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newMultiRegionAccessPointRoutesResourceAsListResource,
+			TypeName: "aws_s3control_multi_region_access_point_routes",
+			Name:     "Multi-Region Access Point Routes",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("mrap", true)),
+		},
+	})
+}
+
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{

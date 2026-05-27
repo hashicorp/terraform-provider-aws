@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -560,17 +559,15 @@ func flattenRegionReports(apiObjects []types.RegionReport) []any {
 	return tfList
 }
 
+func multiRegionAccessPointARN(ctx context.Context, c *conns.AWSClient, alias string) string {
+	return c.GlobalARN(ctx, "s3", "accesspoint/"+alias)
+}
+
 func resourceMultiRegionAccessPointFlatten(ctx context.Context, awsClient *conns.AWSClient, accountID string, accessPoint *types.MultiRegionAccessPointReport, d *schema.ResourceData) error {
 	alias := aws.ToString(accessPoint.Alias)
-	arn := arn.ARN{
-		Partition: awsClient.Partition(ctx),
-		Service:   "s3",
-		AccountID: accountID,
-		Resource:  fmt.Sprintf("accesspoint/%s", alias),
-	}.String()
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrAlias, alias)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, multiRegionAccessPointARN(ctx, awsClient, alias))
 	if err := d.Set("details", []any{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
 		return fmt.Errorf("setting details: %w", err)
 	}
