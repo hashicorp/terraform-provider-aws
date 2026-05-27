@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "data_source/aws_kinesis_firehose_delivery_stream",
     "data_source/aws_kinesis_stream_consumer",
     "data_source/aws_kinesis_stream",
     "data_source/aws_networkfirewall_firewall_policy",
