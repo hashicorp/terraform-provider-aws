@@ -12,7 +12,6 @@ import (
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
@@ -23,13 +22,6 @@ const (
 
 // Expand  = TF -->  AWS
 // Flatten = AWS --> TF
-
-// autoFlexer is the interface implemented by an auto-flattener or expander.
-type autoFlexer interface {
-	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, fieldOpts) diag.Diagnostics
-	getOptions() AutoFlexOptions
-	handleXMLWrapperCollapse(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, reflect.Type, reflect.Type, map[string]bool) diag.Diagnostics
-}
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
 func autoFlexValues(ctx context.Context, from, to any) (context.Context, reflect.Value, reflect.Value, diag.Diagnostics) {
