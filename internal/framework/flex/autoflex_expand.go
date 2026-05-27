@@ -116,8 +116,8 @@ func (expander *autoExpander) getCachedFieldValue(v reflect.Value, fieldName str
 	return reflect.Value{}
 }
 
-// autoFlexConvert converts `from` to `to` using the specified auto-flexer.
-func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
+// autoFlexConvert converts `from` to `to` using the specified autoExpander.
+func autoExpandConvert(ctx context.Context, from, to any, flexer *autoExpander) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourcePath := path.Empty()
@@ -1231,7 +1231,7 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, sourcePat
 	// Create a new target structure and walk its fields.
 	to := reflect.New(tStruct)
 	if !reflect.ValueOf(from).IsNil() {
-		diags.Append(expandStruct(ctx, sourcePath, from, targetPath, to.Interface(), expander)...)
+		diags.Append(expandStruct(ctx, sourcePath, from, targetPath, to.Interface(), &expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1289,7 +1289,7 @@ func (expander autoExpander) nestedObjectCollectionToSlice(ctx context.Context, 
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
-		diags.Append(expandStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
+		diags.Append(expandStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), &expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1344,7 +1344,7 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
-		diags.Append(expandStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
+		diags.Append(expandStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), &expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1363,7 +1363,7 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 }
 
 // expandStruct traverses struct `from`, calling `flexer` for each exported field.
-func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
+func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer *autoExpander) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
@@ -1405,7 +1405,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		return diags
 	}
 
-	for fromField := range expandSourceFields(ctx, typeFrom, flexer.getOptions()) {
+	for fromField := range expandSourceFields(ctx, typeFrom, flexer.Options) {
 		fromFieldName := fromField.Name
 		_, fromFieldOpts := autoflexTags(fromField)
 		if fromFieldOpts.NoExpand() {
@@ -1431,7 +1431,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 			continue
 		}
 
-		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer.getOptions())
+		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer.Options)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding target field", map[string]any{
