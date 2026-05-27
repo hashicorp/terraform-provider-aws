@@ -113,10 +113,20 @@ func resourceDeliveryStream() *schema.Resource {
 							names.AttrLogGroupName: {
 								Type:     schema.TypeString,
 								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									blockKey := strings.TrimSuffix(k, "."+names.AttrLogGroupName)
+									enabled := d.Get(blockKey + "." + names.AttrEnabled).(bool)
+									return !enabled
+								},
 							},
 							"log_stream_name": {
 								Type:     schema.TypeString,
 								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									blockKey := strings.TrimSuffix(k, ".log_stream_name")
+									enabled := d.Get(blockKey + "." + names.AttrEnabled).(bool)
+									return !enabled
+								},
 							},
 						},
 					},
@@ -2502,12 +2512,14 @@ func expandCloudWatchLoggingOptions(s3 map[string]any) *types.CloudWatchLoggingO
 		Enabled: aws.Bool(loggingConfig[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := loggingConfig[names.AttrLogGroupName]; ok {
-		loggingOptions.LogGroupName = aws.String(v.(string))
-	}
+	if aws.ToBool(loggingOptions.Enabled) {
+		if v, ok := loggingConfig[names.AttrLogGroupName]; ok {
+			loggingOptions.LogGroupName = aws.String(v.(string))
+		}
 
-	if v, ok := loggingConfig["log_stream_name"]; ok {
-		loggingOptions.LogStreamName = aws.String(v.(string))
+		if v, ok := loggingConfig["log_stream_name"]; ok {
+			loggingOptions.LogStreamName = aws.String(v.(string))
+		}
 	}
 
 	return loggingOptions
