@@ -206,8 +206,9 @@ func testAccCheckPolicyEngineExists(ctx context.Context, t *testing.T, n string,
 
 func testAccPreCheckPolicyEngines(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
+	input := bedrockagentcorecontrol.ListPolicyEnginesInput{}
 
-	_, err := conn.ListPolicyEngines(ctx, &bedrockagentcorecontrol.ListPolicyEnginesInput{})
+	_, err := conn.ListPolicyEngines(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

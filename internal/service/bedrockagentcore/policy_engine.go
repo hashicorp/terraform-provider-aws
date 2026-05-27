@@ -204,16 +204,18 @@ func (r *policyEngineResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Only description can be updated.
-	// The API does not support clearing description once set (min length 1).
-	if !plan.Description.Equal(state.Description) && !plan.Description.IsNull() {
-		description := &awstypes.UpdatedDescription{
-			OptionalValue: aws.String(plan.Description.ValueString()),
+	if !plan.Description.Equal(state.Description) {
+		description := &awstypes.UpdatedDescription{}
+		if !plan.Description.IsNull() {
+			description.OptionalValue = plan.Description.ValueStringPointer()
 		}
 
-		_, err := conn.UpdatePolicyEngine(ctx, &bedrockagentcorecontrol.UpdatePolicyEngineInput{
+		input := bedrockagentcorecontrol.UpdatePolicyEngineInput{
 			PolicyEngineId: plan.PolicyEngineID.ValueStringPointer(),
 			Description:    description,
-		})
+		}
+
+		_, err := conn.UpdatePolicyEngine(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineID.String())
 			return
@@ -239,9 +241,11 @@ func (r *policyEngineResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	policyEngineID := state.PolicyEngineID.ValueString()
 
-	_, err := conn.DeletePolicyEngine(ctx, &bedrockagentcorecontrol.DeletePolicyEngineInput{
+	input := bedrockagentcorecontrol.DeletePolicyEngineInput{
 		PolicyEngineId: aws.String(policyEngineID),
-	})
+	}
+
+	_, err := conn.DeletePolicyEngine(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -325,9 +329,11 @@ func statusPolicyEngine(conn *bedrockagentcorecontrol.Client, id string) retry.S
 }
 
 func findPolicyEngineByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*bedrockagentcorecontrol.GetPolicyEngineOutput, error) {
-	out, err := conn.GetPolicyEngine(ctx, &bedrockagentcorecontrol.GetPolicyEngineInput{
+	input := bedrockagentcorecontrol.GetPolicyEngineInput{
 		PolicyEngineId: aws.String(id),
-	})
+	}
+
+	out, err := conn.GetPolicyEngine(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
