@@ -634,6 +634,8 @@ func expandCertificateOptions(tfMap map[string]any) *types.CertificateOptions {
 
 	if v, ok := tfMap["export"].(string); ok && v != "" {
 		apiObject.Export = types.CertificateExport(v)
+	} else {
+		apiObject.Export = types.CertificateExportDisabled
 	}
 
 	return apiObject
