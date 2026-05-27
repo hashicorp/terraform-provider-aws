@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "data_source/aws_instance",
     "data_source/aws_instances",
     "data_source/aws_ip_ranges",
     "data_source/aws_kinesis_firehose_delivery_stream",
