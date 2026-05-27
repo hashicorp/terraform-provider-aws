@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "resource/aws_appmesh_route",
     "resource/aws_appmesh_virtual_gateway",
     "resource/aws_appmesh_virtual_node",
     "resource/aws_appmesh_virtual_router",
