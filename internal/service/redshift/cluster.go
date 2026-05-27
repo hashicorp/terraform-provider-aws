@@ -201,6 +201,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"vpc_endpoints": redshiftVPCEndpointSchema(),
 			"enhanced_vpc_routing": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -683,6 +684,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrDNSName, nil)
 	d.Set(names.AttrEndpoint, nil)
 	d.Set(names.AttrPort, nil)
+	if err := d.Set("vpc_endpoints", nil); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoints: %s", err)
+	}
 	if endpoint := rsc.Endpoint; endpoint != nil {
 		if address := aws.ToString(endpoint.Address); address != "" {
 			d.Set(names.AttrDNSName, address)
@@ -692,6 +696,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			} else {
 				d.Set(names.AttrEndpoint, address)
 			}
+		}
+		if err := d.Set("vpc_endpoints", flattenVPCEndpoints(endpoint.VpcEndpoints)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vpc_endpoints: %s", err)
 		}
 	}
 
