@@ -2548,7 +2548,6 @@ check "timeouts_section" {
   enabled = true
 
   ignore_targets = [
-    "aws_budgets_budget_action",
     "aws_dx_hosted_private_virtual_interface",
     "aws_dx_hosted_transit_virtual_interface",
     "aws_eks_access_entry",
