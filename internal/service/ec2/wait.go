@@ -1327,7 +1327,7 @@ func waitLocalGatewayRouteDeleted(ctx context.Context, conn *ec2.Client, localGa
 
 func waitLocalGatewayRouteTableVIFGroupAssociationAssociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
 	const (
-		timeout = 5 * time.Minute
+		timeout = 30 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeAssociating),
@@ -1347,7 +1347,7 @@ func waitLocalGatewayRouteTableVIFGroupAssociationAssociated(ctx context.Context
 
 func waitLocalGatewayRouteTableVIFGroupAssociationDisassociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
 	const (
-		timeout = 5 * time.Minute
+		timeout = 30 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociating),
