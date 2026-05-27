@@ -351,6 +351,7 @@ This resource supports the following arguments:
 #### Parameters arguments
 
 * `exclude_boot_volume` - (Optional) Indicates whether to exclude the root volume from snapshots created using CreateSnapshots. The default is `false`.
+* `exclude_data_volume_tags` - (Optional) Map of tag keys and their values used to identify data (non-root) volumes to exclude from multi-volume snapshot sets. Applies to custom snapshot policies that target instances only.
 * `no_reboot` - (Optional) Applies to AMI lifecycle policies only. Indicates whether targeted instances are rebooted when the lifecycle policy runs. `true` indicates that targeted instances are not rebooted when the policy runs. `false` indicates that target instances are rebooted when the policy runs. The default is `true` (instances are not rebooted).
 
 #### Schedule arguments
