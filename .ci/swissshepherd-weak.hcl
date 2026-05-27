@@ -2591,7 +2591,6 @@ check "file_check" {
   inline_links = true
 
   ignore_targets = [
-    "list_resource/aws_vpc",
     "resource/aws_batch_compute_environment",
     "resource/aws_bedrockagent_data_source",
     "resource/aws_cloudfront_connection_group",
