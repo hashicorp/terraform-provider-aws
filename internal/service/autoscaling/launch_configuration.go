@@ -36,15 +36,14 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 )
 
 // @SDKResource("aws_launch_configuration", name="Launch Configuration")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.LaunchConfiguration")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchConfigurationCreate,
 		ReadWithoutTimeout:   resourceLaunchConfigurationRead,
 		DeleteWithoutTimeout: resourceLaunchConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

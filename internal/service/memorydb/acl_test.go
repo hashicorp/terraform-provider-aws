@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -19,8 +19,8 @@ import (
 
 func TestAccMemoryDBACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
-	user1 := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
+	user1 := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -53,7 +53,7 @@ func TestAccMemoryDBACL_basic(t *testing.T) {
 
 func TestAccMemoryDBACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,6 +69,14 @@ func TestAccMemoryDBACL_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmemorydb.ResourceACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -120,7 +128,7 @@ func TestAccMemoryDBACL_namePrefix(t *testing.T) {
 
 func TestAccMemoryDBACL_update_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -193,10 +201,10 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 
 func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
-	user1 := "tf-test1-" + sdkacctest.RandString(8)
-	user2 := "tf-test2-" + sdkacctest.RandString(8)
-	user3 := "tf-test3-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
+	user1 := "tf-test1-" + acctest.RandString(t, 8)
+	user2 := "tf-test2-" + acctest.RandString(t, 8)
+	user3 := "tf-test3-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -131,7 +130,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -172,9 +171,9 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 	}
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	domainWildcard := fmt.Sprintf("*.%s", domain)
-	rName := fmt.Sprintf("%s.%s", sdkacctest.RandString(8), domain)
+	rName := fmt.Sprintf("%s.%s", acctest.RandString(t, 8), domain)
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -209,7 +208,7 @@ func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -240,7 +239,7 @@ func TestAccAPIGatewayDomainName_securityPolicyEnhanced(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -271,7 +270,7 @@ func TestAccAPIGatewayDomainName_securityPolicyEnhancedUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -331,7 +330,7 @@ func TestAccAPIGatewayDomainName_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -361,7 +360,7 @@ func TestAccAPIGatewayDomainName_privatePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -392,7 +391,7 @@ func TestAccAPIGatewayDomainName_privatePolicy_added(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -430,7 +429,7 @@ func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -447,6 +446,14 @@ func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -455,7 +462,7 @@ func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
+	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(t), rootDomain)
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
@@ -511,7 +518,7 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 func TestAccAPIGatewayDomainName_MutualTLSAuthentication_ownership(t *testing.T) {
 	ctx := acctest.Context(t)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
+	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(t), rootDomain)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 	var v apigateway.GetDomainNameOutput
@@ -551,7 +558,7 @@ func TestAccAPIGatewayDomainName_updateIDFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -606,7 +613,7 @@ func TestAccAPIGatewayDomainName_ipAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
@@ -653,7 +660,7 @@ func TestAccAPIGatewayDomainName_routingMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 

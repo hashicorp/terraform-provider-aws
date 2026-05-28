@@ -86,7 +86,7 @@ func (l *listResourceLoadBalancer) List(ctx context.Context, request list.ListRe
 
 			result.DisplayName = aws.ToString(item.LoadBalancerName)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

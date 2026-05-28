@@ -18,7 +18,7 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_backup_report_plan.test"
 	resourceName := "aws_backup_report_plan.test"
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
@@ -56,7 +56,7 @@ func TestAccBackupReportPlanDataSource_reportSettings(t *testing.T) {
 	datasourceName := "data.aws_backup_report_plan.test"
 	resourceName := "aws_backup_report_plan.test"
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },

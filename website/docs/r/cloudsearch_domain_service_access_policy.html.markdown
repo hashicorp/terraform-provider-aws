@@ -42,8 +42,6 @@ data "aws_iam_policy_document" "example" {
   }
 }
 
-
-
 resource "aws_cloudsearch_domain_service_access_policy" "example" {
   domain_name   = aws_cloudsearch_domain.example.id
   access_policy = data.aws_iam_policy_document.example.json

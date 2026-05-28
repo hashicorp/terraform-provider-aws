@@ -31,13 +31,13 @@ func TestAccSQSQueue_List_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckQueueDestroy(ctx, t),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		CheckDestroy:             testAccCheckQueueDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Queue/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Queue/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -49,9 +49,8 @@ func TestAccSQSQueue_List_basic(t *testing.T) {
 				},
 			},
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Queue/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Queue/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

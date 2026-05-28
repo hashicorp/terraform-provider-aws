@@ -87,12 +87,12 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   domain_id                = aws_datazone_domain.test.id
   environment_blueprint_id = data.aws_datazone_environment_blueprint.test.id
   provisioning_role_arn    = aws_iam_role.domain_execution_role.arn
-  enabled_regions          = [data.aws_region.test.name]
+  enabled_regions          = [data.aws_region.test.region]
 }
 
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.name
+  aws_account_region               = data.aws_region.test.region
   description                      = "description"
   environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
   name                             = "example-name"

@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -92,7 +92,7 @@ func (r *prefixListAssociationResource) Create(ctx context.Context, req resource
 	coreNetworkID := fwflex.StringValueFromFramework(ctx, plan.CoreNetworkID)
 	prefixListARN := fwflex.StringValueFromFramework(ctx, plan.PrefixListARN)
 	input := networkmanager.CreateCoreNetworkPrefixListAssociationInput{
-		ClientToken:     aws.String(sdkid.UniqueId()),
+		ClientToken:     aws.String(create.UniqueId(ctx)),
 		CoreNetworkId:   aws.String(coreNetworkID),
 		PrefixListAlias: fwflex.StringFromFramework(ctx, plan.PrefixListAlias),
 		PrefixListArn:   aws.String(prefixListARN),

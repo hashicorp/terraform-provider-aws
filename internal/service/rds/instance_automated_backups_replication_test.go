@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -82,6 +83,14 @@ func TestAccRDSInstanceAutomatedBackupsReplication_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstanceAutomatedBackupsReplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -167,11 +176,11 @@ func TestAccRDSInstanceAutomatedBackupsReplication_withFinalSnapshot(t *testing.
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	replicationResourceName := "aws_db_instance_automated_backups_replication.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance_automated_backups_replication.test"
 	instanceResourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -181,13 +190,13 @@ func TestAccRDSInstanceAutomatedBackupsReplication_withFinalSnapshot(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_withFinalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, replicationResourceName),
-					resource.TestCheckResourceAttr(replicationResourceName, names.AttrRetentionPeriod, "7"),
+					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
 					resource.TestCheckResourceAttr(instanceResourceName, "skip_final_snapshot", "false"),
 					resource.TestCheckResourceAttr(instanceResourceName, names.AttrFinalSnapshotIdentifier, rName),
 				),

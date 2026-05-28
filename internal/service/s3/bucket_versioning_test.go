@@ -73,6 +73,14 @@ func TestAccS3BucketVersioning_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketVersioning(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -97,6 +105,14 @@ func TestAccS3BucketVersioning_disappears_bucket(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -793,7 +809,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     status = %[2]q
   }
@@ -808,7 +824,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     mfa_delete = %[2]q
     status     = "Enabled"
@@ -824,7 +840,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     status = %[2]q
   }
@@ -839,7 +855,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     mfa_delete = %[2]q
     status     = "Enabled"
@@ -855,7 +871,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   expected_bucket_owner = data.aws_caller_identity.current.account_id
 

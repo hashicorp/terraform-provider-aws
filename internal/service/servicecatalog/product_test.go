@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -30,7 +31,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -84,7 +85,7 @@ func TestAccServiceCatalogProduct_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -99,6 +100,14 @@ func TestAccServiceCatalogProduct_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_product.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_product.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -109,7 +118,7 @@ func TestAccServiceCatalogProduct_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -148,7 +157,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -177,6 +186,40 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"accept_language",
+					"provisioning_artifact_parameters.0.disable_template_validation",
+				},
+			},
+		},
+	})
+}
+
+func TestAccServiceCatalogProduct_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_servicecatalog_product.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProductDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProductConfig_regionOverride(rName, domain, acctest.DefaultEmailAddress, acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
+				),
+			},
+			{
+				Config:            testAccProductConfig_regionOverride(rName, domain, acctest.DefaultEmailAddress, acctest.AlternateRegion()),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"accept_language",
@@ -350,4 +393,54 @@ resource "aws_servicecatalog_product" "test" {
   }
 }
 `, rName, domain, email)
+}
+
+func testAccProductConfig_regionOverride(rName, domain, email, region string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack" "test" {
+  region = %[4]q
+  name   = %[1]q
+
+  template_body = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+
+    Resources = {
+      MyVPC = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = "10.1.0.0/16"
+        }
+      }
+    }
+
+    Outputs = {
+      VpcID = {
+        Description = "VPC ID"
+        Value = {
+          Ref = "MyVPC"
+        }
+      }
+    }
+  })
+}
+
+resource "aws_servicecatalog_product" "test" {
+  region              = %[4]q
+  description         = "beskrivning"
+  distributor         = "distributör"
+  name                = %[1]q
+  owner               = "ägare"
+  type                = "CLOUD_FORMATION_TEMPLATE"
+  support_description = "supportbeskrivning"
+  support_email       = %[3]q
+  support_url         = %[2]q
+
+  provisioning_artifact_parameters {
+    description          = "artefaktbeskrivning"
+    name                 = %[1]q
+    template_physical_id = aws_cloudformation_stack.test.id
+    type                 = "CLOUD_FORMATION_TEMPLATE"
+  }
+}
+`, rName, domain, email, region)
 }

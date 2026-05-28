@@ -26,6 +26,13 @@ import (
 )
 
 // @SDKResource("aws_acm_certificate_validation", name="Certificate Validation")
+// @ArnIdentity("certificate_arn")
+// @NoImport
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(checkDestroyNoop=true)
+// @Testing(acmRootDomainTfVar="rootDomain")
+// @Testing(acmSubdomainTfVar="rootDomain;domainName")
+// @Testing(identityTest=false)
 func resourceCertificateValidation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateValidationCreate,

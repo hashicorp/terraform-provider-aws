@@ -39,7 +39,6 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(serialize=true)
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecondaryNetworkResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &secondaryNetworkResource{}
 

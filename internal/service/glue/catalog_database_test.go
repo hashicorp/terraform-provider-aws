@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -27,7 +28,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogDatabaseConfig_basic(rName),
@@ -84,7 +85,7 @@ func TestAccGlueCatalogDatabase_createTablePermission(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogDatabaseConfig_permission(rName, "ALTER"),
@@ -128,7 +129,7 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogDatabaseConfig_target(rName),
@@ -171,7 +172,7 @@ func TestAccGlueCatalogDatabase_targetDatabaseWithRegion(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogDatabaseConfig_targetWithRegion(rName),
@@ -202,7 +203,7 @@ func TestAccGlueCatalogDatabase_federatedDatabase(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogDatabaseConfig_federatedDatabase(rName),
@@ -234,7 +235,7 @@ func TestAccGlueCatalogDatabase_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogDatabaseConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -282,7 +283,7 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogDatabaseConfig_basic(rName),
@@ -291,12 +292,20 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckDatabaseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCatalogDatabaseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
@@ -305,12 +314,7 @@ func testAccCheckDatabaseDestroy(ctx context.Context, t *testing.T) resource.Tes
 				continue
 			}
 
-			catalogId, dbName, err := tfglue.ReadCatalogID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfglue.FindDatabaseByName(ctx, conn, catalogId, dbName)
+			_, err := tfglue.FindDatabaseByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrName])
 
 			if retry.NotFound(err) {
 				continue
@@ -324,6 +328,21 @@ func testAccCheckDatabaseDestroy(ctx context.Context, t *testing.T) resource.Tes
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckCatalogDatabaseExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
+
+		_, err := tfglue.FindDatabaseByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrName])
+
+		return err
 	}
 }
 
@@ -537,27 +556,4 @@ resource "aws_glue_catalog_database" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccCheckCatalogDatabaseExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		catalogId, dbName, err := tfglue.ReadCatalogID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
-		_, err = tfglue.FindDatabaseByName(ctx, conn, catalogId, dbName)
-
-		return err
-	}
 }

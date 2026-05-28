@@ -108,7 +108,7 @@ This resource supports the following arguments:
 
 * `certificate_transparency_logging_preference` (Optional) - Certificate transparency logging preference. Valid values: `enabled`, `disabled`.
 * `primary_domain_name` (Optional) - Primary domain name for the certificate.
-* `validation_token_host` (Optional) - Host for validation token. Valid values: `cloudfront`, `domain`.
+* `validation_token_host` (Optional) - Host for validation token. Valid values: `cloudfront`, `self-hosted`.
 
 #### Parameter Arguments
 

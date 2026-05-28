@@ -13,7 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -69,7 +69,7 @@ func resourceBucketVersioning() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.MFADelete](),
+							ValidateDiagFunc: enum.Validate[awstypes.MFADelete](),
 						},
 						names.AttrStatus: {
 							Type:         schema.TypeString,
@@ -93,7 +93,7 @@ func resourceBucketVersioning() *schema.Resource {
 				oldStatusRaw, newStatusRaw := diff.GetChange("versioning_configuration.0.status")
 				oldStatus, newStatus := oldStatusRaw.(string), newStatusRaw.(string)
 
-				if newStatus == bucketVersioningStatusDisabled && (oldStatus == string(types.BucketVersioningStatusEnabled) || oldStatus == string(types.BucketVersioningStatusSuspended)) {
+				if newStatus == bucketVersioningStatusDisabled && (oldStatus == string(awstypes.BucketVersioningStatusEnabled) || oldStatus == string(awstypes.BucketVersioningStatusSuspended)) {
 					return fmt.Errorf("versioning_configuration.status cannot be updated from '%s' to '%s'", oldStatus, newStatus)
 				}
 
@@ -198,11 +198,20 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
-	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting versioning_configuration: %s", err)
+
+	if err := resourceBucketVersioningFlatten(ctx, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
+}
+
+func resourceBucketVersioningFlatten(_ context.Context, bucketVersioning *s3.GetBucketVersioningOutput, d *schema.ResourceData) error {
+	if err := d.Set("versioning_configuration", flattenVersioning(bucketVersioning)); err != nil {
+		return fmt.Errorf("setting versioning_configuration: %w", err)
+	}
+
+	return nil
 }
 
 func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -259,10 +268,10 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 
 	input := s3.PutBucketVersioningInput{
 		Bucket: aws.String(bucket),
-		VersioningConfiguration: &types.VersioningConfiguration{
+		VersioningConfiguration: &awstypes.VersioningConfiguration{
 			// Status must be provided thus to "remove" this resource,
 			// we suspend versioning
-			Status: types.BucketVersioningStatusSuspended,
+			Status: awstypes.BucketVersioningStatusSuspended,
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -289,7 +298,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandBucketVersioningConfiguration(l []any) *types.VersioningConfiguration {
+func expandBucketVersioningConfiguration(l []any) *awstypes.VersioningConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -299,14 +308,14 @@ func expandBucketVersioningConfiguration(l []any) *types.VersioningConfiguration
 		return nil
 	}
 
-	result := &types.VersioningConfiguration{}
+	result := &awstypes.VersioningConfiguration{}
 
 	if v, ok := tfMap["mfa_delete"].(string); ok && v != "" {
-		result.MFADelete = types.MFADelete(v)
+		result.MFADelete = awstypes.MFADelete(v)
 	}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.BucketVersioningStatus(v)
+		result.Status = awstypes.BucketVersioningStatus(v)
 	}
 
 	return result
@@ -403,5 +412,5 @@ const (
 )
 
 func bucketVersioningStatus_Values() []string {
-	return tfslices.AppendUnique(enum.Values[types.BucketVersioningStatus](), bucketVersioningStatusDisabled)
+	return tfslices.AppendUnique(enum.Values[awstypes.BucketVersioningStatus](), bucketVersioningStatusDisabled)
 }

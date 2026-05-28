@@ -69,6 +69,9 @@ func deleteFrameworkResource(
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
+		// Bootstrap context for resource type
+		ctx = NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+
 		resource, err := factory(ctx)
 		if err != nil {
 			return err

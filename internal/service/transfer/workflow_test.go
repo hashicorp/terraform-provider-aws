@@ -10,8 +10,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -19,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTransferWorkflow_basic(t *testing.T) {
+func testAccWorkflow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -59,11 +59,11 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
+func testAccWorkflow_onExceptionSteps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -106,11 +106,11 @@ func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_description(t *testing.T) {
+func testAccWorkflow_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -134,11 +134,11 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_tags(t *testing.T) {
+func testAccWorkflow_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -180,11 +180,11 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_disappears(t *testing.T) {
+func testAccWorkflow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -199,16 +199,24 @@ func TestAccTransferWorkflow_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccTransferWorkflow_allSteps(t *testing.T) {
+func testAccWorkflow_allSteps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -442,7 +450,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_efs_file_system" "test" {

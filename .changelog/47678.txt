@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_securityhub_connector_v2
+```
+
+```release-note:new-list-resource
+aws_securityhub_connector_v2
+```

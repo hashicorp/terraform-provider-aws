@@ -43,7 +43,6 @@ import (
 // @IdentityAttribute("id")
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

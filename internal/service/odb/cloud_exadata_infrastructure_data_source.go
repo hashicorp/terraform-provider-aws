@@ -60,7 +60,7 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 			},
 			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed:    true,
-				Description: "he name of the Availability Zone (AZ) where the Exadata infrastructure is located.",
+				Description: "The name of the Availability Zone (AZ) where the Exadata infrastructure is located.",
 			},
 			"availability_zone_id": schema.StringAttribute{
 				Computed:    true,
@@ -166,7 +166,7 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 			},
 			"storage_count": schema.Int32Attribute{
 				Computed:    true,
-				Description: "he number of storage servers that are activated for the Exadata infrastructure.",
+				Description: "The number of storage servers that are activated for the Exadata infrastructure.",
 			},
 			"storage_server_version": schema.StringAttribute{
 				Computed:    true,

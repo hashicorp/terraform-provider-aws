@@ -11,8 +11,8 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -23,7 +23,7 @@ import (
 func TestAccWAFWebACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -57,8 +57,8 @@ func TestAccWAFWebACL_basic(t *testing.T) {
 func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName1 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
-	rName2 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName1 := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
+	rName2 := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -103,7 +103,7 @@ func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 func TestAccWAFWebACL_defaultAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -140,7 +140,7 @@ func TestAccWAFWebACL_defaultAction(t *testing.T) {
 func TestAccWAFWebACL_rules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -186,7 +186,7 @@ func TestAccWAFWebACL_rules(t *testing.T) {
 func TestAccWAFWebACL_logging(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -239,7 +239,7 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 func TestAccWAFWebACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -255,6 +255,14 @@ func TestAccWAFWebACL_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -263,7 +271,7 @@ func TestAccWAFWebACL_disappears(t *testing.T) {
 func TestAccWAFWebACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -37,7 +37,6 @@ import (
 // @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(name="BlockPublicAccessExclusion")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newVPCBlockPublicAccessExclusionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcBlockPublicAccessExclusionResource{}
 

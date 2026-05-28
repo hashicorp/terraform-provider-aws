@@ -10,9 +10,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -29,18 +31,19 @@ import (
 )
 
 // @SDKResource("aws_iam_user", name="User")
+// @IdentityAttribute("name")
+// @MutableIdentity
 // @Tags(identifierAttribute="id", resourceType="User")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User", importIgnore="force_destroy")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User")
+// @Testing(importIgnore="force_destroy")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.35.1")
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -156,16 +159,12 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, user.Arn)
-	d.Set(names.AttrName, user.UserName)
-	d.Set(names.AttrPath, user.Path)
-	if user.PermissionsBoundary != nil {
-		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
-	} else {
-		d.Set("permissions_boundary", nil)
+	// occasionally, immediately after a user is created, AWS will give an ARN like AIDAQ7SSZBKHREXAMPLE (unique ID)
+	if user, err = waitUserARNIsNotUniqueID(ctx, conn, user); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): waiting for valid ARN: %s", d.Id(), err)
 	}
-	d.Set("unique_id", user.UserId)
 
+	resourceUserFlatten(user, d)
 	setTagsOut(ctx, user.Tags)
 
 	return diags
@@ -297,6 +296,51 @@ func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*
 	}
 
 	return output.User, nil
+}
+
+func waitUserARNIsNotUniqueID(ctx context.Context, conn *iam.Client, user *awstypes.User) (*awstypes.User, error) {
+	if arn.IsARN(aws.ToString(user.Arn)) {
+		return user, nil
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{arnStateIsUniqueID, arnStateNotFound},
+		Target:                    []string{arnStateIsARN},
+		Refresh:                   statusUserARNValue(conn, aws.ToString(user.UserName)),
+		Timeout:                   propagationTimeout,
+		NotFoundChecks:            5,
+		ContinuousTargetOccurence: 5,
+		Delay:                     5 * time.Second,
+		PollInterval:              1 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.User); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusUserARNValue(conn *iam.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		user, err := findUserByName(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, arnStateNotFound, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if arn.IsARN(aws.ToString(user.Arn)) {
+			return user, arnStateIsARN, nil
+		}
+
+		return user, arnStateIsUniqueID, nil
+	}
 }
 
 func deleteUserGroupMemberships(ctx context.Context, conn *iam.Client, user string) error {
@@ -665,4 +709,16 @@ func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUse
 	}
 
 	return output, err
+}
+
+func resourceUserFlatten(user *awstypes.User, d *schema.ResourceData) {
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrName, user.UserName)
+	d.Set(names.AttrPath, user.Path)
+	if user.PermissionsBoundary != nil {
+		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		d.Set("permissions_boundary", nil)
+	}
+	d.Set("unique_id", user.UserId)
 }

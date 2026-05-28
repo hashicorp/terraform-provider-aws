@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -43,7 +42,6 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetMembershipOutput")
 // @Testing(checkDestroyNoop=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newMembershipResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &membershipResource{}
 
@@ -453,9 +451,8 @@ func findMembershipByID(ctx context.Context, conn *cleanrooms.Client, id string)
 	out, err := conn.GetMembership(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

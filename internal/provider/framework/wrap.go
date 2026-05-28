@@ -31,6 +31,12 @@ import (
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
+)
+
+const (
+	logAttrKeyBootstrapContextError = "bootstrapContext error"
+	logAttrKeyResource              = "resource"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -180,8 +186,8 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"data source":            w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"data source":                   w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -351,8 +357,8 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"ephemeral resource":     w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"ephemeral resource":            w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -503,8 +509,8 @@ func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigVal
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"action":                 w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"action":                        w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -768,8 +774,8 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -798,8 +804,8 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping UpgradeState", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -816,8 +822,8 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping MoveState", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -922,6 +928,10 @@ func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 
+	if overrideRegion != "" {
+		ctx = tflog.SetField(ctx, string(semconv.CloudRegionKey), overrideRegion)
+	}
+
 	return ctx, diags
 }
 
@@ -983,13 +993,19 @@ var _ inttypes.ListResourceForSDK = &wrappedListResourceSDK{}
 func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) inttypes.ListResourceForSDK {
 	var interceptors interceptorInvocations
 
-	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled {
 		interceptors = append(interceptors, listResourceInjectRegionAttribute())
 		// TODO: validate region in partition, needs tweaked error message
 	}
 
 	inner := spec.Factory()
 
+	// Updates SDKv2 schema
 	if v, ok := inner.(framework.WithRegionSpec); ok {
 		v.SetRegionSpec(spec.Region)
 	}
@@ -999,6 +1015,14 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 	}
 
 	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
+		v.AppendResultInterceptor(listresource.SetResourceStateSDK())
+
+		if isRegionOverrideEnabled {
+			v.AppendResultInterceptor(listresource.SetRegionInterceptorSDK())
+		}
+
+		v.AppendResultInterceptor(listresource.IdentityInterceptorSDK(spec.Identity.Attributes))
+
 		if !tfunique.IsHandleNil(spec.Tags) {
 			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
@@ -1049,6 +1073,10 @@ func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAt
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 
+	if overrideRegion != "" {
+		ctx = tflog.SetField(ctx, string(semconv.CloudRegionKey), overrideRegion)
+	}
+
 	return ctx, diags
 }
 
@@ -1096,8 +1124,8 @@ func (w *wrappedListResourceSDK) RawV5Schemas(ctx context.Context, request list.
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping Schemas", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 		}
 

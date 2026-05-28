@@ -17,10 +17,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -52,9 +52,14 @@ func resourceSpotInstanceRequest() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: func() map[string]*schema.Schema {
+		SchemaFunc: func() map[string]*schema.Schema {
 			// The Spot Instance Request Schema is based on the AWS Instance schema.
-			s := resourceInstance().SchemaMap()
+			s := resourceInstanceSchema()
+
+			// Remove attributes added for spot instances.
+			delete(s, "instance_lifecycle")
+			delete(s, "instance_market_options")
+			delete(s, "spot_instance_request_id")
 
 			// Everything on a spot instance is ForceNew (except tags/tags_all).
 			for k, v := range s {
@@ -70,11 +75,6 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				x.ForceNew = true
 				s[k] = &x
 			}
-
-			// Remove attributes added for spot instances.
-			delete(s, "instance_lifecycle")
-			delete(s, "instance_market_options")
-			delete(s, "spot_instance_request_id")
 
 			s["instance_interruption_behavior"] = &schema.Schema{
 				Type:             schema.TypeString,
@@ -159,7 +159,7 @@ func resourceSpotInstanceRequest() *schema.Resource {
 			}
 
 			return s
-		}(),
+		},
 	}
 }
 
@@ -173,7 +173,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	input := ec2.RequestSpotInstancesInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
 		// Users can get equivalent behavior out of TF's "count" meta-parameter.

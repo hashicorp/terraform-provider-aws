@@ -32,16 +32,15 @@ import (
 
 // @SDKResource("aws_glue_job", name="Job")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/glue/types;types.Job")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobCreate,
 		ReadWithoutTimeout:   resourceJobRead,
 		UpdateWithoutTimeout: resourceJobUpdate,
 		DeleteWithoutTimeout: resourceJobDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceJobCustomizeDiff,
 
@@ -348,7 +347,8 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.GlueClient(ctx)
 
 	job, err := findJobByName(ctx, conn, d.Id())
 
@@ -362,38 +362,9 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading Glue Job (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, jobARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting command: %s", err)
+	if err := resourceJobFlatten(ctx, awsClient, job, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting connections: %s", err)
-	}
-	d.Set("default_arguments", job.DefaultArguments)
-	d.Set(names.AttrDescription, job.Description)
-	d.Set("execution_class", job.ExecutionClass)
-	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
-	}
-	d.Set("glue_version", job.GlueVersion)
-	d.Set("job_mode", job.JobMode)
-	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
-	d.Set("maintenance_window", job.MaintenanceWindow)
-	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
-	d.Set("max_retries", job.MaxRetries)
-	d.Set(names.AttrName, job.Name)
-	d.Set("non_overridable_arguments", job.NonOverridableArguments)
-	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting notification_property: %s", err)
-	}
-	d.Set("number_of_workers", job.NumberOfWorkers)
-	d.Set(names.AttrRoleARN, job.Role)
-	d.Set("security_configuration", job.SecurityConfiguration)
-	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting source_control_details: %s", err)
-	}
-	d.Set(names.AttrTimeout, job.Timeout)
-	d.Set("worker_type", job.WorkerType)
 
 	return diags
 }
@@ -541,6 +512,43 @@ func resourceJobCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v an
 			}
 		}
 	}
+
+	return nil
+}
+
+func resourceJobFlatten(ctx context.Context, awsClient *conns.AWSClient, job *awstypes.Job, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, jobARN(ctx, awsClient, d.Id()))
+	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
+		return fmt.Errorf("setting command: %w", err)
+	}
+	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
+		return fmt.Errorf("setting connections: %w", err)
+	}
+	d.Set("default_arguments", job.DefaultArguments)
+	d.Set(names.AttrDescription, job.Description)
+	d.Set("execution_class", job.ExecutionClass)
+	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
+		return fmt.Errorf("setting execution_property: %w", err)
+	}
+	d.Set("glue_version", job.GlueVersion)
+	d.Set("job_mode", job.JobMode)
+	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
+	d.Set("maintenance_window", job.MaintenanceWindow)
+	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
+	d.Set("max_retries", job.MaxRetries)
+	d.Set(names.AttrName, job.Name)
+	d.Set("non_overridable_arguments", job.NonOverridableArguments)
+	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
+		return fmt.Errorf("setting notification_property: %w", err)
+	}
+	d.Set("number_of_workers", job.NumberOfWorkers)
+	d.Set(names.AttrRoleARN, job.Role)
+	d.Set("security_configuration", job.SecurityConfiguration)
+	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
+		return fmt.Errorf("setting source_control_details: %w", err)
+	}
+	d.Set(names.AttrTimeout, job.Timeout)
+	d.Set("worker_type", job.WorkerType)
 
 	return nil
 }

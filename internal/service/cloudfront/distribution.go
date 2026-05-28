@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,6 +33,11 @@ import (
 
 // @SDKResource("aws_cloudfront_distribution", name="Distribution")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.Distribution")
+// @Testing(importIgnore="retain_on_delete;wait_for_deployment", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -42,6 +48,10 @@ func resourceDistribution() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
 				conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 				output, err := findDistributionByID(ctx, conn, d.Id())
@@ -82,6 +92,19 @@ func resourceDistribution() *schema.Resource {
 			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"cache_tag_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"header_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
 			},
 			names.AttrComment: {
 				Type:         schema.TypeString,
@@ -846,7 +869,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -878,7 +901,7 @@ func resourceDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						attrItems: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -1020,7 +1043,8 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.CloudFrontClient(ctx)
 
 	output, err := findDistributionByID(ctx, conn, d.Id())
 
@@ -1034,10 +1058,19 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceDistributionFlatten(ctx, awsClient, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceDistributionFlatten(ctx context.Context, awsClient *conns.AWSClient, output *cloudfront.GetDistributionOutput, d *schema.ResourceData) error {
 	distributionConfig := output.Distribution.DistributionConfig
+
 	if distributionConfig.Aliases != nil {
 		if err := d.Set("aliases", flattenAliases(distributionConfig.Aliases)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
+			return fmt.Errorf("setting aliases: %w", err)
 		}
 	}
 	d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
@@ -1046,9 +1079,12 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if aws.ToString(distributionConfig.Comment) != "" {
 		d.Set(names.AttrComment, distributionConfig.Comment)
 	}
+	if err := d.Set("cache_tag_config", flattenCacheTagConfig(distributionConfig.CacheTagConfig)); err != nil {
+		return fmt.Errorf("setting cache_tag_config: %w", err)
+	}
 	if distributionConfig.ConnectionFunctionAssociation != nil {
 		if err := d.Set("connection_function_association", []any{flattenConnectionFunctionAssociation(distributionConfig.ConnectionFunctionAssociation)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting connection_function_association: %s", err)
+			return fmt.Errorf("setting connection_function_association: %w", err)
 		}
 	}
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
@@ -1057,18 +1093,18 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 	if distributionConfig.CustomErrorResponses != nil {
 		if err := d.Set("custom_error_response", flattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting custom_error_response: %s", err)
+			return fmt.Errorf("setting custom_error_response: %w", err)
 		}
 	}
 	if err := d.Set("default_cache_behavior", []any{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_cache_behavior: %s", err)
+		return fmt.Errorf("setting default_cache_behavior: %w", err)
 	}
 	d.Set("default_root_object", distributionConfig.DefaultRootObject)
 	d.Set(names.AttrDomainName, output.Distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
-	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, awsClient.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
@@ -1076,7 +1112,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("logging_v1_enabled", distributionConfig.Logging.Enabled)
 		if aws.ToBool(distributionConfig.Logging.Enabled) || aws.ToBool(distributionConfig.Logging.IncludeCookies) {
 			if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+				return fmt.Errorf("setting logging_config: %w", err)
 			}
 		} else {
 			d.Set("logging_config", []any{})
@@ -1087,46 +1123,46 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if distributionConfig.CacheBehaviors != nil {
 		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting ordered_cache_behavior: %s", err)
+			return fmt.Errorf("setting ordered_cache_behavior: %w", err)
 		}
 	}
 	if aws.ToInt32(distributionConfig.Origins.Quantity) > 0 {
 		if err := d.Set("origin", flattenOrigins(distributionConfig.Origins)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting origin: %s", err)
+			return fmt.Errorf("setting origin: %w", err)
 		}
 	}
 	if aws.ToInt32(distributionConfig.OriginGroups.Quantity) > 0 {
 		if err := d.Set("origin_group", flattenOriginGroups(distributionConfig.OriginGroups)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting origin_group: %s", err)
+			return fmt.Errorf("setting origin_group: %w", err)
 		}
 	}
 	d.Set("price_class", distributionConfig.PriceClass)
 	if distributionConfig.Restrictions != nil {
 		if err := d.Set("restrictions", flattenRestrictions(distributionConfig.Restrictions)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting restrictions: %s", err)
+			return fmt.Errorf("setting restrictions: %w", err)
 		}
 	}
 	d.Set("staging", distributionConfig.Staging)
 	d.Set(names.AttrStatus, output.Distribution.Status)
 	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(output.Distribution.ActiveTrustedKeyGroups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting trusted_key_groups: %s", err)
+		return fmt.Errorf("setting trusted_key_groups: %w", err)
 	}
 	if err := d.Set("trusted_signers", flattenActiveTrustedSigners(output.Distribution.ActiveTrustedSigners)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting trusted_signers: %s", err)
+		return fmt.Errorf("setting trusted_signers: %w", err)
 	}
 	if err := d.Set("viewer_certificate", flattenViewerCertificate(distributionConfig.ViewerCertificate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting viewer_certificate: %s", err)
+		return fmt.Errorf("setting viewer_certificate: %w", err)
 	}
 	if distributionConfig.ViewerMtlsConfig != nil {
 		if err := d.Set("viewer_mtls_config", flattenViewerMtlsConfig(distributionConfig.ViewerMtlsConfig)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting viewer_mtls_config: %s", err)
+			return fmt.Errorf("setting viewer_mtls_config: %w", err)
 		}
 	} else {
 		d.Set("viewer_mtls_config", []any{})
 	}
 	d.Set("web_acl_id", distributionConfig.WebACLId)
 
-	return diags
+	return nil
 }
 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1462,6 +1498,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 
 	if v, ok := d.GetOk("caller_reference"); ok {
 		apiObject.CallerReference = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cache_tag_config"); ok {
+		apiObject.CacheTagConfig = expandCacheTagConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("connection_function_association"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -2817,6 +2857,30 @@ func flattenAliases(apiObject *awstypes.Aliases) []any {
 	return []any{}
 }
 
+func expandCacheTagConfig(tfList []any) *awstypes.CacheTagConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.CacheTagConfig{
+		HeaderName: aws.String(tfMap["header_name"].(string)),
+	}
+
+	return apiObject
+}
+
+func flattenCacheTagConfig(apiObject *awstypes.CacheTagConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{
+		"header_name": aws.ToString(apiObject.HeaderName),
+	}
+
+	return []any{tfMap}
+}
+
 func expandRestrictions(tfMap map[string]any) *awstypes.Restrictions {
 	if tfMap == nil {
 		return nil
@@ -2930,7 +2994,7 @@ func flattenActiveTrustedKeyGroups(apiObject *awstypes.ActiveTrustedKeyGroups) [
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenKGKeyPairIDs(apiObject.Items),
+		attrItems:         flattenKGKeyPairIDs(apiObject.Items),
 	}
 
 	return []any{tfMap}
@@ -2958,7 +3022,7 @@ func flattenActiveTrustedSigners(apiObject *awstypes.ActiveTrustedSigners) []any
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"items":           flattenSigners(apiObject.Items),
+		attrItems:         flattenSigners(apiObject.Items),
 	}
 
 	return []any{tfMap}

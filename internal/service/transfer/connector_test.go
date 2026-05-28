@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -17,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTransferConnector_basic(t *testing.T) {
+func testAccConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -60,7 +61,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_sftpConfig(t *testing.T) {
+func testAccConnector_sftpConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -95,7 +96,7 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_securityPolicyName(t *testing.T) {
+func testAccConnector_securityPolicyName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -130,7 +131,7 @@ func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_disappears(t *testing.T) {
+func testAccConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -153,12 +154,20 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccTransferConnector_egressConfig(t *testing.T) {
+func testAccConnector_egressConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -194,7 +203,7 @@ func TestAccTransferConnector_egressConfig(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_egressConfigUpdate(t *testing.T) {
+func testAccConnector_egressConfigUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
@@ -233,7 +242,7 @@ func TestAccTransferConnector_egressConfigUpdate(t *testing.T) {
 	})
 }
 
-func TestAccTransferConnector_tags(t *testing.T) {
+func testAccConnector_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"

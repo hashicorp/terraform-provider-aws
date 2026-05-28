@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -78,7 +78,7 @@ func testAccMultiplexProgram_basic(t *testing.T) {
 	}
 
 	var multiplexprogram medialive.DescribeMultiplexProgramOutput
-	rName := fmt.Sprintf("tf_acc_%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf_acc_%s", acctest.RandString(t, 8))
 	resourceName := "aws_medialive_multiplex_program.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -117,7 +117,7 @@ func testAccMultiplexProgram_update(t *testing.T) {
 	}
 
 	var multiplexprogram medialive.DescribeMultiplexProgramOutput
-	rName := fmt.Sprintf("tf_acc_%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf_acc_%s", acctest.RandString(t, 8))
 	resourceName := "aws_medialive_multiplex_program.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -162,7 +162,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 	}
 
 	var multiplexprogram medialive.DescribeMultiplexProgramOutput
-	rName := fmt.Sprintf("tf_acc_%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf_acc_%s", acctest.RandString(t, 8))
 	resourceName := "aws_medialive_multiplex_program.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -181,6 +181,14 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmedialive.ResourceMultiplexProgram, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

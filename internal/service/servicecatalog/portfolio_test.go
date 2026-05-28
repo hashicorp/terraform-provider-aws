@@ -10,8 +10,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -22,7 +22,7 @@ import (
 func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_portfolio.test"
-	name := sdkacctest.RandString(5)
+	name := acctest.RandString(t, 5)
 	var dpo servicecatalog.DescribePortfolioOutput
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -54,7 +54,7 @@ func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
 
 func TestAccServiceCatalogPortfolio_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := sdkacctest.RandString(5)
+	name := acctest.RandString(t, 5)
 	resourceName := "aws_servicecatalog_portfolio.test"
 	var dpo servicecatalog.DescribePortfolioOutput
 
@@ -71,6 +71,14 @@ func TestAccServiceCatalogPortfolio_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourcePortfolio(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_portfolio.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_portfolio.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -135,4 +143,8 @@ resource "aws_servicecatalog_portfolio" "test" {
   provider_name = "test-3"
 }
 `, name)
+}
+
+func randomPortfolioName(t *testing.T) string {
+	return acctest.RandString(t, 5)
 }

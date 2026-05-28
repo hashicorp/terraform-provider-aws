@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -29,7 +28,7 @@ import (
 func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -70,7 +69,7 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -106,7 +105,7 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -159,7 +158,7 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -317,6 +316,6 @@ resource "aws_bedrockagentcore_memory" "test" {
 `, rName))
 }
 
-func randomMemoryName() string {
-	return strings.ReplaceAll(fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10)), "-", "_")
+func randomMemoryName(t *testing.T) string {
+	return strings.ReplaceAll(fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10)), "-", "_")
 }

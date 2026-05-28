@@ -44,16 +44,16 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 )
 
 // @SDKResource("aws_autoscaling_group", name="Group")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.AutoScalingGroup")
+// @Testing(importIgnore="force_delete;force_delete_warm_pool;ignore_failed_scaling_activities;wait_for_capacity_timeout")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -1200,7 +1200,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		inputCASG.Tags = svcTags(keyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		inputCASG.Tags = svcTags(keyValueTags(ctx, v, asgName, tagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -1415,7 +1415,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	d.Set("warm_pool_size", g.WarmPoolSize)
 
-	if err := d.Set("tag", listOfMap(keyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	if err := d.Set("tag", listOfMap(keyValueTags(ctx, g.Tags, d.Id(), tagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 
@@ -1577,10 +1577,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChanges("tag") {
 		oTagRaw, nTagRaw := d.GetChange("tag")
-		oldTags := svcTags(keyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
-		newTags := svcTags(keyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
+		oldTags := svcTags(keyValueTags(ctx, oTagRaw, d.Id(), tagResourceTypeGroup))
+		newTags := svcTags(keyValueTags(ctx, nTagRaw, d.Id(), tagResourceTypeGroup))
 
-		if err := updateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), tagResourceTypeGroup, oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags for Auto Scaling Group (%s): %s", d.Id(), err)
 		}
 	}
@@ -1604,7 +1604,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 
 			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
-				return countTrafficSourcesInState(ctx, conn, d.Id(), "", TrafficSourceStateRemoving)
+				return countTrafficSourcesInState(ctx, conn, d.Id(), "", trafficSourceStateRemoving)
 			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffic sources removed: %s", d.Id(), err)
 			}
@@ -1623,7 +1623,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 
 			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
-				return countTrafficSourcesInState(ctx, conn, d.Id(), "", TrafficSourceStateAdding)
+				return countTrafficSourcesInState(ctx, conn, d.Id(), "", trafficSourceStateAdding)
 			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffic sources added: %s", d.Id(), err)
 			}
@@ -1649,7 +1649,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 
 			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
-				return countLoadBalancersInState(ctx, conn, d.Id(), LoadBalancerStateRemoving)
+				return countLoadBalancersInState(ctx, conn, d.Id(), loadBalancerStateRemoving)
 			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers removed: %s", d.Id(), err)
 			}
@@ -1668,7 +1668,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 
 			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
-				return countLoadBalancersInState(ctx, conn, d.Id(), LoadBalancerStateAdding)
+				return countLoadBalancersInState(ctx, conn, d.Id(), loadBalancerStateAdding)
 			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers added: %s", d.Id(), err)
 			}
@@ -1693,7 +1693,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
 			}
 			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
-				return countLoadBalancerTargetGroupsInState(ctx, conn, d.Id(), LoadBalancerTargetGroupStateRemoving)
+				return countLoadBalancerTargetGroupsInState(ctx, conn, d.Id(), loadBalancerTargetGroupStateRemoving)
 			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
 			}
@@ -1712,7 +1712,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 
 			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
-				return countLoadBalancerTargetGroupsInState(ctx, conn, d.Id(), LoadBalancerTargetGroupStateAdding)
+				return countLoadBalancerTargetGroupsInState(ctx, conn, d.Id(), loadBalancerTargetGroupStateAdding)
 			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups added: %s", d.Id(), err)
 			}
@@ -2477,7 +2477,7 @@ func statusGroupCapacity(conn *autoscaling.Client, elbconn *elasticloadbalancing
 				continue
 			}
 
-			if aws.ToString(v.HealthStatus) != InstanceHealthStatusHealthy {
+			if aws.ToString(v.HealthStatus) != instanceHealthStatusHealthy {
 				continue
 			}
 

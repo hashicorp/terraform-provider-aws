@@ -42,7 +42,7 @@ func testAccEC2SecondaryNetwork_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckSecondaryNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckSecondaryNetworkDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -50,7 +50,7 @@ func testAccEC2SecondaryNetwork_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/SecondaryNetwork/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecondaryNetworkExists(ctx, resourceName),
+					testAccCheckSecondaryNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),

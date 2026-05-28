@@ -492,6 +492,21 @@ func resourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deployment_strategy_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"deployment_strategy": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DeploymentStrategy](),
+						},
+					},
+				},
+			},
 			"domain_endpoint_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -872,6 +887,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.CognitoOptions = expandCognitoOptions(v.([]any))
 	}
 
+	if v, ok := d.GetOk("deployment_strategy_options"); ok {
+		input.DeploymentStrategyOptions = expandDeploymentStrategyOptions(v.([]any))
+	}
+
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
 		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]any))
 	}
@@ -1090,6 +1109,9 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
 	}
+	if err := d.Set("deployment_strategy_options", flattenDeploymentStrategyOptions(ds.DeploymentStrategyOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployment_strategy_options: %s", err)
+	}
 	if err := d.Set("domain_endpoint_options", flattenDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting domain_endpoint_options: %s", err)
 	}
@@ -1237,6 +1259,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]any))
 		}
 
+		if d.HasChange("deployment_strategy_options") {
+			input.DeploymentStrategyOptions = expandDeploymentStrategyOptions(d.Get("deployment_strategy_options").([]any))
+		}
+
 		if d.HasChange("domain_endpoint_options") {
 			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]any))
 		}
@@ -1314,7 +1340,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			newTypes := tfslices.ApplyToAll(ns.List(), func(v any) string {
 				return v.(map[string]any)["log_type"].(string)
 			})
-			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, func(s1, s2 string) bool { return s1 == s2 })
+			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, flex.Equal)
 			for _, logType := range remove {
 				input.LogPublishingOptions[logType] = awstypes.LogPublishingOption{
 					Enabled: aws.Bool(false),

@@ -10,9 +10,9 @@ description: |-
 
 Provides an AppFlow connector profile resource.
 
-For information about AppFlow flows, see the [Amazon AppFlow API Reference][1].
+For information about AppFlow flows, see the [Amazon AppFlow API Reference](https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html).
 For specific information about creating an AppFlow connector profile, see the
-[CreateConnectorProfile][2] page in the Amazon AppFlow API Reference.
+[CreateConnectorProfile](https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html) page in the Amazon AppFlow API Reference.
 
 ## Example Usage
 
@@ -364,6 +364,3 @@ Using `terraform import`, import AppFlow Connector Profile using the connector p
 ```console
 % terraform import aws_appflow_connector_profile.example example-profile
 ```
-
-[1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
-[2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html

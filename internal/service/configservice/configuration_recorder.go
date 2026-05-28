@@ -29,16 +29,16 @@ import (
 )
 
 // @SDKResource("aws_config_configuration_recorder", name="Configuration Recorder")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigurationRecorder")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationRecorderPut,
 		ReadWithoutTimeout:   resourceConfigurationRecorderRead,
 		UpdateWithoutTimeout: resourceConfigurationRecorderPut,
 		DeleteWithoutTimeout: resourceConfigurationRecorderDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceConfigurationRecorderCustomizeDiff,
 
@@ -158,7 +158,7 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutConfigurationRecorderInput{
+	input := configservice.PutConfigurationRecorderInput{
 		ConfigurationRecorder: &types.ConfigurationRecorder{
 			Name:    aws.String(name),
 			RoleARN: aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -174,7 +174,7 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 		input.ConfigurationRecorder.RecordingMode = expandRecordingMode(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.PutConfigurationRecorder(ctx, input)
+	_, err := conn.PutConfigurationRecorder(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Recorder (%s): %s", name, err)
@@ -297,11 +297,11 @@ func resourceConfigurationRecorderCustomizeDiff(_ context.Context, diff *schema.
 }
 
 func findConfigurationRecorderByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigurationRecorder, error) {
-	input := &configservice.DescribeConfigurationRecordersInput{
+	input := configservice.DescribeConfigurationRecordersInput{
 		ConfigurationRecorderNames: []string{name},
 	}
 
-	return findConfigurationRecorder(ctx, conn, input)
+	return findConfigurationRecorder(ctx, conn, &input)
 }
 
 func findConfigurationRecorder(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationRecordersInput) (*types.ConfigurationRecorder, error) {

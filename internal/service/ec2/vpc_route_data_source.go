@@ -96,6 +96,11 @@ func dataSourceRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"odb_network_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -179,6 +184,10 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			continue
 		}
 
+		if v, ok := d.GetOk("odb_network_arn"); ok && aws.ToString(r.OdbNetworkArn) != v.(string) {
+			continue
+		}
+
 		if v, ok := d.GetOk(names.AttrTransitGatewayID); ok && aws.ToString(r.TransitGatewayId) != v.(string) {
 			continue
 		}
@@ -219,6 +228,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
+	d.Set("odb_network_arn", route.OdbNetworkArn)
 	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 

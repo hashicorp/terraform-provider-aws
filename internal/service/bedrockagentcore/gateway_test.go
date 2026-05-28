@@ -462,6 +462,329 @@ func TestAccBedrockAgentCoreGateway_protocolConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizer(
+					rName,
+					"https://accounts.google.com/.well-known/openid-configuration",
+					"weather", "sports",
+					"client-999", "client-888",
+					"openid", names.AttrEmail,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("sports"),
+										knownvalue.StringExact("weather"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-888"),
+										knownvalue.StringExact("client-999"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrEmail),
+									}),
+									"custom_claim":  knownvalue.SetSizeExact(0),
+									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizer(
+					rName,
+					"https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+					"finance", "technology",
+					"client-111", "client-222",
+					"openid", names.AttrProfile,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("finance"),
+										knownvalue.StringExact("technology"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-111"),
+										knownvalue.StringExact("client-222"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrProfile),
+									}),
+									"custom_claim":  knownvalue.SetSizeExact(0),
+									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimString(
+					rName,
+					"https://accounts.google.com/.well-known/openid-configuration",
+					"weather", "sports",
+					"client-999", "client-888",
+					"openid", names.AttrEmail,
+					string(awstypes.InboundTokenClaimValueTypeString),
+					string(awstypes.ClaimMatchOperatorTypeEquals),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("sports"),
+										knownvalue.StringExact("weather"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-888"),
+										knownvalue.StringExact("client-999"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrEmail),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeString)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string":      knownvalue.StringExact("admin"),
+															"match_value_string_list": knownvalue.Null(),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				// Update to inbound_token_claim_value_type "STRING_ARRAY" and claim_match_operator "CONTAINS"
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimString(
+					rName,
+					"https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+					"finance", "technology",
+					"client-111", "client-222",
+					"openid", names.AttrProfile,
+					string(awstypes.InboundTokenClaimValueTypeStringArray),
+					string(awstypes.ClaimMatchOperatorTypeContains),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("finance"),
+										knownvalue.StringExact("technology"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-111"),
+										knownvalue.StringExact("client-222"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrProfile),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeStringArray)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeContains)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string":      knownvalue.StringExact("admin"),
+															"match_value_string_list": knownvalue.Null(),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				// Update to use match_value_string_list instead of match_value_string for claim_match_operator "CONTAINS_ANY"
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimStringList(
+					rName,
+					"https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+					"finance", "technology",
+					"client-111", "client-222",
+					"openid", names.AttrProfile,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("finance"),
+										knownvalue.StringExact("technology"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-111"),
+										knownvalue.StringExact("client-222"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrProfile),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeStringArray)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeContainsAny)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string": knownvalue.Null(),
+															"match_value_string_list": knownvalue.SetExact([]knownvalue.Check{
+																knownvalue.StringExact("admin"),
+																knownvalue.StringExact("user"),
+															}),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -778,4 +1101,87 @@ resource "aws_bedrockagentcore_gateway" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGatewayConfig_customJWTAuthorizer(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerCustomClaimString(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
+      custom_claim {
+        inbound_token_claim_name       = "cognito:groups"
+        inbound_token_claim_value_type = %[9]q
+        authorizing_claim_match_value {
+          claim_match_operator = %[10]q
+          claim_match_value {
+            match_value_string = "admin"
+          }
+        }
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerCustomClaimStringList(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
+      custom_claim {
+        inbound_token_claim_name       = "cognito:groups"
+        inbound_token_claim_value_type = "STRING_ARRAY"
+        authorizing_claim_match_value {
+          claim_match_operator = "CONTAINS_ANY"
+          claim_match_value {
+            match_value_string_list = ["admin", "user"]
+          }
+        }
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
