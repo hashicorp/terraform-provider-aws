@@ -1,6 +1,9 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// IMPORTANT: The "fixed" file must not be formatted with gofmt.
+// Semgrep does not handle formatting of multiline fixes in Goc orrectly.
+
 package main
 
 import (
