@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kinesis_stream_consumer", name="Stream Consumer)
+// @SDKDataSource("aws_kinesis_stream_consumer", name="Stream Consumer")
 // @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
 func dataSourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{

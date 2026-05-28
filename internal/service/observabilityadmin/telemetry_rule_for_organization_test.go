@@ -188,6 +188,78 @@ func testAccTelemetryRuleForOrganization_tags(t *testing.T) {
 	})
 }
 
+func testAccTelemetryRuleForOrganization_vpcFlowLogs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v observabilityadmin.GetTelemetryRuleForOrganizationOutput
+	resourceName := "aws_observabilityadmin_telemetry_rule_for_organization.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccTelemetryRuleForOrganizationPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTelemetryRuleForOrganizationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryRuleForOrganizationConfig_vpcFlowLogs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", "organization-telemetry-rule/"+rName)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+		},
+	})
+}
+
+func testAccTelemetryRuleForOrganization_allRegions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v observabilityadmin.GetTelemetryRuleForOrganizationOutput
+	resourceName := "aws_observabilityadmin_telemetry_rule_for_organization.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccTelemetryRuleForOrganizationPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTelemetryRuleForOrganizationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryRuleForOrganizationConfig_allRegions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", "organization-telemetry-rule/"+rName)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+		},
+	})
+}
+
 func testAccCheckTelemetryRuleForOrganizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
@@ -283,4 +355,52 @@ resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
 
 resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccTelemetryRuleForOrganizationConfig_vpcFlowLogs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
+  rule_name = %[1]q
+
+  rule {
+    resource_type          = "AWS::EC2::VPC"
+    telemetry_type         = "Logs"
+    telemetry_source_types = ["VPC_FLOW_LOGS"]
+
+    destination_configuration {
+      destination_type    = "cloud-watch-logs"
+      destination_pattern = "/aws/vpcflowlogs/<resourceId>"
+      retention_in_days   = 7
+
+      vpc_flow_log_parameters {
+        traffic_type             = "ALL"
+        max_aggregation_interval = 60
+      }
+    }
+  }
+
+  depends_on = [aws_observabilityadmin_telemetry_evaluation_for_organization.test]
+}
+
+resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {}
+`, rName)
+}
+
+func testAccTelemetryRuleForOrganizationConfig_allRegions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
+  rule_name = %[1]q
+
+  rule {
+    resource_type          = "AWS::EKS::Cluster"
+    telemetry_type         = "Logs"
+    telemetry_source_types = ["EKS_AUDIT_LOGS"]
+    all_regions            = true
+  }
+
+  depends_on = [aws_observabilityadmin_telemetry_evaluation_for_organization.test]
+}
+
+resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {}
+`, rName)
 }

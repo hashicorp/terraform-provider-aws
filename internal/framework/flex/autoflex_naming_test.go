@@ -331,7 +331,7 @@ func TestFindFieldFuzzy_Combinations(t *testing.T) {
 			}
 			flexer := newAutoExpander(opts)
 
-			field, found := (&fuzzyFieldFinder{}).findField(ctx, fieldNameFrom, typeFrom, typeTo, flexer)
+			field, found := (&fuzzyFieldFinder{}).findField(ctx, fieldNameFrom, typeFrom, typeTo, flexer.Options)
 			if !found {
 				t.Fatalf("expected to find field, but found==false")
 			}

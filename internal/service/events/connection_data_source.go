@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudwatch_event_connection", name="Connection)
+// @SDKDataSource("aws_cloudwatch_event_connection", name="Connection")
 func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,

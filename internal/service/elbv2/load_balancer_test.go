@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
@@ -85,7 +86,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_basic(rName),
+				Config: testAccLoadBalancerConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
@@ -161,7 +162,7 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
+func TestAccELBV2LoadBalancer_GWLB_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -174,7 +175,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_typeGateway(rName),
+				Config: testAccLoadBalancerConfig_gwlbBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					matchGatewayLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
@@ -209,7 +210,7 @@ func TestAccELBV2LoadBalancer_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_basic(rName),
+				Config: testAccLoadBalancerConfig_albBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceLoadBalancer(), resourceName),
@@ -241,7 +242,7 @@ func TestAccELBV2LoadBalancer_nameGenerated(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nameGenerated(rName),
+				Config: testAccLoadBalancerConfig_albNameGenerated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-lb-"),
@@ -276,7 +277,7 @@ func TestAccELBV2LoadBalancer_nameGeneratedForZeroValue(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_zeroValueName(rName),
+				Config: testAccLoadBalancerConfig_albZeroValueName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-lb-"),
@@ -300,7 +301,7 @@ func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_namePrefix(rName, "tf-px-"),
+				Config: testAccLoadBalancerConfig_albNamePrefix(rName, "tf-px-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-px-"),
@@ -335,21 +336,21 @@ func TestAccELBV2LoadBalancer_duplicateName(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_basic(rName),
+				Config: testAccLoadBalancerConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
-				Config:      testAccLoadBalancerConfig_duplicateName(rName),
+				Config:      testAccLoadBalancerConfig_albDuplicateName(rName),
 				ExpectError: regexache.MustCompile(`already exists`),
 			},
 		},
 	})
 }
 
-func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_ipv6SubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -372,7 +373,7 @@ func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_ipv6(rName),
+				Config: testAccLoadBalancerConfig_albIPv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]*regexp.Regexp{
@@ -390,7 +391,7 @@ func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalancing(t *testing.T) {
+func TestAccELBV2LoadBalancer_GWLB_enableCrossZoneLoadBalancing(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -403,7 +404,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_typeGatewayEnableCrossZoneBalancing(rName, true),
+				Config: testAccLoadBalancerConfig_gwlbEnableCrossZoneBalancing(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					matchGatewayLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
@@ -423,7 +424,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_typeGatewayEnableCrossZoneBalancing(rName, false),
+				Config: testAccLoadBalancerConfig_gwlbEnableCrossZoneBalancing(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					matchGatewayLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
@@ -448,7 +449,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_outpost(rName),
+				Config: testAccLoadBalancerConfig_albOutpost(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
@@ -475,7 +476,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_networkLoadBalancerEIP(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_allocationID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	resourceName := "aws_lb.test"
@@ -488,7 +489,7 @@ func TestAccELBV2LoadBalancer_networkLoadBalancerEIP(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nlbEIP(rName),
+				Config: testAccLoadBalancerConfig_nlbAllocationID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -528,10 +529,15 @@ func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 				Config: testAccLoadBalancerConfig_nlbPrivateIPV4Address(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "network"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_mapping"), knownvalue.SetSizeExact(2)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -556,7 +562,7 @@ func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_backwardsCompatibility(rName),
+				Config: testAccLoadBalancerConfig_albBackwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -579,7 +585,7 @@ func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_updateCrossZone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -634,7 +640,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateZonalShift(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_updateZonalShift(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -689,7 +695,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateZonalShift(t *testing.T)
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateZonalShift(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateZonalShift(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -744,7 +750,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateZonalShift(t *testin
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateHTTP2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -757,7 +763,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_enableHTTP2(rName, false),
+				Config: testAccLoadBalancerConfig_albEnableHTTP2(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http2.enabled", acctest.CtFalse),
@@ -770,7 +776,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enableHTTP2(rName, true),
+				Config: testAccLoadBalancerConfig_albEnableHTTP2(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http2.enabled", acctest.CtTrue),
@@ -783,7 +789,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enableHTTP2(rName, false),
+				Config: testAccLoadBalancerConfig_albEnableHTTP2(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http2.enabled", acctest.CtFalse),
@@ -799,7 +805,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_clientKeepAlive(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -812,7 +818,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_clientKeepAlive(rName, 3600),
+				Config: testAccLoadBalancerConfig_albClientKeepAlive(rName, 3600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, tfelbv2.LoadBalancerAttributeClientKeepAliveSeconds, "3600"),
@@ -825,7 +831,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_clientKeepAlive(rName, 7200),
+				Config: testAccLoadBalancerConfig_albClientKeepAlive(rName, 7200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, tfelbv2.LoadBalancerAttributeClientKeepAliveSeconds, "7200"),
@@ -838,7 +844,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_clientKeepAlive(rName, 14400),
+				Config: testAccLoadBalancerConfig_albClientKeepAlive(rName, 14400),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, tfelbv2.LoadBalancerAttributeClientKeepAliveSeconds, "14400"),
@@ -854,7 +860,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFields(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateDropInvalidHeaderFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -867,7 +873,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, false),
+				Config: testAccLoadBalancerConfig_albEnableDropInvalidHeaderFields(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.drop_invalid_header_fields.enabled", acctest.CtFalse),
@@ -880,7 +886,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, true),
+				Config: testAccLoadBalancerConfig_albEnableDropInvalidHeaderFields(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.drop_invalid_header_fields.enabled", acctest.CtTrue),
@@ -893,7 +899,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, false),
+				Config: testAccLoadBalancerConfig_albEnableDropInvalidHeaderFields(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.drop_invalid_header_fields.enabled", acctest.CtFalse),
@@ -909,7 +915,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updatePreserveHostHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -922,7 +928,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, false),
+				Config: testAccLoadBalancerConfig_albEnablePreserveHostHeader(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.preserve_host_header.enabled", acctest.CtFalse),
@@ -935,7 +941,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, true),
+				Config: testAccLoadBalancerConfig_albEnablePreserveHostHeader(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.preserve_host_header.enabled", acctest.CtTrue),
@@ -948,7 +954,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, false),
+				Config: testAccLoadBalancerConfig_albEnablePreserveHostHeader(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.preserve_host_header.enabled", acctest.CtFalse),
@@ -964,7 +970,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateDeletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -977,7 +983,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_enableDeletionProtection(rName, false),
+				Config: testAccLoadBalancerConfig_albEnableDeletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "deletion_protection.enabled", acctest.CtFalse),
@@ -990,7 +996,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enableDeletionProtection(rName, true),
+				Config: testAccLoadBalancerConfig_albEnableDeletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "deletion_protection.enabled", acctest.CtTrue),
@@ -1003,7 +1009,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enableDeletionProtection(rName, false),
+				Config: testAccLoadBalancerConfig_albEnableDeletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "deletion_protection.enabled", acctest.CtFalse),
@@ -1019,7 +1025,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateWAFFailOpen(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1032,7 +1038,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_enableWAFFailOpen(rName, false),
+				Config: testAccLoadBalancerConfig_albEnableWAFFailOpen(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", acctest.CtFalse),
@@ -1049,7 +1055,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_enableWAFFailOpen(rName, true),
+				Config: testAccLoadBalancerConfig_albEnableWAFFailOpen(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", acctest.CtTrue),
@@ -1061,7 +1067,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_enableWAFFailOpen(rName, false),
+				Config: testAccLoadBalancerConfig_albEnableWAFFailOpen(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", acctest.CtFalse),
@@ -1076,7 +1082,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 	})
 }
 
-func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateIPAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1089,7 +1095,7 @@ func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_ipAddressType(rName, "ipv4"),
+				Config: testAccLoadBalancerConfig_albIPAddressType(rName, "ipv4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -1101,7 +1107,7 @@ func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_ipAddressType(rName, "dualstack"),
+				Config: testAccLoadBalancerConfig_albIPAddressType(rName, "dualstack"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
@@ -1113,7 +1119,7 @@ func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_ipAddressType(rName, "dualstack-without-public-ipv4"),
+				Config: testAccLoadBalancerConfig_albIPAddressType(rName, "dualstack-without-public-ipv4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack-without-public-ipv4"),
@@ -1128,7 +1134,7 @@ func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_ipamPoolsBasic(t *testing.T) {
 	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
 
 	ctx := acctest.Context(t)
@@ -1143,7 +1149,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_IPAMPools_basic(rName),
+				Config: testAccLoadBalancerConfig_albIPAMPoolsBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -1151,7 +1157,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 				),
 			},
 			{ // Destroy the ALB first for eventual consistency check. IPAM pool EIP is not released after replaced.
-				Config: testAccLoadBalancerConfig_IPAMPools_basic_destroyALB(rName),
+				Config: testAccLoadBalancerConfig_albIPAMPoolsBasicDestroyALB(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerDestroy(ctx, t),
 				),
@@ -1160,7 +1166,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_ipamPoolsModify(t *testing.T) {
 	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
 
 	ctx := acctest.Context(t)
@@ -1176,7 +1182,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 
 		Steps: []resource.TestStep{
 			{ // Create the load balancer with an IPAM pool
-				Config: testAccLoadBalancerConfig_IPAMPools_basic(rName),
+				Config: testAccLoadBalancerConfig_albIPAMPoolsBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -1189,7 +1195,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 				ImportStateVerify: true,
 			},
 			{ // Replace the IPAM pool
-				Config: testAccLoadBalancerConfig_IPAMPools_modify(rName),
+				Config: testAccLoadBalancerConfig_albIPAMPoolsModify(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -1202,7 +1208,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 				ImportStateVerify: true,
 			},
 			{ // Destroy the ALB first for eventual consistency check. IPAM pool EIP is not released after replaced.
-				Config: testAccLoadBalancerConfig_IPAMPools_modify_destroyALB(rName),
+				Config: testAccLoadBalancerConfig_albIPAMPoolsModifyDestroyALB(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerDestroy(ctx, t),
 				),
@@ -1211,7 +1217,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_ipamPoolsUnassign(t *testing.T) {
 	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
 
 	ctx := acctest.Context(t)
@@ -1226,7 +1232,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_IPAMPools_basic(rName),
+				Config: testAccLoadBalancerConfig_albIPAMPoolsBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -1239,7 +1245,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_IPAMPools_unassign(rName),
+				Config: testAccLoadBalancerConfig_albIPAMPoolsUnassign(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -1252,7 +1258,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 				ImportStateVerify: true,
 			},
 			{ // Destroy the ALB first for eventual consistency check. IPAM pool EIP is not released after removed.
-				Config: testAccLoadBalancerConfig_IPAMPools_unassign_destroyALB(rName),
+				Config: testAccLoadBalancerConfig_albIPAMPoolsUnassignDestroyALB(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerDestroy(ctx, t),
 				),
@@ -1261,7 +1267,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *test
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updatedSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1320,7 +1326,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_addSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1337,7 +1343,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 2),
+				Config: testAccLoadBalancerConfig_albSubnetCount(rName, 3, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
@@ -1350,7 +1356,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 3),
+				Config: testAccLoadBalancerConfig_albSubnetCount(rName, 3, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
@@ -1366,7 +1372,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_deleteSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1383,7 +1389,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 3),
+				Config: testAccLoadBalancerConfig_albSubnetCount(rName, 3, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
@@ -1396,7 +1402,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 2),
+				Config: testAccLoadBalancerConfig_albSubnetCount(rName, 3, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
@@ -1412,7 +1418,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_addSubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1429,7 +1435,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testin
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 2),
+				Config: testAccLoadBalancerConfig_albSubnetMappingCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
@@ -1442,7 +1448,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testin
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 3),
+				Config: testAccLoadBalancerConfig_albSubnetMappingCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
@@ -1458,7 +1464,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testin
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_deleteSubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1475,7 +1481,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *tes
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 3),
+				Config: testAccLoadBalancerConfig_albSubnetMappingCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
@@ -1488,7 +1494,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *tes
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 2),
+				Config: testAccLoadBalancerConfig_albSubnetMappingCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
@@ -1507,7 +1513,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *tes
 // TestAccELBV2LoadBalancer_noSecurityGroup regression tests the issue in #8264,
 // where if an ALB is created without a security group, a default one
 // is assigned.
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_noSecurityGroup(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_noSecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1538,7 +1544,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_noSecurityGroup(t *testing
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogs(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_accessLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1611,7 +1617,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogs(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogsPrefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_accessLogsPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1671,7 +1677,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogsPrefix(t *testin
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogs(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_connectionLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1744,7 +1750,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogs(t *testing.
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogsPrefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_connectionLogsPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1804,7 +1810,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogsPrefix(t *te
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_healthCheckLogs(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_healthCheckLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1877,7 +1883,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_healthCheckLogs(t *testing
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_healthCheckLogsPrefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_healthCheckLogsPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1937,7 +1943,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_healthCheckLogsPrefix(t *t
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogs(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_accessLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2017,7 +2023,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogs(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogsPrefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_accessLogsPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2084,7 +2090,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogsPrefix(t *testing.T)
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateDNSRecordClientRoutingPolicy(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_updateDNSRecordClientRoutingPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2130,7 +2136,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateDNSRecordClientRoutingPo
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_noSecurityGroups(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_noSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2153,14 +2159,14 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_noSecurityGroups(t *testing.T)
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(0)),
 				},
 			},
 		},
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_updateSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2184,7 +2190,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
@@ -2199,7 +2205,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(1)),
 				},
 			},
 			{
@@ -2214,7 +2220,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(2)),
 				},
 			},
 			{
@@ -2239,14 +2245,14 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(0)),
 				},
 			},
 		},
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_updateSecurityGroupsToUnknown(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2269,7 +2275,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
@@ -2286,14 +2292,14 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(1)),
 				},
 			},
 		},
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_enforcePrivateLink(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2386,7 +2392,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnet(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_addSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2430,7 +2436,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnet(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_deleteSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2474,7 +2480,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_addSubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2520,7 +2526,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T)
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_deleteSubnetMapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2566,7 +2572,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_secondaryIPAddresses(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_secondaryIPAddresses(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2629,7 +2635,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_secondaryIPAddresses(t *testin
 	})
 }
 
-func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateDesyncMitigationMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2642,7 +2648,7 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_desyncMitigationMode(rName, "strictest"),
+				Config: testAccLoadBalancerConfig_albDesyncMitigationMode(rName, "strictest"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.desync_mitigation_mode", "strictest"),
@@ -2660,7 +2666,7 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_desyncMitigationMode(rName, "monitor"),
+				Config: testAccLoadBalancerConfig_albDesyncMitigationMode(rName, "monitor"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.desync_mitigation_mode", "monitor"),
@@ -2673,7 +2679,7 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccLoadBalancerConfig_desyncMitigationMode(rName, "defensive"),
+				Config: testAccLoadBalancerConfig_albDesyncMitigationMode(rName, "defensive"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.desync_mitigation_mode", "defensive"),
@@ -2702,7 +2708,7 @@ func TestAccELBV2LoadBalancer_ALB_updateTLSVersionAndCipherSuite(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_tlscipherSuiteEnabled(rName, false),
+				Config: testAccLoadBalancerConfig_albTLSCipherSuiteEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.x_amzn_tls_version_and_cipher_suite.enabled", acctest.CtFalse),
@@ -2715,7 +2721,7 @@ func TestAccELBV2LoadBalancer_ALB_updateTLSVersionAndCipherSuite(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_tlscipherSuiteEnabled(rName, true),
+				Config: testAccLoadBalancerConfig_albTLSCipherSuiteEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.x_amzn_tls_version_and_cipher_suite.enabled", acctest.CtTrue),
@@ -2723,7 +2729,7 @@ func TestAccELBV2LoadBalancer_ALB_updateTLSVersionAndCipherSuite(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_tlscipherSuiteEnabled(rName, false),
+				Config: testAccLoadBalancerConfig_albTLSCipherSuiteEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.x_amzn_tls_version_and_cipher_suite.enabled", acctest.CtFalse),
@@ -2747,7 +2753,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffHeaderProcessingMode(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_xffHeaderProcessingMode(rName, "append"),
+				Config: testAccLoadBalancerConfig_albXFFHeaderProcessingMode(rName, "append"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.xff_header_processing.mode", "append"),
@@ -2760,7 +2766,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffHeaderProcessingMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_xffHeaderProcessingMode(rName, "preserve"),
+				Config: testAccLoadBalancerConfig_albXFFHeaderProcessingMode(rName, "preserve"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.xff_header_processing.mode", "preserve"),
@@ -2768,7 +2774,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffHeaderProcessingMode(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_xffHeaderProcessingMode(rName, "remove"),
+				Config: testAccLoadBalancerConfig_albXFFHeaderProcessingMode(rName, "remove"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.xff_header_processing.mode", "remove"),
@@ -2792,7 +2798,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffClientPort(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_xffClientPort(rName, false),
+				Config: testAccLoadBalancerConfig_albXFFClientPort(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.xff_client_port.enabled", acctest.CtFalse),
@@ -2805,7 +2811,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffClientPort(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_xffClientPort(rName, true),
+				Config: testAccLoadBalancerConfig_albXFFClientPort(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.xff_client_port.enabled", acctest.CtTrue),
@@ -2813,7 +2819,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffClientPort(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_xffClientPort(rName, false),
+				Config: testAccLoadBalancerConfig_albXFFClientPort(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					testAccCheckLoadBalancerAttribute(ctx, t, resourceName, "routing.http.xff_client_port.enabled", acctest.CtFalse),
@@ -2824,7 +2830,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffClientPort(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_updateCapacityReservation(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateCapacityReservation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2837,7 +2843,7 @@ func TestAccELBV2LoadBalancer_updateCapacityReservation(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_capacityReservation(rName, 100),
+				Config: testAccLoadBalancerConfig_albCapacityReservation(rName, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_load_balancer_capacity.#", "1"),
@@ -2850,7 +2856,7 @@ func TestAccELBV2LoadBalancer_updateCapacityReservation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_basic(rName),
+				Config: testAccLoadBalancerConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_load_balancer_capacity.#", "0"),
@@ -2860,7 +2866,7 @@ func TestAccELBV2LoadBalancer_updateCapacityReservation(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_albMoreThan20Attributes(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_moreThan20Attributes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2882,6 +2888,64 @@ func TestAccELBV2LoadBalancer_albMoreThan20Attributes(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_NLB_enablePrefixForIPv6SourceNAT(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbEnablePrefixForIPv6SourceNAT(rName, awstypes.EnablePrefixForIpv6SourceNatEnumOff),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_prefix_for_ipv6_source_nat"), tfknownvalue.StringExact(awstypes.EnablePrefixForIpv6SourceNatEnumOff)),
+				},
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbEnablePrefixForIPv6SourceNAT(rName, awstypes.EnablePrefixForIpv6SourceNatEnumOn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_prefix_for_ipv6_source_nat"), tfknownvalue.StringExact(awstypes.EnablePrefixForIpv6SourceNatEnumOn)),
+				},
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbEnablePrefixForIPv6SourceNAT(rName, awstypes.EnablePrefixForIpv6SourceNatEnumOff),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_prefix_for_ipv6_source_nat"), tfknownvalue.StringExact(awstypes.EnablePrefixForIpv6SourceNatEnumOff)),
+				},
 			},
 		},
 	})
@@ -3100,11 +3164,11 @@ resource "aws_vpc_ipam_pool_cidr" "test_cidr" {
 `, rName)
 }
 
-func testAccLoadBalancerConfig_basic(rName string) string {
-	return testAccLoadBalancerConfig_subnetCount(rName, 2, 2)
+func testAccLoadBalancerConfig_albBasic(rName string) string {
+	return testAccLoadBalancerConfig_albSubnetCount(rName, 2, 2)
 }
 
-func testAccLoadBalancerConfig_subnetCount(rName string, nSubnets, nSubnetsReferenced int) string {
+func testAccLoadBalancerConfig_albSubnetCount(rName string, nSubnets, nSubnetsReferenced int) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, nSubnets), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3118,7 +3182,7 @@ resource "aws_lb" "test" {
 `, rName, nSubnetsReferenced))
 }
 
-func testAccLoadBalancerConfig_subnetMappingCount(rName string, subnetCount int) string {
+func testAccLoadBalancerConfig_albSubnetMappingCount(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, subnetCount), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3142,7 +3206,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_nameGenerated(rName string) string {
+func testAccLoadBalancerConfig_albNameGenerated(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal        = true
@@ -3159,7 +3223,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_zeroValueName(rName string) string {
+func testAccLoadBalancerConfig_albZeroValueName(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = ""
@@ -3182,7 +3246,7 @@ output "lb_name" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_namePrefix(rName, namePrefix string) string {
+func testAccLoadBalancerConfig_albNamePrefix(rName, namePrefix string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name_prefix     = %[2]q
@@ -3200,8 +3264,8 @@ resource "aws_lb" "test" {
 `, rName, namePrefix))
 }
 
-func testAccLoadBalancerConfig_duplicateName(rName string) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_basic(rName), fmt.Sprintf(`
+func testAccLoadBalancerConfig_albDuplicateName(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_albBasic(rName), fmt.Sprintf(`
 resource "aws_lb" "test2" {
   name            = %[1]q
   internal        = true
@@ -3214,7 +3278,7 @@ resource "aws_lb" "test2" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_IPAMPools_basic(rName string) string {
+func testAccLoadBalancerConfig_albIPAMPoolsBasic(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -3242,7 +3306,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_IPAMPools_basic_destroyALB(rName string) string {
+func testAccLoadBalancerConfig_albIPAMPoolsBasicDestroyALB(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -3254,7 +3318,7 @@ resource "aws_internet_gateway" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_IPAMPools_modify(rName string) string {
+func testAccLoadBalancerConfig_albIPAMPoolsModify(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_vpc_ipam_pool" "test_pool2" {
   address_family   = "ipv4"
@@ -3300,7 +3364,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_IPAMPools_modify_destroyALB(rName string) string {
+func testAccLoadBalancerConfig_albIPAMPoolsModifyDestroyALB(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_vpc_ipam_pool" "test_pool2" {
   address_family   = "ipv4"
@@ -3330,7 +3394,7 @@ resource "aws_internet_gateway" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_IPAMPools_unassign(rName string) string {
+func testAccLoadBalancerConfig_albIPAMPoolsUnassign(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -3354,7 +3418,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_IPAMPools_unassign_destroyALB(rName string) string {
+func testAccLoadBalancerConfig_albIPAMPoolsUnassignDestroyALB(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -3366,7 +3430,7 @@ resource "aws_internet_gateway" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_ipAddressType(rName, ipAddressType string) string {
+func testAccLoadBalancerConfig_albIPAddressType(rName, ipAddressType string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3419,7 +3483,7 @@ resource "aws_internet_gateway" "test" {
 `, rName, ipAddressType))
 }
 
-func testAccLoadBalancerConfig_outpost(rName string) string {
+func testAccLoadBalancerConfig_albOutpost(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -3512,7 +3576,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_enableHTTP2(rName string, http2 bool) string {
+func testAccLoadBalancerConfig_albEnableHTTP2(rName string, http2 bool) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3532,7 +3596,7 @@ resource "aws_lb" "test" {
 `, rName, http2))
 }
 
-func testAccLoadBalancerConfig_clientKeepAlive(rName string, value int64) string {
+func testAccLoadBalancerConfig_albClientKeepAlive(rName string, value int64) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3553,7 +3617,7 @@ resource "aws_lb" "test" {
 `, rName, value))
 }
 
-func testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName string, dropInvalid bool) string {
+func testAccLoadBalancerConfig_albEnableDropInvalidHeaderFields(rName string, dropInvalid bool) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3573,7 +3637,7 @@ resource "aws_lb" "test" {
 `, rName, dropInvalid))
 }
 
-func testAccLoadBalancerConfig_enablePreserveHostHeader(rName string, enablePreserveHostHeader bool) string {
+func testAccLoadBalancerConfig_albEnablePreserveHostHeader(rName string, enablePreserveHostHeader bool) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3593,7 +3657,7 @@ resource "aws_lb" "test" {
 `, rName, enablePreserveHostHeader))
 }
 
-func testAccLoadBalancerConfig_enableDeletionProtection(rName string, deletionProtection bool) string {
+func testAccLoadBalancerConfig_albEnableDeletionProtection(rName string, deletionProtection bool) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3611,7 +3675,7 @@ resource "aws_lb" "test" {
 `, rName, deletionProtection))
 }
 
-func testAccLoadBalancerConfig_enableWAFFailOpen(rName string, wafFailOpen bool) string {
+func testAccLoadBalancerConfig_albEnableWAFFailOpen(rName string, wafFailOpen bool) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -3692,7 +3756,7 @@ resource "aws_lb" "test" {
 `, rName, cz, zs))
 }
 
-func testAccLoadBalancerConfig_typeGateway(rName string) string {
+func testAccLoadBalancerConfig_gwlbBasic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
   load_balancer_type = "gateway"
@@ -3705,7 +3769,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_ipv6(rName string) string {
+func testAccLoadBalancerConfig_albIPv6(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -3734,7 +3798,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_typeGatewayEnableCrossZoneBalancing(rName string, enableCrossZoneLoadBalancing bool) string {
+func testAccLoadBalancerConfig_gwlbEnableCrossZoneBalancing(rName string, enableCrossZoneLoadBalancing bool) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
   enable_cross_zone_load_balancing = %[2]t
@@ -3748,7 +3812,7 @@ resource "aws_lb" "test" {
 `, rName, enableCrossZoneLoadBalancing))
 }
 
-func testAccLoadBalancerConfig_nlbEIP(rName string) string {
+func testAccLoadBalancerConfig_nlbAllocationID(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -3804,24 +3868,8 @@ resource "aws_eip" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_nlbPrivateIPV4Address(rName string) string {
+func testAccLoadBalancerConfig_baseNLBPrivateIPV4Address(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "test" {
-  name                       = %[1]q
-  internal                   = true
-  load_balancer_type         = "network"
-  enable_deletion_protection = false
-
-  subnet_mapping {
-    subnet_id            = aws_subnet.test.id
-    private_ipv4_address = "10.10.0.15"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 
@@ -3830,11 +3878,47 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
+resource "aws_subnet" "test1" {
   vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.10.0.0/21"
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.10.8.0/21"
+  map_public_ip_on_launch = true
+  availability_zone       = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_nlbPrivateIPV4Address(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBPrivateIPV4Address(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name                       = %[1]q
+  internal                   = true
+  load_balancer_type         = "network"
+  enable_deletion_protection = false
+
+  subnet_mapping {
+    subnet_id            = aws_subnet.test2.id
+    private_ipv4_address = "10.10.8.15"
+  }
+
+  subnet_mapping {
+    subnet_id            = aws_subnet.test1.id
+    private_ipv4_address = "10.10.0.15"
+  }
 
   tags = {
     Name = %[1]q
@@ -3900,7 +3984,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_backwardsCompatibility(rName string) string {
+func testAccLoadBalancerConfig_albBackwardsCompatibility(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_alb" "test" {
   name            = %[1]q
@@ -4275,7 +4359,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_desyncMitigationMode(rName, mode string) string {
+func testAccLoadBalancerConfig_albDesyncMitigationMode(rName, mode string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -4291,7 +4375,7 @@ resource "aws_lb" "test" {
 `, rName, mode))
 }
 
-func testAccLoadBalancerConfig_tlscipherSuiteEnabled(rName string, enabled bool) string {
+func testAccLoadBalancerConfig_albTLSCipherSuiteEnabled(rName string, enabled bool) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -4307,7 +4391,7 @@ resource "aws_lb" "test" {
 `, rName, enabled))
 }
 
-func testAccLoadBalancerConfig_xffHeaderProcessingMode(rName, mode string) string {
+func testAccLoadBalancerConfig_albXFFHeaderProcessingMode(rName, mode string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -4323,7 +4407,7 @@ resource "aws_lb" "test" {
 `, rName, mode))
 }
 
-func testAccLoadBalancerConfig_xffClientPort(rName string, enabled bool) string {
+func testAccLoadBalancerConfig_albXFFClientPort(rName string, enabled bool) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -4359,7 +4443,7 @@ resource "aws_lb" "test" {
 `, rName, zs))
 }
 
-func testAccLoadBalancerConfig_capacityReservation(rName string, unit int) string {
+func testAccLoadBalancerConfig_albCapacityReservation(rName string, unit int) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -4413,4 +4497,59 @@ resource "aws_lb" "test" {
   }
 }
 `, rName))
+}
+
+func testAccLoadBalancerConfig_nlbEnablePrefixForIPv6SourceNAT(rName string, enablePrefix awstypes.EnablePrefixForIpv6SourceNatEnum) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = %[1]q
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  ip_address_type                   = "dualstack"
+  load_balancer_type                = "network"
+  enable_prefix_for_ipv6_source_nat = %[2]q
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_egress_only_internet_gateway.test, aws_internet_gateway.test]
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, enablePrefix))
 }
