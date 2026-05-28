@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"strings"
 	"time"
 
@@ -44,6 +45,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -900,15 +902,7 @@ func (r *gatewayTargetResource) Delete(ctx context.Context, request resource.Del
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	gatewayIdentifier, targetID := fwflex.StringValueFromFramework(ctx, data.GatewayIdentifier), fwflex.StringValueFromFramework(ctx, data.TargetID)
-	input := bedrockagentcorecontrol.DeleteGatewayTargetInput{
-		GatewayIdentifier: aws.String(gatewayIdentifier),
-		TargetId:          aws.String(targetID),
-	}
-	_, err := conn.DeleteGatewayTarget(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
-	}
-	if err != nil {
+	if err := deleteGatewayTarget(ctx, conn, gatewayIdentifier, targetID); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
 		return
 	}
@@ -1055,6 +1049,42 @@ func findGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	}
 
 	return out, nil
+}
+
+func deleteGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string) error {
+	input := bedrockagentcorecontrol.DeleteGatewayTargetInput{
+		GatewayIdentifier: aws.String(gatewayIdentifier),
+		TargetId:          aws.String(targetID),
+	}
+	_, err := conn.DeleteGatewayTarget(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting Bedrock AgentCore Gateway (%s) Target (%s): %w", gatewayIdentifier, targetID, err)
+	}
+
+	return nil
+}
+
+func listGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListGatewayTargetsInput) iter.Seq2[awstypes.TargetSummary, error] {
+	return func(yield func(awstypes.TargetSummary, error) bool) {
+		pages := bedrockagentcorecontrol.NewListGatewayTargetsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.TargetSummary](), fmt.Errorf("listing Bedrock AgentCore Gateway Targets: %w", err))
+				return
+			}
+
+			for _, item := range page.Items {
+				if !yield(item, nil) {
+					return
+				}
+			}
+		}
+	}
 }
 
 type gatewayTargetResourceModel struct {
