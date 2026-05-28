@@ -5,3 +5,7 @@ resource/aws_lb: Add `enable_prefix_for_ipv6_source_nat` argument
 ```release-note:enhancement
 data-source/aws_lb: Add `enable_prefix_for_ipv6_source_nat` attribute
 ```
+
+```release-note:bug
+resource/aws_lb: Fix `ValidationError: You must specify a subnet ID for each subnet mapping` errors when updating from configured `subnets` to configured `subnet_mapping`
+```

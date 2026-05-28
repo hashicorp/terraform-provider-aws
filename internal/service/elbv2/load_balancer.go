@@ -1806,8 +1806,12 @@ func flattenLoadBalancerHealthCheckLogsAttributes(apiObjects []awstypes.LoadBala
 	return tfMap
 }
 
-func expandSubnetMapping(tfMap map[string]any) awstypes.SubnetMapping {
-	apiObject := awstypes.SubnetMapping{}
+func expandSubnetMapping(tfMap map[string]any) *awstypes.SubnetMapping {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.SubnetMapping{}
 
 	if v, ok := tfMap["allocation_id"].(string); ok && v != "" {
 		apiObject.AllocationId = aws.String(v)
@@ -1823,6 +1827,9 @@ func expandSubnetMapping(tfMap map[string]any) awstypes.SubnetMapping {
 
 	if v, ok := tfMap[names.AttrSubnetID].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
+	} else {
+		// https://github.com/hashicorp/terraform-provider-aws/issues/40060.
+		return nil
 	}
 
 	return apiObject
@@ -1844,7 +1851,11 @@ func expandSubnetMappings(tfList []any) []awstypes.SubnetMapping {
 
 		apiObject := expandSubnetMapping(tfMap)
 
-		apiObjects = append(apiObjects, apiObject)
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
