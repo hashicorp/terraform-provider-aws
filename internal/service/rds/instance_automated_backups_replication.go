@@ -266,22 +266,6 @@ func statusDBInstanceAutomatedBackup(conn *rds.Client, arn string) retry.StateRe
 	}
 }
 
-func statusDBInstanceForAutomatedBackup(conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.ToString(output.DBInstanceStatus), nil
-	}
-}
-
 func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*types.DBInstanceAutomatedBackup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{instanceAutomatedBackupStatusPending},
@@ -300,8 +284,6 @@ func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.Client,
 }
 
 func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBInstance, error) {
-	var output *types.DBInstance
-
 	_, err := tfresource.RetryUntilEqual(ctx, timeout, false, func(ctx context.Context) (bool, error) {
 		dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceID, optFns...)
 
@@ -313,8 +295,6 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 			return false, err
 		}
 
-		output = dbInstance
-
 		return slices.ContainsFunc(dbInstance.DBInstanceAutomatedBackupsReplications, func(v types.DBInstanceAutomatedBackupsReplication) bool {
 			return aws.ToString(v.DBInstanceAutomatedBackupsArn) == dbInstanceAutomatedBackupsARN
 		}), nil
@@ -324,13 +304,14 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 		return nil, err
 	}
 
+	// "InvalidDBInstanceState: Cannot create a snapshot because the database instance ... is not currently in the available state".
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			instanceStatusModifying,
 			instanceStatusBackingUp,
 		},
 		Target:  []string{instanceStatusAvailable},
-		Refresh: statusDBInstanceForAutomatedBackup(conn, dbInstanceID, optFns...),
+		Refresh: statusDBInstance(conn, dbInstanceID, optFns...),
 		Timeout: timeout,
 	}
 
@@ -340,5 +321,5 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 		return output, err
 	}
 
-	return output, err
+	return nil, err
 }
