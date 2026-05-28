@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_cloudfront_public_key: Add `encoded_key_wo` write-only attribute
+```
+
