@@ -445,8 +445,8 @@ lint: golangci-lint provider-lint import-lint ## Legacy target, use caution
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test, website, and docs linter findings
 
-makefile-lint: prereq-go ## [CI] Validate GNUmakefile/docs alignment
-	@echo "make: Validating Makefile and docs alignment..."
+makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
+	@echo "make: Makefile Linting / alignment check..."
 	@cd tools/makelign && $(GO_VER) run . ../..
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
