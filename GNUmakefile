@@ -826,6 +826,11 @@ swissshepherd-count: ## [CI] Run Swiss Shepherd checks
 	@echo "make: Count of all Swiss Shepherd checks..."
 	@swissshepherd --config .ci/swissshepherd-full.hcl | grep -E '^(WARN|ERROR)' | wc -l
 
+swissshepherd-refresh: ## [CI] Run Swiss Shepherd checks and refresh schemas
+	@echo "make: Refreshing Swiss Shepherd schemas..."
+	@echo "make: This will take a while..."
+	@swissshepherd --config .ci/swissshepherd-weak.hcl --refresh-schema
+
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
@@ -1268,6 +1273,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	sweeper-unlinked \
 	swissshepherd \
 	swissshepherd-count \
+	swissshepherd-refresh \
 	t \
 	test \
 	test-compile \
