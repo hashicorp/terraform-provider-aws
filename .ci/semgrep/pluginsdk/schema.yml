@@ -21,6 +21,9 @@ rules:
           Elem: &schema.Resource{
             ...,
           }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^.*(?<!V\d)$
     fix: |
       SchemaFunc: func() map[string]*schema.Schema {
       	return $SCHEMA
