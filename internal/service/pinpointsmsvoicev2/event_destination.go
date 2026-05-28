@@ -43,22 +43,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_pinpointsmsvoicev2_configuration_set_event_destination", name="Configuration Set Event Destination")
+// @FrameworkResource("aws_pinpointsmsvoicev2_event_destination", name="Event Destination")
 // @IdentityAttribute("configuration_set_name")
 // @IdentityAttribute("event_destination_name")
-// @ImportIDHandler("configurationSetEventDestinationImportID")
+// @ImportIDHandler("eventDestinationImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttributes="configuration_set_name;event_destination_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
-func newConfigurationSetEventDestinationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &configurationSetEventDestinationResource{}, nil
+func newEventDestinationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &eventDestinationResource{}, nil
 }
 
-type configurationSetEventDestinationResource struct {
-	framework.ResourceWithModel[configurationSetEventDestinationResourceModel]
+type eventDestinationResource struct {
+	framework.ResourceWithModel[eventDestinationResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *configurationSetEventDestinationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *eventDestinationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"configuration_set_arn": schema.StringAttribute{
@@ -187,10 +187,10 @@ func sinkTypeSwapRequiresReplace(_ context.Context, req planmodifier.ListRequest
 	resp.RequiresReplace = req.StateValue.IsNull() != req.PlanValue.IsNull()
 }
 
-func (r *configurationSetEventDestinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *eventDestinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	var plan configurationSetEventDestinationResourceModel
+	var plan eventDestinationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -253,16 +253,16 @@ func (r *configurationSetEventDestinationResource) Create(ctx context.Context, r
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *configurationSetEventDestinationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *eventDestinationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	var state configurationSetEventDestinationResourceModel
+	var state eventDestinationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	eventDestination, configurationSetArn, err := findConfigurationSetEventDestinationByTwoPartKey(ctx, conn, state.ConfigurationSetName.ValueString(), state.EventDestinationName.ValueString())
+	eventDestination, configurationSetArn, err := findEventDestinationByTwoPartKey(ctx, conn, state.ConfigurationSetName.ValueString(), state.EventDestinationName.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -282,10 +282,10 @@ func (r *configurationSetEventDestinationResource) Read(ctx context.Context, req
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *configurationSetEventDestinationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *eventDestinationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	var plan, state configurationSetEventDestinationResourceModel
+	var plan, state eventDestinationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -334,10 +334,10 @@ func (r *configurationSetEventDestinationResource) Update(ctx context.Context, r
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *configurationSetEventDestinationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *eventDestinationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	var state configurationSetEventDestinationResourceModel
+	var state eventDestinationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -360,7 +360,7 @@ func (r *configurationSetEventDestinationResource) Delete(ctx context.Context, r
 	}
 }
 
-func (r *configurationSetEventDestinationResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+func (r *eventDestinationResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("cloudwatch_logs_destination"),
@@ -370,7 +370,7 @@ func (r *configurationSetEventDestinationResource) ConfigValidators(_ context.Co
 	}
 }
 
-func findConfigurationSetEventDestinationByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName, eventDestinationName string) (*awstypes.EventDestination, *string, error) {
+func findEventDestinationByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, configurationSetName, eventDestinationName string) (*awstypes.EventDestination, *string, error) {
 	parent, err := findConfigurationSetByID(ctx, conn, configurationSetName)
 	if err != nil {
 		return nil, nil, err
@@ -387,7 +387,7 @@ func findConfigurationSetEventDestinationByTwoPartKey(ctx context.Context, conn 
 	}
 }
 
-type configurationSetEventDestinationResourceModel struct {
+type eventDestinationResourceModel struct {
 	framework.WithRegionModel
 	CloudWatchLogsDestination  fwtypes.ListNestedObjectValueOf[cloudWatchLogsDestinationModel]  `tfsdk:"cloudwatch_logs_destination"`
 	ConfigurationSetARN        fwtypes.ARN                                                      `tfsdk:"configuration_set_arn"`
@@ -414,12 +414,12 @@ type snsDestinationModel struct {
 }
 
 var (
-	_ inttypes.ImportIDParser = configurationSetEventDestinationImportID{}
+	_ inttypes.ImportIDParser = eventDestinationImportID{}
 )
 
-type configurationSetEventDestinationImportID struct{}
+type eventDestinationImportID struct{}
 
-func (configurationSetEventDestinationImportID) Parse(id string) (string, map[string]any, error) {
+func (eventDestinationImportID) Parse(id string) (string, map[string]any, error) {
 	configurationSetName, eventDestinationName, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id %q should be in the format <configuration-set-name>%s<event-destination-name>", id, intflex.ResourceIdSeparator)

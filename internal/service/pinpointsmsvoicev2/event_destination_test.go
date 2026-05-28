@@ -21,24 +21,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_basic(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_basic(rName),
+				Config: testAccEventDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
@@ -62,25 +62,25 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_basic(t *testing.
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_disappears(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_basic(rName),
+				Config: testAccEventDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourceConfigurationSetEventDestination, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourceEventDestination, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -93,29 +93,29 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_disappears(t *tes
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_enabled(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_basic(rName),
+				Config: testAccEventDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_enabled(rName),
+				Config: testAccEventDestinationConfig_enabled(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -130,14 +130,14 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_enabled(t *testin
 				ImportStateVerifyIdentifierAttribute: "configuration_set_name",
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_disabled(rName),
+				Config: testAccEventDestinationConfig_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_disabled(rName),
+				Config: testAccEventDestinationConfig_disabled(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -148,24 +148,24 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_enabled(t *testin
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_disabled(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_disabled(rName),
+				Config: testAccEventDestinationConfig_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
@@ -177,14 +177,14 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_disabled(t *testi
 				ImportStateVerifyIdentifierAttribute: "configuration_set_name",
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_enabled(rName),
+				Config: testAccEventDestinationConfig_enabled(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
@@ -192,24 +192,24 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_disabled(t *testi
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_MatchingEventTypes(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_MatchingEventTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_MatchingEventTypes(rName, []string{"TEXT_DELIVERED"}),
+				Config: testAccEventDestinationConfig_MatchingEventTypes(rName, []string{"TEXT_DELIVERED"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "matching_event_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "matching_event_types.*", "TEXT_DELIVERED"),
 				),
@@ -222,14 +222,14 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_MatchingEventType
 				ImportStateVerifyIdentifierAttribute: "configuration_set_name",
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_MatchingEventTypes(rName, []string{"TEXT_DELIVERED", "TEXT_PENDING", "TEXT_QUEUED", "TEXT_INVALID", "TEXT_BLOCKED"}),
+				Config: testAccEventDestinationConfig_MatchingEventTypes(rName, []string{"TEXT_DELIVERED", "TEXT_PENDING", "TEXT_QUEUED", "TEXT_INVALID", "TEXT_BLOCKED"}),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "matching_event_types.#", "5"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "matching_event_types.*", "TEXT_DELIVERED"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "matching_event_types.*", "TEXT_PENDING"),
@@ -239,16 +239,16 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_MatchingEventType
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_MatchingEventTypes(rName, []string{"TEXT_QUEUED", "TEXT_BLOCKED"}),
+				Config: testAccEventDestinationConfig_MatchingEventTypes(rName, []string{"TEXT_QUEUED", "TEXT_BLOCKED"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "matching_event_types.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "matching_event_types.*", "TEXT_QUEUED"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "matching_event_types.*", "TEXT_BLOCKED"),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_MatchingEventTypes(rName, []string{"TEXT_QUEUED", "TEXT_BLOCKED"}),
+				Config: testAccEventDestinationConfig_MatchingEventTypes(rName, []string{"TEXT_QUEUED", "TEXT_BLOCKED"}),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -259,24 +259,24 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_MatchingEventType
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_CloudWatchLogsDestination(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_CloudWatchLogsDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination1(rName),
+				Config: testAccEventDestinationConfig_CloudWatchLogsDestination1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs_destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logs_destination.0.iam_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logs_destination.0.log_group_arn", "aws_cloudwatch_log_group.test1", names.AttrARN),
@@ -292,20 +292,20 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_CloudWatchLogsDes
 				ImportStateVerifyIdentifierAttribute: "configuration_set_name",
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination2(rName),
+				Config: testAccEventDestinationConfig_CloudWatchLogsDestination2(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs_destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logs_destination.0.log_group_arn", "aws_cloudwatch_log_group.test2", names.AttrARN),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination2(rName),
+				Config: testAccEventDestinationConfig_CloudWatchLogsDestination2(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -316,24 +316,24 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_CloudWatchLogsDes
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_KinesisFirehoseDestination(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_KinesisFirehoseDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination1(rName),
+				Config: testAccEventDestinationConfig_KinesisFirehoseDestination1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_firehose_destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_firehose_destination.0.iam_role_arn", "aws_iam_role.delivery_stream", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_firehose_destination.0.delivery_stream_arn", "aws_kinesis_firehose_delivery_stream.test1", names.AttrARN),
@@ -349,20 +349,20 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_KinesisFirehoseDe
 				ImportStateVerifyIdentifierAttribute: "configuration_set_name",
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination2(rName),
+				Config: testAccEventDestinationConfig_KinesisFirehoseDestination2(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_firehose_destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_firehose_destination.0.delivery_stream_arn", "aws_kinesis_firehose_delivery_stream.test2", names.AttrARN),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination2(rName),
+				Config: testAccEventDestinationConfig_KinesisFirehoseDestination2(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -373,66 +373,66 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_KinesisFirehoseDe
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_replaceDestination(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_replaceDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_basic(rName),
+				Config: testAccEventDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sns_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs_destination.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_firehose_destination.#", "0"),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination1(rName),
+				Config: testAccEventDestinationConfig_CloudWatchLogsDestination1(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sns_destination.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_firehose_destination.#", "0"),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination1(rName),
+				Config: testAccEventDestinationConfig_KinesisFirehoseDestination1(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_firehose_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs_destination.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sns_destination.#", "0"),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_basic(rName),
+				Config: testAccEventDestinationConfig_basic(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sns_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_firehose_destination.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs_destination.#", "0"),
@@ -442,25 +442,25 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_replaceDestinatio
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_invalidDestination(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_invalidDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccConfigurationSetEventDestinationConfig_noDestination(rName),
+				Config:      testAccEventDestinationConfig_noDestination(rName),
 				ExpectError: regexache.MustCompile(`Missing Attribute Configuration`),
 			},
 			{
-				Config:      testAccConfigurationSetEventDestinationConfig_multipleDestinations(rName),
+				Config:      testAccEventDestinationConfig_multipleDestinations(rName),
 				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
 			},
 		},
@@ -470,37 +470,37 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_invalidDestinatio
 // Negative test: AWS's CreateEventDestination rejects an ARN-form configuration_set_name
 // with ResourceNotFoundException, despite the SDK doc comment suggesting either form is
 // accepted. This test pins that empirical behavior so a future SDK change surfaces loudly.
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_ConfigurationSetARN(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_ConfigurationSetARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckConfigurationSetEventDestination(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccConfigurationSetEventDestinationConfig_ConfigurationSetARN(rName),
+				Config:      testAccEventDestinationConfig_ConfigurationSetARN(rName),
 				ExpectError: regexache.MustCompile(`(?s)ResourceNotFoundException.*configuration-set`),
 			},
 		},
 	})
 }
 
-func testAccCheckConfigurationSetEventDestinationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckEventDestinationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_pinpointsmsvoicev2_configuration_set_event_destination" {
+			if rs.Type != "aws_pinpointsmsvoicev2_event_destination" {
 				continue
 			}
 
-			_, _, err := tfpinpointsmsvoicev2.FindConfigurationSetEventDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["configuration_set_name"], rs.Primary.Attributes["event_destination_name"])
+			_, _, err := tfpinpointsmsvoicev2.FindEventDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["configuration_set_name"], rs.Primary.Attributes["event_destination_name"])
 
 			if retry.NotFound(err) {
 				continue
@@ -517,7 +517,7 @@ func testAccCheckConfigurationSetEventDestinationDestroy(ctx context.Context, t 
 	}
 }
 
-func testAccCheckConfigurationSetEventDestinationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckEventDestinationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -526,13 +526,13 @@ func testAccCheckConfigurationSetEventDestinationExists(ctx context.Context, t *
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
-		_, _, err := tfpinpointsmsvoicev2.FindConfigurationSetEventDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["configuration_set_name"], rs.Primary.Attributes["event_destination_name"])
+		_, _, err := tfpinpointsmsvoicev2.FindEventDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["configuration_set_name"], rs.Primary.Attributes["event_destination_name"])
 
 		return err
 	}
 }
 
-func testAccPreCheckConfigurationSetEventDestination(ctx context.Context, t *testing.T) {
+func testAccPreCheckEventDestination(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 	input := pinpointsmsvoicev2.DescribeConfigurationSetsInput{}
@@ -547,7 +547,7 @@ func testAccPreCheckConfigurationSetEventDestination(ctx context.Context, t *tes
 	}
 }
 
-func testAccConfigurationSetEventDestinationConfig_basic(rName string) string {
+func testAccEventDestinationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
   name = %[1]q
@@ -557,7 +557,7 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
   event_destination_name = %[1]q
 
@@ -570,7 +570,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName)
 }
 
-func testAccConfigurationSetEventDestinationConfig_MatchingEventTypes(rName string, types []string) string {
+func testAccEventDestinationConfig_MatchingEventTypes(rName string, types []string) string {
 	quoted := make([]string, len(types))
 	for i, t := range types {
 		quoted[i] = fmt.Sprintf("%q", t)
@@ -584,7 +584,7 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
   event_destination_name = %[1]q
 
@@ -597,7 +597,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName, strings.Join(quoted, ", "))
 }
 
-func testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination_base(rName string) string {
+func testAccEventDestinationConfig_CloudWatchLogsDestination_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -654,9 +654,9 @@ resource "aws_iam_role_policy" "test" {
 `, rName)
 }
 
-func testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination1(rName string) string {
-	return acctest.ConfigCompose(testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination_base(rName), fmt.Sprintf(`
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+func testAccEventDestinationConfig_CloudWatchLogsDestination1(rName string) string {
+	return acctest.ConfigCompose(testAccEventDestinationConfig_CloudWatchLogsDestination_base(rName), fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   depends_on = [aws_iam_role_policy.test]
 
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
@@ -672,9 +672,9 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName))
 }
 
-func testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination2(rName string) string {
-	return acctest.ConfigCompose(testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination_base(rName), fmt.Sprintf(`
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+func testAccEventDestinationConfig_CloudWatchLogsDestination2(rName string) string {
+	return acctest.ConfigCompose(testAccEventDestinationConfig_CloudWatchLogsDestination_base(rName), fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   depends_on = [aws_iam_role_policy.test]
 
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
@@ -690,7 +690,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName))
 }
 
-func testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination_base(rName string) string {
+func testAccEventDestinationConfig_KinesisFirehoseDestination_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -779,9 +779,9 @@ resource "aws_kinesis_firehose_delivery_stream" "test2" {
 `, rName)
 }
 
-func testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination1(rName string) string {
-	return acctest.ConfigCompose(testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination_base(rName), fmt.Sprintf(`
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+func testAccEventDestinationConfig_KinesisFirehoseDestination1(rName string) string {
+	return acctest.ConfigCompose(testAccEventDestinationConfig_KinesisFirehoseDestination_base(rName), fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   depends_on = [aws_iam_role_policy.delivery_stream]
 
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
@@ -797,9 +797,9 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName))
 }
 
-func testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination2(rName string) string {
-	return acctest.ConfigCompose(testAccConfigurationSetEventDestinationConfig_KinesisFirehoseDestination_base(rName), fmt.Sprintf(`
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+func testAccEventDestinationConfig_KinesisFirehoseDestination2(rName string) string {
+	return acctest.ConfigCompose(testAccEventDestinationConfig_KinesisFirehoseDestination_base(rName), fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   depends_on = [aws_iam_role_policy.delivery_stream]
 
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
@@ -815,13 +815,13 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName))
 }
 
-func testAccConfigurationSetEventDestinationConfig_noDestination(rName string) string {
+func testAccEventDestinationConfig_noDestination(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
   name = %[1]q
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
   event_destination_name = %[1]q
 
@@ -830,13 +830,13 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName)
 }
 
-func testAccConfigurationSetEventDestinationConfig_multipleDestinations(rName string) string {
-	return acctest.ConfigCompose(testAccConfigurationSetEventDestinationConfig_CloudWatchLogsDestination_base(rName), fmt.Sprintf(`
+func testAccEventDestinationConfig_multipleDestinations(rName string) string {
+	return acctest.ConfigCompose(testAccEventDestinationConfig_CloudWatchLogsDestination_base(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   depends_on = [aws_iam_role_policy.test]
 
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
@@ -856,7 +856,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName))
 }
 
-func testAccConfigurationSetEventDestinationConfig_ConfigurationSetARN(rName string) string {
+func testAccEventDestinationConfig_ConfigurationSetARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
   name = %[1]q
@@ -866,7 +866,7 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.arn
   event_destination_name = %[1]q
 
@@ -879,7 +879,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName)
 }
 
-func testAccConfigurationSetEventDestinationConfig_enabled(rName string) string {
+func testAccEventDestinationConfig_enabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
   name = %[1]q
@@ -889,7 +889,7 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
   event_destination_name = %[1]q
   enabled                = true
@@ -903,7 +903,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
 `, rName)
 }
 
-func testAccConfigurationSetEventDestinationConfig_disabled(rName string) string {
+func testAccEventDestinationConfig_disabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
   name = %[1]q
@@ -913,7 +913,7 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
   event_destination_name = %[1]q
   enabled                = false

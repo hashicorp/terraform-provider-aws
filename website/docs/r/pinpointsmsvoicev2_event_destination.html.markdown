@@ -1,14 +1,14 @@
 ---
 subcategory: "End User Messaging SMS"
 layout: "aws"
-page_title: "AWS: aws_pinpointsmsvoicev2_configuration_set_event_destination"
+page_title: "AWS: aws_pinpointsmsvoicev2_event_destination"
 description: |-
-  Manages an AWS End User Messaging SMS Configuration Set Event Destination.
+  Manages an AWS End User Messaging SMS Event Destination.
 ---
 
-# Resource: aws_pinpointsmsvoicev2_configuration_set_event_destination
+# Resource: aws_pinpointsmsvoicev2_event_destination
 
-Manages an AWS End User Messaging SMS Configuration Set Event Destination.
+Manages an AWS End User Messaging SMS Event Destination.
 
 An event destination is a location where messaging events are published. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured per event destination. Changing the sink type (e.g., from `sns_destination` to `cloudwatch_logs_destination`) forces resource replacement — AWS's `UpdateEventDestination` rejects sink-type changes with `ConflictException`.
 
@@ -21,7 +21,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
   name = "example-configuration-set"
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
+resource "aws_pinpointsmsvoicev2_event_destination" "example" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.example.name
   event_destination_name = "example"
   matching_event_types   = ["ALL"]
@@ -40,7 +40,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
   name = "example-configuration-set"
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
+resource "aws_pinpointsmsvoicev2_event_destination" "example" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.example.name
   event_destination_name = "example"
   matching_event_types   = ["ALL"]
@@ -59,7 +59,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
   name = "example-configuration-set"
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
+resource "aws_pinpointsmsvoicev2_event_destination" "example" {
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.example.name
   event_destination_name = "example"
   matching_event_types   = ["ALL"]
@@ -118,14 +118,14 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_pinpointsmsvoicev2_configuration_set_event_destination.example
+  to = aws_pinpointsmsvoicev2_event_destination.example
   identity = {
     configuration_set_name = "example-configuration-set"
     event_destination_name = "example-event-destination"
   }
 }
 
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" {
+resource "aws_pinpointsmsvoicev2_event_destination" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -142,11 +142,11 @@ resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "example" 
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import and event destination using the `configuration_set_name` and `event_destination_name`, separated by a comma. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an event destination using the `configuration_set_name` and `event_destination_name`, separated by a comma. For example:
 
 ```terraform
 import {
-  to = aws_pinpointsmsvoicev2_configuration_set_event_destination.example
+  to = aws_pinpointsmsvoicev2_event_destination.example
   id = "example-configuration-set,example-event-destination"
 }
 ```
@@ -154,5 +154,5 @@ import {
 Using `terraform import`, import an event destination using the `configuration_set_name` and `event_destination_name`, separated by a comma. For example:
 
 ```console
-% terraform import aws_pinpointsmsvoicev2_configuration_set_event_destination.example "example-configuration-set,example-event-destination"
+% terraform import aws_pinpointsmsvoicev2_event_destination.example "example-configuration-set,example-event-destination"
 ```

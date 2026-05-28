@@ -1,4 +1,4 @@
-resource "aws_pinpointsmsvoicev2_configuration_set_event_destination" "test" {
+resource "aws_pinpointsmsvoicev2_event_destination" "test" {
 {{- template "region" }}
   configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
   event_destination_name = var.rName
